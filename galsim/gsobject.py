@@ -38,11 +38,9 @@ rescaling of flux or size, rotating, and shifting; and (c) actually make images 
 brightness profiles.
 """
 
-import os
 import numpy as np
 
 import galsim
-from . import utilities
 from . import _galsim
 
 class GSObject(object):
@@ -1447,10 +1445,10 @@ class GSObject(object):
         # Make sure we hit the minimum size specified in the gsparams.
         N = max(N, self.gsparams.minimum_fft_size)
 
-        dk = 2.*np.pi / N;
+        dk = 2.*np.pi / N
 
         if N*dk/2 > self.maxK():
-            Nk = N;
+            Nk = N
         else:
             # There will be aliasing.  Make a larger image and then wrap it.
             Nk = int(np.ceil(self.maxK()/dk)) * 2
@@ -1476,7 +1474,7 @@ class GSObject(object):
 
         # Add (a portion of) this to the original image.
         image.image += real_image.subImage(image.bounds)
-        added_photons = real_image.subImage(image.bounds).array.sum();
+        added_photons = real_image.subImage(image.bounds).array.sum()
 
         return added_photons
 
@@ -1571,18 +1569,18 @@ class GSObject(object):
             pd = galsim.PoissonDeviate(rng, mean)
             pd_val = pd() - mean + flux
             ratio = pd_val / flux
-            g *= ratio;
-            mod_flux *= ratio;
+            g *= ratio
+            mod_flux *= ratio
 
         if n_photons == 0.:
-            n_photons = mod_flux;
+            n_photons = mod_flux
             if max_extra_noise > 0.:
                 gfactor = 1. + max_extra_noise / self.SBProfile.maxSB()
-                n_photons /= gfactor;
-                g *= gfactor;
+                n_photons /= gfactor
+                g *= gfactor
 
         # Make n_photons an integer.
-        iN = int(n_photons + 0.5);
+        iN = int(n_photons + 0.5)
 
         if iN <= 0:  # pragma: no cover
             import warnings
@@ -1712,12 +1710,12 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
 
-            phot_array.scaleFlux(g * thisN / Ntot);
+            phot_array.scaleFlux(g * thisN / Ntot)
 
             added_flux += phot_array.addTo(image.image)
-            Nleft -= thisN;
+            Nleft -= thisN
 
-        return added_flux;
+        return added_flux
 
 
     def shoot(self, N, ud):
