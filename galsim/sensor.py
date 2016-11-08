@@ -84,7 +84,7 @@ class SiliconSensor(Sensor):
 
         cfg_success, ConfigData = self.ReadConfigFile(config_file)
         if cfg_success:
-            DiffStep = self.CalcDiffStep(ConfigData['DistributedCharge'], ConfigData['PixelSize'], ConfigData['ChannelStopWidth'], ConfigData['Vbb'], ConfigData['Vparallel_lo'], ConfigData['Vparallel_hi'], ConfigData['CCDTemperature'], DiffMult)
+            DiffStep = self.CalcDiffStep(ConfigData['CollectingPhases'], ConfigData['PixelSize'], ConfigData['ChannelStopWidth'], ConfigData['Vbb'], ConfigData['Vparallel_lo'], ConfigData['Vparallel_hi'], ConfigData['CCDTemperature'], DiffMult)
             NumVertices = ConfigData['NumVertices']
             Nx = ConfigData['PixelBoundaryNx']
             Ny = ConfigData['PixelBoundaryNy']
@@ -171,7 +171,7 @@ class SiliconSensor(Sensor):
 
         return True, ConfigData
 
-    def CalcDiffStep(self, DistributedCharge, PixelSize, ChannelStopWidth, Vbb, Vparallel_lo, Vparallel_hi, CCDTemperature, DiffMult):
+    def CalcDiffStep(self, CollectingPhases, PixelSize, ChannelStopWidth, Vbb, Vparallel_lo, Vparallel_hi, CCDTemperature, DiffMult):
         # This calculates the diffusion step size given the detector
         # parameters.  The diffusion step size is the mean radius of diffusion
         # assuming the electron propagates the full width of the sensor.
@@ -181,12 +181,12 @@ class SiliconSensor(Sensor):
         # Set up the collection area and the diffusion step size at 100 C
         collXmin = ChannelStopWidth / (2.0 * PixelSize)
         collXwidth = (PixelSize - ChannelStopWidth) / PixelSize
-        if DistributedCharge == 1:
+        if CollectingPhases == 1:
             # This is one collecting gate
             collYmin = 1.0 / 3.0
             collYwidth = 1.0 / 3.0
             Vdiff = (2.0 * Vparallel_lo + Vparallel_hi) / 3.0 - Vbb
-        elif DistributedCharge == 2:
+        elif CollectingPhases == 2:
             #This is two collecting gates
             collYmin = 1.0 / 6.0
             collYwidth = 2.0 / 3.0
