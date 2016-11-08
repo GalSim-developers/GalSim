@@ -779,7 +779,13 @@ class PhaseScreenList(object):
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
+        return np.sum([layer.wavefront(aper, theta, compact) for layer in self], axis=0)
+
+    def wavefront_grad(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+        return np.sum([layer.wavefront_grad(aper, theta, compact) for layer in self], axis=0)
+
+    def wavefront_grad_where(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        return np.sum([layer.wavefront_grad_where(u, v, t, theta) for layer in self], axis=0)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type

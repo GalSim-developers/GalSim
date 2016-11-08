@@ -177,6 +177,29 @@ class AtmosphericScreen(object):
         noise = utilities.rand_arr(self.psi.shape, gd)
         return np.fft.ifft2(np.fft.fft2(noise)*self.psi).real
 
+    @property
+    def gradx(self):
+        if not hasattr(self, '_gradx'):
+            self._make_grad()
+        return self._gradx
+
+    @property
+    def grady(self):
+        if not hasattr(self, '_grady'):
+            self._make_grad()
+        return self._grady
+
+    def _make_grad(self):
+        gradx, grady = np.gradient(self.tab2d.f)
+        # Have to chop off a row+col to use wrap.
+        gradx = gradx[:-1,:-1]
+        grady = grady[:-1,:-1]
+        gradx /= self.screen_scale
+        grady /= self.screen_scale
+        # Units of gradx, grady are nanometers per m.
+        self._gradx = galsim.LookupTable2D(self._xs, self._ys, gradx, edge_mode='wrap')
+        self._grady = galsim.LookupTable2D(self._xs, self._ys, grady, edge_mode='wrap')
+
     def advance(self):
         """Advance phase screen realization by self.time_step."""
         # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
@@ -186,6 +209,8 @@ class AtmosphericScreen(object):
         if self.alpha != 1.0:
             self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
             self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
+            if hasattr(self, '_gradx'):
+                del self._gradx, self._grady
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -240,6 +265,44 @@ class AtmosphericScreen(object):
             u, v = aper.u, aper.v
         return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta[0].tan(),
                           v + self.origin[1] + 1000*self.altitude*theta[1].tan())
+
+    def wavefront_grad(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+        """ Compute wavefront gradient of phase screen.
+
+        Gradient will be returned in units of nm / m.
+
+        @param aper     `galsim.Aperture` over which to compute wavefront.
+        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+        @param compact  If true, then only return wavefront for illuminated pixels in a
+                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
+                        return wavefront as a 2d array for the full Aperture pupil plane.
+                        [default: True]
+        @returns        2-tuple: dW/du, dW/dv
+        """
+        if compact:
+            u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        else:
+            u, v = aper.u, aper.v
+        u += self.origin[0] + 1000*self.altitude*theta[0].tan()
+        v += self.origin[1] + 1000*self.altitude*theta[1].tan()
+        return self.gradx(u, v), self.grady(u, v)
+
+    def wavefront_grad_where(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Compute wavefront gradient at a particular focal plane position at a particular time and
+        at a particular place in the field-of-view.
+
+        @param u        Horizontal focal plane coordinate in meters.
+        @param v        Vertical focal plane coordinate in meters.
+        @param t        Time since t=0 in seconds.
+        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+        """
+        if self.alpha != 1.0:
+            raise ValueError("Cannot use wavefront_grad_where with boiling atmosphere.")
+        u += -t*self.vx + 1000*self.altitude*theta[0].tan()
+        v += -t*self.vy + 1000*self.altitude*theta[1].tan()
+        return self.gradx(u, v), self.grady(u, v)
 
     def reset(self):
         """Reset phase screen back to time=0."""
