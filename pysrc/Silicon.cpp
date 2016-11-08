@@ -65,3 +65,16 @@ void pyExportSilicon()
 }
 
 } // namespace galsim
+
+
+/*
+
+Was:
+
+Silicon::Silicon (std::string inname)
+
+Is:
+
+  Silicon::Silicon (int NumVertices, int NumElec, int Nx, int Ny, int QDist, double DiffStep, double** vertex_data)
+
+*/
