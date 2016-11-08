@@ -65,8 +65,8 @@ namespace {
                      "Set the total flux to a new value")
                 .def("scaleFlux", &PhotonArray::scaleFlux, (bp::arg("scale")),
                      "Scale the total flux by a given factor")
-                .def("append", &PhotonArray::append, (bp::arg("rhs")),
-                     "Append the contents of another PhotonArray to this one.")
+                .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
+                     "Assign the contents of another PhotonArray to this one starting at istart.")
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<PhotonArray> >();
