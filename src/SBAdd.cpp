@@ -231,10 +231,11 @@ namespace galsim {
         double fluxPerPhoton = totalAbsoluteFlux / N;
 
         // Initialize the output array
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(0));
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double remainingAbsoluteFlux = totalAbsoluteFlux;
         int remainingN = N;
+        int istart = 0;  // The location in the result array where we assign the component arrays.
 
         // Get photons from each summand, using BinomialDeviate to
         // randomize distribution of photons among summands
@@ -256,7 +257,8 @@ namespace galsim {
                 // whereas the shoot() routine would have made them each nominally
                 // thisAbsoluteFlux/thisN
                 thisPA->scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
-                result->append(*thisPA);
+                result->assignAt(istart, *thisPA);
+                istart += thisN;
             }
             remainingN -= thisN;
             remainingAbsoluteFlux -= thisAbsoluteFlux;

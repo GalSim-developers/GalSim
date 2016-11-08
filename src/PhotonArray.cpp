@@ -69,20 +69,14 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::append(const PhotonArray& rhs)
+    void PhotonArray::assignAt(int istart, const PhotonArray& rhs)
     {
-        if (rhs.size()==0) return;      // Nothing needed for empty RHS.
-        int oldSize = size();
-        int finalSize = oldSize + rhs.size();
-        _x.resize(finalSize);
-        _y.resize(finalSize);
-        _flux.resize(finalSize);
-        std::vector<double>::iterator destination=_x.begin()+oldSize;
-        std::copy(rhs._x.begin(), rhs._x.end(), destination);
-        destination=_y.begin()+oldSize;
-        std::copy(rhs._y.begin(), rhs._y.end(), destination);
-        destination=_flux.begin()+oldSize;
-        std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
+        if (istart + rhs.size() > size())
+            throw std::runtime_error("Trying to assign past the end of PhotonArray");
+
+        std::copy(rhs._x.begin(), rhs._x.end(), _x.begin()+istart);
+        std::copy(rhs._y.begin(), rhs._y.end(), _y.begin()+istart);
+        std::copy(rhs._flux.begin(), rhs._flux.end(), _flux.begin()+istart);
     }
 
     void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud)

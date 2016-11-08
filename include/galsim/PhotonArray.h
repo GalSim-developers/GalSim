@@ -149,11 +149,12 @@ namespace galsim {
         void scaleXY(double scale);
 
         /**
-         * @brief Extend this array with the contents of another.
+         * @brief Assign the contents of another array to a portion of this one.
          *
-         * @param[in] rhs PhotonArray whose contents to append to this one.
+         * @param[in] istart    The starting index at which to assign the contents of rhs
+         * @param[in] rhs       PhotonArray whose contents to assign into this one
          */
-        void append(const PhotonArray& rhs);
+        void assignAt(int istart, const PhotonArray& rhs);
 
         /**
          * @brief Convolve this array with another.
