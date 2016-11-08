@@ -62,7 +62,7 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data requires ncol == 5");
             int NumPolys = Nx * Ny + 2;
             int Nv = 4 * NumVertices + 4;
-            if (GetNumpyArrayDim(array.ptr(), 1) != Nv*(NumPolys-2))
+            if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist, DiffStep, PixelSize, data);
         }

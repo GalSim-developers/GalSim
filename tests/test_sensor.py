@@ -32,7 +32,7 @@ except ImportError:
 
 @timer
 def test_silicon():
-    """Test the basic construction and use of the SiloconSensor class.
+    """Test the basic construction and use of the SiliconSensor class.
     """
 
     # Note: Use something quite small in terms of npixels so the B/F effect kicks in without
@@ -53,7 +53,7 @@ def test_silicon():
     # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
     # to setting specific parameters via constructor arguments, rather than use a file at all.
     # (Should probably enable this feature anyway...)
-    silicon = galsim.SiliconSensor('../devel/poisson/BF_256_9x9_0_Vertices', rng=rng1)
+    silicon = galsim.SiliconSensor('../devel/poisson/numvertices_4/bf.cfg','../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 160000, rng=rng1, DiffMult = 0.0)    
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
@@ -74,7 +74,7 @@ def test_silicon():
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)
     r3 = im3.calculateMomentRadius(flux=obj.flux)
-    print('Flux = %.0f:  sum        peak         radius'%obj.flux)
+    print('Flux = %.0f:  sum        peak          radius'%obj.flux)
     print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
     print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
@@ -155,6 +155,72 @@ def test_silicon():
     # We need some more sophisticated tests that this is doing the right thing, not just
     # showing some evidence for B/F.
 
+@timer
+def test_bf_slopes():
+    """Test the brighter-fatter slopes
+    with both the B-F effect and diffusion turned on and off.
+    """
+    from scipy import stats
+    simple = galsim.Sensor()
+    obj = galsim.Gaussian(flux=200000, sigma=0.3)
+    num_fluxes = 5
+    x_moments = np.zeros([num_fluxes, 3])
+    y_moments = np.zeros([num_fluxes, 3])
+    fluxes = np.zeros([num_fluxes])
+    
+    for fluxmult in range(num_fluxes):
+        rng1 = galsim.BaseDeviate(5678)
+        rng2 = galsim.BaseDeviate(5678)
+        rng3 = galsim.BaseDeviate(5678)
+        # silicon1 has diffusion turned off, silicon2 has it turned on.
+        silicon1 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng1, DiffMult = 0.0)
+        silicon2 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng2, DiffMult = 1.0)            
+
+        obj1 = obj * float(fluxmult + 1)
+        # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
+        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon1 (diffusion off)
+        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon2 (diffusion on)        
+        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
+        
+        obj1.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon1, rng=rng1)
+        obj1.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon2, rng=rng2)
+        obj1.drawImage(im3, method='phot', poisson_flux=False, sensor=simple, rng=rng3)
+        
+        print('Moments Mx, My, Mxx, Myy, Mxy for im1, flux = %f:'%obj1.flux)
+        mx, my, mxx, myy, mxy = getmoments(im1)
+        x_moments[fluxmult,0] = mxx
+        y_moments[fluxmult,0] = myy        
+        print('Moments Mx, My, Mxx, Myy, Mxy for im2, flux = %f:'%obj1.flux)
+        mx, my, mxx, myy, mxy = getmoments(im2)
+        x_moments[fluxmult,1] = mxx
+        y_moments[fluxmult,1] = myy        
+        print('Moments Mx, My, Mxx, Myy, Mxy for im3, flux = %f:'%obj1.flux)
+        mx, my, mxx, myy, mxy = getmoments(im3)
+        x_moments[fluxmult,2] = mxx
+        y_moments[fluxmult,2] = myy        
+        fluxes[fluxmult] = im1.array.max() 
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,0])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,0])    
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0    
+    np.testing.assert_almost_equal(x_slope, 1.5, decimal=0)
+    np.testing.assert_almost_equal(y_slope, 1.5, decimal=0)    
+    print('With BF turned on, diffusion off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope )) 
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,1])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,1])    
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0    
+    np.testing.assert_almost_equal(x_slope, 1.5, decimal=0)
+    np.testing.assert_almost_equal(y_slope, 1.5, decimal=0)    
+    print('With BF turned on, diffusion on, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope )) 
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,2])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,2])    
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0    
+    np.testing.assert_almost_equal(x_slope, 0.0, decimal=0)
+    np.testing.assert_almost_equal(y_slope, 0.0, decimal=0)    
+    print('With BF turned off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope )) 
+    return
 
 @timer
 def test_silicon_fft():
@@ -171,7 +237,7 @@ def test_silicon_fft():
     im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
 
     rng = galsim.BaseDeviate(5678)
-    silicon = galsim.SiliconSensor('../devel/poisson/BF_256_9x9_0_Vertices', rng=rng)
+    silicon = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng, DiffMult = 0.0)    
     simple = galsim.Sensor()
 
     obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
@@ -242,3 +308,4 @@ def test_silicon_fft():
 if __name__ == "__main__":
     test_silicon()
     test_silicon_fft()
+    test_bf_slopes()

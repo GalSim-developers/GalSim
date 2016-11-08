@@ -124,7 +124,7 @@ namespace galsim {
       if (index == 73) // Test print out of read in
         {
 	  dbg<<"Successfully reading the Pixel vertex file\n";
-	  dbg<<"line = "<<line<<std::endl;
+	  //dbg<<"line = "<<line<<std::endl;
 	  dbg<<"n = "<<n<<", i = "<<i<<", j = "<<j<<", x0 = "<<x0<<", y0 = "<<y0
 	     <<", th = "<<th<<", x1 = "<<x1<<", y1 = "<<y1<<std::endl;
         }
@@ -162,7 +162,7 @@ namespace galsim {
   {
     // This builds the polygon under test based on the charge in the nearby pixels
     // and tests to see if the delivered position is inside it.
-    // (ix,iy) is the pixel being tested, and (x,y) is the coordiante of the
+    // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
     // photon within the pixel, with (0,0) in the lower left
 
     int TestPoly, EmptyPoly, i, j, ii, jj, chargei, chargej, n;
@@ -171,7 +171,9 @@ namespace galsim {
     double dx, dy;
     // The term zfactor decreases the pixel shifts as we get closer to the bottom
     // It is an empirical fit to the Poisson solver simulations, and only matters
-    // when we get quite close to the bottom.
+    // when we get quite close to the bottom.  This could be more accurate by making
+    // the Vertices files have an additional look-up variable (z), but this doesn't
+    // seem necessary at this point
 
     double zfit = 12.0;
     double zfactor = 0.0;
@@ -193,10 +195,11 @@ namespace galsim {
     miny = target.getYMin();
     maxx = target.getXMax();
     maxy = target.getYMax();
+#ifdef DEBUGLOGGING
     xdbg<<"minx = "<<minx<<", miny = "<<miny<<", maxx = "<<maxx<<", maxy = "<<maxy<<std::endl;
     xdbg<<"ix = "<<ix<<", iy = "<<iy<<", target(ix,iy) = "<<target(ix,iy)
         <<", x = "<<x<<", y = "<<y<<std::endl;
-
+#endif
     for (i=NxCenter-_QDist; i<NxCenter+_QDist+1; i++)
     {
         for (j=NyCenter-_QDist; j<NyCenter+_QDist+1; j++)
@@ -250,12 +253,14 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
     int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
     int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
     int n=0;
-    double zconv = 95.0; // Z coordinate of photoconversion in microns
-                         // Will add more detail later by drawing this from a distribution
-                         // once we have wavelength information.
+    double zconv = 95.0;
+    // Z coordinate of photoconversion in microns
+    // TODO: Calculate zconv as a function of wavelength and angle once these are available in
+    // PhotonArray
     GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
     double DiffStep; // Mean diffusion step size in microns
+    // This simply ratios the calculated _DiffStep by the starting z coordinate
     if (zconv <= 10.0)
     { DiffStep = 0.0; }
     else
@@ -270,10 +275,11 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                  " undefined Bounds");
 
     // Factor to turn flux into surface brightness in an Image pixel
+#ifdef DEBUGLOGGING
     dbg<<"In Silicon::accumulate\n";
     dbg<<"bounds = "<<b<<std::endl;
     dbg<<"total nphotons = "<<photons.size()<<std::endl;
-
+#endif
     double addedFlux = 0.;
     double Irr = 0.;
     double Irr0 = 0.;
@@ -331,8 +337,8 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
         }
         if (!FoundPixel)
         {
-            dbg<<"Not found in any pixel\n";
-            dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
+	  xdbg<<"Not found in any pixel\n";
+	  xdbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
             // We should never arrive here, since this means we didn't find it in the undistorted
             // pixel or any of the neighboring pixels.  However, sometimes (about 0.01% of the
             // time) we do arrive here due to roundoff error of the pixel boundary.  When this
