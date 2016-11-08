@@ -1702,7 +1702,7 @@ class GSObject(object):
             thisN = min(maxN, Nleft)
 
             try:
-                phot_array = self.SBProfile.shoot(thisN, ud);
+                phot_array = self.shoot(thisN, ud)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1718,6 +1718,11 @@ class GSObject(object):
             Nleft -= thisN;
 
         return added_flux;
+
+
+    def shoot(self, N, ud):
+        """Shoot photons into a PhotonArray."""
+        return self.SBProfile.shoot(N, ud)
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
