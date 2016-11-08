@@ -53,7 +53,7 @@ Atmosphere
 """
 
 from itertools import chain
-from builtins import range, zip
+from builtins import range
 
 import numpy as np
 import galsim
@@ -814,38 +814,38 @@ class PhaseScreenList(object):
         @param circular_pupil      Adopt a circular pupil?  [default: True]
         @param obscuration         Linear dimension of central obscuration as fraction of aperture
                                    linear dimension. [0., 1.).  [default: 0.0]
-        @param nstruts             Number of radial support struts to add to the central obscuration.
-                                   [default: 0]
+        @param nstruts             Number of radial support struts to add to the central
+                                   obscuration. [default: 0]
         @param strut_thick         Thickness of support struts as a fraction of aperture diameter.
                                    [default: 0.05]
-        @param strut_angle         Angle made between the vertical and the strut starting closest to it,
-                                   defined to be positive in the counter-clockwise direction; must be an
-                                   Angle instance. [default: 0. * galsim.degrees]
+        @param strut_angle         Angle made between the vertical and the strut starting closest to
+                                   it, defined to be positive in the counter-clockwise direction;
+                                   must be an Angle instance. [default: 0. * galsim.degrees]
         @param oversampling        Optional oversampling factor *in the image plane* for the PSF
                                    eventually constructed using this Aperture.  Setting
                                    `oversampling < 1` will produce aliasing in the PSF (not good).
                                    [default: 1.0]
         @param pad_factor          Additional multiple by which to extend the PSF image to avoid
                                    folding.  [default: 1.0]
-        @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the pupil
-                                   plane image, to be used instead of generating one based on the
-                                   obscuration and strut parameters.  Note that if the image is saved as
-                                   unsigned integers, you will get a warning about conversion to floats,
-                                   which is harmless. [default: None]
-        @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil plane
-                                   (positive in the counter-clockwise direction).  Must be an Angle
-                                   instance. [default: 0. * galsim.degrees]
+        @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the
+                                   pupil plane image, to be used instead of generating one based on
+                                   the obscuration and strut parameters.  Note that if the image is
+                                   saved as unsigned integers, you will get a warning about
+                                   conversion to floats, which is harmless. [default: None]
+        @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil
+                                   plane (positive in the counter-clockwise direction).  Must be an
+                                   Angle instance. [default: 0. * galsim.degrees]
         @param pupil_plane_scale   Sampling interval in meters to use for the pupil plane array.  In
                                    most cases, it's a good idea to leave this as None, in which case
                                    GalSim will attempt to find a good value automatically.  The
-                                   exception is when specifying the pupil arrangement via an image, in
-                                   which case this keyword can be used to indicate the sampling of that
-                                   image.  See also `pad_factor` for adjusting the pupil sampling scale.
-                                   [default: None]
-        @param pupil_plane_size    Size in meters to use for the pupil plane array.  In most cases, it's
-                                   a good idea to leave this as None, in which case GalSim will attempt
-                                   to find a good value automatically.  See also `oversampling` for
-                                   adjusting the pupil size.  [default: None]
+                                   exception is when specifying the pupil arrangement via an image,
+                                   in which case this keyword can be used to indicate the sampling
+                                   of that image.  See also `pad_factor` for adjusting the pupil
+                                   sampling scale. [default: None]
+        @param pupil_plane_size    Size in meters to use for the pupil plane array.  In most cases,
+                                   it's a good idea to leave this as None, in which case GalSim will
+                                   attempt to find a good value automatically.  See also
+                                   `oversampling` for adjusting the pupil size.  [default: None]
         """
         # Assemble theta as an iterable over 2-tuples of Angles.
         single = False
