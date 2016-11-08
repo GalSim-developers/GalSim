@@ -39,14 +39,10 @@ namespace galsim
     class Silicon
     {
     public:
-        Polygon** polylist;
-        Point* testpoint;
-        double DiffStep, collXmin, collXwidth, collYmin, collYwidth;
-        int Nx, Ny, Nv, NumVertices, NumElec;
         Silicon() {};
-        Silicon(std::string); // Constructor
+        Silicon (int NumVertices, int NumElec, int Nx, int Ny, int QDist, double DiffStep,
+                 double PixelSize, double* vertex_data);
         ~Silicon();  // Destructor
-        double random_gaussian(void);
 
         template <typename T>
         bool InsidePixel(int ix, int iy, double x, double y, double zconv,
@@ -55,6 +51,12 @@ namespace galsim
         template <typename T>
         double accumulate(const PhotonArray& photons, UniformDeviate ud,
                           ImageView<T> target) const;
+    private:
+        double random_gaussian(void);
+        Polygon** _polylist;
+        Point* _testpoint;
+        int _NumVertices, _NumElect, _Nx, _Ny, _Nv;
+        double _QDist, _DiffStep, _PixelSize; // _collXmin, _collXwidth, _collYmin, _collYwidth;
     };
 }
 
