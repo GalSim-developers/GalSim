@@ -68,17 +68,6 @@ namespace galsim {
          */
         int size() const { return _x.size(); }
 
-        /** @brief reserve space in arrays for future elements
-         *
-         * @param[in] N number of elements to reserve space for.
-         */
-        void reserve(int N)
-        {
-            _x.reserve(N);
-            _y.reserve(N);
-            _flux.reserve(N);
-        }
-
         /**
          * @brief Set characteristics of a photon
          *

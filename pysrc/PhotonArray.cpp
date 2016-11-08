@@ -50,8 +50,6 @@ namespace {
                 .def(bp::init<int>(bp::args("N")))
                 .def("size", &PhotonArray::size,
                      "Return the number of photons")
-                .def("reserve", &PhotonArray::reserve, (bp::arg("N")),
-                     "Reserve space for N photons")
                 .def("setPhoton", &PhotonArray::setPhoton,
                      (bp::arg("i"), bp::arg("x"), bp::arg("y"), bp::arg("flux")),
                      "Set x,y,flux for photon number i")
