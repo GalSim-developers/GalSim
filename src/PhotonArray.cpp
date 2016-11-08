@@ -26,17 +26,29 @@
 #include <numeric>
 #include "PhotonArray.h"
 
+#ifdef DEBUGLOGGING
+#include <vector>
+#endif
+
 namespace galsim {
 
-    PhotonArray::PhotonArray(
-        std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux) :
-        _is_correlated(false)
+    template <typename T>
+    struct ArrayDeleter {
+        void operator()(T* p) const { delete [] p; }
+    };
+
+    PhotonArray::PhotonArray(int N) : _x(N), _y(N), _flux(N), _is_correlated(false)
+    {}
+
+    void PhotonArray::allocateAngleVectors()
     {
-        if (vx.size() != vy.size() || vx.size() != vflux.size())
-            throw std::runtime_error("Size mismatch of input vectors to PhotonArray");
-        _x = vx;
-        _y = vy;
-        _flux = vflux;
+        if (_dxdz.size() != size()) _dxdz.resize(size());
+        if (_dydz.size() != size()) _dydz.resize(size());
+    }
+
+    void PhotonArray::allocateLambdaVector()
+    {
+        if (_lambda.size() != size()) _lambda.resize(size());
     }
 
     double PhotonArray::getTotalFlux() const
@@ -54,19 +66,16 @@ namespace galsim {
 
     void PhotonArray::scaleFlux(double scale)
     {
-        for (std::vector<double>::size_type i=0; i<_flux.size(); i++) {
-            _flux[i] *= scale;
-        }
+        std::transform(_flux.begin(), _flux.end(), _flux.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
     }
 
     void PhotonArray::scaleXY(double scale)
     {
-        for (std::vector<double>::size_type i=0; i<_x.size(); i++) {
-            _x[i] *= scale;
-        }
-        for (std::vector<double>::size_type i=0; i<_y.size(); i++) {
-            _y[i] *= scale;
-        }
+        std::transform(_x.begin(), _x.end(), _x.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
+        std::transform(_y.begin(), _y.end(), _y.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
     }
 
     void PhotonArray::assignAt(int istart, const PhotonArray& rhs)
@@ -77,7 +86,24 @@ namespace galsim {
         std::copy(rhs._x.begin(), rhs._x.end(), _x.begin()+istart);
         std::copy(rhs._y.begin(), rhs._y.end(), _y.begin()+istart);
         std::copy(rhs._flux.begin(), rhs._flux.end(), _flux.begin()+istart);
+        if (rhs._dxdz.size() > 0) {
+            allocateAngleVectors();
+            std::copy(rhs._dxdz.begin(), rhs._dxdz.end(), _dxdz.begin()+istart);
+            std::copy(rhs._dydz.begin(), rhs._dydz.end(), _dydz.begin()+istart);
+        }
+        if (rhs._lambda.size() > 0) {
+            allocateLambdaVector();
+            std::copy(rhs._lambda.begin(), rhs._lambda.end(), _lambda.begin()+istart);
+        }
     }
+
+    // Helper for multiplying x * y * N
+    struct MultXYScale
+    {
+        MultXYScale(double scale) : _scale(scale) {}
+        double operator()(double x, double y) { return x * y * _scale; }
+        double _scale;
+    };
 
     void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud)
     {
@@ -86,21 +112,15 @@ namespace galsim {
         if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
 
         // If neither or only one is correlated, we are ok to just use them in order.
-        int N = size();
-        if (rhs.size() != N)
+        if (rhs.size() != size())
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         // Add x coordinates:
-        std::vector<double>::iterator lIter = _x.begin();
-        std::vector<double>::const_iterator rIter = rhs._x.begin();
-        for ( ; lIter!=_x.end(); ++lIter, ++rIter) *lIter += *rIter;
+        std::transform(_x.begin(), _x.end(), rhs._x.begin(), _x.begin(), std::plus<double>());
         // Add y coordinates:
-        lIter = _y.begin();
-        rIter = rhs._y.begin();
-        for ( ; lIter!=_y.end(); ++lIter, ++rIter) *lIter += *rIter;
+        std::transform(_y.begin(), _y.end(), rhs._y.begin(), _y.begin(), std::plus<double>());
         // Multiply fluxes, with a factor of N needed:
-        lIter = _flux.begin();
-        rIter = rhs._flux.begin();
-        for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
+        std::transform(_flux.begin(), _flux.end(), rhs._flux.begin(), _flux.begin(),
+                       MultXYScale(size()));
 
         // If rhs was correlated, then the output will be correlated.
         // This is ok, but we need to mark it as such.
@@ -141,8 +161,8 @@ namespace galsim {
 
     void PhotonArray::takeYFrom(const PhotonArray& rhs)
     {
+        assert(rhs.size()==size());
         int N = size();
-        assert(rhs.size()==N);
         for (int i=0; i<N; i++) {
             _y[i] = rhs._x[i];
             _flux[i] *= rhs._flux[i]*N;
