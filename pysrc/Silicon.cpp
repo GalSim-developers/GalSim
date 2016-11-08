@@ -25,6 +25,7 @@
 
 #include "Silicon.h"
 #include "Random.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -43,11 +44,37 @@ namespace {
                 ;
         }
 
+
+        static Silicon* MakeSilicon(
+            int NumVertices, int NumElect, int Nx, int Ny, int QDist, double DiffStep,
+            double PixelSize, const bp::object& array)
+        {
+            double* data = 0;
+            boost::shared_ptr<double> owner;
+            int step = 0;
+            int stride = 0;
+            CheckNumpyArray(array, 2, false, data, owner, step, stride);
+            if (step != 1)
+                throw std::runtime_error("Silicon vertex_data requires step == 1");
+            if (stride != 5)
+                throw std::runtime_error("Silicon vertex_data requires stride == 5");
+            if (GetNumpyArrayDim(array.ptr(), 1) != 5)
+                throw std::runtime_error("Silicon vertex_data requires ncol == 5");
+            int NumPolys = Nx * Ny + 2;
+            int Nv = 4 * NumVertices + 4;
+            if (GetNumpyArrayDim(array.ptr(), 1) != Nv*(NumPolys-2))
+                throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
+            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist, DiffStep, PixelSize, data);
+        }
+
         static void wrap()
         {
             bp::class_<Silicon> pySilicon("Silicon", bp::no_init);
             pySilicon
-                .def(bp::init<std::string>(bp::args("config_file")))
+                .def("__init__", bp::make_constructor(
+                        &MakeSilicon, bp::default_call_policies(),
+                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist", "DiffStep",
+                                  "PixelSize", "vertex_data"))))
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<Silicon> >();
