@@ -61,6 +61,7 @@ New Features
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
 - Added support for reading in of unsigned int Images (#715)
+- Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw random wavelengths from an SED. (#822)
 
 
 New config features
