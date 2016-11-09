@@ -360,6 +360,54 @@ def test_table2d():
     except ImportError:
         print('The assert_raises tests require nose')
 
+@timer
+def test_table2d_gradient():
+    """Check LookupTable2D gradient function
+    """
+    # Same function as the above test
+    def f(x_, y_):
+        return np.sin(x_) * np.cos(y_) + x_
+    # The gradient is analytic for this:
+    def dfdx(x_, y_):
+        return np.cos(x_) * np.cos(y_) + 1.
+    def dfdy(x_, y_):
+        return -np.sin(x_) * np.sin(y_)
+
+    x = np.linspace(0.1, 3.3, 250)
+    y = np.linspace(0.2, 10.4, 750)
+    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    z = f(xx, yy)
+
+    tab2d = galsim.LookupTable2D(x, y, z)
+
+    newx = np.linspace(0.2, 3.1, 45)
+    newy = np.linspace(0.3, 10.1, 85)
+    newyy, newxx = np.meshgrid(newy, newx)
+
+    # Check single value functionality.
+    x1,y1 = 1.1, 4.9
+    np.testing.assert_almost_equal(tab2d.gradient(x1,y1), (dfdx(x1,y1), dfdy(x1,y1)), decimal=2)
+
+    # Check that the gradient function comes out close to the analytic derivatives.
+    ref_dfdx = dfdx(newxx, newyy)
+    ref_dfdy = dfdy(newxx, newyy)
+    test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+    np.testing.assert_almost_equal(test_dfdx, ref_dfdx, decimal=2)
+    np.testing.assert_almost_equal(test_dfdy, ref_dfdy, decimal=2)
+
+    # Try a simpler interpolation function.  Derivatives should be exact.
+    def f(x_, y_):
+        return 2*x_ + 3*y_
+
+    z = f(xx, yy)
+    tab2d = galsim.LookupTable2D(x, y, z)
+    test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+    np.testing.assert_almost_equal(test_dfdx, 2., decimal=7)
+    np.testing.assert_almost_equal(test_dfdy, 3., decimal=7)
+
+    # Check single value functionality.
+    np.testing.assert_almost_equal(tab2d.gradient(x1,y1), (2., 3.))
+
 
 @timer
 def test_ne():
@@ -384,4 +432,5 @@ if __name__ == "__main__":
     test_log()
     test_roundoff()
     test_table2d()
+    test_table2d_gradient()
     test_ne()

@@ -489,6 +489,29 @@ class LookupTable2D(object):
         elif self.edge_mode == 'constant':
             return self._call_constant(x, y)
 
+    def gradient(self, x, y):
+        """Calculate the gradient of the function at an arbitrary point or points.
+
+        @param x        Either a single x value or an array of x values at which to compute
+                        the gradient.
+        @param y        Either a single y value or an array of y values at which to compute
+                        the gradient.
+
+        @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
+        values) or numpy arrays.
+        """
+        try:
+            xx = float(x)
+            yy = float(y)
+            return self.table.gradient(xx,yy)
+        except:
+            if x.shape != y.shape:
+                raise ValueError("x and y must be the same length/shape")
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(x)
+            self.table.gradientMany(x.ravel(),y.ravel(),dfdx.ravel(),dfdy.ravel())
+            return dfdx, dfdy
+
     def __str__(self):
         return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
                 "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r, edge_mode=%r)"%(

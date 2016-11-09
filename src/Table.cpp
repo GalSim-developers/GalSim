@@ -17,6 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
+//#define DEBUGLOGGING
+
 #include "galsim/IgnoreWarnings.h"
 
 #include "TMV.h"
@@ -344,10 +346,10 @@ namespace galsim {
     void Table2D<V,A>::interpMany(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
-        for (int k=0; k<N; k++, valvec++) {
+        for (int k=0; k<N; k++) {
             i = xargs.upperIndex(xvec[k]);
             j = yargs.upperIndex(yvec[k]);
-            *valvec = (this->*interpolate)(xvec[k], yvec[k], i, j);
+            *valvec++ = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
 
@@ -360,10 +362,41 @@ namespace galsim {
         int i, j;
         for (int outi=0; outi<outNx; outi++) {
             i = xargs.upperIndex(xvec[outi]);
-            for (int outj=0; outj<outNy; outj++, valvec++) {
+            for (int outj=0; outj<outNy; outj++) {
                 j = yargs.upperIndex(yvec[outj]);
-                *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
+                *valvec++ = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
+        }
+    }
+
+    /// Estimate many df/dx and df/dy values
+    template <class V, class A>
+    void Table2D<V,A>::gradient(const A x, const A y, V& dfdx, V& dfdy) const
+    {
+        // Note: This is really only accurate for linear interpolation.
+        // The derivative for floor, ceil, nearest interpolation doesn't really make
+        // much sense, so this is probably what the user would want.  However, if we
+        // eventually implement spline interpolation for Table2D, then this function will
+        // need to be revisited.
+        int i = xargs.upperIndex(x);
+        int j = yargs.upperIndex(y);
+        A dx = xargs[i] - xargs[i-1];
+        A dy = yargs[j] - yargs[j-1];
+        V f00 = vals[(i-1)*Ny+j-1];
+        V f01 = vals[(i-1)*Ny+j];
+        V f10 = vals[i*Ny+j-1];
+        V f11 = vals[i*Ny+j];
+        dfdx = (f11 + f10 - f01 - f00) / (2.*dx);
+        dfdy = (f11 - f10 + f01 - f00) / (2.*dy);
+    }
+
+    /// Estimate many df/dx and df/dy values
+    template <class V, class A>
+    void Table2D<V,A>::gradientMany(const A* xvec, const A* yvec, V* dfdxvec, V* dfdyvec,
+                                    int N) const
+    {
+        for (int k=0; k<N; ++k) {
+            gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
         }
     }
 
