@@ -1148,17 +1148,18 @@ class PhaseScreenPSF(GSObject):
         # Randomly pick aperture locations (discretely for now)
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
-        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * N).astype(int)
+        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * len(u)).astype(int)
         u = u[pick]
-        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * N).astype(int)
+        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * len(v)).astype(int)
         v = v[pick]
         x, y = self.screen_list.wavefront_grad_where(u, v, arrival_times, self.theta)
         x *= 1.e-9 * 206265
         y *= 1.e-9 * 206265
 
         photon_array = galsim._galsim.PhotonArray(N)
-        for i, (x_, y_) in enumerate(zip(x, y)):
-            photon_array.setPhoton(i, x_, y_, 1.0)
+        photon_array.getXArray()[:] = x
+        photon_array.getYArray()[:] = y
+        photon_array.getFluxArray()[:] = 1.0
         return photon_array
 
 
