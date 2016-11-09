@@ -123,6 +123,8 @@ namespace {
                      "Scale the total flux by a given factor")
                 .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
                      "Assign the contents of another PhotonArray to this one starting at istart.")
+                .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
+                     "Convolve this PhotonArray with another")
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<PhotonArray> >();
