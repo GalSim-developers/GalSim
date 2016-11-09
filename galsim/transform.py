@@ -197,6 +197,16 @@ class Transformation(galsim.GSObject):
             s += ' * %s'%self.flux_ratio
         return s
 
+    def shoot(self, N, ud):
+        photon_array = self.original.shoot(N, ud)
+        x = photon_array.getXArray()
+        y = photon_array.getYArray()
+        new = np.dot(self.jac, np.vstack([x, y]))
+        photon_array.getXArray()[:] = new[0, :] + self.offset.x
+        photon_array.getYArray()[:] = new[1, :] + self.offset.y
+        photon_array.scaleFlux(np.abs(np.linalg.det(self.jac))*self.flux_ratio)
+        return photon_array
+
     def __getstate__(self):
         # While the SBProfile should be picklable, it is better to reconstruct it from the
         # original object, which will pickle better.  The SBProfile is only picklable via its

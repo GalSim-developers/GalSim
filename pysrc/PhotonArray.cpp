@@ -125,6 +125,8 @@ namespace {
                      "Assign the contents of another PhotonArray to this one starting at istart.")
                 .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
                      "Convolve this PhotonArray with another")
+                .def("setCorrelated", &PhotonArray::setCorrelated, (bp::arg("new_val")),
+                     "Declare that the photons in this array are correlated.")
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<PhotonArray> >();

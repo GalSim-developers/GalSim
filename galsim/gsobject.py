@@ -1718,9 +1718,23 @@ class GSObject(object):
         return added_flux
 
 
-    def shoot(self, N, ud):
-        """Shoot photons into a PhotonArray."""
-        return self.SBProfile.shoot(N, ud)
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+        return self.SBProfile.shoot(n_photons, ud)
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,

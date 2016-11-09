@@ -26,7 +26,6 @@ AutoCorrelation = convolution of a profile by its reflection
 FourierSqrt = Fourier-space square root of a profile
 """
 
-from past.builtins import xrange
 import numpy as np
 
 import galsim
@@ -174,6 +173,62 @@ class Sum(galsim.GSObject):
         str_list = [ str(obj) for obj in self.obj_list ]
         return '(' + ' + '.join(str_list) + ')'
         #return 'galsim.Sum([%s])'%', '.join(str_list)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
+        fluxPerPhoton = remainingAbsoluteFlux / n_photons
+
+        # Initialize the output array
+        result = galsim._galsim.PhotonArray(n_photons)
+
+        remainingN = n_photons
+        istart = 0  # The location in the result array where we assign the component arrays.
+
+        # Get photons from each summand, using BinomialDeviate to randomize
+        # the distribution of photons among summands
+        for i, obj in enumerate(self.obj_list):
+            thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
+
+            # How many photons to shoot from this summand?
+            thisN = remainingN  # All of what's left, if this is the last summand...
+            if i < len(self.obj_list)-1:
+                # otherwise, allocate a randomized fraction of the remaining photons to summand.
+                bd = galsim.BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                thisN = bd()
+            if thisN > 0:
+                thisPA = obj.shoot(thisN, ud)
+                # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+                # whereas the shoot() routine would have made them each nominally
+                # thisAbsoluteFlux/thisN
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
+                result.assignAt(istart, thisPA)
+                istart += thisN
+            remainingN -= thisN
+            remainingAbsoluteFlux -= thisAbsoluteFlux
+            if remainingN <= 0: break
+            if remainingAbsoluteFlux <= 0: break
+
+        # This process produces correlated photons, so mark the resulting array as such.
+        if len(self.obj_list) > 1:
+            result.setCorrelated(True)
+
+        return result
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -414,6 +469,32 @@ class Convolution(galsim.GSObject):
         s += ')'
         return s
 
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        photon_array = self._obj_list[0].shoot(n_photons, ud)
+        # It may be necessary to shuffle when convolving because we do not have a
+        # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
+        # both have their negative ones at the end.
+        # However, this decision is now made by the convolve method.
+        for obj in self._obj_list[1:]:
+            photon_array.convolve(obj.shoot(n_photons, ud), ud)
+        return photon_array
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -645,6 +726,27 @@ class AutoConvolution(galsim.GSObject):
         s += ')'
         return s
 
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        photon_array = self._orig_obj.shoot(n_photons, ud)
+        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
+        return photon_array
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -782,6 +884,33 @@ class AutoCorrelation(galsim.GSObject):
             s += ', real_space=True'
         s += ')'
         return s
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        result = self._orig_obj.shoot(n_photons, ud)
+        result2 = self._orig_obj.shoot(n_photons, ud)
+
+        # Flip sign of (x, y) in one of the results
+        result2.getXArray()[:] *= -1
+        result2.getYArray()[:] *= -1
+
+        result.convolve(result2, ud)
+        return result
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -944,7 +1073,7 @@ class RandomWalk(Sum):
     -------
 
     This class inherits from galsim.Sum. Additional methods are
-    
+
         calculateHLR:
             Calculate the actual half light radius of the generated points
 
@@ -1065,7 +1194,7 @@ class RandomWalk(Sum):
         sigma=self._gaussian_sigma
         gsparams=self._input_gsparams
         fluxper=self._flux/self._npoints
-        
+
         for p in points:
             g = galsim._galsim.SBGaussian(
                 sigma=sigma,
@@ -1159,5 +1288,3 @@ class RandomWalk(Sum):
             gsparams=repr(self._input_gsparams),
         )
         return rep
-
-
