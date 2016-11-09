@@ -219,14 +219,36 @@ class AtmosphericScreen(object):
         @returns   The actual amount of time updated, which will differ from `dt` when `dt` is not a
                    multiple of self.time_step.
         """
-        if dt < 0:
-            raise ValueError("Cannot advance phase screen backwards in time.")
-        _nstep = int(np.round(dt/self.time_step))
+        if dt < 0 and self.alpha != 1:
+            raise ValueError("Cannot advance phase screen with alpha != 1 backwards in time.")
+        _nstep = int(np.round(abs(dt)/self.time_step))
         if _nstep == 0:
             _nstep = 1
         for i in range(_nstep):
-            self.advance()
-        return _nstep*self.time_step  # return the time *actually* advanced
+            if dt > 0:
+                self.advance()
+            else:
+                self.rewind()
+        return np.sign(dt)*_nstep*self.time_step  # return the time *actually* advanced
+
+    def rewind(self):
+        """Rewind phase screen realization by self.time_step."""
+        if self.alpha != 1.0:
+            raise TypeError("Cannot rewind phase screen with alpha != 1.0")
+        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
+        # moving the screen with the wind.
+        self.origin += (self.vx*self.time_step, self.vy*self.time_step)
+
+    def rewind_by(self, dt):
+        """Rewind phase screen by specified amount of time.
+
+        @param dt  Amount of time in seconds by which to rewind the screen.
+        @returns   The actual amount of time rewound, which will differ from `dt` when `dt` is not a
+                   multiple of self.time_step.
+        """
+        if self.alpha != 1:
+            raise ValueError("Cannot rewind phase screen with alpha != 1 backwards in time.")
+        return self.advance_by(-dt)
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.

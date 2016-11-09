@@ -115,6 +115,13 @@ def test_phase_screen_list():
     do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x.wavefront(aper).sum())
 
+    # Check that can't rewind a screen with alpha != 1.0
+    try:
+        np.assert_raises(ar1.rewind())
+        np.assert_raises(ar1.rewind_by(1))
+    except:
+        pass
+
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
     assert ar1 == ar2
@@ -245,6 +252,15 @@ def test_frozen_flow():
     wf1 = screen.wavefront(aper, theta=(45*galsim.degrees, 0*galsim.degrees))
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
+
+    # We should be able to rewind too.
+    screen.rewind()  # 0.01
+    screen.rewind()  # 0.02
+    screen.rewind_by(t-0.02)  # and the rest.
+
+    wf2 = screen.wavefront(aper)
+
+    np.testing.assert_array_almost_equal(wf0, wf2, 5, "Flow is not frozen")
 
 
 @timer

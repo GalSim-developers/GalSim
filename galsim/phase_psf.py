@@ -755,6 +755,24 @@ class PhaseScreenList(object):
                 pass
         return out
 
+    def rewind(self):
+        """Rewind each phase screen in list by self.time_step."""
+        for layer in self:
+            try:
+                layer.rewind()
+            except AttributeError:
+                # Time indep phase screen.
+                pass
+
+    def rewind_by(self, dt):
+        """Rewind each phase screen in list by specified amount of time.
+
+        @param dt  Amount of time in seconds by which to rewind the screens.
+        @returns   The actual amount of time rewound, which can potentially (though not necessarily)
+                   differ from `dt` when `dt` is not a multiple of self.time_step.
+        """
+        return self.advance_by(-dt)
+
     def reset(self):
         """Reset phase screens back to time=0."""
         for layer in self:
