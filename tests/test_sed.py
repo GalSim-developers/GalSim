@@ -550,7 +550,8 @@ def test_SED_sampleWavelength():
 
     sed  = galsim.SED(galsim.LookupTable([1,2,3,4,5], [0.,1.,0.5,1.,0.]),
                       wave_type='nm', flux_type='fphotons')
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'), 'nm')
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'), 
+                               'nm')
     sedbp = sed*bandpass
 
     out = sed.sampleWavelength(3,None)
@@ -573,8 +574,10 @@ def test_SED_sampleWavelength():
     np.testing.assert_equal(len(sed.deviate),2,"Unexpected number of SED deviates.")
     np.testing.assert_equal(len(out),1e3,"Unexpected number of SED samples.")
 
-    np.testing.assert_equal(np.sum(out > sedbp.red_limit),0,"SED sample outside of function bounds.")
-    np.testing.assert_equal(np.sum(out < sedbp.blue_limit),0,"SED sample outside of function bounds.")
+    np.testing.assert_equal(np.sum(out > sedbp.red_limit),0,
+                            "SED sample outside of function bounds.")
+    np.testing.assert_equal(np.sum(out < sedbp.blue_limit),0,
+                            "SED sample outside of function bounds.")
 
     out2 = sed.sampleWavelength(1e3,bandpass,seed=seed,npoints=512)
     np.testing.assert_equal(len(sed.deviate),3,"Unexpected number of SED deviates.")
