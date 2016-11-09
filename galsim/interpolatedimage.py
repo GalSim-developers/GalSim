@@ -647,7 +647,7 @@ class InterpolatedKImage(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param real_kimage      Optionally, rather than provide kimage, you may provide the real
-                            and imaginarry parts separately.  These separate real-valued images
+                            and imaginary parts separately.  These separate real-valued images
                             may be strings, in which case they refer to FITS files from which
                             to read the images. [default: None]
     @param imag_kimage      The imaginary image corresponding to real_kimage. [default: None]
