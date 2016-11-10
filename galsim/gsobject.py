@@ -1663,8 +1663,7 @@ class GSObject(object):
             else: poisson_flux = False
 
         # Check that either n_photons is set to something or flux is set to something
-        if (n_photons == 0. and self.getFlux() == 1.
-            and area == 1. and exptime == 1.): # pragma: no cover
+        if n_photons == 0. and self.getFlux() == 1.:
             import warnings
             warnings.warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "
