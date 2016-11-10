@@ -20,7 +20,8 @@ import numpy as np
 import galsim
 import os
 
-def getPSF(approximate_spider=False, no_spider=False, gsparams=None, **kwargs):
+def getPSF(approximate_spider=False, no_spider=False, gsparams=None, highres=False, strut_thick=None,
+           im_size=2048, **kwargs):
     """
     Get a PSF for LSST.  Currently does only the basics, keeps a lot of information locally that
     should eventually go in __init__.py.  Does not attempt to use camera geometry to propagate
@@ -29,18 +30,29 @@ def getPSF(approximate_spider=False, no_spider=False, gsparams=None, **kwargs):
     """
     diam = 8.36 # m (clear area)
     obscuration = 5.1/diam # linear obscuration
-    pupil_plane_im = os.path.join(galsim.meta_data.share_dir, "lsst_spider_2048.fits.gz")
-    pupil_plane_scale = diam / 2048. # for a 2048 x 2048 image
+    pupil_plane_im = os.path.join(galsim.meta_data.share_dir, "lsst_spider_%d.fits.gz"%im_size)
+    pupil_plane_scale = diam / float(im_size) # for the images from Aaron Roodman
     nstruts = 4 # when doing approximate calculation
+    strut_angle = 45.*galsim.degrees # when doing approximate calculation
+    if strut_thick is None:
+        strut_thick = 0.0957 # 0.8 meter thickness with 8.36 meter aperture
 
     if approximate_spider:
         psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration, nstruts=nstruts,
-                                gsparams=gsparams, strut_angle=45.*galsim.degrees, **kwargs)
+                                gsparams=gsparams, strut_angle=strut_angle, strut_thick=strut_thick,
+                                **kwargs)
     elif no_spider:
         psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration, gsparams=gsparams,
                                 **kwargs)
     else:
-        psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration,
-                                pupil_plane_im=pupil_plane_im, pupil_plane_scale=pupil_plane_scale,
-                                gsparams=gsparams, **kwargs)
+        if 'pupil_plane_im' not in kwargs.keys():
+            print 'ppi not in kwargs!'
+            psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration,
+                                    pupil_plane_im=pupil_plane_im, pupil_plane_scale=pupil_plane_scale,
+                                    gsparams=gsparams, **kwargs)
+        else:
+            print 'ppi in kwargs!'
+            psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration,
+                                    pupil_plane_scale=pupil_plane_scale,
+                                    gsparams=gsparams, **kwargs)
     return psf
