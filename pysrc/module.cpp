@@ -64,6 +64,7 @@ namespace galsim {
     void pyExportInterpolant();
     void pyExportCorrelationFunction();
     void pyExportCDModel();
+    void pyExportSBDeltaFunction();
 
     namespace hsm {
         void pyExportHSM();
@@ -113,4 +114,5 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportTable();
     galsim::pyExportTable2D();
     galsim::bessel::pyExportBessel();
+    galsim::pyExportSBDeltaFunction();
 }
