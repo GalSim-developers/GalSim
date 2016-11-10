@@ -818,6 +818,52 @@ class SED(object):
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit) / flux
 
+    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=256):
+        """ Sample a number of random wavelength values from the SED, possibly as observed through
+        a bandpass.
+
+        @param nphotons  Number of samples (photons) to randomly draw.
+        @param bandpass  A Bandpass object representing a filter, or None to sample over the full 
+                         SED wavelength range.
+        @param rng       If provided, a random number generator that is any kind of BaseDeviate 
+                         object. If `rng` is None, one will be automatically created, using the 
+                         time as a seed. [default: None]
+        @param npoints   Number of points DistDeviate should use for its internal interpolation
+                         tables. [default: 256]
+        """
+        if int(nphotons) != nphotons:
+            raise TypeError("'nphotons' must be integer type")
+        nphotons=int(nphotons)
+
+        if bandpass is None:
+            sed = self
+        else:
+            sed = self * bandpass
+
+        # Speed up the integration by skipping the overhead of __call__
+        sed(sed.red_limit)
+        a = 1/(1.0 + sed.redshift)
+        fn = lambda x: sed._fast_spec(a*x)
+
+        # Create a lookup dict for storing the deviate (save construction time)
+        if not hasattr(self,'deviate'):
+            self.deviate = dict()
+
+        key = (bandpass,npoints)
+        try:
+            dev = self.deviate[key]
+        except KeyError:
+            dev = galsim.DistDeviate(function=fn,x_min=sed.blue_limit,x_max=sed.red_limit,
+                                     npoints=npoints)
+            self.deviate[key] = dev
+
+        # Reset the deviate explicitly
+        if rng is not None: dev.reset(rng)
+
+        ret = np.empty(nphotons)
+        dev.generate(ret)
+        return ret
+
     def __eq__(self, other):
         return (isinstance(other, SED) and
                 self._orig_spec == other._orig_spec and

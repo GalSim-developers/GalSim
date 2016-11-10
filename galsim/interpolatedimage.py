@@ -715,7 +715,7 @@ class InterpolatedKImage(GSObject):
             if not kimage.iscomplex:
                 raise ValueError("Supplied kimage is not an ImageC")
 
-        # Make wcs is a PixelScale.
+        # Make sure wcs is a PixelScale.
         if kimage.wcs is not None and not kimage.wcs.isPixelScale():
             raise ValueError("kimage wcs must be PixelScale or None.")
 
