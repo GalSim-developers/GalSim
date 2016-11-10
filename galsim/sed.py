@@ -823,7 +823,8 @@ class SED(object):
         a bandpass.
 
         @param nphotons  Number of samples (photons) to randomly draw.
-        @param bandpass  Bandpass through which object is being imaged.
+        @param bandpass  A Bandpass object representing a filter, or None to sample over the full 
+                         SED wavelength range.
         @param rng       If provided, a random number generator that is any kind of BaseDeviate 
                          object. If `rng` is None, one will be automatically created, using the 
                          time as a seed. [default: None]

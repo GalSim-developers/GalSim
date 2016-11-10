@@ -241,3 +241,4 @@ if __name__ == "__main__":
     test_invroot_finite_limits()
     test_invroot_infinite_limits()
     test_midpoint_basic()
+    test_trapz_basic()

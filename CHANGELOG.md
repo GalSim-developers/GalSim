@@ -92,8 +92,8 @@ New Features
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
-- Added support for reading in of unsigned int Images (#715)
-- Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw random wavelengths from an SED. (#822)
+- Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
+  random wavelengths from an SED. (#822)
 
 
 New config features
