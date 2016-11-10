@@ -186,8 +186,10 @@ class Transformation(galsim.GSObject):
             if single == 0:
                 # If flip or there are two components, then revert to transform as simpler.
                 single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
-            if single is not None:
-                s += single
+            if single is None:
+                # If nothing is large enough to show up above, give full detail of transform
+                single = '.transform(%r,%r,%r,%r)'%(dudx,dudy,dvdx,dvdy)
+            s += single
         if self.offset.x != 0 or self.offset.y != 0:
             s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
@@ -221,6 +223,5 @@ def SBTransform_init(self):
     return (obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
 _galsim.SBTransform.__getinitargs__ = SBTransform_init
 _galsim.SBTransform.__getstate__ = lambda self: None
-_galsim.SBTransform.__setstate__ = lambda self, state: 1
 _galsim.SBTransform.__repr__ = lambda self: \
         'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()

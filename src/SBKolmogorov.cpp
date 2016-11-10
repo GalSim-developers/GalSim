@@ -31,6 +31,10 @@
 #include "Solve.h"
 #endif
 
+// This is used in two places below, so store it up here.
+// See KolmogorovInfo constructor for the explanation of this number.
+#define XVAL_ZERO 0.55090124543985636638457099311149824 / (2.*M_PI)
+
 namespace galsim {
 
     SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux,
@@ -85,6 +89,12 @@ namespace galsim {
         dbg<<"k0 = "<<_k0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"xnorm = "<<_xnorm<<std::endl;
+    }
+
+    double SBKolmogorov::SBKolmogorovImpl::maxSB() const
+    {
+        // _info->xValue(r) is just XVAL_ZERO, defined above.
+        return _xnorm * XVAL_ZERO;
     }
 
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const
@@ -335,7 +345,8 @@ namespace galsim {
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
         //    = 0.55090124543985636638457099311149824;
-        double val = 0.55090124543985636638457099311149824 / (2.*M_PI);
+        // The value we want is this / 2pi, which we define as XVAL_ZERO above.
+        double val = XVAL_ZERO;
         _radial.addEntry(0.,val);
         xdbg<<"f(0) = "<<val<<std::endl;
 

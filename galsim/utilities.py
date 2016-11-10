@@ -76,17 +76,15 @@ def g1g2_to_e1e2(g1, g2):
     # b/a = (1-g)/(1+g)
     # e = (1-(b/a)^2) / (1+(b/a)^2)
     gsq = g1*g1 + g2*g2
-    if gsq > 0.:
+    if gsq == 0.:
+        return 0., 0.
+    else:
         g = np.sqrt(gsq)
         boa = (1-g) / (1+g)
         e = (1 - boa*boa) / (1 + boa*boa)
         e1 = g1 * (e/g)
         e2 = g2 * (e/g)
         return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
@@ -244,9 +242,7 @@ def rand_arr(shape, deviate):
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
     """
-    if interpolant is None:
-        return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant):
+    if isinstance(interpolant, galsim.Interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.

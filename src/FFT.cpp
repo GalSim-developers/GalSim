@@ -101,17 +101,28 @@ namespace galsim {
 
     boost::shared_ptr<KTable> KTable::wrap(int Nout) const
     {
+        dbg<<"Start KTable wrap: N = "<<_N<<", Nout = "<<Nout<<std::endl;
+        // MJ: I found that when using this routing with N not being a multiple of Nout, that
+        //     the output image could lose some symmetries.  e.g. the test_flip tests in
+        //     test_transform.py could fail when wrapping was involved.  Now the fourierDraw
+        //     routing in SBProfile.cpp enforces that N = k Nout, and things seem to be
+        //     working fine.  But beware that there may be a subtle bug, probably in the
+        //     handling of the N/2 column or row, when the wrap starts and ends somewhere in
+        //     the middle of the output grid.
+        //     Update: Not anymore. Now that I switched it to only wrap once to include both
+        //     the wrapping and the Hermitian edges, it works just fine without being a multiple
+        //     of N.
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
         // Make it even:
         Nout = 2*((Nout+1)/2);
         int Nouto2 = Nout>>1;
         boost::shared_ptr<KTable> out(new KTable(Nout, _dk, std::complex<double>(0.,0.)));
-        for (int iyin=-_No2; iyin<_No2; ++iyin) {
+        for (int iyin=-_No2; iyin<=_No2; ++iyin) {
             int iyout = iyin;
             while (iyout < -Nouto2) iyout += Nout;
             while (iyout >= Nouto2) iyout -= Nout;
             int ixin = 0;
-            while (ixin < _No2) {
+            while (ixin <= _No2) {
                 // number of points to accumulate without conjugation:
                 // Do points that do *not* need to be conjugated:
                 int nx = std::min(_No2-ixin+1, Nouto2+1);
@@ -123,7 +134,7 @@ namespace galsim {
                     ++outptr;
                 }
                 ixin += Nouto2;
-                if (ixin >= _No2) break;
+                if (ixin > _No2) break;
                 // Now do any points that *do* need conjugation
                 // such that output storage locations go backwards
                 inptr = _array.get() + index(ixin,iyin);
@@ -321,8 +332,8 @@ namespace galsim {
         xassert(iyMin < _No2);
         xassert(iyMax > -_No2);
         xassert(iyMax <= _No2);
-        dbg<<"ix range = "<<ixMin<<"..."<<ixMax<<std::endl;
-        dbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
+        xdbg<<"ix range = "<<ixMin<<"..."<<ixMax<<std::endl;
+        xdbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
 
         std::complex<double> sum = 0.;
         const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&interp);
@@ -354,7 +365,7 @@ namespace galsim {
             // Build the x component of interpolant
             int nx = ixMax - ixMin;
             if (nx<=0) nx += _N;
-            dbg<<"nx = "<<nx<<std::endl;
+            xdbg<<"nx = "<<nx<<std::endl;
             // This is also cached if possible.  It gets cleared when kx != cacheX above.
             if (_xwt.empty()) {
                 _xwt.resize(nx);
@@ -365,18 +376,18 @@ namespace galsim {
                     double arg = ix-kx;
                     if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
                     for (int i=0; i<nx; ++i, ++ix, ++arg) {
-                        dbg<<"Call xval for arg = "<<arg<<std::endl;
+                        xdbg<<"Call xval for arg = "<<arg<<std::endl;
                         if (arg > _halfNd) arg -= _Nd;
                         _xwt[i] = ixy->xval1d(arg);
-                        dbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
+                        xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                     }
                 } else {
                     // Then might need to wrap to do the sum that's in xvalWrapped...
                     for (int i=0; i<nx; ++i, ++ix) {
-                        dbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
+                        xdbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
                             ix-kx<<std::endl;
                         _xwt[i] = ixy->xvalWrapped1d(ix-kx, _N);
-                        dbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
+                        xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                     }
                 }
             } else {
@@ -409,7 +420,7 @@ namespace galsim {
             }
             for (; ny; --ny, ++iy, ++arg) {
                 if (iy >= _No2) iy -= _N;   // wrap iy if needed
-                dbg<<"ny = "<<ny<<", iy = "<<iy<<std::endl;
+                xdbg<<"ny = "<<ny<<", iy = "<<iy<<std::endl;
                 std::complex<double> sumy = 0.;
                 if (nextSaved != _cache.end()) {
                     // This row is cached
@@ -422,10 +433,7 @@ namespace galsim {
                     // Simple loop preserved for comparison.
                     for (int i=0; i<nx; ++i, ++ix) {
                         if (ix > N/2) ix -= N; //check for wrap
-                        dbg<<"i = "<<i<<", ix = "<<ix<<std::endl;
-                        dbg<<"xwt = "<<_xwt[i]<<", kval = "<<kval(ix,iy)<<std::endl;
                         sumy += _xwt[i]*kval(ix,iy);
-                        dbg<<"index = "<<index(ix,iy)<<", sumy -> "<<sumy<<std::endl;
                     }
 #else
 
@@ -434,9 +442,9 @@ namespace galsim {
                     const double* xwt_it = &_xwt[0];
                     // First do any initial negative ix values:
                     if (ix < 0) {
-                        dbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
+                        xdbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
                         int count1 = std::min(count, -ix);
-                        dbg<<"count1 = "<<count1<<std::endl;
+                        xdbg<<"count1 = "<<count1<<std::endl;
                         count -= count1;
                         const std::complex<double>* ptr = _array.get() + index(ix,iy);
                         sumy += ZDot<true>(count1, xwt_it, ptr);
@@ -446,18 +454,18 @@ namespace galsim {
 
                     // Next do positive ix values:
                     if (count) {
-                        dbg<<"Positive ix: ix = "<<ix<<std::endl;
+                        xdbg<<"Positive ix: ix = "<<ix<<std::endl;
                         const std::complex<double>* ptr = _array.get() + index(ix,iy);
                         int count1 = std::min(count, _No2+1-ix);
-                        dbg<<"count1 = "<<count1<<std::endl;
+                        xdbg<<"count1 = "<<count1<<std::endl;
                         count -= count1;
                         sumy += ZDot<false>(count1, xwt_it, ptr);
                         xwt_it += count1;
 
                         // Finally if we've wrapped around again, do more negative ix values:
                         if (count) {
-                            dbg<<"More negative ix: ix = "<<ix<<std::endl;
-                            dbg<<"count = "<<count<<std::endl;
+                            xdbg<<"More negative ix: ix = "<<ix<<std::endl;
+                            xdbg<<"count = "<<count<<std::endl;
                             ix = -_No2 + 1;
                             const std::complex<double>* ptr = _array.get() + index(ix,iy);
                             xassert(count < _No2-1);
@@ -474,13 +482,13 @@ namespace galsim {
                 }
                 if (simple_xval) {
                     if (arg > _halfNd) arg -= _Nd;
-                    dbg<<"Call xval for arg = "<<arg<<std::endl;
+                    xdbg<<"Call xval for arg = "<<arg<<std::endl;
                     sum += sumy * ixy->xval1d(arg);
                 } else {
-                    dbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
+                    xdbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
                     sum += sumy * ixy->xvalWrapped1d(arg, _N);
                 }
-                dbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
+                xdbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
             }
         } else {
             // Interpolant is not seperable, calculate weight at each point
@@ -499,7 +507,7 @@ namespace galsim {
                 }
             }
         }
-        dbg<<"Done: sum = "<<sum<<std::endl;
+        xdbg<<"Done: sum = "<<sum<<std::endl;
         return sum;
     }
 
@@ -1008,7 +1016,11 @@ namespace galsim {
     // This version takes XTable reference as argument
     void KTable::transform(XTable& xt) const
     {
+        dbg<<"Start transform K -> X\n";
+        dbg<<"N = "<<_N<<std::endl;
+        dbg<<"dk = "<<_dk<<std::endl;
         check_array();
+        dbg<<"flux = "<<_array[0]<<std::endl;
 
         // check proper dimensions for xt
         assert(_N==xt.getN());
@@ -1016,34 +1028,33 @@ namespace galsim {
         // We'll need a new k array because FFTW kills the k array in this
         // operation.  Also, to put x=0 in center of array, we need to flop
         // every other sign of k array, and need to scale.
-        dbg<<"Before make t_array"<<std::endl;
         FFTW_Array<std::complex<double> > t_array(_N*(_No2+1));
-        dbg<<"After make t_array"<<std::endl;
         double fac = _dk * _dk / (4*M_PI*M_PI);
+        xdbg<<"fac = "<<fac<<std::endl;
         long int ind=0;
-        dbg<<"t_array.size = "<<t_array.size()<<std::endl;
+        xdbg<<"t_array.size = "<<t_array.size()<<std::endl;
         for (int iy=0; iy<_N; ++iy) {
-            dbg<<"ind = "<<ind<<std::endl;
             for (int ix=0; ix<=_No2; ++ix) {
                 if ( (ix+iy)%2==0) t_array[ind]=fac * _array[ind];
                 else t_array[ind] = -fac* _array[ind];
                 ++ind;
             }
         }
-        dbg<<"After fill t_array"<<std::endl;
+        xdbg<<"After fill t_array, t_array[0] = "<<t_array[0]<<std::endl;
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_ESTIMATE);
-        dbg<<"After make plan"<<std::endl;
+        xdbg<<"After make plan"<<std::endl;
         if (plan==NULL) throw FFTInvalid();
 
         // Run the transform:
         fftw_execute(plan);
-        dbg<<"After exec plan"<<std::endl;
+        xdbg<<"After exec plan"<<std::endl;
         fftw_destroy_plan(plan);
-        dbg<<"After destroy plan"<<std::endl;
+        xdbg<<"After destroy plan"<<std::endl;
 
         xt._dx = 2.*M_PI*_invNd*_invdk;
+        dbg<<"dx = "<<xt._dx<<std::endl;
         dbg<<"Done transform"<<std::endl;
     }
 

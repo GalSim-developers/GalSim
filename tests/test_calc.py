@@ -123,20 +123,19 @@ def test_hlr():
                                    err_msg="Exponential r90 calculation is not accurate.")
 
     # Check the image version.
-    im = e1.drawImage(scale=0.1)
-    test_hlr = im.calculateHLR(flux=e1.flux)
+    im = e1.drawImage(scale=0.1, nx=2048, ny=2048)  # Needs to be large to get enough flux for the
+                                                    # image to get it to 3 digits of accuracy.
+    test_hlr = im.calculateHLR()
     print('im.calculateHLR() = ',test_hlr)
     print('ratio - 1 = ',test_hlr/e1.half_light_radius-1)
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
                                    err_msg="image.calculateHLR is not accurate.")
 
     # Check that a non-square image works correctly.  Also, not centered anywhere in particular.
-    #bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
-    bounds = galsim.BoundsI(1, 1+size*2, 1, 1+size)
-    #offset = galsim.PositionD(29,1)
-    offset = galsim.PositionD(0,0)
+    bounds = galsim.BoundsI(-1234, -1234+2048, 8234, 8234+2099)
+    offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateHLR(flux=e1.flux, center=im.trueCenter()+offset)
+    test_hlr = im.calculateHLR(center=im.trueCenter()+offset)
     print('im.calculateHLR() = ',test_hlr)
     print('ratio - 1 = ',test_hlr/e1.half_light_radius-1)
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
@@ -259,7 +258,7 @@ def test_sigma():
     # Check the image version.
     size = 2000
     im = e1.drawImage(scale=0.1, nx=size, ny=size)
-    test_sigma = im.calculateMomentRadius(flux=e1.flux)
+    test_sigma = im.calculateMomentRadius()
     print('im.calculateMomentRadius() = ',test_sigma)
     print('ratio - 1 = ',test_sigma/e1_sigma-1)
     np.testing.assert_almost_equal(
@@ -270,7 +269,7 @@ def test_sigma():
     bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateMomentRadius(flux=e1.flux, center=im.trueCenter()+offset)
+    test_hlr = im.calculateMomentRadius(center=im.trueCenter()+offset)
     print('im.calculateMomentRadius() = ',test_sigma)
     print('ratio - 1 = ',test_sigma/e1_sigma-1)
     np.testing.assert_almost_equal(
@@ -349,7 +348,7 @@ def test_fwhm():
 
     # Can set a centroid manually.  This should be equivalent to the default.
     print('e3.centroid = ',e3.centroid())
-    test_fwhm = e3.calculateFWHM(scale=0.1)
+    test_fwhm = e3.calculateFWHM(scale=0.1, centroid=e3.centroid())
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="shifted FWHM with explicit centroid is not accurate.")
 

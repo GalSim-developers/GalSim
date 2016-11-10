@@ -946,7 +946,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
+        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in objs ]
         im_size = np.max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we
@@ -1848,7 +1848,7 @@ class ChromaticConvolution(ChromaticObject):
         self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     @staticmethod
-    def _get_effective_prof(insep_obj, bandpass, iimult, wmult, integrator, gsparams):
+    def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams, wmult):
         # Find scale at which to draw effective profile
         _, prof0 = insep_obj._fiducial_profile(bandpass)
         iiscale = prof0.nyquistScale()
@@ -1859,12 +1859,12 @@ class ChromaticConvolution(ChromaticObject):
         # ChromaticConvolution.
         if isinstance(insep_obj, ChromaticConvolution):
             effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, bandpass, wmult=wmult, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
+                    insep_obj, bandpass, scale=iiscale,
+                    integrator=integrator, method='no_pixel', wmult=wmult)
         else:
             effective_prof_image = insep_obj.drawImage(
-                    bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-                    method='no_pixel')
+                    bandpass, scale=iiscale, integrator=integrator,
+                    method='no_pixel', wmult=wmult)
 
         return galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
 
@@ -2038,13 +2038,13 @@ class ChromaticConvolution(ChromaticObject):
                 sep_profs.append(prof0 / obj.SED(wave0))
                 insep_obj *= obj.SED
 
-        wmult = kwargs.get('wmult', 1)
+        wmult = kwargs.get('wmult', 1.0)
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.SED should *not* be None.
         effective_prof = ChromaticConvolution._effective_prof_cache(
-                insep_obj, bandpass, iimult, wmult,
-                integrator, self.gsparams)
+                insep_obj, bandpass, iimult,
+                integrator, self.gsparams, wmult)
 
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
@@ -2223,15 +2223,23 @@ class ChromaticAutoCorrelation(ChromaticObject):
 class ChromaticFourierSqrtProfile(ChromaticObject):
     """A class for computing the Fourier-space square root of a ChromaticObject.
 
-    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of a profile.
+    The ChromaticFourierSqrtProfile class represents a wavelength-dependent Fourier-space square
+    root of a profile.
 
     You may also specify a gsparams argument.  See the docstring for GSParams using
     help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
-    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams as
-    the object being operated on.
+    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams
+    as the object being operated on.
 
     Initialization
     --------------
+
+    The normal way to use this class is to use the FourierSqrt() factory function:
+
+        >>> fourier_sqrt = galsim.FourierSqrt(chromatic_obj)
+
+    If `chromatic_obj` is indeed a ChromaticObject, then that function will create a
+    ChromaticFourierSqrtProfile object.
 
     @param obj              The object to compute the Fourier-space square root of.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for

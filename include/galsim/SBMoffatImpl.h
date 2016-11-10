@@ -22,6 +22,8 @@
 
 #include "SBProfileImpl.h"
 #include "SBMoffat.h"
+#include "Table.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -62,6 +64,7 @@ namespace galsim {
 
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return _norm; }
 
         /**
          * @brief Moffat photon shooting is done by analytic inversion of cumulative flux

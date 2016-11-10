@@ -21,7 +21,6 @@
 
 #include "SBBox.h"
 #include "SBBoxImpl.h"
-#include "FFT.h"
 #include "Interpolant.h"  // For sinc(x)
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp

@@ -97,12 +97,13 @@ def test_nfwhalo():
 
     # set up the same halo
     halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1)
-    pos_x = np.arange(1,600)
+    pos_x = np.arange(1.,600)
     pos_y = np.zeros_like(pos_x)
     z_s = 2
+    # Along the way test different allowed ways to pass in position information.
     kappa = halo.getConvergence((pos_x, pos_y), z_s)
-    gamma1, gamma2 = halo.getShear((pos_x, pos_y), z_s, reduced=False)
-    g1, g2 = halo.getShear((pos_x, pos_y), z_s, reduced=True)
+    gamma1, gamma2 = halo.getShear([pos_x, pos_y], z_s, reduced=False)
+    g1, g2 = halo.getShear([galsim.PositionD(x,y) for x,y in zip(pos_x,pos_y)], z_s, reduced=True)
     mu = halo.getMagnification((pos_x, pos_y), z_s)
     alt_g1, alt_g2, alt_mu = halo.getLensing((pos_x, pos_y), z_s)
 
@@ -250,7 +251,7 @@ def test_shear_variance():
     # Now do the same test as previously, but with E-mode power only.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
-                               units=galsim.degrees)
+                               units='degrees')
     assert g1.shape == (ngrid, ngrid)
     assert g2.shape == (ngrid, ngrid)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
@@ -601,9 +602,9 @@ def test_shear_units():
     g1_2, g2_2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
                               rng=galsim.BaseDeviate(rand_seed))
     # Finally redo it, inputting the PS and grid info in degrees.
-    ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units=galsim.degrees)
+    ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units='degrees')
     g1_3, g2_3 = ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
-                              units = galsim.degrees, rng=galsim.BaseDeviate(rand_seed))
+                              units='degrees', rng=galsim.BaseDeviate(rand_seed))
 
     # Since same random seed was used, require complete equality of shears, which would show that
     # all unit conversions were properly handled.
@@ -827,7 +828,7 @@ def test_power_spectrum_with_kappa():
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     do_pickle(psE)
     g1E, g2E, k_test = psE.buildGrid(
-        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
+        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units='arcmin',
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
     kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1E, g2E)
     # Test that E-mode kappa matches to some sensible accuracy

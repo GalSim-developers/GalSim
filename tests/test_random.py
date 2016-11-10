@@ -1746,6 +1746,18 @@ def test_permute():
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
+    # Repeat with same seed, should do same permutation.
+    my_list = copy.deepcopy(my_list_copy)
+    galsim.random.permute(312, my_list)
+    for ind in range(n_list):
+        assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    try:
+        # permute with no lists should raise TypeError
+        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
+    except ImportError:
+        pass
+
 
 @timer
 def test_ne():

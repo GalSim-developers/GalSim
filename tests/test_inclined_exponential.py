@@ -66,6 +66,7 @@ def test_regression():
         # Now make a test image
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height)
+        check_basic(test_profile, "InclinedExponential")
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
@@ -76,8 +77,10 @@ def test_regression():
 
         # Compare to the example - Due to the different fourier transforms used, some offset is
         # expected, so we just compare in the core to two decimal places
+
         image_core = image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
         test_image_core = test_image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
+
         ratio_core = image_core / test_image_core
 
         # galsim.fits.write(test_image,"test_"+image_filename,image_dir)
@@ -100,14 +103,20 @@ def test_exponential():
     exp_profile = galsim.Exponential(scale_radius=scale_radius)
 
     # Draw images for both
-    inc_exp_image = galsim.Image(image_nx,image_ny,scale=1.0)
-    exp_image = galsim.Image(image_nx,image_ny,scale=1.0)
+    inc_exp_image = galsim.Image(image_nx, image_ny, scale=1.0)
+    exp_image = galsim.Image(image_nx, image_ny, scale=1.0)
 
     inc_exp_profile.drawImage(inc_exp_image)
     exp_profile.drawImage(exp_image)
 
     # Check that they're the same
     np.testing.assert_array_almost_equal(inc_exp_image.array, exp_image.array, decimal=4)
+
+    # The face-on version should get the maxSB value exactly right.
+    np.testing.assert_array_almost_equal(inc_exp_profile.maxSB(), exp_profile.maxSB())
+
+    check_basic(inc_exp_profile, "Face-on InclinedExponential")
+
 
 @timer
 def test_edge_on():
@@ -116,7 +125,7 @@ def test_edge_on():
 
     scale_radius = 3.0
 
-    inclinations = (np.arccos(0.01),np.pi/2,2*np.pi-np.arccos(0.01))
+    inclinations = (np.arccos(0.01),2*np.pi-np.arccos(0.01),np.pi/2.)
 
     images = []
 
@@ -124,6 +133,8 @@ def test_edge_on():
         # Set up the profile
         prof = galsim.InclinedExponential(inclination*galsim.radians, scale_radius=scale_radius,
                                           scale_h_over_r=0.1)
+
+        check_basic(prof, "Edge-on InclinedExponential")
 
         # Draw an image of it
         image = galsim.Image(image_nx,image_ny,scale=1.0)
@@ -136,11 +147,19 @@ def test_edge_on():
     np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
     np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
+    # Also the edge-on version should get the maxSB value exactly right = exp.maxSB * r/h.
+    exp = galsim.Exponential(scale_radius=scale_radius)
+    np.testing.assert_array_almost_equal(prof.maxSB(), exp.maxSB() / 0.1)
+    prof.drawImage(image, method='sb', use_true_center=False)
+    print('max pixel: ',image.array.max(),' cf.',prof.maxSB())
+    np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
+
 
 @timer
 def test_sanity():
     """ Performs various sanity checks on a set of InclinedExponential profiles. """
 
+    print('flux, inc_angle, scale_radius, scale_height, pos_angle')
     for flux, inc_angle, scale_radius, scale_height, pos_angle in zip(fluxes,
                                                                       image_inc_angles,
                                                                       image_scale_radii,
@@ -153,10 +172,13 @@ def test_sanity():
         scale_radius=float(scale_radius)
         scale_height=float(scale_height)
         pos_angle=float(pos_angle)
+        print(flux, inc_angle, scale_radius, scale_height, pos_angle)
 
         # Now make a test image
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height, flux=flux)
+
+        check_basic(test_profile, "InclinedExponential")
 
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_almost_equal(test_profile.scale_height/test_profile.scale_radius,
@@ -180,6 +202,14 @@ def test_sanity():
         centroid = test_profile.centroid()
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
+
+        # Check maxSB
+        # We don't do a great job at estimating this, but it should be in the right ball park,
+        # and typically too large.
+        test_profile.drawImage(test_image, method='sb', use_true_center=False)
+        print('max pixel: ',test_image.array.max(),' cf.',test_profile.maxSB())
+        np.testing.assert_allclose(test_image.array.max(), test_profile.maxSB(), rtol=0.3)
+        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
 
 
 @timer
@@ -280,15 +310,21 @@ def test_eq_ne():
 def test_pickle():
     """ Check that we can pickle it. """
 
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_h_over_r=0.2))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
-                                         flux=10.0))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
+    exp = galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                     scale_height=0.3)
+    do_pickle(exp)
+    do_pickle(exp.SBProfile)
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_h_over_r=0.2))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3, flux=10.0))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3,
                                          gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
-                                         flux=10.0,gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3, flux=10.0,
+                                         gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
     test_regression()

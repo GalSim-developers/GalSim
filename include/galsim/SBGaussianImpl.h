@@ -47,6 +47,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return _norm; }
 
         /**
          * @brief Shoot photons through this SBGaussian.
