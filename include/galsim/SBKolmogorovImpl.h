@@ -23,6 +23,8 @@
 #include "SBProfileImpl.h"
 #include "SBKolmogorov.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
+#include "Table.h"
 
 namespace galsim {
 
@@ -112,6 +114,7 @@ namespace galsim {
 
         double getFlux() const { return _flux; }
         double getLamOverR0() const { return _lam_over_r0; }
+        double maxSB() const;
 
         /**
          * @brief Kolmogorov photon-shooting is done numerically with `OneDimensionalDeviate` class.

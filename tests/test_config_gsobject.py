@@ -95,7 +95,7 @@ def test_moffat():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
                  },
-        'gal5' : { 'type' : 'Moffat' , 'beta' : 2.8, 'flux' : 22, 'fwhm' : 0.3, 'trunc' : 0.7,
+        'gal5' : { 'type' : 'Moffat' , 'beta' : 2.8, 'flux' : 22, 'fwhm' : 0.2, 'trunc' : 0.7,
                    'shear' : galsim.Shear(g1=-0.15, g2=0.2),
                    'gsparams' : { 'maxk_threshold' : 1.e-2 }
                  },
@@ -124,7 +124,7 @@ def test_moffat():
     # Note: this needs to be rather small otherwise maxk_threshold is obviated by other
     # adjustments we make to the parameters in SBProfile.cpp
     gsparams = galsim.GSParams(maxk_threshold=1.e-2)
-    gal5b = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7, gsparams=gsparams)
+    gal5b = galsim.Moffat(beta=2.8, fwhm=0.2, flux=22, trunc=0.7, gsparams=gsparams)
     gal5b = gal5b.shear(g1=-0.15, g2=0.2)
     # convolve to test the k-space gsparams (with an even smaller profile)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=0.01))

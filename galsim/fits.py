@@ -25,6 +25,7 @@ routines for handling multiple Images.
 from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
+import numpy as np
 
 
 ##############################################################################################
@@ -67,7 +68,7 @@ def _parse_compression(compression, file_name):
 class _ReadFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gunzip_call(self, file):
+    def gunzip_call(self, file): # pragma: no cover
         # cf. http://bugs.python.org/issue7471
         import subprocess
         from io import StringIO
@@ -120,7 +121,7 @@ class _ReadFile:
         hdu_list = pyfits.open(tmp)
         return hdu_list, tmp
 
-    def bunzip2_call(self, file):
+    def bunzip2_call(self, file): # pragma: no cover
         import subprocess
         from io import StringIO
         from galsim._pyfits import pyfits
@@ -478,8 +479,10 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin:
-        if isinstance(fin, str):
+        if isinstance(fin, str): # pragma: no cover
             # In this case, it is a file name that we need to delete.
+            # Note: This is relevant for the _tmp versions that are not run on Travis, so
+            # don't include this bit in the coverage report.
             import os
             os.remove(fin)
         else:
@@ -537,6 +540,10 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     """
     from galsim._pyfits import pyfits
 
+    if image.iscomplex:
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -581,6 +588,10 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
     from galsim._pyfits import pyfits
+
+    if any(image.iscomplex for image in image_list if isinstance(image, galsim.Image)):
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -640,8 +651,23 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     @param clobber      See documentation for this parameter on the galsim.fits.write() method.
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
-    import numpy
     from galsim._pyfits import pyfits
+
+    if isinstance(image_list, np.ndarray):
+        is_all_numpy = True
+        if image_list.dtype.kind == 'c':
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    elif all(isinstance(item, np.ndarray) for item in image_list):
+        is_all_numpy = True
+        if any(a.dtype.kind == 'c' for a in image_list):
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    else:
+        is_all_numpy = False
+        if any(im.iscomplex for im in image_list):
+            raise ValueError("Cannot write complex images to a fits file. "
+                             "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -653,15 +679,14 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
-    is_all_numpy = (isinstance(image_list, numpy.ndarray) or
-                    all(isinstance(item, numpy.ndarray) for item in image_list))
     if is_all_numpy:
-        cube = numpy.asarray(image_list)
+        cube = np.asarray(image_list)
         nimages = cube.shape[0]
         nx = cube.shape[1]
         ny = cube.shape[2]
         # Use default values for bounds
         bounds = galsim.BoundsI(1,nx,1,ny)
+        wcs = None
     else:
         nimages = len(image_list)
         if (nimages == 0):
@@ -675,7 +700,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         bounds = im.bounds
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
-        cube = numpy.zeros(array_shape, dtype=dtype)
+        cube = np.zeros(array_shape, dtype=dtype)
         for k in range(nimages):
             im = image_list[k]
             nx_k = im.xmax-im.xmin+1
@@ -803,14 +828,13 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
         wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
-        if dt in galsim.Image.valid_array_dtypes:
+        if dt in galsim.Image.valid_dtypes:
             data = hdu.data
         else:
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
         image = galsim.Image(array=data)
         image.setOrigin(origin)
@@ -952,19 +976,18 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     try:
         wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
-        if dt in galsim.Image.valid_array_dtypes:
+        if dt in galsim.Image.valid_dtypes:
             data = hdu.data
         else:
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
-        nimages = hdu.data.shape[0]
+        nimages = data.shape[0]
         image_list = []
         for k in range(nimages):
-            image = galsim.Image(array=hdu.data[k,:,:])
+            image = galsim.Image(array=data[k,:,:])
             image.setOrigin(origin)
             image.wcs = wcs
             image_list.append(image)
@@ -1156,8 +1179,9 @@ class FitsHeader(object):
                     file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
                     lines = [ line.strip() for line in fin ]
-                if 'END' in lines:  # Don't include END (or later lines)
-                    lines = lines[:lines.index('END')]
+                # Don't include END (or later lines)
+                end = lines.index('END') if 'END' in lines else len(lines)
+                lines = lines[:end]
                 # Later pyfits versions changed this to a class method, so you can write
                 # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
                 # a regular method.  This syntax should work in both cases.
@@ -1224,11 +1248,11 @@ class FitsHeader(object):
         # pyfits doesn't like getting bytes in python 3, so decode if appropriate
         try:
             key = str(key.decode())
-        except:
+        except AttributeError:
             pass
         try:
             value = str(value.decode())
-        except:
+        except AttributeError:
             pass
         from galsim._pyfits import pyfits_version
         self._tag = None
@@ -1294,11 +1318,10 @@ class FitsHeader(object):
         from galsim._pyfits import pyfits_version
         self._tag = None
         # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
-        if pyfits_version < '3.1':
-            for k, v in dict2.iteritems():
-                self[k] = v
-        else:
-            self.header.update(dict2)
+        # Note: Don't use self.header.update, since that sometimes has problems (in astropy)
+        # with COMMENT lines.  The __setitem__ syntax seems to work properly though.
+        for k, v in iteritems(dict2):
+            self[k] = v
 
     def values(self):
         from galsim._pyfits import pyfits_version
@@ -1374,4 +1397,3 @@ class FitsHeader(object):
 
 # inject write as method of Image class
 galsim.Image.write = write
-

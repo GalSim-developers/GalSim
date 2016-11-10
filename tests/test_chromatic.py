@@ -1780,6 +1780,13 @@ def test_convolution_of_spectral():
     cgal2 = galsim.Gaussian(fwhm=2)                          # dimensionless
     cgal3 = galsim.ChromaticObject(galsim.Gaussian(fwhm=3))  # dimensionless
 
+    assert cgal1.spectral
+    assert not cgal2.spectral
+    assert not cgal3.spectral
+    assert not cgal1.dimensionless
+    assert cgal2.dimensionless
+    assert cgal3.dimensionless
+
     # These should be okay
     galsim.Convolve(cgal1, cgal2)
     galsim.Convolve(cgal1, cgal3)
@@ -1881,9 +1888,9 @@ def test_chromatic_invariant():
     check_chromatic_invariant(autocorr2)
 
     # ChromaticFourierSqrt
-    four1 = galsim.ChromaticFourierSqrtProfile(chrom_airy)
+    four1 = galsim.FourierSqrt(chrom_airy)
     check_chromatic_invariant(four1)
-    four2 = galsim.ChromaticFourierSqrtProfile(chrom_airy * (lambda w: (w/500.0)**0.1))
+    four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
 
     # And a few transforms too...

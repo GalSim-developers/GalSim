@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBAiry.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -211,6 +212,7 @@ namespace galsim {
         double getFlux() const { return _flux; }
         double getLamOverD() const { return _lam_over_D; }
         double getObscuration() const { return _obscuration; }
+        double maxSB() const { return _xnorm * _info->xValue(0.); }
 
         /**
          * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.

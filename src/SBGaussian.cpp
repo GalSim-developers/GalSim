@@ -113,7 +113,6 @@ namespace galsim {
     std::complex<double> SBGaussian::SBGaussianImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y)*_sigma_sq;
-
         if (ksq > _ksq_max) {
             return 0.;
         } else if (ksq < _ksq_min) {

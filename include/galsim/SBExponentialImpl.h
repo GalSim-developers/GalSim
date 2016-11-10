@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBExponential.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -124,6 +125,7 @@ namespace galsim {
 
         double getFlux() const { return _flux; }
         double getScaleRadius() const { return _r0; }
+        double maxSB() const { return _norm; }
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 

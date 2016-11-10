@@ -99,6 +99,7 @@ namespace galsim {
         { return Position<double>(_x0, _y0); }
 
         double getFlux() const { return _fluxProduct; }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -173,6 +174,7 @@ namespace galsim {
         Position<double> centroid() const { return _adaptee.centroid() * 2.; }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -229,6 +231,7 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;

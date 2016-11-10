@@ -31,6 +31,8 @@ namespace galsim {
         SBDeconvolveImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
         ~SBDeconvolveImpl() {}
 
+        SBProfile getObj() const { return _adaptee; }
+
         // xValue() not implemented for SBDeconvolve.
         double xValue(const Position<double>& p) const;
 
@@ -50,6 +52,7 @@ namespace galsim {
 
         Position<double> centroid() const;
         double getFlux() const;
+        double maxSB() const;
 
         // shoot also not implemented.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;

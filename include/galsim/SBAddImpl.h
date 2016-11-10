@@ -83,6 +83,7 @@ namespace galsim {
         { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
 
         double getFlux() const { return _sumflux; }
+        double maxSB() const;
 
         /**
          * @brief Shoot photons through this SBAdd.

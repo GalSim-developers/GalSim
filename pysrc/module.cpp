@@ -37,6 +37,7 @@ static int doImportNumpy() {
 namespace galsim {
     void pyExportAngle();
     void pyExportBounds();
+    void pyExportPhotonArray();
     void pyExportImage();
     void pyExportSBProfile();
     void pyExportSBAdd();
@@ -83,6 +84,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportImage();
+    galsim::pyExportPhotonArray();
     galsim::pyExportSBProfile();
     galsim::pyExportSBAdd();
     galsim::pyExportSBConvolve();

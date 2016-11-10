@@ -54,28 +54,6 @@ damages of any kind.
 #include "FFT.h"
 #include <boost/math/special_functions/fpclassify.hpp> // for isnan()
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cerr;
-int verbose_level = 1;
-// There are three levels of verbosity which can be helpful when debugging,
-// which are written as dbg, xdbg, xxdbg (all defined in Std.h).
-// It's Mike's way to have debug statements in the code that are really easy to turn
-// on and off.
-//
-// If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value
-// of verbose_level.
-// dbg requires verbose_level >= 1
-// xdbg requires verbose_level >= 2
-// xxdbg requires verbose_level >= 3
-//
-// If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
-// so the compiler parses the statement fine, but trivially optimizes the code away,
-// so there is no efficiency hit from leaving them in the code.
-#endif
-
-
 namespace galsim {
 namespace hsm {
 
@@ -98,40 +76,19 @@ namespace hsm {
                                       const BaseImage<T>& image,
                                       const BaseImage<int>& mask)
     {
-        Bounds<int> b = image.getBounds();
-        dbg<<"b = "<<b<<std::endl;
-        masked_image.resize(b);
-        dbg<<"resized masked_image: b -> "<<masked_image.getBounds()<<std::endl;
-        const int rowlen = b.getXMax() - b.getXMin() + 1;
-        const T* pI = image.getData();
-        const int sI = image.getStride() - rowlen;
-        const int* pM = mask.getData();
-        const int sM = mask.getStride() - rowlen;
-        double* pF = masked_image.getData();
-        const int sF = masked_image.getStride() - rowlen;
+        Bounds<int> b1 = image.nonZeroBounds();
+        Bounds<int> b2 = mask.nonZeroBounds();
+        Bounds<int> b = b1 & b2;
 
-        Bounds<int> b2;
-        for(int y=b.getYMin();y<=b.getYMax();y++) {
-            for(int x=b.getXMin();x<=b.getXMax();x++) {
-                if (*pM++) {
-                    *pF = *pI++;
-                    if (*pF != 0.) b2 += Position<int>(x,y);
-                    ++pF;
-                } else {
-                    *pF++ = 0.;
-                    ++pI;
-                }
-            }
-            pM += sM;
-            pI += sI;
-            pF += sF;
-        }
-        dbg<<"Done MakeMaskedImage"<<std::endl;
-        dbg<<"Final b2 bounds = "<<b2<<std::endl;
         // Make sure we have at least 1 pixel in the final mask.  Throw an exception if not.
-        if (!b2.isDefined())
+        if (!b.isDefined())
             throw HSMError("Masked image is all 0's.");
-        return masked_image[b2];
+
+        masked_image.resize(b);
+        masked_image = image[b];
+        masked_image *= mask[b];
+
+        return masked_image.view();
     }
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
