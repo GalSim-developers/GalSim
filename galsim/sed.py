@@ -818,13 +818,15 @@ class SED(object):
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit) / flux
 
-    def sampleWavelength(self, nphotons, bandpass, seed=0, npoints=256):
-        """ Sample 'nphoton' random wavelengths from the SED (and bandpass).
+    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=256):
+        """ Sample a number of random wavelength values from the SED, possibly as observed through
+        a bandpass.
 
         @param nphotons  Number of samples (photons) to randomly draw.
         @param bandpass  Bandpass through which object is being imaged.
-        @param seed      Something that can seed a BaseDeviate: a long int seed or another
-                         BaseDeviate.  Using 0 means generate a seed from the system. [default: 0]
+        @param rng       If provided, a random number generator that is any kind of BaseDeviate 
+                         object. If `rng` is None, one will be automatically created, using the 
+                         time as a seed. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
                          tables. [default: 256]
         """
@@ -854,11 +856,11 @@ class SED(object):
                                      npoints=npoints)
             self.deviate[key] = dev
 
-        # Set the seed explicitly rather than in the constructor
-        ret = np.empty(nphotons)
-        dev.seed(seed)
-        dev.generate(ret)
+        # Reset the deviate explicitly
+        if rng is not None: dev.reset(rng)
 
+        ret = np.empty(nphotons)
+        dev.generate(ret)
         return ret
 
     def __eq__(self, other):
