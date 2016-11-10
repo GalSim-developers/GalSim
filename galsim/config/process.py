@@ -324,6 +324,10 @@ class LoggerWrapper(object):
         if self.logger and self.logger.isEnabledFor(logging.ERROR):
             self.logger.error(*args, **kwargs)
 
+    def log(self, lvl, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(lvl):
+            self.logger.log(lvl, *args, **kwargs)
+
     def isEnabledFor(self, *args, **kwargs):
         return self.logger.isEnabledFor(*args,**kwargs)
 

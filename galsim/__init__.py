@@ -100,7 +100,7 @@ from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageUS, ImageUI
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -125,6 +125,7 @@ from .interpolatedimage import InterpolatedImage, InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile
+from .compound import RandomWalk
 from .transform import Transform, Transformation
 
 # Chromatic

@@ -20,7 +20,7 @@
 #ifndef GalSim_PhotonArray_H
 #define GalSim_PhotonArray_H
 
-/** 
+/**
  * @file PhotonArray.h @brief Contains a class definition for lists of photons from "shooting."
  */
 
@@ -35,24 +35,24 @@
 namespace galsim {
 
     /** @brief Class to hold a list of "photon" arrival positions
-     * 
+     *
      * Class holds a vector of information about photon arrivals: x and y positions, and a flux
-     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in 
-     * absolute value so that noise statistics can be estimated by counting number of positive 
+     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in
+     * absolute value so that noise statistics can be estimated by counting number of positive
      * and negative photons.
      * This class holds the code that allows its flux to be added to a surface-brightness Image.
      */
-    class PhotonArray 
+    class PhotonArray
     {
     public:
-        /** 
+        /**
          * @brief Construct an array of given size with zero-flux photons
          *
          * @param[in] N Size of desired array.
          */
         explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.), _is_correlated(false) {}
 
-        /** 
+        /**
          * @brief Construct from three vectors.  Exception if vector sizes do not match.
          *
          * @param[in] vx vector of photon x coordinates
@@ -72,7 +72,7 @@ namespace galsim {
          *
          * @param[in] N number of elements to reserve space for.
          */
-        void reserve(int N) 
+        void reserve(int N)
         {
             _x.reserve(N);
             _y.reserve(N);
@@ -87,9 +87,9 @@ namespace galsim {
          * @param[in] y y coordinate of photon
          * @param[in] flux flux of photon
          */
-        void setPhoton(int i, double x, double y, double flux) 
+        void setPhoton(int i, double x, double y, double flux)
         {
-            _x[i]=x; 
+            _x[i]=x;
             _y[i]=y;
             _flux[i]=flux;
         }
@@ -158,9 +158,9 @@ namespace galsim {
         /**
          * @brief Convolve this array with another.
          *
-         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon 
-         * basis and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is 
-         * renormalized so that the expectation value of output total flux is product of two input 
+         * Convolution of two arrays is defined as adding the coordinates on a photon-by-photon
+         * basis and multiplying the fluxes on a photon-by-photon basis. Output photons' flux is
+         * renormalized so that the expectation value of output total flux is product of two input
          * totals, if the two photon streams are uncorrelated.
          *
          * @param[in] rhs PhotonArray to convolve with this one.  Must be same size.
@@ -169,7 +169,7 @@ namespace galsim {
         void convolve(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Convolve this array with another, shuffling the order in which photons are 
+         * @brief Convolve this array with another, shuffling the order in which photons are
          * combined.
          *
          * Same convolution behavior as convolve(), but the order in which the photons are
@@ -181,7 +181,7 @@ namespace galsim {
         void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Take x displacement from this, and y displacement from x of another array, 
+         * @brief Take x displacement from this, and y displacement from x of another array,
          * multiplying fluxes.
          *
          * @param[in] rhs Source of y displacements
@@ -192,7 +192,7 @@ namespace galsim {
          * @brief Add flux of photons to an image by binning into pixels.
          *
          * Photon in this PhotonArray are binned into the pixels of the input
-         * Image and their flux summed into the pixels.  Image is assumed to represent 
+         * Image and their flux summed into the pixels.  Image is assumed to represent
          * surface brightness, so photons' fluxes are divided by image pixel area.
          * Photons past the edges of the image are discarded.
          *
@@ -200,7 +200,7 @@ namespace galsim {
          * @returns The total flux of photons the landed inside the image bounds.
          */
         template <class T>
-        double addTo(ImageView<T>& target) const;
+        double addTo(ImageView<T> target) const;
 
         /**
          * @brief Declare that the photons in this array are correlated.

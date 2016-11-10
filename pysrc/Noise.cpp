@@ -93,7 +93,7 @@ namespace galsim {
         static void wrapTemplates(W& wrapper) {
             typedef void (BaseNoise::* applyTo_func_type)(ImageView<U>);
             wrapper
-                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView), 
+                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView),
                      (bp::arg("image")))
                 ;
         }
@@ -206,7 +206,7 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<VarGaussianNoise, bp::bases<BaseNoise> > pyVarGaussianNoise(
-                "VarGaussianNoise",  
+                "VarGaussianNoise",
                 bp::init<boost::shared_ptr<BaseDeviate>, const BaseImage<float>& >(
                     (bp::arg("rng")=bp::object(), bp::arg("var_image")))
             );

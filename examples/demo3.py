@@ -22,12 +22,12 @@ The third script in our tutorial about using GalSim in python scripts: examples/
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This script gets reasonably close to including all the principal features of an image
-from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk, 
-where each component is represented by a sheared Sersic profile (with different Sersic 
-indices).  The PSF has both atmospheric and optical components.  The atmospheric 
-component is a Kolmogorov turbulent spectrum.  The optical component includes defocus, 
+from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
+where each component is represented by a sheared Sersic profile (with different Sersic
+indices).  The PSF has both atmospheric and optical components.  The atmospheric
+component is a Kolmogorov turbulent spectrum.  The optical component includes defocus,
 coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model
-includes both a gain and read noise.  And finally, we include the effect of a slight 
+includes both a gain and read noise.  And finally, we include the effect of a slight
 telescope distortion.
 
 New features introduced in this demo:
@@ -59,7 +59,7 @@ def main(argv):
     """
     Getting reasonably close to including all the principle features of an image from a
     ground-based telescope:
-      - Use a bulge plus disk model for the galaxy 
+      - Use a bulge plus disk model for the galaxy
       - Both galaxy components are Sersic profiles (n=3.5 and n=1.5 respectively)
       - Let the PSF have both atmospheric and optical components.
       - The atmospheric component is a Kolmogorov spectrum.
@@ -76,7 +76,7 @@ def main(argv):
     logFile = logging.FileHandler(os.path.join("output", "script3.log"))
     logFile.setFormatter(logging.Formatter("%(name)s[%(levelname)s] %(asctime)s: %(message)s"))
     logging.getLogger("demo3").addHandler(logFile)
-    logger = logging.getLogger("demo3") 
+    logger = logging.getLogger("demo3")
 
     gal_flux = 1.e6        # ADU  ("Analog-to-digital units", the units of the numbers on a CCD)
     bulge_n = 3.5          #
@@ -87,7 +87,7 @@ def main(argv):
     gal_q = 0.73           # (axis ratio 0 < q < 1)
     gal_beta = 23          # degrees (position angle on the sky)
     atmos_fwhm=2.1         # arcsec
-    atmos_e = 0.13         # 
+    atmos_e = 0.13         #
     atmos_beta = 0.81      # radians
     opt_defocus=0.53       # wavelengths
     opt_a1=-0.29           # wavelengths
@@ -120,7 +120,7 @@ def main(argv):
     logger.info('       - Shape is e,beta (%.2f,%.2f rad)', atmos_e, atmos_beta)
     logger.info('    - Optical PSF has defocus = %.2f, astigmatism = (%.2f,%.2f),',
                 opt_defocus, opt_a1, opt_a2)
-    logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m', 
+    logger.info('          coma = (%.2f,%.2f), lambda = %.0f nm, D = %.1f m',
                 opt_c1, opt_c2, lam, tel_diam)
     logger.info('          obscuration linear size = %.1f',opt_obscuration)
     logger.info('    - pixel scale = %.2f,',pixel_scale)
@@ -130,11 +130,11 @@ def main(argv):
 
     # Initialize the (pseudo-)random number generator that we will be using below.
     rng = galsim.BaseDeviate(random_seed+1)
- 
+
     # Define the galaxy profile.
-    # Normally Sersic profiles are specified by half-light radius, the radius that 
-    # encloses half of the total flux.  However, for some purposes, it can be 
-    # preferable to instead specify the scale radius, where the surface brightness 
+    # Normally Sersic profiles are specified by half-light radius, the radius that
+    # encloses half of the total flux.  However, for some purposes, it can be
+    # preferable to instead specify the scale radius, where the surface brightness
     # drops to 1/e of the central peak value.
     bulge = galsim.Sersic(bulge_n, half_light_radius=bulge_re)
     disk = galsim.Sersic(disk_n, scale_radius=disk_r0)
@@ -185,21 +185,21 @@ def main(argv):
     # lam_over_diam = lam_over_diam / galsim.arcsec
     logger.debug('Calculated lambda over diam = %f arcsec', lam_over_diam)
     # The rest of the values should be given in units of the wavelength of the incident light.
-    optics = galsim.OpticalPSF(lam_over_diam, 
+    optics = galsim.OpticalPSF(lam_over_diam,
                                defocus = opt_defocus,
                                coma1 = opt_c1, coma2 = opt_c2,
                                astig1 = opt_a1, astig2 = opt_a2,
                                obscuration = opt_obscuration)
     logger.debug('Made optical PSF profile')
 
-    # So far, our coordinate transformation between image and sky coordinates has been just a 
+    # So far, our coordinate transformation between image and sky coordinates has been just a
     # scaling of the units between pixels and arcsec, which we have defined as the "pixel scale".
     # This is fine for many purposes, so we have made it easy to treat the coordinate systems
     # this way via the `scale` parameter to commands like drawImage.  However, in general, the
     # transformation between the two coordinate systems can be more complicated than that,
-    # including distortions, rotations, variation in pixel size, and so forth.  GalSim can 
+    # including distortions, rotations, variation in pixel size, and so forth.  GalSim can
     # model a number of different "World Coordinate System" (WCS) transformations.  See the
-    # docstring for BaseWCS for more information.  
+    # docstring for BaseWCS for more information.
 
     # In this case, we use a WCS that includes a distortion (specified as g1,g2 in this case),
     # which we call a ShearWCS.
@@ -211,7 +211,7 @@ def main(argv):
     final = galsim.Convolve([psf, gal])
     logger.debug('Convolved components into final profile')
 
-    # This time we specify a particular size for the image rather than let GalSim 
+    # This time we specify a particular size for the image rather than let GalSim
     # choose the size automatically.  GalSim has several kinds of images that it can use:
     #   ImageF uses 32-bit floats    (like a C float, aka numpy.float32)
     #   ImageD uses 64-bit floats    (like a C double, aka numpy.float64)
@@ -231,7 +231,7 @@ def main(argv):
 
     # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    # In this case, we draw a "surface brightness image" using method='sb'.  Rather than 
+    # In this case, we draw a "surface brightness image" using method='sb'.  Rather than
     # integrate the flux over the area of each pixel, this method just samples the surface
     # brightness value at the locations of the pixel centers.  We will encounter a few other
     # drawing methods as we go through this sequence of demos.  cf. demos 7, 8, 10, and 11.
@@ -243,8 +243,8 @@ def main(argv):
 
     # This time, we use CCDNoise to model the real noise in a CCD image.  It takes a sky level,
     # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
-    # or PoissonNoise that we used in demos 1 and 2.  
-    # 
+    # or PoissonNoise that we used in demos 1 and 2.
+    #
     # The gain is in units of e-/ADU.  Technically, one should also account for quantum efficiency
     # (QE) of the detector. An ideal CCD has one electron per incident photon, but real CCDs have
     # QE less than 1, so not every photon triggers an electron.  We are essentially folding

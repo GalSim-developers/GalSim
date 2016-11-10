@@ -106,3 +106,13 @@ galsim.ConstImageView = {
     numpy.float32 : ConstImageViewF,
     numpy.float64 : ConstImageViewD
 }
+
+def at(self, x, y):
+    """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
+    does not have to parse the different options available for __call__.  (i.e. im(x,y) or
+    im(pos) or im(x=x,y=y))
+    """
+    depr('image.at(x,y)', 1.5, 'image.getValue(x,y)')
+    return self.getValue(x,y)
+
+galsim.Image.at = at

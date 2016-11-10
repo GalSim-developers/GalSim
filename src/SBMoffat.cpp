@@ -41,12 +41,6 @@
 #define USE_COS_SIN
 #endif
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
@@ -367,87 +361,53 @@ namespace galsim {
         else return _ft(ksq);
     }
 
-    void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<double> im,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
     {
-        dbg<<"SBMoffat fillXValue\n";
+        dbg<<"SBMoffat fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
 
             x0 *= _inv_rD;
             dx *= _inv_rD;
             y0 *= _inv_rD;
             dy *= _inv_rD;
 
-            for (int j=0;j<n;++j,y0+=dy) {
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
                 double ysq = y0*y0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) {
+                for (int i=0; i<m; ++i,x+=dx,++ptr) {
                     double rsq = x*x + ysq;
-                    if (rsq > _maxRrD_sq) *valit++ = 0.;
-                    else *valit++ = _norm / _pow_beta(1.+rsq, _beta);
+                    if (rsq <= _maxRrD_sq)
+                        *ptr = _norm / _pow_beta(1.+rsq, _beta);
                 }
             }
         }
     }
 
-    void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double kx0, double dkx, int izero,
-                                            double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBMoffat fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-            kx0 *= _rD;
-            dkx *= _rD;
-            ky0 *= _rD;
-            dky *= _rD;
-
-            for (int j=0;j<n;++j,ky0+=dky) {
-                double kx = kx0;
-                double kysq = ky0*ky0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,kx+=dkx) {
-                    double ksq = kx*kx + kysq;
-                    *valit++ = _knorm * (this->*_kV)(ksq);
-                }
-            }
-        }
-    }
-
-    void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBMoffat::SBMoffatImpl::fillXImage(ImageView<double> im,
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
-        dbg<<"SBMoffat fillXValue\n";
+        dbg<<"SBMoffat fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 *= _inv_rD;
         dx *= _inv_rD;
@@ -456,30 +416,61 @@ namespace galsim {
         dy *= _inv_rD;
         dyx *= _inv_rD;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx,++ptr) {
                 double rsq = x*x + y*y;
-                if (rsq > _maxRrD_sq) *valit++ = 0.;
-                else *valit++ = _norm / _pow_beta(1.+rsq, _beta);
+                if (rsq <= _maxRrD_sq)
+                    *ptr = _norm / _pow_beta(1.+rsq, _beta);
             }
         }
     }
 
-    void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBMoffat fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _rD;
+            dkx *= _rD;
+            ky0 *= _rD;
+            dky *= _rD;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0;i<m;++i,kx+=dkx)
+                    *ptr++ = _knorm * (this->*_kV)(kx*kx + kysq);
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
                                             double kx0, double dkx, double dkxy,
                                             double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBMoffat fillKValue\n";
+        dbg<<"SBMoffat fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         kx0 *= _rD;
         dkx *= _rD;
@@ -488,14 +479,11 @@ namespace galsim {
         dky *= _rD;
         dkyx *= _rD;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
-                double ksq = kx*kx + ky*ky;
-                *valit++ = _knorm * (this->*_kV)(ksq);
-            }
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _knorm * (this->*_kV)(kx*kx + ky*ky);
         }
     }
 

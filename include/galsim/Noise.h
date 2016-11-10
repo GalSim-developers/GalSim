@@ -20,7 +20,7 @@
 #ifndef GalSim_Noise_H
 #define GalSim_Noise_H
 
-/** 
+/**
  * @file Noise.h @brief Add noise to image using various noise models
  *
  */
@@ -35,8 +35,8 @@ namespace galsim {
     template <typename T>
     inline T SQR(T x) { return x*x; }
 
-    /** 
-     * @brief Base class for noise models.  
+    /**
+     * @brief Base class for noise models.
      *
      * The BaseNoise class defines the interface for classes that define noise models
      * for how to add noise to an image.
@@ -49,7 +49,7 @@ namespace galsim {
          *
          * @param[in] rng   The BaseDeviate to use for the random number generation.
          */
-        BaseNoise(boost::shared_ptr<BaseDeviate> rng) : _rng(rng) 
+        BaseNoise(boost::shared_ptr<BaseDeviate> rng) : _rng(rng)
         { if (!_rng) _rng.reset(new BaseDeviate(0)); }
 
         /**
@@ -94,10 +94,10 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
-        { 
-            // This uses the standard workaround for the fact that you can't have a 
-            // virtual template function.  The doApplyTo functions are virtual and 
+        void applyToView(ImageView<T> data)
+        {
+            // This uses the standard workaround for the fact that you can't have a
+            // virtual template function.  The doApplyTo functions are virtual and
             // are listed for each allowed value of T (
             doApplyTo(data);
         }
@@ -118,7 +118,7 @@ namespace galsim {
     };
 
 
-    /** 
+    /**
      * @brief Class implementing simple Gaussian noise.
      *
      * The GaussianNoise class implements a simple Gaussian noise with a given sigma.
@@ -126,7 +126,7 @@ namespace galsim {
     class GaussianNoise : public BaseNoise
     {
     public:
- 
+
         /**
          * @brief Construct a new noise model with a given sigma.
          *
@@ -142,10 +142,10 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        GaussianNoise(const GaussianNoise& rhs) : 
+        GaussianNoise(const GaussianNoise& rhs) :
             BaseNoise(rhs), _sigma(rhs._sigma)
         {}
- 
+
         /**
          * @brief Report current sigma.
          */
@@ -155,7 +155,7 @@ namespace galsim {
          * @brief Set sigma
          */
         void setSigma(double sigma) { _sigma = sigma; }
- 
+
         /**
          * @brief Get the variance of the noise model
          */
@@ -164,28 +164,28 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          */
-        void setVariance(double variance) 
+        void setVariance(double variance)
         {
-            if (!(variance >= 0.)) 
+            if (!(variance >= 0.))
                 throw std::runtime_error("Cannot setVariance to < 0");
-            _sigma = sqrt(variance); 
+            _sigma = sqrt(variance);
         }
 
         /**
          * @brief Scale the variance of the noise model
          */
-        void scaleVariance(double variance_ratio) 
+        void scaleVariance(double variance_ratio)
         {
-            if (!(variance_ratio >= 0.)) 
+            if (!(variance_ratio >= 0.))
                 throw std::runtime_error("Cannot scaleVariance to < 0");
-            _sigma *= sqrt(variance_ratio); 
+            _sigma *= sqrt(variance_ratio);
         }
 
         /**
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
+        void applyToView(ImageView<T> data)
         {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
@@ -208,14 +208,14 @@ namespace galsim {
         void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
-    private: 
+    private:
         double _sigma;
     };
 
-    /** 
+    /**
      * @brief Class implementing simple Poisson noise.
      *
-     * The PoissonNoise class encapsulates the noise model of Poisson noise corresponding 
+     * The PoissonNoise class encapsulates the noise model of Poisson noise corresponding
      * to the current value in each pixel (including an optional extra sky level).
      *
      * It is equivalent to CCDNoise with gain=1, read_noise=0.
@@ -223,13 +223,13 @@ namespace galsim {
     class PoissonNoise : public BaseNoise
     {
     public:
- 
+
         /**
          * @brief Construct a new noise model, sharing the random number generator with rng.
          *
          * @param[in] rng        The BaseDeviate to use for the random number generation.
          * @param[in] sky_level  The sky level in counts per pixel that was originally in
-         *                       the input image, but which is taken to have already been 
+         *                       the input image, but which is taken to have already been
          *                       subtracted off.
          */
         PoissonNoise(boost::shared_ptr<BaseDeviate> rng, double sky_level) :
@@ -241,10 +241,10 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        PoissonNoise(const PoissonNoise& rhs) : 
+        PoissonNoise(const PoissonNoise& rhs) :
             BaseNoise(rhs), _sky_level(rhs._sky_level)
         {}
- 
+
 
         /**
          * @brief Report current sky_level
@@ -255,7 +255,7 @@ namespace galsim {
          * @brief Set sky level
          */
         void setSkyLevel(double sky_level) { _sky_level = sky_level; }
- 
+
         /**
          * @brief Get the variance of the noise model
          */
@@ -264,30 +264,30 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          */
-        void setVariance(double variance) 
-        { 
-            if (!(variance >= 0.)) 
+        void setVariance(double variance)
+        {
+            if (!(variance >= 0.))
                 throw std::runtime_error("Cannot setVariance to < 0");
-            _sky_level = variance; 
+            _sky_level = variance;
         }
 
         /**
          * @brief Scale the variance of the noise model
          */
-        void scaleVariance(double variance_ratio) 
-        { 
-            if (!(variance_ratio >= 0.)) 
+        void scaleVariance(double variance_ratio)
+        {
+            if (!(variance_ratio >= 0.))
                 throw std::runtime_error("Cannot scaleVariance to < 0");
-            _sky_level *= variance_ratio; 
+            _sky_level *= variance_ratio;
         }
 
         /**
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
+        void applyToView(ImageView<T> data)
         {
-            // Above this many e's, assume Poisson distribution == Gaussian 
+            // Above this many e's, assume Poisson distribution == Gaussian
             // The Gaussian deviate is about 20% faster than Poisson, and for high N
             // they are virtually identical.
             const double MAX_POISSON=1.e5;
@@ -325,12 +325,12 @@ namespace galsim {
         void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
-    private: 
+    private:
         double _sky_level;
     };
 
-    /** 
-     * @brief Class implementing basic CCD noise model.  
+    /**
+     * @brief Class implementing basic CCD noise model.
      *
      * The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
      * components: first, Poisson noise corresponding to the number of electrons in each pixel
@@ -348,13 +348,13 @@ namespace galsim {
     class CCDNoise : public BaseNoise
     {
     public:
- 
+
         /**
          * @brief Construct a new noise model, sharing the random number generator with rng.
          *
          * @param[in] rng        The BaseDeviate to use for the random number generation.
          * @param[in] sky_level  The sky level in ADU per pixel that was originally in
-         *                       the input image, but which is taken to have already been 
+         *                       the input image, but which is taken to have already been
          *                       subtracted off.
          * @param[in] gain       Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] read_noise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
@@ -370,11 +370,11 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        CCDNoise(const CCDNoise& rhs) : 
+        CCDNoise(const CCDNoise& rhs) :
             BaseNoise(rhs),
             _sky_level(rhs._sky_level), _gain(rhs._gain), _read_noise(rhs._read_noise)
         {}
- 
+
 
         /**
          * @brief Report current sky_level
@@ -405,11 +405,11 @@ namespace galsim {
          * @brief Set read noise
          */
         void setReadNoise(double read_noise) { _read_noise = read_noise; }
- 
+
         /**
          * @brief Get the variance of the noise model
          */
-        double getVariance() const 
+        double getVariance() const
         {
             if (_gain > 0) return _sky_level/_gain + SQR(_read_noise/_gain);
             else return SQR(_read_noise);
@@ -422,7 +422,7 @@ namespace galsim {
          */
         void setVariance(double variance)
         {
-            if (!(variance >= 0.)) 
+            if (!(variance >= 0.))
                 throw std::runtime_error("Cannot setVariance to < 0");
             double var = getVariance();
             if (var > 0.)
@@ -438,7 +438,7 @@ namespace galsim {
          */
         void scaleVariance(double variance_ratio)
         {
-            if (!(variance_ratio >= 0.)) 
+            if (!(variance_ratio >= 0.))
                 throw std::runtime_error("Cannot scaleVariance to < 0");
             _sky_level *= variance_ratio;
             _read_noise *= sqrt(variance_ratio);
@@ -452,9 +452,9 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
+        void applyToView(ImageView<T> data)
         {
-            // Above this many e's, assume Poisson distribution == Gaussian 
+            // Above this many e's, assume Poisson distribution == Gaussian
             // The Gaussian deviate is about 20% faster than Poisson, and for high N
             // they are virtually identical.
             const double MAX_POISSON=1.e5;
@@ -501,14 +501,14 @@ namespace galsim {
          * @brief Add noise to an Image and also report variance of each pixel.
          *
          * Adds noise as in applyToView(Image) signature, but second Image is filled with
-         * variance of added noise.  Note: the variance image must be the same size as the 
+         * variance of added noise.  Note: the variance image must be the same size as the
          * data image.
          *
          * @param[in,out] data The Image to be noise-ified.
          * @param[in,out] var  The Image to fill with variance of applied noise.
          */
         template <class T>
-        void applyToVar(ImageView<T> data, ImageView<T> var) 
+        void applyToVar(ImageView<T> data, ImageView<T> var)
         {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
@@ -526,7 +526,7 @@ namespace galsim {
                     for (ImIter it = data.rowBegin(y); it != ee; ++it, ++it2) {
                         if (*it > 0.) *it2 += (*it + _sky_level) / _gain;
                     }
-                } 
+                }
             }
             // then call noise method to instantiate noise
             applyToView(data);
@@ -541,14 +541,14 @@ namespace galsim {
         void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
-    private: 
+    private:
         double _sky_level;
         double _gain;
         double _read_noise;
     };
 
 
-    /** 
+    /**
      * @brief Add noise according to a given Deviate
      *
      * For each pixel, draw the amount of noise from the provided Deviate object.
@@ -556,7 +556,7 @@ namespace galsim {
     class DeviateNoise : public BaseNoise
     {
     public:
- 
+
         /**
          * @brief Construct a new noise model using a given BaseDeviate object.
          *
@@ -570,11 +570,11 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         DeviateNoise(const DeviateNoise& rhs) : BaseNoise(rhs) {}
-  
+
         /**
          * @brief Get the variance of the noise model
          */
-        double getVariance() const 
+        double getVariance() const
         {
             throw std::runtime_error("getVariance not implemented for DeviateNoise");
         }
@@ -582,9 +582,9 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          */
-        void setVariance(double variance) 
+        void setVariance(double variance)
         {
-            if (!(variance >= 0.)) 
+            if (!(variance >= 0.))
                 throw std::runtime_error("Cannot setVariance to < 0");
             throw std::runtime_error("setVariance not implemented for DeviateNoise");
         }
@@ -592,9 +592,9 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          */
-        void scaleVariance(double variance_ratio) 
+        void scaleVariance(double variance_ratio)
         {
-            if (!(variance_ratio >= 0.)) 
+            if (!(variance_ratio >= 0.))
                 throw std::runtime_error("Cannot scaleVariance to < 0");
             throw std::runtime_error("scaleVariance not implemented for DeviateNoise");
         }
@@ -605,7 +605,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
+        void applyToView(ImageView<T> data)
         {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
@@ -626,16 +626,16 @@ namespace galsim {
         void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
     };
 
-    /** 
+    /**
      * @brief Class implementing variable Gaussian noise.
      *
-     * The VarGaussianNoise class implements Gaussian noise where each pixel may have 
+     * The VarGaussianNoise class implements Gaussian noise where each pixel may have
      * a different variance.
      */
     class VarGaussianNoise : public BaseNoise
     {
     public:
- 
+
         /**
          * @brief Construct a new noise model with a given variance image.
          *
@@ -652,10 +652,10 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        VarGaussianNoise(const VarGaussianNoise& rhs) : 
+        VarGaussianNoise(const VarGaussianNoise& rhs) :
             BaseNoise(rhs), _var_image(rhs._var_image)
         {}
- 
+
         /**
          * @brief Report current variance image.
          */
@@ -664,17 +664,17 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        double getVariance() const 
-        { 
-            throw std::runtime_error("No single variance value for VariableGaussianNoise"); 
+        double getVariance() const
+        {
+            throw std::runtime_error("No single variance value for VariableGaussianNoise");
             return 0.;
         }
 
         /**
          * @brief Set the variance of the noise model
          */
-        void setVariance(double variance) 
-        { 
+        void setVariance(double variance)
+        {
             throw std::runtime_error(
                 "Changing the variance is not allowed for VariableGaussianNoise");
         }
@@ -682,7 +682,7 @@ namespace galsim {
         /**
          * @brief Scale the variance of the noise model
          */
-        void scaleVariance(double variance_ratio) 
+        void scaleVariance(double variance_ratio)
         {
             throw std::runtime_error(
                 "Changing the variance is not allowed for VariableGaussianNoise");
@@ -692,7 +692,7 @@ namespace galsim {
          * @brief Add noise to an Image.
          */
         template <typename T>
-        void applyToView(ImageView<T> data) 
+        void applyToView(ImageView<T> data)
         {
             if ( (data.getYMax()-data.getYMin() != _var_image.getYMax()-_var_image.getYMin()) ||
                  (data.getXMax()-data.getXMin() != _var_image.getXMax()-_var_image.getXMin()) ) {
@@ -710,7 +710,7 @@ namespace galsim {
                 ImIter ee = data.rowEnd(y);
                 CImFIter var_it = _var_image.rowBegin(y2);
                 for (ImIter it = data.rowBegin(y); it != ee; ++it, ++var_it) {
-                    if (!(*var_it >= 0)) 
+                    if (!(*var_it >= 0))
                         throw std::runtime_error("variance image has elements < 0.");
                     gd.setSigma(sqrt(*var_it));
                     *it = T(*it + gd());
@@ -727,7 +727,7 @@ namespace galsim {
         void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
-    private: 
+    private:
         ConstImageView<float> _var_image;
 
     };

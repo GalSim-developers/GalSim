@@ -20,11 +20,11 @@ Demo #2
 
 The second script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
- 
+
 This script is a bit more sophisticated, but still pretty basic.  We're still only making
 a single image, but now the galaxy has an exponential radial profile and is sheared.
 The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
-using the flux from both the object and a background sky level to determine the 
+using the flux from both the object and a background sky level to determine the
 variance in each pixel.
 
 New features introduced in this demo:
@@ -50,9 +50,9 @@ def main(argv):
       - Convolve it by a circular Moffat PSF.
       - Add Poisson noise to the image.
     """
-    # In non-script code, use getLogger(__name__) at module scope instead.    
+    # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger("demo2") 
+    logger = logging.getLogger("demo2")
 
     gal_flux = 1.e5    # counts
     gal_r0 = 2.7       # arcsec
@@ -77,7 +77,7 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
     # Initialize the (pseudo-)random number generator that we will be using below.
-    # For a technical reason that will be explained later (demo9.py), we add 1 to the 
+    # For a technical reason that will be explained later (demo9.py), we add 1 to the
     # given random seed here.
     rng = galsim.BaseDeviate(random_seed+1)
 
@@ -139,7 +139,7 @@ def main(argv):
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
                 results.observed_shape.e2, results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports distortions')
-    logger.info('    e1, e2 = %.3f, %.3f', 
+    logger.info('    e1, e2 = %.3f, %.3f',
                 results.corrected_e1, results.corrected_e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     exp_shear = galsim.Shear(g1=g1, g2=g2)

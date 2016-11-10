@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 
 # The Great3 real-ground-constant branch configuration file
-# Note: This configuration will not produce images _identical_ to the ones used for Great3, 
+# Note: This configuration will not produce images _identical_ to the ones used for Great3,
 # since the order of random number generation is different.  However, it is intended to
 # produce an _equivalent_ simulation as the one produced for Great3.
 

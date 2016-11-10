@@ -59,7 +59,7 @@ def test_corr_padding_cf():
     for iter in range(n_iter):
         # make it into an InterpolatedImage padded with cf
         int_im = galsim.InterpolatedImage(orig_img, noise_pad=cf)
-        
+
         # do it again with a particular seed
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = cf)

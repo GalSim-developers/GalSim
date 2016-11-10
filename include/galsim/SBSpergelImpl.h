@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBSpergel.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 
@@ -149,6 +150,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return std::abs(_xnorm) * _info->xValue(0.); }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
@@ -165,16 +167,16 @@ namespace galsim {
         double calculateFluxRadius(const double &f) const;
 
         // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

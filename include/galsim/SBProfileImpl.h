@@ -21,7 +21,6 @@
 #define GalSim_SBProfileImpl_H
 
 #include "SBProfile.h"
-#include "FFT.h"
 #include "integ/Int.h"
 #include "TMV.h"
 
@@ -59,16 +58,16 @@ namespace galsim {
         //
         // If these aren't overridden, then the regular xValue or kValue will be called for each
         // position.
-        virtual void fillXValue(tmv::MatrixView<double> val,
+        virtual void fillXImage(ImageView<double> im,
                                 double x0, double dx, int izero,
                                 double y0, double dy, int jzero) const;
-        virtual void fillXValue(tmv::MatrixView<double> val,
+        virtual void fillXImage(ImageView<double> im,
                                 double x0, double dx, double dxy,
                                 double y0, double dy, double dyx) const;
-        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        virtual void fillKImage(ImageView<std::complex<double> > im,
                                 double kx0, double dkx, int izero,
                                 double ky0, double dky, int jzero) const;
-        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        virtual void fillKImage(ImageView<std::complex<double> > im,
                                 double kx0, double dkx, double dkxy,
                                 double ky0, double dky, double dkyx) const;
 
@@ -80,6 +79,7 @@ namespace galsim {
         virtual bool isAnalyticK() const =0;
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0;
+        virtual double maxSB() const =0;
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
 
         // Functions with default implementations:
@@ -97,17 +97,6 @@ namespace galsim {
 
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
-        // Utility for drawing into Image data structures.
-        // returns flux integral
-        template <typename T>
-        double fillXImage(ImageView<T>& image, double gain) const;
-
-        // Utility for drawing a k grid into FFT data structures
-        void fillKGrid(KTable& kt) const;
-
-        // Utility for drawing an x grid into FFT data structures
-        void fillXGrid(XTable& xt) const;
-
         // Public so it can be directly used from SBProfile.
         const GSParamsPtr gsparams;
 
@@ -122,12 +111,12 @@ namespace galsim {
         // Only one quadrant has its values computed.  Then these values are copied to the other
         // 3 quadrants.  The input values izero, jzero are the index of x=0, y=0.
         // At least one of these needs to be != 0.
-        void fillXValueQuadrant(tmv::MatrixView<double> val,
-                                double x0, double dx, int nx1,
-                                double y0, double dy, int ny1) const;
-        void fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
-                                double kx0, double dkx, int nkx1,
-                                double ky0, double dky, int nky1) const;
+        void fillXImageQuadrant(ImageView<double> im,
+                                double x0, double dx, int m1,
+                                double y0, double dy, int n1) const;
+        void fillKImageQuadrant(ImageView<std::complex<double> > im,
+                                double kx0, double dkx, int m1,
+                                double ky0, double dky, int n1) const;
 
     private:
         // Copy constructor and op= are undefined.

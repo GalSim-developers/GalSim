@@ -360,7 +360,7 @@ class InterpolatedImage(GSObject):
             # as large as we need in any direction.
             noise_pad_size = int(math.ceil(noise_pad_size / self.min_scale))
             # Round up to a good size for doing FFTs
-            noise_pad_size = galsim._galsim.goodFFTSize(noise_pad_size)
+            noise_pad_size = galsim.Image.good_fft_size(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0
@@ -592,14 +592,14 @@ class InterpolatedImage(GSObject):
 
 
 class InterpolatedKImage(GSObject):
-    """A class describing non-parametric profiles specified by samples -- i.e., images -- of their
-    complex Fourier transform.
+    """A class describing non-parametric profiles specified by samples of their complex Fourier
+    transform.
 
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
-    transform of an object as a pair of Images -- one for the real part and one for the imaginary
-    part -- of the complex-valued profile that you wish to manipulate / transform using GSObject
-    methods such as shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor
-    photon-shooting of InterpolatedKImages is currently implemented.  Please submit an issue at
+    transform of the profile (provided as either a complex Image or two Images giving the real and
+    imaginary parts) that you wish to manipulate / transform using GSObject methods such as
+    shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor photon-shooting
+    of InterpolatedKImages is currently implemented.  Please submit an issue at
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
     The images required for creating an InterpolatedKImage are precisely those returned by the
@@ -607,13 +607,15 @@ class InterpolatedKImage(GSObject):
     essentially equivalent images when drawn with the `.drawImage()` method:
 
     >>> a = returns_a_GSObject()
-    >>> b = galsim.InterpolatedKImage(*a.drawKImage())
+    >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
-    The real- and imaginary-part Images must have the same data type, same bounds, and same scale.
-    The only wcs permitted is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
-    formed by `real_kimage` and `imag_kimage` must be Hermitian, since it represents a real-valued
-    real-space profile.  (To see an example of valid input to `InterpolatedKImage`, you can look at
-    the output of `drawKImage`).
+    The input `kimage` must have dtype=numpy.complex128, which is also known as an ImageC object.
+    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case `kimage.scale` is
+    used for the `stepk` value unless overridden by the `stepk` initialization argument.
+
+    Furthermore, the complex-valued Fourier profile given by `kimage` must be Hermitian, since it
+    represents a real-valued real-space profile.  (To see an example of valid input to
+    `InterpolatedKImage`, you can look at the output of `drawKImage`).
 
     The user may optionally specify an interpolant, `k_interpolant`, for Fourier-space
     manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
@@ -626,14 +628,12 @@ class InterpolatedKImage(GSObject):
     Initialization
     --------------
 
-        >>> interpolated_kimage = galsim.InterpolatedKImage(real_kimage, imag_kimage,
-                k_interpolant=None, stepk=0., gsparams=None)
+        >>> interpolated_kimage = galsim.InterpolatedKImage(kimage, k_interpolant=None, stepk=0.,
+                                                            gsparams=None)
 
     Initializes `interpolated_kimage` as an InterpolatedKImage instance.
 
-    @param real_kimage      The Image corresponding to the real part of the Fourier-space samples.
-    @param imag_kimage      The Image corresponding to the imaginary part of the Fourier-space
-                            samples.
+    @param kimage           The complex Image corresponding to the Fourier-space samples.
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -645,9 +645,18 @@ class InterpolatedKImage(GSObject):
                             of decreasing the separation between neighboring copies of the
                             DFT-rendered real-space profile.  (See the GSParams docstring for the
                             parameter `folding_threshold` for more information).
-                            [default: real_kimage.scale]
+                            [default: kimage.scale]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param real_kimage      Optionally, rather than provide kimage, you may provide the real
+                            and imaginary parts separately.  These separate real-valued images
+                            may be strings, in which case they refer to FITS files from which
+                            to read the images. [default: None]
+    @param imag_kimage      The imaginary image corresponding to real_kimage. [default: None]
+    @param real_hdu         When reading in real_kimage from a file, this parameter can be used to
+                            select a particular HDU in the file. [default: None]
+    @param imag_hdu         When reading in imag_kimage from a file, this parameter can be used to
+                            select a particular HDU in the file. [default: None]
 
     Methods
     -------
@@ -657,58 +666,83 @@ class InterpolatedKImage(GSObject):
     _req_params = { 'real_kimage' : str,
                     'imag_kimage' : str }
     _opt_params = {
-        'k_interpolant' : str,
-        'stepk': float
+        'k_interpolant' : str, 'stepk': float,
+        'real_hdu': int, 'imag_hdu': int,
     }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=None,
-                 gsparams=None):
+    def __init__(self, kimage=None, k_interpolant=None, stepk=None, gsparams=None,
+                 real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):
+        if isinstance(kimage,galsim.Image) and isinstance(k_interpolant,galsim.Image):
+            from .deprecated import depr
+            depr('InterpolatedKImage(re,im,...)', 1.5,
+                 'either InterpolatedKImage(re + 1j * im, ...) or '
+                 'InterpolatedKImage(real_kimage=re, imag_kimage=im)')
+            # This won't work if they call InterpolatedKImage(re,im, k_interpolant=kinterp)
+            # But I don't see an easy way around that, so I guess that use case is not
+            # backwards compatible.  Sorry..
+            real_kimage = kimage
+            imag_kimage = k_interpolant
+            kimage = None
+            k_interpolant = None
 
-        # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are congruent.
-        if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image):
-            raise ValueError("Supplied kimage is not an Image instance")
-        if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
-            or (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
-            raise ValueError("Supplied image does not have dtype of float32 or float64!")
-        if real_kimage.bounds != imag_kimage.bounds:
-            raise ValueError("Real and Imag kimages must have same bounds.")
-        if real_kimage.scale != imag_kimage.scale:
-            raise ValueError("Real and Imag kimages must have same scale.")
+        if kimage is None:
+            if real_kimage is None or imag_kimage is None:
+                raise ValueError("Must provide either kimage or real_kimage/imag_kimage")
 
-        # Make sure any `wcs`s are `PixelScale`s.
-        if ((real_kimage.wcs is not None
-             and not real_kimage.wcs.isPixelScale())
-            or (imag_kimage.wcs is not None
-                and not imag_kimage.wcs.isPixelScale())):
-            raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
+            # If the "image" is not actually an image, try to read the image as a file.
+            if not isinstance(real_kimage, galsim.Image):
+                real_kimage = galsim.fits.read(real_kimage, hdu=real_hdu)
+            if not isinstance(imag_kimage, galsim.Image):
+                imag_kimage = galsim.fits.read(imag_kimage, hdu=imag_hdu)
 
-        # Check for Hermitian symmetry properties of real_kimage and imag_kimage
-        shape = real_kimage.array.shape
+            # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are
+            # congruent.
+            if not isinstance(real_kimage, galsim.Image):
+                raise ValueError("Supplied real_kimage is not an Image instance")
+            if not isinstance(imag_kimage, galsim.Image):
+                raise ValueError("Supplied imag_kimage is not an Image instance")
+            if real_kimage.bounds != imag_kimage.bounds:
+                raise ValueError("Real and Imag kimages must have same bounds.")
+            if real_kimage.wcs != imag_kimage.wcs:
+                raise ValueError("Real and Imag kimages must have same scale/wcs.")
+
+            kimage = real_kimage + 1j*imag_kimage
+        else:
+            if real_kimage is not None or imag_kimage is not None:
+                raise ValueError("Cannot provide both kimage and real_kimage/imag_kimage")
+            if not kimage.iscomplex:
+                raise ValueError("Supplied kimage is not an ImageC")
+
+        # Make sure wcs is a PixelScale.
+        if kimage.wcs is not None and not kimage.wcs.isPixelScale():
+            raise ValueError("kimage wcs must be PixelScale or None.")
+
+        # Check for Hermitian symmetry properties of kimage
+        shape = kimage.array.shape
         # If image is even-sized, ignore first row/column since in this case not every pixel has
         # a symmetric partner to which to compare.
-        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0),
-                            real_kimage.xmax,
-                            real_kimage.ymin + (1 if shape[0]%2==0 else 0),
-                            real_kimage.ymax)
-        if not (np.allclose(real_kimage[bd].array,
-                            real_kimage[bd].array[::-1,::-1]) and
-                np.allclose(imag_kimage[bd].array,
-                            -imag_kimage[bd].array[::-1,::-1])):
+        bd = galsim.BoundsI(kimage.xmin + (1 if shape[1]%2==0 else 0),
+                            kimage.xmax,
+                            kimage.ymin + (1 if shape[0]%2==0 else 0),
+                            kimage.ymax)
+        if not (np.allclose(kimage[bd].real.array,
+                            kimage[bd].real.array[::-1,::-1]) and
+                np.allclose(kimage[bd].imag.array,
+                            -kimage[bd].imag.array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
-            stepk = real_kimage.scale
+            stepk = kimage.scale
         else:
-            if stepk < real_kimage.scale:
+            if stepk < kimage.scale:
                 import warnings
                 warnings.warn(
                     "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
-                stepk = real_kimage.scale
+                stepk = kimage.scale
 
-        self._real_kimage = real_kimage
-        self._imag_kimage = imag_kimage
+        self._kimage = kimage
         self._stepk = stepk
         self._gsparams = gsparams
 
@@ -720,35 +754,30 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
-            self._real_kimage.image, self._imag_kimage.image,
-            self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
+            self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, gsparams))
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
-                self._real_kimage == other._real_kimage and
-                self._imag_kimage == other._imag_kimage and
+                self._kimage == other._kimage and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        # Definitely want to cache this, since the real and image kimages could be large.
+        # Definitely want to cache this, since the kimage could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
                                self._gsparams))
-            for img in [self._real_kimage, self._imag_kimage]:
-                self._hash ^= hash(tuple(img.array.ravel()))
-                self._hash ^= hash((img.bounds, img.wcs))
+            self._hash ^= hash(tuple(self._kimage.array.ravel()))
+            self._hash ^= hash((self._kimage.bounds, self._kimage.wcs))
         return self._hash
 
     def __repr__(self):
-        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)')%(
-                self._real_kimage, self._imag_kimage, self.k_interpolant,
-                self._stepk, self._gsparams)
+        return ('galsim.InterpolatedKImage(\n%r,\n%r, stepk=%r, gsparams=%r)')%(
+                self._kimage, self.k_interpolant, self._stepk, self._gsparams)
 
     def __str__(self):
-        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)'%(
-                self._real_kimage, self._imag_kimage)
+        return 'galsim.InterpolatedKImage(kimage=%s)'%(self._kimage)
 
     def __getstate__(self):
         # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty
@@ -763,14 +792,12 @@ class InterpolatedKImage(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.SBProfile = galsim._galsim.SBInterpolatedKImage(
-            self._real_kimage.image, self._imag_kimage.image,
-            self._real_kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
+            self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
         self.stepK(), self.maxK(), self.getGSParams())
 _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
-_galsim.SBInterpolatedImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
@@ -783,7 +810,6 @@ def _SBIKI_getinitargs(self):
                 0.0, 0.0, False, self.getGSParams())
 _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
-_galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
     'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
     %self.__getinitargs__())

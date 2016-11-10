@@ -59,6 +59,8 @@ template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT3
 //template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
+template <> struct NumPyTraits<std::complex<double> >
+{ static int getCode() { return NPY_COMPLEX128; } };
 
 inline int GetNumpyArrayTypeCode(PyObject* array)
 {
@@ -176,14 +178,14 @@ static bp::object ManageNumpyArray(PyObject* array, boost::shared_ptr<T> owner)
 
 template <typename T>
 static bp::object MakeNumpyArray(
-    const T* data, int n1, int n2, int stride, bool isConst,
+    const T* data, int n1, int n2, int step, int stride, bool isConst,
     boost::shared_ptr<T> owner = boost::shared_ptr<T>())
 {
     // --- Create array ---
     int flags = NPY_ARRAY_ALIGNED;
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[2] = { n1, n2 };
-    npy_intp strides[2] = { stride* int(sizeof(T)), int(sizeof(T)) };
+    npy_intp strides[2] = { stride * int(sizeof(T)), step * int(sizeof(T)) };
     PyObject* array = PyArray_New(
         &PyArray_Type, 2, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
@@ -200,7 +202,7 @@ static bp::object MakeNumpyArray(
     int flags = NPY_ARRAY_ALIGNED;
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[1] = { n1 };
-    npy_intp strides[1] = { stride* int(sizeof(T)) };
+    npy_intp strides[1] = { stride * int(sizeof(T)) };
     PyObject* array = PyArray_New(
         &PyArray_Type, 1, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
@@ -211,12 +213,11 @@ static bp::object MakeNumpyArray(
 // Check the type of the numpy array, input as array.
 // - It should be the same type as required for data (T).
 // - It should have dimensions dim
-// - It should be writeable if isConst=true
-// - It should have unit stride on the rows if ndim == 2
-// Also sets data, owner, stride to the appropriate values before returning.
+// - It should be writeable if isConst=false
+// Also sets data, owner, step, stride to the appropriate values before returning.
 template <typename T>
 static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
-    T*& data, boost::shared_ptr<T>& owner, int& stride)
+    T*& data, boost::shared_ptr<T>& owner, int& step, int& stride)
 {
     if (!PyArray_Check(array.ptr())) {
         PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
@@ -265,11 +266,10 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
         PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument must be writeable");
         bp::throw_error_already_set();
     }
-    if (ndim == 2 && GetNumpyArrayStride<T>(array.ptr(), 1) != 1) {
-        PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument must have contiguous rows");
-        bp::throw_error_already_set();
-    }
-
+    if (ndim == 2)
+        step = GetNumpyArrayStride<T>(array.ptr(), 1);
+    else
+        step = 1;
     stride = GetNumpyArrayStride<T>(array.ptr(), 0);
     data = GetNumpyArrayData<T>(array.ptr());
     PyObject* pyOwner = GetNumpyArrayBase(array.ptr());

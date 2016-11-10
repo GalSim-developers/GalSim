@@ -32,7 +32,7 @@ namespace galsim {
 
     struct PyLVector {
 
-        static bp::object GetArrayImpl(bp::object self, bool isConst) 
+        static bp::object GetArrayImpl(bp::object self, bool isConst)
         {
             const LVector& lvector = bp::extract<const LVector&>(self);
             bp::object numpy_array = MakeNumpyArray(
@@ -48,8 +48,9 @@ namespace galsim {
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
+            int step = 0;
             int stride = 0;
-            CheckNumpyArray(array,1,true,data,owner,stride);
+            CheckNumpyArray(array,1,true,data,owner,step,stride);
             int size = GetNumpyArrayDim(array.ptr(), 0);
             if (size != PQIndex::size(order)) {
                 PyErr_SetString(PyExc_ValueError, "Array for LVector is the wrong size");
@@ -98,13 +99,13 @@ namespace galsim {
                 .enable_pickling()
                 ;
 
-            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"), 
+            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"),
                     "Calculate the size of a shapelet vector for a given order");
 
         }
     };
 
-    struct PySBShapelet 
+    struct PySBShapelet
     {
         template <typename U>
         static void wrapImageTemplates() {
@@ -138,7 +139,7 @@ namespace galsim {
         }
     };
 
-    void pyExportSBShapelet() 
+    void pyExportSBShapelet()
     {
         PyLVector::wrap();
         PySBShapelet::wrap();

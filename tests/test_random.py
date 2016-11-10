@@ -1353,7 +1353,6 @@ def test_distLookupTable():
             d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
-            
 
     # Test filling an image
     d.seed(testseed)
@@ -1674,6 +1673,18 @@ def test_permute():
     # Make sure that everything is sensible
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    # Repeat with same seed, should do same permutation.
+    my_list = copy.deepcopy(my_list_copy)
+    galsim.random.permute(312, my_list)
+    for ind in range(n_list):
+        assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    try:
+        # permute with no lists should raise TypeError
+        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
+    except ImportError:
+        pass
 
 
 @timer

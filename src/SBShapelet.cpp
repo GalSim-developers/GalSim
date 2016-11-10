@@ -22,13 +22,6 @@
 #include "SBShapelet.h"
 #include "SBShapeletImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParamsPtr& gsparams) :
@@ -131,6 +124,12 @@ namespace galsim {
         return flux;
     }
 
+    double SBShapelet::SBShapeletImpl::maxSB() const
+    {
+        // Usually b0 dominates the flux, so just take the maximum SB for that Gaussian.
+        return std::abs(_bvec[0]) / (2. * M_PI * _sigma * _sigma);
+    }
+
     Position<double> SBShapelet::SBShapeletImpl::centroid() const
     {
         std::complex<double> cen(0.);
@@ -144,15 +143,18 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
 
-    void SBShapelet::SBShapeletImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<double> im,
                                                 double x0, double dx, int izero,
                                                 double y0, double dy, int jzero) const
     {
-        dbg<<"SBShapelet fillXValue\n";
+        dbg<<"SBShapelet fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        const int m = val.colsize();
-        const int n = val.rowsize();
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 /= _sigma;
         dx /= _sigma;
@@ -160,45 +162,33 @@ namespace galsim {
         dy /= _sigma;
 
         tmv::Matrix<double> mx(m,n);
-        for (int i=0;i<m;++i,x0+=dx) mx.row(i).setAllTo(x0);
+        for (int i=0; i<m; ++i,x0+=dx) mx.row(i).setAllTo(x0);
         tmv::Matrix<double> my(m,n);
-        for (int j=0;j<n;++j,y0+=dy) my.col(j).setAllTo(y0);
+        for (int j=0; j<n; ++j,y0+=dy) my.col(j).setAllTo(y0);
 
-        fillXValue(val,mx,my);
+        tmv::Matrix<double> val(m,n);
+        fillXValue(val.view(),mx,my);
+
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
     }
 
-    void SBShapelet::SBShapeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double kx0, double dkx, int izero,
-                                                double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBShapelet fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        const int m = val.colsize();
-        const int n = val.rowsize();
-
-        kx0 *= _sigma;
-        dkx *= _sigma;
-        ky0 *= _sigma;
-        dky *= _sigma;
-
-        tmv::Matrix<double> mkx(m,n);
-        for (int i=0;i<m;++i,kx0+=dkx) mkx.row(i).setAllTo(kx0);
-        tmv::Matrix<double> mky(m,n);
-        for (int j=0;j<n;++j,ky0+=dky) mky.col(j).setAllTo(ky0);
-
-        fillKValue(val,mkx,mky);
-    }
-
-    void SBShapelet::SBShapeletImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<double> im,
                                                 double x0, double dx, double dxy,
                                                 double y0, double dy, double dyx) const
     {
-        dbg<<"SBShapelet fillXValue\n";
+        dbg<<"SBShapelet fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        const int m = val.colsize();
-        const int n = val.rowsize();
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 /= _sigma;
         dx /= _sigma;
@@ -212,24 +202,68 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
         It xit = mx.linearView().begin();
         It yit = my.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
         }
 
-        fillXValue(val,mx,my);
+        tmv::Matrix<double> val(m,n);
+        fillXValue(val.view(),mx,my);
+
+        It valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
     }
 
-    void SBShapelet::SBShapeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBShapelet fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _sigma;
+        dkx *= _sigma;
+        ky0 *= _sigma;
+        dky *= _sigma;
+
+        tmv::Matrix<double> mkx(m,n);
+        for (int i=0; i<m; ++i,kx0+=dkx) mkx.row(i).setAllTo(kx0);
+        tmv::Matrix<double> mky(m,n);
+        for (int j=0; j<n; ++j,ky0+=dky) mky.col(j).setAllTo(ky0);
+
+        tmv::Matrix<std::complex<double> > val(m,n);
+        fillKValue(val.view(),mkx,mky);
+
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        CIt valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
+     }
+
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBShapelet fillKValue\n";
+        dbg<<"SBShapelet fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        const int m = val.colsize();
-        const int n = val.rowsize();
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         kx0 *= _sigma;
         dkx *= _sigma;
@@ -243,13 +277,21 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
         It kxit = mkx.linearView().begin();
         It kyit = mky.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) { *kxit++ = kx; *kyit++ = ky; }
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) { *kxit++ = kx; *kyit++ = ky; }
         }
 
-        fillKValue(val,mkx,mky);
+        tmv::Matrix<std::complex<double> > val(m,n);
+        fillKValue(val.view(),mkx,mky);
+
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        CIt valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
     }
 
     void SBShapelet::SBShapeletImpl::fillXValue(

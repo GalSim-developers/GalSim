@@ -98,7 +98,7 @@ struct PyAngle {
 
 } // anonymous
 
-void pyExportAngle() 
+void pyExportAngle()
 {
     PyAngleUnit::wrap();
     PyAngle::wrap();

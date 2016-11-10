@@ -29,11 +29,11 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAdd 
+    struct PySBAdd
     {
 
         // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams) 
+        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams)
         {
             bp::stl_input_iterator<SBProfile> begin(iterable), end;
             std::list<SBProfile> plist(begin, end);
@@ -49,7 +49,7 @@ namespace galsim {
             return l;
         }
 
-        static void wrap() 
+        static void wrap()
         {
             static char const* doc = "Sum of SBProfiles.";
 
@@ -69,7 +69,7 @@ namespace galsim {
 
     };
 
-    void pyExportSBAdd() 
+    void pyExportSBAdd()
     {
         PySBAdd::wrap();
     }

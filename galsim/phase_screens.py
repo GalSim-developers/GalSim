@@ -76,7 +76,7 @@ class AtmosphericScreen(object):
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
+        self.npix = galsim.Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_scale * self.npix
         self.altitude = altitude

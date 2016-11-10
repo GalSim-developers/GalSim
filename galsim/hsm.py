@@ -334,7 +334,7 @@ def _convertImage(image):
     # if weight is not of type float/double, convert to float/double
     if (image.dtype == np.int16 or image.dtype == np.uint16):
         image = galsim.ImageF(image)
-        
+
     if (image.dtype == np.int32 or image.dtype == np.uint32):
         image = galsim.ImageD(image)
 

@@ -83,6 +83,7 @@ namespace galsim {
         { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
 
         double getFlux() const { return _sumflux; }
+        double maxSB() const;
 
         /**
          * @brief Shoot photons through this SBAdd.
@@ -118,16 +119,16 @@ namespace galsim {
         double getNegativeFlux() const;
 
         // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
