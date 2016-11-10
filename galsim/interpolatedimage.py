@@ -592,14 +592,14 @@ class InterpolatedImage(GSObject):
 
 
 class InterpolatedKImage(GSObject):
-    """A class describing non-parametric profiles specified by samples -- i.e., images -- of their
-    complex Fourier transform.
+    """A class describing non-parametric profiles specified by samples of their complex Fourier
+    transform.
 
     The InterpolatedKImage class is useful if you have a non-parametric description of the Fourier
-    transform of an object as a pair of Images -- one for the real part and one for the imaginary
-    part -- of the complex-valued profile that you wish to manipulate / transform using GSObject
-    methods such as shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor
-    photon-shooting of InterpolatedKImages is currently implemented.  Please submit an issue at
+    transform of the profile (provided as either a complex Image or two Images giving the real and
+    imaginary parts) that you wish to manipulate / transform using GSObject methods such as
+    shear(), magnify(), shift(), etc.  Note that neither real-space convolution nor photon-shooting
+    of InterpolatedKImages is currently implemented.  Please submit an issue at
     http://github.com/GalSim-developers/GalSim/issues if you require either of these use cases.
 
     The images required for creating an InterpolatedKImage are precisely those returned by the
@@ -610,10 +610,12 @@ class InterpolatedKImage(GSObject):
     >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
     The input `kimage` must have dtype=numpy.complex128, which is also known as an ImageC object.
-    The only wcs permitted is a simple PixelScale.  Furthermore, the complex-valued Fourier profile
-    given by `kimage` must be Hermitian, since it represents a real-valued real-space profile.
-    (To see an example of valid input to `InterpolatedKImage`, you can look at the output of
-    `drawKImage`).
+    The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case `kimage.scale` is
+    used for the `stepk` value unless overridden by the `stepk` initialization argument.
+
+    Furthermore, the complex-valued Fourier profile given by `kimage` must be Hermitian, since it
+    represents a real-valued real-space profile.  (To see an example of valid input to
+    `InterpolatedKImage`, you can look at the output of `drawKImage`).
 
     The user may optionally specify an interpolant, `k_interpolant`, for Fourier-space
     manipulations (e.g., shearing, resampling).  If none is specified, then by default, a Quintic
@@ -631,7 +633,7 @@ class InterpolatedKImage(GSObject):
 
     Initializes `interpolated_kimage` as an InterpolatedKImage instance.
 
-    @param kimage           The Image corresponding to the real part of the Fourier-space samples.
+    @param kimage           The complex Image corresponding to the Fourier-space samples.
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
