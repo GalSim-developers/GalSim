@@ -33,8 +33,8 @@ a detector.
 A PhotonArray object is not typically constructed directly by the user.  Rather, it is
 typically constructed as the return value of the `GSObject.shoot` method.
 At this point, the photons only have x,y,flux values.  Then there are a number of classes
-that perform various modifications to the photons such as giving them wavelenghts or
-inclination angles or remove some due to fringing or vignetting.
+that perform various modifications to the photons such as giving them wavelengths or
+inclination angles or removing some due to fringing or vignetting.
 
 TODO: fringing, vignetting, and angles are not implemented yet, but we expect them to
 be implemented soon, so the above paragraph is a bit aspirational atm.
@@ -179,4 +179,3 @@ class WavelengthSampler(object):
         """Assign wavelengths to the photons sampled from the SED * Bandpass."""
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
-
