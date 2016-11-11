@@ -43,7 +43,8 @@ def test_photon_angles():
     fratio = 1.2
     obscuration = 0.2
     seed = 12345
-    photon_array.assignPhotonAngles(fratio, obscuration, seed)
+    assigner = galsim.FRatioAngles(fratio, obscuration, seed)
+    assigner.applyTo(photon_array)
 
     dxdz = photon_array.getDXDZArray()
     dydz = photon_array.getDYDZArray()

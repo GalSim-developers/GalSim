@@ -20,57 +20,67 @@ import numpy as np
 from ._galsim import PhotonArray
 import galsim
 
-def assignPhotonAngles(self, fratio, obscuration, seed):
-    """
+class FRatioAngles(object):
+    """A surface-layer operator that assigns photon directions based on the f/ratio and
+    obscuration.
+
     Assigns arrival directions at the focal plane for photons, drawing from a uniform
     brightness distribution between the obscuration angle and the angle of the FOV defined
-    by the f-ratio of the telescope.  The angles are expressed in terms of slopes dx/dz
+    by the f/ratio of the telescope.  The angles are expressed in terms of slopes dx/dz
     and dy/dz.
 
-    @param fratio               The f-ratio of the telescope (1.2 for LSST)
-    @param obscuration_angle    The angular radius of the central obscuration (deg)
-    @param seed                 Random number seed (optional)
+    @param fratio           The f-ratio of the telescope (e.g. 1.2 for LSST)
+    @param obscuration      Linear dimension of central obscuration as fraction of aperture
+                            linear dimension. [0., 1.).  [default: 0.0]
+    @param rng              A random number generator to use or None, in which case an rng
+                            will be automatically constructed for you. [default: None]
     """
+    def __init__(self, fratio, obscuration=0.0, rng=None):
 
-    if obscuration < 0 or obscuration > 1:
-        raise ValueError("The obscuration fraction must be between 0 and 1.")
+        if fratio < 0:
+            raise ValueError("The f-ratio must be positive.")
+        if obscuration < 0 or obscuration >= 1:
+            raise ValueError("The obscuration fraction must be between 0 and 1.")
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        else:
+            ud = galsim.UniformDeviate(rng)
 
-    if fratio < 0:
-        raise ValueError("The f-ratio must be positive.")
-        
-    dxdz = self.getDXDZArray()
-    dydz = self.getDYDZArray()
-    n_photons = len(dxdz)
+        self.fratio = fratio
+        self.obscuration = obscuration
+        self.ud = ud
 
-    fov_angle = np.arctan(0.5 / fratio)  # radians
-    obscuration_angle = obscuration * fov_angle
 
-    if seed is None:
-        ud = galsim.UniformDeviate()
-    else:
-        ud = galsim.UniformDeviate(seed)
+    def applyTo(self, photon_array):
+        """Assign directions to the photons in photon_array."""
 
-    # Generate azimuthal angles for the photons
-    # Set up a loop to fill the array of azimuth angles for now
-    # (The array is initialized below but there's no particular need to do this.)
-    phi = np.zeros(n_photons)
+        dxdz = photon_array.getDXDZArray()
+        dydz = photon_array.getDYDZArray()
+        n_photons = len(dxdz)
 
-    for i in np.arange(n_photons):
-        phi[i] = ud() * 2 * np.pi 
+        fov_angle = np.arctan(0.5 / self.fratio)  # radians
+        obscuration_angle = self.obscuration * fov_angle
 
-    # Generate inclination angles for the photons, which are uniform in sin(theta) between
-    # the sine of the obscuration angle and the sine of the FOV radius
-    sintheta = np.zeros(n_photons)
+        # Generate azimuthal angles for the photons
+        # Set up a loop to fill the array of azimuth angles for now
+        # (The array is initialized below but there's no particular need to do this.)
+        phi = np.zeros(n_photons)
 
-    for i in np.arange(n_photons):
-        sintheta[i] = np.sin(obscuration_angle) + (np.sin(fov_angle) - \
-                      np.sin(obscuration_angle))*ud()
+        for i in np.arange(n_photons):
+            phi[i] = self.ud() * 2 * np.pi
 
-    # Assign the directions to the arrays. In this class the convention for the
-    # zero of phi does not matter but it might if the obscuration dependent on
-    # phi
-    costheta = np.sqrt(1. - np.square(sintheta))
-    dxdz[:] = costheta * np.sin(phi)
-    dydz[:] = costheta * np.cos(phi)
+        # Generate inclination angles for the photons, which are uniform in sin(theta) between
+        # the sine of the obscuration angle and the sine of the FOV radius
+        sintheta = np.zeros(n_photons)
 
-PhotonArray.assignPhotonAngles = assignPhotonAngles
+        for i in np.arange(n_photons):
+            sintheta[i] = np.sin(obscuration_angle) + (np.sin(fov_angle) - \
+                          np.sin(obscuration_angle))*self.ud()
+
+        # Assign the directions to the arrays. In this class the convention for the
+        # zero of phi does not matter but it might if the obscuration dependent on
+        # phi
+        costheta = np.sqrt(1. - np.square(sintheta))
+        dxdz[:] = costheta * np.sin(phi)
+        dydz[:] = costheta * np.cos(phi)
+
