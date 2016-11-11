@@ -75,9 +75,9 @@ namespace {
                                   boost::shared_ptr<double>());
         }
 
-        static bp::object GetLambdaArray(PhotonArray& phot)
+        static bp::object GetWavelengthArray(PhotonArray& phot)
         {
-            return MakeNumpyArray(&phot.getLambdaVector()[0], phot.size(), 1, false,
+            return MakeNumpyArray(&phot.getWavelengthVector()[0], phot.size(), 1, false,
                                   boost::shared_ptr<double>());
         }
 
@@ -101,7 +101,7 @@ namespace {
                      "Get dxdz for photon number i")
                 .def("getDYDZ", &PhotonArray::getDYDZ, (bp::arg("i")),
                      "Get dydz for photon number i")
-                .def("getLambda", &PhotonArray::getLambda, (bp::arg("i")),
+                .def("getWavelength", &PhotonArray::getWavelength, (bp::arg("i")),
                      "Get wavelength for photon number i")
                 .def("getXArray", GetXArray,
                      "Get numpy array of x positions")
@@ -109,11 +109,15 @@ namespace {
                      "Get numpy array of y positions")
                 .def("getFluxArray", GetFluxArray,
                      "Get numpy array of fluxes")
+                .def("hasAllocatedAngles", &PhotonArray::hasAllocatedAngles,
+                     "Returns whether the dxdz and dydz arrays are allocated")
+                .def("hasAllocatedWavelengths", &PhotonArray::hasAllocatedWavelengths,
+                     "Returns whether the wavelength arrays are allocated")
                 .def("getDXDZArray", GetDXDZArray,
                      "Get numpy array of dxdz values")
                 .def("getDYDZArray", GetDYDZArray,
                      "Get numpy array of dydz values")
-                .def("getLambdaArray", GetLambdaArray,
+                .def("getWavelengthArray", GetWavelengthArray,
                      "Get numpy array of wavelengths")
                 .def("getTotalFlux", &PhotonArray::getTotalFlux,
                      "Return the total flux of all photons")

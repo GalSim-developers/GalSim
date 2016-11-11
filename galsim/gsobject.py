@@ -979,7 +979,8 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, sensor=None, setup_only=False, dx=None, wmult=1.):
+                  poisson_flux=None, surface_ops=(), sensor=None, setup_only=False,
+                  dx=None, wmult=1.):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1232,6 +1233,9 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param surface_ops  A list of operators that can modify the photon array that will be
+                            applied in order before accumulating the photons on the sensor.
+                            [default: ()]
         @param sensor       An optional Sensor instance, which will be used to accumulate the
                             photons onto the image. [default: None]
         @param setup_only   Don't actually draw anything on the image.  Just make sure the image
@@ -1291,6 +1295,8 @@ class GSObject(object):
                 raise ValueError("max_extra_noise is only relevant for method='phot'")
             if poisson_flux is not None:
                 raise ValueError("poisson_flux is only relevant for method='phot'")
+            if surface_ops != ():
+                raise ValueError("surface_ops are only relevant for method='phot'")
 
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
@@ -1346,7 +1352,7 @@ class GSObject(object):
 
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
-                                          sensor, gain)
+                                          surface_ops, sensor, gain)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1368,7 +1374,12 @@ class GSObject(object):
                     ud = galsim.UniformDeviate(rng)
                 else:
                     raise TypeError("The rng provided is not a BaseDeviate")
+
                 phot_array = galsim._galsim.PhotonArray(draw_image.image, 1., ud)
+
+                for op in surface_ops:
+                    op.applyTo(phot_array)
+
                 added_photons = sensor.accumulate(phot_array, imview)
                 print 'added_photons = ',added_photons
 
@@ -1622,7 +1633,7 @@ class GSObject(object):
 
 
     def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
-                 sensor=None, gain=1.0):
+                 surface_ops=(), sensor=None, gain=1.0):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1672,6 +1683,9 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param surface_ops  A list of operators that can modify the photon array that will be
+                            applied in order before accumulating the photons on the sensor.
+                            [default: ()]
         @param sensor       An optional Sensor instance, which will be used to accumulate the
                             photons onto the image. [default: None]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
@@ -1742,6 +1756,9 @@ class GSObject(object):
                 raise
 
             phot_array.scaleFlux(g * thisN / Ntot)
+
+            for op in surface_ops:
+                op.applyTo(phot_array)
 
             added_flux += sensor.accumulate(phot_array, image)
             Nleft -= thisN;
