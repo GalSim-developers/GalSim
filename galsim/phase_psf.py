@@ -799,9 +799,6 @@ class PhaseScreenList(object):
         """
         return np.sum([layer.wavefront(aper, theta, compact) for layer in self], axis=0)
 
-    def wavefront_grad(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
-        return np.sum([layer.wavefront_grad(aper, theta, compact) for layer in self], axis=0)
-
     def wavefront_grad_at(self, u, v, t, diam=None, theta=None):
         return np.sum([layer.wavefront_grad_at(u, v, t, diam, theta) for layer in self],
                       axis=0)
