@@ -60,6 +60,8 @@ New Features
 ------------
 
 - Added support for reading in of unsigned int Images (#715)
+- Added ability to specify optical aberrations in terms of annular Zernike
+  coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
   user input, including DistDeviate (aka RandomDistribution in config files),
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these
@@ -96,6 +98,9 @@ New Features
   random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
   dx/dz and dy/dz slopes) to an existing photon array. (#823)
+- Added `surface_ops` option to `drawImage` function, which applies a list of
+  surface operations to the photon array before accumulating on the image.
+  (#827)
 
 
 New config features

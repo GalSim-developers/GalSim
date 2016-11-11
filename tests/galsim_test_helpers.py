@@ -439,8 +439,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: flux_untruncated doesn't change anything if trunc == 0.
             if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
-            # Special case: can't change size of LVector without changing array
-            if classname == 'LVector' and i == 0:
+            # Special case: can't change size of LVector or PhotonArray without changing array
+            if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
