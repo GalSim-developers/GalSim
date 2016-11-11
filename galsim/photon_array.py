@@ -155,3 +155,28 @@ PhotonArray.dydz = property(PhotonArray.getDYDZArray, PhotonArray_setdydz)
 def PhotonArray_setwavelength(self, wavelength): self.getWavelengthArray()[:] = wavelength
 PhotonArray.wavelength = property(PhotonArray.getWavelengthArray, PhotonArray_setwavelength)
 
+
+class WavelengthSampler(object):
+    """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
+    array of a PhotonArray.
+
+    @param sed          The SED to use for the objects spectral energy distribution.
+    @param bandpass     A Bandpass object representing a filter, or None to sample over the full
+                        SED wavelength range.
+    @param rng          If provided, a random number generator that is any kind of BaseDeviate
+                        object. If `rng` is None, one will be automatically created, using the
+                        time as a seed. [default: None]
+    @param npoints      Number of points DistDeviate should use for its internal interpolation
+                        tables. [default: 256]
+    """
+    def __init__(self, sed, bandpass, rng=None, npoints=256):
+        self.sed = sed
+        self.bandpass = bandpass
+        self.rng = rng
+        self.npoints = npoints
+
+    def applyTo(self, photon_array):
+        """Assign wavelengths to the photons sampled from the SED * Bandpass."""
+        photon_array.wavelength = self.sed.sampleWavelength(
+                photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
+

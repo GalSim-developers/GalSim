@@ -120,5 +120,40 @@ def test_photon_array():
     # Check picklability again with non-zero values for everything
     do_pickle(photon_array)
 
+@timer
+def test_wavelength_sampler():
+    nphotons = 1000
+    obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
+    rng = galsim.UniformDeviate(1234)
+
+    photon_array = obj.SBProfile.shoot(nphotons, rng)
+
+    bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    sedpath = os.path.abspath(os.path.join(path, "../share/"))
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
+    bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
+
+    sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+    sampler.applyTo(photon_array)
+
+    # Note: the underlying functionality of the sampleWavelengths function is tested
+    # in test_sed.py.  So here we are really just testing that the wrapper class is
+    # properly writing to the photon_array.wavelengths array.
+
+    assert photon_array.hasAllocatedWavelengths()
+    assert not photon_array.hasAllocatedAngles()
+
+    print('mean wavelength = ',np.mean(photon_array.wavelength))
+    print('min wavelength = ',np.min(photon_array.wavelength))
+    print('max wavelength = ',np.max(photon_array.wavelength))
+
+    assert np.min(photon_array.wavelength) > bandpass.blue_limit
+    assert np.max(photon_array.wavelength) < bandpass.red_limit
+
+    # This is a regression test based on the value at commit 0b0cc764a9
+    np.testing.assert_almost_equal(np.mean(photon_array.wavelength), 616.92072, decimal=3)
+
+
 if __name__ == '__main__':
     test_photon_array()
+    test_wavelength_sampler()
