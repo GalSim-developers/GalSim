@@ -430,23 +430,16 @@ class SED(object):
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):
-            if self._const:
-                # make a new scaled Bandpass, and use that to initialize a new SED.
-                new_bp = other * self._spec(42.0) # const, so can eval anywhere
-                return SED(new_bp.func, 'nm', '1', redshift=self.redshift, fast=self.fast,
-                           _blue_limit=new_bp.blue_limit, _red_limit=new_bp.red_limit,
-                           _wave_list=new_bp._wave_list, _spectral=self.spectral)
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+            zfactor = (1.0+self.redshift) * other.wave_factor
+            if self.fast:
+                self._make_fast_spec()
+                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
             else:
-                wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-                zfactor = (1.0+self.redshift) * other.wave_factor
-                if self.fast:
-                    self._make_fast_spec()
-                    spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
-                else:
-                    spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
-                return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
-                           _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                           _spectral=self.spectral)
+                spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
+            return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
+                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                       _spectral=self.spectral)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
         if hasattr(other, '__call__'):

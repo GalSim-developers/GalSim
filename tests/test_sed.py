@@ -199,8 +199,9 @@ def test_SED_mul():
     sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons')
     sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
+    sed2 = galsim.SED(17.0, wave_type='ang', flux_type='1')
 
-    for sed, z in zip( [sed1, sed0], [0, 0.2, 0.4] ):
+    for sed, z in zip( [sed0, sed1, sed2], [0, 0.2, 0.4] ):
         a = sed.atRedshift(z)
 
         # SED multiplied by function
