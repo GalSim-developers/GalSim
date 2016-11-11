@@ -433,7 +433,7 @@ class SED(object):
             if self._const:
                 # make a new scaled Bandpass, and use that to initialize a new SED.
                 new_bp = other * self._spec(42.0) # const, so can eval anywhere
-                return SED(new_bp.func, 'nm', '1', redshift=self.redshift,
+                return SED(new_bp.func, 'nm', '1', redshift=self.redshift, fast=self.fast,
                            _blue_limit=new_bp.blue_limit, _red_limit=new_bp.red_limit,
                            _wave_list=new_bp._wave_list, _spectral=self.spectral)
             else:
@@ -444,7 +444,7 @@ class SED(object):
                     spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
                 else:
                     spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
-                return SED(spec, 'nm', 'fphotons', redshift=self.redshift,
+                return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
                            _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
                            _spectral=self.spectral)
 
@@ -456,7 +456,7 @@ class SED(object):
             else:
                 spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
             flux_type = 'fphotons' if self.spectral else '1'
-            return SED(spec, 'nm', flux_type, redshift=self.redshift,
+            return SED(spec, 'nm', flux_type, redshift=self.redshift, fast=self.fast,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
@@ -482,7 +482,7 @@ class SED(object):
                     spec = lambda w: self._fast_spec(w) * other
                 else:
                     spec = lambda w: self(w*(1.0+self.redshift)) * other
-            return SED(spec, wave_type, flux_type, redshift=self.redshift,
+            return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
@@ -507,7 +507,8 @@ class SED(object):
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
-        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type, redshift=self.redshift,
+        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type,
+                   redshift=self.redshift, fast=self.fast,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
@@ -560,7 +561,7 @@ class SED(object):
             spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
 
         return SED(spec, wave_type='nm', flux_type=flux_type,
-                   redshift=self.redshift, _wave_list=wave_list,
+                   redshift=self.redshift, fast=self.fast, _wave_list=wave_list,
                    _blue_limit=blue_limit, _red_limit=red_limit,
                    _spectral=_spectral)
 
@@ -643,7 +644,7 @@ class SED(object):
         if red_limit is not None:
             red_limit *= wave_factor
 
-        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift,
+        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def calculateFlux(self, bandpass):
@@ -738,7 +739,8 @@ class SED(object):
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
             newspec = galsim.LookupTable(newx, newf, interpolant='linear')
-            return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift)
+            return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
+                       fast=self.fast)
         else:
             return self
 
@@ -910,9 +912,9 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, redshift=%r, wave_type=%r, flux_type=%r' +
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
-                      self._orig_spec, self.redshift, self.wave_type, self.flux_type,
+                      self._orig_spec, self.wave_type, self.flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit, self.red_limit)
         return outstr
 

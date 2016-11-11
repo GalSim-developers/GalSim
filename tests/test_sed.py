@@ -196,10 +196,12 @@ def test_SED_sub():
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
-    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+    sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons')
-    for z in [0, 0.2, 0.4]:
-        a = a0.atRedshift(z)
+    sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
+
+    for sed, z in zip( [sed1, sed0], [0, 0.2, 0.4] ):
+        a = sed.atRedshift(z)
 
         # SED multiplied by function
         b = lambda w: w**2
@@ -217,13 +219,13 @@ def test_SED_mul():
         d = a*4.2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # assignment multiplication
         d *= 2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # SED multiplied by dimensionless, constant SED
         e = galsim.SED(2.0, 'nm', '1')
@@ -407,13 +409,20 @@ def test_SED_withFlux():
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                       flux_type='flambda')
-        if z != 0:
-            a = a.atRedshift(z)
-        a = a.withFlux(1.0, rband)
-        np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
-                                             "Setting SED flux failed.")
+        for fast in [True, False]:
+            a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                           flux_type='flambda', fast=fast)
+            if z != 0:
+                a = a.atRedshift(z)
+            a = a.withFlux(1.0, rband)
+            np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
+                                                 "Setting SED flux failed.")
+
+            # Should be equivalent to multiplying an SED * Bandpass and computing the
+            # "bolometric" flux.
+            ab = a * rband
+            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+                                                 "Calculating SED flux from sed * bp failed.")
 
 
 @timer
