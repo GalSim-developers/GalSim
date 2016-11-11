@@ -4,7 +4,8 @@ branches:
 
 language: python
 python:
-    - 2.6
+    #- 2.6  # disabled until Travis fixes their issue #6732
+            # https://github.com/travis-ci/travis-ci/issues/6732
     - 2.7
     - 3.4
     - 3.5

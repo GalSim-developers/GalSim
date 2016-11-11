@@ -304,13 +304,15 @@ def test_des():
         new_dir = os.getcwd()
         if new_dir not in sys.path:
             sys.path.append(new_dir)
+
         import draw_psf
         print('Running draw_psf.py')
         draw_psf.main(['last=1'])
         logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
         logger = logging.getLogger('galsim')
-        configs = galsim.config.ReadConfig('draw_psf.yaml', logger=logger)
+
         print('Running draw_psf.yaml')
+        configs = galsim.config.ReadConfig('draw_psf.yaml', logger=logger)
         for config in configs:
             config['output']['nfiles'] = 1
             galsim.config.Process(config, logger=logger)
@@ -327,9 +329,11 @@ def test_des():
         del config['input']['cosmos_catalog']['sample']
         config['input']['des_wcs']['bad_ccds'] = list(range(2,63))  # All but CCD 1
         galsim.config.Process(config, logger=logger)
+
         input_cosmos = config['input']['cosmos_catalog'] # Save example COSMOS catalog spec.
         config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
         galsim.config.Process(config, logger=logger)
+
         config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
         config['input']['cosmos_catalog'] = input_cosmos
         config['input']['des_psfex']['file_name']['num'] = 1

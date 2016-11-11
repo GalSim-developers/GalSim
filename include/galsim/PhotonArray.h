@@ -36,11 +36,10 @@ namespace galsim {
 
     /** @brief Class to hold a list of "photon" arrival positions
      *
-     * Class holds a vector of information about photon arrivals: x and y positions, and a flux
-     * carried by each photon.  It is the intention that fluxes of photons be nearly equal in
-     * absolute value so that noise statistics can be estimated by counting number of positive
-     * and negative photons.
-     * This class holds the code that allows its flux to be added to a surface-brightness Image.
+     * Class holds arrays of information about photon arrivals: x and y positions, dxdz and dydz
+     * inclination "angles" (really slopes), a flux, and a wavelength carried by each photon.
+     * It is the intention that fluxes of photons be nearly equal in absolute value so that noise
+     * statistics can be estimated by counting number of positive and negative photons.
      */
     class PhotonArray
     {
@@ -48,18 +47,12 @@ namespace galsim {
         /**
          * @brief Construct an array of given size with zero-flux photons
          *
+         * This will only allocate memory for x,y,flux, which are often the only things needed.
+         * Memory for angles and wavelength will be allocated as needed.
+         *
          * @param[in] N Size of desired array.
          */
-        explicit PhotonArray(int N): _x(N,0.), _y(N,0.), _flux(N,0.), _is_correlated(false) {}
-
-        /**
-         * @brief Construct from three vectors.  Exception if vector sizes do not match.
-         *
-         * @param[in] vx vector of photon x coordinates
-         * @param[in] vy vector of photon y coordinates
-         * @param[in] vflux vector of photon fluxes
-         */
-        PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux);
+        explicit PhotonArray(int N);
 
         /**
          * @brief Turn an image into an array of photons
@@ -84,26 +77,26 @@ namespace galsim {
          *
          * @returns Array size
          */
-        int size() const { return _x.size(); }
-
-        /** @brief reserve space in arrays for future elements
-         *
-         * @param[in] N number of elements to reserve space for.
-         */
-        void reserve(int N)
-        {
-            _x.reserve(N);
-            _y.reserve(N);
-            _flux.reserve(N);
-        }
+        size_t size() const { return _x.size(); }
 
         /**
-         * @brief Set characteristics of a photon
+         * @{
+         * @brief Allocate memory for optional arrays
+         */
+        void allocateAngleVectors();
+        void allocateLambdaVector();
+        /**
+         * @}
+         */
+
+        /**
+         * @brief Set characteristics of a photon that are decided during photon shooting
+         * (i.e. only x,y,flux)
          *
-         * @param[in] i Index of desired photon (no bounds checking)
-         * @param[in] x x coordinate of photon
-         * @param[in] y y coordinate of photon
-         * @param[in] flux flux of photon
+         * @param[in] i     Index of desired photon (no bounds checking)
+         * @param[in] x     x coordinate of photon
+         * @param[in] y     y coordinate of photon
+         * @param[in] flux  flux of photon
          */
         void setPhoton(int i, double x, double y, double flux)
         {
@@ -137,6 +130,44 @@ namespace galsim {
         double getFlux(int i) const { return _flux[i]; }
 
         /**
+         * @brief Access dxdz of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns dxdz of photon
+         */
+        double getDXDZ(int i) const { return _dxdz[i]; }
+
+        /**
+         * @brief Access dydz coordinate of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns dydz coordinate of photon
+         */
+        double getDYDZ(int i) const { return _dydz[i]; }
+
+        /**
+         * @brief Access wavelength of a photon
+         *
+         * @param[in] i Index of desired photon (no bounds checking)
+         * @returns wavelength of photon
+         */
+        double getLambda(int i) const { return _lambda[i]; }
+
+        /**
+         * @{
+         * @brief Accessors that provide access as numpy arrays in Python layer
+         */
+        std::vector<double>& getXVector() { return _x; }
+        std::vector<double>& getYVector() { return _y; }
+        std::vector<double>& getFluxVector() { return _flux; }
+        std::vector<double>& getDXDZVector() { allocateAngleVectors(); return _dxdz; }
+        std::vector<double>& getDYDZVector() { allocateAngleVectors(); return _dydz; }
+        std::vector<double>& getLambdaVector() { allocateLambdaVector(); return _lambda; }
+        /**
+         * @}
+         */
+
+        /**
          * @brief Return sum of all photons' fluxes
          *
          * @returns flux of photon
@@ -167,11 +198,12 @@ namespace galsim {
         void scaleXY(double scale);
 
         /**
-         * @brief Extend this array with the contents of another.
+         * @brief Assign the contents of another array to a portion of this one.
          *
-         * @param[in] rhs PhotonArray whose contents to append to this one.
+         * @param[in] istart    The starting index at which to assign the contents of rhs
+         * @param[in] rhs       PhotonArray whose contents to assign into this one
          */
-        void append(const PhotonArray& rhs);
+        void assignAt(int istart, const PhotonArray& rhs);
 
         /**
          * @brief Convolve this array with another.
@@ -231,10 +263,13 @@ namespace galsim {
         bool isCorrelated() const { return _is_correlated; }
 
     private:
-        std::vector<double> _x;      // Vector holding x coords of photons
-        std::vector<double> _y;      // Vector holding y coords of photons
-        std::vector<double> _flux;   // Vector holding flux of photons
-        bool _is_correlated;          // Are the photons correlated?
+        std::vector<double> _x;         // Vector holding x coords of photons
+        std::vector<double> _y;         // Vector holding y coords of photons
+        std::vector<double> _flux;      // Vector holding flux of photons
+        std::vector<double> _dxdz;      // Vector holding dxdz of photons
+        std::vector<double> _dydz;      // Vector holding dydz of photons
+        std::vector<double> _lambda;    // Vector holding wavelength of photons
+        bool _is_correlated;            // Are the photons correlated?
     };
 
 } // end namespace galsim

@@ -626,13 +626,13 @@ class Image(with_metaclass(MetaImage, object)):
     def wrap(self, bounds, hermitian=False):
         """Wrap the values in a image onto a given subimage and return the subimage.
 
-        This would typically be used on a k-space image where you initiall draw a larger image
+        This would typically be used on a k-space image where you initially draw a larger image
         than you want for the FFT and then wrap it onto a smaller subset.  This will cause
         aliasing of course, but this is often preferable to just using the smaller image
         without wrapping.
 
         For complex images of FFTs, one often only stores half the image plane with the
-        implicit understanding that the funciton is Hermitian, so im(-x,-y) == im(x,y).conjugate().
+        implicit understanding that the function is Hermitian, so im(-x,-y) == im(x,y).conjugate().
         In this case, the wrapping needs to work slightly differently, so you can specify
         that your image is implicitly Hermitian with the `hermitian` argument.  Options are:
 
@@ -1312,7 +1312,7 @@ def ImageC(*args, **kwargs):
 ################################################################################################
 #
 # Now we have to make some modifications to the C++ layer objects.  Mostly adding some
-# arithemetic functions, so they work more intuitively.
+# arithmetic functions, so they work more intuitively.
 #
 
 # Define a utility function to be used by the arithmetic functions below
@@ -1416,13 +1416,10 @@ def Image_idiv(self, other):
     except AttributeError:
         a = other
         dt = type(a)
-    if dt == self.array.dtype:
-        try:
-            self.array[:,:] /= a
-        except TypeError:
-            # if dtype is an integer type, then numpy doesn't allow true division /= to assign
-            # back to an integer array.  To allow this for images, we do the following:
-            self.array[:,:] = (self.array / a).astype(self.array.dtype)
+    if dt == self.array.dtype and not self.isinteger:
+        # if dtype is an integer type, then numpy doesn't allow true division /= to assign
+        # back to an integer array.  So for integers (or mixed types), don't use /=.
+        self.array[:,:] /= a
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self

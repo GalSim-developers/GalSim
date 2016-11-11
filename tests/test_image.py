@@ -899,11 +899,11 @@ def test_Image_CubeFITS_IO():
         with pyfits.open(test_cube_file) as fits:
             test_array = fits[0].data
 
-        # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
-        # note that all other tests will pass since they will be read as float32s instead
         wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
-        if (types[i] == "uint16" or types[i] == "uint32"): # Handle uint cases
-            import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
+        if types[i] == np.uint16 or types[i] == np.uint32:
+            # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
+            # note that all other tests will pass since they will be read as float32s instead
+            import astropy
             if LooseVersion(astropy.__version__) >= LooseVersion('1.1.0'):
                 assert test_array.dtype.type == types[i], wrong_type_error_msg
         else:

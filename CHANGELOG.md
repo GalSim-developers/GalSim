@@ -18,7 +18,7 @@ API Changes
 - Changed `drawKImage` to return a single ImageC instance rather than two
   ImageD instances (for real and imag parts).  The old syntax of
   `re, im = obj.drawKImage(...)` will still work, but it will raise a
-  depracation warning. (#799)
+  deprecation warning. (#799)
 - Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
@@ -78,20 +78,24 @@ New Features
   surface brightness.  For analytic profiles, it returns the correct value,
   but for compound objects (convolutions in particular), it cannot know the
   exact value without fully drawing the object (which would defeat the point
-  for the uses cases where we want this information).  So it does its best to
+  for the use cases where we want this information).  So it does its best to
   estimate something close, generally erring on the high side.  So the true
   maximum SB <~ obj.maxSB(). (#799)
 - Added `im[x,y] = value` as a valid replacement for im.setValue(x,y,value).
   Likewise `value = im[x,y]` is equivalent to `value = im(x,y)` or `value =
   im.getValue(x,y)`. (#799).
 - Added ability to do FFTs directly on images.  The relevant methods for
-  doing so are `im.calcuate_fft()` and `im.calculate_inverse_fft()`.  There
+  doing so are `im.calculate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
 - Added new profile `galsim.RandomWalk`, a class for generating a set of 
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
+- Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
+  random wavelengths from an SED. (#822)
+- Added function assignPhotonAngles to add arrival directions (in the form of
+  dx/dz and dy/dz slopes) to an existing photon array. (#823)
 
 
 New config features
