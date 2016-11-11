@@ -12,7 +12,7 @@ files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt', 'wfir
       'WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz', 'sip_422.txt', 'wfc_F814W.dat.gz',
       'CWW_E_ext.sed', 'CWW_Sbc_ext.sed', 'CWW_Scd_ext.sed', 'CWW_Im_ext.sed',
       'CWW_E_ext_more.sed', 'CWW_Sbc_ext_more.sed', 'CWW_Scd_ext_more.sed', 'CWW_Im_ext_more.sed',
-      'lsst_spider_2048.fits.gz', 'lsst_spider_256.fits.gz', 'lsst_spider_512.fits.gz' ]
+      'lsst_spider_2048.fits.gz', 'lsst_spider_512.fits.gz' ]
 
 for N in range(1, 19):
     str_N = '%02d'%N
