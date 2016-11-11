@@ -60,6 +60,8 @@ New Features
 ------------
 
 - Added support for reading in of unsigned int Images (#715)
+- Added ability to specify optical aberrations in terms of annular Zernike
+  coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
   user input, including DistDeviate (aka RandomDistribution in config files),
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these

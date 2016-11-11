@@ -934,6 +934,7 @@ class LRU_Cache:
         # Cache miss: evaluate and insert new key/value at root, then increment root
         #             so that just-evaluated value is in last position.
         result = self.user_function(*key)
+        root = self.root  # re-establish root in case user_function modified it due to recursion
         root[2] = key
         root[3] = result
         oldroot = root
@@ -1179,3 +1180,31 @@ def math_eval(str, other_modules=()):
     for m in other_modules:
         exec_('import ' + m, gdict)
     return eval(str, gdict)
+
+def binomial(a, b, n):
+    """Return xy coefficients of (ax + by)^n ordered by descending powers of a.
+
+    For example:
+
+    # (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3
+    >>>  print(binomial(1, 1, 3))
+    array([ 1.,  3.,  3.,  1.])
+
+
+    # (2 x + y)^3 = 8 x^3 + 12 x^2 y + 6 x y^2 + 1 y^3
+    >>>  print(binomial(2, 1, 3))
+    array([ 8.,  12.,  6.,  1.])
+
+    @param a    First scalar in binomial to be expanded.
+    @param b    Second scalar in binomial to be expanded.
+    @param n    Exponent of expansion.
+    @returns    Array of coefficients in expansion.
+    """
+    b_over_a = float(b)/float(a)
+    def generate():
+        c = a**n
+        yield c
+        for i in range(n):
+            c *= b_over_a * (n-i)/(i+1)
+            yield c
+    return np.fromiter(generate(), float, n+1)

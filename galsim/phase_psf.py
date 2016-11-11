@@ -1076,17 +1076,22 @@ class PhaseScreenPSF(GSObject):
                 self._step()
                 self.screen_list.advance()
                 if _bar is not None:
-                    _bar.update()
+                    _bar.update()  # pragma: nocover
             self._finalize(flux, suppress_warning)
+
+        self._flux = flux
+
+    def getFlux(self):
+        return self._flux
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
                 (self.screen_list, self.lam, self.exptime))
 
     def __repr__(self):
-        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta=%r, " +
+        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
                   "scale_unit=%r, interpolant=%r, gsparams=%r)")
-        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta,
+        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
                          self.scale_unit, self.interpolant, self.gsparams)
 
     def __eq__(self, other):
@@ -1214,7 +1219,12 @@ class OpticalPSF(GSObject):
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
-    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.  By default, the
+    aberration coefficients indicate the amplitudes of _circular_ Zernike polynomials, which are
+    orthogonal over a circle.  If you would like the aberration coefficients to instead be
+    interpretted as the amplitudes of _annular_ Zernike polynomials, which are orthogonal over an
+    annulus (see Mahajan, J. Opt. Soc. Am. 71, 1 (1981)), set the `annular_zernike` keyword argument
+    to True.
 
     There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
     and the areas that will be illuminated outside of it.  The first way is to use keywords that
@@ -1295,6 +1305,9 @@ class OpticalPSF(GSObject):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
+    @param annular_zernike  Boolean indicating that aberrations specify the amplitudes of annular
+                            Zernike polynomials instead of circular Zernike polynomials.
+                            [default: False]
     @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
@@ -1367,6 +1380,7 @@ class OpticalPSF(GSObject):
         "trefoil1": float,
         "trefoil2": float,
         "spher": float,
+        "annular_zernike": bool,
         "circular_pupil": bool,
         "obscuration": float,
         "oversampling": float,
@@ -1388,7 +1402,8 @@ class OpticalPSF(GSObject):
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                 aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
+                 aberrations=None, annular_zernike=False,
+                 aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_plane_scale=None, pupil_plane_size=None,
@@ -1433,7 +1448,7 @@ class OpticalPSF(GSObject):
         optics_screen = galsim.OpticalScreen(
                 defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
-                lam_0=lam)
+                obscuration=obscuration, annular_zernike=annular_zernike, lam_0=lam)
         self._screens = galsim.PhaseScreenList(optics_screen)
 
         # Make the aperture.
@@ -1445,6 +1460,12 @@ class OpticalPSF(GSObject):
                     pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
                     pupil_plane_scale=pupil_plane_scale, pupil_plane_size=pupil_plane_size,
                     gsparams=gsparams)
+            self.obscuration = obscuration
+        else:
+            if hasattr(aper, '_obscuration'):
+                self.obscuration = aper._obscuration
+            else:
+                self.obscuration = 0.0
 
         # Save for pickling
         self._lam = lam
@@ -1453,6 +1474,7 @@ class OpticalPSF(GSObject):
         self._scale_unit = scale_unit
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
+        self._aper = aper
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
@@ -1461,6 +1483,8 @@ class OpticalPSF(GSObject):
                                           suppress_warning=self._suppress_warning)
         GSObject.__init__(self, self._psf)
 
+    def getFlux(self):
+        return self._flux
 
     def __str__(self):
         screen = self._psf.screen_list[0]
@@ -1469,8 +1493,11 @@ class OpticalPSF(GSObject):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
         if hasattr(self._psf.aper, '_circular_pupil'):
             s += self._psf.aper._geometry_str()
-        if self._psf.flux != 1.0:
-            s += ", flux=%s" % self._psf.flux
+        if screen.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
+        if self._flux != 1.0:
+            s += ", flux=%s" % self._flux
         s += ")"
         return s
 
@@ -1479,7 +1506,10 @@ class OpticalPSF(GSObject):
         s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
-            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+            s += ", aberrations=[" + ",".join(repr(ab) for ab in screen.aberrations) + "]"
+        if screen.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         s += ")"
