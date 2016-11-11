@@ -1327,6 +1327,7 @@ class OpticalPSF(GSObject):
         "trefoil1": float,
         "trefoil2": float,
         "spher": float,
+        "annular_zernike": bool,
         "circular_pupil": bool,
         "obscuration": float,
         "oversampling": float,
