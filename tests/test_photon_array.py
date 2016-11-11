@@ -35,14 +35,26 @@ def test_photon_angles():
     """Test the photon_array function
     """
     # Make a photon array
-    ud = galsim.UniformDeviate()
+    seed = 12345
+    ud = galsim.UniformDeviate(seed)
     gal = galsim.Sersic(n=4, half_light_radius=1)
     photon_array = gal.SBProfile.shoot(100000, ud)
 
-    # Add the directions (not currently working)
+    # Try some invalid inputs
+    try:
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=-0.3)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=-0.3)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.0)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.9)
+    except ImportError:
+        pass
+
+    # Add the directions (N.B. using the same seed as for generating the photon array
+    # above.  The fact that it is the same does not matter here; the testing routine
+    # only needs to have a definite seed value so the consistency of the results with
+    # expectations can be evaluated precisely
     fratio = 1.2
     obscuration = 0.2
-    seed = 12345
     assigner = galsim.FRatioAngles(fratio, obscuration, seed)
     assigner.applyTo(photon_array)
 
@@ -53,41 +65,33 @@ def test_photon_angles():
     # over all azimiths and uniform in sin(inclination) over the range of
     # allowed inclinations
     phi = np.arctan2(dydz,dxdz)
-    sintheta = np.sqrt(1. - np.square(dxdz) - np.square(dydz))
+    tantheta = np.sqrt(np.square(dxdz) + np.square(dydz))
+    sintheta = np.sin(np.arctan(tantheta))
 
     phi_histo, phi_bins = np.histogram(phi, bins=100)
     sintheta_histo, sintheta_bins = np.histogram(sintheta, bins=100)
 
-    phi_ref = phi_histo*0 + float(np.sum(phi_histo))/phi_histo.size
-    sintheta_ref = sintheta_histo*0 + float(np.sum(sintheta_histo)
-                   )/sintheta_histo.size
+    phi_ref = float(np.sum(phi_histo))/phi_histo.size
+    sintheta_ref = float(np.sum(sintheta_histo))/sintheta_histo.size
 
     chisqr_phi = np.sum(np.square(phi_histo - phi_ref)/phi_ref) / phi_histo.size
     chisqr_sintheta = np.sum(np.square(sintheta_histo - sintheta_ref) /
                       sintheta_ref) / sintheta_histo.size
-
-    
-    # In the assert_almost_equal tests below, the expected values are defined
-    # for the particular set of directions generated for the seed value specified
-    # above
-    np.testing.assert_almost_equal(chisqr_phi, 1.05562, 5, \
-        "Distribution in azimuth is not uniform")
-    np.testing.assert_almost_equal(chisqr_sintheta, 0.95920, 5, \
-        "Distribution in sin(inclination) is not uniform")
+    assert 0.9 < chisqr_phi < 1.1, "Distribution in azimuth is not nearly uniform"
+    assert 0.9 < chisqr_sintheta < 1.1, "Distribution in sin(inclination) is not nearly uniform"
 
     # Also check that the values are within the ranges expected
-    np.testing.assert_almost_equal(np.min(phi) + np.pi, 0.000258, 5, \
-        "Azimuth angle range extends to too-small angles")
-    np.testing.assert_almost_equal(np.max(phi) - np.pi, -6.474875e-05, 5, \
-        "Inclination angle range extends to too-large angles")
+    # (The test on phi really can't fail, because it is only testing the range of the
+    # arctan2 function.)
+    np.testing.assert_array_less(-phi, np.pi, "Azimuth angles outside possible range")
+    np.testing.assert_array_less(phi, np.pi, "Azimuth angles outside possible range")
 
     fov_angle = np.arctan(0.5 / fratio)
     obscuration_angle = obscuration * fov_angle
-
-    np.testing.assert_almost_equal(np.min(sintheta) - np.sin(obscuration_angle), \
-        0., 5, "Inclination angle range extends to too-small angles")
-    np.testing.assert_almost_equal(np.max(sintheta) - np.sin(fov_angle), \
-        0., 5, "Inclination angle range extends to too-large angles")
+    np.testing.assert_array_less(-sintheta, -np.sin(obscuration_angle), \
+        "Inclination angles outside possible range")
+    np.testing.assert_array_less(sintheta, np.sin(fov_angle), \
+        "Inclination angles outside possible range")
 
 if __name__ == "__main__":
     test_photon_angles()
