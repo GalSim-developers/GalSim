@@ -1458,7 +1458,7 @@ class OpticalPSF(GSObject):
         s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
-            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+            s += ", aberrations=[" + ",".join(repr(ab) for ab in screen.aberrations) + "]"
         if screen.annular_zernike:
             s += ", annular_zernike=True"
             s += ", obscuration=%r"%self.obscuration

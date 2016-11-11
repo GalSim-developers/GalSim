@@ -781,8 +781,11 @@ def test_annular_Zernike_limit():
                 im1.array, im2.array, atol=1e-10,
                 err_msg="annular Zernike with 1e-5 obscuration not close to circular Zernike")
 
+    do_pickle(psf1._aper)
     do_pickle(psf1)
     do_pickle(psf1, lambda x: x.drawImage())
+    do_pickle(psf2)
+    do_pickle(psf2, lambda x: x.drawImage())
 
 
 @timer
