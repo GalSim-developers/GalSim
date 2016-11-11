@@ -189,15 +189,6 @@ def test_photon_angles():
     gal = galsim.Sersic(n=4, half_light_radius=1)
     photon_array = gal.SBProfile.shoot(100000, ud)
 
-    # Try some invalid inputs
-    try:
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=-0.3)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=-0.3)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.0)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.9)
-    except ImportError:
-        pass
-
     # Add the directions (N.B. using the same seed as for generating the photon array
     # above.  The fact that it is the same does not matter here; the testing routine
     # only needs to have a definite seed value so the consistency of the results with
@@ -241,6 +232,15 @@ def test_photon_angles():
         "Inclination angles outside possible range")
     np.testing.assert_array_less(sintheta, np.sin(fov_angle), \
         "Inclination angles outside possible range")
+
+    # Try some invalid inputs
+    try:
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=-0.3)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=-0.3)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.0)
+        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.9)
+    except ImportError:
+        pass
 
 
 if __name__ == '__main__':
