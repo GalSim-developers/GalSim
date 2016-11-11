@@ -153,6 +153,30 @@ def test_wavelength_sampler():
     # This is a regression test based on the value at commit 0b0cc764a9
     np.testing.assert_almost_equal(np.mean(photon_array.wavelength), 616.92072, decimal=3)
 
+    # Test that using this as a surface op work properly.
+
+    # First do the shooting and clipping manually.
+    im1 = galsim.Image(64,64,scale=1)
+    im1.setCenter(0,0)
+    photon_array.flux[photon_array.wavelength < 600] = 0.
+    photon_array.addTo(im1.image.view())
+
+    # Make a dummy surface op that clips any photons with lambda < 600
+    class Clip600(object):
+        def applyTo(self, photon_array):
+            photon_array.flux[photon_array.wavelength < 600] = 0.
+
+    # Use (a new) sampler and clip600 as surface_ops in drawImage
+    im2 = galsim.Image(64,64,scale=1)
+    im2.setCenter(0,0)
+    clip600 = Clip600()
+    rng2 = galsim.BaseDeviate(1234)
+    sampler2 = galsim.WavelengthSampler(sed, bandpass, rng2)
+    obj.drawImage(im2, method='phot', n_photons=nphotons, use_true_center=False,
+                  surface_ops=[sampler2,clip600], rng=rng2)
+    print('sum = ',im1.array.sum(),im2.array.sum())
+    np.testing.assert_array_equal(im1.array, im2.array)
+
 
 if __name__ == '__main__':
     test_photon_array()
