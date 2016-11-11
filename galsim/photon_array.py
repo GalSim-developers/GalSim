@@ -156,6 +156,31 @@ PhotonArray.dydz = property(PhotonArray.getDYDZArray, PhotonArray_setdydz)
 def PhotonArray_setwavelength(self, wavelength): self.getWavelengthArray()[:] = wavelength
 PhotonArray.wavelength = property(PhotonArray.getWavelengthArray, PhotonArray_setwavelength)
 
+def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
+    """Turn an existing image into a PhotonArray that would accumulate into this image.
+
+    The flux in each non-zero pixel will be turned into 1 or more photons with random positions
+    within the pixel bounds.  The `max_flux` parameter (which defaults to 1) sets an upper
+    limit for the absolute value of the flux of any photon.  Pixels with abs values > maxFlux will
+    spawn multiple photons.
+
+    TODO: This corresponds to the `Nearest` interpolant.  It would be worth figuring out how
+          to implement other (presumably better) interpolation options here.
+
+    @param image        The image to turn into a PhotonArray
+    @param max_flux     The maximum flux value to use for any output photon [default: 1]
+    @param rng          A BaseDeviate to use for the random number generation [default: None]
+
+    @returns a PhotonArray
+    """
+    if rng is None:
+        ud = galsim.UniformDeviate()
+    else:
+        ud = galsim.UniformDeviate(rng)
+    max_flux = float(max_flux)
+    return galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+
+PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths

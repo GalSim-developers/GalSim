@@ -1375,7 +1375,7 @@ class GSObject(object):
                 else:
                     raise TypeError("The rng provided is not a BaseDeviate")
 
-                phot_array = galsim._galsim.PhotonArray(draw_image.image, 1., ud)
+                phot_array = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
 
                 for op in surface_ops:
                     op.applyTo(phot_array)
