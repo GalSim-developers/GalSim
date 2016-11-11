@@ -92,8 +92,11 @@ New Features
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
+- Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
+  random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
   dx/dz and dy/dz slopes) to an existing photon array. (#823)
+
 
 New config features
 -------------------

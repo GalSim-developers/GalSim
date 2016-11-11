@@ -22,6 +22,7 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Random.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -54,6 +55,18 @@ namespace galsim {
         }
     };
 
+    void Generate(BaseDeviate& rng, const bp::object& array)
+    {
+        double* data;
+        boost::shared_ptr<double> owner;
+        int step, stride;
+        CheckNumpyArray(array, 1, false, data, owner, step, stride);
+        if (step != 1 || stride != 1)
+            throw std::runtime_error("generate requires a contiguous numpy array");
+        int N = GetNumpyArrayDim(array.ptr(), 0);
+        rng.generate(N, data);
+    }
+
     struct PyBaseDeviate {
 
         static void wrap() {
@@ -74,6 +87,7 @@ namespace galsim {
                 .def("duplicate", &BaseDeviate::duplicate)
                 .def("discard", &BaseDeviate::discard)
                 .def("raw", &BaseDeviate::raw)
+                .def("generate", &Generate, bp::arg("array"))
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()
