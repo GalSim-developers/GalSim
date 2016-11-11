@@ -802,8 +802,9 @@ class PhaseScreenList(object):
     def wavefront_grad(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
         return np.sum([layer.wavefront_grad(aper, theta, compact) for layer in self], axis=0)
 
-    def wavefront_grad_where(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
-        return np.sum([layer.wavefront_grad_where(u, v, t, theta) for layer in self], axis=0)
+    def wavefront_grad_at(self, u, v, t, diam=None, theta=None):
+        return np.sum([layer.wavefront_grad_at(u, v, t, diam, theta) for layer in self],
+                      axis=0)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -1160,21 +1161,27 @@ class PhaseScreenPSF(GSObject):
                                        gsparams=self._gsparams)
         GSObject.__init__(self, self.ii)
 
-    def shoot(self, N, ud):
-        # Get a uniform distribution of photon arrival times from 0 to self.exptime.
-        arrival_times = np.squeeze(utilities.rand_arr((N,1), ud)) * self.exptime
-        # Randomly pick aperture locations (discretely for now)
+    def shoot(self, n_photons, rng=None):
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        t = np.squeeze(utilities.rand_arr((n_photons, 1), ud)) * self.exptime
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
-        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * len(u)).astype(int)
+        pick = (np.squeeze(utilities.rand_arr((n_photons, 1), ud)) * len(u)).astype(int)
         u = u[pick]
-        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * len(v)).astype(int)
         v = v[pick]
-        x, y = self.screen_list.wavefront_grad_where(u, v, arrival_times, self.theta)
-        x *= 1.e-9 * 206265
-        y *= 1.e-9 * 206265
 
-        photon_array = galsim._galsim.PhotonArray(N)
+        x, y = self.screen_list.wavefront_grad_at(u, v, t, self.aper.diam, self.theta)
+        x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
+        y *= 1e-9 * 206265
+
+        photon_array = galsim._galsim.PhotonArray(n_photons)
         photon_array.getXArray()[:] = x
         photon_array.getYArray()[:] = y
         photon_array.getFluxArray()[:] = 1.0
