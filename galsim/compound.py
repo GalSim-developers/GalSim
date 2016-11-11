@@ -846,7 +846,7 @@ class FourierSqrtProfile(galsim.GSObject):
 
     The normal way to use this class is to use the FourierSqrt() factory function:
 
-        >>> b = galsim.FourierSqrt(a)
+        >>> fourier_sqrt = galsim.FourierSqrt(obj)
 
     @param obj              The object to compute Fourier-space square root of.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
