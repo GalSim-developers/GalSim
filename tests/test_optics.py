@@ -118,9 +118,9 @@ def test_OpticalPSF_vs_Airy_with_obs():
     nlook = 100          # size of array region at the centre of each image to compare
     image = galsim.ImageF(nlook,nlook)
     for obs in obses:
-        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=2.)
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs,
-                                        suppress_warning=True)
+                                        suppress_warning=True, flux=2.)
         airy_array = airy_test.drawImage(scale=1.,image=image, method='no_pixel').array
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
@@ -372,6 +372,7 @@ def test_OpticalPSF_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+
 
 @timer
 def test_OpticalPSF_pupil_plane():
@@ -755,6 +756,7 @@ def test_Zernike_orthonormality():
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
     do_pickle(screen1)
     do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+
 
 @timer
 def test_annular_Zernike_limit():

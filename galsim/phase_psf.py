@@ -1054,7 +1054,7 @@ class PhaseScreenPSF(GSObject):
                 self._step()
                 self.screen_list.advance()
                 if _bar is not None:
-                    _bar.update()
+                    _bar.update()  # pragma: nocover
             self._finalize(flux, suppress_warning)
 
         self._flux = flux
