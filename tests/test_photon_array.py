@@ -228,10 +228,10 @@ def test_photon_angles():
 
     fov_angle = np.arctan(0.5 / fratio)
     obscuration_angle = obscuration * fov_angle
-    np.testing.assert_array_less(-sintheta, -np.sin(obscuration_angle), \
-        "Inclination angles outside possible range")
-    np.testing.assert_array_less(sintheta, np.sin(fov_angle), \
-        "Inclination angles outside possible range")
+    np.testing.assert_array_less(-sintheta, -np.sin(obscuration_angle),
+                                 "Inclination angles outside possible range")
+    np.testing.assert_array_less(sintheta, np.sin(fov_angle),
+                                 "Inclination angles outside possible range")
 
     # Try some invalid inputs
     try:
