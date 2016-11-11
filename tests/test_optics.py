@@ -784,6 +784,29 @@ def test_annular_Zernike_limit():
     do_pickle(psf1)
     do_pickle(psf1, lambda x: x.drawImage())
 
+
+@timer
+def test_OpticalPSF_aper():
+    # Test setting up an OpticalPSF using an Aperture object instead of relying on the constructor
+    # to initialize the aperture.
+    lam = 500
+    diam = 4.0
+
+    aper = galsim.Aperture(lam=lam, diam=diam)
+    psf1 = galsim.OpticalPSF(lam=lam, diam=diam, aper=aper)
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, oversampling=1.0, pad_factor=1.0)
+    assert psf1 == psf2
+
+    im = galsim.Image((psf1._aper.illuminated).astype(int))
+
+    aper = galsim.Aperture(lam=lam, diam=diam, pupil_plane_im=im)
+    psf1 = galsim.OpticalPSF(lam=lam, diam=diam, aper=aper)
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, pupil_plane_im=im,
+                             oversampling=1.0, pad_factor=1.0)
+
+    assert psf1 == psf2
+
+
 @timer
 def test_ne():
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
@@ -836,4 +859,5 @@ if __name__ == "__main__":
     test_OpticalPSF_pupil_plane_size()
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
+    test_OpticalPSF_aper()
     test_ne()

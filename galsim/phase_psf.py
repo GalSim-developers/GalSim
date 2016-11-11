@@ -53,7 +53,7 @@ Atmosphere
 """
 
 from itertools import chain
-from builtins import range, zip
+from builtins import range
 
 import numpy as np
 import galsim
@@ -1057,14 +1057,19 @@ class PhaseScreenPSF(GSObject):
                     _bar.update()
             self._finalize(flux, suppress_warning)
 
+        self._flux = flux
+
+    def getFlux(self):
+        return self._flux
+
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
                 (self.screen_list, self.lam, self.exptime))
 
     def __repr__(self):
-        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta=%r, " +
+        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
                   "scale_unit=%r, interpolant=%r, gsparams=%r)")
-        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta,
+        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
                          self.scale_unit, self.interpolant, self.gsparams)
 
     def __eq__(self, other):
@@ -1409,8 +1414,8 @@ class OpticalPSF(GSObject):
                     gsparams=gsparams)
             self.obscuration = obscuration
         else:
-            if hasattr(aper, obscuration):
-                self.obscuration = aper.obscuration
+            if hasattr(aper, '_obscuration'):
+                self.obscuration = aper._obscuration
             else:
                 self.obscuration = 0.0
 
@@ -1421,6 +1426,7 @@ class OpticalPSF(GSObject):
         self._scale_unit = scale_unit
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
+        self._aper = aper
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
@@ -1429,6 +1435,8 @@ class OpticalPSF(GSObject):
                                           suppress_warning=self._suppress_warning)
         GSObject.__init__(self, self._psf)
 
+    def getFlux(self):
+        return self._flux
 
     def __str__(self):
         screen = self._psf.screen_list[0]
