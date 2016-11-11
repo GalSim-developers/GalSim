@@ -489,6 +489,45 @@ class LookupTable2D(object):
         elif self.edge_mode == 'constant':
             return self._call_constant(x, y)
 
+    def _gradient_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise ValueError("Extrapolating beyond input range.")
+
+        try:
+            xx = float(x)
+            yy = float(y)
+            return self.table.gradient(xx, yy)
+        except:
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(x)
+            self.table.gradientMany(x.ravel(), y.ravel(), dfdx.ravel(), dfdy.ravel())
+            return dfdx, dfdy
+
+    def _gradient_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._gradient_raise(x, y)
+
+    def _gradient_constant(self, x, y):
+        from numbers import Real
+        if isinstance(x, Real):
+            if self._inbounds(x, y):
+                return self.table.gradient(x, y)
+            else:
+                return 0.0, 0.0
+        else:
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(y)
+            dfdx.fill(0.0)
+            dfdy.fill(0.0)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            tmp1 = np.empty((np.sum(good),), dtype=x.dtype)
+            tmp2 = np.empty((np.sum(good),), dtype=x.dtype)
+            self.table.gradientMany(x[good], y[good], tmp1, tmp2)
+            dfdx[good] = tmp1
+            dfdy[good] = tmp2
+            return dfdx, dfdy
+
     def gradient(self, x, y):
         """Calculate the gradient of the function at an arbitrary point or points.
 
@@ -500,17 +539,12 @@ class LookupTable2D(object):
         @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
         values) or numpy arrays.
         """
-        try:
-            xx = float(x)
-            yy = float(y)
-            return self.table.gradient(xx,yy)
-        except:
-            if x.shape != y.shape:
-                raise ValueError("x and y must be the same length/shape")
-            dfdx = np.empty_like(x)
-            dfdy = np.empty_like(x)
-            self.table.gradientMany(x.ravel(),y.ravel(),dfdx.ravel(),dfdy.ravel())
-            return dfdx, dfdy
+        if self.edge_mode == 'raise':
+            return self._gradient_raise(x, y)
+        elif self.edge_mode == 'wrap':
+            return self._gradient_wrap(x, y)
+        elif self.edge_mode == 'constant':
+            return self._gradient_constant(x, y)
 
     def __str__(self):
         return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
