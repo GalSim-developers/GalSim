@@ -468,18 +468,6 @@ def _zern_coef_array(n, m, eps=0., shape=None, annular=False):
         out[i, abs(m)] = c
     return out
 
-
-def _binomial(a, b, n):
-    """Return xy coefficients of (ax + by)^n."""
-    b_over_a = float(b)/float(a)
-    def generate():
-        c = a**n
-        yield c
-        for i in range(n):
-            c *= b_over_a * (n-i)/(i+1)
-            yield c
-    return np.fromiter(generate(), float, n+1)
-
 # Following 3 functions from
 #
 # "Zernike annular polynomials for imaging systems with annular pupils"
@@ -525,7 +513,7 @@ def __annular_zern_rho_coefs(n, m, eps):
         for i, coef in enumerate(coefs):
             if i % 2 == 1: continue
             j = i // 2
-            more_coefs = (norm**j) * _binomial(-eps**2, 1, j)
+            more_coefs = (norm**j) * utilities.binomial(-eps**2, 1, j)
             out[0:i+1:2] += coef*more_coefs
     elif m == n:  # Equation (25)
         norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
