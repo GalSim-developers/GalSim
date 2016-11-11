@@ -1437,8 +1437,11 @@ class OpticalPSF(GSObject):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
         if hasattr(self._psf.aper, '_circular_pupil'):
             s += self._psf.aper._geometry_str()
-        if self._psf.flux != 1.0:
-            s += ", flux=%s" % self._psf.flux
+        if screen.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
+        if self._flux != 1.0:
+            s += ", flux=%s" % self._flux
         s += ")"
         return s
 
