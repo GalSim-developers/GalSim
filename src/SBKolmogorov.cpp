@@ -32,7 +32,7 @@
 #endif
 
 // This is used in two places below, so store it up here.
-// See KolmogorovInfo constructor for the explanantion of this number.
+// See KolmogorovInfo constructor for the explanation of this number.
 #define XVAL_ZERO 0.55090124543985636638457099311149824 / (2.*M_PI)
 
 namespace galsim {

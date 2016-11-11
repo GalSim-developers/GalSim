@@ -407,7 +407,7 @@ def test_exponential():
 
     # Use non-unity values.
     expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
-    check_basic(expon, "Expnential")
+    check_basic(expon, "Exponential")
 
     # Test photon shooting.
     do_shoot(expon,myImg,"Exponential")
@@ -1963,7 +1963,8 @@ def test_kolmogorov():
     kolm5 = galsim.Kolmogorov(lam=lam, r0_500=r0_500, flux=test_flux)
     gsobject_compare(kolm,kolm5)
 
-    # Should raise an exception if >= 2 radius specifications are provided.
+    # Should raise an exception if >= 2 radius specifications are provided and/or lam and r0 are not
+    # paired together.
     try:
         np.testing.assert_raises(TypeError, galsim.Kolmogorov,
                                  lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3, r0=1)

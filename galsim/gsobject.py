@@ -331,7 +331,7 @@ class GSObject(object):
         """Returns an estimate of the maximum surface brightness of the object.
 
         Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how
+        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how to
         calculate this value without just drawing the image and checking what the maximum value is.
         Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
         which will generally be conservative on the high side.
@@ -1157,7 +1157,7 @@ class GSObject(object):
         Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
         to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
         the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
-        use to reduce the level of these artificats, in particular `folding_threshold` may be
+        use to reduce the level of these artifacts, in particular `folding_threshold` may be
         helpful if you see such artifacts in your images.
 
         @param image        If provided, this will be the image on which to draw the profile.
@@ -1376,7 +1376,7 @@ class GSObject(object):
                             Note: The flux will be added to any flux already on the image,
                             so this corresponds to the add_to_image=True option in drawImage.
 
-        @returns The total flux drawin inside the image bounds.
+        @returns The total flux drawn inside the image bounds.
         """
         return self.SBProfile.draw(image.image, image.scale)
 
@@ -1384,7 +1384,7 @@ class GSObject(object):
         """Return a good size to use for drawing this profile.
 
         The size will be large enough to cover most of the flux of the object.  Specifically,
-        at least (1-gsparasm.folding_threshold) (i.e. 99.5% by default) of the flux should fall
+        at least (1-gsparams.folding_threshold) (i.e. 99.5% by default) of the flux should fall
         in the image.
 
         Also, the returned size is always an even number, which is usually desired in practice.
@@ -1421,7 +1421,7 @@ class GSObject(object):
                             Note: The flux will be added to any flux already on the image,
                             so this corresponds to the add_to_image=True option in drawImage.
 
-        @returns The total flux drawin inside the image bounds.
+        @returns The total flux drawn inside the image bounds.
         """
         if wmult != 1.: # pragma: no cover
             from .deprecated import depr
@@ -1661,8 +1661,7 @@ class GSObject(object):
             else: poisson_flux = False
 
         # Check that either n_photons is set to something or flux is set to something
-        if (n_photons == 0. and self.getFlux() == 1.
-            and area == 1. and exptime == 1.): # pragma: no cover
+        if n_photons == 0. and self.getFlux() == 1.:
             import warnings
             warnings.warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "
@@ -1755,7 +1754,7 @@ class GSObject(object):
 
         @param image        If provided, this will be the ImageC onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
-                            created.  If is is given, but its bounds are undefined, then it
+                            created.  If `image` is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
                             [default: None]
         @param nx           If provided and `image` is None, use to set the x-direction size of the

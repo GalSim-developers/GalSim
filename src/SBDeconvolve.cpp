@@ -158,7 +158,7 @@ namespace galsim {
         //     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
         //
         // A deconvolution will contribute a -sigma^2 to the sum, so a logical choice for
-        // maxSB is to have flux / maxSB = -flux_adaptee / maxSB_adaptee, so it's contribution
+        // maxSB is to have flux / maxSB = -flux_adaptee / maxSB_adaptee, so its contribution
         // to the Sum_i 2pi sigma^2 is to subtract its adaptee's value of sigma^2.
         //
         // maxSB = -flux * maxSB_adaptee / flux_adaptee
