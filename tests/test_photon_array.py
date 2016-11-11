@@ -30,6 +30,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+@timer
 def test_photon_array():
     """Test the basic methods of PhotonArray class
     """

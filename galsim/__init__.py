@@ -103,7 +103,7 @@ from .table import LookupTable, LookupTable2D
 from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI
 
 # PhotonArray
-from .photon_array import PhotonArray, WavelengthSampler
+from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -130,7 +130,6 @@ from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelat
 from .compound import FourierSqrt, FourierSqrtProfile
 from .compound import RandomWalk
 from .transform import Transform, Transformation
-from .photon_array import PhotonArray, FRatioAngles
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
