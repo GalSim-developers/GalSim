@@ -77,12 +77,12 @@ needed.  The other arrays are only allocated on demand if the user accesses thes
 
 @param N            The number of photons to store in this PhotonArray.  This value cannot be
                     changed.
-@param x            Optionally, the inital x values. [default: None]
-@param y            Optionally, the inital y values. [default: None]
-@param flux         Optionally, the inital flux values. [default: None]
-@param dxdz         Optionally, the inital dxdz values. [default: None]
-@param dydz         Optionally, the inital dydz values. [default: None]
-@param wavelength   Optionally, the inital wavelength values. [default: None]
+@param x            Optionally, the initial x values. [default: None]
+@param y            Optionally, the initial y values. [default: None]
+@param flux         Optionally, the initial flux values. [default: None]
+@param dxdz         Optionally, the initial dxdz values. [default: None]
+@param dydz         Optionally, the initial dydz values. [default: None]
+@param wavelength   Optionally, the initial wavelength values. [default: None]
 """
 
 # In python we want the init function to be a bit more functional so we can serialize properly.

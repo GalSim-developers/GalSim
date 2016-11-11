@@ -58,7 +58,7 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.y, 17.)
     np.testing.assert_array_equal(photon_array.flux, 23.)
 
-    # Check assignment via numpy [:]
+    # Check assignment directly to the attributes
     photon_array.x = 25
     photon_array.y = 37
     photon_array.flux = 53
