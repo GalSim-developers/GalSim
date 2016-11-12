@@ -253,19 +253,9 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
     int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
     int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
     int n=0;
-    double zconv = 95.0;
-    // Z coordinate of photoconversion in microns
-    // TODO: Calculate zconv as a function of wavelength and angle once these are available in
+
     // PhotonArray
     GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
-
-    double DiffStep; // Mean diffusion step size in microns
-    // This simply ratios the calculated _DiffStep by the starting z coordinate
-    if (zconv <= 10.0)
-    { DiffStep = 0.0; }
-    else
-    { DiffStep = _DiffStep * (zconv - 10.0) / 100.0; }
-
     int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
 
     Bounds<int> b = target.getBounds();
@@ -279,17 +269,79 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
     dbg<<"In Silicon::accumulate\n";
     dbg<<"bounds = "<<b<<std::endl;
     dbg<<"total nphotons = "<<photons.size()<<std::endl;
+    dbg<<"hasAllocatedWavelengths = "<<photons.hasAllocatedWavelengths()<<std::endl;
+    dbg<<"hasAllocatedAngles = "<<photons.hasAllocatedAngles()<<std::endl;    
 #endif
     double addedFlux = 0.;
     double Irr = 0.;
     double Irr0 = 0.;
     for (int i=0; i<int(photons.size()); i++)
     {
-        // First we add in a displacement due to diffusion
-        double x0 = photons.getX(i) + DiffStep * gd() / 10.0;
-        double y0 = photons.getY(i) + DiffStep * gd() / 10.0;
-        double flux = photons.getFlux(i);
+      // First we get the location where the photon strikes the silicon:
+      double x0 = photons.getX(i); // in pixels
+      double y0 = photons.getY(i); // in pixels
+      // Next we determine the distance the photon travels into the silicon
+      double si_length, zconv;
+      if (photons.hasAllocatedWavelengths())
+	{
+	  double lambda = photons.getWavelength(i); // in nm
+	  // The below is an approximation.  TODO: Need to do implement a look-up table
+	  double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
+	  si_length = -abs_length * log(1.0 - ud()); // in microns
+#ifdef DEBUGLOGGING
+      if (i % 1000 == 0)
+	{
+	  dbg<<"lambda = "<<lambda<<std::endl;
+	  dbg<<"si_length = "<<si_length<<std::endl;	  	  
+	}
+#endif
+	}
+      else
+	{
+	si_length = 5.0; // If no wavelength info, assume conversion takes place near the top.
+	}
+      // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
+      if (photons.hasAllocatedAngles())
+	{
+	  double dxdz = photons.getDXDZ(i);
+	  double dydz = photons.getDYDZ(i);
+	  double deltaz = fmin(95.0, si_length / sqrt(1.0 + dxdz*dxdz + dydz*dydz));// in microns
+	  x0 += dxdz * deltaz / 10.0; // in pixels
+	  y0 += dydz * deltaz / 10.0; // in pixels
+	  zconv = 100.0 - deltaz; // Conversion depth in microns
+#ifdef DEBUGLOGGING
+      if (i % 1000 == 0)
+	{
+	  dbg<<"dxdz = "<<dxdz<<std::endl;
+	  dbg<<"dydz = "<<dydz<<std::endl;
+	  dbg<<"deltaz = "<<deltaz<<std::endl;	  	  
+	}
+#endif
 
+	}
+      else
+	{
+	  zconv = 100.0 - si_length;
+	}
+      if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
+      // TODO: Do something more realistic if it hits the bottom.
+      
+      // Now we add in a displacement due to diffusion
+      double DiffStep = fmax(0.0, _DiffStep * (zconv - 10.0) / 100.0); // in microns
+      x0 += DiffStep * gd() / 10.0; // in pixels
+      y0 += DiffStep * gd() / 10.0; // in pixels
+      double flux = photons.getFlux(i);
+
+#ifdef DEBUGLOGGING
+      if (i % 1000 == 0)
+	{
+	  dbg<<"DiffStep = "<<DiffStep<<std::endl;	  
+	  dbg<<"zconv = "<<zconv<<std::endl;
+	  dbg<<"x0 = "<<x0<<std::endl;
+	  dbg<<"y0 = "<<y0<<std::endl;
+	}
+#endif
+      
         // Now we find the undistorted pixel
         int ix = int(floor(x0 + 0.5));
         int iy = int(floor(y0 + 0.5));

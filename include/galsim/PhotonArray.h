@@ -93,8 +93,8 @@ namespace galsim {
          * @{
          * @brief Return whether the optional arrays are allocated
          */
-        bool hasAllocatedAngles();
-        bool hasAllocatedWavelengths();
+        bool hasAllocatedAngles() const;
+        bool hasAllocatedWavelengths() const;
         /**
          * @}
          */

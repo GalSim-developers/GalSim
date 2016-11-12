@@ -55,13 +55,13 @@ namespace galsim {
         }
     }
 
-    bool PhotonArray::hasAllocatedAngles()
+    bool PhotonArray::hasAllocatedAngles() const
     {
         // dydz should always be in sync, so not need to check it.
         return _dxdz.size() == size();
     }
 
-    bool PhotonArray::hasAllocatedWavelengths()
+    bool PhotonArray::hasAllocatedWavelengths() const
     {
         return _wavelength.size() == size();
     }
