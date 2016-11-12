@@ -42,13 +42,28 @@ namespace galsim {
 
     void PhotonArray::allocateAngleVectors()
     {
-        if (_dxdz.size() != size()) _dxdz.resize(size());
-        if (_dydz.size() != size()) _dydz.resize(size());
+        if (!hasAllocatedAngles()) {
+            _dxdz.resize(size());
+            _dydz.resize(size());
+        }
     }
 
-    void PhotonArray::allocateLambdaVector()
+    void PhotonArray::allocateWavelengthVector()
     {
-        if (_lambda.size() != size()) _lambda.resize(size());
+        if (!hasAllocatedWavelengths()) {
+            _wavelength.resize(size());
+        }
+    }
+
+    bool PhotonArray::hasAllocatedAngles()
+    {
+        // dydz should always be in sync, so not need to check it.
+        return _dxdz.size() == size();
+    }
+
+    bool PhotonArray::hasAllocatedWavelengths()
+    {
+        return _wavelength.size() == size();
     }
 
     double PhotonArray::getTotalFlux() const
@@ -91,9 +106,9 @@ namespace galsim {
             std::copy(rhs._dxdz.begin(), rhs._dxdz.end(), _dxdz.begin()+istart);
             std::copy(rhs._dydz.begin(), rhs._dydz.end(), _dydz.begin()+istart);
         }
-        if (rhs._lambda.size() > 0) {
-            allocateLambdaVector();
-            std::copy(rhs._lambda.begin(), rhs._lambda.end(), _lambda.begin()+istart);
+        if (rhs._wavelength.size() > 0) {
+            allocateWavelengthVector();
+            std::copy(rhs._wavelength.begin(), rhs._wavelength.end(), _wavelength.begin()+istart);
         }
     }
 
