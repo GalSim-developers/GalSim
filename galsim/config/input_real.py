@@ -43,9 +43,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
         ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = %s"%param_name)
-    kwargs['rng'] = base['rng']
+    kwargs['rng'] = galsim.config.check_for_rng(base, logger, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']

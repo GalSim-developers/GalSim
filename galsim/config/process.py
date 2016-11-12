@@ -892,3 +892,16 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
     return results
 
+def check_for_rng(base, logger, tag):
+    """A helper function to check for base['rng'] and emit a warning if it is not present.
+
+    @returns either base['rng'] or None
+    """
+    if 'rng' not in base and logger:
+        # Only report the warning the first time.
+        rng_tag = tag + '_reported_no_rng'
+        if rng_tag not in base:
+            base[rng_tag] = True
+            logger.warning("No base['rng'] available for %s.  Using /dev/urandom."%tag)
+    return base.get('rng',None)
+

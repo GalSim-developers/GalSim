@@ -20,6 +20,8 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+import StringIO
+import logging
 
 path, filename = os.path.split(__file__)
 try:
@@ -560,3 +562,40 @@ def timer(f):
         print('time for %s = %.2f' % (fname, t1-t0))
         return result
     return f2
+
+def check_default_rng(func, base, *args, **kwargs):
+    """For some things, we want to test that the config parsing works properly if there is
+    no rng present in the base config dict.  This helper does that check for the given param_name.
+    """
+    # Can't have default kwargs with *args (in python 2), so do it manually.
+    test_logging = kwargs.pop('test_logging', True)
+
+    # Delete the rng if it is present.
+    if 'rng' in base:
+        del base['rng']
+
+    # Clear the cached values
+    galsim.config.RemoveCurrent(base)
+
+    # First, it should work fine with no logger.
+    # No assert here, but the code should not raise any error or warning.
+    func(base, *args)
+
+    if not test_logging: return
+
+    # If there is a logger, there should be a warning message emitted.
+    stream = StringIO.StringIO()
+    logger = logging.getLogger('test_logger')
+    logger.setLevel(logging.WARNING)
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+    handler = logging.StreamHandler(stream)
+    logger.addHandler(handler)
+
+    galsim.config.RemoveCurrent(base)
+    func(base, *args, logger=logger)
+
+    handler.flush()
+    print(stream.getvalue())
+    assert "No base['rng'] available" in stream.getvalue()
+    handler.close()

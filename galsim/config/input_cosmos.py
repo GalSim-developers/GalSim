@@ -76,9 +76,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for type = COSMOSGalaxy")
-        kwargs['rng'] = base['rng']
+        kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
 
     if 'index' in kwargs:
         index = kwargs['index']

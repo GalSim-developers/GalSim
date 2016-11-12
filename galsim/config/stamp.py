@@ -485,7 +485,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if 'wcs' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
     if method == 'phot' and 'rng' not in kwargs:
-        kwargs['rng'] = base['rng']
+        kwargs['rng'] = galsim.config.check_for_rng(base, logger, "method='phot'")
 
     # Check validity of extra phot options:
     max_extra_noise = None

@@ -639,6 +639,8 @@ def test_realgalaxy():
     # Also check that the noise attribute is correct.
     gsobject_compare(gal5a.noise._profile, gal5b.noise._profile, conv=conv)
 
+    check_default_rng(galsim.config.BuildGSObject, config, 'gal5')
+
 
 @timer
 def test_interpolated_image():
@@ -711,6 +713,10 @@ def test_interpolated_image():
     np.testing.assert_almost_equal(
         test_g2, 0.7, decimal=3,
         err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
+
+    # gal5, gal6 should work with default rngs
+    check_default_rng(galsim.config.BuildGSObject, config, 'gal5')
+    check_default_rng(galsim.config.BuildGSObject, config, 'gal6', test_logging=False)
 
 
 @timer

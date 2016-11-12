@@ -82,11 +82,10 @@ def AddNoise(config, im, current_var=0., logger=None):
     # case for the noise.  The easiest way to make sure this doesn't get messed up by any
     # value parsing is to copy it over to a new item in the dict.
     orig_index = config.get('index_key','image_num')
+    rng = galsim.config.check_for_rng(config, logger, 'AddNoise')
     if orig_index == 'obj_num':
         config['index_key'] = 'image_num'
-        rng = config.get('obj_num_rng', config['rng'])
-    else:
-        rng = config['rng']
+        rng = config.get('obj_num_rng', rng)
 
     builder = valid_noise_types[noise_type]
     var = builder.addNoise(noise, config, im, rng, current_var, draw_method, logger)
@@ -535,7 +534,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             kwargs = galsim.config.GetAllParams(config, base, opt=opt,
                                                 ignore=noise_ignore)[0]
             if rng is None:
-                rng = base['rng']
+                rng = base.get('rng',None)
             cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
             self.current_cn = cn
             self.current_cn_tag = tag

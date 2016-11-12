@@ -124,9 +124,7 @@ class SimpleWCSBuilder(WCSBuilder):
 
         # This would be weird, but might as well check...
         if build_func._takes_rng:
-            if 'rng' not in base:
-                raise ValueError("No base['rng'] available for %s.type = %s"%(key,wcs_type))
-            kwargs['rng'] = base['rng']
+            kwargs['rng'] = base.get('rng',None)
         return kwargs
 
     def buildWCS(self, config, base):

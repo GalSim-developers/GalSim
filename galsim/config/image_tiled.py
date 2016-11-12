@@ -131,7 +131,7 @@ class TiledImageBuilder(ImageBuilder):
         elif order.startswith('rand'):
             ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
             iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
-            rng = base['rng']
+            rng = galsim.config.check_for_rng(base, logger, 'TiledImage, order = '+order)
             galsim.random.permute(rng, ix_list, iy_list)
         else:
             raise ValueError("Invalid order.  Must be row, column, or random")
