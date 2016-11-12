@@ -563,39 +563,40 @@ def timer(f):
         return result
     return f2
 
-def check_default_rng(func, base, *args, **kwargs):
-    """For some things, we want to test that the config parsing works properly if there is
-    no rng present in the base config dict.  This helper does that check for the given param_name.
+
+class CaptureLog(object):
+    """A context manager that saves logging output into a string that is accessible for
+    checking in unit tests.
+
+    After exiting the context, the attribute `output` will have the logging output.
+
+    Sample usage:
+
+            >>> with CaptureLog() as cl:
+            ...     cl.logger.info('Do some stuff')
+            >>> assert cl.output == 'Do some stuff'
+
     """
-    # Can't have default kwargs with *args (in python 2), so do it manually.
-    test_logging = kwargs.pop('test_logging', True)
+    def __init__(self, level=3):
+        logging_levels = { 0: logging.CRITICAL,
+                           1: logging.WARNING,
+                           2: logging.INFO,
+                           3: logging.DEBUG }
+        self.logger = logging.getLogger('CaptureLog')
+        self.logger.setLevel(logging_levels[level])
 
-    # Delete the rng if it is present.
-    if 'rng' in base:
-        del base['rng']
+    def __enter__(self):
+        self.stream = StringIO.StringIO()
+        for handler in self.logger.handlers:
+            self.logger.removeHandler(handler)
+        self.handler = logging.StreamHandler(self.stream)
+        self.logger.addHandler(self.handler)
+        return self
 
-    # Clear the cached values
-    galsim.config.RemoveCurrent(base)
+    def __exit__(self, type, value, traceback):
+        self.handler.flush()
+        self.output = self.stream.getvalue().strip()
+        self.handler.close()
 
-    # First, it should work fine with no logger.
-    # No assert here, but the code should not raise any error or warning.
-    func(base, *args)
 
-    if not test_logging: return
 
-    # If there is a logger, there should be a warning message emitted.
-    stream = StringIO.StringIO()
-    logger = logging.getLogger('test_logger')
-    logger.setLevel(logging.WARNING)
-    for handler in logger.handlers:
-        logger.removeHandler(handler)
-    handler = logging.StreamHandler(stream)
-    logger.addHandler(handler)
-
-    galsim.config.RemoveCurrent(base)
-    func(base, *args, logger=logger)
-
-    handler.flush()
-    print(stream.getvalue())
-    assert "No base['rng'] available" in stream.getvalue()
-    handler.close()

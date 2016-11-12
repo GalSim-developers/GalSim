@@ -639,7 +639,16 @@ def test_realgalaxy():
     # Also check that the noise attribute is correct.
     gsobject_compare(gal5a.noise._profile, gal5b.noise._profile, conv=conv)
 
-    check_default_rng(galsim.config.BuildGSObject, config, 'gal5')
+    # Should work if rng not in base config dict.
+    del config['rng']
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    galsim.config.BuildGSObject(config, 'gal5')
+
+    # If there is a logger, there should be a warning message emitted.
+    with CaptureLog() as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
+    assert "No base['rng'] available" in cl.output
 
 
 @timer
@@ -715,9 +724,20 @@ def test_interpolated_image():
         err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
 
     # gal5, gal6 should work with default rngs
-    check_default_rng(galsim.config.BuildGSObject, config, 'gal5')
-    check_default_rng(galsim.config.BuildGSObject, config, 'gal6', test_logging=False)
+    del config['rng']
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    galsim.config.BuildGSObject(config, 'gal5')
+    galsim.config.BuildGSObject(config, 'gal6')
 
+    # If there is a logger, there should be a warning message emitted, but only the first time.
+    with CaptureLog() as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
+    assert "No base['rng'] available" in cl.output
+    with CaptureLog(level=1) as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal6', logger=cl.logger)
+    assert cl.output == ''
 
 @timer
 def test_add():
