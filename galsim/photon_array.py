@@ -25,7 +25,7 @@ class FRatioAngles(object):
     obscuration.
 
     Assigns arrival directions at the focal plane for photons, drawing from a uniform
-    brightness distribution between the obscuration angle and the angle of the FOV defined
+    brightness distribution between the obscuration angle and the edge of the pupil defined
     by the f/ratio of the telescope.  The angles are expressed in terms of slopes dx/dz
     and dy/dz.
 
@@ -61,8 +61,8 @@ class FRatioAngles(object):
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of
         # the telescope.  The angular radius of the field of view is defined by the 
         # ratio of the radius of the aperture to the focal length
-        fov_angle = np.arctan(0.5 / self.fratio)  # radians
-        obscuration_angle = self.obscuration * fov_angle
+        pupil_angle = np.arctan(0.5 / self.fratio)  # radians
+        obscuration_angle = np.arctan(0.5 * self.obscuration / self.fratio)
 
         # Generate azimuthal angles for the photons
         phi = np.empty(n_photons)
@@ -70,10 +70,10 @@ class FRatioAngles(object):
         phi *= (2 * np.pi)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
-        # the sine of the obscuration angle and the sine of the FOV radius
+        # the sine of the obscuration angle and the sine of the pupil radius
         sintheta = np.empty(n_photons)
         self.ud.generate(sintheta) 
-        sintheta = np.sin(obscuration_angle) + (np.sin(fov_angle) - np.sin(obscuration_angle)) \
+        sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
             * sintheta
 
         # Assign the directions to the arrays. In this class the convention for the
