@@ -65,7 +65,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         base = config
 
     if logger:
-        logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
+        logger.debug('obj %d: Start BuildGSObject %s',base.get('obj_num',0),key)
 
     # If key isn't in config, then just return None.
     try:
@@ -99,12 +99,12 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         # If logging, explain why we are using the current object.
         if logger:
             if param['current_safe']:
-                logger.debug('obj %d: current is safe',base['obj_num'])
+                logger.debug('obj %d: current is safe',base.get('obj_num',0))
             elif repeat > 1:
                 logger.debug('obj %d: repeat = %d, index = %d, use current object',
-                             base['obj_num'],repeat,index)
+                             base.get('obj_num',0),repeat,index)
             else:
-                logger.debug('obj %d: This object is already current', base['obj_num'])
+                logger.debug('obj %d: This object is already current', base.get('obj_num',0))
 
         # Make sure to reset these values in case they were changed.
         if orig_index_key is not None:
@@ -119,7 +119,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
         if skip:
             if logger:
-                logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
+                logger.debug('obj %d: Skipping because field skip=True',base.get('obj_num',0))
             raise SkipThisObject()
 
     # Set up the initial default list of attributes to ignore while building the object:
@@ -241,7 +241,7 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
     else:
         init_func = eval(type_name)
     if logger:
-        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
+        logger.debug('obj %d: BuildSimple for type = %s',base.get('obj_num',0),type_name)
 
     req = init_func._req_params if hasattr(init_func,'_req_params') else {}
     opt = init_func._opt_params if hasattr(init_func,'_opt_params') else {}
@@ -252,13 +252,11 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if init_func._takes_rng:
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for type = %s"%type_name)
-        kwargs['rng'] = base['rng']
+        kwargs['rng'] = galsim.config.check_for_rng(base, logger, type_name)
         safe = False
 
     if logger:
-        logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
+        logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)
 
     # Finally, after pulling together all the params, try making the GSObject.
     return init_func(**kwargs), safe
@@ -289,7 +287,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float,base) == 0.:
             if logger:
-                logger.debug('obj %d: Not including component with flux == 0',base['obj_num'])
+                logger.debug('obj %d: Not including component with flux == 0',base.get('obj_num',0))
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)
@@ -319,7 +317,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
-            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
+            logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
@@ -355,7 +353,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
-            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
+            logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
@@ -385,7 +383,7 @@ def _BuildList(config, base, ignore, gsparams, logger):
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
-            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
+            logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
 
@@ -449,42 +447,42 @@ def TransformObject(gsobject, config, base, logger):
 def _Shear(gsobject, config, key, base, logger):
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
     if logger:
-        logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
+        logger.debug('obj %d: shear = %f,%f',base.get('obj_num',0),shear.g1,shear.g2)
     gsobject = gsobject.shear(shear)
     return gsobject, safe
 
 def _Rotate(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     if logger:
-        logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
+        logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad())
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
 def _ScaleFlux(gsobject, config, key, base, logger):
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
-        logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
+        logger.debug('obj %d: flux_ratio  = %f',base.get('obj_num',0),flux_ratio)
     gsobject = gsobject * flux_ratio
     return gsobject, safe
 
 def _Dilate(gsobject, config, key, base, logger):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
-        logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
+        logger.debug('obj %d: scale  = %f',base.get('obj_num',0),scale)
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
 def _Magnify(gsobject, config, key, base, logger):
     mu, safe = galsim.config.ParseValue(config, key, base, float)
     if logger:
-        logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
+        logger.debug('obj %d: mu  = %f',base.get('obj_num',0),mu)
     gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
 def _Shift(gsobject, config, key, base, logger):
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
     if logger:
-        logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
+        logger.debug('obj %d: shift  = %f,%f',base.get('obj_num',0),shift.x,shift.y)
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 

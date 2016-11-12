@@ -55,7 +55,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 
     kwargs['real_galaxy_catalog'] = real_cat
     if logger:
-        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,kwargs)
+        logger.debug('obj %d: %s kwargs = %s',base.get('obj_num',0),param_name,kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
 

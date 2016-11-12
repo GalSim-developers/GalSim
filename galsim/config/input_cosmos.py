@@ -87,7 +87,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
                 "%s index has gone past the number of entries in the catalog"%index)
 
     if logger:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
+        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base.get('obj_num',0),kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
 

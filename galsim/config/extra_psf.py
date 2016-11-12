@@ -88,7 +88,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
             else:
                 shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
             if logger:
-                logger.debug('obj %d: psf shift: %s',base['obj_num'],str(shift))
+                logger.debug('obj %d: psf shift: %s',base.get('obj_num',0),str(shift))
             psf = psf.shift(shift)
 
         # Start with the offset required just due to the stamp size/shape.
@@ -102,7 +102,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
             else:
                 offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
             if logger:
-                logger.debug('obj %d: psf offset: %s',base['obj_num'],str(offset))
+                logger.debug('obj %d: psf offset: %s',base.get('obj_num',0),str(offset))
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
@@ -126,7 +126,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                 # that don't start with _.  Hence using the more verbose form here.
                 image.setSubImage(b, image.subImage(b) + stamp[b])
                 if logger:
-                    logger.debug('obj %d: added psf image to main image',base['obj_num'])
+                    logger.debug('obj %d: added psf image to main image',base.get('obj_num',0))
         self.data[index] = image
 
 
