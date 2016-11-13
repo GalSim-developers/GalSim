@@ -284,7 +284,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     else:
         ntries = 1
 
-    for itry in range(ntries):
+    itry = 0
+    while True:
+        itry += 1  # itry increases from 1..ntries at which point we just reraise the exception.
 
         # The rest of the stamp generation stage is wrapped in a try/except block.
         # If we catch an exception, we continue the for loop to try again.
@@ -374,7 +376,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             if not skip:
                 reject = builder.reject(stamp, config, prof, psf, im, logger)
                 if reject:
-                    if itry+1 < ntries:
+                    if itry < ntries:
                         if logger:
                             logger.warning('Object %d: Rejecting this object and rebuilding',
                                            obj_num)
@@ -410,13 +412,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            if itry == ntries-1:
+            if itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
                 if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
-                    logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
+                    logger.info('This is try %d/%d, so trying again.',itry,ntries)
                 if logger:
                     import traceback
                     tr = traceback.format_exc()
