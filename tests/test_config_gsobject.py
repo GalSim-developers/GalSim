@@ -1161,6 +1161,47 @@ def test_ring():
         print('The assert_raises tests require nose')
 
 
+@timer
+def test_repeat():
+    """Test use of the repeat option for an object
+    """
+    config = {
+        'rng' : galsim.BaseDeviate(1234),
+        'gal' : {
+            'repeat' : 3,
+            'type' : 'Gaussian',
+            'sigma' : { 'type' : 'Random', 'min' : 1, 'max' : 2 },
+            'flux' : '$(obj_num + 1) * 100'
+        }
+    }
+
+    ud = galsim.UniformDeviate(1234)
+    config['obj_num'] = 0
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal1b = galsim.Gaussian(sigma=ud()+1, flux=100)
+    gsobject_compare(gal1a, gal1b)
+
+    # Next 2 should be the same.
+    config['obj_num'] = 1
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal1a, gal1b)
+    config['obj_num'] = 2
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal1a, gal1b)
+
+    # Then next 3 should be a new object.
+    config['obj_num'] = 3
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal2b = galsim.Gaussian(sigma=ud()+1, flux=400)
+    gsobject_compare(gal2a, gal2b)
+    config['obj_num'] = 4
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal2a, gal2b)
+    config['obj_num'] = 5
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal2a, gal2b)
+
+
 if __name__ == "__main__":
     test_gaussian()
     test_moffat()
@@ -1177,3 +1218,4 @@ if __name__ == "__main__":
     test_convolve()
     test_list()
     test_ring()
+    test_repeat()
