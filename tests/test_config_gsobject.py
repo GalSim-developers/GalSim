@@ -1202,6 +1202,65 @@ def test_repeat():
     gsobject_compare(gal2a, gal2b)
 
 
+@timer
+def test_usertype():
+    """Test a user-defined type
+    """
+    # A custom GSObject class that will use BuildSimple
+    class PseudoDelta(galsim.GSObject):
+        _req_params = {}
+        _opt_params = { "flux" : float }
+        _single_params = []
+        _takes_rng = False
+        def __init__(self, flux=1., gsparams=None):
+            obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
+            galsim.GSObject.__init__(self, obj)
+
+    galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
+
+    config = {
+        'gal1' : { 'type' : 'PseudoDelta' },
+        'gal2' : { 'type' : 'PseudoDelta', 'flux' : 100 },
+        'gal3' : { 'type' : 'PseudoDelta', 'flux' : 1.e5,
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
+                 },
+    }
+
+    psf = galsim.Gaussian(sigma=2.3)
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.Gaussian(sigma=1.e-8, flux=1)
+    gsobject_compare(gal1a, gal1b, conv=psf)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.Gaussian(sigma=1.e-8, flux = 100)
+    gsobject_compare(gal2a, gal2b, conv=psf)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.Gaussian(sigma=1.e-8, flux = 1.e5)
+    gal3b = gal3b.shift(dx = 0.7, dy = -1.2)
+    gsobject_compare(gal3a, gal3b, conv=psf)
+
+    # Now an equivalent thing, but implemented with a builder rather than a class.
+    def BuildPseudoDelta(config, base, ignore, gsparams, logger):
+        opt = { 'flux' : float }
+        kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+        gsparams = galsim.GSParams(**gsparams)  # within config, it is passed around as a dict
+        return galsim.Gaussian(sigma=1.e-8, gsparams=gsparams, **kwargs), safe
+
+    galsim.config.RegisterObjectType('PseudoDelta', BuildPseudoDelta)
+
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gsobject_compare(gal1a, gal1b, conv=psf)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gsobject_compare(gal2a, gal2b, conv=psf)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gsobject_compare(gal3a, gal3b, conv=psf)
+
+
 if __name__ == "__main__":
     test_gaussian()
     test_moffat()
@@ -1219,3 +1278,4 @@ if __name__ == "__main__":
     test_list()
     test_ring()
     test_repeat()
+    test_usertype()

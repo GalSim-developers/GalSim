@@ -17,6 +17,7 @@
 #
 import galsim
 import logging
+import inspect
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
@@ -173,19 +174,18 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'gsparams' in param:
         gsparams = UpdateGSParams(gsparams, param['gsparams'], base)
 
-    # See if this type has a specialized build function:
+    # See if this type is registerd as a valid type.
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
-        gsobject, safe = build_func(param, base, ignore, gsparams, logger)
-    # Next, we check if this name is in the galsim dictionary.
     elif type_name in galsim.__dict__:
-        if issubclass(galsim.__dict__[type_name], galsim.GSObject):
-            gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
-        else:
-            raise TypeError("Input config type = %s is not a GSObject."%type_name)
-    # Otherwise, it's not a valid type.
+        build_func = eval("galsim."+type_name)
     else:
         raise NotImplementedError("Unrecognised config type = %s"%type_name)
+
+    if inspect.isclass(build_func) and issubclass(build_func, galsim.GSObject):
+        gsobject, safe = _BuildSimple(build_func, param, base, ignore, gsparams, logger)
+    else:
+        gsobject, safe = build_func(param, base, ignore, gsparams, logger)
 
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
@@ -231,28 +231,24 @@ def UpdateGSParams(gsparams, config, base):
 # These are not imported into galsim.config namespace.
 #
 
-def _BuildSimple(config, base, ignore, gsparams, logger):
+def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
     any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
     type_name = config['type']
-    if type_name in galsim.__dict__:
-        init_func = eval("galsim."+type_name)
-    else:
-        init_func = eval(type_name)
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base.get('obj_num',0),type_name)
 
-    req = init_func._req_params if hasattr(init_func,'_req_params') else {}
-    opt = init_func._opt_params if hasattr(init_func,'_opt_params') else {}
-    single = init_func._single_params if hasattr(init_func,'_single_params') else []
+    req = build_func._req_params if hasattr(build_func,'_req_params') else {}
+    opt = build_func._opt_params if hasattr(build_func,'_opt_params') else {}
+    single = build_func._single_params if hasattr(build_func,'_single_params') else []
     kwargs, safe = galsim.config.GetAllParams(config, base,
                                               req=req, opt=opt, single=single,
                                               ignore=ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    if init_func._takes_rng:
+    if build_func._takes_rng:
         kwargs['rng'] = galsim.config.check_for_rng(base, logger, type_name)
         safe = False
 
@@ -260,7 +256,7 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
         logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)
 
     # Finally, after pulling together all the params, try making the GSObject.
-    return init_func(**kwargs), safe
+    return build_func(**kwargs), safe
 
 
 def _BuildNone(config, base, ignore, gsparams, logger):
