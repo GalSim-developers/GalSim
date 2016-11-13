@@ -1809,7 +1809,7 @@ class GSObject(object):
             raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
 
         # Make sure the type of wmult is correct and has a valid value
-        if type(wmult) != float:
+        if type(wmult) != float:  # pragma: no cover
             wmult = float(wmult)
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0.")

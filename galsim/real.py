@@ -959,7 +959,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
                                           # results in the same object.
 
-        if _imgs is not None:
+        if _imgs is not None:  # pragma: no cover
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the crg
             # catalog directly by providing the things we need from it.
             imgs, bands, xis, PSFs = _imgs, _bands, _xis, _PSFs
