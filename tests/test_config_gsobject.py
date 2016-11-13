@@ -792,8 +792,21 @@ def test_add():
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
-        }
-    }
+        },
+        'gal6' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+            ]
+        },
+        'gal7' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+                { 'type' : 'Exponential' , 'half_light_radius' : 2.3, 'flux' : 0 }
+            ]
+        },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -841,6 +854,16 @@ def test_add():
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # "Adding" 1 item is equivalent to just that item alone
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal6a, gal6b)
+
+    # Also if an item has 0 flux, it is ignored (for efficiency)
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal7a, gal7b)
 
 
 @timer
@@ -898,8 +921,14 @@ def test_convolve():
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
-        }
-    }
+        },
+        'gal6' : {
+            'type' : 'Convolve' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+            ]
+        },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -946,6 +975,11 @@ def test_convolve():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # "Convolving" 1 item is equivalent to just that item alone
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal6a, gal6b)
 
 
 @timer
