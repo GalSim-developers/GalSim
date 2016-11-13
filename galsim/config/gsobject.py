@@ -107,8 +107,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                 logger.debug('obj %d: This object is already current', base.get('obj_num',0))
 
         # Make sure to reset these values in case they were changed.
-        if orig_index_key is not None:
-            base['index_key'] = orig_index_key
+        # Note: it is impossible to get here if orig_index_key is None
+        assert orig_index_key is not None
+        base['index_key'] = orig_index_key
         if orig_rng is not None:
             base['rng'] = orig_rng
 
@@ -495,13 +496,10 @@ def _GetMinimumBlock(config, base):
     @param config       A dict with the configuration information.
     @param base         The base dict of the configuration. [default: config]
     """
-    if isinstance(config, dict) and 'type' in config:
-        type_name = config['type']
-        if type_name in block_gsobject_types: # pragma: no cover
-            num = galsim.config.ParseValue(config, 'num', base, int)[0]
-            return num
-        else:
-            return 1
+    type_name = config.get('type',None)
+    if type_name in block_gsobject_types: # pragma: no cover
+        num = galsim.config.ParseValue(config, 'num', base, int)[0]
+        return num
     else:
         return 1
 
@@ -542,7 +540,7 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
         block_gsobject_types.append(type_name)
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):
+        if isinstance(input_type, list):  # pragma: no cover
             for key in input_type:
                 RegisterInputConnectedType(key, type_name)
         else:

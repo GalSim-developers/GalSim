@@ -341,10 +341,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             im = builder.makeStamp(stamp, config, xsize, ysize, logger)
 
             if not skip:
-                if 'draw_method' in stamp:
-                    method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
-                else:
-                    method = 'auto'
+                method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
                 if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
                     raise AttributeError("Invalid draw_method: %s"%method)
 
@@ -480,7 +477,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     kwargs['image'] = image
     kwargs['offset'] = offset
     kwargs['method'] = method
-    if 'wmult' in config and 'wmult' not in kwargs:
+    if 'wmult' in config and 'wmult' not in kwargs: # pragma: no cover
         kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
     if 'wcs' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
@@ -513,15 +510,14 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if max_extra_noise is not None and 'max_extra_noise' not in kwargs:
         if max_extra_noise < 0.:
             raise ValueError("image.max_extra_noise cannot be negative")
-        if max_extra_noise > 0.:
-            if 'image' in base and 'noise' in base['image']:
-                noise_var = galsim.config.CalculateNoiseVar(base)
-            else:
-                raise AttributeError("Need to specify noise level when using max_extra_noise")
-            if noise_var < 0.:
-                raise ValueError("noise_var calculated to be < 0.")
-            max_extra_noise *= noise_var
-            kwargs['max_extra_noise'] = max_extra_noise
+        if 'image' in base and 'noise' in base['image']:
+            noise_var = galsim.config.CalculateNoiseVar(base)
+        else:
+            raise AttributeError("Need to specify noise level when using max_extra_noise")
+        if noise_var < 0.:
+            raise ValueError("noise_var calculated to be < 0.")
+        max_extra_noise *= noise_var
+        kwargs['max_extra_noise'] = max_extra_noise
 
     image = prof.drawImage(**kwargs)
     return image
