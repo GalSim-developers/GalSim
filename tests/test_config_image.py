@@ -31,9 +31,60 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# TODO: Add more tests of the higher level config items.
-# So far, I only added two tests related to bugs that David Kirkby found in issues
-# #380 and #391.  But clearly more deserve to be added to our test suite.
+
+@timer
+def test_single():
+    """Test the default image type = Single and stamp type = Basic
+    """
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+        },
+        'stamp' : {
+            'type' : 'Basic',
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        }
+    }
+
+    if False:
+        logger = logging.getLogger('test_single')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger = galsim.config.LoggerWrapper(None)
+
+    for k in range(6):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = ud() + 1.
+        gal = galsim.Gaussian(sigma=sigma, flux=100)
+        print('gal = ',gal)
+        im1 = gal.drawImage(scale=1)
+
+        im2 = galsim.config.BuildImage(config, obj_num=k, logger=logger)
+        np.testing.assert_array_equal(im2.array, im1.array)
+
+        # Can also use BuildStamp.  In this case, it will used the cached value
+        # of sigma, so we don't need to worry about resetting the rng in the config dict.
+        im3 = galsim.config.BuildStamp(config, obj_num=k, logger=logger)[0]
+        np.testing.assert_array_equal(im3.array, im1.array)
+
+        # Users can write their own custom stamp builders, in which case they may want
+        # to call DrawBasic directly as part of the draw method in their builder.
+        im4 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
+                                      config['stamp'], config, logger)
+        np.testing.assert_array_equal(im4.array, im1.array)
+
+        # The user is allowed to to add extra kwarg to the end, which would be passed on
+        # to the drawImage command.
+        im5 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
+                                      config['stamp'], config, logger, scale=1.0)
+        np.testing.assert_array_equal(im5.array, im1.array)
+
 
 
 @timer
@@ -354,6 +405,7 @@ def test_njobs():
 
 
 if __name__ == "__main__":
+    test_single()
     test_ring()
     test_scattered()
     test_njobs()

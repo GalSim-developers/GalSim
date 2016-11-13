@@ -481,7 +481,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     kwargs['method'] = method
     if 'wmult' in config and 'wmult' not in kwargs: # pragma: no cover
         kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
-    if 'wcs' not in kwargs:
+    if 'wcs' not in kwargs and 'scale' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
     if method == 'phot' and 'rng' not in kwargs:
         kwargs['rng'] = galsim.config.check_for_rng(base, logger, "method='phot'")
@@ -521,6 +521,8 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
+    if logger:
+        logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0),kwargs)
     image = prof.drawImage(**kwargs)
     return image
 
