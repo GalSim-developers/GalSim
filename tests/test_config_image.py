@@ -58,12 +58,15 @@ def test_single():
     else:
         logger = galsim.config.LoggerWrapper(None)
 
-    for k in range(6):
+    im1_list = []
+    nimages = 6
+    for k in range(nimages):
         ud = galsim.UniformDeviate(1234 + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         print('gal = ',gal)
         im1 = gal.drawImage(scale=1)
+        im1_list.append(im1)
 
         im2 = galsim.config.BuildImage(config, obj_num=k, logger=logger)
         np.testing.assert_array_equal(im2.array, im1.array)
@@ -85,7 +88,21 @@ def test_single():
                                       config['stamp'], config, logger, scale=1.0)
         np.testing.assert_array_equal(im5.array, im1.array)
 
+    # Use BuildStamps to build them all at once:
+    im6_list = galsim.config.BuildStamps(nimages, config)[0]
+    for k in range(nimages):
+        im1 = im1_list[k]
+        im6 = im6_list[k]
+        np.testing.assert_array_equal(im6.array, im1.array)
 
+    # In this case, BuildImages does essentially the same thing
+    im7_list = galsim.config.BuildImages(nimages, config)
+    print('im7_list = ',im7_list)
+    for k in range(nimages):
+        im1 = im1_list[k]
+        im7 = im7_list[k]
+        print('im7 = ',im7)
+        np.testing.assert_array_equal(im7.array, im1.array)
 
 @timer
 def test_ring():
