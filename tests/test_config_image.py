@@ -42,15 +42,15 @@ def test_ring():
     """
     config = {
         'stamp' : {
-            'type' : 'Ring' ,
+            'type' : 'Ring',
             'num' : 2,
         },
         'gal' : {
-            'type' : 'Gaussian' ,
+            'type' : 'Gaussian',
             'sigma' : 2,
             'ellip' : {
                 'type' : 'E1E2',
-                'e1' : { 'type' : 'List' ,
+                'e1' : { 'type' : 'List',
                             'items' : [ 0.3, 0.2, 0.8 ],
                             'index' : { 'type' : 'Sequence', 'repeat' : 2 }
                         },
@@ -77,7 +77,7 @@ def test_ring():
 
     config = {
         'stamp' : {
-            'type' : 'Ring' ,
+            'type' : 'Ring',
             'num' : 10,
         },
         'gal' : {
@@ -98,7 +98,7 @@ def test_ring():
 
     config = {
         'stamp' : {
-            'type' : 'Ring' ,
+            'type' : 'Ring',
             'num' : 5,
             'full_rotation' : 360. * galsim.degrees,
             'index' : { 'type' : 'Sequence', 'repeat' : 4 }
@@ -132,7 +132,7 @@ def test_ring():
     # Check that the ring items correctly inherit their gsparams from the top level
     config = {
         'stamp' : {
-            'type' : 'Ring' ,
+            'type' : 'Ring',
             'num' : 20,
             'full_rotation' : 360. * galsim.degrees,
             'gsparams' : { 'maxk_threshold' : 1.e-2,
