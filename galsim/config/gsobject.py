@@ -524,7 +524,7 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
     @param build_func       A function to build a GSObject from the config information.
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
-    @param input_type       If the type utilises an input object, give the key name of the input
+    @param input_type       If the type requires an input object, give the key name of the input
                             type here.  (If it uses more than one, this may be a list.)
                             [default: None]
     """
