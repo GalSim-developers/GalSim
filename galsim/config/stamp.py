@@ -43,11 +43,13 @@ def BuildStamps(nobjects, config, obj_num=0,
     @param config           A configuration dict.
     @param obj_num          If given, the current obj_num. [default: 0]
     @param xsize            The size of a single stamp in the x direction. [default: 0,
-                            which means to look for config.image.stamp_xsize, and if that's
-                            not there, use automatic sizing.]
+                            which means to look first for config.stamp.xsize, then for
+                            config.image.stamp_xsize, and if neither are given, then use
+                            automatic sizing.]
     @param ysize            The size of a single stamp in the y direction. [default: 0,
-                            which means to look for config.image.stamp_xsize, and if that's
-                            not there, use automatic sizing.]
+                            which means to look first for config.stamp.ysize, then for
+                            config.image.stamp_ysize, and if neither are given, then use
+                            automatic sizing.]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
     @param logger           If given, a logger object to log progress. [default: None]
@@ -252,8 +254,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     @param config           A configuration dict.
     @param obj_num          If given, the current obj_num [default: 0]
-    @param xsize            The xsize of the image to build (if known). [default: 0]
-    @param ysize            The ysize of the image to build (if known). [default: 0]
+    @param xsize            The xsize of the stamp to build (if known). [default: 0]
+    @param ysize            The ysize of the stamp to build (if known). [default: 0]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
     @param logger           If given, a logger object to log progress. [default: None]

@@ -51,7 +51,7 @@ def test_single():
         }
     }
 
-    if False:
+    if __name__ == '__main__':
         logger = logging.getLogger('test_single')
         logger.addHandler(logging.StreamHandler(sys.stdout))
         logger.setLevel(logging.DEBUG)
@@ -97,12 +97,78 @@ def test_single():
 
     # In this case, BuildImages does essentially the same thing
     im7_list = galsim.config.BuildImages(nimages, config)
-    print('im7_list = ',im7_list)
     for k in range(nimages):
         im1 = im1_list[k]
         im7 = im7_list[k]
-        print('im7 = ',im7)
         np.testing.assert_array_equal(im7.array, im1.array)
+
+
+@timer
+def test_positions():
+    """Test various ways to set the object position
+    """
+    # Start with a configuration that puts a single galaxy somewhere off-center on an image
+    config = {
+        'image' : {
+            'type' : 'Single',
+        },
+        'stamp' : {
+            'type' : 'Basic',
+            'xsize' : 21,
+            'ysize' : 21,
+            'image_pos' : { 'type' : 'XY', 'x' : 39, 'y' : 43 },
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.7,
+            'flux' : 100,
+        }
+    }
+
+    if True:
+        logger = logging.getLogger('test_single')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger = None
+
+    gal = galsim.Gaussian(sigma=1.7, flux=100)
+    im1= gal.drawImage(nx=21, ny=21, scale=1)
+    im1.setCenter(39,43)
+
+    im2 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im2.array, im1.array)
+    assert im2.bounds == im1.bounds  # This is really the main test.
+
+    # image_pos could also be in image
+    config['image']['image_pos'] = config['stamp']['image_pos']
+    del config['stamp']['image_pos']
+    im3 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im3.array, im1.array)
+    assert im3.bounds == im1.bounds
+
+    # since our wcs is just a pixel scale, we can also specify world_pos instead.
+    config['stamp']['world_pos'] = config['image']['image_pos']
+    del config['image']['image_pos']
+    im4 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im4.array, im1.array)
+    assert im4.bounds == im1.bounds
+
+    # world_pos in image works slightly differently for image type = Single.
+    # The intent there is just to give the object a world position for values that might depend
+    # on it (e.g. NFWHalo shears)
+    config['image']['world_pos'] = config['stamp']['world_pos']
+    del config['stamp']['world_pos']
+    im5 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im5.array, im1.array)
+    assert im5.bounds == galsim.BoundsI(-10,10,-10,10)
+
+    # It is also valid to give both world_pos and image_pos in the image field for Single.
+    config['image']['image_pos'] = config['image']['world_pos']
+    im6 = galsim.config.BuildImage(config, logger=logger)
+    np.testing.assert_array_equal(im6.array, im1.array)
+    assert im6.bounds == im1.bounds
+
 
 @timer
 def test_ring():
@@ -121,7 +187,7 @@ def test_ring():
                 'e1' : { 'type' : 'List',
                             'items' : [ 0.3, 0.2, 0.8 ],
                             'index' : { 'type' : 'Sequence', 'repeat' : 2 }
-                        },
+                       },
                 'e2' : 0.1
             }
         }
@@ -423,6 +489,7 @@ def test_njobs():
 
 if __name__ == "__main__":
     test_single()
+    test_positions()
     test_ring()
     test_scattered()
     test_njobs()
