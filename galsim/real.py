@@ -1080,7 +1080,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Setting stepk is trickier.  We'll assume that the postage stamp inputs are already at the
         # critical size to avoid significant aliasing and use the implied stepk.  This is a bit
         # tricky if the images have a complicated WCS, so for now, we'll assume the WCS is a simple
-        # PixelScale.
+        # PixelScale.  Though note that we *do* allow the stepk to be different in x and y, which
+        # corresponds to the input images being rectangular but non-square.
         x_stepk = np.min([2*np.pi/(img.scale*img.array.shape[1]) for img in imgs])
         y_stepk = np.min([2*np.pi/(img.scale*img.array.shape[0]) for img in imgs])
         nkx = 2*int(np.floor(maxk/x_stepk))
@@ -1093,8 +1094,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         for i, (img, band, PSF) in enumerate(zip(imgs, bands, PSFs)):
             for j, sed in enumerate(self.SEDs):
                 # assume that PSF already includes pixel, so don't convolve one in again.
-                re, im = (PSF * sed).drawKImage(band, nx=nkx, ny=nky, wcs=wcs)
-                PSF_eff_kimgs[i, j] = re.array + 1j * im.array
+                PSF_eff_kimgs[i, j] = (PSF * sed).drawKImage(band, nx=nkx, ny=nky, wcs=wcs).array
 
         # Get Fourier-space representations of input imgs.
         kimgs = np.empty((Nim, nky, nkx), dtype=np.complex128)
@@ -1103,9 +1103,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         for i, img in enumerate(imgs):
             # Is there any reason not to use x_interpolant='sinc'?
             ii = galsim.InterpolatedImage(img, x_interpolant='sinc')
-            re, im = ii.drawKImage(nx=nkx, ny=nky, wcs=wcs)
-            kimgs[i] = re.array + 1j * im.array
+            kimgs[i] = ii.drawKImage(nx=nkx, ny=nky, wcs=wcs).array
 
+        # Commented-out code below is out-of-date
         # Option 2) Using numpy to Fourier transform
         # for i, img in enumerate(imgs):
         #     tmp = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img.array)))
@@ -1134,11 +1134,12 @@ class ChromaticRealGalaxy(ChromaticSum):
             xscale = 2*np.pi/(nx*img.scale)
             yscale = 2*np.pi/(ny*img.scale)
             tmpwcs = galsim.JacobianWCS(yscale, 0.0, 0.0, xscale)
-            re = galsim.Image(pk, wcs=tmpwcs)
-            im = galsim.Image(pk*0, wcs=tmpwcs)
-            iki = galsim.InterpolatedKImage(re, im)
-            re, _ = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
-            pks[i] = re.array * nx*ny
+            tmp = galsim.ImageC(pk+0j, wcs=tmpwcs)
+            # re = galsim.Image(pk, wcs=tmpwcs)
+            # im = galsim.Image(pk*0, wcs=tmpwcs)
+            iki = galsim.InterpolatedKImage(tmp)
+            pk = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
+            pks[i] = pk.array.real * nx * ny
 
         # Allocate and fill output coefficients and covariances.
         Sigma = np.empty((NSED, NSED, nky, nkx), dtype=np.complex128)
@@ -1175,19 +1176,23 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
         for i, sed in enumerate(self.SEDs):
-            re = galsim.Image(np.ascontiguousarray(coef[i].real), wcs=wcs)
-            im = galsim.Image(np.ascontiguousarray(coef[i].imag), wcs=wcs)
-            objlist.append(sed * galsim.InterpolatedKImage(re, im))
+            # re = galsim.Image(np.ascontiguousarray(coef[i].real), wcs=wcs)
+            # im = galsim.Image(np.ascontiguousarray(coef[i].imag), wcs=wcs)
+            # objlist.append(sed * galsim.InterpolatedKImage(re, im))
+            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageC(coef[i], wcs=wcs)))
 
         Sigma_dict = {}
         for i in range(NSED):
             for j in range(i, NSED):
-                rearray = Sigma[i, j].real
-                imarray = Sigma[i, j].imag
-                re = galsim.ImageD(np.ascontiguousarray(rearray), wcs=wcs)
-                im = galsim.ImageD(np.ascontiguousarray(imarray), wcs=wcs)
-                obj = galsim.InterpolatedKImage(re, im) / (
-                       imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
+                # rearray = Sigma[i, j].real
+                # imarray = Sigma[i, j].imag
+                # re = galsim.ImageD(np.ascontiguousarray(rearray), wcs=wcs)
+                # im = galsim.ImageD(np.ascontiguousarray(imarray), wcs=wcs)
+                # obj = galsim.InterpolatedKImage(re, im) / (
+                #        imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
+                # Sigma_dict[(i, j)] = obj
+                obj = galsim.InterpolatedKImage(galsim.ImageC(Sigma[i, j], wcs=wcs))
+                obj /= (imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)

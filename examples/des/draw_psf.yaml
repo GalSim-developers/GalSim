@@ -17,7 +17,7 @@
 #
 #
 # Draw DES PSFs at the locations of observed galaxies.  To run it type:
-# 
+#
 #     galsim draw_psf.yaml
 #
 # This demo probably isn't so useful as an actual program, but it does showcase how to
@@ -43,7 +43,7 @@
 # First define the aspects of the configuration that are common to both tasks
 
 # We define a few variables here that will be used multiple times below.
-# Also, it's convenient to define them near the top to make them easy to change to run on 
+# Also, it's convenient to define them near the top to make them easy to change to run on
 # different exposures in other directories, etc.
 eval_variables :
     # Note: the s at the start of sroot means the variable is a str.
@@ -65,7 +65,7 @@ modules :
     - galsim.des
 
 # Define the PSF profile.  For now, just the items common to both shapelet and PSFEx PSFs.
-psf : 
+psf :
     skip : { type : Catalog, col : 'FLAGS' }
     flux : { type : Catalog, col : 'FLUX_AUTO' }
 
@@ -74,7 +74,7 @@ psf :
 input :
     catalog :
         dir : *data_dir
-        file_name : 
+        file_name :
             type : NumberedFile
             root : *root
             digits : 2
@@ -84,7 +84,7 @@ input :
 
     fits_header :
         dir : *data_dir
-        file_name : 
+        file_name :
             type : NumberedFile
             root : *root
             digits : 2
@@ -93,7 +93,7 @@ input :
 
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     type : Scattered
 
@@ -104,15 +104,15 @@ image :
 
     noise :
         type : CCD
-        gain : 
+        gain :
             # This is an approximation, since GAINA, GAINB are missing in SV files.
             type : Eval
             str : 'sky / sig**2'
             fsky : { type : FitsHeader , key : 'SKYBRITE' }
             fsig : { type : FitsHeader , key : 'SKYSIGMA' }
 
-    image_pos : 
-        type : XY 
+    image_pos :
+        type : XY
         x : { type : Catalog , col : 'X_IMAGE' }
         y : { type : Catalog , col : 'Y_IMAGE' }
 
@@ -121,7 +121,7 @@ image :
     wcs :
         type : Fits
         dir : *data_dir
-        file_name : 
+        file_name :
             type : Current
             key : input.fits_header.file_name
 
@@ -159,7 +159,7 @@ input :
             digits : 2
             ext : '_fitpsf.fits'
             num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
-        
+
 output :
     file_name :
         ext : '_fitpsf_image.fits'
@@ -179,10 +179,10 @@ input :
             digits : 2
             ext : '_psfcat.psf'
             num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
-        image_file_name : 
+        image_file_name :
             type : Current
             key : input.fits_header.file_name
- 
+
 output :
     file_name :
         ext : '_psfex_image.fits'

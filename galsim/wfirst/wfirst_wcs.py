@@ -112,7 +112,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     #
     # Payload coordinate system: +X_pl points along -Y_obs, +Y_pl points along +Z_obs, +Z_pl points
     # along -X_obs (back towards observer).
-    # 
+    #
     # Wide field imager (WFI) focal plane assembly (FPA) coordinate system: This is defined by a
     # left-handed system f1, f2, that is rotated by an angle `theta_fpa` with respect to the payload
     # axes.  +f1 points along the long axis of the focal plane, transverse to the radius from the
@@ -267,7 +267,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
                             "partial of second axis coordinate w.r.t. x")
         header['CD2_2'] = (-sin_pa_sca * a11 + cos_pa_sca * b11,
                             "partial of second axis coordinate w.r.t. y")
-        header['ORIENTAT'] = (pa_sca / galsim.degrees, 
+        header['ORIENTAT'] = (pa_sca / galsim.degrees,
                               "position angle of image y axis (deg. e of n)")
         header['LONPOLE'] = (phi_p / galsim.degrees,
                              "Native longitude of celestial pole")
@@ -498,7 +498,7 @@ def allowedPos(world_pos, date):
     sky).  The reason is that the observatory is aligned such that if the observer is looking at
     some sky position, the solar panels are oriented at 90 degrees from that position.  So it's
     always optimal for the observatory to be pointing at an angle of 90 degrees relative to the
-    Sun.  It is also permitted to look within 36 degrees of that optimal position. 
+    Sun.  It is also permitted to look within 36 degrees of that optimal position.
 
     @param world_pos      A galsim.CelestialCoord indicating the position at which the observer
                           wishes to look.
@@ -548,7 +548,7 @@ def bestPA(world_pos, date):
     # (+X, +Y, +Z)_obs to form a right-handed coordinate system.
     y_obs_tp = galsim.PositionD(-sun_tp.y, sun_tp.x)
     y_obs = world_pos.deproject(y_obs_tp, 'gnomonic')
-    
+
     # Finally the observatory position angle is defined by the angle between +Y_observatory and the
     # celestial north pole.  It is defined as position angle east of north.
     north = galsim.CelestialCoord(y_obs.ra, 90.*galsim.degrees)

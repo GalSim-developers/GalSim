@@ -77,8 +77,8 @@ def _GenerateFromRandomGaussian(config, base, value_type):
     sigma = kwargs['sigma']
 
     if 'gd' in base and base['current_gdsigma'] == sigma:
-        # Minor subtlety here.  GaussianDeviate requires two random numbers to 
-        # generate a single Gaussian deviate.  But then it gets a second 
+        # Minor subtlety here.  GaussianDeviate requires two random numbers to
+        # generate a single Gaussian deviate.  But then it gets a second
         # deviate for free.  So it's more efficient to store gd than to make
         # a new one each time.  So check if we did that.
         gd = base['gd']
@@ -110,7 +110,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
         else:
             min -= mean
             max -= mean
-    
+
         # Emulate a do-while loop
         import math
         while True:
@@ -237,7 +237,7 @@ def _GenerateFromRandomDistribution(config, base, value_type):
     rng = base['rng']
 
     ignore = [ 'x', 'f', 'x_log', 'f_log' ]
-    opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
+    opt = {'function' : str, 'interpolant' : str, 'npoints' : int,
            'x_min' : float, 'x_max' : float }
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
@@ -261,7 +261,7 @@ def _GenerateFromRandomDistribution(config, base, value_type):
             raise AttributeError("x_log, f_log are invalid with function for type=RandomDistribution")
 
     if '_distdev' not in config or config['_distdev_kwargs'] != kwargs:
-        # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
+        # The overhead for making a DistDeviate is large enough that we'd rather not do it every
         # time, so first check if we've already made one:
         distdev=galsim.DistDeviate(rng,**kwargs)
         config['_distdev'] = distdev
@@ -269,7 +269,7 @@ def _GenerateFromRandomDistribution(config, base, value_type):
     else:
         distdev = config['_distdev']
 
-    # Typically, the rng will change between successive calls to this, so reset the 
+    # Typically, the rng will change between successive calls to this, so reset the
     # seed.  (The other internal calculations don't need to be redone unless the rest of the
     # kwargs have been changed.)
     distdev.reset(rng)

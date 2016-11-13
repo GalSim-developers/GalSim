@@ -27,31 +27,52 @@
 #include "PhotonArray.h"
 
 #ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+#include <vector>
 #endif
 
 namespace galsim {
 
-    PhotonArray::PhotonArray(
-        std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux) :
-        _is_correlated(false)
+    template <typename T>
+    struct ArrayDeleter {
+        void operator()(T* p) const { delete [] p; }
+    };
+
+    PhotonArray::PhotonArray(int N) : _x(N), _y(N), _flux(N), _is_correlated(false)
+    {}
+
+    void PhotonArray::allocateAngleVectors()
     {
-        if (vx.size() != vy.size() || vx.size() != vflux.size())
-            throw std::runtime_error("Size mismatch of input vectors to PhotonArray");
-        _x = vx;
-        _y = vy;
-        _flux = vflux;
+        if (!hasAllocatedAngles()) {
+            _dxdz.resize(size());
+            _dydz.resize(size());
+        }
     }
 
-    double PhotonArray::getTotalFlux() const 
+    void PhotonArray::allocateWavelengthVector()
+    {
+        if (!hasAllocatedWavelengths()) {
+            _wavelength.resize(size());
+        }
+    }
+
+    bool PhotonArray::hasAllocatedAngles()
+    {
+        // dydz should always be in sync, so not need to check it.
+        return _dxdz.size() == size();
+    }
+
+    bool PhotonArray::hasAllocatedWavelengths()
+    {
+        return _wavelength.size() == size();
+    }
+
+    double PhotonArray::getTotalFlux() const
     {
         double total = 0.;
         return std::accumulate(_flux.begin(), _flux.end(), total);
     }
 
-    void PhotonArray::setTotalFlux(double flux) 
+    void PhotonArray::setTotalFlux(double flux)
     {
         double oldFlux = getTotalFlux();
         if (oldFlux==0.) return; // Do nothing if the flux is zero to start with
@@ -60,69 +81,71 @@ namespace galsim {
 
     void PhotonArray::scaleFlux(double scale)
     {
-        for (std::vector<double>::size_type i=0; i<_flux.size(); i++) {
-            _flux[i] *= scale;
-        }
+        std::transform(_flux.begin(), _flux.end(), _flux.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
     }
 
     void PhotonArray::scaleXY(double scale)
     {
-        for (std::vector<double>::size_type i=0; i<_x.size(); i++) {
-            _x[i] *= scale;
-        }
-        for (std::vector<double>::size_type i=0; i<_y.size(); i++) {
-            _y[i] *= scale;
-        }
+        std::transform(_x.begin(), _x.end(), _x.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
+        std::transform(_y.begin(), _y.end(), _y.begin(),
+                       std::bind2nd(std::multiplies<double>(),scale));
     }
 
-    void PhotonArray::append(const PhotonArray& rhs) 
+    void PhotonArray::assignAt(int istart, const PhotonArray& rhs)
     {
-        if (rhs.size()==0) return;      // Nothing needed for empty RHS.
-        int oldSize = size();
-        int finalSize = oldSize + rhs.size();
-        _x.resize(finalSize);
-        _y.resize(finalSize);
-        _flux.resize(finalSize);
-        std::vector<double>::iterator destination=_x.begin()+oldSize;
-        std::copy(rhs._x.begin(), rhs._x.end(), destination);
-        destination=_y.begin()+oldSize;
-        std::copy(rhs._y.begin(), rhs._y.end(), destination);
-        destination=_flux.begin()+oldSize;
-        std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
+        if (istart + rhs.size() > size())
+            throw std::runtime_error("Trying to assign past the end of PhotonArray");
+
+        std::copy(rhs._x.begin(), rhs._x.end(), _x.begin()+istart);
+        std::copy(rhs._y.begin(), rhs._y.end(), _y.begin()+istart);
+        std::copy(rhs._flux.begin(), rhs._flux.end(), _flux.begin()+istart);
+        if (rhs._dxdz.size() > 0) {
+            allocateAngleVectors();
+            std::copy(rhs._dxdz.begin(), rhs._dxdz.end(), _dxdz.begin()+istart);
+            std::copy(rhs._dydz.begin(), rhs._dydz.end(), _dydz.begin()+istart);
+        }
+        if (rhs._wavelength.size() > 0) {
+            allocateWavelengthVector();
+            std::copy(rhs._wavelength.begin(), rhs._wavelength.end(), _wavelength.begin()+istart);
+        }
     }
 
-    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
+    // Helper for multiplying x * y * N
+    struct MultXYScale
+    {
+        MultXYScale(double scale) : _scale(scale) {}
+        double operator()(double x, double y) { return x * y * _scale; }
+        double _scale;
+    };
+
+    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud)
     {
         // If both arrays have correlated photons, then we need to shuffle the photons
         // as we convolve them.
         if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
 
         // If neither or only one is correlated, we are ok to just use them in order.
-        int N = size();
-        if (rhs.size() != N) 
+        if (rhs.size() != size())
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         // Add x coordinates:
-        std::vector<double>::iterator lIter = _x.begin();
-        std::vector<double>::const_iterator rIter = rhs._x.begin();
-        for ( ; lIter!=_x.end(); ++lIter, ++rIter) *lIter += *rIter;
+        std::transform(_x.begin(), _x.end(), rhs._x.begin(), _x.begin(), std::plus<double>());
         // Add y coordinates:
-        lIter = _y.begin();
-        rIter = rhs._y.begin();
-        for ( ; lIter!=_y.end(); ++lIter, ++rIter) *lIter += *rIter;
+        std::transform(_y.begin(), _y.end(), rhs._y.begin(), _y.begin(), std::plus<double>());
         // Multiply fluxes, with a factor of N needed:
-        lIter = _flux.begin();
-        rIter = rhs._flux.begin();
-        for ( ; lIter!=_flux.end(); ++lIter, ++rIter) *lIter *= *rIter*N;
+        std::transform(_flux.begin(), _flux.end(), rhs._flux.begin(), _flux.begin(),
+                       MultXYScale(size()));
 
         // If rhs was correlated, then the output will be correlated.
         // This is ok, but we need to mark it as such.
         if (rhs._is_correlated) _is_correlated = true;
     }
 
-    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud) 
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud)
     {
         int N = size();
-        if (rhs.size() != N) 
+        if (rhs.size() != N)
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         double xSave=0.;
         double ySave=0.;
@@ -151,10 +174,10 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::takeYFrom(const PhotonArray& rhs) 
+    void PhotonArray::takeYFrom(const PhotonArray& rhs)
     {
+        assert(rhs.size()==size());
         int N = size();
-        assert(rhs.size()==N);
         for (int i=0; i<N; i++) {
             _y[i] = rhs._x[i];
             _flux[i] *= rhs._flux[i]*N;
@@ -162,11 +185,11 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target) const 
+    double PhotonArray::addTo(ImageView<T> target) const
     {
         Bounds<int> b = target.getBounds();
 
-        if (!b.isDefined()) 
+        if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
 
@@ -225,7 +248,7 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double PhotonArray::addTo(ImageView<float>& image) const;
-    template double PhotonArray::addTo(ImageView<double>& image) const;
+    template double PhotonArray::addTo(ImageView<float> image) const;
+    template double PhotonArray::addTo(ImageView<double> image) const;
 
 }

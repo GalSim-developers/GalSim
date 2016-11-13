@@ -70,7 +70,7 @@ def _GenerateFromEval(config, base, value_type):
     #print('config = ',config)
 
     if isinstance(config['str'], str):
-        # The ParseValue function can get confused if the first character is an @, but the 
+        # The ParseValue function can get confused if the first character is an @, but the
         # whole string isn't a Current item.  e.g. @image.pixel_scale * @image.stamp_size.
         # So if config['str'] is a string, just get it.  Otherwise, try parsing the dict.
         string = config['str']
@@ -165,5 +165,5 @@ def _GenerateFromEval(config, base, value_type):
 
 # Register this as a valid value type
 from .value import RegisterValueType
-RegisterValueType('Eval', _GenerateFromEval, 
+RegisterValueType('Eval', _GenerateFromEval,
                   [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])

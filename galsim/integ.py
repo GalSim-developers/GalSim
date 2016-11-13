@@ -72,6 +72,36 @@ def midpt(fvals, x):
     weighted_fvals = [w*f for w,f in zip(dx, fvals)]
     return reduce(lambda y,z:y+z, weighted_fvals)
 
+def trapz(func, min, max, points=1e4):
+    """Simple wrapper around 'numpy.trapz' to take function and limits as inputs.
+
+    Example usage:
+
+        >>> def func(x): return x**2
+        >>> galsim.integ.trapz(func, 0, 1)
+        0.33333333500033341
+        >>> galsim.integ.trapz(func, 0, 1, 1e6)
+        0.33333333333349996
+        >>> galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 1e3))
+        0.33333350033383402
+
+    @param func     The function to be integrated.  y = func(x) should be valid.
+    @param min      The lower end of the integration bounds.
+    @param max      The upper end of the integration bounds.
+    @param points   If integer, the number of points to sample the integrand. If array-like, then
+                    the points to sample the integrand at. [default: 1000].
+    """
+    if not np.isscalar(points):
+        if (np.max(points) > max) or (np.min(points) < min):
+            raise ValueError("Points outside of range: %s -- %s"%(min,max))
+    elif int(points) != points:
+        raise TypeError("'npoints' must be integer type or array")
+    else:
+        points = np.linspace(min, max, points)
+
+    return np.trapz(func(points),points)
+
+
 class ImageIntegrator(object):
     def __init__(self):
         raise NotImplementedError("Must instantiate subclass of ImageIntegrator")
@@ -90,9 +120,7 @@ class ImageIntegrator(object):
         @param image                Image used to set size and scale of output
         @param drawImageKwargs      dict with other kwargs to send to drawImage function.
         @param doK                  Integrate up results of drawKImage instead of results of
-                                    drawImage.  This keyword changes the output to return a tuple,
-                                    the first element of which is the real-part of the k-image,
-                                    and the second element of which is the imag-part.
+                                    drawImage.
 
         @returns the result of integral as an Image
         """
@@ -105,12 +133,8 @@ class ImageIntegrator(object):
             if not doK:
                 images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
             else:
-                images.append(prof.drawKImage(re=image.copy(), im=image.copy(), **drawImageKwargs))
-        if not doK:
-            return self.rule(images, waves)
-        else:
-            images = zip(*images)
-            return self.rule(images[0], waves), self.rule(images[1], waves)
+                images.append(prof.drawKImage(image=image.copy(), **drawImageKwargs))
+        return self.rule(images, waves)
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over

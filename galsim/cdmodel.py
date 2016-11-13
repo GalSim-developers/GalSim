@@ -38,21 +38,21 @@ class BaseCDModel(object):
         Usually this class will not be instantiated directly, but there is nothing to prevent you
         from doing so.  Each of the input a_l, a_r, a_b & a_t matrices must have the same shape and
         be odd-dimensioned.
-        
+
         The model implemented here is described in Antilogus et al. (2014). The effective border
-        of a pixel shifts to an extent proportional to the flux in a pixel at separation (dx,dy) 
+        of a pixel shifts to an extent proportional to the flux in a pixel at separation (dx,dy)
         and a coefficient a(dx,dy). Contributions of all neighbouring pixels are superposed. Border
-        shifts are calculated for each (l=left, r=right (=positive x), b=bottom, t=top (=pos. y)) 
+        shifts are calculated for each (l=left, r=right (=positive x), b=bottom, t=top (=pos. y))
         border and the resulting change in flux in a pixel is the shift times the mean of its flux
-        and the flux in the pixel on the opposite side of the border (caveat: in Antilogus et al. 
+        and the flux in the pixel on the opposite side of the border (caveat: in Antilogus et al.
         2014 the sum is used instead of the mean, making the a(dx,dy) a factor of 2 smaller).
-        
+
         The parameters of the model are the a_l/r/b/t matrices, whose entry at (dy,dx) gives the
         respective shift coefficient. Note that for a realistic model, the matrices have a number
         of symmetries, as described in Antilogus et al. (2014). Use derived classes like PowerLawCD
         to have a model that automatically fulfills the symmetry conditions.
-        
-        Note that there is a gain factor included in the coefficients. When the a_* are measured 
+
+        Note that there is a gain factor included in the coefficients. When the a_* are measured
         from flat fields according to eqn. 4.10 in Antilogus et. al (2014) and applied to images
         that have the same gain as the flats, the correction is as intended. If the gain in the
         images is different, this can be accounted for with the gain_ratio parameter when calling
@@ -75,7 +75,7 @@ class BaseCDModel(object):
         self.n = a_l.shape[0] // 2
         if (self.n < 1):
             raise ValueError("Input arrays must be at least 3x3")
-        
+
         self.a_l = galsim.Image(a_l, dtype=np.float64, make_const=True)
         self.a_r = galsim.Image(a_r, dtype=np.float64, make_const=True)
         self.a_b = galsim.Image(a_b, dtype=np.float64, make_const=True)
@@ -87,7 +87,7 @@ class BaseCDModel(object):
         Returns an image with the forward charge deflection transformation applied.  The input image
         is not modified, but its WCS is included in the returned image.
 
-        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
+        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from
                            flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
@@ -104,7 +104,7 @@ class BaseCDModel(object):
         Returns an image with the backward charge deflection transformation applied.  The input
         image is not modified, but its WCS is included in the returned image.
 
-        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from 
+        @param gain_ratio  Ratio of gain_image/gain_flat when shift coefficients were derived from
                            flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
@@ -179,12 +179,12 @@ class PowerLawCD(BaseCDModel):
 
     def __init__(self, n, r0, t0, rx, tx, r, t, alpha):
         """Initialize a power-law charge deflection model.
-        
-        The deflections from charges in the six pixels directly neighbouring a pixel border are 
-        modelled independently by the parameters `r0`, `t0` (directly adjacent to borders between 
+
+        The deflections from charges in the six pixels directly neighbouring a pixel border are
+        modelled independently by the parameters `r0`, `t0` (directly adjacent to borders between
         two pixels in the same row=y / column=x) and `rx`, `tx` (pixels on the corner of pixel
         borders).
-        
+
         Deflections due to charges further away are modelled as a power-law
 
             a = A * numpy.sin(theta) * (r_distance)**(-alpha)
@@ -192,7 +192,7 @@ class PowerLawCD(BaseCDModel):
         where `A` is a power-law amplitude (`r` for `a_l / a_b` and `t` `for a_b / a_t`), `theta` is
         the angle between the pixel border line and the line from border center to the other pixel
         center.
-        
+
         Sign conventions are such that positive `r0`, `t0`, `rx`, `tx`, `r`, `t` correspond to
         physical deflection of equal charges (this is also how the `theta` above is defined).
 

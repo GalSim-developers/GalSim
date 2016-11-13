@@ -99,6 +99,7 @@ namespace galsim {
         { return Position<double>(_x0, _y0); }
 
         double getFlux() const { return _fluxProduct; }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -114,10 +115,10 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -173,6 +174,7 @@ namespace galsim {
         Position<double> centroid() const { return _adaptee.centroid() * 2.; }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -180,10 +182,10 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -229,6 +231,7 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
+        double maxSB() const;
 
         double getPositiveFlux() const;
         double getNegativeFlux() const;
@@ -236,10 +239,10 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

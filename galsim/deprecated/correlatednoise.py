@@ -151,9 +151,9 @@ def CN_draw(self, *args, **kwargs):
 def CN_calculateCovarianceMatrix(self, bounds, scale):
     """This function is deprecated and will be removed in a future version.  If you have a
     use for this function and would like to keep it, please open an issue at:
-    
+
     https://github.com/GalSim-developers/GalSim/issues
-    
+
     Old documentation:
     ------------------
     Calculate the covariance matrix for an image with specified properties.

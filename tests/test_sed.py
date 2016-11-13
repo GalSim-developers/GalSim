@@ -195,10 +195,13 @@ def test_SED_sub():
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
-    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+    sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons')
-    for z in [0, 0.2, 0.4]:
-        a = a0.atRedshift(z)
+    sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
+    sed2 = galsim.SED(17.0, wave_type='ang', flux_type='1')
+
+    for sed, z in zip( [sed0, sed1, sed2], [0, 0.2, 0.4] ):
+        a = sed.atRedshift(z)
 
         # SED multiplied by function
         b = lambda w: w**2
@@ -216,13 +219,13 @@ def test_SED_mul():
         d = a*4.2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # assignment multiplication
         d *= 2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # SED multiplied by dimensionless, constant SED
         e = galsim.SED(2.0, 'nm', '1')
@@ -406,13 +409,20 @@ def test_SED_withFlux():
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                       flux_type='flambda')
-        if z != 0:
-            a = a.atRedshift(z)
-        a = a.withFlux(1.0, rband)
-        np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
-                                             "Setting SED flux failed.")
+        for fast in [True, False]:
+            a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                           flux_type='flambda', fast=fast)
+            if z != 0:
+                a = a.atRedshift(z)
+            a = a.withFlux(1.0, rband)
+            np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
+                                                 "Setting SED flux failed.")
+
+            # Should be equivalent to multiplying an SED * Bandpass and computing the
+            # "bolometric" flux.
+            ab = a * rband
+            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+                                                 "Calculating SED flux from sed * bp failed.")
 
 
 @timer
@@ -544,6 +554,97 @@ def test_SED_calculateSeeingMomentRatio():
 
     np.testing.assert_almost_equal(relative_size, num/den, 5)
 
+@timer
+def test_SED_sampleWavelength():
+    seed = 12345
+    rng = galsim.UniformDeviate(seed)
+
+    sed  = galsim.SED(galsim.LookupTable([1,2,3,4,5], [0.,1.,0.5,1.,0.]),
+                      wave_type='nm', flux_type='fphotons')
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'), 
+                               'nm')
+    sedbp = sed*bandpass
+
+    out = sed.sampleWavelength(3,None)
+    np.testing.assert_equal(hasattr(sed,'deviate'),True,"Creating SED deviate cache failed.")
+    np.testing.assert_equal(len(sed.deviate),1,"Creating SED deviate failed.")
+
+    out = sed.sampleWavelength(3,None,rng=seed)
+    np.testing.assert_equal(len(sed.deviate),1,"Accessing existing SED deviate failed.")
+
+    test0 = np.array([ 4.15562438,  4.737775  ,  1.93594078])
+    np.testing.assert_array_almost_equal(out,test0,8,"Unexpected SED sample values.")
+
+    out = sed.sampleWavelength(3,None,rng=rng)
+    np.testing.assert_array_almost_equal(out,test0,8,"Failed to pass 'UniformDeviate'.")
+
+    out = sed.sampleWavelength(3,bandpass,rng=seed)
+    np.testing.assert_equal(len(sed.deviate),2,"Creating new SED deviate failed.")
+
+    test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
+    np.testing.assert_array_almost_equal(out,test1,8,"Unexpected SED sample values.")
+
+    out = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=256)
+    np.testing.assert_equal(len(sed.deviate),2,"Unexpected number of SED deviates.")
+    np.testing.assert_equal(len(out),1e3,"Unexpected number of SED samples.")
+
+    np.testing.assert_equal(np.sum(out > sedbp.red_limit),0,
+                            "SED sample outside of function bounds.")
+    np.testing.assert_equal(np.sum(out < sedbp.blue_limit),0,
+                            "SED sample outside of function bounds.")
+
+    out2 = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=512)
+    np.testing.assert_equal(len(sed.deviate),3,"Unexpected number of SED deviates.")
+    np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
+                                   "to the nearest integer.")
+
+    def create_cdfs(sed,out,nbins=100):
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        centers = bins[:-1] + step/2.
+        cdf = np.cumsum(sed(centers)*step)
+        cdf /= cdf.max()
+
+        test = np.linspace(sed.blue_limit,sed.red_limit,nbins)
+        cdf1 = np.interp(test,centers,cdf)
+        cdf2 = np.array([(out <= w).sum() for w in test],dtype=float)/len(out)
+        return centers,(cdf1,cdf2)
+
+    def create_counts(sed,out,nbins=100):
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,nbins+1,retstep=True)
+        centers = bins[:-1] + step/2.        
+        cts1,_ = np.histogram(out,nbins)
+        
+        #cts2 = np.array([galsim.integ.int1d(sed,low,low+step,1e-3,1e-6) for low in bins[:-1]])
+        cts2 = np.array([galsim.integ.trapz(sed,low,low+step) for low in bins[:-1]])
+        cts2 *= (float(len(out))/cts2.sum())
+        return centers,(cts1, cts2)
+
+    # Test the output distribution
+    out = sed.sampleWavelength(1e5,None,rng=seed)
+        
+    _,(cts1,cts2) = create_counts(sed,out)
+    chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
+    np.testing.assert_almost_equal(chisq,1.0,1,"Sampled counts do not match input SED.")
+
+    _,(cdf1,cdf2) = create_cdfs(sed,out)
+    np.testing.assert_almost_equal(cdf1,cdf2,2,"Sampled CDF does not match input SED.")
+
+    # Test redshift dependence
+    z = 2.0
+    sedz = sed.atRedshift(z)
+    outz = sedz.sampleWavelength(1e5,None,rng=seed)
+    np.testing.assert_almost_equal(out, outz/(1 + z), 8,
+                                   "Redshifted wavelengths are not shifted by 1/(1+z).")
+
+    _,(cts1,cts2) = create_counts(sedz,outz)
+    chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
+    np.testing.assert_almost_equal(chisq, 1.0, 1,
+                                   "Sampled counts do not match input redshifted SED.")
+
+    _,(cdf1,cdf2) = create_cdfs(sedz,outz)
+    np.testing.assert_almost_equal(cdf1, cdf2, 2,
+                                   "Sampled CDF does not match input redshifted SED.")
+    
 
 @timer
 def test_fnu_vs_flambda():
@@ -643,6 +744,7 @@ if __name__ == "__main__":
     test_SED_calculateMagnitude()
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentRatio()
+    test_SED_sampleWavelength()
     test_fnu_vs_flambda()
     test_ne()
     test_thin()

@@ -24,7 +24,7 @@ from .stamp import StampBuilder
 class RingBuilder(StampBuilder):
     """This performs the tasks necessary for building a Ring stamp type.
 
-    It uses the regular Basic functions for most things. 
+    It uses the regular Basic functions for most things.
     It specializes the setup, buildProfile, reject, and makeTasks functions.
     """
 

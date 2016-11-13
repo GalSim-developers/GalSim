@@ -22,11 +22,12 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Random.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
 
-// Note that class docstrings for all of these are now added in galsim/random.py     
+// Note that class docstrings for all of these are now added in galsim/random.py
 
 namespace galsim {
 
@@ -43,16 +44,28 @@ namespace galsim {
         ~BaseDeviateCallBack() {}
 
     protected:
-        // This is the special magic needed so the virtual function calls back to the 
+        // This is the special magic needed so the virtual function calls back to the
         // function defined in the python layer.
         double _val()
         {
-            if (bp::override py_func = this->get_override("_val")) 
+            if (bp::override py_func = this->get_override("_val"))
                 return py_func();
-            else 
+            else
                 return BaseDeviate::_val();
         }
     };
+
+    void Generate(BaseDeviate& rng, const bp::object& array)
+    {
+        double* data;
+        boost::shared_ptr<double> owner;
+        int step, stride;
+        CheckNumpyArray(array, 1, false, data, owner, step, stride);
+        if (step != 1 || stride != 1)
+            throw std::runtime_error("generate requires a contiguous numpy array");
+        int N = GetNumpyArrayDim(array.ptr(), 0);
+        rng.generate(N, data);
+    }
 
     struct PyBaseDeviate {
 
@@ -67,13 +80,14 @@ namespace galsim {
                      (bp::arg("seed")=0))
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
                      (bp::arg("seed")=0))
-                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
+                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset,
                      (bp::arg("seed")))
                 .def("clearCache", &BaseDeviate::clearCache)
                 .def("serialize", &BaseDeviate::serialize)
                 .def("duplicate", &BaseDeviate::duplicate)
                 .def("discard", &BaseDeviate::discard)
                 .def("raw", &BaseDeviate::raw)
+                .def("generate", &Generate, bp::arg("array"))
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()
@@ -90,7 +104,7 @@ namespace galsim {
             //
             // then the `gn.getRNG()` call doesn't need anything special because the actual
             // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
-            // So boost python knows how to handle it.  
+            // So boost python knows how to handle it.
             //
             // But if the BaseDeviate was constructed in the C++ layer, which happens when you
             // default construct the BaseNoise object:
@@ -99,7 +113,7 @@ namespace galsim {
             //
             // then the `gn.getRNG()` call returns a real BaseDeviate object in the shared_ptr.
             // So python doesn't really know what that is without this next line.  The
-            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the 
+            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the
             // C++ layer should be treated like a BaseDeviate in the python layer.
             bp::register_ptr_to_python< boost::shared_ptr<BaseDeviate> >();
         }

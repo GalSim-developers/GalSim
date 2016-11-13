@@ -32,12 +32,6 @@
 #define USE_COS_SIN
 #endif
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 1;
-#endif
-
 namespace galsim {
 
 
@@ -119,7 +113,6 @@ namespace galsim {
     std::complex<double> SBGaussian::SBGaussianImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y)*_sigma_sq;
-
         if (ksq > _ksq_max) {
             return 0.;
         } else if (ksq < _ksq_min) {
@@ -129,22 +122,23 @@ namespace galsim {
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<double> im,
                                                 double x0, double dx, int izero,
                                                 double y0, double dy, int jzero) const
     {
-        dbg<<"SBGaussian fillXValue\n";
+        dbg<<"SBGaussian fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
 
             x0 *= _inv_sigma;
             dx *= _inv_sigma;
@@ -152,64 +146,40 @@ namespace galsim {
             dy *= _inv_sigma;
 
             // The Gaussian profile is separable:
-            //    val = _norm * exp(-0.5 * (x*x + y*y)
-            //        = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
-            tmv::Vector<double> gauss_x(m);
+            //    im(x,y) = _norm * exp(-0.5 * (x*x + y*y)
+            //            = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
+            std::vector<double> gauss_x(m);
+            std::vector<double> gauss_y(n);
+            typedef std::vector<double>::iterator It;
             It xit = gauss_x.begin();
-            for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
-            tmv::Vector<double> gauss_y(n);
-            It yit = gauss_y.begin();
-            for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+            for (int i=0; i<m; ++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
 
-            val = _norm * gauss_x ^ gauss_y;
+            if ((x0 == y0) && (dx == dy) && (m==n)) {
+                gauss_y = gauss_x;
+            } else {
+                It yit = gauss_y.begin();
+                for (int j=0; j<n; ++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+            }
+
+            for (int j=0; j<n; ++j,ptr+=skip) {
+                for (int i=0; i<m; ++i)
+                    *ptr++ = _norm * gauss_x[i] * gauss_y[j];
+            }
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double kx0, double dkx, int izero,
-                                                double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBGaussian fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-            kx0 *= _sigma;
-            dkx *= _sigma;
-            ky0 *= _sigma;
-            dky *= _sigma;
-
-            tmv::Vector<double> gauss_kx(m);
-            It kxit = gauss_kx.begin();
-            for (int i=0;i<m;++i,kx0+=dkx) *kxit++ = exp(-0.5 * kx0*kx0);
-            tmv::Vector<double> gauss_ky(n);
-            It kyit = gauss_ky.begin();
-            for (int j=0;j<n;++j,ky0+=dky) *kyit++ = exp(-0.5 * ky0*ky0);
-
-            val = _flux * gauss_kx ^ gauss_ky;
-        }
-    }
-
-    void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<double> im,
                                                 double x0, double dx, double dxy,
                                                 double y0, double dy, double dyx) const
     {
-        dbg<<"SBGaussian fillXValue\n";
+        dbg<<"SBGaussian fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 *= _inv_sigma;
         dx *= _inv_sigma;
@@ -218,27 +188,73 @@ namespace galsim {
         dy *= _inv_sigma;
         dyx *= _inv_sigma;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx)
-                *valit++ = _norm * std::exp( -0.5 * (x*x + y*y) );
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = _norm * std::exp( -0.5 * (x*x + y*y) );
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBGaussian fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _sigma;
+            dkx *= _sigma;
+            ky0 *= _sigma;
+            dky *= _sigma;
+
+            // The Gaussian profile is separable:
+            //    im(kx,ky) = _flux * exp(-0.5 * (kx*kx + ky*ky)
+            //              = _flux * exp(-0.5 * kx*kx) * exp(-0.5 * ky*ky)
+            std::vector<double> gauss_kx(m);
+            std::vector<double> gauss_ky(n);
+            typedef std::vector<double>::iterator It;
+            It kxit = gauss_kx.begin();
+
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = exp(-0.5 * kx0*kx0);
+
+            if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
+                gauss_ky = gauss_kx;
+            } else {
+                It kyit = gauss_ky.begin();
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = exp(-0.5 * ky0*ky0);
+            }
+
+            for (int j=0; j<n; ++j,ptr+=skip) {
+                for (int i=0; i<m; ++i)
+                    *ptr++ = _flux * gauss_kx[i] * gauss_ky[j];
+            }
+        }
+    }
+
+    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<double> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBGaussian fillKValue\n";
+        dbg<<"SBGaussian fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         kx0 *= _sigma;
         dkx *= _sigma;
@@ -247,18 +263,17 @@ namespace galsim {
         dky *= _sigma;
         dkyx *= _sigma;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
                 if (ksq > _ksq_max) {
-                    *valit++ = 0.;
+                    *ptr++ = 0.;
                 } else if (ksq < _ksq_min) {
-                    *valit++ = _flux * (1. - 0.5*ksq*(1. - 0.25*ksq));
+                    *ptr++ = _flux * (1. - 0.5*ksq*(1. - 0.25*ksq));
                 } else {
-                    *valit++ =  _flux * std::exp(-0.5*ksq);
+                    *ptr++ =  _flux * std::exp(-0.5*ksq);
                 }
             }
         }

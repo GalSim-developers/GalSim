@@ -29,7 +29,7 @@ import logging
 valid_gsobject_types = {}
 
 # A list of gsobject types that define a block of inter-related stamps.  This is only necessary
-# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can 
+# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can
 # remove this structure.
 block_gsobject_types = []
 
@@ -37,7 +37,7 @@ class SkipThisObject(Exception):
     """
     A class that a builder can throw to indicate that nothing went wrong, but for some
     reason, this particular object should be skipped and just move onto the next object.
-    The constructor takes an optional message that will be output to the logger if 
+    The constructor takes an optional message that will be output to the logger if
     logging is active.
     """
     def __init__(self, message=None):
@@ -145,7 +145,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'gal' not in base and key == 'psf':
         ignore += [ 'signal_to_noise']
 
-    # If we are specifying the size according to a resolution, then we 
+    # If we are specifying the size according to a resolution, then we
     # need to get the PSF's half_light_radius.
     if 'resolution' in param:
         if 'psf' not in base:
@@ -188,15 +188,15 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
-        try : 
+        try:
             param['saved_re'] = gsobject.getHalfLightRadius()
-        except :
+        except:
             pass
-    
+
     # Apply any dilation, ellip, shear, etc. modifications.
     gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
- 
+
     param['current_val'] = gsobject
     param['current_safe'] = safe
     param['current_value_type'] = None
@@ -225,7 +225,7 @@ def UpdateGSParams(gsparams, config, base):
     return ret
 
 
-# 
+#
 # The following are private functions to implement the simpler GSObject types.
 # These are not imported into galsim.config namespace.
 #
@@ -351,7 +351,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
         if gsparams: gsparams = galsim.GSParams(**gsparams)
         else: gsparams = None
         gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
-    
+
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         if logger:
@@ -411,7 +411,7 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
             aber_list.append(value)
             safe = safe and safe1
         kwargs['aberrations'] = aber_list
-            
+
     return galsim.OpticalPSF(**kwargs), safe
 
 
@@ -489,7 +489,7 @@ def _Shift(gsobject, config, key, base, logger):
     return gsobject, safe
 
 def _GetMinimumBlock(config, base):
-    """Get the minimum number of objects that should be done on the same process for a 
+    """Get the minimum number of objects that should be done on the same process for a
     particular object configuration.
 
     This function is only needed for backwards-compatibility support of gsobject type=Ring.
@@ -516,7 +516,7 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
     1. The config parameter is the dict for the current object to be generated.  So it should
        be the case that config['type'] == type_name.
     2. The base parameter is the original config dict being processed.
-    3. The ignore parameter  is a list of items that should be ignored in the config dict if they 
+    3. The ignore parameter  is a list of items that should be ignored in the config dict if they
        are present and not valid for the object being built.
     4. The gsparams parameter is a dict of kwargs that should be used to build a GSParams object
        to use when building this object.

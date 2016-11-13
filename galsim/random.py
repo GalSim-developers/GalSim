@@ -158,7 +158,8 @@ def permute(rng, *args):
     @param args   Any number of lists to be permuted.
     """
     ud = _galsim.UniformDeviate(rng)
-    if len(args) == 0: return
+    if len(args) == 0:
+        raise TypeError("permute called with no lists to permute")
 
     # We use an algorithm called the Knuth shuffle, which is based on the Fisher-Yates shuffle.
     # See http://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more information.

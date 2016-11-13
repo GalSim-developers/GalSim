@@ -97,6 +97,10 @@ def test_real_galaxy_ideal():
     except ImportError:
         print('The assert_raises tests require nose')
 
+    check_basic(rg, "RealGalaxy", approx_maxsb=True)
+    check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
+    check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
+
     do_pickle(rgc, lambda x: [ x.getGalImage(ind_fake), x.getPSFImage(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
@@ -191,6 +195,8 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
+
+    check_basic(rg, "RealGalaxy", approx_maxsb=True)
 
     # Check picklability
     do_pickle(rgc, lambda x: [ x.getGalImage(ind_real), x.getPSFImage(ind_real),

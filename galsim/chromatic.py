@@ -424,7 +424,7 @@ class ChromaticObject(object):
         self._last_wcs = image.wcs
         return image
 
-    def drawKImage(self, bandpass, re=None, im=None, integrator='trapezoidal', **kwargs):
+    def drawKImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing the Fourier transform of a ChromaticObject.
 
         The task of drawKImage() in a chromatic context is exactly analogous to the task of
@@ -433,31 +433,29 @@ class ChromaticObject(object):
 
         See drawImage() for details on integration options.
 
-        @param bandpass         A Bandpass object representing the filter against which to
-                                integrate.
-        @param re               Optionally, the `Image`s to draw the real part result onto.
-                                (See GSObject.drawKImage() for details.)  If `re` is None, then `im`
-                                must also be None.  [default: None]
-        @param im               Optionally, the `Image`s to draw the imaginary part result onto.
-                                (See GSObject.drawKImage() for details.)  If `im` is None, then `re`
-                                must also be None. [default: None]
-        @param integrator       When doing the exact evaluation of the profile, this argument should
-                                be one of the image integrators from galsim.integ, or a string
-                                'trapezoidal' or 'midpoint', in which case the routine will use a
-                                SampleIntegrator or ContinuousIntegrator depending on whether or not
-                                the object has a `wave_list`.  [default: 'trapezoidal',
-                                which will try to select an appropriate integrator using the
-                                trapezoidal integration rule automatically.]
-        @param **kwargs         For all other kwarg options, see GSObject.drawKImage()
+        @param bandpass     A Bandpass object representing the filter against which to integrate.
+        @param image        If provided, this will be the ImageC onto which to draw the k-space
+                            image.  If `image` is None, then an automatically-sized image will be
+                            created.  If `image` is given, but its bounds are undefined, then it
+                            will be resized appropriately based on the profile's size.
+                            [default: None]
+        @param integrator   When doing the exact evaluation of the profile, this argument should be
+                            one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not the
+                            object has a `wave_list`.  [default: 'trapezoidal', which will try to
+                            select an appropriate integrator using the trapezoidal integration rule
+                            automatically.]
+        @param **kwargs     For all other kwarg options, see GSObject.drawKImage()
 
-        @returns the tuple of Image instances, `(re, im)` (created if necessary).
+        @returns an ImageC instance (created if necessary)
         """
         if self.SED.dimensionless:
             raise ValueError("Can only drawK ChromaticObjects with spectral SEDs.")
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        re, im = prof0.drawKImage(re=re, im=im, **kwargs)
+        image = prof0.drawKImage(image=image, **kwargs)
         _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
@@ -470,8 +468,8 @@ class ChromaticObject(object):
                 multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
                                                 bandpass.blue_limit, bandpass.red_limit)
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
-            re, im = prof0.drawKImage(re=re, im=im, **kwargs)
-            return re, im
+            image = prof0.drawKImage(image=image, **kwargs)
+            return image
 
         # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
         # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
@@ -498,7 +496,7 @@ class ChromaticObject(object):
                                        wave_type='nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
-        reint, imint = integrator(self.evaluateAtWavelength, bandpass, re, kwargs, doK=True)
+        image_int = integrator(self.evaluateAtWavelength, bandpass, image, kwargs, doK=True)
 
         # For performance profiling, store the number of evaluations used for the last integration
         # performed.  Note that this might not be very useful for ChromaticSum instances, which are
@@ -511,11 +509,9 @@ class ChromaticObject(object):
         #       Remember that python doesn't actually do assignments, so this won't update the
         #       original image if the user provided one.  The following procedure does work.
         if not add_to_image:
-            re.setZero()
-            im.setZero()
-        re += reint
-        im += imint
-        return re, im
+            image.setZero()
+        image += image_int
+        return image
 
     def _getCombinedWaveList(self, bandpass):
         wave_list = bandpass.wave_list
@@ -1047,7 +1043,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
+        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in objs ]
         im_size = np.max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we
@@ -1958,7 +1954,7 @@ class ChromaticConvolution(ChromaticObject):
         self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     @staticmethod
-    def _get_effective_prof(insep_obj, bandpass, iimult, wmult, integrator, gsparams):
+    def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams, wmult):
         # Find scale at which to draw effective profile
         _, prof0 = insep_obj._fiducial_profile(bandpass)
         iiscale = prof0.nyquistScale()
@@ -1969,12 +1965,12 @@ class ChromaticConvolution(ChromaticObject):
         # ChromaticConvolution.
         if isinstance(insep_obj, ChromaticConvolution):
             effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, bandpass, wmult=wmult, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
+                    insep_obj, bandpass, scale=iiscale,
+                    integrator=integrator, method='no_pixel', wmult=wmult)
         else:
             effective_prof_image = insep_obj.drawImage(
-                    bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-                    method='no_pixel')
+                    bandpass, scale=iiscale, integrator=integrator,
+                    method='no_pixel', wmult=wmult)
 
         return galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
 
@@ -2152,13 +2148,13 @@ class ChromaticConvolution(ChromaticObject):
                 sep_profs.append(prof0 / obj.SED(wave0))
                 insep_obj *= obj.SED
 
-        wmult = kwargs.get('wmult', 1)
+        wmult = kwargs.get('wmult', 1.0)
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.SED should *not* be None.
         effective_prof = ChromaticConvolution._effective_prof_cache(
-                insep_obj, bandpass, iimult, wmult,
-                integrator, self.gsparams)
+                insep_obj, bandpass, iimult,
+                integrator, self.gsparams, wmult)
 
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
@@ -2357,15 +2353,23 @@ class ChromaticAutoCorrelation(ChromaticObject):
 class ChromaticFourierSqrtProfile(ChromaticObject):
     """A class for computing the Fourier-space square root of a ChromaticObject.
 
-    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of a profile.
+    The ChromaticFourierSqrtProfile class represents a wavelength-dependent Fourier-space square
+    root of a profile.
 
     You may also specify a gsparams argument.  See the docstring for GSParams using
     help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
-    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams as
-    the object being operated on.
+    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams
+    as the object being operated on.
 
     Initialization
     --------------
+
+    The normal way to use this class is to use the FourierSqrt() factory function:
+
+        >>> fourier_sqrt = galsim.FourierSqrt(chromatic_obj)
+
+    If `chromatic_obj` is indeed a ChromaticObject, then that function will create a
+    ChromaticFourierSqrtProfile object.
 
     @param obj              The object to compute the Fourier-space square root of.
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for

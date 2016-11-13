@@ -190,7 +190,6 @@ class Shapelet(GSObject):
 _galsim.SBShapelet.__getinitargs__ = lambda self: (
         self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.SBShapelet.__getstate__ = lambda self: None
-_galsim.SBShapelet.__setstate__ = lambda self, state: 1
 _galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
         self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)

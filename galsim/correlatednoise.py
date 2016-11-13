@@ -621,8 +621,8 @@ class _BaseCorrelatedNoise(object):
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
-    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, wmult=1., add_to_image=False,
-                  dx=None):
+    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False,
+                  dx=None, wmult=1.0):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -645,10 +645,6 @@ class _BaseCorrelatedNoise(object):
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
                             numpy.float32]
-        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
-                            default automatically calculated FFT grid size used for any
-                            intermediate calculations in Fourier space.  See the description
-                            in GSObject.drawImage() for more details. [default: 1]
         @param add_to_image Whether to add flux to the existing image rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it have defined
@@ -656,17 +652,18 @@ class _BaseCorrelatedNoise(object):
 
         @returns an Image of the correlation function.
         """
-        # Check for obsolete dx parameter
+        # Check for obsolete parameters
         if dx is not None and scale is None: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
+        # Let self._profile.drawImage raise the deprecation warning for wmult.
 
         wcs = self._profile._determine_wcs(scale, wcs, image, self.wcs)
 
         return self._profile.drawImage(
-            image=image, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
-            add_to_image=add_to_image, use_true_center=False)
+            image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
+            add_to_image=add_to_image, use_true_center=False, wmult=wmult)
 
     def drawKImage(self, re=None, im=None, nx=None, ny=None, scale=None, dtype=None, wmult=1.,
                    add_to_image=False):
@@ -904,7 +901,7 @@ class _BaseCorrelatedNoise(object):
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
                 tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
-                tmp_obj.drawImage(tmp_im, scale=1, method='no_pixel')
+                tmp_obj.drawImage(tmp_im, scale=1, method='sb')
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
         # Now simply take the halfcomplex, compact stored part that we are interested in,
@@ -1110,7 +1107,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instances have also been implemented directly as
     `cn` methods, so that the following commands are all legal:
 
-        >>> image = cn.drawImage(im, scale, wmult=4)
+        >>> image = cn.drawImage(im, scale)
         >>> cn = cn.shear(s)
         >>> cn = cn.expand(m)
         >>> cn = cn.rotate(theta * galsim.degrees)

@@ -110,7 +110,7 @@ class NFWHalo(object):
     Based on Matthias Bartelmann's libastro.
 
     The cosmology to use can be set either by providing a Cosmology instance as cosmo,
-    or by providing omega_m and/or omega_lam.  
+    or by providing omega_m and/or omega_lam.
     If only one of the latter is provided, the other is taken to be one minus that.
     If no cosmology parameters are set, a default Cosmology is constructed.
 
@@ -128,7 +128,7 @@ class NFWHalo(object):
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
+    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0),
                  omega_m=None, omega_lam=None, cosmo=None):
         if omega_m is not None or omega_lam is not None:
             if cosmo is not None:

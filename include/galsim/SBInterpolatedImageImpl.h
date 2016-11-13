@@ -45,16 +45,14 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
-        void fillXValue(tmv::MatrixView<double> val,
+        // Only the izero, jzero one can be improved, so override that one.
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -70,6 +68,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
 
         /**
          *
@@ -178,11 +177,8 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& realKImage,
-            const BaseImage<T>& imagKImage,
-            double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<T>& kimage, double stepk,
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
@@ -200,12 +196,6 @@ namespace galsim {
         double xValue(const Position<double>& p) const
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, int izero,
-        //                 double ky0, double dky, int jzero) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, double dkxy,
-        //                 double ky0, double dky, double dkyx) const;
 
         boost::shared_ptr<Interpolant> getKInterp() const;
 
@@ -221,6 +211,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 

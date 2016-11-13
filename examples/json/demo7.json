@@ -39,7 +39,7 @@
             "items" : [
                 { "type" : "Gaussian" , "fwhm" : 0.65 },
                 {
-                  "type" : "OpticalPSF" , 
+                  "type" : "OpticalPSF" ,
                   "lam_over_diam" : 0.39,
                   "obscuration" : 0.4,
                   "aberrations" : [ 0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13 ]
@@ -59,7 +59,7 @@
         "type" : "Sequence",
         "first" : 0,
         "last" : 4,
-        "repeat" : 40 
+        "repeat" : 40
     }
 },
 
