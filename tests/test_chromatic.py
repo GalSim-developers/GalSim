@@ -119,20 +119,13 @@ def test_draw_add_commutativity():
     # final profile
     final = galsim.Convolve([GS_gal, PSF])
     GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    GS_kimage = galsim.ImageC(stamp_size, stamp_size, scale=pixel_scale)
     t2 = time.time()
     GS_image = final.drawImage(image=GS_image)
+    GS_kimage = final.drawKImage(image=GS_kimage)
     t3 = time.time()
-    print('GS_object.drawImage() took {0} seconds.'.format(t3-t2))
+    print('GS_object drawImage, drawKImage took {0} seconds.'.format(t3-t2))
     # plotme(GS_image)
-
-    # As an aside, check for appropriate tests of 'integrator' argument.
-    try:
-        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
-                                 integrator='midp') # minor misspelling
-        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
-                                 integrator=galsim.integ.midpt)
-    except ImportError:
-        print('The assert_raises tests require nose')
 
     #------------------------------------------------------------------------------
     # Use galsim.chromatic to generate chromaticity.  Internally, this module draws
@@ -168,6 +161,7 @@ def test_draw_add_commutativity():
     # final profile
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    chromatic_kimage = galsim.ImageC(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
     integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
@@ -179,17 +173,39 @@ def test_draw_add_commutativity():
     #     implementation, so those had to be switched as well.
     galsim.ChromaticObject.drawImage(chromatic_final, bandpass, image=chromatic_image,
                                      integrator=integrator)
+    galsim.ChromaticObject.drawKImage(chromatic_final, bandpass, image=chromatic_kimage,
+                                      integrator=integrator)
     t5 = time.time()
-    print('ChromaticObject.drawImage() took {0} seconds.'.format(t5-t4))
+    print('ChromaticObject drawImage, drawKImage took {0} seconds.'.format(t5-t4))
     # plotme(chromatic_image)
 
-    peak1 = chromatic_image.array.max()
-
+    peak = chromatic_image.array.max()
     printval(GS_image, chromatic_image)
     np.testing.assert_array_almost_equal(
-        chromatic_image.array/peak1, GS_image.array/peak1, 6,
+        chromatic_image.array/peak, GS_image.array/peak, 6,
         err_msg="Directly computed chromatic image disagrees with image created using "
                 +"galsim.chromatic")
+
+    kpeak = chromatic_kimage.array.real.max()
+    np.testing.assert_array_almost_equal(
+        chromatic_kimage.array/kpeak, GS_kimage.array/kpeak, 6,
+        err_msg="Directly computed chromatic kimage disagrees with kimage created using "
+                +"galsim.chromatic")
+
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                                 integrator=galsim.integ.midpt)
+        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                                 integrator=galsim.integ.midpt)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
 
 
 @timer
