@@ -1072,8 +1072,8 @@ def test_kroundtrip():
     # Try non-PixelScale wcs.
     wcs = galsim.JacobianWCS(0.11, -0.04, 0.02, 0.08)
     a = final
-    re, im = a.drawKImage(wcs=wcs)
-    b = galsim.InterpolatedKImage(re, im)
+    kimage = a.drawKImage(wcs=wcs)
+    b = galsim.InterpolatedKImage(kimage)
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,

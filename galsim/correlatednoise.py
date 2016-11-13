@@ -1616,17 +1616,15 @@ class CovarianceSpectrum(object):
         for i, sed in enumerate(self.SEDs):
             # Assume that PSF does not yet include pixel contribution, so add it in.
             conv = galsim.Convolve(PSF, galsim.Pixel(wcs.scale)) * sed
-            re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
-            PSF_eff_kimgs[i] = re.array + 1j * im.array
+            PSF_eff_kimgs[i] = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk).array
         pkout = np.zeros((nk, nk), dtype=np.float64)
         for i in range(NSED):
             for j in range(i, NSED):
-                re, im = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk)
-                s = re.array + 1j * im.array
+                s = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk).array
                 pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
                           (2 if i != j else 1)).real
-        re = galsim.Image(pkout, scale=stepk)
-        iki = galsim.InterpolatedKImage(re, re*0)  # imag part should be zero
+        pk = galsim.ImageC(pkout + 0j, scale=stepk)  # imag part should be zero
+        iki = galsim.InterpolatedKImage(pk)
         iki *= wcs.pixelArea()**2  # determined this empirically
         return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)
 
