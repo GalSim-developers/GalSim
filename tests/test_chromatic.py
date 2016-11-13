@@ -1126,7 +1126,8 @@ def test_analytic_integrator():
     """Test that the analytic (i.e., not sampled) versions of SEDs and Bandpasses produce the
     same results as the sampled versions.
     """
-    psf = galsim.Moffat(fwhm=1.0, beta=2.7)
+    # Make sure to use something non-separable so the ImageIntegrators actually get triggered.
+    psf = galsim.ChromaticObject(galsim.Moffat(fwhm=1.0, beta=2.7)).dilate(lambda w:(w/500)**1.1)
 
     # pure analytic
     band1 = galsim.Bandpass('1', 'nm', blue_limit=500, red_limit=750)
@@ -1134,9 +1135,11 @@ def test_analytic_integrator():
     gal1 = galsim.Gaussian(fwhm=1.0) * sed1
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
+    kimage1 = galsim.ImageC(32, 32, scale=0.2)
     assert len(band1.wave_list) == 0
     assert len(sed1.wave_list) == 0
     final1.drawImage(band1, image=image1)
+    final1.drawKImage(band1, image=kimage1)
 
     # try making the SED sampled
     band2 = band1
@@ -1149,9 +1152,11 @@ def test_analytic_integrator():
     gal2 = galsim.Gaussian(fwhm=1.0) * sed2
     final2 = galsim.Convolve(gal2, psf)
     image2 = galsim.ImageD(32, 32, scale=0.2)
+    kimage2 = galsim.ImageC(32, 32, scale=0.2)
     assert len(band2.wave_list) == 0
     assert len(sed2.wave_list) != 0
     final2.drawImage(band1, image=image2)
+    final2.drawKImage(band1, image=kimage2)
 
     # try making the Bandpass sampled
     sed3 = sed1
@@ -1159,15 +1164,22 @@ def test_analytic_integrator():
     gal3 = galsim.Gaussian(fwhm=1.0) * sed3
     final3 = galsim.Convolve(gal3, psf)
     image3 = galsim.ImageD(32, 32, scale=0.2)
+    kimage3 = galsim.ImageC(32, 32, scale=0.2)
     assert len(band3.wave_list) != 0
     assert len(sed3.wave_list) == 0
     final3.drawImage(band3, image=image3)
+    final3.drawKImage(band3, image=kimage3)
 
     printval(image1, image2)
     np.testing.assert_array_almost_equal(image1.array, image2.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
     printval(image1, image3)
     np.testing.assert_array_almost_equal(image1.array, image3.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+
+    np.testing.assert_array_almost_equal(kimage1.array, kimage2.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+    np.testing.assert_array_almost_equal(kimage1.array, kimage3.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
 
 
@@ -1382,6 +1394,14 @@ def test_interpolated_ChromaticObject():
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, integrator='midpoint', scale=scale)
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=4,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
+
+    # Check kimage with midpoint rule too, also non-default.
+    kscale = 2*np.pi/(scale*40)
+    kim_exact = exact_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40)
+    kim_interp = interp_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40, integrator='midpoint')
+    np.testing.assert_allclose(
+        kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
     # Check that we can turn interpolation off and on at will.
