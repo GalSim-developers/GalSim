@@ -106,7 +106,7 @@ def BuildStamps(nobjects, config, obj_num=0,
     if not results:  # pragma: no cover
         images, current_vars = [], []
         if logger:
-            logger.error('No images were built.  All were either skipped or had errors.')
+            logger.error('No stamps were built.  All were either skipped or had errors.')
     else:
         images, current_vars = zip(*results)
         if logger:
