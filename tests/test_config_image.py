@@ -51,12 +51,9 @@ def test_single():
         }
     }
 
-    if __name__ == '__main__':
-        logger = logging.getLogger('test_single')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger = galsim.config.LoggerWrapper(None)
+    logger = logging.getLogger('test_single')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
 
     im1_list = []
     nimages = 6
@@ -125,12 +122,9 @@ def test_positions():
         }
     }
 
-    if True:
-        logger = logging.getLogger('test_single')
-        logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger = None
+    logger = logging.getLogger('test_single')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
 
     gal = galsim.Gaussian(sigma=1.7, flux=100)
     im1= gal.drawImage(nx=21, ny=21, scale=1)
@@ -168,6 +162,79 @@ def test_positions():
     im6 = galsim.config.BuildImage(config, logger=logger)
     np.testing.assert_array_equal(im6.array, im1.array)
     assert im6.bounds == im1.bounds
+
+@timer
+def test_phot():
+    """Test draw_method=phot, which has extra allowed kwargs
+    """
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'draw_method' : 'phot'
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.7,
+            'flux' : 100,
+        }
+    }
+
+    # First the simple config written above
+    ud = galsim.UniformDeviate(1234 + 1)
+    gal = galsim.Gaussian(sigma=1.7, flux=100)
+    im1a = gal.drawImage(scale=1, method='phot', rng=ud)
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im1b.array, im1a.array)
+
+    # Use a non-default number of photons
+    del config['_copied_image_keys_to_stamp']
+    config['image']['n_photons'] = 300
+    ud.seed(1234 + 1)
+    im2a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud)
+    im2b = galsim.config.BuildImage(config)
+    print('image = ',config['image'])
+    print('stamp = ',config['stamp'])
+    np.testing.assert_array_equal(im2b.array, im2a.array)
+
+    # Allow the flux to vary as a Poisson deviate even though n_photons is given
+    del config['_copied_image_keys_to_stamp']
+    config['image']['poisson_flux'] = True
+    ud.seed(1234 + 1)
+    im3a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud, poisson_flux=True)
+    im3b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im3b.array, im3a.array)
+
+    # If max_extra_noise is given with n_photons, then ignore it.
+    del config['_copied_image_keys_to_stamp']
+    config['image']['max_extra_noise'] = 0.1
+    im3c = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im3c.array, im3a.array)
+
+    # Although with a logger, it should give a warning.
+    with CaptureLog() as cl:
+        im3d = galsim.config.BuildImage(config, logger=cl.logger)
+    assert "ignoring 'max_extra_noise'" in cl.output
+
+    # Without n_photons, it should work.  But then, we also need a noise field
+    # So without the noise field, it will raise an exception.
+    del config['image']['n_photons']
+    del config['stamp']['n_photons']
+    try:
+        np.testing.assert_raises(AttributeError, galsim.config.BuildImage, config)
+    except ImportError:
+        pass
+
+    # Using this much extra noise with a sky noise variance of 50 cuts the number of photons
+    # approximately in half.
+    print('N,g without extra_noise: ',gal._calculate_nphotons(0, False, None, None))
+    print('N,g with extra_noise: ',gal._calculate_nphotons(0, False, 5, None))
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 50 }
+    ud.seed(1234 + 1)
+    im4a = gal.drawImage(scale=1, method='phot', max_extra_noise=5, rng=ud, poisson_flux=True)
+    im4a.addNoise(galsim.GaussianNoise(sigma=np.sqrt(50), rng=ud))
+    im4b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im4b.array, im4a.array)
 
 
 @timer
@@ -490,6 +557,7 @@ def test_njobs():
 if __name__ == "__main__":
     test_single()
     test_positions()
+    test_phot()
     test_ring()
     test_scattered()
     test_njobs()

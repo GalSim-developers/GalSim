@@ -116,6 +116,11 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     return images, current_vars
 
+# A list of keys that really belong in stamp, but are allowed in image both for convenience
+# and backwards-compatibility reasons.  Any of these present will be copied over to
+# config['stamp'] if they exist in config['image'].
+stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method', 'wmult',
+                    'n_photons', 'max_extra_noise', 'poisson_flux']
 
 def SetupConfigObjNum(config, obj_num):
     """Do the basic setup of the config dict at the stamp (or object) processing level.
@@ -153,17 +158,15 @@ def SetupConfigObjNum(config, obj_num):
     # These are things that we used to advertise as being in the image field, but now that
     # we have a stamp field, they really make more sense here.  But for backwards compatibility,
     # or just because they can make sense in either place, we allow them to be in 'image' still.
-    if '_copied_image_keys_to_stamp' not in config and 'image' in config:
+    if not config.get('_copied_image_keys_to_stamp',False) and 'image' in config:
         image = config['image']
-        for key in ['offset', 'retry_failures', 'gsparams',
-                    'draw_method', 'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux']:
+        for key in stamp_image_keys:
             if key in image and key not in stamp:
                 stamp[key] = image[key]
         config['_copied_image_keys_to_stamp'] = True
 
     if 'draw_method' not in stamp:
         stamp['draw_method'] = 'auto'
-
 
 
 def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
@@ -245,7 +248,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux',
+                'wmult', 'n_photons', 'max_extra_noise', 'poisson_flux',
                 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
@@ -492,7 +495,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if 'n_photons' in config and 'n_photons' not in kwargs:
         if method != 'phot':
             raise AttributeError('n_photons is invalid with method != phot')
-        if 'max_extra_noise' in config:  # pragma: no cover
+        if 'max_extra_noise' in config:
             if logger:
                 logger.warning(
                     "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
