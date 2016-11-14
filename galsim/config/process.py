@@ -141,6 +141,32 @@ def ReadJson(config_file):
     # JSON files only ever define a single job, but we need to return a list with this one item.
     return [config]
 
+
+def ConvertNones(config):
+    """Convert any items whose value is 'None' to None.
+
+    To allow some parameters to be set to None in the config dict (e.g. in a list, where only
+    some values need to be None), we convert all values == 'None' to None.
+
+    @param config       The config dict to process
+    """
+    if isinstance(config, dict):
+        keys = config.keys()
+    elif isinstance(config, list):
+        keys = range(len(config))
+    else:
+        return
+
+    for key in keys:
+        # Recurse to lower levels, if any
+        if isinstance(config[key],(list,dict)):
+            ConvertNones(config[key])
+
+        # Convert any Nones at this level
+        elif config[key] == 'None':
+            config[key] = None
+
+
 def ReadConfig(config_file, file_type=None, logger=None):
     """Read in a configuration file and return the corresponding dicts.
 
@@ -188,11 +214,15 @@ def ReadConfig(config_file, file_type=None, logger=None):
     if file_type == 'yaml':
         if logger:
             logger.info('Reading YAML config file %s', config_file)
-        return galsim.config.ReadYaml(config_file)
+        config = galsim.config.ReadYaml(config_file)
     else:
         if logger:
             logger.info('Reading JSON config file %s', config_file)
-        return galsim.config.ReadJson(config_file)
+        config = galsim.config.ReadJson(config_file)
+
+    galsim.config.ConvertNones(config)
+
+    return config
 
 
 def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):

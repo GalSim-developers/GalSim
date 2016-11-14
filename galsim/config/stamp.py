@@ -500,11 +500,9 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
                     "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
     elif 'max_extra_noise' in config:
-        if method != 'phot':
-            raise AttributeError('max_extra_noise is invalid with method != phot')
         max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
-    elif method == 'phot':
-        max_extra_noise = 0.01
+        if method != 'phot' and max_extra_noise is not None:
+            raise AttributeError('max_extra_noise is invalid with method != phot')
 
     if 'poisson_flux' in config and 'poisson_flux' not in kwargs:
         if method != 'phot':

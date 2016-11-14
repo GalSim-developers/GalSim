@@ -191,6 +191,17 @@ stamp :
         # The following sequence for index is automatically generated:
         #index : { type : Sequence , first : 0 , last : 1 }
 
+    # For bright objects, it can be quite slow to shoot all the photons from the object.
+    # Shooting fewer photons with flux > 1 each will be faster, but will add some extra
+    # Poisson noise due to the smaller number of photons.
+    # The max_extra_noise parameter indicates how much extra noise per pixel we are
+    # willing to tolerate as a fraction of the noise that we will be adding from the
+    # sky (cf. the image.noise field).  In this case, we allow an extra 1% larger variance,
+    # but only for photon
+    max_extra_noise :
+        type: List
+        items: [ None, 0.01 ]
+
 
     # This script is set up as a comparison between using FFTs for doing the convolutions and
     # shooting photons.  The two methods have trade-offs in speed and accuracy which vary

@@ -85,7 +85,9 @@ def ParseValue(config, key, base, value_type):
         #print(key,' = ',param)
         val,safe = param, True
     elif not isinstance(param, dict):
-        if value_type is galsim.Angle:
+        if param is None:
+            val = param  # None is allowed for all types.  If invalid it will give an error later.
+        elif value_type is galsim.Angle:
             # Angle is a special case.  Angles are specified with a final string to
             # declare what unit to use.
             val = _GetAngleValue(param)
@@ -157,7 +159,7 @@ def ParseValue(config, key, base, value_type):
             safe = False
 
         # Make sure we really got the right type back.  (Just in case...)
-        if value_type is not None and not isinstance(val,value_type):
+        if val is not None and value_type is not None and not isinstance(val,value_type):
             val = value_type(val)
 
         # Save the current value for possible use by the Current type
