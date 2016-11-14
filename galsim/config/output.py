@@ -185,7 +185,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     output_type = output['type']
 
     if logger:
-        logger.debug('file %d: Build File with type=%s to build %d images, starting with %d',
+        logger.debug('file %d: BuildFile with type=%s to build %d images, starting with %d',
                       file_num,output_type,nimages,image_num)
 
     # Make sure the inputs and extra outputs are set up properly.
@@ -201,15 +201,13 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if 'skip' in output and galsim.config.ParseValue(output, 'skip', config, bool)[0]:
         if logger:
             logger.warning('Skipping file %d = %s because output.skip = True',file_num,file_name)
-        t2 = time.time()
-        return file_name, 0
+        return file_name, 0  # Note: time=0 is the indicator that a file was skipped.
     if ('noclobber' in output
         and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
         and os.path.isfile(file_name)):
         if logger:
             logger.warning('Skipping file %d = %s because output.noclobber = True' +
                            ' and file exists',file_num,file_name)
-        t2 = time.time()
         return file_name, 0
 
     if logger:
@@ -220,6 +218,14 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     ignore = output_ignore + list(galsim.config.valid_extra_outputs)
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
+
+    # If any images came back as None, then remove them, since they cannot be written.
+    data = [ im for im in data if im is not None ]
+
+    if len(data) == 0:
+        if logger:
+            logger.warning('Skipping file %d = %s because all images were None',file_num,file_name)
+        return file_name, 0
 
     if builder.canAddHdus():
         data = galsim.config.AddExtraOutputHDUs(config,data,logger)

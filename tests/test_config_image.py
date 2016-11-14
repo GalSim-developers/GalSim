@@ -236,6 +236,181 @@ def test_phot():
     im4b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4b.array, im4a.array)
 
+@timer
+def test_reject():
+    """Test various ways that objects can be rejected.
+    """
+    # Make a custom function for rejecting COSMOSCatalog objects that use Sersics with n > 2.
+    def HighN(config, base, value_type):
+        gal = galsim.config.GetCurrentValue('gal',base)
+        #print('gal = ',gal)
+        assert isinstance(gal, galsim.Transformation)
+        orig = gal.original
+        if isinstance(orig, galsim.Sum): # Reject all B+D galaxies (which are a minority)
+            reject = True  # Reject all B+D galaxies (which are a minority)
+        else:
+            assert isinstance(orig, galsim.Sersic)
+            reject = orig.getN() > 2
+        return reject, False
+    galsim.config.RegisterValueType('HighN', HighN, [bool])
+
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 12345,
+            'noise' : { 'type' : 'Gaussian', 'variance' : 10 },
+            'pixel_scale' : 0.1,
+        },
+        'stamp' : {
+            'type' : 'Basic',
+            'size' : 32,
+            'retry_failures' : 50,
+            'reject' : { 'type' : 'HighN' },
+            'min_flux_frac' : 0.95,  # This rejects around 1/4 of the objects
+            'max_snr' : 50, # This just rejects a few objects
+            'image_pos': {
+                # This will raise an exception about 1/4 the time (when inner_radius > radius)
+                'type' : 'RandomCircle',
+                'radius' : { 'type' : 'Random', 'min' : 0, 'max': 20 },
+                'inner_radius' : { 'type' : 'Random', 'min' : 0, 'max': 10 },
+            },
+        },
+        'gal' : {
+            'type' : 'COSMOSGalaxy',
+            'gal_type' : 'parametric',
+            # This is invalid about 1/3 of the time. (There are only 100 items in the catalog.)
+            'index' : { 'type' : 'Random', 'min' : 0, 'max' : 150 },
+            'scale_flux' : {
+                'type' : 'Eval',
+                # This will raise an exception about half the time
+                'str' : 'math.sqrt(x)',
+                'fx' : { 'type' : 'Random', 'min' : -10000, 'max' : 10000 },
+            },
+            'skip' : {
+                # Skip doesn't count as an error for the recount.  Rather it returns None
+                # for the image rather than making it.
+                # 1/20 will be skipped.  (Although with all the other rejections and exceptions
+                # a much higher fraction of the returned images will be None.)
+                'type' : 'RandomBinomial',
+                'p' : 0.05,
+            },
+        },
+        'psf' : { 'type' : 'Gaussian', 'sigma' : 0.15 },
+        'input' : {
+            'cosmos_catalog' : {
+                'dir' : '../examples/data',
+                'file_name' : 'real_galaxy_catalog_23.5_example_fits.fits',
+                'use_real' : False,
+            }
+        }
+    }
+    galsim.config.ProcessInput(config)
+
+    if False:
+        logger = logging.getLogger('test_single')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger = galsim.config.LoggerWrapper(None)
+
+    nimages = 10
+    im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
+    # For this particular config, only 6 of them are real images.  The others were skipped.
+    # The skipped ones are present in the list, but their flux is 0
+    fluxes = [im.array.sum() if im is not None else 0 for im in im_list]
+    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 1341]
+    np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
+
+    # Check for a few of the logging outputs that explain why things were rejected.
+    with CaptureLog() as cl:
+        im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
+    for im1,im2 in zip(im_list, im_list2):
+        assert im1 == im2
+    #print(cl.output)
+    # Note: I'm testing for specific error messages here, which could change if we change
+    # the order of operations somewhere.  The point here is that we hit at least one of each
+    # kind of skip/rejection/exception that we intended in the config dict above.
+    assert "obj 1: Skipping because field skip=True" in cl.output
+    assert "obj 1: Caught SkipThisObject: e = None" in cl.output
+    assert "Skipping object 1" in cl.output
+    assert "Object 0: Caught exception 105 index has gone past the number of entries" in cl.output
+    assert "Object 0: Caught exception inner_radius must be less than radius" in cl.output
+    assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
+    assert "obj 0: reject evaluated to True" in cl.output
+    assert "Object 0: Rejecting this object and rebuilding" in cl.output
+    assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
+    assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
+
+    # For test coverage to get all branches, do min_snr and max_snr separately.
+    del config['stamp']['max_snr']
+    config['stamp']['min_snr'] = 20
+    with CaptureLog() as cl:
+        im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
+    #print(cl.output)
+    assert "Object 8: Measured snr = 9.157386 < 20.0." in cl.output
+
+    # If we lower the number of retries, we'll max out and abort the image
+    config['stamp']['retry_failures'] = 10
+    galsim.config.RemoveCurrent(config)
+    try:
+        np.testing.assert_raises((ValueError,IndexError,RuntimeError), 
+                                 galsim.config.BuildStamps, nimages, config, do_noise=False)
+    except ImportError:
+        pass
+    try:
+        with CaptureLog() as cl:
+            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+    except (ValueError,IndexError,RuntimeError):
+        pass
+    #print(cl.output)
+    assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
+    assert "Exception caught when building stamp 0" in cl.output
+
+    # We can also do this with BuildImages which runs through a different code path.
+    galsim.config.RemoveCurrent(config)
+    try:
+        with CaptureLog() as cl:
+            galsim.config.BuildImages(nimages, config, logger=cl.logger)
+    except (ValueError,IndexError,RuntimeError):
+        pass
+    #print(cl.output)
+    assert "Exception caught when building image 0" in cl.output
+
+    # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
+    # report that no files were written.
+    config['stamp']['max_snr'] = 20 # If nothing else failed, min or max snr will reject.
+    config['root'] = 'test_reject'  # This lets the code generate a file name automatically.
+    del config['stamp']['size']     # Otherwise skipped images will still build an empty image.
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
+    #print(cl.output)
+    assert "No files were written.  All were either skipped or had errors." in cl.output
+
+    # If we skip all objects, and don't have a definite size for them, then we get to a message
+    # that no stamps were built.
+    config['gal']['skip'] = True
+    galsim.config.RemoveCurrent(config)
+    im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
+    assert all (im is None for im in im_list3)
+    with CaptureLog() as cl:
+        im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
+    #print(cl.output)
+    assert "No stamps were built.  All objects were skipped." in cl.output
+
+    # Likewise with BuildImages, but with a slightly different message.
+    with CaptureLog() as cl:
+        im_list4 = galsim.config.BuildImages(nimages, config, logger=cl.logger)
+    assert "No images were built.  All were either skipped or had errors." in cl.output
+
+    # And BuildFiles
+    with CaptureLog() as cl:
+        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
+    assert "No files were written.  All were either skipped or had errors." in cl.output
+
+    # Finally, with a fake logger, this covers the LoggerWrapper functionality.
+    logger = galsim.config.LoggerWrapper(None)
+    galsim.config.BuildFiles(nimages, config, logger=logger)
 
 @timer
 def test_ring():
@@ -558,6 +733,7 @@ if __name__ == "__main__":
     test_single()
     test_positions()
     test_phot()
+    test_reject()
     test_ring()
     test_scattered()
     test_njobs()

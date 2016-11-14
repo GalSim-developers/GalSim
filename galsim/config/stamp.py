@@ -105,14 +105,12 @@ def BuildStamps(nobjects, config, obj_num=0,
                                          done_func = done_func,
                                          except_func = except_func)
 
-    if not results:  # pragma: no cover
-        images, current_vars = [], []
-        if logger:
-            logger.error('No stamps were built.  All were either skipped or had errors.')
-    else:
-        images, current_vars = zip(*results)
-        if logger:
-            logger.debug('image %d: Done making stamps',config.get('image_num',0))
+    images, current_vars = zip(*results)
+
+    if logger:
+        logger.debug('image %d: Done making stamps',config.get('image_num',0))
+        if all(im is None for im in images):
+            logger.error('No stamps were built.  All objects were skipped.')
 
     return images, current_vars
 
@@ -330,10 +328,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             except galsim.config.gsobject.SkipThisObject as e:
                 if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-                if logger:
-                    if e.msg:
-                        # If there is a message, upgrade to info level
-                        logger.info('Skipping object %d: %s',obj_num,e.msg)
+                    logger.info('Skipping object %d',obj_num)
                 skip = True
                 # Note: Skip is different from Reject.
                 #       Skip means we return None for this stamp image and continue on.
@@ -387,11 +382,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                                            obj_num)
                         builder.reset(config, logger)
                         continue
-                    else: # pragma: no cover
-                        if logger:
-                            logger.error(
-                                'Object %d: Too many rejections for this object. Aborting.',
-                                obj_num)
+                    else:
                         raise RuntimeError(
                                 "Rejected an object %d times. If this is expected, "%ntries+
                                 "you should specify a larger stamp.retry_failures.")
@@ -409,7 +400,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 current_var = 0.
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
-            if do_noise:
+            if do_noise and not skip:
                 im, current_var = builder.addNoise(stamp,config,im,skip,current_var,logger)
 
             return im, current_var
@@ -419,6 +410,12 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         except Exception as e:
             if itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
+                if logger:
+                    logger.info('Object %d: Caught exception %s',obj_num,str(e))
+                    if ntries > 1:
+                        logger.error(
+                            'Object %d: Too many exceptions/rejections for this object. Aborting.',
+                            obj_num)
                 raise
             else:
                 if logger:
@@ -791,21 +788,26 @@ class StampBuilder(object):
                 # If we reject now, it will mess things up.
                 return False
 
-        reject = False
         if 'reject' in config:
-            reject = galsim.config.ParseValue(config, 'reject', base, bool)[0]
+            if galsim.config.ParseValue(config, 'reject', base, bool)[0]:
+                if logger:
+                    logger.info('obj %d: reject evaluated to True',base['obj_num'])
+                return True
         if 'min_flux_frac' in config:
             if not isinstance(prof, galsim.GSObject):
                 raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
-                                "a single GSObject profile.")
+                                 "a single GSObject profile.")
             expected_flux = prof.flux
             measured_flux = np.sum(image.array)
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
+            if logger:
+                logger.debug('obj %d: flux_frac = %f', base.get('obj_num',0),
+                             measured_flux / expected_flux)
             if measured_flux < min_flux_frac * expected_flux:
                 if logger:
                     logger.warning('Object %d: Measured flux = %f < %s * %f.',
                                    base['obj_num'], measured_flux, min_flux_frac, expected_flux)
-                reject = True
+                return True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, galsim.GSObject):
                 raise ValueError("Cannot apply min_snr for stamp types that do not use "+
@@ -813,21 +815,23 @@ class StampBuilder(object):
             var = galsim.config.CalculateNoiseVar(base)
             sumsq = np.sum(image.array**2)
             snr = np.sqrt(sumsq / var)
+            if logger:
+                logger.debug('obj %d: snr = %f', base.get('obj_num',0), snr)
             if 'min_snr' in config:
                 min_snr = galsim.config.ParseValue(config, 'min_snr', base, float)[0]
                 if snr < min_snr:
                     if logger:
                         logger.warning('Object %d: Measured snr = %f < %s.',
                                        base['obj_num'], snr, min_snr)
-                    reject = True
+                    return True
             if 'max_snr' in config:
                 max_snr = galsim.config.ParseValue(config, 'max_snr', base, float)[0]
                 if snr > max_snr:
                     if logger:
                         logger.warning('Object %d: Measured snr = %f > %s.',
                                        base['obj_num'], snr, max_snr)
-                    reject = True
-        return reject
+                    return True
+        return False
 
     def reset(self, base, logger):
         """Reset some aspects of the config dict so the object can be rebuilt after rejecting the
@@ -839,7 +843,8 @@ class StampBuilder(object):
         # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
         # This means they are either marked as safe or indexed by something other than obj_num.
         for field in ['psf', 'gal', 'stamp']:
-            galsim.config.RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
+            if field in base:
+                galsim.config.RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
 
     def addNoise(self, config, base, image, skip, current_var, logger):
         """

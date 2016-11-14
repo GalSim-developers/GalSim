@@ -280,6 +280,10 @@ def _GenerateFromRandomCircle(config, base, value_type):
         min_rsq = inner_radius**2
     else:
         min_rsq = 0.
+
+    if min_rsq >= max_rsq:
+        raise ValueError("inner_radius must be less than radius for type=RandomCircle")
+
     # Emulate a do-while loop
     while True:
         x = (2*ud()-1) * radius

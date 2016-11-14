@@ -93,6 +93,8 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
 
     if logger:
         logger.debug('file %d: Done making images',config.get('file_num',0))
+        if len(images) == 0:
+            logger.error('No images were built.  All were either skipped or had errors.')
 
     return images
 
@@ -235,9 +237,10 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     config['current_image'] = image
 
     # Just in case these changed from their initial values, make sure they are correct now:
-    config['image_origin'] = image.origin()
-    config['image_center'] = image.trueCenter()
-    config['image_bounds'] = image.bounds
+    if image is not None:
+        config['image_origin'] = image.origin()
+        config['image_center'] = image.trueCenter()
+        config['image_bounds'] = image.bounds
     if logger:
         logger.debug('image %d: image_origin => %s',image_num,config['image_origin'])
         logger.debug('image %d: image_center => %s',image_num,config['image_center'])
@@ -377,7 +380,7 @@ class ImageBuilder(object):
         @returns xsize, ysize
         """
         if logger:
-            logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',
+            logger.debug('image %d: Build Single Image: image, obj = %d,%d',
                          image_num,image_num,obj_num)
 
         extra_ignore = [ 'image_pos', 'world_pos' ]
@@ -420,6 +423,8 @@ class ImageBuilder(object):
         """
         xsize = base['image_xsize']
         ysize = base['image_ysize']
+        if logger:
+            logger.debug('image %d: Single Image: size = %s, %s',image_num,xsize,ysize)
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
