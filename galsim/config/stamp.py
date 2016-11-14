@@ -89,7 +89,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger: # pragma: no cover
+        if logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             obj_num = jobs[k]['obj_num']
@@ -421,7 +421,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry,ntries)
-                if logger:
                     import traceback
                     tr = traceback.format_exc()
                     logger.debug('obj %d: Traceback = %s',obj_num,tr)
