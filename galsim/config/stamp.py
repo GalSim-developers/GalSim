@@ -520,8 +520,10 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
-    if logger:
-        logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0),kwargs)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        # Don't output the full image array.  Use str(image) for that kwarg.
+        alt_kwargs = { k : kwargs[k] if k != 'image' else str(kwargs[k]) for k in kwargs}
+        logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
     image = prof.drawImage(**kwargs)
     return image
 

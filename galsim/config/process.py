@@ -359,7 +359,10 @@ class LoggerWrapper(object):
             self.logger.log(lvl, *args, **kwargs)
 
     def isEnabledFor(self, *args, **kwargs):
-        return self.logger.isEnabledFor(*args,**kwargs)
+        if self.logger:
+            return self.logger.isEnabledFor(*args,**kwargs)
+        else:
+            return False
 
 
 def UpdateNProc(nproc, ntot, config, logger=None):
