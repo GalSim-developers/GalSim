@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import logging
+import math
 
 from galsim_test_helpers import *
 
@@ -232,7 +233,7 @@ def test_phot():
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 50 }
     ud.seed(1234 + 1)
     im4a = gal.drawImage(scale=1, method='phot', max_extra_noise=5, rng=ud, poisson_flux=True)
-    im4a.addNoise(galsim.GaussianNoise(sigma=np.sqrt(50), rng=ud))
+    im4a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
     im4b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4b.array, im4a.array)
 
@@ -411,6 +412,66 @@ def test_reject():
     # Finally, with a fake logger, this covers the LoggerWrapper functionality.
     logger = galsim.config.LoggerWrapper(None)
     galsim.config.BuildFiles(nimages, config, logger=logger)
+
+
+@timer
+def test_snr():
+    """Test signal-to-noise option for setting the flux
+    """
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'noise' : { 'type' : 'Gaussian', 'variance' : 50 },
+            'pixel_scale' : 0.4,
+        },
+        'stamp' : {
+            'type' : 'Basic',
+            'size' : 32,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.7,
+            'signal_to_noise' : 70,
+        }
+    }
+
+    # Do the S/N calculation by hand.
+    ud = galsim.UniformDeviate(1234 + 1)
+    gal = galsim.Gaussian(sigma=1.7)
+    im1a = gal.drawImage(nx=32, ny=32, scale=0.4)
+    sn_meas = math.sqrt( np.sum(im1a.array**2) / 50 )
+    print('measured s/n = ',sn_meas)
+    im1a *= 70 / sn_meas
+    im1a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
+
+    # Compare to what config does
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im1b.array, im1a.array)
+
+    # Also works on psf images
+    config['psf'] = config['gal']
+    del config['gal']
+    im1c = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im1c.array, im1a.array)
+
+    # Photon shooting can do snr scaling, but will give a warning.
+    config['stamp']['draw_method'] = 'phot'
+    config['stamp']['n_photons'] = 100  # Need something here otherwise it will shoot 1 photon.
+    ud.seed(1234 + 1)
+    im2a = gal.drawImage(nx=32, ny=32, scale=0.4, method='phot', n_photons=100, rng=ud)
+    sn_meas = math.sqrt( np.sum(im2a.array**2) / 50 )
+    print('measured s/n = ',sn_meas)
+    im2a *= 70 / sn_meas
+    im2a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
+    im2b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im2b.array, im2a.array)
+
+    with CaptureLog() as cl:
+        im2c = galsim.config.BuildImage(config, logger=cl.logger)
+    np.testing.assert_array_equal(im2c.array, im2a.array)
+    assert 'signal_to_noise calculation is not accurate for draw_method = phot' in cl.output
+
 
 @timer
 def test_ring():
@@ -734,6 +795,7 @@ if __name__ == "__main__":
     test_positions()
     test_phot()
     test_reject()
+    test_snr()
     test_ring()
     test_scattered()
     test_njobs()

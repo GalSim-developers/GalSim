@@ -19,6 +19,7 @@
 import galsim
 import logging
 import numpy as np
+import math
 
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
@@ -214,7 +215,6 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
         image_pos = config['wcs'].toImage(world_pos)
 
     if image_pos is not None:
-        import math
         # The image_pos refers to the location of the true center of the image, which is
         # not necessarily the nominal center we need for adding to the final image.  In
         # particular, even-sized images have their nominal center offset by 1/2 pixel up
@@ -698,6 +698,10 @@ class StampBuilder(object):
     def getSNRScale(self, image, config, base, logger):
         """Calculate the factor by which to rescale the image based on a desired S/N level.
 
+        Note: The default implementation does thsi for the gal or psf field, so if a custom
+              stamp builder uses some other way to get the profiles, this method should
+              probably be overridden.
+
         @param image        The current image.
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
@@ -705,40 +709,39 @@ class StampBuilder(object):
 
         @returns scale_factor
         """
-        if (('gal' in base and 'signal_to_noise' in base['gal']) or
-            ('gal' not in base and 'psf' in base and 'signal_to_noise' in base['psf'])):
-            import math
-            if 'gal' in base: root_key = 'gal'
-            else: root_key = 'psf'
-
-            if 'flux' in base[root_key]:
-                raise AttributeError(
-                    'Only one of signal_to_noise or flux may be specified for %s'%root_key)
-
-            if 'image' in base and 'noise' in base['image']:
-                noise_var = galsim.config.CalculateNoiseVar(base)
-            else:
-                raise AttributeError(
-                    "Need to specify noise level when using %s.signal_to_noise"%root_key)
-            sn_target = galsim.config.ParseValue(base[root_key], 'signal_to_noise', base, float)[0]
-
-            # Now determine what flux we need to get our desired S/N
-            # There are lots of definitions of S/N, but here is the one used by Great08
-            # We use a weighted integral of the flux:
-            # S = sum W(x,y) I(x,y) / sum W(x,y)
-            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-            # Var(I(x,y)) = var
-            # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-            # Then a few things cancel and we find that
-            # S/N = sqrt( sum I(x,y)^2 / var )
-
-            sn_meas = math.sqrt( np.sum(image.array**2) / noise_var )
-            # Now we rescale the flux to get our desired S/N
-            scale_factor = sn_target / sn_meas
-            return scale_factor
+        if 'gal' in base and 'signal_to_noise' in base['gal']:
+            key = 'gal'
+        elif 'gal' not in base and 'psf' in base and 'signal_to_noise' in base['psf']:
+            key = 'psf'
         else:
             return 1.
+
+        if 'flux' in base[key]:
+            raise AttributeError(
+                'Only one of signal_to_noise or flux may be specified for %s'%key)
+
+        if 'image' in base and 'noise' in base['image']:
+            noise_var = galsim.config.CalculateNoiseVar(base)
+        else:
+            raise AttributeError(
+                "Need to specify noise level when using %s.signal_to_noise"%key)
+        sn_target = galsim.config.ParseValue(base[key], 'signal_to_noise', base, float)[0]
+
+        # Now determine what flux we need to get our desired S/N
+        # There are lots of definitions of S/N, but here is the one used by Great08
+        # We use a weighted integral of the flux:
+        # S = sum W(x,y) I(x,y) / sum W(x,y)
+        # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+        # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+        # Var(I(x,y)) = var
+        # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+        # Then a few things cancel and we find that
+        # S/N = sqrt( sum I(x,y)^2 / var )
+
+        sn_meas = math.sqrt( np.sum(image.array**2) / noise_var )
+        # Now we rescale the flux to get our desired S/N
+        scale_factor = sn_target / sn_meas
+        return scale_factor
 
     def applySNRScale(self, image, prof, scale_factor, method, logger):
         """Apply the scale_factor from getSNRScale to the image and profile.
@@ -755,7 +758,7 @@ class StampBuilder(object):
         @returns image, prof  (after being properly scaled)
         """
         if scale_factor != 1.0:
-            if method == 'phot': # pragma: no cover
+            if logger and method == 'phot':
                 logger.warning(
                     "signal_to_noise calculation is not accurate for draw_method = phot")
             image *= scale_factor
