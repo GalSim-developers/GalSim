@@ -36,17 +36,14 @@ valid_noise_types = {}
 def AddSky(config, im):
     """Add the sky level to the image
     """
-    orig_index = config.get('index_key','image_num')
-    if orig_index == 'obj_num':
-        config['index_key'] = 'image_num'
+    orig_index = config.get('index_key',None)
+    config['index_key'] = 'image_num'
 
-    if im:
-        sky = GetSky(config['image'], config)
-        if sky:
-            im += sky
+    sky = GetSky(config['image'], config)
+    if sky:
+        im += sky
 
-    if orig_index == 'obj_num':
-        config['index_key'] = 'obj_num'
+    config['index_key'] = orig_index
 
 
 def AddNoise(config, im, current_var=0., logger=None):
@@ -71,10 +68,6 @@ def AddNoise(config, im, current_var=0., logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    if 'stamp' not in config:
-        # This will make sure draw_method is initialized properly.  We don't really care what
-        # obj_num is used here, since we won't be using it.
-        galsim.config.stamp.SetupConfigObjNum(config, 0)
     draw_method = galsim.config.GetCurrentValue('stamp.draw_method',config,str)
 
     # We need to use image_num for the index_key, but if we are in the stamp processing
@@ -114,15 +107,13 @@ def CalculateNoiseVar(config):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    orig_index = config.get('index_key','image_num')
-    if orig_index == 'obj_num':
-        config['index_key'] = 'image_num'
+    orig_index = config.get('index_key',None)
+    config['index_key'] = 'image_num'
 
     builder = valid_noise_types[noise_type]
     var = builder.getNoiseVariance(noise, config)
 
-    if orig_index == 'obj_num':
-        config['index_key'] = 'obj_num'
+    config['index_key'] = orig_index
 
     return var
 
@@ -154,15 +145,13 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    orig_index = config.get('index_key','image_num')
-    if orig_index == 'obj_num':
-        config['index_key'] = 'image_num'
+    orig_index = config.get('index_key',None)
+    config['index_key'] = 'image_num'
 
     builder = valid_noise_types[noise_type]
     builder.addNoiseVariance(noise, config, im, include_obj_var, logger)
 
-    if orig_index == 'obj_num':
-        config['index_key'] = orig_index
+    config['index_key'] = orig_index
 
 def GetSky(config, base):
     """Parse the sky information and return either a float value for the sky level per pixel
@@ -179,8 +168,6 @@ def GetSky(config, base):
         wcs = base['wcs']
         if wcs.isUniform():
             return sky_level * wcs.pixelArea()
-        elif 'image_pos' in base:
-            return sky_level * wcs.pixelArea(base['image_pos'])
         else:
             # This calculation is non-trivial, so store this in case we need it again.
             tag = (id(base), base['file_num'], base['image_num'])
@@ -313,10 +300,8 @@ class PoissonNoiseBuilder(NoiseBuilder):
         # Get how much extra sky to assume from the image.noise attribute.
         sky = GetSky(base['image'], base)
         extra_sky = GetSky(config, base)
-        if not sky and not extra_sky:
-            raise AttributeError(
-                "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
         var = sky + extra_sky # for the return value
+        # (This could be zero, in which case we only add poisson noise for the object photons)
 
         # If we already have some variance in the image (from whitening), then we subtract this
         # much off of the sky level.  It's not precisely accurate, since the existing variance is
@@ -466,12 +451,11 @@ class CCDNoiseBuilder(NoiseBuilder):
                 im += noise_im
             else:
                 total_sky = sky + extra_sky
-                if total_sky > 0.:
-                    if gain != 1.0: im *= gain
-                    pd = galsim.PoissonDeviate(rng, mean=total_sky*gain)
-                    im.addNoise(galsim.DeviateNoise(pd))
-                    if gain != 1.0: im /= gain
-                    im -= total_sky
+                if gain != 1.0: im *= gain
+                pd = galsim.PoissonDeviate(rng, mean=total_sky*gain)
+                im.addNoise(galsim.DeviateNoise(pd))
+                if gain != 1.0: im /= gain
+                im -= total_sky
             # And add the read noise
             if read_noise != 0.:
                 im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise/gain))
@@ -580,7 +564,7 @@ def RegisterNoiseType(noise_type, builder, input_type=None):
                             [default: None]
     """
     valid_noise_types[noise_type] = builder
-    if input_type is not None:
+    if input_type is not None:  # pragma: no cover
         from .input import RegisterInputConnectedType
         if isinstance(input_type, list):
             for key in input_type:

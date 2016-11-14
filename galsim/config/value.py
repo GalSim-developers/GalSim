@@ -97,10 +97,6 @@ def ParseValue(config, key, base, value_type):
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
-        elif value_type is list:
-            if not isinstance(param,list):
-                raise AttributeError("parameter %s in config is not a list."%key)
-            val = param
         elif value_type is None:
             # If no value_type is given, just return whatever we have in the dict and hope
             # for the best.
@@ -317,26 +313,10 @@ def SetDefaultIndex(config, num):
             index['default'] = True
         elif ( type_name == 'Sequence'
                and 'nitems' not in index
-               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            # Normally, the value of default doesn't matter.  Its presence is sufficient
-            # to indicate True.  However, here we have three options.
-            # 1) first and last are both set by default
-            # 2) first (only) is set by default
-            # 3) last (only) is set by default
-            # So set default to the option we are using, so we update with the correct method.
-            if ( ('first' not in index and 'last' not in index)
-                 or ('default' in index and index['default'] == 1) ):
-                index['first'] = num-1
-                index['last'] = 0
-                index['default'] = 1
-            elif ( 'first' not in index
-                   or ('default' in index and index['default'] == 2) ):
-                index['first'] = num-1
-                index['default'] = 2
-            elif ( 'last' not in index
-                   or ('default' in index and index['default'] == 3) ):
-                index['last'] = 0
-                index['default'] = 3
+               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) )
+               and ('last' not in index or 'default' in index) ):
+            index['last'] = 0
+            index['default'] = True
         elif ( type_name == 'Random'
                and ('min' not in index or 'default' in index)
                and ('max' not in index or 'default' in index) ):
@@ -369,8 +349,6 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
 
     # Check items for which exacly 1 should be defined:
     for s in single:
-        if not s: # If no items in list, don't require one of them to be present.
-            break
         valid_keys += list(s)
         count = 0
         for (key, value_type) in s.items():
@@ -415,7 +393,7 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
         safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
-    if sys.version_info < (2,7):
+    if sys.version_info < (2,7):  # pragma: no cover
         kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.items()])
     return kwargs, safe
 
@@ -439,10 +417,7 @@ def _get_index(config, base, is_sequence=False):
             index_key = 'obj_num_in_file'
 
     if index_key == 'obj_num_in_file':
-        if 'obj_num' in base:
-            index = base['obj_num'] - base.get('start_obj_num',0)
-        else:
-            index = None
+        index = base.get('obj_num',0) - base.get('start_obj_num',0)
         rng = base.get('obj_num_rng', None)
     else:
         index = base.get(index_key,None)
@@ -829,7 +804,7 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):
+        if isinstance(input_type, list): # pragma: no cover
             for key in input_type:
                 RegisterInputConnectedType(key, type_name)
         else:

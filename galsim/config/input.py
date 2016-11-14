@@ -447,7 +447,7 @@ def _GenerateFromCatalog(config, base, value_type):
         val = input_cat.getFloat(index, col)
     elif value_type is int:
         val = input_cat.getInt(index, col)
-    elif value_type is bool:
+    else:  # value_type is bool
         val = galsim.config.value._GetBoolValue(input_cat.get(index, col))
 
     #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))

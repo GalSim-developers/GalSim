@@ -214,7 +214,7 @@ def RegisterWCSType(wcs_type, builder, input_type=None):
     valid_wcs_types[wcs_type] = builder
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):
+        if isinstance(input_type, list):  # pragma: no cover
             for key in input_type:
                 RegisterInputConnectedType(key, wcs_type)
         else:
