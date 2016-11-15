@@ -96,6 +96,8 @@ New Features
   to represent knots of star formation. (#819)
 - Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
   random wavelengths from an SED. (#822)
+- Added function assignPhotonAngles to add arrival directions (in the form of
+  dx/dz and dy/dz slopes) to an existing photon array. (#823)
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.
   (#827)
