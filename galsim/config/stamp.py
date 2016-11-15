@@ -237,10 +237,10 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     else:
         config['stamp_center'] = None
         config['stamp_offset'] = galsim.PositionD(0.,0.)
-        # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if
+        # Set the image_pos to the image center in case the wcs needs it.  Probably, if
         # there is no image_pos or world_pos defined, then it is unlikely a
         # non-trivial wcs will have been set.  So anything would actually be fine.
-        config['image_pos'] = galsim.PositionD(0.,0.)
+        config['image_pos'] = galsim.PositionD( (xsize+1.)/2, (ysize+1.)/2 )
         config['world_pos'] = world_pos
 
 # Ignore these when parsing the parameters for specific stamp types:
