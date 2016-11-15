@@ -194,6 +194,9 @@ BoundsI.__init__ = _new_BoundsI_init
 def BoundsI_numpyShape(self):
     """A simple utility function to get the numpy shape that corresponds to this Bounds object.
     """
-    return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    if self.isDefined():
+        return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    else:
+        return 0,0
 
 BoundsI.numpyShape = BoundsI_numpyShape
