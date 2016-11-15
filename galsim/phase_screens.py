@@ -69,7 +69,7 @@ class AtmosphericScreen(object):
     Published in Proceedings Volume 9148: Adaptive Optics Systems IV
     September 2014
     """
-    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
+    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.025,
                  r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None,
                  _orig_rng=None, _tab2d=None, _psi=None, _screen=None, _origin=None):
 
@@ -88,6 +88,7 @@ class AtmosphericScreen(object):
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
+        self.time = 0.0
 
         if rng is None:
             rng = galsim.BaseDeviate()
@@ -186,6 +187,7 @@ class AtmosphericScreen(object):
         if self.alpha != 1.0:
             self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
             self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
+        self.time += self.time_step
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -213,6 +215,7 @@ class AtmosphericScreen(object):
         # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
         # moving the screen with the wind.
         self.origin += (self.vx*self.time_step, self.vy*self.time_step)
+        self.time -= self.time_step
 
     def rewind_by(self, dt):
         """Rewind phase screen by specified amount of time.
@@ -282,6 +285,7 @@ class AtmosphericScreen(object):
         """Reset phase screen back to time=0."""
         self.rng = self.orig_rng.duplicate()
         self.origin = np.array([0.0, 0.0])
+        self.time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
         if self.alpha != 1.0 or not hasattr(self, 'tab2d'):

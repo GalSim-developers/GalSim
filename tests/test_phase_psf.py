@@ -115,6 +115,8 @@ def test_phase_screen_list():
     do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x.wavefront(aper).sum())
 
+    assert ar1.time == 0.0, "AtmosphericScreen initialized with non-zero time."
+
     # Check that can't rewind a screen with alpha != 1.0
     try:
         np.assert_raises(ar1.rewind())
@@ -138,6 +140,7 @@ def test_phase_screen_list():
                             r0_500=0.15,
                             rng=rng)
     atm.append(ar3)
+    assert atm.time == 0.0, "Wrong time for Atmosphere"
     do_pickle(atm)
     do_pickle(atm, func=lambda x:x.wavefront(aper).sum())
 
@@ -185,7 +188,9 @@ def test_phase_screen_list():
     atm5 = copy.copy(atm)
     assert atm[0] == atm5[0]
     assert atm[0] is atm5[0]
+    assert atm.time == 0.0, "Wrong time for Atmosphere"
     atm.advance()
+    assert atm.time == atm.time_step, "Wrong time for Atmosphere"
     assert atm[0] == atm5[0]
     assert atm[0] is atm5[0]
     # Deepcopy actually makes an indepedent object in memory.
@@ -193,6 +198,7 @@ def test_phase_screen_list():
     assert atm[0] == atm5[0]
     assert atm[0] is not atm5[0]
     atm.advance()
+    assert atm.time == 2*atm.time_step, "Wrong time for Atmosphere"
     assert atm[0] != atm5[0]
 
     # Constructor should accept both list and indiv layers as arguments.
@@ -207,11 +213,18 @@ def test_phase_screen_list():
 
     # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
     # relatively large pupil_plane_scale to speed up the unit test.
-    atm.advance_by(1.0)
+    t = atm.advance_by(1.0)
+    np.testing.assert_allclose(2*atm.time_step+t, atm.time, err_msg="Wrong time for Atmosphere")
     do_pickle(atm)
     atm.reset()
-    kwargs = dict(exptime=0.06, diam=1.0, lam=1000.0)
+    assert atm.time == 0.0, "Wrong time for Atmosphere"
+    kwargs = dict(exptime=0.05, diam=1.0, lam=1000.0)
     psf = atm.makePSF(**kwargs)
+    assert atm.time == kwargs['exptime'], "Wrong time for Atmsphere"
+    atm.rewind()
+    assert atm.time == kwargs['exptime']-atm.time_step, "Wrong time for Atmsphere"
+    atm.rewind_by(0.025)
+    assert atm.time == 0.0, "Wrong time for Atmsphere"
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
@@ -249,14 +262,19 @@ def test_frozen_flow():
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper)
     screen.advance_by(t)
+    assert screen.time == t, "Wrong time for AtmosphericScreen"
     wf1 = screen.wavefront(aper, theta=(45*galsim.degrees, 0*galsim.degrees))
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
 
     # We should be able to rewind too.
     screen.rewind()  # 0.01
+    np.testing.assert_allclose(screen.time, t-dt, err_msg="Wrong time for AtmosphericScreen")
     screen.rewind()  # 0.02
+    np.testing.assert_allclose(screen.time, t-2*dt, err_msg="Wrong time for AtmosphericScreen")
     screen.rewind_by(t-0.02)  # and the rest.
+    np.testing.assert_allclose(screen.time, 0.0, rtol=0, atol=1e-10,
+                               err_msg="Wrong time for AtmosphericScreen")
 
     wf2 = screen.wavefront(aper)
 

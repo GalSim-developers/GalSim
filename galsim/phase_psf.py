@@ -710,18 +710,26 @@ class PhaseScreenList(object):
 
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attributes are
-        # self.time_step and self.rng.
+        # self.time_step, self.time, and self.rng.
         # Could have made these each a @property instead of defining _update_attrs(), but then
         # failures would occur late rather than early, which makes debugging more difficult.
 
         # Each layer must have same value for time_step or no attr time_step.
-        time_step = set([l.time_step for l in self if hasattr(l, 'time_step')])
+        time_step = set([layer.time_step for layer in self if hasattr(layer, 'time_step')])
         if len(time_step) == 0:
             self.time_step = None
         elif len(time_step) == 1:
             self.time_step = time_step.pop()
         else:
             raise ValueError("Layer time steps must all be identical or None")
+
+        time = set([layer.time for layer in self if hasattr(layer, 'time')])
+        if len(time) == 0:
+            self.time = None
+        elif len(time) == 1:
+            self.time = time.pop()
+        else:
+            raise ValueError("Layer times must be identical or None")
 
         # If any of the wrapped PhaseScreens have an rng, then eval(repr(screen_list)) will run, but
         # fail to round-trip to the original object.  So we search for that here and set/delete a
@@ -739,6 +747,7 @@ class PhaseScreenList(object):
             except AttributeError:
                 # Time indep phase screen.
                 pass
+        self._update_attrs()
 
     def advance_by(self, dt):
         """Advance each phase screen in list by specified amount of time.
@@ -753,6 +762,7 @@ class PhaseScreenList(object):
             except AttributeError:
                 # Time indep phase screen
                 pass
+        self._update_attrs()
         return out
 
     def rewind(self):
@@ -763,6 +773,7 @@ class PhaseScreenList(object):
             except AttributeError:
                 # Time indep phase screen.
                 pass
+        self._update_attrs()
 
     def rewind_by(self, dt):
         """Rewind each phase screen in list by specified amount of time.
@@ -781,6 +792,7 @@ class PhaseScreenList(object):
             except AttributeError:
                 # Time indep phase screen
                 pass
+        self._update_attrs()
 
     def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
         """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
