@@ -45,6 +45,7 @@ class WeightBuilder(ExtraOutputBuilder):
                         base['output']['weight'], 'include_obj_var', config, bool)[0]
             else:
                 include_obj_var = False
+            base['current_noise_image'] = base['current_stamp']
             galsim.config.AddNoiseVariance(base,weight_im,include_obj_var,logger)
             self.scratch[obj_num] = weight_im
 
@@ -69,6 +70,7 @@ class WeightBuilder(ExtraOutputBuilder):
                         base['output']['weight'], 'include_obj_var', config, bool)[0]
             else:
                 include_obj_var = False
+            base['current_noise_image'] = base['current_image']
             if isinstance(image, galsim.Image):
                 galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
             else:

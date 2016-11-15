@@ -174,7 +174,7 @@ def GetSky(config, base):
             if config.get('_current_sky_tag',None) == tag:
                 return config['_current_sky']
             else:
-                bounds = base['current_image'].bounds
+                bounds = base['current_noise_image'].bounds
                 sky = galsim.Image(bounds, wcs=wcs)
                 wcs.makeSkyImage(sky, sky_level)
                 config['_current_sky_tag'] = tag
@@ -360,7 +360,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
         if include_obj_var:
             # The current image at this point should be the noise-free, sky-free image,
             # which is the object variance in each pixel.
-            im += base['current_image']
+            im += base['current_noise_image']
 
             # Note: For the phot case, we don't actually have an exact value for the variance in
             # each pixel, but the drawn image before adding the Poisson noise is our best guess for
@@ -489,9 +489,9 @@ class CCDNoiseBuilder(NoiseBuilder):
             # The current image at this point should be the noise-free, sky-free image,
             # which is the object variance in each pixel.
             if gain != 1.0:
-                im += base['current_image']/gain
+                im += base['current_noise_image']/gain
             else:
-                im += base['current_image']
+                im += base['current_noise_image']
 
         # Now add on the regular CCDNoise from the sky and read noise.
         im += self.getNoiseVariance(config,base)
@@ -503,15 +503,11 @@ class CCDNoiseBuilder(NoiseBuilder):
 
 class COSMOSNoiseBuilder(NoiseBuilder):
 
-    def __init__(self):
-        self.current_cn_tag = None
-        self.current_cn = None
-
     def getCOSMOSNoise(self, config, base, rng=None):
         # Save the constructed CorrelatedNoise object, since we might need it again.
         tag = (id(base), base['file_num'], base['image_num'])
-        if self.current_cn_tag == tag:
-            return self.current_cn
+        if base.get('_current_cn_tag',None) == tag:
+            return base['_current_cn']
         else:
             opt = { 'file_name' : str, 'cosmos_scale' : float, 'variance' : float }
 
@@ -520,8 +516,8 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             if rng is None:
                 rng = base.get('rng',None)
             cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
-            self.current_cn = cn
-            self.current_cn_tag = tag
+            base['_current_cn'] = cn
+            base['_current_cn_tag'] = tag
             return cn
 
     def addNoise(self, config, base, im, rng, current_var, draw_method, logger):

@@ -205,6 +205,7 @@ class TiledImageBuilder(ImageBuilder):
         # If didn't do noise above in the stamps, then need to do it here.
         if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
+            base['current_noise_image'] = base['current_image']
             galsim.config.AddSky(config,image)
             galsim.config.AddNoise(base,image,current_var,logger)
 

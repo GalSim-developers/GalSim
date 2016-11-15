@@ -171,6 +171,7 @@ class ScatteredImageBuilder(ImageBuilder):
         @param current_var  The current noise variance in each postage stamps.
         @param logger       If given, a logger object to log progress.
         """
+        base['current_noise_image'] = base['current_image']
         galsim.config.AddSky(base,image)
         galsim.config.AddNoise(base,image,current_var,logger)
 

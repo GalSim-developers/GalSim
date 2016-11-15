@@ -868,6 +868,7 @@ class StampBuilder(object):
         @returns the new values of image, current_var
         """
         galsim.config.AddSky(base,image)
+        base['current_noise_image'] = base['current_stamp']
         current_var = galsim.config.AddNoise(base,image,current_var,logger)
         return image, current_var
 
