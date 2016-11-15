@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import logging
+import math
 
 from galsim_test_helpers import *
 
@@ -270,7 +271,219 @@ def test_cosmosnoise():
         image3.array, image4.array,
         err_msg='Config COSMOS noise with whitening does not reproduce manually drawn image')
 
+@timer
+def test_whiten():
+    """Test the options in config to whiten images
+    """
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'pixel_scale' : 0.05,
+            'size' : 32,
+        },
+        'stamp' : {
+            'type' : 'Basic',
+            'size' : 32,
+        },
+        'gal' : {
+            'type' : 'RealGalaxy',
+            'index' : 79,
+            'flux' : 100,
+        },
+        'psf' : {  # This is really slow if we don't convolve by a PSF.
+            'type' : 'Gaussian',
+            'sigma' : 0.05
+        },
+        'input' : {
+            'real_catalog' : {
+                'dir' : real_gal_dir ,
+                'file_name' : real_gal_cat
+            }
+        }
+    }
+
+    # First build by hand (no whitening yet)
+    rng = galsim.BaseDeviate(1234 + 1)
+    rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
+    gal = galsim.RealGalaxy(rgc, index=79, flux=100, rng=rng)
+    psf = galsim.Gaussian(sigma=0.05)
+    final = galsim.Convolve(gal,psf)
+    im1a = final.drawImage(nx=32, ny=32, scale=0.05)
+
+    # Compare to what config builds
+    galsim.config.ProcessInput(config)
+    im1b, cv1b = galsim.config.BuildStamp(config, do_noise=False)
+    np.testing.assert_equal(cv1b, 0.)
+    np.testing.assert_equal(im1b.array, im1a.array)
+
+    # Now add whitening, but no noise yet.
+    cv1a = final.noise.whitenImage(im1a)
+    print('From whiten, current_var = ',cv1a)
+    galsim.config.RemoveCurrent(config)
+    config['image']['noise'] =  { 'whiten' : True, }
+    im1c, cv1c = galsim.config.BuildStamp(config, do_noise=False)
+    print('From BuildStamp, current_var = ',cv1c)
+    np.testing.assert_equal(cv1c, cv1a)
+    np.testing.assert_equal(im1c.array, im1a.array)
+    rng1 = rng.duplicate()  # Save current state of rng
+
+    # 1. Gaussian noise
+    #####
+    config['image']['noise'] =  {
+        'type' : 'Gaussian',
+        'variance' : 50,
+        'whiten' : True,
+    }
+    galsim.config.RemoveCurrent(config)
+    im2a = im1a.copy()
+    im2a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50-cv1a), rng=rng))
+    im2b, cv2b = galsim.config.BuildStamp(config)
+    np.testing.assert_almost_equal(cv2b, 50)
+    np.testing.assert_almost_equal(im2b.array, im2a.array, decimal=5)
+
+    # If whitening already added too much noise, raise an exception
+    config['image']['noise']['variance'] = 1.e-5
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.config.BuildStamp,config)
+    except ImportError:
+        pass
+
+    # 2. Poisson noise
+    #####
+    config['image']['noise'] =  {
+        'type' : 'Poisson',
+        'sky_level_pixel' : 50,
+        'whiten' : True,
+    }
+    galsim.config.RemoveCurrent(config)
+    im3a = im1a.copy()
+    sky = 50 - cv1a
+    rng.reset(rng1.duplicate())
+    im3a.addNoise(galsim.PoissonNoise(sky_level=sky, rng=rng))
+    im3b, cv3b = galsim.config.BuildStamp(config)
+    np.testing.assert_almost_equal(cv3b, 50, decimal=5)
+    np.testing.assert_almost_equal(im3b.array, im3a.array, decimal=5)
+
+    # It's more complicated if the sky is quoted per arcsec and the wcs is not uniform.
+    config2 = galsim.config.CopyConfig(config)
+    galsim.config.RemoveCurrent(config2)
+    config2['image']['sky_level'] = 100
+    config2['image']['wcs'] =  {
+        'type' : 'UVFunction',
+        'ufunc' : '0.05*x + 0.001*x**2',
+        'vfunc' : '0.05*y + 0.001*y**2',
+    }
+    del config2['image']['pixel_scale']
+    del config2['wcs']
+    config2['image']['noise']['symmetrize'] = 4 # Also switch to symmetrize, just to mix it up.
+    del config2['image']['noise']['whiten']
+    rng.reset(1234+1) # Start fresh, since redoing the whitening/symmetrizing
+    wcs = galsim.UVFunction(ufunc='0.05*x + 0.001*x**2', vfunc='0.05*y + 0.001*y**2')
+    im3c = galsim.Image(32,32, wcs=wcs)
+    im3c = final.drawImage(im3c)
+    cv3c = final.noise.symmetrizeImage(im3c,4)
+    sky = galsim.Image(im3c.bounds, wcs=wcs)
+    wcs.makeSkyImage(sky, 100)
+    mean_sky = np.mean(sky.array)
+    im3c += sky
+    extra_sky = 50 - cv3c
+    im3c.addNoise(galsim.PoissonNoise(sky_level=extra_sky, rng=rng))
+    im3d, cv3d = galsim.config.BuildStamp(config2)
+    np.testing.assert_almost_equal(cv3d, 50 + mean_sky, decimal=5)
+    np.testing.assert_almost_equal(im3d.array, im3c.array, decimal=5)
+
+    config['image']['noise']['sky_level_pixel'] = 1.e-5
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.config.BuildStamp,config)
+    except ImportError:
+        pass
+
+    # 3. CCDNoise
+    #####
+    config['image']['noise'] =  {
+        'type' : 'CCD',
+        'sky_level_pixel' : 25,
+        'read_noise' : 5,
+        'gain' : 1,
+        'whiten' : True,
+    }
+    galsim.config.RemoveCurrent(config)
+    im4a = im1a.copy()
+    rn = math.sqrt(25-cv1a)
+    rng.reset(rng1.duplicate())
+    im4a.addNoise(galsim.CCDNoise(sky_level=25, read_noise=rn, gain=1, rng=rng))
+    im4b, cv4b = galsim.config.BuildStamp(config)
+    np.testing.assert_almost_equal(cv4b, 50, decimal=5)
+    np.testing.assert_almost_equal(im4b.array, im4a.array, decimal=5)
+
+    # Repeat with gain != 1
+    config['image']['noise']['gain'] = 3.7
+    galsim.config.RemoveCurrent(config)
+    im5a = im1a.copy()
+    rn = math.sqrt(25-cv1a * 3.7**2)
+    rng.reset(rng1.duplicate())
+    im5a.addNoise(galsim.CCDNoise(sky_level=25, read_noise=rn, gain=3.7, rng=rng))
+    im5b, cv5b = galsim.config.BuildStamp(config)
+    np.testing.assert_almost_equal(cv5b, 50, decimal=5)
+    np.testing.assert_almost_equal(im5b.array, im5a.array, decimal=5)
+
+    # And again with a non-trivial sky image
+    galsim.config.RemoveCurrent(config2)
+    config2['image']['noise'] = config['image']['noise']
+    config2['image']['noise']['symmetrize'] = 4
+    del config2['image']['noise']['whiten']
+    rng.reset(1234+1)
+    im5c = galsim.Image(32,32, wcs=wcs)
+    im5c = final.drawImage(im5c)
+    cv5c = final.noise.symmetrizeImage(im5c, 4)
+    sky = galsim.Image(im5c.bounds, wcs=wcs)
+    wcs.makeSkyImage(sky, 100)
+    mean_sky = np.mean(sky.array)
+    im5c += sky
+    rn = math.sqrt(25-cv5c * 3.7**2)
+    im5c.addNoise(galsim.CCDNoise(sky_level=25, read_noise=rn, gain=3.7, rng=rng))
+    im5d, cv5d = galsim.config.BuildStamp(config2)
+    np.testing.assert_almost_equal(cv5d, 50 + mean_sky, decimal=5)
+    np.testing.assert_almost_equal(im5d.array, im5c.array, decimal=5)
+
+    config['image']['noise']['sky_level_pixel'] = 1.e-5
+    config['image']['noise']['read_noise'] = 0
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.config.BuildStamp,config)
+    except ImportError:
+        pass
+
+    # 4. COSMOSNoise
+    #####
+    file_name = os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
+    config['image']['noise'] =  {
+        'type' : 'COSMOS',
+        'file_name' : file_name,
+        'variance' : 50,
+        'whiten' : True,
+    }
+    galsim.config.RemoveCurrent(config)
+    im6a = im1a.copy()
+    rng.reset(rng1.duplicate())
+    noise = galsim.getCOSMOSNoise(file_name=file_name, variance=50, rng=rng)
+    noise -= galsim.UncorrelatedNoise(cv1a, rng=rng, wcs=noise.wcs)
+    im6a.addNoise(noise)
+    im6b, cv6b = galsim.config.BuildStamp(config)
+    np.testing.assert_almost_equal(cv6b, 50, decimal=5)
+    np.testing.assert_almost_equal(im6b.array, im6a.array, decimal=5)
+
+    config['image']['noise']['variance'] = 1.e-5
+    del config['_current_cn_tag']
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.config.BuildStamp,config)
+    except ImportError:
+        pass
+
 
 if __name__ == "__main__":
     test_ccdnoise()
     test_cosmosnoise()
+    test_whiten()

@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy as np
 
 # This file handles the functionality for adding noise and the sky to an image after
 # drawing the objects.
@@ -253,6 +254,7 @@ class GaussianNoiseBuilder(NoiseBuilder):
 
         # Read the noise variance
         var = self.getNoiseVariance(config, base)
+        ret = var  # save for the return value
 
         # If we already have some variance in the image (from whitening), then we subtract this much
         # from sigma**2.
@@ -274,7 +276,7 @@ class GaussianNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Added Gaussian noise with var = %f',
                          base.get('image_num',0),base.get('obj_num',0),var)
 
-        return var
+        return ret
 
     def getNoiseVariance(self, config, base):
 
@@ -301,6 +303,8 @@ class PoissonNoiseBuilder(NoiseBuilder):
         sky = GetSky(base['image'], base)
         extra_sky = GetSky(config, base)
         var = sky + extra_sky # for the return value
+        if isinstance(var, galsim.Image):
+            var = np.mean(var.array)
         # (This could be zero, in which case we only add poisson noise for the object photons)
 
         # If we already have some variance in the image (from whitening), then we subtract this
@@ -334,11 +338,10 @@ class PoissonNoiseBuilder(NoiseBuilder):
                 im += noise_im
             else:
                 total_sky = sky + extra_sky
-                if total_sky > 0.:
-                    im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
-                    # This deviate adds a noisy version of the sky, so need to subtract the mean
-                    # back off.
-                    im -= total_sky
+                im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
+                # This deviate adds a noisy version of the sky, so need to subtract the mean
+                # back off.
+                im -= total_sky
         else:
             im += extra_sky
             # Do the normal PoissonNoise calculation.
@@ -402,6 +405,8 @@ class CCDNoiseBuilder(NoiseBuilder):
             raise AttributeError(
                 "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
         var = sky + extra_sky + read_noise_var  # for the return value
+        if isinstance(var, galsim.Image):
+            var = np.mean(var.array)
 
         # If we already have some variance in the image (from whitening), then we try to subtract
         # t from the read noise if possible.  If now, we subtract the rest off of the sky level.
@@ -534,7 +539,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             if var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than the requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=im.wcs)
+            cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=cn.wcs)
 
         # Add the noise to the image
         im.addNoise(cn)
