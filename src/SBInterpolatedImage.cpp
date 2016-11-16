@@ -793,12 +793,11 @@ namespace galsim {
         const BaseImage<double>& data,
         double stepk, double maxk,
         boost::shared_ptr<Interpolant> kInterp,
-        double xcen, double ycen, bool cenIsSet,
         const GSParamsPtr& gsparams) :
         SBProfile(new SBInterpolatedKImageImpl(
             data, stepk, maxk,
             boost::shared_ptr<Interpolant2d>(new InterpolantXY(kInterp)),
-            xcen, ycen, cenIsSet, gsparams)
+            gsparams)
         ) {}
 
     SBInterpolatedKImage::SBInterpolatedKImage(const SBInterpolatedKImage& rhs)
@@ -818,12 +817,6 @@ namespace galsim {
         return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getKData();
     }
 
-    bool SBInterpolatedKImage::cenIsSet() const
-    {
-        assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).cenIsSet();
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedKImageImpl methods
 
@@ -833,7 +826,7 @@ namespace galsim {
         const BaseImage<T>& kimage, double stepk,
         boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _kInterp(kInterp), _stepk(stepk), _maxk(0.), _cenIsSet(false) //fill in maxk below
+        _kInterp(kInterp), _stepk(stepk), _maxk(0.) //fill in maxk below
     {
         // Note that _stepk indicates the maximum pitch for drawImage() to use when rendering an
         // image, in units of the sampling pitch of the input images.  _stepk must be greater than
@@ -872,6 +865,37 @@ namespace galsim {
         }
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
+        setCentroid();
+    }
+
+    void SBInterpolatedKImage::SBInterpolatedKImageImpl::setCentroid() const {
+        /*  Centroid:
+            int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
+                          = int FT(x) FT(f) dk
+            FT(x) is divergent, but really we want the first integral above to be
+            int(x f(x) dx, -L/2..L/2) since f(x) is formally periodic once it's put on a
+            grid.  So in the last integral, we really want FT(x if |x|<L/2 else 0),
+            which works out to
+            2 i ( kx L cos(kx L/2) - 2 sin(kx L/2)) sin (ky L/2) / kx^2 / ky.
+            Noting that kx L/2 = ikx pi, the cosines are -1^ikx and the sines are 0.
+            Of course, lim kx->0 sin(kx)/kx is 1 though, so that term survives.  Algebra
+            eventually reduces the above expression to what's in the code below.
+         */
+        double xsum(0.0), ysum(0.0);
+        int iky = -_Ninitial/2;
+        double sign = (iky % 2 == 0) ? 1.0 : -1.0;
+        for (; iky < _Ninitial/2; iky++, sign = -sign) {
+            if (iky == 0) continue;
+            ysum += sign / iky * _ktab->kval(0, iky).imag();
+        }
+        int ikx = -_Ninitial/2;
+        sign = (ikx % 2 == 0) ? 1.0 : -1.0;
+        for (; ikx < _Ninitial/2; ikx++, sign = -sign) {
+            if (ikx == 0) continue;
+            xsum += sign / ikx * _ktab->kval(ikx, 0).imag();
+        }
+        _xcentroid = xsum/_flux;
+        _ycentroid = ysum/_flux;
     }
 
     // "Serialization" constructor.  Only used when unpickling an InterpolatedKImage.
@@ -879,11 +903,9 @@ namespace galsim {
     SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<double>& data, double stepk, double maxk,
         boost::shared_ptr<Interpolant2d> kInterp,
-        double xcen, double ycen, bool cenIsSet,
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _xcentroid(xcen), _ycentroid(ycen),
-        _kInterp(kInterp), _stepk(stepk), _maxk(maxk), _cenIsSet(cenIsSet)
+        _kInterp(kInterp), _stepk(stepk), _maxk(maxk)
     {
         dbg << "Using alternative constructor" << std::endl;
         _Nk = 2*(data.getYMax() - data.getYMin());
@@ -897,6 +919,7 @@ namespace galsim {
         for(int i=0; i<2*_Nk*(_Nk/2+1); i++)
             kptr[i] = ptr[i];
         _flux = kValue(Position<double>(0.,0.)).real();
+        setCentroid();
     }
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
@@ -929,35 +952,6 @@ namespace galsim {
     {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
-        if (!_cenIsSet) {
-            /*  int x f(x) dx = (x conv f)|x=0 = int FT(x conv f)(k) dk
-                              = int FT(x) FT(f) dk
-                FT(x) is divergent, but really we want the first integral above to be
-                int(x f(x) dx, -L/2..L/2) since f(x) is formally periodic once it's put on a
-                grid.  So in the last integral, we really want FT(x if |x|<L/2 else 0),
-                which works out to
-                2 i ( kx L cos(kx L/2) - 2 sin(kx L/2)) sin (ky L/2) / kx^2 / ky.
-                Noting that kx L/2 = ikx pi, the cosines are -1^ikx and the sines are 0.
-                Of course, lim kx->0 sin(kx)/kx is 1 though, so that term survives.  Algebra
-                eventually reduces the above expression to what's in the code below.
-             */
-            double xsum(0.0), ysum(0.0);
-            int iky = -_Ninitial/2;
-            double sign = (iky % 2 == 0) ? 1.0 : -1.0;
-            for (; iky < _Ninitial/2; iky++, sign = -sign) {
-                if (iky == 0) continue;
-                ysum += sign / iky * _ktab->kval(0, iky).imag();
-            }
-            int ikx = -_Ninitial/2;
-            sign = (ikx % 2 == 0) ? 1.0 : -1.0;
-            for (; ikx < _Ninitial/2; ikx++, sign = -sign) {
-                if (ikx == 0) continue;
-                xsum += sign / ikx * _ktab->kval(ikx, 0).imag();
-            }
-            _xcentroid = xsum/flux;
-            _ycentroid = ysum/flux;
-            _cenIsSet = true;
-        }
         return Position<double>(_xcentroid, _ycentroid);
     }
 
@@ -998,10 +992,6 @@ namespace galsim {
         oss << stepK() << ", " << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
         oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
-        if (_cenIsSet)
-            oss << _xcentroid << ", " << _ycentroid << ", True, ";
-        else
-            oss << 0.0 << ", " << 0.0 << ", False, ";
         oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }

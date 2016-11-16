@@ -163,7 +163,6 @@ namespace galsim {
             const BaseImage<double>& data,
             double stepk, double maxk,
             boost::shared_ptr<Interpolant> kInterp,
-            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
@@ -175,7 +174,6 @@ namespace galsim {
         boost::shared_ptr<Interpolant> getKInterp() const;
 
         ConstImageView<double> getKData() const;
-        bool cenIsSet() const;
 
     protected:
 

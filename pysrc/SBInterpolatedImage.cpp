@@ -78,19 +78,14 @@ namespace galsim {
                 .def(bp::init<const BaseImage<double> &,
                               double, double,
                               boost::shared_ptr<Interpolant>,
-                              double, double, bool,
                               boost::shared_ptr<GSParams> >(
                                   (bp::arg("data"),
                                    bp::arg("stepk"),
                                    bp::arg("maxk"),
                                    bp::arg("kInterp"),
-                                   bp::arg("xcen"),
-                                   bp::arg("ycen"),
-                                   bp::arg("cenIsSet"),
                                    bp::arg("gsparams")=bp::object())
                      ))
                 .def("getKInterp", &SBInterpolatedKImage::getKInterp)
-                .def("_cenIsSet", &SBInterpolatedKImage::cenIsSet)
                 .def("_getKData", &SBInterpolatedKImage::getKData)
                 .def(bp::init<const BaseImage<std::complex<double> > &,
                               double,

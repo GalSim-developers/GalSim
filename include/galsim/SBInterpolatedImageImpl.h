@@ -185,7 +185,6 @@ namespace galsim {
             const BaseImage<double>& data,
             double stepk, double maxk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         ~SBInterpolatedKImageImpl();
@@ -209,6 +208,7 @@ namespace galsim {
         // a table.  We do not currently implement xValue for real-space interpolation.
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
+        void setCentroid() const;
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
         double maxSB() const;
@@ -220,7 +220,6 @@ namespace galsim {
         // Additional subclass methods
 
         ConstImageView<double> getKData() const;
-        bool cenIsSet() const {return _cenIsSet;}
 
     protected:
 
@@ -234,8 +233,6 @@ namespace galsim {
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;
-
-        mutable bool _cenIsSet;
 
         std::string serialize() const;
 
