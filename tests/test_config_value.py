@@ -109,6 +109,12 @@ def test_float_value():
     val2 = galsim.config.ParseValue(config,'val2',config, float)[0]
     np.testing.assert_almost_equal(val2, 400)
 
+    # You can also give None as the value type, which just returns whatever is in the dict.
+    val1b  = galsim.config.ParseValue(config,'val1',config, None)[0]
+    val2b  = galsim.config.ParseValue(config,'val2',config, None)[0]
+    np.testing.assert_almost_equal(val1b, 9.9)
+    np.testing.assert_almost_equal(val2b, 400)
+
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, float)[0]
     np.testing.assert_almost_equal(str1, 8.73)
@@ -334,10 +340,12 @@ def test_int_value():
         'list2' : { 'type' : 'List',
                     'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
+        'list3' : [ 1, 2, 3, 4 ],
+        'list4' : [],
         'dict1' : { 'type' : 'Dict', 'key' : 'i' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'i' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' },
-        'sum1' : { 'type' : 'Sum', 'items' : [ 72.3, '2', { 'type' : 'Dict', 'key' : 'i' } ] }
+        'sum1' : { 'type' : 'Sum', 'items' : [ 72.3, '2', { 'type' : 'Dict', 'key' : 'i' } ] },
     }
 
     test_yaml = True
@@ -477,6 +485,18 @@ def test_int_value():
 
     np.testing.assert_array_equal(list1, [ 73, 8, 3, 73, 8 ])
     np.testing.assert_array_equal(list2, [ 8, 0, 3, 8, 8 ])
+
+    # Test a direct list in the config file.
+    list3  = galsim.config.ParseValue(config,'list3',config, list)[0]
+    list4  = galsim.config.ParseValue(config,'list4',config, list)[0]
+    np.testing.assert_array_equal(list3, [ 1, 2, 3, 4 ])
+    np.testing.assert_array_equal(list4, [])
+
+    # You can also give None as the value type, which just returns whatever is in the dict.
+    list3b  = galsim.config.ParseValue(config,'list3',config, None)[0]
+    list4b  = galsim.config.ParseValue(config,'list4',config, None)[0]
+    np.testing.assert_array_equal(list3b, [ 1, 2, 3, 4 ])
+    np.testing.assert_array_equal(list4b, [])
 
     # Test values read from a Dict
     dict = []
@@ -808,6 +828,11 @@ def test_angle_value():
 
     val2 = galsim.config.ParseValue(config,'val2',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(val2.rad(), -41 * math.pi/180)
+
+    val1b = galsim.config.ParseValue(config,'val1',config, None)[0]
+    val2b = galsim.config.ParseValue(config,'val2',config, None)[0]
+    np.testing.assert_almost_equal(val1b.rad(), 1.9)
+    np.testing.assert_almost_equal(val2b.rad(), -41 * math.pi/180)
 
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, galsim.Angle)[0]
