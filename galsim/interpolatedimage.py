@@ -715,11 +715,14 @@ class InterpolatedKImage(GSObject):
             if not kimage.iscomplex:
                 raise ValueError("Supplied kimage is not an ImageC")
 
+        self._kimage = kimage = kimage.copy()
+
         # Need to check kimage for wcs?
-        if hasattr(kimage, 'wcs'):
+        if kimage.wcs is not None:
             wcs = kimage.wcs
         else:
             wcs = galsim.PixelScale(1.0)
+            kimage.wcs = wcs
 
         # Check for Hermitian symmetry properties of kimage
         shape = kimage.array.shape
@@ -745,7 +748,6 @@ class InterpolatedKImage(GSObject):
                     "overriding with wcs.minLinearScale.")
                 stepk = wcs.minLinearScale()
 
-        self._kimage = kimage
         self._stepk = stepk
         self._gsparams = gsparams
 
@@ -768,7 +770,8 @@ class InterpolatedKImage(GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
-                self._kimage == other._kimage and
+                np.array_equal(self._kimage.array, other._kimage.array) and
+                self._kimage.wcs.local() == other._kimage.wcs.local() and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
                 self._gsparams == other._gsparams)

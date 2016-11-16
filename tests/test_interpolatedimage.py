@@ -1011,6 +1011,12 @@ def test_kroundtrip():
     np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
                                          "InterpolatedKImage image drawn incorrectly.")
 
+    # Check that we can construct an interpolatedKImage without a wcs.
+    kim_c = a.drawKImage(scale=1)
+    c = galsim.InterpolatedKImage(kim_c)
+    d = galsim.InterpolatedKImage(galsim.ImageC(kim_c.array))
+    assert c == d, "Failed to construct InterpolatedKImage without wcs."
+
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
         shape = kim_a.array.shape
