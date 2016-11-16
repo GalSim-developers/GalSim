@@ -401,9 +401,6 @@ class CCDNoiseBuilder(NoiseBuilder):
         # Get how much extra sky to assume from the image.noise attribute.
         sky = GetSky(base['image'], base)
         extra_sky = GetSky(config, base)
-        if not sky and not extra_sky:
-            raise AttributeError(
-                "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
         var = sky + extra_sky + read_noise_var  # for the return value
         if isinstance(var, galsim.Image):
             var = np.mean(var.array)
