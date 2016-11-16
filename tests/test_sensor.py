@@ -128,7 +128,8 @@ def test_silicon():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
     print('check r1 > r3 due to brighter-fatter')
     assert r1 > r3
-
+    print('Finished test_silicon')
+    sys.stdout.flush()
     """
     if __name__ != "__main__":
 
@@ -175,13 +176,13 @@ def test_bf_slopes():
         rng2 = galsim.BaseDeviate(5678)
         rng3 = galsim.BaseDeviate(5678)
         # silicon1 has diffusion turned off, silicon2 has it turned on.
-        # These are older simulations, but they will run faster (takes about 1 minute)
+        # These are older simulations, but they will run faster (takes about 10 seconds)
         silicon1 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng1, DiffMult = 0.0)
         silicon2 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng2, DiffMult = 1.0)            
 
 
         # silicon1 has diffusion turned off, silicon2 has it turned on.
-        # These are newer simulations, but use 32 vertices per edge, so will take about 4 minutes
+        # These are newer simulations, but use 32 vertices per edge, so will take longer (about 30 seconds).
         #silicon1 = galsim.SiliconSensor('../devel/poisson/H7_BF8_NV32/bf.cfg','../devel/poisson/H7_BF8_NV32/BF_256_9x9_80_Vertices', 80000, rng=rng1, DiffMult = 0.0)
         #silicon2 = galsim.SiliconSensor('../devel/poisson/H7_BF8_NV32/bf.cfg','../devel/poisson/H7_BF8_NV32/BF_256_9x9_80_Vertices', 80000, rng=rng2, DiffMult = 1.0)            
 
@@ -234,6 +235,9 @@ def test_bf_slopes():
 
 @timer
 def test_sensor_wavelengths_and_angles():
+
+    print('Starting test_wavelengths_and_angles')
+    sys.stdout.flush()
 
     bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
     sedpath = os.path.abspath(os.path.join(path, "../share/"))
@@ -378,6 +382,6 @@ def test_silicon_fft():
 if __name__ == "__main__":
     test_silicon()
     test_sensor_wavelengths_and_angles()
-else:
     test_silicon_fft()
+else:
     test_bf_slopes()

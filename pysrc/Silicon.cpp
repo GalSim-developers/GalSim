@@ -38,7 +38,7 @@ namespace {
         static void wrapTemplates(W & wrapper) {
             wrapper
                 .def("accumulate",
-                     (double (Silicon::*)(const PhotonArray&, UniformDeviate, ImageView<U>) const)&Silicon::accumulate,
+                     (double (Silicon::*)(const PhotonArray&, UniformDeviate, ImageView<U>))&Silicon::accumulate,		     
                      (bp::args("photons", "rng", "image")),
                      "Accumulate photons in image")
                 ;
@@ -46,7 +46,7 @@ namespace {
 
 
         static Silicon* MakeSilicon(
-            int NumVertices, int NumElect, int Nx, int Ny, int QDist, double DiffStep,
+				    int NumVertices, int NumElect, int Nx, int Ny, int QDist, int Nrecalc, double DiffStep,
             double PixelSize, const bp::object& array)
         {
             double* data = 0;
@@ -64,7 +64,7 @@ namespace {
             int Nv = 4 * NumVertices + 4;
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
-            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist, DiffStep, PixelSize, data);
+            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist, Nrecalc, DiffStep, PixelSize, data);
         }
 
         static void wrap()
@@ -73,7 +73,7 @@ namespace {
             pySilicon
                 .def("__init__", bp::make_constructor(
                         &MakeSilicon, bp::default_call_policies(),
-                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist", "DiffStep",
+                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist", "Nrecalc", "DiffStep",
                                   "PixelSize", "vertex_data"))))
                 .enable_pickling()
                 ;
@@ -93,15 +93,3 @@ void pyExportSilicon()
 
 } // namespace galsim
 
-
-/*
-
-Was:
-
-Silicon::Silicon (std::string inname)
-
-Is:
-
-  Silicon::Silicon (int NumVertices, int NumElec, int Nx, int Ny, int QDist, double DiffStep, double** vertex_data)
-
-*/

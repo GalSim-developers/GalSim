@@ -980,7 +980,7 @@ class GSObject(object):
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
                   poisson_flux=None, surface_ops=(), sensor=None, setup_only=False,
-                  dx=None, wmult=1.):
+                  dx=None, wmult=1., maxN=100000):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1243,6 +1243,10 @@ class GSObject(object):
                             may be cases where the user will want the same functionality.
                             [default: False]
 
+       @param maxN          Sets the maximum number of photons that can be added to an image
+                            with a single call to drawImage
+                            
+
         @returns the drawn Image.
         """
         # Check for obsolete parameters
@@ -1352,7 +1356,7 @@ class GSObject(object):
 
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
-                                          surface_ops, sensor, gain)
+                                          surface_ops, sensor, gain, maxN)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1633,7 +1637,7 @@ class GSObject(object):
 
 
     def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
-                 surface_ops=(), sensor=None, gain=1.0):
+                 surface_ops=(), sensor=None, gain=1.0, maxN=100000):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1691,6 +1695,9 @@ class GSObject(object):
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
 
+        @param maxN         If provided, sets the maximum number of photons that can be added to an image
+                            with a single call to drawImage
+
         @returns The total flux of photons that landed inside the image bounds.
         """
         # Make sure the type of n_photons is correct and has a valid value:
@@ -1736,7 +1743,7 @@ class GSObject(object):
         added_flux = 0.
 
         # Don't do more than this at a time to keep the  memory usage reasonable.
-        maxN = 100000
+        #maxN = 100000
 
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot

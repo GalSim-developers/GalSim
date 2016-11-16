@@ -69,12 +69,13 @@ class SiliconSensor(Sensor):
                             was done, it will depend on different parameters in the config_file, so needs to be entered manually. Note that you can also use this parameter to adjust the strength of the brighter-fatter effect.  For example, if vertex_file was generated with 80,000 electrons in the reference pixel, and you enter 40,000 in NumElec, you will basically be doubling the strength of the brighter-fatter effect.
     @param DiffMult         A parameter used to adjust the amount of diffusion.  Default=1.0 which is the theoretical amount of diffusion.  A value of 0.0 turns off diffusion.
     @param QDist            A parameter which sets how far away pixels are distorted due to charge in a given pixel.  Default=3.  A large value will increase accuracy but take more time. If it is increased larger than 4, the size of the Poisson simulation must be increased to match.
+    @param Nrecalc          Sets how often the distorted pixel shapes are recalculated.  Default = every 10,000 photons.
     
     @param rng              A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
     """
-    def __init__(self, config_file, vertex_file, NumElec, rng, DiffMult = 1.0, QDist = 3):
+    def __init__(self, config_file, vertex_file, NumElec, rng, DiffMult = 1.0, QDist = 3, Nrecalc = 10000):
         if rng is None:
             self.rng = galsim.UniformDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
@@ -95,7 +96,7 @@ class SiliconSensor(Sensor):
             except IOError:
                 print "Vertex file %s not found"%vertex_file
             if vertex_data.size == 5 * Nx * Ny * (4 * NumVertices + 4):
-                self._silicon = galsim._galsim.Silicon(NumVertices, NumElec, Nx, Ny, QDist, DiffStep, PixelSize, vertex_data)
+                self._silicon = galsim._galsim.Silicon(NumVertices, NumElec, Nx, Ny, QDist, Nrecalc, DiffStep, PixelSize, vertex_data)
             else:
                 raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
         else:

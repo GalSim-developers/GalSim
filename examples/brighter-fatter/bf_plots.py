@@ -83,6 +83,7 @@ def main(argv):
     sensor3 = galsim.SiliconSensor('../../devel/poisson/numvertices_4/bf.cfg','../../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 200000, rng=rng, DiffMult = 1.0)                
 
     for set in range(1,4):
+        starttime = time.time()
         exec("sensor = sensor%d"%set)
         for nfile in range(1,6):
 
@@ -226,6 +227,7 @@ def main(argv):
             gal_image.write(gal_file_name)
             logger.info('Wrote image to %r',gal_file_name)  # using %r adds quotes around filename for us
 
-
+        finishtime = time.time()
+        print("Time to complete set %d = %.2f seconds\n"%(set, finishtime-starttime))
 if __name__ == "__main__":
     main(sys.argv)
