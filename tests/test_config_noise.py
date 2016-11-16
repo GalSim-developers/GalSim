@@ -33,6 +33,64 @@ except ImportError:
     import galsim
 
 @timer
+def test_gaussian():
+    """Test the Poisson noise builder
+    """
+    scale = 0.3
+    sigma = 17.3
+
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'pixel_scale' : scale,
+            'size' : 32,
+
+            'noise' : {
+                'type' : 'Gaussian',
+                'sigma' : sigma,
+            }
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.1,
+            'flux' : 100,
+        },
+    }
+
+    # First build by hand
+    rng = galsim.BaseDeviate(1234 + 1)
+    gal = galsim.Gaussian(sigma=1.1, flux=100)
+    im1a = gal.drawImage(nx=32, ny=32, scale=scale)
+    var = sigma**2
+    im1a.addNoise(galsim.GaussianNoise(rng, sigma))
+
+    # Compare to what config builds
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im1b.array, im1a.array)
+
+    # Check noise variance
+    var = sigma**2
+    var1 = galsim.config.CalculateNoiseVariance(config)
+    np.testing.assert_equal(var1, var)
+    var2 = galsim.Image(3,3)
+    galsim.config.AddNoiseVariance(config, var2)
+    np.testing.assert_almost_equal(var2.array, var)
+
+    # Check include_obj_var=True, which shouldn't do anything different in this case
+    var3 = galsim.Image(32,32)
+    galsim.config.AddNoiseVariance(config, var3, include_obj_var=True)
+    np.testing.assert_almost_equal(var3.array, var)
+
+    # Gaussian noise can also be given the variance directly, rather than sigma
+    galsim.config.RemoveCurrent(config)
+    del config['image']['noise']['sigma']
+    config['image']['noise']['variance'] = var
+    im1c = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im1c.array, im1a.array)
+
+
+@timer
 def test_poisson():
     """Test the Poisson noise builder
     """
@@ -693,6 +751,7 @@ def test_whiten():
 
 
 if __name__ == "__main__":
+    test_gaussian()
     test_poisson()
     test_ccdnoise()
     test_ccdnoise_phot()
