@@ -89,7 +89,7 @@ def AddNoise(config, im, current_var=0., logger=None):
 
     return var
 
-def CalculateNoiseVar(config):
+def CalculateNoiseVariance(config):
     """
     Calculate the noise variance from the noise specified in the noise dict.
 

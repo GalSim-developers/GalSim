@@ -47,7 +47,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
                 "signal_to_noise option not implemented for draw_method = phot")
 
         if 'image' in base and 'noise' in base['image']:
-            noise_var = galsim.config.CalculateNoiseVar(base)
+            noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
             raise AttributeError("Need to specify noise level when using psf.signal_to_noise")
 

@@ -260,7 +260,15 @@ def test_cosmosnoise():
             rng=rng,
             file_name=os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
             cosmos_scale=pix_scale)
+
+    # Check that the COSMOSNoiseBuilder calculates the right variance.
+    var1 = noise.getVariance()
+    var2 = galsim.config.CalculateNoiseVariance(config)
     print('Full noise variance = ',noise.getVariance())
+    print('From config.CalculateNoiseVar = ',var2)
+    np.testing.assert_almost_equal(var2, var1, err_msg="COSMOSNoise calculated the wrong variance")
+
+    # Finish whitening steps.
     np.testing.assert_equal(
         current_var3, noise.getVariance(),
         err_msg='Config COSMOS noise with whitening does not return the correct current_var')
@@ -270,6 +278,20 @@ def test_cosmosnoise():
     np.testing.assert_equal(
         image3.array, image4.array,
         err_msg='Config COSMOS noise with whitening does not reproduce manually drawn image')
+
+    # If CalculateNoiseVar happens before using the noise, there is a slightly different code
+    # path, but it should return the same answer of course.
+    del config['_current_cn_tag']
+    var3 = galsim.config.CalculateNoiseVariance(config)
+    print('From config.CalculateNoiseVar = ',var3)
+    np.testing.assert_almost_equal(var3, var1, err_msg="COSMOSNoise calculated the wrong variance")
+
+    # AddNoiseVariance should add the variance to an image
+    image5 = galsim.Image(32,32)
+    galsim.config.AddNoiseVariance(config, image5)
+    np.testing.assert_almost_equal(image5.array, var1,
+                                   err_msg="AddNoiseVariance added the wrong variance")
+
 
 @timer
 def test_whiten():

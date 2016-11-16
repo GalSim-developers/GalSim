@@ -106,3 +106,5 @@ New config features
 
 - Output slightly more information about the COSMOSCatalog() (if any) being used
   as the basis of simulations, at the default verbosity level. (#804)
+- Changed the name of galsim.config.CalculateNoiseVar to the slightly more
+  verbose, but also more readable CalculateNoiseVariance. (#820)

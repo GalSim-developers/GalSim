@@ -512,7 +512,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         if max_extra_noise < 0.:
             raise ValueError("image.max_extra_noise cannot be negative")
         if 'image' in base and 'noise' in base['image']:
-            noise_var = galsim.config.CalculateNoiseVar(base)
+            noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
             raise AttributeError("Need to specify noise level when using max_extra_noise")
         if noise_var < 0.:
@@ -721,7 +721,7 @@ class StampBuilder(object):
                 'Only one of signal_to_noise or flux may be specified for %s'%key)
 
         if 'image' in base and 'noise' in base['image']:
-            noise_var = galsim.config.CalculateNoiseVar(base)
+            noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
             raise AttributeError(
                 "Need to specify noise level when using %s.signal_to_noise"%key)
@@ -815,7 +815,7 @@ class StampBuilder(object):
             if not isinstance(prof, galsim.GSObject):
                 raise ValueError("Cannot apply min_snr for stamp types that do not use "+
                                 "a single GSObject profile.")
-            var = galsim.config.CalculateNoiseVar(base)
+            var = galsim.config.CalculateNoiseVariance(base)
             sumsq = np.sum(image.array**2)
             snr = np.sqrt(sumsq / var)
             if logger:

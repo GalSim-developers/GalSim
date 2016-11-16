@@ -70,7 +70,7 @@ def Great3Reject(config, base, value_type):
     # First get the sum of pixel values squared:
     sumsq = np.sum(im.array**2)
     # Get the noise variance for this stamp:
-    var = galsim.config.CalculateNoiseVar(base)
+    var = galsim.config.CalculateNoiseVariance(base)
 
     # If the galaxy has a noise attribute, then we are in a real-galaxy branch, so we need to
     # subtract off the contribution of the image noise to sumsq.
