@@ -32,6 +32,95 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+@timer
+def test_poisson():
+    """Test the Poisson noise builder
+    """
+    scale = 0.3
+    sky = 200
+
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'pixel_scale' : scale,
+            'size' : 32,
+
+            'noise' : {
+                'type' : 'Poisson',
+                'sky_level' : sky,
+            }
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.1,
+            'flux' : 100,
+        },
+    }
+
+    # First build by hand
+    rng = galsim.BaseDeviate(1234 + 1)
+    gal = galsim.Gaussian(sigma=1.1, flux=100)
+    im1a = gal.drawImage(nx=32, ny=32, scale=scale)
+    sky_pixel = sky * scale**2
+    im1a.addNoise(galsim.PoissonNoise(rng, sky_level=sky_pixel))
+
+    # Compare to what config builds
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im1b.array, im1a.array)
+
+    # Check noise variance
+    var1 = galsim.config.CalculateNoiseVariance(config)
+    np.testing.assert_equal(var1, sky_pixel)
+    var2 = galsim.Image(3,3)
+    galsim.config.AddNoiseVariance(config, var2)
+    np.testing.assert_almost_equal(var2.array, sky_pixel)
+
+    # Check include_obj_var=True
+    var3 = galsim.Image(32,32)
+    galsim.config.AddNoiseVariance(config, var3, include_obj_var=True)
+    np.testing.assert_almost_equal(var3.array, sky_pixel + im1a.array)
+
+    # Repeat using photon shooting, which needs to do something slightly different, since the
+    # signal photons already have shot noise.
+    rng.seed(1234 + 1)
+    im2a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
+    # Need to add Poisson noise for the sky, but not the signal (which already has shot noise)
+    im2a.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_pixel)))
+    im2a -= sky_pixel
+
+    # Compare to what config builds
+    galsim.config.RemoveCurrent(config)
+    config['image']['draw_method'] = 'phot'  # Make sure it gets copied over to stamp properly.
+    del config['stamp']['draw_method']
+    del config['_copied_image_keys_to_stamp']
+    im2b = galsim.config.BuildImage(config)
+    np.testing.assert_equal(im2b.array, im2a.array)
+
+    # Check non-trivial sky image
+    galsim.config.RemoveCurrent(config)
+    config['image']['sky_level'] = sky
+    config['image']['wcs'] =  {
+        'type' : 'UVFunction',
+        'ufunc' : '0.05*x + 0.001*x**2',
+        'vfunc' : '0.05*y + 0.001*y**2',
+    }
+    del config['image']['pixel_scale']
+    del config['wcs']
+    rng.seed(1234+1)
+    wcs = galsim.UVFunction(ufunc='0.05*x + 0.001*x**2', vfunc='0.05*y + 0.001*y**2')
+    im3a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
+    sky_im = galsim.Image(im3a.bounds, wcs=wcs)
+    wcs.makeSkyImage(sky_im, sky)
+    im3a += sky_im  # Add 1 copy of the raw sky image for image[sky]
+    noise_im = sky_im.copy()
+    noise_im *= 2.  # Now 2x because the noise includes both in image[sky] and noise[sky]
+    noise_im.addNoise(galsim.PoissonNoise(rng))
+    noise_im -= 2.*sky_im
+    im3a += noise_im
+    im3b = galsim.config.BuildImage(config)
+    np.testing.assert_almost_equal(im3b.array, im3a.array, decimal=6)
+
 
 @timer
 def test_ccdnoise():
@@ -604,6 +693,7 @@ def test_whiten():
 
 
 if __name__ == "__main__":
+    test_poisson()
     test_ccdnoise()
     test_ccdnoise_phot()
     test_cosmosnoise()

@@ -29,7 +29,6 @@ import numpy as np
 # that will perform the different functions related to adding noise to images.
 valid_noise_types = {}
 
-
 #
 # First the driver functions:
 #
@@ -69,13 +68,17 @@ def AddNoise(config, im, current_var=0., logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
+    # We'll mess this up below, so store it so we can reset it back at the end.
+    orig_index = config.get('index_key','image_num')
+
+    # This makes sure draw_method is properly copied over and given a default value.
+    galsim.config.stamp.SetupConfigObjNum(config, config.get('obj_num',0))
     draw_method = galsim.config.GetCurrentValue('stamp.draw_method',config,str)
 
     # We need to use image_num for the index_key, but if we are in the stamp processing
     # make sure to reset it back when we are done.  Also, we want to use obj_num_rng in this
     # case for the noise.  The easiest way to make sure this doesn't get messed up by any
     # value parsing is to copy it over to a new item in the dict.
-    orig_index = config.get('index_key','image_num')
     rng = galsim.config.check_for_rng(config, logger, 'AddNoise')
     if orig_index == 'obj_num':
         config['index_key'] = 'image_num'
