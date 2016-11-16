@@ -756,12 +756,12 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        sbiki = galsim._galsim.SBInterpolatedKImage(
+        self._sbiki = galsim._galsim.SBInterpolatedKImage(
                 self._kimage.image, self._stepk/wcs.minLinearScale(), self.k_interpolant, gsparams)
 
         inv_wcs = wcs.local().inverse().jacobian()
         transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
-        prof = transform_wcs.toWorld(GSObject(sbiki))
+        prof = transform_wcs.toWorld(GSObject(self._sbiki))
         prof = galsim._galsim.SBAdd([prof.SBProfile])
 
         GSObject.__init__(self, prof)
