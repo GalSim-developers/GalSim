@@ -302,7 +302,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
 
     @returns the final variance in the image
     """
-    rng = config['rng']
+    rng = config['image_num_rng']
     nobjects = len(stamps)
     max_current_var = max(current_vars)
     if max_current_var > 0:

@@ -689,6 +689,9 @@ class StampBuilder(object):
                     if 'symmetrize' in noise:
                         raise AttributeError('Only one of whiten or symmetrize is allowed')
                     whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
+                    # In case the galaxy was cached, update the rng
+                    rng = galsim.config.check_for_rng(base, logger, "whiten")
+                    prof.noise.rng.reset(rng)
                     current_var = prof.noise.whitenImage(image)
                 elif 'symmetrize' in noise:
                     symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', base, int)

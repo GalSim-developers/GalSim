@@ -713,6 +713,105 @@ def test_scattered():
 
     np.testing.assert_almost_equal(image.array, image2.array)
 
+@timer
+def test_scattered_whiten():
+    """Test whitening with the image type Scattered.  In particular getting the noise flattened
+    across overlapping stamps and stamps that are partially off the image.
+    """
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    config = {
+        'image' : {
+            'type' : 'Scattered',
+            'random_seed' : 12345,
+            'pixel_scale' : 0.05,
+            'size' : 100,
+            'image_pos' : { 'type' : 'XY',
+                            # Some of these will be completely off the main image.
+                            # They will be ignored.
+                            'x' : { 'type' : 'Random', 'min': -50, 'max': 150 },
+                            'y' : { 'type' : 'Random', 'min': -50, 'max': 150 },
+                          },
+            'nobjects' : 30,
+            'noise' : {
+                'type' : 'Gaussian',
+                'variance' : 10,
+                'whiten' : True,
+            },
+        },
+        'gal' : {
+            'type' : 'RealGalaxy',
+            'index' : 79,  # It's a bit faster if they all use the same index.
+            'flux' : 1000,
+
+            # This tests a special case in FlattenNoiseVariance
+            'skip' : { 'type': 'RandomBinomial', 'p': 0.2 }
+        },
+        'psf' : {
+            'type' : 'Gaussian',
+            'sigma' : 0.1,
+        },
+        'input' : {
+            'real_catalog' : {
+                'dir' : real_gal_dir ,
+                'file_name' : real_gal_cat,
+            }
+        }
+    }
+
+    # First build by hand
+    rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
+    gal = galsim.RealGalaxy(rgc, index=79, flux=1000)
+    psf = galsim.Gaussian(sigma=0.1)
+    final = galsim.Convolve(gal,psf)
+    im1 = galsim.Image(100,100, scale=0.05)
+    cv_im = galsim.Image(100,100)
+
+    for k in range(30):
+        ud = galsim.UniformDeviate(12345 + k + 1)
+
+        x = ud() * 200. - 50.
+        y = ud() * 200. - 50.
+
+        skip_dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
+        if skip_dev() > 0: continue
+
+        ix = int(math.floor(x+1))
+        iy = int(math.floor(y+1))
+        dx = x-ix+0.5
+        dy = y-iy+0.5
+        stamp = final.drawImage(offset=(dx, dy), scale=0.05)
+        stamp.setCenter(ix,iy)
+
+        final.noise.rng.reset(ud)
+        cv = final.noise.whitenImage(stamp)
+
+        b = im1.bounds & stamp.bounds
+        if not b.isDefined(): continue
+
+        im1[b] += stamp[b]
+        cv_im[b] += cv
+
+    print('max cv = ',cv_im.array.max())
+    print('min cv = ',cv_im.array.min())
+    max_cv = cv_im.array.max()
+    noise_im = max_cv - cv_im
+    rng = galsim.BaseDeviate(12345)
+    im1.addNoise(galsim.VariableGaussianNoise(rng, noise_im))
+    im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(10-max_cv)))
+
+    # Compare to what config builds
+    galsim.config.ProcessInput(config)
+    im2 = galsim.config.BuildImage(config)
+    np.testing.assert_almost_equal(im2.array, im1.array)
+
+    # Should give a warning for the objects that fall off the edge
+    with CaptureLog() as cl:
+        im3 = galsim.config.BuildImage(config, logger=cl.logger)
+    #print(cl.output)
+    assert "Object centered at (-24,-43) is entirely off the main image" in cl.output
+    im2 = galsim.config.BuildImage(config)
+
 
 @timer
 def test_tiled():
@@ -822,9 +921,8 @@ def test_tiled():
         seed += 1
         ud = galsim.UniformDeviate(seed)
 
-        dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
-        if dev() > 0:
-            continue
+        skip_dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
+        if skip_dev() > 0: continue
 
         xorigin = i * (xsize-xborder) + 1
         yorigin = j * (ysize-yborder) + 1
@@ -928,5 +1026,6 @@ if __name__ == "__main__":
     test_snr()
     test_ring()
     test_scattered()
+    test_scattered_whiten()
     test_tiled()
     test_njobs()

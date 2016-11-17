@@ -94,6 +94,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     else:
         repeat = 1
 
+    # Check if we need to skip this object
+    if 'skip' in param:
+        skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
+        if skip:
+            if logger:
+                logger.debug('obj %d: Skipping because field skip=True',base.get('obj_num',0))
+            raise SkipThisObject()
+
     # Check if we can use the current cached object
     if ('current_val' in param and
             (param['current_safe'] or param['current_index']//repeat == index//repeat)):
@@ -115,14 +123,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             base['rng'] = orig_rng
 
         return param['current_val'], param['current_safe']
-
-    # Check if we need to skip this object
-    if 'skip' in param:
-        skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
-        if skip:
-            if logger:
-                logger.debug('obj %d: Skipping because field skip=True',base.get('obj_num',0))
-            raise SkipThisObject()
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [
