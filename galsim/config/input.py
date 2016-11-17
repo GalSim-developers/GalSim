@@ -237,6 +237,7 @@ def ProcessInputNObjects(config, logger=None):
     """
     config['index_key'] = 'file_num'
     if 'input' in config:
+        if 'input_objs' not in config: ProcessInput(config)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
@@ -266,14 +267,11 @@ def SetupInputsForImage(config, logger):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
+        if 'input_objs' not in config: ProcessInput(config)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
                 fields = config['input'][key]
-                if not isinstance(fields, list):
-                    fields = [ fields ]
-                if 'input_objs' not in config:
-                    raise RuntimeError("ProcessInput needs to be called before building image")
                 input_objs = config['input_objs'][key]
 
                 for i in range(len(fields)):

@@ -713,6 +713,22 @@ def test_scattered():
 
     np.testing.assert_almost_equal(image.array, image2.array)
 
+    try:
+        # Check error message for missing nobjects
+        del config['image']['nobjects']
+        np.testing.assert_raises(AttributeError, galsim.config.BuildImage,config)
+        # Also if there is an input field that doesn't have nobj capability
+        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+        np.testing.assert_raises(AttributeError, galsim.config.BuildImage,config)
+    except ImportError:
+        pass
+    # However, an input field that does have nobj will return something for nobjects.
+    # This catalog has 3 rows, so equivalent to nobjects = 3
+    del config['input_objs']
+    config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
+    image = galsim.config.BuildImage(config)
+    np.testing.assert_almost_equal(image.array, image2.array)
+
 @timer
 def test_scattered_whiten():
     """Test whitening with the image type Scattered.  In particular getting the noise flattened
@@ -801,7 +817,6 @@ def test_scattered_whiten():
     im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(10-max_cv)))
 
     # Compare to what config builds
-    galsim.config.ProcessInput(config)
     im2 = galsim.config.BuildImage(config)
     np.testing.assert_almost_equal(im2.array, im1.array)
 
