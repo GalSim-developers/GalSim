@@ -43,7 +43,9 @@ def test_float_value():
                     'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ],
+                    'nfw_halo' : { 'mass' : 1.e14, 'conc' : 4, 'redshift' : 0.3 },
+                  },
 
         'val1' : 9.9,
         'val2' : int(400),
@@ -90,7 +92,8 @@ def test_float_value():
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
         'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' },
-        'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] }
+        'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
+        'nfw' : { 'type' : 'NFWHaloMagnification' },
     }
 
     test_yaml = True
@@ -298,6 +301,54 @@ def test_float_value():
 
     sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
+
+    # Test NFWHaloMagnification
+    try:
+        # Raise an error because no world_pos
+        np.testing.assert_raises(ValueError,galsim.config.ParseValue, config,'nfw',config, float)
+        config['world_pos'] = galsim.PositionD(6,8)
+        # Still raise an error because no redshift
+        np.testing.assert_raises(ValueError,galsim.config.ParseValue, config,'nfw',config, float)
+        # With this, it should work.
+        config['gal'] = { 'redshift' : 1.3 }
+    except ImportError:
+        pass
+    nfw_halo = galsim.NFWHalo(mass=1.e14, conc=4, redshift=0.3)
+    nfw1 = galsim.config.ParseValue(config,'nfw',config, float)[0]
+    np.testing.assert_almost_equal(nfw1, nfw_halo.getMagnification((6,8), 1.3))
+
+    # Too large magnificaiton should max out at 25
+    galsim.config.RemoveCurrent(config)
+    config['world_pos'] = galsim.PositionD(0.1,0.3)
+    print("strong lensing mag = ",nfw_halo.getMagnification((0.1,0.3), 1.3))
+    try:
+        nfw2 = np.testing.assert_warns(
+                UserWarning, galsim.config.ParseValue, config, 'nfw', config, float)[0]
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            nfw2 = galsim.config.ParseValue(config,'nfw',config, float)[0]
+    np.testing.assert_almost_equal(nfw2, 25.)
+
+    # Or set a different maximum
+    galsim.config.RemoveCurrent(config)
+    config['nfw']['max_mu'] = 3000.
+    config['world_pos'] = galsim.PositionD(0.1,0.3)
+    nfw3 = galsim.config.ParseValue(config,'nfw',config, float)[0]
+    np.testing.assert_almost_equal(nfw3, nfw_halo.getMagnification((0.1,0.3), 1.3))
+
+    # Also, if it goes negative, it should report the max_mu value.
+    galsim.config.RemoveCurrent(config)
+    config['world_pos'] = galsim.PositionD(0.1,0.2)
+    print("very strong lensing mag = ",nfw_halo.getMagnification((0.1,0.2), 1.3))
+    try:
+        nfw4 = np.testing.assert_warns(
+                UserWarning, galsim.config.ParseValue, config, 'nfw', config, float)[0]
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            nfw4 = galsim.config.ParseValue(config,'nfw',config, float)[0]
+    np.testing.assert_almost_equal(nfw4, 3000.)
 
 
 @timer
@@ -933,7 +984,10 @@ def test_shear_value():
         'sum1' : { 'type' : 'Sum',
                   'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                               galsim.Shear(g1 = -0.5, g2 = 0.2),
-                              galsim.Shear(g1 = 0.1, g2 = 0.0) ] }
+                              galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
+        'nfw' : { 'type' : 'NFWHaloShear' },
+
+        'input' : { 'nfw_halo' : { 'mass' : 1.e14, 'conc' : 4, 'redshift' : 0.3 } },
     }
 
     # Test direct values
@@ -1004,6 +1058,43 @@ def test_shear_value():
     s += galsim.Shear(g1=0.1, g2=0.0)
     np.testing.assert_almost_equal(sum1.getG1(), s.getG1())
     np.testing.assert_almost_equal(sum1.getG2(), s.getG2())
+
+    # Test NFWHaloShear
+    galsim.config.ProcessInput(config)
+    try:
+        # Raise an error because no world_pos
+        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config, 'nfw', config,
+                                 galsim.Shear)
+        config['world_pos'] = galsim.PositionD(6,8)
+        # Still raise an error because no redshift
+        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config, 'nfw', config,
+                                 galsim.Shear)
+        # With this, it should work.
+        config['gal'] = { 'redshift' : 1.3 }
+    except ImportError:
+        pass
+    nfw_halo = galsim.NFWHalo(mass=1.e14, conc=4, redshift=0.3)
+    nfw1a = galsim.config.ParseValue(config,'nfw',config, galsim.Shear)[0]
+    nfw1b = nfw_halo.getShear((6,8), 1.3)
+    print('nfw1a = ',nfw1a)
+    print('nfw1b = ',nfw1b)
+    np.testing.assert_almost_equal(nfw1a.g1, nfw1b[0])
+    np.testing.assert_almost_equal(nfw1a.g2, nfw1b[1])
+
+    # If shear is larger than 1, it raises a warning and returns 0,0
+    galsim.config.RemoveCurrent(config)
+    config['world_pos'] = galsim.PositionD(0.1,0.2)
+    print("strong lensing shear = ",nfw_halo.getShear((0.1,0.2), 1.3))
+    try:
+        nfw2a = np.testing.assert_warns(
+                UserWarning, galsim.config.ParseValue, config, 'nfw', config, galsim.Shear)[0]
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            nfw2a = galsim.config.ParseValue(config,'nfw',config, galsim.Shear)[0]
+    nfw2b = nfw_halo.getShear((0.1,0.2), 1.3)
+    np.testing.assert_almost_equal(nfw2a.g1, 0)
+    np.testing.assert_almost_equal(nfw2a.g2, 0)
 
 
 @timer
