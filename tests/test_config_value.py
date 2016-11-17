@@ -1175,6 +1175,9 @@ def test_pos_value():
         'val1' : galsim.PositionD(0.1,0.2),
         'xy1' : { 'type' : 'XY', 'x' : 1.3, 'y' : 2.4 },
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
+        'ran2' : { 'type' : 'RandomCircle', 'radius' : 1, 'center' : galsim.PositionD(3,7) },
+        'ran3' : { 'type' : 'RandomCircle', 'radius' : 3.1, 'center' : galsim.PositionD(0.2,-0.9),
+                   'inner_radius' : 1.3 },
         'list1' : { 'type' : 'List',
                     'items' : [ galsim.PositionD(0.2, -0.3),
                                 galsim.PositionD(-0.5, 0.2),
@@ -1194,7 +1197,7 @@ def test_pos_value():
     np.testing.assert_almost_equal(xy1.x, 1.3)
     np.testing.assert_almost_equal(xy1.y, 2.4)
 
-    # Test values generated from a uniform deviate
+    # Test values generated in a random circle
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     config['index_key'] = 'image_num'
@@ -1209,6 +1212,24 @@ def test_pos_value():
             if rsq <= 9: break
         np.testing.assert_almost_equal(ran1.x, x)
         np.testing.assert_almost_equal(ran1.y, y)
+
+        ran2 = galsim.config.ParseValue(config,'ran2',config, galsim.PositionD)[0]
+        while True:
+            x = (2*rng()-1)
+            y = (2*rng()-1)
+            rsq = x**2 + y**2
+            if rsq <= 1: break
+        np.testing.assert_almost_equal(ran2.x, x+3)
+        np.testing.assert_almost_equal(ran2.y, y+7)
+
+        ran3 = galsim.config.ParseValue(config,'ran3',config, galsim.PositionD)[0]
+        while True:
+            x = (2*rng()-1) * 3.1
+            y = (2*rng()-1) * 3.1
+            rsq = x**2 + y**2
+            if rsq >= 1.3**2 and rsq <= 3.1**2: break
+        np.testing.assert_almost_equal(ran3.x, x+0.2)
+        np.testing.assert_almost_equal(ran3.y, y-0.9)
 
     # Test values taken from a List
     list1 = []
