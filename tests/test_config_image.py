@@ -674,7 +674,6 @@ def test_scattered():
             np.testing.assert_almost_equal(ixy, 0., decimal=3)
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
-
     # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
     config = copy.deepcopy(base_config)
@@ -713,6 +712,137 @@ def test_scattered():
         image2[b] += stamp[b]
 
     np.testing.assert_almost_equal(image.array, image2.array)
+
+
+@timer
+def test_tiled():
+    """Test image type = Tiled
+    """
+    nx = 5
+    ny = 7
+    xsize = 32
+    ysize = 25
+    xborder = 2
+    yborder = 3
+    scale = 0.3
+    config = {
+        'image' : {
+            'type' : 'Tiled',
+            'nx_tiles' : nx,
+            'ny_tiles' : ny,
+            'stamp_xsize' : xsize,
+            'stamp_ysize' : ysize,
+            'pixel_scale' : scale,
+
+            'xborder' : xborder,
+            'yborder' : yborder,
+
+            'random_seed' : 1234,
+
+            'noise' : { 'type': 'Gaussian', 'sigma': 0.5 }
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : '$image_pos.x + image_pos.y',
+        }
+    }
+
+    seed = 1234
+    im1a = galsim.Image(nx * (xsize+xborder) - xborder, ny * (ysize+yborder) - yborder, scale=scale)
+    for j in range(ny):
+        for i in range(nx):
+            seed += 1
+            ud = galsim.UniformDeviate(seed)
+            xorigin = i * (xsize+xborder) + 1
+            yorigin = j * (ysize+yborder) + 1
+            x = xorigin + (xsize-1)/2.
+            y = yorigin + (ysize-1)/2.
+            stamp = galsim.Image(xsize,ysize, scale=scale)
+            stamp.setOrigin(xorigin,yorigin)
+
+            sigma = ud() + 1
+            flux = x + y
+            gal = galsim.Gaussian(sigma=sigma, flux=flux)
+            gal.drawImage(stamp)
+            stamp.addNoise(galsim.GaussianNoise(sigma=0.5, rng=ud))
+            im1a[stamp.bounds] = stamp
+
+    # Compare to what config builds
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im1b.array, im1a.array)
+
+    # Switch to column ordering.  Also make the stamps overlap slightly, which changes how the
+    # noise is applied.
+    galsim.config.RemoveCurrent(config)
+    config['image']['order'] = 'col'
+    config['image']['xborder'] = -xborder
+    config['image']['yborder'] = -yborder
+    im2a = galsim.Image(nx * (xsize-xborder) + xborder, ny * (ysize-yborder) + yborder, scale=scale)
+    seed = 1234
+    for i in range(nx):
+        for j in range(ny):
+            seed += 1
+            ud = galsim.UniformDeviate(seed)
+            xorigin = i * (xsize-xborder) + 1
+            yorigin = j * (ysize-yborder) + 1
+            x = xorigin + (xsize-1)/2.
+            y = yorigin + (ysize-1)/2.
+            stamp = galsim.Image(xsize,ysize, scale=scale)
+            stamp.setOrigin(xorigin,yorigin)
+
+            sigma = ud() + 1
+            flux = x + y
+            gal = galsim.Gaussian(sigma=sigma, flux=flux)
+            gal.drawImage(stamp)
+            im2a[stamp.bounds] += stamp
+    im2a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=galsim.BaseDeviate(1234)))
+
+    # Compare to what config builds
+    im2b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im2b.array, im2a.array)
+
+    # Finally, random ordering.  And also add some skips, so some of the stamps come back as None.
+    # Switch to column ordering.  Also make the stamps overlap slightly, which changes how the
+    # noise is applied.
+    galsim.config.RemoveCurrent(config)
+    config['image']['order'] = 'rand'
+    config['gal']['skip'] = { 'type': 'RandomBinomial', 'p': 0.2 }
+    im3a = galsim.Image(nx * (xsize-xborder) + xborder, ny * (ysize-yborder) + yborder, scale=scale)
+    seed = 1234
+    i_list = []
+    j_list = []
+    for i in range(nx):
+        for j in range(ny):
+            i_list.append(i)
+            j_list.append(j)
+    rng = galsim.BaseDeviate(seed)
+    galsim.random.permute(rng, i_list, j_list)
+    for i,j in zip(i_list,j_list):
+        seed += 1
+        ud = galsim.UniformDeviate(seed)
+
+        dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
+        if dev() > 0:
+            continue
+
+        xorigin = i * (xsize-xborder) + 1
+        yorigin = j * (ysize-yborder) + 1
+        x = xorigin + (xsize-1)/2.
+        y = yorigin + (ysize-1)/2.
+        stamp = galsim.Image(xsize,ysize, scale=scale)
+        stamp.setOrigin(xorigin,yorigin)
+
+        sigma = ud() + 1
+        flux = x + y
+        gal = galsim.Gaussian(sigma=sigma, flux=flux)
+        gal.drawImage(stamp)
+        im3a[stamp.bounds] += stamp
+    im3a.addNoise(galsim.GaussianNoise(sigma=0.5, rng=rng))
+
+    # Compare to what config builds
+    im3b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im3b.array, im3a.array)
 
 
 @timer
@@ -798,4 +928,5 @@ if __name__ == "__main__":
     test_snr()
     test_ring()
     test_scattered()
+    test_tiled()
     test_njobs()

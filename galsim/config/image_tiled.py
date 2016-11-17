@@ -143,7 +143,7 @@ class TiledImageBuilder(ImageBuilder):
         dx = self.stamp_xsize + self.xborder
         dy = self.stamp_ysize + self.yborder
         config['image_pos'] = {
-            'type' : 'XY' ,
+            'type' : 'XY',
             'x' : { 'type' : 'List',
                     'items' : [ x0 + ix*dx for ix in ix_list ]
                   },
@@ -159,8 +159,6 @@ class TiledImageBuilder(ImageBuilder):
         base['index_key'] = 'image_num'
 
         for k in range(nobjects):
-            # This is our signal that the object was skipped.
-            if stamps[k] is None: continue
             if logger:
                 logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
                 logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))
@@ -206,7 +204,7 @@ class TiledImageBuilder(ImageBuilder):
         if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
             base['current_noise_image'] = base['current_image']
-            galsim.config.AddSky(config,image)
+            galsim.config.AddSky(base,image)
             galsim.config.AddNoise(base,image,current_var,logger)
 
     def getNObj(self, config, base, image_num):
