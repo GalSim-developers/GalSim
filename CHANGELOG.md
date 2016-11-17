@@ -118,3 +118,6 @@ New config features
 - Let 'None' in the config file mean `None`. (#820)
 - Require 'max_extra_noise' to be explicitly set for photon shooting if you
   want it rather than have it default to 0.01.  (#820)
+- Add --except_abort option to galsim executable to abort execution if a file
+  has an error, rather than just reporting the exception and continuing on
+  (which is still the default behavior). (#820)

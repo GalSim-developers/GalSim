@@ -32,7 +32,7 @@ import logging
 valid_output_types = {}
 
 
-def BuildFiles(nfiles, config, file_num=0, logger=None):
+def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     """
     Build a number of output files as specified in config.
 
@@ -40,6 +40,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     @param config           A configuration dict.
     @param file_num         If given, the first file_num. [default: 0]
     @param logger           If given, a logger object to log progress. [default: None]
+    @param except_abort     Whether to abort processing when a file raises an exception (True)
+                            or just report errors and continue on (False). [default: False]
     """
     import time
     t1 = time.time()
@@ -122,7 +124,10 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             else: s0 = '%s: '%proc
             logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)
             logger.error('%s',tr)
-            logger.error('File %s not written! Continuing on...',file_name)
+            if except_abort:
+                logger.error('File %s not written.',file_name)
+            else:
+                logger.error('File %s not written! Continuing on...',file_name)
 
     # Convert to the tasks structure we need for MultiProcess
     # Each task is a list of (job, k) tuples.  In this case, we only have one job per task.
@@ -131,7 +136,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, tasks, 'file',
                                          logger, done_func = done_func,
                                          except_func = except_func,
-                                         except_abort = False)
+                                         except_abort = except_abort)
     t2 = time.time()
 
     if not results:  # pragma: no cover

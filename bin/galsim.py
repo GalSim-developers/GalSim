@@ -84,6 +84,10 @@ def parse_args():
             help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_argument(
+            '-x', '--except_abort', action='store_const', default=False, const=True,
+            help='abort the whole job whenever any file raises an exception rather than ' +
+            'continuing on')
+        parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         args = parser.parse_args()
@@ -122,6 +126,9 @@ def parse_args():
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_option(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
+        parser.add_option(
             '-n', '--njobs', type=int, action='store', default=1, 
             help='set the total number of jobs that this run is a part of. ' + 
             'Used in conjunction with -j (--job)')
@@ -130,8 +137,9 @@ def parse_args():
             help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_option(
-            '-p', '--profile', action='store_const', default=False, const=True,
-            help='output profiling information at the end of the run')
+            '-x', '--except_abort', action='store_const', default=False, const=True,
+            help='abort the whole job whenever any file raises an exception rather than ' +
+            'just reporting the exception and continuing on')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -243,7 +251,8 @@ def main():
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params)
+        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
+                              except_abort=args.except_abort)
 
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html

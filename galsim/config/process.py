@@ -627,7 +627,7 @@ def ProcessAllTemplates(config, logger=None):
             ProcessAllTemplates(field, logger)
 
 # This is the main script to process everything in the configuration dict.
-def Process(config, logger=None, njobs=1, job=1, new_params=None):
+def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=False):
     """
     Do all processing of the provided configuration dict.  In particular, this
     function handles processing the output field, calling other functions to
@@ -646,6 +646,8 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     @param job              Which job should be worked on here (1..njobs). [default: 1]
     @param new_params       A dict of new parameter values that should be used to update the config
                             dict after any template loading (if any). [default: None]
+    @param except_abort     Whether to abort processing when a file raises an exception (True)
+                            or just report errors and continue on (False). [default: False]
     """
     if njobs < 1:
         raise ValueError("Invalid number of jobs %d"%njobs)
@@ -719,7 +721,10 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     else:
         start = 0
 
-    galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
+    if nfiles == 1:
+        except_abort = True  # Mostly just so the message reads better.
+    galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger,
+                             except_abort=except_abort)
 
 
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
