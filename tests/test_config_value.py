@@ -45,6 +45,8 @@ def test_float_value():
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ],
                     'nfw_halo' : { 'mass' : 1.e14, 'conc' : 4, 'redshift' : 0.3 },
+                    'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)',
+                                         'grid_spacing' : 10, 'interpolant' : 'linear' },
                   },
 
         'val1' : 9.9,
@@ -94,6 +96,7 @@ def test_float_value():
         'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
         'nfw' : { 'type' : 'NFWHaloMagnification' },
+        'ps' : { 'type' : 'PowerSpectrumMagnification' },
     }
 
     test_yaml = True
@@ -314,6 +317,7 @@ def test_float_value():
     except ImportError:
         pass
     nfw_halo = galsim.NFWHalo(mass=1.e14, conc=4, redshift=0.3)
+    print("weak lensing mag = ",nfw_halo.getMagnification((6,8), 1.3))
     nfw1 = galsim.config.ParseValue(config,'nfw',config, float)[0]
     np.testing.assert_almost_equal(nfw1, nfw_halo.getMagnification((6,8), 1.3))
 
@@ -350,6 +354,33 @@ def test_float_value():
             nfw4 = galsim.config.ParseValue(config,'nfw',config, float)[0]
     np.testing.assert_almost_equal(nfw4, 3000.)
 
+    # Test PowerSpectrumMagnification
+    ps = galsim.PowerSpectrum(e_power_function='np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    print("ps mag = ",ps.getMagnification((0.1,0.2)))
+    config['image_xsize'] = config['image_ysize'] = 2000
+    config['wcs'] = galsim.PixelScale(0.1)
+    config['image_center'] = galsim.PositionD(0,0)
+    galsim.config.SetupInputsForImage(config, None)
+    ps1 = galsim.config.ParseValue(config,'ps',config, float)[0]
+    np.testing.assert_almost_equal(ps1, ps.getMagnification((0.1,0.2)))
+
+    # Beef up the amplitude to get strong lensing.
+    ps = galsim.PowerSpectrum(e_power_function='50 * np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
+    galsim.config.RemoveCurrent(config)
+    del config['input_objs']
+    config['input']['power_spectrum']['e_power_function'] = '50 * np.exp(-k**0.2)'
+    galsim.config.SetupInputsForImage(config, None)
+    try:
+        ps2 = np.testing.assert_warns(
+                UserWarning, galsim.config.ParseValue, config, 'ps', config, float)[0]
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ps2 = galsim.config.ParseValue(config,'ps',config, float)[0]
+    np.testing.assert_almost_equal(ps2, 25.)
 
 @timer
 def test_int_value():
@@ -986,8 +1017,12 @@ def test_shear_value():
                               galsim.Shear(g1 = -0.5, g2 = 0.2),
                               galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
         'nfw' : { 'type' : 'NFWHaloShear' },
+        'ps' : { 'type' : 'PowerSpectrumShear' },
 
-        'input' : { 'nfw_halo' : { 'mass' : 1.e14, 'conc' : 4, 'redshift' : 0.3 } },
+        'input' : { 'nfw_halo' : { 'mass' : 1.e14, 'conc' : 4, 'redshift' : 0.3 },
+                    'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)',
+                                         'grid_spacing' : 10, 'interpolant' : 'linear' },
+                  }
     }
 
     # Test direct values
@@ -1095,6 +1130,41 @@ def test_shear_value():
     nfw2b = nfw_halo.getShear((0.1,0.2), 1.3)
     np.testing.assert_almost_equal(nfw2a.g1, 0)
     np.testing.assert_almost_equal(nfw2a.g2, 0)
+
+    # Test PowerSpectrumShear
+    rng = galsim.BaseDeviate(1234)
+    config['rng'] = rng.duplicate()
+    ps = galsim.PowerSpectrum(e_power_function='np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    config['image_xsize'] = config['image_ysize'] = 2000
+    config['wcs'] = galsim.PixelScale(0.1)
+    config['image_center'] = galsim.PositionD(0,0)
+    galsim.config.SetupInputsForImage(config, None)
+    ps1a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
+    ps1b = ps.getShear((0.1,0.2))
+    print("ps shear= ",ps1b)
+    np.testing.assert_almost_equal(ps1a.g1, ps1b[0])
+    np.testing.assert_almost_equal(ps1a.g2, ps1b[1])
+
+    # Beef up the amplitude to get strong lensing.
+    ps = galsim.PowerSpectrum(e_power_function='50 * np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
+    galsim.config.RemoveCurrent(config)
+    del config['input_objs']
+    config['input']['power_spectrum']['e_power_function'] = '50 * np.exp(-k**0.2)'
+    galsim.config.SetupInputsForImage(config, None)
+    ps2b = ps.getShear((0.1,0.2))
+    print("ps shear= ",ps2b)
+    try:
+        ps2a = np.testing.assert_warns(
+                UserWarning, galsim.config.ParseValue, config, 'ps', config, galsim.Shear)[0]
+    except ImportError:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ps2a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
+    np.testing.assert_almost_equal(ps2a.g1, 0)
+    np.testing.assert_almost_equal(ps2a.g2, 0)
 
 
 @timer
