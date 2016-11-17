@@ -369,10 +369,9 @@ class InputLoader(object):
         opt = self.init_func._opt_params
         single = self.init_func._single_params
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
-        if self.init_func._takes_rng:
-            if 'rng' not in config:
-                raise ValueError("No config['rng'] available for %s.type"%key)
-            kwargs['rng'] = config['rng']
+        if self.init_func._takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
+            rng = galsim.config.check_for_rng(base, logger, 'input ' + self.init_func.__name__)
+            kwargs['rng'] = rng
             safe = False
         return kwargs, safe
 
