@@ -63,9 +63,9 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
+    gal, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
                                    param_name='RealGalaxyOriginal')
-    return image.original_image, safe
+    return gal.original_gal, safe
 
 
 # Register these as valid gsobject types

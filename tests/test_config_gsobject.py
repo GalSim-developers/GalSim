@@ -593,7 +593,8 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 }
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
+        'gal6' : { 'type' : 'RealGalaxyOriginal' },
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -649,6 +650,12 @@ def test_realgalaxy():
         galsim.config.RemoveCurrent(config)
         galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
     assert "No base['rng'] available" in cl.output
+
+    config['obj_num'] = 5
+    gal1a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal1b = galsim.RealGalaxy(real_cat, index=0).original_gal
+    # The convolution here
+    gsobject_compare(gal1a, gal1b, conv=conv)
 
 
 @timer
