@@ -72,12 +72,6 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
 
-        # First, make sure all the input fields are lists.  If not, then we make them a
-        # list with one element.
-        for key in all_keys:
-            if not isinstance(config['input'][key], list):
-                config['input'][key] = [ config['input'][key] ]
-
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is
         # unwieldy to copy them in the config file for each process.  Instead we use proxy
         # objects which are implemented using multiprocessing.BaseManager.  See
@@ -112,10 +106,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             # Register each input field with the InputManager class
             for key in all_keys:
                 fields = config['input'][key]
-
-                # Register this object with the manager
-                for i in range(len(fields)):
-                    field = fields[i]
+                nfields = len(fields) if isinstance(fields, list) else 1
+                for i in range(nfields):
                     tag = key + str(i)
                     InputManager.register(tag, valid_input_types[key].init_func)
             # Start up the input_manager
@@ -126,8 +118,9 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             config['input_objs'] = {}
             for key in all_keys:
                 fields = config['input'][key]
-                config['input_objs'][key] = [ None for i in range(len(fields)) ]
-                config['input_objs'][key+'_safe'] = [ None for i in range(len(fields)) ]
+                nfields = len(fields) if isinstance(fields, list) else 1
+                config['input_objs'][key] = [ None for i in range(nfields) ]
+                config['input_objs'][key+'_safe'] = [ None for i in range(nfields) ]
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
@@ -140,6 +133,9 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             if logger:
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = config['input'][key]
+            # Make sure all the input fields are lists.  If not, then we make them a
+            # list with one element.
+            if not isinstance(fields, list): fields = [ fields ]
 
             for i in range(len(fields)):
                 field = fields[i]
@@ -242,13 +238,12 @@ def ProcessInputNObjects(config, logger=None):
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
                 field = config['input'][key]
+                # If it's a list, just use the first one.
+                if isinstance(field, list): field = field[0]
 
                 if key in config['input_objs'] and config['input_objs'][key+'_safe'][0]:
                     input_obj = config['input_objs'][key][0]
                 else:
-                    # If it's a list, just use the first one.
-                    if isinstance(field, list): field = field[0]
-
                     kwargs, safe = loader.getKwargs(field, config, logger)
                     kwargs['_nobjects_only'] = True
                     input_obj = loader.init_func(**kwargs)
@@ -273,6 +268,8 @@ def SetupInputsForImage(config, logger):
             if key in config['input']:
                 fields = config['input'][key]
                 input_objs = config['input_objs'][key]
+                # Make fields a list if necessary.
+                if not isinstance(fields, list): fields = [ fields ]
 
                 for i in range(len(fields)):
                     field = fields[i]

@@ -195,23 +195,6 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
     chain = key.split('.')
     d = config
 
-    # We may need to make one adjustment.  If the first item in the key is 'input', then
-    # the key is probably wrong relative to the current config dict.  We make each input
-    # item a list, so the user can have more than one input dict for example.  But if
-    # they aren't using that, we don't want them to have to know about it if they try to
-    # take something from there for a Current item.
-    # So we change, e.g.,
-    #     input.fits_header.file_name
-    # --> input.fits_header.0.file_name
-    if chain[0] == 'input' and len(chain) > 2:
-        try:
-            k = int(chain[2])
-        except KeyboardInterrupt:
-            raise
-        except:
-            chain.insert(2,0)
-    #print('chain = ',chain)
-
     use_index_key = None
 
     while len(chain):
