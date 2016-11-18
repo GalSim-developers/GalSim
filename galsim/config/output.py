@@ -312,14 +312,9 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
     """
-    if file_num is None:
-        if 'file_num' not in config: config['file_num'] = 0
-        if 'start_obj_num' not in config: config['start_obj_num'] = obj_num
-        if 'start_image_num' not in config: config['start_image_num'] = image_num
-    else:
-        config['file_num'] = file_num
-        config['start_obj_num'] = obj_num
-        config['start_image_num'] = image_num
+    config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
+    config['start_image_num'] = image_num
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'file_num'
@@ -342,15 +337,14 @@ def SetDefaultExt(config, default_ext):
                             a default 'ext' value.
     @param default_ext      The default extension to set in the config dict if one is not set.
     """
-    if default_ext is not None:
-        if ( isinstance(config,dict) and 'type' in config and
-            config['type'] == 'NumberedFile' and 'ext' not in config ):
-            config['ext'] = default_ext
+    if ( isinstance(config,dict) and 'type' in config and
+        config['type'] == 'NumberedFile' and 'ext' not in config ):
+        config['ext'] = default_ext
 
 
 # A helper function to retry io commands
 def RetryIO(func, args, ntries, file_name, logger):
-    for itry in range(ntries):
+    while True:
         try:
             ret = func(*args)
         except IOError as e:
@@ -409,9 +403,7 @@ class OutputBuilder(object):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in config:
             dir = galsim.config.ParseValue(config, 'dir', base, str)[0]
-            if dir:
-                _makedirs_check(dir)
-
+            _makedirs_check(dir)
             file_name = os.path.join(dir,file_name)
 
         return file_name
@@ -485,16 +477,16 @@ def RegisterOutputType(output_type, builder):
 RegisterOutputType('Fits', OutputBuilder())
 
 
-_ERR_FILE_EXISTS=17
 def _makedirs_check(dir):
     """
-    try to make the directory, watching for a race condition
+    Try to make the directory, watching for a race condition
 
     In particular check if the OS reported that the directory already exists
     when running makedirs, which can happen if another process creates it
     before this one can
     """
 
+    _ERR_FILE_EXISTS=17
     exists = os.path.exists(dir)
 
     if not exists:

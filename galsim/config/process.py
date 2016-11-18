@@ -649,6 +649,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     @param except_abort     Whether to abort processing when a file raises an exception (True)
                             or just report errors and continue on (False). [default: False]
     """
+    import pprint
     if njobs < 1:
         raise ValueError("Invalid number of jobs %d"%njobs)
     if job < 1:
@@ -679,7 +680,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         config['root'] = os.path.splitext(script_name)[0]
 
     if logger:
-        import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
     # Warn about any unexpected fields.
@@ -868,7 +868,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         results = [ None for k in range(njobs) ]
         for kk in range(njobs):
             res, k, t, proc = results_queue.get()
-            if isinstance(res,Exception):  # pragma: no cover
+            if isinstance(res,Exception):
                 # res is really the exception, e
                 # t is really the traceback
                 # k is the index for the job that failed
@@ -880,7 +880,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     raise res
             else:
                 # The normal case
-                if done_func is not None:
+                if done_func is not None:  # pragma: no cover  (We always have done_func != None)
                     done_func(logger, proc, k, res, t)
                 results[k] = res
 
@@ -911,7 +911,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     kwargs['logger'] = logger
                     result = job_func(**kwargs)
                     t2 = time.time()
-                    if done_func is not None:
+                    if done_func is not None:  # pragma: no cover
                         done_func(logger, None, k, result, t2-t1)
                     results[k] = result
                 except KeyboardInterrupt:
