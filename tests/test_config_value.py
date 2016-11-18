@@ -619,6 +619,7 @@ def test_bool_value():
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool1' },
         'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool2' },
         'ran1' : { 'type' : 'Random' },
+        'ran2' : { 'type' : 'Random', 'p' : 0.8 },
         'dev1' : { 'type' : 'RandomBinomial', 'N' : 1 },
         'dev2' : { 'type' : 'RandomBinomial', 'N' : 1, 'p' : 0.5 },
         'dev3' : { 'type' : 'RandomBinomial', 'p' : 0.2 },
@@ -690,6 +691,11 @@ def test_bool_value():
         config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, bool)[0]
         np.testing.assert_equal(ran1, rng() < 0.5)
+
+    for k in range(6):
+        config['obj_num'] = k
+        ran1 = galsim.config.ParseValue(config,'ran2',config, bool)[0]
+        np.testing.assert_equal(ran1, rng() < 0.8)
 
     # Test values generated from binomial deviate
     for k in range(6):

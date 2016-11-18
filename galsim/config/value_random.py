@@ -37,8 +37,10 @@ def _GenerateFromRandom(config, base, value_type):
         #print(base['obj_num'],'Random angle = ',val)
         return val, False
     elif value_type is bool:
-        galsim.config.CheckAllParams(config)
-        val = ud() < 0.5
+        opt = { 'p' : float }
+        kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
+        p = kwargs.get('p', 0.5)
+        val = ud() < p
         #print(base['obj_num'],'Random bool = ',val)
         return val, False
     else:
