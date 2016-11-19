@@ -47,7 +47,7 @@ class BadPixBuilder(ExtraOutputBuilder):
             for obj_num in obj_nums:
                 stamp = self.scratch[obj_num]
                 b = stamp.bounds & image.getBounds()
-                if b.isDefined():
+                if b.isDefined():  # pragma: no branch
                     # This next line is equivalent to:
                     #    image[b] |= stamp[b]
                     # except that this doesn't work through the proxy.  We can only call methods

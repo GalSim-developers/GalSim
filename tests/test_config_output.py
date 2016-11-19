@@ -168,7 +168,112 @@ def test_skip():
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
+@timer
+def test_extra_wt():
+    """Test the extra weight and badpix fields
+    """
+    nfiles = 6
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+            'pixel_scale' : 0.4,
+            'noise' : { 'type' : 'Poisson', 'sky_level_pixel' : '$0.7 + image_num' }
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        },
+        'output' : {
+            'nfiles' : nfiles,
+            'file_name' : "$'output/test_main_%d.fits'%file_num",
+
+            'weight' : { 'file_name' : "$'output/test_wt_%d.fits'%file_num" },
+            'badpix' : { 'file_name' : "$'output/test_bp_%d.fits'%file_num" },
+        },
+    }
+
+    galsim.config.Process(config)
+
+    for k in range(nfiles):
+        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k))
+        im_bp = galsim.fits.read('output/test_bp_%d.fits'%k)
+        np.testing.assert_array_equal(im_bp.array, 0)
+
+    # If include_obj_var = True, then weight image includes signal.
+    config['output']['weight']['include_obj_var'] = True
+    config['output']['nproc'] = 2
+    galsim.config.RemoveCurrent(config)
+    galsim.config.Process(config)
+    for k in range(nfiles):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = ud() + 1.
+        gal = galsim.Gaussian(sigma=sigma, flux=100)
+        im = gal.drawImage(scale=0.4)
+        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k + im.array))
+
+    # If the image is a Scattered type, then the weight adn badpix images are built by a
+    # different code path.
+    config = {
+        'image' : {
+            'type' : 'Scattered',
+            'random_seed' : 1234,
+            'pixel_scale' : 0.4,
+            'size' : 64,
+            'noise' : { 'type' : 'Poisson', 'sky_level_pixel' : '$0.7 + image_num' },
+            'nobjects' : 1,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        },
+        'output' : {
+            'nfiles' : nfiles,
+            'file_name' : "$'output/test_main_%d.fits'%file_num",
+
+            'weight' : { 'file_name' : "$'output/test_wt_%d.fits'%file_num" },
+            'badpix' : { 'file_name' : "$'output/test_bp_%d.fits'%file_num" },
+        },
+    }
+
+    galsim.config.Process(config)
+
+    for k in range(nfiles):
+        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k))
+        im_bp = galsim.fits.read('output/test_bp_%d.fits'%k)
+        np.testing.assert_array_equal(im_bp.array, 0)
+
+    # If include_obj_var = True, then weight image includes signal.
+    config['output']['weight']['include_obj_var'] = True
+    config['output']['nproc'] = 2
+    galsim.config.RemoveCurrent(config)
+    galsim.config.Process(config)
+    for k in range(nfiles):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        x = ud() * 63 + 1
+        y = ud() * 63 + 1
+        ix = int(math.floor(x+1))
+        iy = int(math.floor(y+1))
+        dx = x-ix+0.5
+        dy = y-iy+0.5
+
+        sigma = ud() + 1.
+        gal = galsim.Gaussian(sigma=sigma, flux=100)
+        im = galsim.ImageF(64,64)
+        stamp = gal.drawImage(scale=0.4, offset=(dx,dy))
+        stamp.setCenter(ix,iy)
+        b = im.bounds & stamp.bounds
+        im[b] = stamp[b]
+        im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
+        np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k + im.array))
+
 
 if __name__ == "__main__":
     test_fits()
     test_skip()
+    test_extra_wt()

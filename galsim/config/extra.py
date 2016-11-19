@@ -386,7 +386,7 @@ class ExtraOutputBuilder(object):
 
         @returns the final version of the object.
         """
-        if self.final_data is None:
+        if self.final_data is None: # pragma: no branch
             self.final_data = self.finalize(config, base, main_data, logger)
         return self.final_data
 

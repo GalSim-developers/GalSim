@@ -880,7 +880,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     raise res
             else:
                 # The normal case
-                if done_func is not None:  # pragma: no cover  (We always have done_func != None)
+                if done_func is not None:  # pragma: no branch
                     done_func(logger, proc, k, res, t)
                 results[k] = res
 
@@ -911,7 +911,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     kwargs['logger'] = logger
                     result = job_func(**kwargs)
                     t2 = time.time()
-                    if done_func is not None:  # pragma: no cover
+                    if done_func is not None:  # pragma: no branch
                         done_func(logger, None, k, result, t2-t1)
                     results[k] = result
                 except KeyboardInterrupt:
