@@ -30,7 +30,7 @@ namespace galsim {
     public:
 
         SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                        const Position<double>& cen, double fluxScaling,
+                        const Position<double>& cen, double ampScaling,
                         const GSParamsPtr& gsparams);
 
         ~SBTransformImpl() {}
@@ -54,11 +54,11 @@ namespace galsim {
 
         Position<double> centroid() const { return _cen + fwd(_adaptee.centroid()); }
 
-        double getFlux() const { return _adaptee.getFlux() * _absdet; }
-        double maxSB() const { return _adaptee.maxSB() * _fluxScaling; }
+        double getFlux() const { return _adaptee.getFlux() * _fluxScaling; }
+        double maxSB() const { return _adaptee.maxSB() * _ampScaling; }
 
-        double getPositiveFlux() const { return _adaptee.getPositiveFlux() * _absdet; }
-        double getNegativeFlux() const { return _adaptee.getNegativeFlux() * _absdet; }
+        double getPositiveFlux() const { return _adaptee.getPositiveFlux() * _fluxScaling; }
+        double getNegativeFlux() const { return _adaptee.getNegativeFlux() * _fluxScaling; }
 
         /**
          * @brief Shoot photons through this SBTransform.
@@ -76,7 +76,7 @@ namespace galsim {
         void getJac(double& mA, double& mB, double& mC, double& mD) const
         { mA = _mA; mB = _mB; mC = _mC; mD = _mD; }
         Position<double> getOffset() const { return _cen; }
-        double getFluxScaling() const { return _fluxScaling; }
+        double getFluxScaling() const { return _ampScaling; }
 
         // Overrides for better efficiency
         void fillXImage(ImageView<double> im,
@@ -104,8 +104,9 @@ namespace galsim {
         Position<double> _cen;  ///< Centroid position.
 
         // Calculate and save these:
-        double _absdet;  ///< Determinant (flux magnification) of `M` matrix * fluxScaling
-        double _fluxScaling;  ///< Amount to multiply flux by.
+        double _absdet;  ///< Determinant (flux magnification) of `M` matrix * ampScaling
+        double _ampScaling;  ///< Amount to scale amplitude by
+        double _fluxScaling;  ///< Amount to scale flux by (= absdet * ampScaling)
         double _invdet;  ///< Inverse determinant of `M` matrix.
         double _maxk;
         double _stepk;
@@ -138,10 +139,10 @@ namespace galsim {
         std::complex<double> kValueNoPhase(const Position<double>& k) const;
 
         std::complex<double> (*_kValue)(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& k, const Position<double>& cen);
         std::complex<double> (*_kValueNoPhase)(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& , const Position<double>& );
 
         Position<double> (*_fwd)(
@@ -150,13 +151,13 @@ namespace galsim {
             double mA, double mB, double mC, double mD, double x, double y, double invdet);
 
         static std::complex<double> _kValueNoPhaseNoDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& , const Position<double>& );
         static std::complex<double> _kValueNoPhaseWithDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& , const Position<double>& );
         static std::complex<double> _kValueWithPhase(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& k, const Position<double>& cen);
 
         static Position<double> _fwd_normal(

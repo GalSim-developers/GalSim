@@ -27,9 +27,9 @@ namespace galsim {
 
     SBTransform::SBTransform(const SBProfile& adaptee,
                              double mA, double mB, double mC, double mD,
-                             const Position<double>& cen, double fluxScaling,
+                             const Position<double>& cen, double ampScaling,
                              const GSParamsPtr& gsparams) :
-        SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,fluxScaling,gsparams)) {}
+        SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,ampScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
@@ -76,14 +76,14 @@ namespace galsim {
 
     SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& adaptee, double mA, double mB, double mC, double mD,
-        const Position<double>& cen, double fluxScaling,
+        const Position<double>& cen, double ampScaling,
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
+        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling)
     {
         dbg<<"Start TransformImpl (1)\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
-        dbg<<"cen = "<<_cen<<", fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"cen = "<<_cen<<", ampScaling = "<<_ampScaling<<std::endl;
 
         // All the actual initialization is in a separate function so we can share code
         // with the other constructor.
@@ -102,10 +102,10 @@ namespace galsim {
             // We are transforming something that's already a transformation.
             dbg<<"this transformation = "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
-                _cen<<','<<_fluxScaling<<std::endl;
+                _cen<<','<<_ampScaling<<std::endl;
             dbg<<"adaptee transformation = "<<
                 sbd->_mA<<','<<sbd->_mB<<','<<sbd->_mC<<','<<sbd->_mD<<','<<
-                sbd->_cen<<','<<sbd->_fluxScaling<<std::endl;
+                sbd->_cen<<','<<sbd->_ampScaling<<std::endl;
             dbg<<"adaptee getFlux = "<<_adaptee.getFlux()<<std::endl;
             // We are transforming something that's already a transformation.
             // So just compound the affine transformaions
@@ -117,16 +117,16 @@ namespace galsim {
             _mB = mA*sbd->_mB + mB*sbd->_mD;
             _mC = mC*sbd->_mA + mD*sbd->_mC;
             _mD = mC*sbd->_mB + mD*sbd->_mD;
-            _fluxScaling *= sbd->_fluxScaling;
+            _ampScaling *= sbd->_ampScaling;
             dbg<<"this transformation => "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
-                _cen<<','<<_fluxScaling<<std::endl;
+                _cen<<','<<_ampScaling<<std::endl;
             _adaptee = sbd->_adaptee;
         } else {
             dbg<<"wrapping a non-transformation.\n";
             dbg<<"this transformation = "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
-                _cen<<','<<_fluxScaling<<std::endl;
+                _cen<<','<<_ampScaling<<std::endl;
         }
 
         // It will be reasonably common to have an identity matrix (for just
@@ -177,7 +177,7 @@ namespace galsim {
         xdbg<<"_cen = "<<_cen<<std::endl;
         xdbg<<"_invdet = "<<_invdet<<std::endl;
         xdbg<<"_absdet = "<<_absdet<<std::endl;
-        xdbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
+        xdbg<<"_ampScaling = "<<_ampScaling<<std::endl;
         xdbg<<"major, minor = "<<major<<", "<<minor<<std::endl;
         xdbg<<"maxK() = "<<_maxk<<std::endl;
         xdbg<<"stepK() = "<<_stepk<<std::endl;
@@ -334,17 +334,16 @@ namespace galsim {
                 }
             }
         }
-        // At this point we are done with _absdet per se.  Multiply it by _fluxScaling
-        // so we can use it as the scale factor for kValue and getFlux.
-        _absdet *= _fluxScaling;
-        xdbg<<"_absdet -> "<<_absdet<<std::endl;
+        // The scale factor for the flux is absdet * ampScaling.
+        _fluxScaling = _absdet * _ampScaling;
+        xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
 
         // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_absdet-1.) < this->gsparams->kvalue_accuracy) {
-            xdbg<<"absdet*fluxScaling = "<<_absdet<<" = 1, so use NoDet version.\n";
+        if (std::abs(_fluxScaling-1.) < this->gsparams->kvalue_accuracy) {
+            xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
         } else {
-            xdbg<<"absdet*fluxScaling = "<<_absdet<<" != 1, so use WithDet version.\n";
+            xdbg<<"fluxScaling = "<<_fluxScaling<<" != 1, so use WithDet version.\n";
             _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
         }
         if (_cen.x == 0. && _cen.y == 0.) {
@@ -485,29 +484,29 @@ namespace galsim {
     }
 
     double SBTransform::SBTransformImpl::xValue(const Position<double>& p) const
-    { return _adaptee.xValue(inv(p-_cen)) * _fluxScaling; }
+    { return _adaptee.xValue(inv(p-_cen)) * _ampScaling; }
 
     std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
-    { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }
+    { return _kValue(_adaptee,fwdT(k),_fluxScaling,k,_cen); }
 
     std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(
         const Position<double>& k) const
-    { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
+    { return _kValueNoPhase(_adaptee,fwdT(k),_fluxScaling,k,_cen); }
 
     std::complex<double> SBTransform::SBTransformImpl::_kValueNoPhaseNoDet(
-        const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+        const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
         const Position<double>& , const Position<double>& )
     { return adaptee.kValue(fwdTk); }
 
     std::complex<double> SBTransform::SBTransformImpl::_kValueNoPhaseWithDet(
-        const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+        const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
         const Position<double>& , const Position<double>& )
-    { return absdet * adaptee.kValue(fwdTk); }
+    { return fluxScaling * adaptee.kValue(fwdTk); }
 
     std::complex<double> SBTransform::SBTransformImpl::_kValueWithPhase(
-        const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+        const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
         const Position<double>& k, const Position<double>& cen)
-    { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
+    { return adaptee.kValue(fwdTk) * std::polar(fluxScaling , -k.x*cen.x-k.y*cen.y); }
 
     void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
                                                   double x0, double dx, int izero,
@@ -518,8 +517,8 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
-        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
-        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"ampScaling = "<<_ampScaling<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
 
@@ -564,7 +563,7 @@ namespace galsim {
         }
 
         // Apply flux scaling
-        im *= _fluxScaling;
+        im *= _ampScaling;
     }
 
     void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
@@ -576,8 +575,8 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
-        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
-        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"ampScaling = "<<_ampScaling<<std::endl;
 
         // Subtract cen
         if (!_zeroCen) {
@@ -596,7 +595,7 @@ namespace galsim {
         GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
 
         // Apply flux scaling
-        im *= _fluxScaling;
+        im *= _ampScaling;
     }
 
     void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
@@ -608,8 +607,8 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
-        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
-        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"ampScaling = "<<_ampScaling<<std::endl;
 
         // Apply fwdT to kx,ky
         if (_mB == 0. && _mC == 0.) {
@@ -633,7 +632,7 @@ namespace galsim {
         // Apply phases
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _absdet;
+            im *= _fluxScaling;
         } else {
             xdbg<<"!zeroCen\n";
             // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
@@ -650,8 +649,8 @@ namespace galsim {
             typedef std::vector<std::complex<double> >::iterator It;
             It kxit = phase_kx.begin();
             It kyit = phase_ky.begin();
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = std::polar(_absdet, -kx0*_cen.x);
-            // Only use _absdet on one of them!
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = std::polar(_fluxScaling, -kx0*_cen.x);
+            // Only use _fluxScaling on one of them!
             for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = std::polar(1., -ky0*_cen.y);
 
             kyit = phase_ky.begin();
@@ -672,8 +671,8 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
-        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
-        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"ampScaling = "<<_ampScaling<<std::endl;
 
         // Apply fwdT to kx,ky
         // Original (x,y):
@@ -697,7 +696,7 @@ namespace galsim {
         // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _absdet;
+            im *= _fluxScaling;
         } else {
             xdbg<<"!zeroCen\n";
             const int m = im.getNCol();
@@ -717,7 +716,7 @@ namespace galsim {
                 double kx = kx0;
                 double ky = ky0;
                 for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
-                    *ptr++ *= std::polar(_absdet, -kx-ky);
+                    *ptr++ *= std::polar(_fluxScaling, -kx-ky);
             }
         }
     }
@@ -732,7 +731,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
         for (int i=0; i<result->size(); i++) {
             Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i)))+_cen;
-            result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_absdet);
+            result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_fluxScaling);
         }
         dbg<<"Distort Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
