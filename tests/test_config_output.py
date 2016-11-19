@@ -19,6 +19,7 @@
 from __future__ import print_function
 import numpy as np
 import os
+import shutil
 import sys
 import logging
 import math
@@ -37,6 +38,10 @@ except ImportError:
 def test_fits():
     """Test the default output type = Fits
     """
+    # Most of the tests in this file write to the 'output' directory.  Here we write to a different
+    # directory and make sure that it properly creates the directory if necessary.
+    if os.path.exists('output_fits'):
+        shutil.rmtree('output_fits')
     config = {
         'image' : {
             'type' : 'Single',
@@ -48,12 +53,13 @@ def test_fits():
             'flux' : 100,
         },
         'output' : {
+            'type' : 'Fits',
             'nfiles' : 6,
-            'file_name' : "$'output/test_fits_%d.fits'%file_num"
+            'file_name' : "$'output_fits/test_fits_%d.fits'%file_num"
         },
     }
 
-    logger = logging.getLogger('test_single')
+    logger = logging.getLogger('test_fits')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
@@ -67,7 +73,7 @@ def test_fits():
         im1_list.append(im1)
 
         galsim.config.BuildFile(config, file_num=k, image_num=k, obj_num=k, logger=logger)
-        file_name = 'output/test_fits_%d.fits'%k
+        file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1.array)
 
@@ -75,7 +81,7 @@ def test_fits():
     galsim.config.RemoveCurrent(config)
     galsim.config.BuildFiles(nfiles, config)
     for k in range(nfiles):
-        file_name = 'output/test_fits_%d.fits'%k
+        file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
@@ -83,24 +89,24 @@ def test_fits():
     galsim.config.RemoveCurrent(config)
     galsim.config.Process(config)
     for k in range(nfiles):
-        file_name = 'output/test_fits_%d.fits'%k
+        file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
     # For the first file, you don't need the file_num.
-    os.remove('output/test_fits_0.fits')
+    os.remove('output_fits/test_fits_0.fits')
     galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
-    im2 = galsim.fits.read('output/test_fits_0.fits')
+    im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
     # If there is no output field, the default behavior is to write to root.fits.
-    os.remove('output/test_fits_0.fits')
+    os.remove('output_fits/test_fits_0.fits')
     del config['output']
-    config['root'] = 'output/test_fits_0'
+    config['root'] = 'output_fits/test_fits_0'
     galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
-    im2 = galsim.fits.read('output/test_fits_0.fits')
+    im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
 

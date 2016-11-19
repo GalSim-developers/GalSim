@@ -364,6 +364,35 @@ def RetryIO(func, args, ntries, file_name, logger):
     return ret
 
 
+def EnsureDir(target):
+    """
+    Make sure the directory for the target location exists, watching for a race condition
+
+    In particular check if the OS reported that the directory already exists when running
+    makedirs, which can happen if another process creates it before this one can
+    """
+
+    _ERR_FILE_EXISTS=17
+    dir = os.path.dirname(target)
+    if dir == '': return
+
+    exists = os.path.exists(dir)
+    if not exists:
+        try:
+            os.makedirs(dir)
+        except OSError as err:
+            # check if the file now exists, which can happen if some other
+            # process created the directory between the os.path.exists call
+            # above and the time of the makedirs attempt.  This is OK
+            if err.errno != _ERR_FILE_EXISTS:
+                raise err
+
+    elif exists and not os.path.isdir(dir):
+        raise IOError("tried to make directory '%s' "
+                      "but a non-directory file of that "
+                      "name already exists" % dir)
+
+
 class OutputBuilder(object):
     """A base class for building and writing the output objects.
 
@@ -403,8 +432,9 @@ class OutputBuilder(object):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in config:
             dir = galsim.config.ParseValue(config, 'dir', base, str)[0]
-            _makedirs_check(dir)
             file_name = os.path.join(dir,file_name)
+
+        EnsureDir(file_name)
 
         return file_name
 
@@ -475,33 +505,4 @@ def RegisterOutputType(output_type, builder):
 
 # The base class is also the builder for type = Fits.
 RegisterOutputType('Fits', OutputBuilder())
-
-
-def _makedirs_check(dir):
-    """
-    Try to make the directory, watching for a race condition
-
-    In particular check if the OS reported that the directory already exists
-    when running makedirs, which can happen if another process creates it
-    before this one can
-    """
-
-    _ERR_FILE_EXISTS=17
-    exists = os.path.exists(dir)
-
-    if not exists:
-        try:
-            os.makedirs(dir)
-        except OSError as err:
-            # check if the file now exists, which can happen if some other
-            # process created the directory between the os.path.exists call
-            # above and the time of the makedirs attempt.  This is OK
-            if err.errno != _ERR_FILE_EXISTS:
-                raise err
-
-    elif exists and not os.path.isdir(dir):
-        raise IOError("tried to make directory '%s' "
-                      "but a non-directory file of that "
-                      "name already exists" % dir)
-
 

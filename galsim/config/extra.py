@@ -201,6 +201,8 @@ def WriteExtraOutputs(config, main_data, logger=None):
         if dir is not None:
             file_name = os.path.join(dir,file_name)
 
+        galsim.config.EnsureDir(file_name)
+
         if noclobber and os.path.isfile(file_name):  # pragma: no cover
             if logger:
                 logger.warning('Not writing %s file %d = %s because output.noclobber = True' +
