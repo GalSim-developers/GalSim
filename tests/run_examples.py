@@ -96,7 +96,7 @@ def test_demo2():
     demo2.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
-    config = galsim.config.ReadConfig('demo2.yaml', logger=logger)[0]
+    config = galsim.config.ReadConfig('demo2.yaml', file_type='yaml', logger=logger)[0]
     print('Running demo2.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/demo2.fits', 'output_yaml/demo2.fits')

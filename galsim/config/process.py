@@ -50,7 +50,7 @@ def MergeConfig(config1, config2, logger=None):
         elif isinstance(value,dict) and isinstance(config1[key],dict):
             # If they both have a key, first check if the values are dicts
             # If they are, just recurse this process and merge those dicts.
-            MergeConfig(config1[key],value)
+            MergeConfig(config1[key],value,logger)
         else:
             # Otherwise config1 takes precedence
             if logger:
@@ -268,6 +268,9 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     else:
         return force
 
+top_level_fields = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
+                     'eval_variables', 'root', 'modules', 'profile' ]
+
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
@@ -288,18 +291,9 @@ def CopyConfig(config):
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
     # get clobbered by two processes writing to the same dict.
-    if 'gal' in config:
-        config1['gal'] = copy.deepcopy(config['gal'])
-    if 'psf' in config:
-        config1['psf'] = copy.deepcopy(config['psf'])
-    if 'image' in config:
-        config1['image'] = copy.deepcopy(config['image'])
-    if 'input' in config:
-        config1['input'] = copy.deepcopy(config['input'])
-    if 'output' in config:
-        config1['output'] = copy.deepcopy(config['output'])
-    if 'eval_variables' in config:
-        config1['eval_variables'] = copy.deepcopy(config['eval_variables'])
+    for field in top_level_fields:
+        if field in config:
+            config1[field] = copy.deepcopy(config[field])
 
     return config1
 
@@ -683,12 +677,11 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
     # Warn about any unexpected fields.
-    expected = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
-                 'eval_variables', 'root', 'modules' ]
-    unexpected = [ k for k in config if k not in expected ]
+    unexpected = [ k for k in config if k not in top_level_fields ]
     if len(unexpected) > 0 and logger:
-        logger.warning("Warning: config dict contains the following unexpected fields: %s."%unexpected)
-        logger.warning("         These fields are not (directly) processed by the config processing.")
+        logger.warning("Warning: config dict contains the following unexpected fields: %s.",
+                       unexpected)
+        logger.warning("These fields are not (directly) processed by the config processing.")
 
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:

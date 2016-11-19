@@ -23,6 +23,8 @@ import shutil
 import sys
 import logging
 import math
+import yaml
+import json
 
 from galsim_test_helpers import *
 
@@ -685,6 +687,69 @@ def test_retry_io():
         np.testing.assert_array_equal(wt1.array, wt2.array)
 
 
+@timer
+def test_config():
+    """Tests that configuration files is read, copied, and merged correctly.
+    """
+    config = {
+        'gal' : { 'type' : 'Gaussian', 'sigma' : 2.3, 'flux' : 100, },
+        'psf' : { 'type' : 'Moffat', 'beta' : 3.5, 'fwhm' : 0.9 },
+        'image' : { 'type' : 'Single', 'random_seed' : 1234, },
+        'output' : { 'type' : 'Fits', 'file_name' : "test.fits" },
+        'input' : { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } },
+        'eval_variables' : { 'fpixel_scale' : 0.3 }
+    }
+
+    # Test yaml
+    yaml_file_name = "output/test_config.yaml"
+    with open(yaml_file_name, 'w') as fout:
+        yaml.dump(config, fout, default_flow_style=True)
+
+    config1 = galsim.config.ReadConfig(yaml_file_name)[0]
+    assert config == dict(config1)
+    config2 = galsim.config.ReadConfig(yaml_file_name, file_type='yaml')[0]
+    assert config == dict(config2)
+    config3 = galsim.config.ReadYaml(yaml_file_name)[0]
+    assert config == dict(config2)
+
+    # Test json
+    json_file_name = "output/test_config.yaml"
+    with open(json_file_name, 'w') as fout:
+        json.dump(config, fout)
+
+    config4 = galsim.config.ReadConfig(json_file_name)[0]
+    assert config == dict(config4)
+    config5 = galsim.config.ReadConfig(json_file_name, file_type='json')[0]
+    assert config == dict(config5)
+    config6 = galsim.config.ReadJson(json_file_name)[0]
+    assert config == dict(config6)
+
+    # Merging identical dicts, should do nothing
+    galsim.config.MergeConfig(config1,config2)
+    assert config == dict(config1)
+    with CaptureLog() as cl:
+        galsim.config.MergeConfig(config1,config2,logger=cl.logger)
+    assert "Not merging key type from the base config" in cl.output
+    assert "Not merging key fwhm from the base config" in cl.output
+
+    # Merging different configs does something, with the first taking precedence on conflicts
+    del config5['gal']
+    del config6['psf']
+    config6['image']['random_seed'] = 1337
+    galsim.config.MergeConfig(config5, config6)
+    assert config == config5
+
+    # Copying deep copies and removes any existing input_manager
+    config4['input_manager'] = 'an input manager'
+    config7 = galsim.config.CopyConfig(config4)
+    assert config == config7
+
+    # It also works on empty config dicts (gratuitous, but adds some test coverage)
+    config8 = {}
+    config9 = galsim.config.CopyConfig(config8)
+    assert config9 == config8
+
+
 if __name__ == "__main__":
     test_fits()
     test_multifits()
@@ -693,3 +758,4 @@ if __name__ == "__main__":
     test_extra_wt()
     test_extra_psf()
     test_retry_io()
+    test_config()
