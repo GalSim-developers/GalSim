@@ -746,8 +746,6 @@ def test_deconvolve():
     check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
     conv = galsim.Convolve([transformed_inv_obj, transformed_obj, obj])
     conv.drawImage(myImg1, method='no_pixel')
-    myImg1.write('junk1.fits')
-    myImg2.write('junk2.fits')
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
