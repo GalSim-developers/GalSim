@@ -105,6 +105,137 @@ def test_fits():
 
 
 @timer
+def test_multifits():
+    """Test the output type = MultiFits
+    """
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        },
+        'output' : {
+            'type' : 'MultiFits',
+            'nimages' : 6,
+            'file_name' : 'output/test_multifits.fits'
+        },
+    }
+
+    im1_list = []
+    nimages = 6
+    for k in range(nimages):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = ud() + 1.
+        gal = galsim.Gaussian(sigma=sigma, flux=100)
+        im1 = gal.drawImage(scale=1)
+        im1_list.append(im1)
+    print('multifit image shapes = ',[im.array.shape for im in im1_list])
+
+    galsim.config.Process(config)
+    im2_list = galsim.fits.readMulti('output/test_multifits.fits')
+    for k in range(nimages):
+        np.testing.assert_array_equal(im2_list[k].array, im1_list[k].array)
+
+    # nimages = 1 is allowed
+    config['output']['nimages'] = 1
+    galsim.config.Process(config)
+    im3_list = galsim.fits.readMulti('output/test_multifits.fits')
+    assert len(im3_list) == 1
+    np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
+
+    try:
+        # Check error message for missing nimages
+        del config['output']['nimages']
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+        # Also if there is an input field that doesn't have nobj capability
+        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+    except ImportError:
+        pass
+    # However, an input field that does have nobj will return something for nobjects.
+    # This catalog has 3 rows, so equivalent to nobjects = 3
+    del config['input_objs']
+    config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
+    galsim.config.BuildFile(config)
+    im4_list = galsim.fits.readMulti('output/test_multifits.fits')
+    assert len(im4_list) == 3
+    for k in range(3):
+        np.testing.assert_array_equal(im4_list[k].array, im1_list[k].array)
+
+
+@timer
+def test_datacube():
+    """Test the output type = DataCube
+    """
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        },
+        'output' : {
+            'type' : 'DataCube',
+            'nimages' : 6,
+            'file_name' : 'output/test_datacube.fits'
+        },
+    }
+
+    im1_list = []
+    nimages = 6
+    b = None
+    for k in range(nimages):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = ud() + 1.
+        gal = galsim.Gaussian(sigma=sigma, flux=100)
+        if b is None:
+            im1 = gal.drawImage(scale=1)
+            b = im1.bounds
+        else:
+            im1 = gal.drawImage(bounds=b, scale=1)
+        im1_list.append(im1)
+    print('datacube image shapes = ',[im.array.shape for im in im1_list])
+
+    galsim.config.Process(config)
+    im2_list = galsim.fits.readCube('output/test_datacube.fits')
+    for k in range(nimages):
+        np.testing.assert_array_equal(im2_list[k].array, im1_list[k].array)
+
+    # nimages = 1 is allowed
+    config['output']['nimages'] = 1
+    galsim.config.Process(config)
+    im3_list = galsim.fits.readCube('output/test_datacube.fits')
+    assert len(im3_list) == 1
+    np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
+
+    try:
+        # Check error message for missing nimages
+        del config['output']['nimages']
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+        # Also if there is an input field that doesn't have nobj capability
+        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+    except ImportError:
+        pass
+    # However, an input field that does have nobj will return something for nobjects.
+    # This catalog has 3 rows, so equivalent to nobjects = 3
+    del config['input_objs']
+    config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
+    galsim.config.BuildFile(config)
+    im4_list = galsim.fits.readCube('output/test_datacube.fits')
+    assert len(im4_list) == 3
+    for k in range(3):
+        np.testing.assert_array_equal(im4_list[k].array, im1_list[k].array)
+
+
+@timer
 def test_skip():
     """Test the skip and noclobber options
     """
@@ -476,6 +607,8 @@ def test_extra_psf():
 
 if __name__ == "__main__":
     test_fits()
+    test_multifits()
+    test_datacube()
     test_skip()
     test_extra_wt()
     test_extra_psf()
