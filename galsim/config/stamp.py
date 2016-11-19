@@ -351,7 +351,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if 'offset' in stamp:
                     offset += galsim.config.ParseValue(stamp, 'offset', config, galsim.PositionD)[0]
                 if logger:
-                    logger.debug('obj %d: offset = %s',obj_num,offset)
+                    logger.debug('obj %d: stamp_offset = %s, offset = %s',obj_num,
+                                 config['stamp_offset'], offset)
 
                 im = builder.draw(prof, im, method, offset, stamp, config, logger)
 

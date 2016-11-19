@@ -121,11 +121,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                 logger.debug('image %d: psf image at b = %s = %s & %s',
                              base['image_num'],b,stamp.bounds,image.getBounds())
             if b.isDefined():
-                # This next line is equivalent to:
-                #    image[b] += stamp[b]
-                # except that this doesn't work through the proxy.  We can only call methods
-                # that don't start with _.  Hence using the more verbose form here.
-                image.setSubImage(b, image.subImage(b) + stamp[b])
+                image[b] += stamp[b]
                 if logger:
                     logger.debug('obj %d: added psf image to main image',base.get('obj_num',0))
         self.data[index] = image
