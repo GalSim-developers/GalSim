@@ -1034,6 +1034,13 @@ class PhaseScreenPSF(GSObject):
 
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
+        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
+        # scale.
+        if self._serialize_stepk is not None:
+            self._serialize_stepk *= self.scale
+        if self._serialize_maxk is not None:
+            self._serialize_maxk *= self.scale
+
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
         if self.exptime < 0:
@@ -1074,9 +1081,11 @@ class PhaseScreenPSF(GSObject):
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
-        # identically if their img and interpolant match.
+        # identically if their img, interpolant, stepk, maxk, and gsparams match.
         return (self.img == other.img and
                 self.interpolant == other.interpolant and
+                self._serialize_stepk == other._serialize_stepk and
+                self._serialize_maxk == other._serialize_maxk and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
@@ -1097,18 +1106,14 @@ class PhaseScreenPSF(GSObject):
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
-        if self._serialize_maxk is None:
-            self.ii = galsim.InterpolatedImage(
-                    self.img, x_interpolant=self.interpolant,
-                    calculate_stepk=True, calculate_maxk=True,
-                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
-            self._serialize_stepk = self.ii._serialize_stepk
-            self._serialize_maxk = self.ii._serialize_maxk
-        else:
-            self.ii = galsim.InterpolatedImage(
-                    self.img, x_interpolant=self.interpolant,
-                    _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
-                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
+        calculate_stepk = self._serialize_stepk is None
+        calculate_maxk = self._serialize_maxk is None
+
+        self.ii = galsim.InterpolatedImage(
+                self.img, x_interpolant=self.interpolant,
+                _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                calculate_stepk=calculate_stepk, calculate_maxk=calculate_maxk,
+                use_true_center=False, normalization='sb', gsparams=self._gsparams)
 
         GSObject.__init__(self, self.ii)
 
@@ -1360,6 +1365,7 @@ class OpticalPSF(GSObject):
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
+                 _force_maxk=None, _force_stepk=None,
                  suppress_warning=False, max_size=None):
         if max_size is not None: # pragma: no cover
             from .deprecated import depr
@@ -1427,12 +1433,15 @@ class OpticalPSF(GSObject):
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
         self._aper = aper
+        self._force_maxk = _force_maxk
+        self._force_stepk = _force_stepk
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
                                           aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                          suppress_warning=self._suppress_warning)
+                                          suppress_warning=self._suppress_warning,
+                                          _force_maxk=_force_maxk, _force_stepk=_force_stepk)
         GSObject.__init__(self, self._psf)
 
     def getFlux(self):
@@ -1464,6 +1473,10 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
+        if self._force_maxk is not None:
+            s += ", _force_maxk=%r" % self._force_maxk
+        if self._force_stepk is not None:
+            s += ", _force_stepk=%r" % self._force_stepk
         s += ")"
         return s
 
@@ -1491,5 +1504,7 @@ class OpticalPSF(GSObject):
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
                                           aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
-                                          suppress_warning=self._suppress_warning)
+                                          suppress_warning=self._suppress_warning,
+                                          _force_maxk=self._force_maxk,
+                                          _force_stepk=self._force_stepk)
         GSObject.__init__(self, self._psf)

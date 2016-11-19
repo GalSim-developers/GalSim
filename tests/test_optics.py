@@ -813,6 +813,28 @@ def test_OpticalPSF_aper():
 
 
 @timer
+def test_stepk_maxk():
+    """Test options to specify (or not) stepk and maxk.
+    """
+    lam = 500
+    diam = 4.0
+
+    psf = galsim.OpticalPSF(lam=lam, diam=diam)
+    stepk = psf.stepK()
+    maxk = psf.maxK()
+
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
+    np.testing.assert_almost_equal(
+            psf2.stepK(), stepk/1.5, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for stepK")
+    np.testing.assert_almost_equal(
+            psf2.maxK(), maxk*2.0, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for maxK")
+
+    do_pickle(psf2)
+
+
+@timer
 def test_ne():
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
     # any images (other than internally the PSF), so should be okay.
@@ -844,6 +866,11 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
+    stepk = objs[0].stepK()
+    maxk = objs[0].maxK()
+    objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
+             galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_maxk=maxk*2)]
+
     if __name__ == do_slow_tests:
         objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    suppress_warning=True),
@@ -865,4 +892,5 @@ if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_OpticalPSF_aper()
+    test_stepk_maxk()
     test_ne()
