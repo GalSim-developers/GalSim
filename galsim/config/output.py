@@ -343,21 +343,24 @@ def SetDefaultExt(config, default_ext):
 
 
 # A helper function to retry io commands
+_sleep_mult = 1  # 1 second normally, but make it a variable, so I can change it when unit testing.
 def RetryIO(func, args, ntries, file_name, logger):
+    itry = 0
     while True:
+        itry += 1
         try:
             ret = func(*args)
         except IOError as e:
-            if itry == ntries-1:
+            if itry == ntries:
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
                 if logger:
                     logger.warning('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
-                                   itry+1,ntries,itry+1)
+                                   itry,ntries,itry)
                 import time
-                time.sleep(itry+1)
+                time.sleep(itry * _sleep_mult)
                 continue
         else:
             break

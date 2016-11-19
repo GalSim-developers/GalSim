@@ -611,6 +611,80 @@ def test_extra_psf():
     assert "Not writing psf file 5 = output_psf/test_psf.fits because already written" in cl.output
 
 
+@timer
+def test_retry_io():
+    """Test the retry_io option
+    """
+    # Make a class that mimics writeMulti, except that it fails about half the time.
+    class FlakyWriter(object):
+        def __init__(self, rng): self.ud = galsim.UniformDeviate(rng)
+        def writeFile(self, *args, **kwargs):
+            if self.ud() < 0.5:
+                galsim.fits.writeMulti(*args, **kwargs)
+            else:
+                raise IOError
+    flaky_writer = FlakyWriter(galsim.BaseDeviate(1234))
+
+    # Now make a copy of Fits and ExtraWeight using this writer.
+    class FlakyFits(galsim.config.OutputBuilder):
+        def writeFile(self, data, file_name):
+            flaky_writer.writeFile(data, file_name)
+    galsim.config.RegisterOutputType('FlakyFits', FlakyFits())
+
+    class FlakyWeight(galsim.config.extra_weight.WeightBuilder):
+        def writeFile(self, file_name, config, base, logger):
+            flaky_writer.writeFile(self.final_data, file_name)
+    galsim.config.RegisterExtraOutput('flaky_weight', FlakyWeight())
+
+    galsim.config.output._sleep_mult = 1.e-10  # Don't take forever testing this.
+
+    nfiles = 6
+    config = {
+        'image' : {
+            'type' : 'Single',
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : 100,
+        },
+        'output' : {
+            'type' : 'FlakyFits',
+            'nfiles' : nfiles,
+            'retry_io': 5,
+            'file_name' : "$'output/test_flaky_fits_%d.fits'%file_num",
+            'flaky_weight' : { 'file_name' : "$'output/test_flaky_wt_%d.fits'%file_num" },
+        },
+    }
+
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    assert "File output/test_flaky_fits_2.fits: Caught IOError" in cl.output
+    assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
+    assert "file 2: Wrote FlakyFits to file 'output/test_flaky_fits_2.fits'" in cl.output
+    assert "File output/test_flaky_wt_3.fits: Caught IOError: " in cl.output
+    assert "This is try 2/6, so sleep for 2 sec and try again." in cl.output
+    assert "file 3: Wrote flaky_weight to 'output/test_flaky_wt_3.fits'" in cl.output
+
+    # Now the regular versions.
+    config['output'] = {
+        'type' : 'Fits',
+        'nfiles' : 6,
+        'file_name' : "$'output/test_nonflaky_fits_%d.fits'%file_num",
+        'weight' : { 'file_name' : "$'output/test_nonflaky_wt_%d.fits'%file_num" },
+    }
+    galsim.config.Process(config)
+
+    for k in range(nfiles):
+        im1 = galsim.fits.read('output/test_flaky_fits_%d.fits'%k)
+        im2 = galsim.fits.read('output/test_nonflaky_fits_%d.fits'%k)
+        np.testing.assert_array_equal(im1.array, im2.array)
+        wt1 = galsim.fits.read('output/test_flaky_wt_%d.fits'%k)
+        wt2 = galsim.fits.read('output/test_nonflaky_wt_%d.fits'%k)
+        np.testing.assert_array_equal(wt1.array, wt2.array)
+
+
 if __name__ == "__main__":
     test_fits()
     test_multifits()
@@ -618,3 +692,4 @@ if __name__ == "__main__":
     test_skip()
     test_extra_wt()
     test_extra_psf()
+    test_retry_io()
