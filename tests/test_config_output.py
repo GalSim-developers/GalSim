@@ -57,7 +57,7 @@ def test_fits():
         'output' : {
             'type' : 'Fits',
             'nfiles' : 6,
-            'file_name' : "$'output_fits/test_fits_%d.fits'%file_num"
+            'file_name' : "$'output_fits/test_fits_%d.fits'%file_num",
         },
     }
 
@@ -101,6 +101,20 @@ def test_fits():
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
+
+    # nproc < 0 should automatically determine nproc from ncpu
+    config['output']['nproc'] = -1
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    assert 'ncpu = ' in cl.output
+
+    # nproc > njobs should drop back to nproc = njobs
+    config['output']['nproc'] = 10
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
 
     # If there is no output field, the default behavior is to write to root.fits.
     os.remove('output_fits/test_fits_0.fits')
