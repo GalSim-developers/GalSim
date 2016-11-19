@@ -519,16 +519,17 @@ def ParseExtendedKey(config, key):
     """
     # This is basically identical to the code for Dict.get(key) in catalog.py.
     chain = key.split('.')
-    d = config
-    while len(chain) > 1:
+    while True:
+        d = config
         k = chain.pop(0)
         try: k = int(k)
         except ValueError: pass
+        if len(chain) == 0: break
         try:
-            d = d[k]
-        except IndexError:
+            config = d[k]
+        except Exception as e:
             raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
-    return d, chain[0]
+    return d, k
 
 def GetFromConfig(config, key):
     """Get the value for the (possibly extended) key from a config dict.
@@ -542,8 +543,12 @@ def GetFromConfig(config, key):
 
     @returns the value of that key from the config.
     """
-    config, key = ParseExtendedKey(config, key)
-    return config[key]
+    d, k = ParseExtendedKey(config, key)
+    try:
+        value = d[k]
+    except Exception as e:
+        raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+    return value
 
 def SetInConfig(config, key, value):
     """Set the value of a (possibly extended) key in a config dict.
@@ -557,12 +562,15 @@ def SetInConfig(config, key, value):
 
     @returns the value of that key from the config.
     """
-    config, key = ParseExtendedKey(config, key)
+    d, k = ParseExtendedKey(config, key)
     if value == '':
         # This means remove it, if it is there.
-        config.pop(key,None)
+        d.pop(k,None)
     else:
-        config[key] = value
+        try:
+            d[k] = value
+        except Exception as e:
+            raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
 
 
 def UpdateConfig(config, new_params):

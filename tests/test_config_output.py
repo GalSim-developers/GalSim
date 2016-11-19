@@ -297,7 +297,6 @@ def test_skip():
     config['output']['noclobber'] = True
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
     assert "Skipping file 1 = output/test_skip_1.fits because output.noclobber" in cl.output
     assert "Skipping file 2 = output/test_skip_2.fits because output.noclobber" in cl.output
     assert "Skipping file 3 = output/test_skip_3.fits because output.noclobber" in cl.output
@@ -625,7 +624,6 @@ def test_extra_psf():
 
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
-    #print(cl.output)
     assert "Not writing psf file 1 = output_psf/test_psf.fits because already written" in cl.output
     assert "Not writing psf file 2 = output_psf/test_psf.fits because already written" in cl.output
     assert "Not writing psf file 3 = output_psf/test_psf.fits because already written" in cl.output
@@ -712,8 +710,12 @@ def test_config():
     """Tests that configuration files is read, copied, and merged correctly.
     """
     config = {
-        'gal' : { 'type' : 'Gaussian', 'sigma' : 2.3, 'flux' : 100, },
-        'psf' : { 'type' : 'Moffat', 'beta' : 3.5, 'fwhm' : 0.9 },
+        'gal' : { 'type' : 'Gaussian', 'sigma' : 2.3,
+                  'flux' : { 'type' : 'List', 'items' : [ 100, 500, 1000 ] } },
+        'psf' : { 'type' : 'Convolve',
+                  'items' : [
+                    {'type' : 'Moffat', 'beta' : 3.5, 'fwhm' : 0.9 },
+                    {'type' : 'Airy', 'obscuration' : 0.3, 'lam' : 900, 'diam' : 4. } ] },
         'image' : { 'type' : 'Single', 'random_seed' : 1234, },
         'output' : { 'type' : 'Fits', 'file_name' : "test.fits" },
         'input' : { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } },
@@ -750,7 +752,7 @@ def test_config():
     with CaptureLog() as cl:
         galsim.config.MergeConfig(config1,config2,logger=cl.logger)
     assert "Not merging key type from the base config" in cl.output
-    assert "Not merging key fwhm from the base config" in cl.output
+    assert "Not merging key items from the base config" in cl.output
 
     # Merging different configs does something, with the first taking precedence on conflicts
     del config5['gal']
@@ -768,6 +770,40 @@ def test_config():
     config8 = {}
     config9 = galsim.config.CopyConfig(config8)
     assert config9 == config8
+
+    # Check ParseExtendedKey functionality
+    d,k = galsim.config.ParseExtendedKey(config,'gal.sigma')
+    assert d[k] == 2.3
+    d,k = galsim.config.ParseExtendedKey(config,'gal.flux.items.0')
+    assert d[k] == 100
+    d,k = galsim.config.ParseExtendedKey(config,'psf.items.1.diam')
+    assert d[k] == 4
+
+    # Check GetFromConfig functionality
+    v = galsim.config.GetFromConfig(config,'gal.sigma')
+    assert v == 2.3
+    v = galsim.config.GetFromConfig(config,'gal.flux.items.0')
+    assert v == 100
+    v = galsim.config.GetFromConfig(config,'psf.items.1.diam')
+    assert v == 4
+
+    # Check SetInConfig functionality
+    galsim.config.SetInConfig(config,'gal.sigma', 2.8)
+    assert galsim.config.GetFromConfig(config,'gal.sigma') == 2.8
+    galsim.config.SetInConfig(config,'gal.flux.items.0', 120)
+    assert galsim.config.GetFromConfig(config,'gal.flux.items.0') == 120
+    galsim.config.SetInConfig(config,'psf.items.1.diam', 8)
+    assert galsim.config.GetFromConfig(config,'psf.items.1.diam') == 8
+
+    try:
+        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.lam')
+        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.4')
+        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.itms.1.lam')
+        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.lam',700)
+        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.4',700)
+        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.itms.1.lam',700)
+    except ImportError:
+        pass
 
 
 if __name__ == "__main__":
