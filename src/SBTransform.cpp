@@ -79,49 +79,42 @@ namespace galsim {
         const Position<double>& cen, double ampScaling,
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling)
+        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling),
+        _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.)
     {
-        dbg<<"Start TransformImpl (1)\n";
+        dbg<<"Start TransformImpl\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", ampScaling = "<<_ampScaling<<std::endl;
 
-        // All the actual initialization is in a separate function so we can share code
-        // with the other constructor.
-        initialize();
-    }
-
-    void SBTransform::SBTransformImpl::initialize()
-    {
-        dbg<<"Start SBTransformImpl initialize\n";
         // First check if our adaptee is really another SBTransform:
         assert(GetImpl(_adaptee));
-        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(GetImpl(_adaptee));
-        dbg<<"sbd = "<<sbd<<std::endl;
-        if (sbd) {
+        const SBTransformImpl* sbt = dynamic_cast<const SBTransformImpl*>(GetImpl(_adaptee));
+        dbg<<"sbt = "<<sbt<<std::endl;
+        if (sbt) {
             dbg<<"wrapping another transformation.\n";
             // We are transforming something that's already a transformation.
             dbg<<"this transformation = "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
                 _cen<<','<<_ampScaling<<std::endl;
             dbg<<"adaptee transformation = "<<
-                sbd->_mA<<','<<sbd->_mB<<','<<sbd->_mC<<','<<sbd->_mD<<','<<
-                sbd->_cen<<','<<sbd->_ampScaling<<std::endl;
+                sbt->_mA<<','<<sbt->_mB<<','<<sbt->_mC<<','<<sbt->_mD<<','<<
+                sbt->_cen<<','<<sbt->_ampScaling<<std::endl;
             dbg<<"adaptee getFlux = "<<_adaptee.getFlux()<<std::endl;
             // We are transforming something that's already a transformation.
             // So just compound the affine transformaions
             // New matrix is product (M_this) * (M_old)
             double mA = _mA; double mB=_mB; double mC=_mC; double mD=_mD;
-            _cen += Position<double>(mA*sbd->_cen.x + mB*sbd->_cen.y,
-                                     mC*sbd->_cen.x + mD*sbd->_cen.y);
-            _mA = mA*sbd->_mA + mB*sbd->_mC;
-            _mB = mA*sbd->_mB + mB*sbd->_mD;
-            _mC = mC*sbd->_mA + mD*sbd->_mC;
-            _mD = mC*sbd->_mB + mD*sbd->_mD;
-            _ampScaling *= sbd->_ampScaling;
+            _cen += Position<double>(mA*sbt->_cen.x + mB*sbt->_cen.y,
+                                     mC*sbt->_cen.x + mD*sbt->_cen.y);
+            _mA = mA*sbt->_mA + mB*sbt->_mC;
+            _mB = mA*sbt->_mB + mB*sbt->_mD;
+            _mC = mC*sbt->_mA + mD*sbt->_mC;
+            _mD = mC*sbt->_mB + mD*sbt->_mD;
+            _ampScaling *= sbt->_ampScaling;
             dbg<<"this transformation => "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
                 _cen<<','<<_ampScaling<<std::endl;
-            _adaptee = sbd->_adaptee;
+            _adaptee = sbt->_adaptee;
         } else {
             dbg<<"wrapping a non-transformation.\n";
             dbg<<"this transformation = "<<
@@ -152,25 +145,12 @@ namespace galsim {
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
-        // Calculate maxK, stepK:
+        // Needed for maxK, stepK:
         double h1 = hypot( _mA+_mD, _mB-_mC);
         double h2 = hypot( _mA-_mD, _mB+_mC);
-        double major = 0.5*std::abs(h1+h2);
-        double minor = 0.5*std::abs(h1-h2);
-        if (major < minor) std::swap(major,minor);
-        _maxk = _adaptee.maxK() / minor;
-        _stepk = _adaptee.stepK() / major;
-
-        // If we have a shift, we need to further modify stepk
-        //     stepk = Pi/R
-        // R <- R + |shift|
-        // stepk <- Pi/(Pi/stepk + |shift|)
-        if (_cen.x != 0. || _cen.y != 0.) {
-            double shift = sqrt( _cen.x*_cen.x + _cen.y*_cen.y );
-            dbg<<"stepk from adaptee = "<<_stepk<<std::endl;
-            _stepk = M_PI / (M_PI/_stepk + shift);
-            dbg<<"shift = "<<shift<<", stepk -> "<<_stepk<<std::endl;
-        }
+        _major = 0.5*std::abs(h1+h2);
+        _minor = 0.5*std::abs(h1-h2);
+        if (_major < _minor) std::swap(_major,_minor);
 
         xdbg<<"Transformation init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -178,9 +158,58 @@ namespace galsim {
         xdbg<<"_invdet = "<<_invdet<<std::endl;
         xdbg<<"_absdet = "<<_absdet<<std::endl;
         xdbg<<"_ampScaling = "<<_ampScaling<<std::endl;
-        xdbg<<"major, minor = "<<major<<", "<<minor<<std::endl;
-        xdbg<<"maxK() = "<<_maxk<<std::endl;
-        xdbg<<"stepK() = "<<_stepk<<std::endl;
+        xdbg<<"major, minor = "<<_major<<", "<<_minor<<std::endl;
+
+        // The scale factor for the flux is absdet * ampScaling.
+        _fluxScaling = _absdet * _ampScaling;
+        xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
+
+        // Figure out which function we need for kValue and kValueNoPhase
+        if (std::abs(_fluxScaling-1.) < this->gsparams->kvalue_accuracy) {
+            xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
+            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
+        } else {
+            xdbg<<"fluxScaling = "<<_fluxScaling<<" != 1, so use WithDet version.\n";
+            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
+        }
+        if (_cen.x == 0. && _cen.y == 0.) {
+            _zeroCen = true;
+            _kValue = _kValueNoPhase;
+        } else {
+            _zeroCen = false;
+            _kValue = &SBTransform::SBTransformImpl::_kValueWithPhase;
+        }
+    }
+
+    double SBTransform::SBTransformImpl::maxK() const
+    {
+        // The adaptee's maxk can be slow (e.g. high-n Sersic), so delay this calculation
+        // until we actually need it.
+        if (_maxk == 0.) _maxk = _adaptee.maxK() / _minor;
+        return _maxk;
+    }
+
+    double SBTransform::SBTransformImpl::stepK() const
+    {
+        if (_stepk == 0.) {
+            _stepk = _adaptee.stepK() / _major;
+            // If we have a shift, we need to further modify stepk
+            //     stepk = Pi/R
+            // R <- R + |shift|
+            // stepk <- Pi/(Pi/stepk + |shift|)
+            if (_cen.x != 0. || _cen.y != 0.) {
+                double shift = sqrt( _cen.x*_cen.x + _cen.y*_cen.y );
+                dbg<<"stepk from adaptee = "<<_stepk<<std::endl;
+                _stepk = M_PI / (M_PI/_stepk + shift);
+                dbg<<"shift = "<<shift<<", stepk -> "<<_stepk<<std::endl;
+            }
+        }
+        return _stepk;
+    }
+
+    void SBTransform::SBTransformImpl::setupRanges() const
+    {
+        if (_xmin != 0. || _xmax != 0.) return;
 
         // Calculate the values for getXRange and getYRange:
         if (_adaptee.isAxisymmetric()) {
@@ -334,30 +363,12 @@ namespace galsim {
                 }
             }
         }
-        // The scale factor for the flux is absdet * ampScaling.
-        _fluxScaling = _absdet * _ampScaling;
-        xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
-
-        // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_fluxScaling-1.) < this->gsparams->kvalue_accuracy) {
-            xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
-        } else {
-            xdbg<<"fluxScaling = "<<_fluxScaling<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
-        }
-        if (_cen.x == 0. && _cen.y == 0.) {
-            _zeroCen = true;
-            _kValue = _kValueNoPhase;
-        } else {
-            _zeroCen = false;
-            _kValue = &SBTransform::SBTransformImpl::_kValueWithPhase;
-        }
     }
 
     void SBTransform::SBTransformImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
     {
+        setupRanges();
         xmin = _xmin; xmax = _xmax;
         splits.insert(splits.end(),_xsplits.begin(),_xsplits.end());
     }
@@ -365,6 +376,7 @@ namespace galsim {
     void SBTransform::SBTransformImpl::getYRange(
         double& ymin, double& ymax, std::vector<double>& splits) const
     {
+        setupRanges();
         ymin = _ymin; ymax = _ymax;
         splits.insert(splits.end(),_ysplits.begin(),_ysplits.end());
     }
@@ -372,6 +384,7 @@ namespace galsim {
     void SBTransform::SBTransformImpl::getYRangeX(
         double x, double& ymin, double& ymax, std::vector<double>& splits) const
     {
+        setupRanges();
         xxdbg<<"Transformation getYRangeX for x = "<<x<<std::endl;
         if (_adaptee.isAxisymmetric()) {
             std::vector<double> splits0;
