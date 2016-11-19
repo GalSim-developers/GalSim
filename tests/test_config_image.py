@@ -724,9 +724,19 @@ def test_scattered():
         pass
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
-    del config['input_objs']
     config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
+    del config['input_objs']
+    galsim.config.RemoveCurrent(config)
     image = galsim.config.BuildImage(config)
+    np.testing.assert_almost_equal(image.array, image2.array)
+
+    # When starting from the file state, there is some extra code to test about this, so
+    # check that here.
+    config['output'] = { 'file_name' : 'output/test_scattered.fits' }
+    del config['input_objs']
+    galsim.config.RemoveCurrent(config)
+    galsim.config.BuildFile(config)
+    image = galsim.fits.read('output/test_scattered.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
 
 @timer

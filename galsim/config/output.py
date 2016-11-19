@@ -283,12 +283,7 @@ def GetNObjForFile(config, file_num, image_num):
     @returns a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
     """
     nimages = GetNImagesForFile(config, file_num)
-
-    try :
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    except ValueError : # (This may be raised if something needs the input stuff)
-        galsim.config.ProcessInput(config, file_num=file_num)
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
 
 
