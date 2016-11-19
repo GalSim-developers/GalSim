@@ -307,6 +307,26 @@ def test_skip():
         im2 = galsim.fits.read(file_name)
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
+    # Another way to skip files is to split the work into several jobs
+    config['output']['noclobber'] = False
+    for k in range(nfiles):
+        file_name = 'output/test_skip_%d.fits'%k
+        if os.path.exists(file_name): os.remove(file_name)
+    galsim.config.Process(config, njobs=3, job=3)
+    for k in range(nfiles):
+        file_name = 'output/test_skip_%d.fits'%k
+        if k <= 3:
+            assert not os.path.exists(file_name)
+        else:
+            im2 = galsim.fits.read(file_name)
+            np.testing.assert_array_equal(im2.array, im1_list[k].array)
+
+    with CaptureLog() as cl:
+        galsim.config.Process(config, njobs=3, job=3, logger=cl.logger)
+    assert "Splitting work into 3 jobs.  Doing job 3" in cl.output
+    assert "Building 2 out of 6 total files: file_num = 4 .. 5" in cl.output
+
+
 @timer
 def test_extra_wt():
     """Test the extra weight and badpix fields
