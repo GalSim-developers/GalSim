@@ -21,8 +21,6 @@ Python layer documentation and functions for handling correlated noise in GalSim
 
 import numpy as np
 import galsim
-from . import base
-from . import utilities
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -79,7 +77,7 @@ class _BaseCorrelatedNoise(object):
         if rng is not None and not isinstance(rng, galsim.BaseDeviate):
             raise TypeError(
                 "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
-        if not isinstance(gsobject, base.GSObject):
+        if not isinstance(gsobject, galsim.GSObject):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
@@ -1145,7 +1143,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             store_rootps = False
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
-        cf_array_prelim = utilities.roll2d(
+        cf_array_prelim = galsim.utilities.roll2d(
             cf_array_prelim, (cf_array_prelim.shape[0] // 2, cf_array_prelim.shape[1] // 2))
 
         # The underlying C++ object is expecting the CF to be represented by an odd-dimensioned
@@ -1197,7 +1195,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         if x_interpolant is None:
             x_interpolant = galsim.Linear(tol=1.e-4)
         else:
-            x_interpolant = utilities.convert_interpolant(x_interpolant)
+            x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
@@ -1378,7 +1376,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     if x_interpolant is None:
         x_interpolant = galsim.Linear(tol=1.e-4)
     else:
-        x_interpolant = utilities.convert_interpolant(x_interpolant)
+        x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
 
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric

@@ -42,7 +42,6 @@ import os
 import numpy as np
 
 import galsim
-from . import utilities
 from . import _galsim
 
 class GSObject(object):

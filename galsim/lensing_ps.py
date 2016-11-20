@@ -1759,7 +1759,6 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    import galsim.utilities
     if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
         g1 = g1.array
         g2 = g2.array
