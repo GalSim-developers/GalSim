@@ -152,10 +152,8 @@ def ConvertNones(config):
     """
     if isinstance(config, dict):
         keys = config.keys()
-    elif isinstance(config, list):
-        keys = range(len(config))
     else:
-        return
+        keys = range(len(config))
 
     for key in keys:
         # Recurse to lower levels, if any
