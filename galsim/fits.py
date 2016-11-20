@@ -71,12 +71,12 @@ class _ReadFile:
     def gunzip_call(self, file): # pragma: no cover
         # cf. http://bugs.python.org/issue7471
         import subprocess
-        from io import StringIO
+        from io import BytesIO
         from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = StringIO(p.communicate()[0])
+        fin = BytesIO(p.communicate()[0])
         assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
@@ -123,10 +123,10 @@ class _ReadFile:
 
     def bunzip2_call(self, file): # pragma: no cover
         import subprocess
-        from io import StringIO
+        from io import BytesIO
         from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = StringIO(p.communicate()[0])
+        fin = BytesIO(p.communicate()[0])
         assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin

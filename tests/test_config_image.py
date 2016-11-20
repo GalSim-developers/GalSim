@@ -228,7 +228,7 @@ def test_phot():
 
     # Using this much extra noise with a sky noise variance of 50 cuts the number of photons
     # approximately in half.
-    print('N,g without extra_noise: ',gal._calculate_nphotons(0, False, None, None))
+    print('N,g without extra_noise: ',gal._calculate_nphotons(0, False, 0, None))
     print('N,g with extra_noise: ',gal._calculate_nphotons(0, False, 5, None))
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 50 }
     ud.seed(1234 + 1)

@@ -817,7 +817,11 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             logger.debug('%s: Received STOP', proc)
         if pr is not None:
             pr.disable()
-            s = io.BytesIO()
+            try:
+                from StringIO import StringIO
+            except:
+                from io import StringIO
+            s = StringIO()
             sortby = 'tottime'
             ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
             ps.print_stats()

@@ -584,7 +584,11 @@ class CaptureLog(object):
                            3: logging.DEBUG }
         self.logger = logging.getLogger('CaptureLog')
         self.logger.setLevel(logging_levels[level])
-        self.stream = io.BytesIO()
+        try:
+            from StringIO import StringIO
+        except:
+            from io import StringIO
+        self.stream = StringIO()
         self.handler = logging.StreamHandler(self.stream)
         self.logger.addHandler(self.handler)
 
