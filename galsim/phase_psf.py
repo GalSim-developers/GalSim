@@ -1082,7 +1082,7 @@ class PhaseScreenPSF(GSObject):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
                   "interpolant=%r, scale_unit=%r, gsparams=%r)")
         return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
-                         self.scale_unit, self.interpolant, self.gsparams)
+                         self.interpolant, self.scale_unit, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
