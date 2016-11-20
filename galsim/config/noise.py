@@ -305,9 +305,11 @@ class PoissonNoiseBuilder(NoiseBuilder):
         # Get how much extra sky to assume from the image.noise attribute.
         sky = GetSky(base['image'], base)
         extra_sky = GetSky(config, base)
-        var = sky + extra_sky # for the return value
-        if isinstance(var, galsim.Image):
-            var = np.mean(var.array)
+        total_sky = sky + extra_sky # for the return value
+        if isinstance(total_sky, galsim.Image):
+            var = np.mean(total_sky.array)
+        else:
+            var = total_sky
         # (This could be zero, in which case we only add poisson noise for the object photons)
 
         # If we already have some variance in the image (from whitening), then we subtract this
@@ -316,31 +318,30 @@ class PoissonNoiseBuilder(NoiseBuilder):
         if current_var:
             if logger:
                 logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                            base.get('image_num',0),base.get('obj_num',0), extra_sky, current_var)
-            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-                test = ((sky+extra_sky).image.array < current_var).any()
+                            base.get('image_num',0),base.get('obj_num',0), var, current_var)
+            if isinstance(total_sky, galsim.Image):
+                test = np.any(total_sky.image.array < current_var)
             else:
-                test = (sky+extra_sky < current_var)
+                test = (total_sky < current_var)
             if test:
                 raise RuntimeError(
                     "Whitening already added more noise than the requested Poisson noise.")
+            total_sky -= current_var
             extra_sky -= current_var
 
         # At this point, there is a slight difference between fft and phot. For photon shooting,
         # the galaxy already has Poisson noise, so we want to make sure not to add that again!
         if draw_method == 'phot':
             # Only add in the noise from the sky.
-            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-                noise_im = sky + extra_sky
-                noise_im.addNoise(galsim.PoissonNoise(rng))
+            if isinstance(total_sky, galsim.Image):
+                total_sky.addNoise(galsim.PoissonNoise(rng))
                 if sky:
-                    noise_im -= sky
+                    total_sky -= sky
                 if extra_sky:
-                    noise_im -= extra_sky
-                # noise_im should now have zero mean, but with the noise of the total sky level.
-                im += noise_im
+                    total_sky -= extra_sky
+                # total_sky should now have zero mean, but with the noise of the total sky level.
+                im += total_sky
             else:
-                total_sky = sky + extra_sky
                 im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
                 # This deviate adds a noisy version of the sky, so need to subtract the mean
                 # back off.
@@ -404,20 +405,25 @@ class CCDNoiseBuilder(NoiseBuilder):
         # Get how much extra sky to assume from the image.noise attribute.
         sky = GetSky(base['image'], base)
         extra_sky = GetSky(config, base)
-        var = sky + extra_sky + read_noise_var  # for the return value
-        if isinstance(var, galsim.Image):
-            var = np.mean(var.array)
+        total_sky = sky + extra_sky # for the return value
+        if isinstance(total_sky, galsim.Image):
+            var = np.mean(total_sky.array) + read_noise_var
+        else:
+            var = total_sky + read_noise_var
 
         # If we already have some variance in the image (from whitening), then we try to subtract
-        # t from the read noise if possible.  If now, we subtract the rest off of the sky level.
+        # it from the read noise if possible.  If not, we subtract the rest off of the sky level.
         # It's not precisely accurate, since the existing variance is Gaussian, rather than
         # Poisson, but it's the best we can do.
         if current_var:
+            if logger:
+                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                            base.get('image_num',0),base.get('obj_num',0), var, current_var)
             read_noise_var_adu = read_noise_var / gain**2
-            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-                test = ((sky+extra_sky).image.array/gain + read_noise_var_adu < current_var).any()
+            if isinstance(total_sky, galsim.Image):
+                test = np.any(total_sky.image.array/gain + read_noise_var_adu < current_var)
             else:
-                target_var = (sky+extra_sky) / gain + read_noise_var_adu
+                target_var = total_sky / gain + read_noise_var_adu
                 if logger:
                     logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                                  base.get('image_num',0),base.get('obj_num',0),
@@ -437,25 +443,24 @@ class CCDNoiseBuilder(NoiseBuilder):
                 read_noise = 0
                 read_noise_var = 0
                 # Take the rest away from the sky level
+                total_sky -= current_var * gain
                 extra_sky -= current_var * gain
 
         # At this point, there is a slight difference between fft and phot. For photon shooting,
         # the galaxy already has Poisson noise, so we want to make sure not to add that again!
         if draw_method == 'phot':
             # Add in the noise from the sky.
-            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-                noise_im = sky + extra_sky
-                if gain != 1.0: noise_im *= gain
-                noise_im.addNoise(galsim.PoissonNoise(rng))
-                if gain != 1.0: noise_im /= gain
+            if isinstance(total_sky, galsim.Image):
+                if gain != 1.0: total_sky *= gain
+                total_sky.addNoise(galsim.PoissonNoise(rng))
+                if gain != 1.0: total_sky /= gain
                 if sky:
-                    noise_im -= sky
+                    total_sky -= sky
                 if extra_sky:
-                    noise_im -= extra_sky
-                # noise_im should now have zero mean, but with the noise of the total sky level.
-                im += noise_im
+                    total_sky -= extra_sky
+                # total_sky should now have zero mean, but with the noise of the total sky level.
+                im += total_sky
             else:
-                total_sky = sky + extra_sky
                 if gain != 1.0: im *= gain
                 pd = galsim.PoissonDeviate(rng, mean=total_sky*gain)
                 im.addNoise(galsim.DeviateNoise(pd))
