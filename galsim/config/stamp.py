@@ -702,7 +702,7 @@ class StampBuilder(object):
     def getSNRScale(self, image, config, base, logger):
         """Calculate the factor by which to rescale the image based on a desired S/N level.
 
-        Note: The default implementation does thsi for the gal or psf field, so if a custom
+        Note: The default implementation does this for the gal or psf field, so if a custom
               stamp builder uses some other way to get the profiles, this method should
               probably be overridden.
 
