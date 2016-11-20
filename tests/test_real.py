@@ -209,6 +209,99 @@ def test_real_galaxy_saved():
 
 
 @timer
+def test_pickle_crg():
+    """Just do some pickling tests of ChromaticRealGalaxy."""
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+
+    do_pickle(crg)
+    do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
+
+
+@timer
+def test_crg_roundtrip():
+    """Test that drawing a ChromaticRealGalaxy using the HST collecting area and filter gives back
+    the original image.
+    """
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    orig_f606w = f606w_cat.getGalImage(0)
+    orig_f814w = f814w_cat.getGalImage(0)
+
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+
+    # Note that getPSF() return value already includes convolution by the pixel
+    f606w_obj = galsim.Convolve(crg, f606w_cat.getPSF(0))
+    f814w_obj = galsim.Convolve(crg, f814w_cat.getPSF(0))
+    f606w = f606w_cat.getBandpass()
+    f814w = f814w_cat.getBandpass()
+
+    im_f606w = f606w_obj.drawImage(f606w, image=orig_f606w.copy(), method='no_pixel')
+    im_f814w = f814w_obj.drawImage(f814w, image=orig_f814w.copy(), method='no_pixel')
+
+    printval(im_f606w, orig_f606w)
+    printval(im_f814w, orig_f814w)
+
+    orig_f606w_mom = galsim.hsm.FindAdaptiveMom(orig_f606w)
+    orig_f814w_mom = galsim.hsm.FindAdaptiveMom(orig_f814w)
+
+    im_f606w_mom = galsim.hsm.FindAdaptiveMom(im_f606w)
+    im_f814w_mom = galsim.hsm.FindAdaptiveMom(im_f814w)
+
+    print(np.max((orig_f606w.array - im_f606w.array)/np.max(orig_f606w.array)))
+    print(np.max((orig_f814w.array - im_f814w.array)/np.max(orig_f814w.array)))
+
+    # Images are only pixel-by-pixel consistent to ~10% or so.  However, if you actually plot the
+    # residuals (which you can do by flipping False->True in printval above), they appear as ringing
+    # over the whole image.  Probably it's unrealistic to expect this test to work perfectly since
+    # we're effectively deconvolving and then reconvolving by the same PSF, not a fatter PSF.
+    np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
+                               rtol=0., atol=1e-1*orig_f606w.array.max())
+    np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
+                               rtol=0., atol=1e-1*orig_f814w.array.max())
+
+    # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
+    np.testing.assert_allclose(orig_f606w_mom.moments_amp,
+                               im_f606w_mom.moments_amp,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(orig_f606w_mom.moments_centroid.x,
+                               im_f606w_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(orig_f606w_mom.moments_centroid.y,
+                               im_f606w_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(orig_f606w_mom.moments_sigma,
+                               im_f606w_mom.moments_sigma,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(orig_f606w_mom.observed_shape.g1,
+                               im_f606w_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4)
+    np.testing.assert_allclose(orig_f606w_mom.observed_shape.g2,
+                               im_f606w_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4)
+
+    np.testing.assert_allclose(orig_f814w_mom.moments_amp,
+                               im_f814w_mom.moments_amp,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(orig_f814w_mom.moments_centroid.x,
+                               im_f814w_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(orig_f814w_mom.moments_centroid.y,
+                               im_f814w_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(orig_f814w_mom.moments_sigma,
+                               im_f814w_mom.moments_sigma,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(orig_f814w_mom.observed_shape.g1,
+                               im_f814w_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4)
+    np.testing.assert_allclose(orig_f814w_mom.observed_shape.g2,
+                               im_f814w_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4)
+
+@timer
 def test_ne():
     """ Check that inequality works as expected."""
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
@@ -225,18 +318,9 @@ def test_ne():
     all_obj_diff(gals)
 
 
-@timer
-def test_pickle_crg():
-    """Just do some pickling tests of ChromaticRealGalaxy."""
-    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
-    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
-    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
-
-    do_pickle(crg)
-    do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
-
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
     test_pickle_crg()
+    test_crg_roundtrip()
     test_ne()

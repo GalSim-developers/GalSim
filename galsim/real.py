@@ -934,6 +934,11 @@ class ChromaticRealGalaxy(ChromaticSum):
                             resulting `ChromaticRealGalaxy` with a "fat" PSF in a subsequent step,
                             then it can be more efficient to limit the range of Fourier modes used
                             when solving for the sum of separable profiles below.  [default: None]
+    @param pad_factor       Factor by which to internally oversample the Fourier-space images
+                            that represent the ChromaticRealGalaxy (equivalent to zero-padding the
+                            real-space profiles).  We strongly recommend leaving this parameter
+                            at its default value; see text in Realgalaxy docstring for details.
+                            [default: 4]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
@@ -944,7 +949,7 @@ class ChromaticRealGalaxy(ChromaticSum):
     There are no additional methods for ChromaticRealGalaxy beyond the usual GSObject methods.
     """
     def __init__(self, real_galaxy_catalogs=None, SEDs=None, index=None, id=None, random=False,
-                 rng=None, k_interpolant=None, maxk=None,
+                 rng=None, k_interpolant=None, maxk=None, pad_factor=4.,
                  _imgs=None, _bands=None, _xis=None, _PSFs=None,  # hidden args
                  gsparams=None, logger=None):
         import numpy as np
@@ -1081,9 +1086,11 @@ class ChromaticRealGalaxy(ChromaticSum):
         # critical size to avoid significant aliasing and use the implied stepk.  This is a bit
         # tricky if the images have a complicated WCS, so for now, we'll assume the WCS is a simple
         # PixelScale.  Though note that we *do* allow the stepk to be different in x and y, which
-        # corresponds to the input images being rectangular but non-square.
-        x_stepk = np.min([2*np.pi/(img.scale*img.array.shape[1]) for img in imgs])
-        y_stepk = np.min([2*np.pi/(img.scale*img.array.shape[0]) for img in imgs])
+        # corresponds to the input images being rectangular but non-square.  Finally, we'll use the
+        # same trick that InterpolatedImage uses to improve accuracy, namely, increase the Fourier-
+        # space resolution a factor of `pad_factor`.
+        x_stepk = np.min([2*np.pi/(img.scale*img.array.shape[1])/pad_factor for img in imgs])
+        y_stepk = np.min([2*np.pi/(img.scale*img.array.shape[0])/pad_factor for img in imgs])
         nkx = 2*int(np.floor(maxk/x_stepk))
         nky = 2*int(np.floor(maxk/y_stepk))
 
@@ -1101,8 +1108,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Option 1): Use GalSim to Fourier transform
         for i, img in enumerate(imgs):
-            # Is there any reason not to use x_interpolant='sinc'?
-            ii = galsim.InterpolatedImage(img, x_interpolant='sinc')
+            ii = galsim.InterpolatedImage(img)
             kimgs[i] = ii.drawKImage(nx=nkx, ny=nky, wcs=wcs).array
 
         # Commented-out code below is out-of-date
@@ -1176,21 +1182,11 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
         for i, sed in enumerate(self.SEDs):
-            # re = galsim.Image(np.ascontiguousarray(coef[i].real), wcs=wcs)
-            # im = galsim.Image(np.ascontiguousarray(coef[i].imag), wcs=wcs)
-            # objlist.append(sed * galsim.InterpolatedKImage(re, im))
             objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageC(coef[i], wcs=wcs)))
 
         Sigma_dict = {}
         for i in range(NSED):
             for j in range(i, NSED):
-                # rearray = Sigma[i, j].real
-                # imarray = Sigma[i, j].imag
-                # re = galsim.ImageD(np.ascontiguousarray(rearray), wcs=wcs)
-                # im = galsim.ImageD(np.ascontiguousarray(imarray), wcs=wcs)
-                # obj = galsim.InterpolatedKImage(re, im) / (
-                #        imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
-                # Sigma_dict[(i, j)] = obj
                 obj = galsim.InterpolatedKImage(galsim.ImageC(Sigma[i, j], wcs=wcs))
                 obj /= (imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
