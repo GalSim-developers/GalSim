@@ -822,7 +822,9 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             except:
                 from io import StringIO
             s = StringIO()
-            sortby = 'tottime'
+            sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
+                             # alias for this that is backwards compatible to older versions
+                             # of pstats.
             ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
             ps.print_stats()
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
