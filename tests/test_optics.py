@@ -813,13 +813,16 @@ def test_OpticalPSF_aper():
 
 
 @timer
-def test_stepk_maxk():
-    """Test options to specify (or not) stepk and maxk.
+def test_stepk_maxk_iipad():
+    """Test options to specify (or not) stepk, maxk, and ii_pad_factor.
     """
+    import time
     lam = 500
     diam = 4.0
 
+    t0 = time.time()
     psf = galsim.OpticalPSF(lam=lam, diam=diam)
+    print("Time for OpticalPSF with default ii_pad_factor=4 {0:6.4f}".format(time.time()-t0))
     stepk = psf.stepK()
     maxk = psf.maxK()
 
@@ -832,6 +835,20 @@ def test_stepk_maxk():
             err_msg="OpticalPSF did not adopt forced value for maxK")
 
     do_pickle(psf2)
+
+    t0 = time.time()
+    psf3 = galsim.OpticalPSF(lam=lam, diam=diam, ii_pad_factor=1.)
+    print("Time for OpticalPSF with ii_pad_factor=1 {0:6.4f}".format(time.time()-t0))
+    do_pickle(psf3)
+
+    # The two images should be close, but not equivalent.
+    im = psf.drawImage(nx=16, ny=16, scale=0.2)
+    im3 = psf3.drawImage(nx=16, ny=16, scale=0.2)
+    assert im != im3, (
+            "Images drawn from InterpolatedImages with different pad_factor unexpectedly equal.")
+
+    # Peak is ~0.2, to 1e-5 is pretty good.
+    np.testing.assert_allclose(im.array, im3.array, rtol=0, atol=1e-5)
 
 
 @timer
@@ -865,7 +882,8 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, pad_factor=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
-            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
+            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, ii_pad_factor=2.)]
     stepk = objs[0].stepK()
     maxk = objs[0].maxK()
     objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
@@ -892,5 +910,5 @@ if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_OpticalPSF_aper()
-    test_stepk_maxk()
+    test_stepk_maxk_iipad()
     test_ne()

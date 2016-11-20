@@ -90,7 +90,7 @@ New Features
   doing so are `im.calculate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
-- Added new profile `galsim.RandomWalk`, a class for generating a set of 
+- Added new profile `galsim.RandomWalk`, a class for generating a set of
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
@@ -101,6 +101,8 @@ New Features
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.
   (#827)
+- Added `ii_pad_factor` kwarg to PhaseScreenPSF and OpticalPSF to control the
+  zero-padding of the underlying InterpolatedImage. (#835)
 
 
 New config features

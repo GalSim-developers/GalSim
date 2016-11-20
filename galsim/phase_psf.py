@@ -957,6 +957,9 @@ class PhaseScreenPSF(GSObject):
                                to use.  [default: galsim.Quintic()]
     @param scale_unit          Units to use for the sky coordinates of the output profile.
                                [default: galsim.arcsec]
+    @param ii_pad_factor       Zero-padding factor by which to extend the image of the PSF when
+                               creating the `InterpolatedImage`.  See the `InterpolatedImage`
+                               docstring for more details.  [default: 4.]
     @param suppress_warning    If `pad_factor` is too small, the code will emit a warning telling
                                you its best guess about how high you might want to raise it.
                                However, you can suppress this warning by using
@@ -1005,7 +1008,7 @@ class PhaseScreenPSF(GSObject):
     """
     def __init__(self, screen_list, lam, exptime=0.0, flux=1.0, aper=None,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
-                 scale_unit=galsim.arcsec, suppress_warning=False, gsparams=None,
+                 scale_unit=galsim.arcsec, suppress_warning=False, ii_pad_factor=4., gsparams=None,
                  _eval_now=True, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
@@ -1053,6 +1056,8 @@ class PhaseScreenPSF(GSObject):
         if self._nstep == 0:
             self._nstep = 1
 
+        self._ii_pad_factor = ii_pad_factor
+
         # PhaseScreenList.makePSFs() optimizes multiple PSF evaluation by iterating over PSFs inside
         # of the normal iterate over time loop.  So only do the time loop here and now if we're not
         # doing a makePSFs().
@@ -1060,8 +1065,8 @@ class PhaseScreenPSF(GSObject):
             for i in range(self._nstep):
                 self._step()
                 self.screen_list.advance()
-                if _bar is not None:
-                    _bar.update()  # pragma: nocover
+                if _bar is not None:  # pragma: nocover
+                    _bar.update()
             self._finalize(flux, suppress_warning)
 
         self._flux = flux
@@ -1075,17 +1080,18 @@ class PhaseScreenPSF(GSObject):
 
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
-                  "scale_unit=%r, interpolant=%r, gsparams=%r)")
+                  "interpolant=%r, scale_unit=%r, gsparams=%r)")
         return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
                          self.scale_unit, self.interpolant, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
-        # identically if their img, interpolant, stepk, maxk, and gsparams match.
+        # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
         return (self.img == other.img and
                 self.interpolant == other.interpolant and
                 self._serialize_stepk == other._serialize_stepk and
                 self._serialize_maxk == other._serialize_maxk and
+                self._ii_pad_factor == other._ii_pad_factor and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
@@ -1113,6 +1119,7 @@ class PhaseScreenPSF(GSObject):
                 self.img, x_interpolant=self.interpolant,
                 _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
                 calculate_stepk=calculate_stepk, calculate_maxk=calculate_maxk,
+                pad_factor=self._ii_pad_factor,
                 use_true_center=False, normalization='sb', gsparams=self._gsparams)
 
         GSObject.__init__(self, self.ii)
@@ -1141,6 +1148,7 @@ class PhaseScreenPSF(GSObject):
         self.__dict__ = d
         self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
                                        use_true_center=False, normalization='sb',
+                                       pad_factor=self._ii_pad_factor,
                                        _serialize_stepk=self._serialize_stepk,
                                        _serialize_maxk=self._serialize_maxk,
                                        gsparams=self._gsparams)
@@ -1283,6 +1291,9 @@ class OpticalPSF(GSObject):
                             compared to what would be employed for a simple Airy.  Note that
                             `pad_factor` may need to be increased for stronger aberrations, i.e.
                             those larger than order unity.  [default: 1.5]
+    @param ii_pad_factor    Zero-padding factor by which to extend the image of the PSF when
+                            creating the `InterpolatedImage`.  See the `InterpolatedImage` docstring
+                            for more details.  [default: 4.]
     @param suppress_warning If `pad_factor` is too small, the code will emit a warning telling you
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using `suppress_warning=True`.
@@ -1361,9 +1372,9 @@ class OpticalPSF(GSObject):
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, annular_zernike=False,
                  aper=None, circular_pupil=True, obscuration=0., interpolant=None,
-                 oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
-                 strut_angle=0.*galsim.degrees, pupil_plane_im=None,
-                 pupil_plane_scale=None, pupil_plane_size=None,
+                 oversampling=1.5, pad_factor=1.5, ii_pad_factor=4., flux=1.,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                 pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  _force_maxk=None, _force_stepk=None,
                  suppress_warning=False, max_size=None):
@@ -1435,13 +1446,15 @@ class OpticalPSF(GSObject):
         self._aper = aper
         self._force_maxk = _force_maxk
         self._force_stepk = _force_stepk
+        self._ii_pad_factor = ii_pad_factor
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
                                           aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
                                           suppress_warning=self._suppress_warning,
-                                          _force_maxk=_force_maxk, _force_stepk=_force_stepk)
+                                          _force_maxk=_force_maxk, _force_stepk=_force_stepk,
+                                          ii_pad_factor=ii_pad_factor)
         GSObject.__init__(self, self._psf)
 
     def getFlux(self):
@@ -1477,6 +1490,8 @@ class OpticalPSF(GSObject):
             s += ", _force_maxk=%r" % self._force_maxk
         if self._force_stepk is not None:
             s += ", _force_stepk=%r" % self._force_stepk
+        if self._ii_pad_factor is not None:
+            s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
 
@@ -1506,5 +1521,6 @@ class OpticalPSF(GSObject):
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
                                           suppress_warning=self._suppress_warning,
                                           _force_maxk=self._force_maxk,
-                                          _force_stepk=self._force_stepk)
+                                          _force_stepk=self._force_stepk,
+                                          ii_pad_factor=self._ii_pad_factor)
         GSObject.__init__(self, self._psf)

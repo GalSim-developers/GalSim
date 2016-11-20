@@ -441,6 +441,12 @@ def test_ne():
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
     psl.reset()
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
+    stepk = objs[0].stepK()
+    maxk = objs[0].maxK()
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_stepk=stepk/1.5)]
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_maxk=maxk*2.0)]
     all_obj_diff(objs)
 
 
