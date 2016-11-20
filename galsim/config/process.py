@@ -815,11 +815,11 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 results_queue.put( (e, k, tr, proc) )
         if logger:
             logger.debug('%s: Received STOP', proc)
-        if pr:
+        if pr is not None:
             pr.disable()
-            s = io.StringIO()
+            s = io.BytesIO()
             sortby = 'tottime'
-            ps = pstats.Stats(pr,stream=s).sort_stats(sortby).reverse_order()
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
             ps.print_stats()
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
                          proc,s.getvalue(),proc)
@@ -841,6 +841,9 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
+
+        if 'profile' in config and config['profile']:
+            logger.info("Starting separate profiling for each of the %d processes.",nproc)
 
         # The logger is not picklable, so we need to make a proxy for it so all the
         # processes can emit logging information safely.

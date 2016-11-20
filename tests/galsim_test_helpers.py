@@ -20,8 +20,8 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
-import StringIO
 import logging
+import io
 
 path, filename = os.path.split(__file__)
 try:
@@ -584,13 +584,11 @@ class CaptureLog(object):
                            3: logging.DEBUG }
         self.logger = logging.getLogger('CaptureLog')
         self.logger.setLevel(logging_levels[level])
-
-    def __enter__(self):
-        self.stream = StringIO.StringIO()
-        for handler in self.logger.handlers:
-            self.logger.removeHandler(handler)
+        self.stream = io.BytesIO()
         self.handler = logging.StreamHandler(self.stream)
         self.logger.addHandler(self.handler)
+
+    def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):

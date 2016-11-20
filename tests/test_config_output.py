@@ -116,6 +116,21 @@ def test_fits():
         galsim.config.Process(config, logger=cl.logger)
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
 
+    # Check that profile outputs something appropriate for multithreading.
+    # (The single-thread profiling is handled by the galsim executable, which we don't
+    # bother testing here.)
+    config['profile'] = True
+    config['output']['nproc'] = -1
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    print(cl.output)
+    # Unfortunately, the LoggerProxy doesn't really work right with the string logger used
+    # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
+    # logs and couldn't get it working.  So this just checks for an info log before the
+    # multithreading starts.  But with a regular logger, there really is profiling output.
+    assert "Starting separate profiling for each of the" in cl.output
+
     # If there is no output field, the default behavior is to write to root.fits.
     os.remove('output_fits/test_fits_0.fits')
     del config['output']
