@@ -88,6 +88,8 @@ script:
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     # Note: This outputs a bunch of warnings that read
+    # Coverage.py warning: Module galsim was previously imported, but not measured.
+    # I think this is probably ok, since it seems to measure the coverage properly.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase --processes=2 --process-timeout=60"
     # Without cover-erase, this will append to the .coverage file
     - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest --processes=2 --process-timeout=300"
