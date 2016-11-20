@@ -1065,7 +1065,7 @@ class PhaseScreenPSF(GSObject):
             for i in range(self._nstep):
                 self._step()
                 self.screen_list.advance()
-                if _bar is not None:  # pragma: nocover
+                if _bar is not None:  # pragma: no cover
                     _bar.update()
             self._finalize(flux, suppress_warning)
 
