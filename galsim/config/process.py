@@ -440,7 +440,7 @@ def SetupConfigRNG(config, seed_offset=0):
         for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
             config.pop(key, None)
 
-    if 'random_seed' in config['image']:
+    if 'image' in config and 'random_seed' in config['image']:
         if index_key == 'obj_num':
             # The normal case
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]

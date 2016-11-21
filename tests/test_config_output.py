@@ -894,6 +894,30 @@ def test_config():
     except ImportError:
         pass
 
+@timer
+def test_no_output():
+    """Technically, it is permissible to not have an output field.
+
+    This is pretty contrived, but make sure it works as intended.
+    """
+    config = {
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 1.7,
+            'flux' : 100,
+        },
+        'root' : 'output/test_no_output'  # The galsim executable sets this to the base name of
+                                          # the config file.
+    }
+    file_name = 'output/test_no_output.fits'
+    if os.path.exists(file_name):
+        os.remove(file_name)
+    galsim.config.Process(config)
+    assert os.path.exists(file_name)
+    im1 = galsim.fits.read(file_name)
+    im2 = galsim.Gaussian(sigma=1.7,flux=100).drawImage(scale=1)
+    np.testing.assert_equal(im1.array,im2.array)
+
 
 if __name__ == "__main__":
     test_fits()
@@ -905,3 +929,4 @@ if __name__ == "__main__":
     test_extra_truth()
     test_retry_io()
     test_config()
+    test_no_output()

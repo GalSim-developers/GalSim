@@ -268,16 +268,10 @@ def GetNObjForImage(config, image_num):
 
     @returns the number of objects
     """
-    image = config['image']
-    if 'type' in image:
-        image_type = image['type']
-    else:
-        image_type = 'Single'
-
-    # Check that the type is valid
+    image = config.get('image',{})
+    image_type = image.get('type','Single')
     if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%type)
-
+        raise AttributeError("Invalid image.type=%s."%image_type)
     return valid_image_types[image_type].getNObj(image,config,image_num)
 
 
@@ -347,7 +341,7 @@ def MakeImageTasks(config, jobs, logger):
     image = config.get('image', {})
     image_type = image.get('type', 'Single')
     if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%type)
+        raise AttributeError("Invalid image.type=%s."%image_type)
     return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
 
 

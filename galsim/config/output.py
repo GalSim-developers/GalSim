@@ -254,8 +254,10 @@ def GetNImagesForFile(config, file_num):
 
     @returns the number of images
     """
-    output = config['output']
-    output_type = output['type']
+    output = config.get('output',{})
+    output_type = output.get('type','Fits')
+    if output_type not in valid_output_types:
+        raise AttributeError("Invalid output.type=%s."%output_type)
     return valid_output_types[output_type].getNImages(output, config, file_num)
 
 
