@@ -25,6 +25,7 @@ import logging
 import math
 import yaml
 import json
+import re
 
 from galsim_test_helpers import *
 
@@ -724,15 +725,17 @@ def test_extra_truth():
 def test_retry_io():
     """Test the retry_io option
     """
-    # Make a class that mimics writeMulti, except that it fails about half the time.
+    # Make a class that mimics writeMulti, except that it fails about 1/3 of the time.
     class FlakyWriter(object):
         def __init__(self, rng): self.ud = galsim.UniformDeviate(rng)
         def writeFile(self, *args, **kwargs):
-            if self.ud() < 0.5:
-                galsim.fits.writeMulti(*args, **kwargs)
+            p = self.ud()
+            if p < 0.33:
+                raise IOError("p = %f"%p)
             else:
-                raise IOError
-    flaky_writer = FlakyWriter(galsim.BaseDeviate(1234))
+                galsim.fits.writeMulti(*args, **kwargs)
+    flaky_rng = galsim.BaseDeviate(1234)
+    flaky_writer = FlakyWriter(flaky_rng)
 
     # Now make a copy of Fits and ExtraWeight using this writer.
     class FlakyFits(galsim.config.OutputBuilder):
@@ -769,21 +772,23 @@ def test_retry_io():
 
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
-    assert "File output/test_flaky_fits_2.fits: Caught IOError" in cl.output
-    assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
-    assert "file 2: Wrote FlakyFits to file 'output/test_flaky_fits_2.fits'" in cl.output
-    assert "File output/test_flaky_wt_3.fits: Caught IOError: " in cl.output
+    #print(cl.output)
+    assert "File output/test_flaky_fits_0.fits: Caught IOError" in cl.output
     assert "This is try 2/6, so sleep for 2 sec and try again." in cl.output
-    assert "file 3: Wrote flaky_weight to 'output/test_flaky_wt_3.fits'" in cl.output
+    assert "file 0: Wrote FlakyFits to file 'output/test_flaky_fits_0.fits'" in cl.output
+    assert "File output/test_flaky_wt_0.fits: Caught IOError: " in cl.output
+    assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
+    assert "file 0: Wrote flaky_weight to 'output/test_flaky_wt_0.fits'" in cl.output
 
     # Now the regular versions.
-    config['output'] = {
+    config2 = galsim.config.CopyConfig(config)
+    config2['output'] = {
         'type' : 'Fits',
-        'nfiles' : 6,
+        'nfiles' : nfiles,
         'file_name' : "$'output/test_nonflaky_fits_%d.fits'%file_num",
         'weight' : { 'file_name' : "$'output/test_nonflaky_wt_%d.fits'%file_num" },
     }
-    galsim.config.Process(config)
+    galsim.config.Process(config2)
 
     for k in range(nfiles):
         im1 = galsim.fits.read('output/test_flaky_fits_%d.fits'%k)
@@ -792,6 +797,45 @@ def test_retry_io():
         wt1 = galsim.fits.read('output/test_flaky_wt_%d.fits'%k)
         wt2 = galsim.fits.read('output/test_nonflaky_wt_%d.fits'%k)
         np.testing.assert_array_equal(wt1.array, wt2.array)
+
+    # Without retry_io, it will fail, but keep going
+    flaky_rng.seed(1234)
+    del config['output']['retry_io']
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    #print(cl.output)
+    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
+    assert "File output/test_flaky_fits_1.fits not written! Continuing on..." in cl.output
+    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
+    assert "file 3: Wrote FlakyFits to file 'output/test_flaky_fits_3.fits'" in cl.output
+    assert "file 3: Wrote flaky_weight to 'output/test_flaky_wt_3.fits'" in cl.output
+    assert "File 3 = output/test_flaky_fits_3.fits" in cl.output
+
+    # Also works in nproc > 1 mode
+    # However, because the flaky_writer's rng gets pickled, it's not the same result as
+    # what we get in the single processing case.  Different files fail.
+    config['output']['nproc'] = 2
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    #print(cl.output)
+    assert re.search("Process-.: File 0 = output/test_flaky_fits_0.fits", cl.output)
+    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
+    assert re.search("Process-.: Exception caught for file 2 = output/test_flaky_fits_2.fits",
+                     cl.output)
+    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
+
+    # But with except_abort = True, it will stop after the first failure
+    del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
+    with CaptureLog() as cl:
+        try:
+            galsim.config.Process(config, logger=cl.logger, except_abort=True)
+        except IOError as e:
+            assert str(e) == "p = 0.093326"
+    #print(cl.output)
+    assert "File 0 = output/test_flaky_fits_0.fits" in cl.output
+    assert "File output/test_flaky_fits_1.fits not written." in cl.output
+
 
 
 @timer

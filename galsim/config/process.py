@@ -867,7 +867,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 # res is really the exception, e
                 # t is really the traceback
                 # k is the index for the job that failed
-                if except_func is not None:
+                if except_func is not None:  # pragma: no branch
                     except_func(logger, proc, k, res, t)
                 if except_abort or isinstance(res,KeyboardInterrupt):
                     for j in range(nproc):
