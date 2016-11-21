@@ -229,17 +229,17 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
                 raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             if not isinstance(d[k], dict):
-                if value_type is None:
+                if value_type is not None or (isinstance(d[k],str) and d[k][0] in ['@','$']):
+                    # This will work fine to evaluate the current value, but will also
+                    # compute it if necessary
+                    #print('Not dict. Parse value normally')
+                    val, safe = ParseValue(d, k, base, value_type)
+                else:
                     # If we are not given the value_type, and it's not a dict, then the
                     # item is probably just some value already.
                     #print('Not dict, no value_type.  Assume %s is ok.'%d[k])
                     val = d[k]
                     safe = True
-                else:
-                    # This will work fine to evaluate the current value, but will also
-                    # compute it if necessary
-                    #print('Not dict. Parse value normally')
-                    val, safe = ParseValue(d, k, base, value_type)
             else:
                 if use_index_key is not None and 'index_key' not in d[k]:
                     #print('Set d[k] index_key to ',use_index_key)

@@ -661,6 +661,66 @@ def test_extra_psf():
 
 
 @timer
+def test_extra_truth():
+    """Test the extra truth field
+    """
+    nobjects = 6
+    config = {
+        'image' : {
+            'type' : 'Tiled',
+            'nx_tiles' : nobjects,
+            'ny_tiles' : 1,
+            'stamp_xsize' : 32,
+            'stamp_ysize' : 32,
+            'random_seed' : 1234,
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2 },
+            'flux' : '$100 * obj_num',
+        },
+        'output' : {
+            'type' : 'Fits',
+            'file_name' : 'output/test_truth.fits',
+            'truth' : {
+                'hdu' : 1,
+                'columns' : {
+                    'object_id' : 'obj_num',
+                    'flux' : 'gal.flux',
+                    # Check several different ways to do calculations
+                    'sigma' : '@gal.sigma',  # The @ is not required, but allowed.
+                    'hlr' : '$(@gal.sigma) * np.sqrt(2.*math.log(2))',
+                    'fwhm' : '$(@gal).fwhm',
+                    'pos' : 'image_pos'
+                }
+            }
+        }
+    }
+
+    galsim.config.Process(config)
+
+    sigma_list = []
+    for k in range(nobjects):
+        ud = galsim.UniformDeviate(1234 + k + 1)
+        sigma = ud() + 1.
+        flux = k * 100
+        gal = galsim.Gaussian(sigma=sigma, flux=flux)
+        sigma_list.append(sigma)
+    sigma = np.array(sigma_list)
+
+    file_name = 'output/test_truth.fits'
+    cat = galsim.Catalog(file_name, hdu=1)
+    obj_num = np.array(range(nobjects))
+    np.testing.assert_almost_equal(cat.data['object_id'], obj_num)
+    np.testing.assert_almost_equal(cat.data['flux'], 100.*obj_num)
+    np.testing.assert_almost_equal(cat.data['sigma'], sigma)
+    np.testing.assert_almost_equal(cat.data['hlr'], sigma * galsim.Gaussian._hlr_factor)
+    np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
+    np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
+    np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
+
+
+@timer
 def test_retry_io():
     """Test the retry_io option
     """
@@ -842,5 +902,6 @@ if __name__ == "__main__":
     test_skip()
     test_extra_wt()
     test_extra_psf()
+    test_extra_truth()
     test_retry_io()
     test_config()
