@@ -63,10 +63,10 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             are not going to change every file, so it can be made once and
                             used by multiple processes if appropriate. [default: False]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
-    if logger:
-        logger.debug('file %d: Start ProcessInput',file_num)
+    logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
         # We'll iterate through this list of keys a few times
@@ -130,8 +130,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             # Skip this key if not relevant for file_scope_only run.
             if file_scope_only and not loader.file_scope: continue
 
-            if logger:
-                logger.debug('file %d: Process input key %s',file_num,key)
+            logger.debug('file %d: Process input key %s',file_num,key)
             fields = config['input'][key]
             # Make sure all the input fields are lists.  If not, then we make them a
             # list with one element.
@@ -141,15 +140,12 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 field = fields[i]
                 input_objs = config['input_objs'][key]
                 input_objs_safe = config['input_objs'][key+'_safe']
-                if logger:
-                    logger.debug('file %d: Current values for %s are %s, safe = %s',
-                                 file_num, key, str(input_objs[i]), input_objs_safe[i])
+                logger.debug('file %d: Current values for %s are %s, safe = %s',
+                             file_num, key, str(input_objs[i]), input_objs_safe[i])
                 if input_objs[i] is not None and input_objs_safe[i]:
-                    if logger:
-                        logger.debug('file %d: Using %s already read in',file_num,key)
+                    logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
-                    if logger:
-                        logger.debug('file %d: Build input type %s',file_num,key)
+                    logger.debug('file %d: Build input type %s',file_num,key)
                     try:
                         kwargs, safe = loader.getKwargs(field, config, logger)
                     except KeyboardInterrupt:
@@ -161,9 +157,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         # So in this case, we just continue on.  If it was not a safe_only run,
                         # the exception is reraised.
                         if safe_only:
-                            if logger:
-                                logger.debug('file %d: Skip %s %d, since caught exception: %s',
-                                             file_num,key,i,e)
+                            logger.debug('file %d: Skip %s %d, since caught exception: %s',
+                                         file_num,key,i,e)
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
@@ -171,27 +166,23 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             raise
 
                     if safe_only and not safe:
-                        if logger:
-                            logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
+                        logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
                         input_objs[i] = None
                         input_objs_safe[i] = None
                         continue
 
-                    if logger:
-                        logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
+                    logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
                     if use_manager:
                         tag = key + str(i)
                         input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     else:
                         input_obj = loader.init_func(**kwargs)
 
-                    if logger:
-                        logger.debug('file %d: Built input object %s %d',file_num,key,i)
-                        if 'file_name' in kwargs:
-                            logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
-                    if logger:
-                        if loader.has_nobj:
-                            logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
+                    logger.debug('file %d: Built input object %s %d',file_num,key,i)
+                    if 'file_name' in kwargs:
+                        logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
+                    if loader.has_nobj:
+                        logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
 
                     # Store input_obj in the config for use by BuildGSObject function.
                     input_objs[i] = input_obj
@@ -201,9 +192,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in connected_types[key]:
                         galsim.config.RemoveCurrent(config, type=value_type)
-                        if logger:
-                            logger.debug('file %d: Cleared current_vals for items with type %s',
-                                         file_num,value_type)
+                        logger.debug('file %d: Cleared current_vals for items with type %s',
+                                     file_num,value_type)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -231,6 +221,7 @@ def ProcessInputNObjects(config, logger=None):
 
     @returns the number of objects to use.
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['index_key'] = 'file_num'
     if 'input' in config:
         if 'input_objs' not in config: ProcessInput(config)
@@ -247,9 +238,8 @@ def ProcessInputNObjects(config, logger=None):
                     kwargs, safe = loader.getKwargs(field, config, logger)
                     kwargs['_nobjects_only'] = True
                     input_obj = loader.init_func(**kwargs)
-                if logger:
-                    logger.debug('file %d: Found nobjects = %d for %s',
-                                 config['file_num'],input_obj.getNOjects(),key)
+                logger.debug('file %d: Found nobjects = %d for %s',
+                             config['file_num'],input_obj.getNObjects(),key)
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None

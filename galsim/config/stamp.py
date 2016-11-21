@@ -57,9 +57,9 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     @returns the tuple (images, current_vars).  Both are lists.
     """
-    if logger:
-        logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
-                     config.get('image_num',0),nobjects,obj_num)
+    logger = galsim.config.LoggerWrapper(logger)
+    logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
+                 config.get('image_num',0),nobjects,obj_num)
 
     # Figure out how many processes we will use for building the stamps:
     if nobjects > 1 and 'image' in config and 'nproc' in config['image']:
@@ -80,7 +80,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         jobs.append(kwargs)
 
     def done_func(logger, proc, k, result, t):
-        if logger and result[0] is not None:
+        if result[0] is not None:
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
@@ -90,13 +90,12 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
-            if proc is None: s0 = ''
-            else: s0 = '%s: '%proc
-            obj_num = jobs[k]['obj_num']
-            logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
-            logger.warning('%s',tr)
-            logger.error('Aborting the rest of this image')
+        if proc is None: s0 = ''
+        else: s0 = '%s: '%proc
+        obj_num = jobs[k]['obj_num']
+        logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
+        logger.warning('%s',tr)
+        logger.error('Aborting the rest of this image')
 
     # Convert to the tasks structure we need for MultiProcess.
     # Each task is a list of (job, k) tuples.
@@ -108,10 +107,9 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     images, current_vars = zip(*results)
 
-    if logger:
-        logger.debug('image %d: Done making stamps',config.get('image_num',0))
-        if all(im is None for im in images):
-            logger.error('No stamps were built.  All objects were skipped.')
+    logger.debug('image %d: Done making stamps',config.get('image_num',0))
+    if all(im is None for im in images):
+        logger.error('No stamps were built.  All objects were skipped.')
 
     return images, current_vars
 
@@ -263,6 +261,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     @returns the tuple (image, current_var)
     """
+    logger = galsim.config.LoggerWrapper(logger)
     SetupConfigObjNum(config,obj_num)
 
     stamp = config['stamp']
@@ -273,8 +272,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
     seed = galsim.config.SetupConfigRNG(config, seed_offset=1)
-    if logger:
-        logger.debug('obj %d: seed = %d',obj_num,seed)
+    logger.debug('obj %d: seed = %d',obj_num,seed)
 
     if 'retry_failures' in stamp:
         ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
@@ -304,15 +302,14 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # Save these values for possible use in Evals or other modules
             SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
             stamp_center = config['stamp_center']
-            if logger:
-                if xsize:
-                    logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
-                if image_pos:
-                    logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
-                if world_pos:
-                    logger.debug('obj %d: world_pos = %s',obj_num,world_pos)
-                if stamp_center:
-                    logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
+            if xsize:
+                logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
+            if image_pos:
+                logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
+            if world_pos:
+                logger.debug('obj %d: world_pos = %s',obj_num,world_pos)
+            if stamp_center:
+                logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
 
             # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
@@ -326,9 +323,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                                                   logger=logger)[0]
                 prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
             except galsim.config.gsobject.SkipThisObject as e:
-                if logger:
-                    logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-                    logger.info('Skipping object %d',obj_num)
+                logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+                logger.info('Skipping object %d',obj_num)
                 skip = True
                 # Note: Skip is different from Reject.
                 #       Skip means we return None for this stamp image and continue on.
@@ -350,9 +346,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 offset = config['stamp_offset']
                 if 'offset' in stamp:
                     offset += galsim.config.ParseValue(stamp, 'offset', config, galsim.PositionD)[0]
-                if logger:
-                    logger.debug('obj %d: stamp_offset = %s, offset = %s',obj_num,
-                                 config['stamp_offset'], offset)
+                logger.debug('obj %d: stamp_offset = %s, offset = %s',obj_num,
+                             config['stamp_offset'], offset)
 
                 im = builder.draw(prof, im, method, offset, stamp, config, logger)
 
@@ -378,9 +373,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 reject = builder.reject(stamp, config, prof, psf, im, logger)
                 if reject:
                     if itry < ntries:
-                        if logger:
-                            logger.warning('Object %d: Rejecting this object and rebuilding',
-                                           obj_num)
+                        logger.warning('Object %d: Rejecting this object and rebuilding', obj_num)
                         builder.reset(config, logger)
                         continue
                     else:
@@ -394,9 +387,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             if not skip:
                 current_var = builder.whiten(prof, im, stamp, config, logger)
                 if current_var != 0.:
-                    if logger:
-                        logger.debug('obj %d: whitening noise brought current var to %f',
-                                     config['obj_num'],current_var)
+                    logger.debug('obj %d: whitening noise brought current var to %f',
+                                 config['obj_num'],current_var)
             else:
                 current_var = 0.
 
@@ -411,20 +403,18 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         except Exception as e:
             if itry >= ntries:
                 # Then this was the last try.  Just re-raise the exception.
-                if logger:
-                    logger.info('Object %d: Caught exception %s',obj_num,str(e))
-                    if ntries > 1:
-                        logger.error(
-                            'Object %d: Too many exceptions/rejections for this object. Aborting.',
-                            obj_num)
+                logger.info('Object %d: Caught exception %s',obj_num,str(e))
+                if ntries > 1:
+                    logger.error(
+                        'Object %d: Too many exceptions/rejections for this object. Aborting.',
+                        obj_num)
                 raise
             else:
-                if logger:
-                    logger.info('Object %d: Caught exception %s',obj_num,str(e))
-                    logger.info('This is try %d/%d, so trying again.',itry,ntries)
-                    import traceback
-                    tr = traceback.format_exc()
-                    logger.debug('obj %d: Traceback = %s',obj_num,tr)
+                logger.info('Object %d: Caught exception %s',obj_num,str(e))
+                logger.info('This is try %d/%d, so trying again.',itry,ntries)
+                import traceback
+                tr = traceback.format_exc()
+                logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
                 builder.reset(config, logger)
@@ -476,6 +466,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
 
     @returns the resulting image
     """
+    logger = galsim.config.LoggerWrapper(logger)
     # Setup the kwargs to pass to drawImage
     # (Start with any additional kwargs given as extra kwargs to DrawBasic and add to it.)
     kwargs['image'] = image
@@ -494,10 +485,9 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         if method != 'phot':
             raise AttributeError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config:
-            if logger:
-                logger.warning(
-                    "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
-                    "ignoring 'max_extra_noise'.")
+            logger.warning(
+                "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
+                "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
     elif 'max_extra_noise' in config:
         max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
@@ -521,7 +511,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.
         alt_kwargs = { k : kwargs[k] if k != 'image' else str(kwargs[k]) for k in kwargs}
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
@@ -762,7 +752,7 @@ class StampBuilder(object):
         @returns image, prof  (after being properly scaled)
         """
         if scale_factor != 1.0:
-            if logger and method == 'phot':
+            if method == 'phot':
                 logger.warning(
                     "signal_to_noise calculation is not accurate for draw_method = phot")
             image *= scale_factor
@@ -797,8 +787,7 @@ class StampBuilder(object):
 
         if 'reject' in config:
             if galsim.config.ParseValue(config, 'reject', base, bool)[0]:
-                if logger:
-                    logger.info('obj %d: reject evaluated to True',base['obj_num'])
+                logger.info('obj %d: reject evaluated to True',base['obj_num'])
                 return True
         if 'min_flux_frac' in config:
             if not isinstance(prof, galsim.GSObject):
@@ -807,13 +796,11 @@ class StampBuilder(object):
             expected_flux = prof.flux
             measured_flux = np.sum(image.array)
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
-            if logger:
-                logger.debug('obj %d: flux_frac = %f', base.get('obj_num',0),
-                             measured_flux / expected_flux)
+            logger.debug('obj %d: flux_frac = %f', base.get('obj_num',0),
+                         measured_flux / expected_flux)
             if measured_flux < min_flux_frac * expected_flux:
-                if logger:
-                    logger.warning('Object %d: Measured flux = %f < %s * %f.',
-                                   base['obj_num'], measured_flux, min_flux_frac, expected_flux)
+                logger.warning('Object %d: Measured flux = %f < %s * %f.',
+                               base['obj_num'], measured_flux, min_flux_frac, expected_flux)
                 return True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, galsim.GSObject):
@@ -822,21 +809,18 @@ class StampBuilder(object):
             var = galsim.config.CalculateNoiseVariance(base)
             sumsq = np.sum(image.array**2)
             snr = np.sqrt(sumsq / var)
-            if logger:
-                logger.debug('obj %d: snr = %f', base.get('obj_num',0), snr)
+            logger.debug('obj %d: snr = %f', base.get('obj_num',0), snr)
             if 'min_snr' in config:
                 min_snr = galsim.config.ParseValue(config, 'min_snr', base, float)[0]
                 if snr < min_snr:
-                    if logger:
-                        logger.warning('Object %d: Measured snr = %f < %s.',
-                                       base['obj_num'], snr, min_snr)
+                    logger.warning('Object %d: Measured snr = %f < %s.',
+                                   base['obj_num'], snr, min_snr)
                     return True
             if 'max_snr' in config:
                 max_snr = galsim.config.ParseValue(config, 'max_snr', base, float)[0]
                 if snr > max_snr:
-                    if logger:
-                        logger.warning('Object %d: Measured snr = %f > %s.',
-                                       base['obj_num'], snr, max_snr)
+                    logger.warning('Object %d: Measured snr = %f > %s.',
+                                   base['obj_num'], snr, max_snr)
                     return True
         return False
 

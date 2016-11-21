@@ -43,6 +43,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     @param except_abort     Whether to abort processing when a file raises an exception (True)
                             or just report errors and continue on (False). [default: False]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     import time
     t1 = time.time()
 
@@ -118,16 +119,15 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
             logger.warning(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:  # pragma: no cover
-            file_num, file_name = info[k]
-            if proc is None: s0 = ''
-            else: s0 = '%s: '%proc
-            logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)
-            logger.error('%s',tr)
-            if except_abort:
-                logger.error('File %s not written.',file_name)
-            else:
-                logger.error('File %s not written! Continuing on...',file_name)
+        file_num, file_name = info[k]
+        if proc is None: s0 = ''
+        else: s0 = '%s: '%proc
+        logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)
+        logger.error('%s',tr)
+        if except_abort:
+            logger.error('File %s not written.',file_name)
+        else:
+            logger.error('File %s not written! Continuing on...',file_name)
 
     # Convert to the tasks structure we need for MultiProcess
     # Each task is a list of (job, k) tuples.  In this case, we only have one job per task.
@@ -146,14 +146,12 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nfiles_written = sum([ t!=0 for t in times])
 
     if nfiles_written == 0:  # pragma: no cover
-        if logger:
-            logger.error('No files were written.  All were either skipped or had errors.')
+        logger.error('No files were written.  All were either skipped or had errors.')
     else:
-        if logger:
-            if nfiles_written > 1 and nproc != 1:
-                logger.warning('Total time for %d files with %d processes = %f sec',
-                               nfiles_written,nproc,t2-t1)
-            logger.warning('Done building files')
+        if nfiles_written > 1 and nproc != 1:
+            logger.warning('Total time for %d files with %d processes = %f sec',
+                           nfiles_written,nproc,t2-t1)
+        logger.warning('Done building files')
 
 
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
@@ -171,13 +169,13 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     @returns a tuple of the file name and the time taken to build file: (file_name, t)
     Note: t==0 indicates that this file was skipped.
     """
+    logger = galsim.config.LoggerWrapper(logger)
     import time
     t1 = time.time()
 
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = galsim.config.SetupConfigRNG(config)
-    if logger:
-        logger.debug('file %d: seed = %d',file_num,seed)
+    logger.debug('file %d: seed = %d',file_num,seed)
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
@@ -189,9 +187,8 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     output = config['output']
     output_type = output['type']
 
-    if logger:
-        logger.debug('file %d: BuildFile with type=%s to build %d images, starting with %d',
-                      file_num,output_type,nimages,image_num)
+    logger.debug('file %d: BuildFile with type=%s to build %d images, starting with %d',
+                 file_num,output_type,nimages,image_num)
 
     # Make sure the inputs and extra outputs are set up properly.
     galsim.config.ProcessInput(config, file_num=file_num, logger=logger)
@@ -204,22 +201,19 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     # Check if we ought to skip this file
     if 'skip' in output and galsim.config.ParseValue(output, 'skip', config, bool)[0]:
-        if logger:
-            logger.warning('Skipping file %d = %s because output.skip = True',file_num,file_name)
+        logger.warning('Skipping file %d = %s because output.skip = True',file_num,file_name)
         return file_name, 0  # Note: time=0 is the indicator that a file was skipped.
     if ('noclobber' in output
         and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
         and os.path.isfile(file_name)):
-        if logger:
-            logger.warning('Skipping file %d = %s because output.noclobber = True' +
-                           ' and file exists',file_num,file_name)
+        logger.warning('Skipping file %d = %s because output.noclobber = True' +
+                       ' and file exists',file_num,file_name)
         return file_name, 0
 
-    if logger:
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: file_name = %s',file_num,file_name)
-        else:
-            logger.warning('Start file %d = %s', file_num, file_name)
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: file_name = %s',file_num,file_name)
+    else:
+        logger.warning('Start file %d = %s', file_num, file_name)
 
     ignore = output_ignore + list(galsim.config.valid_extra_outputs)
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
@@ -228,8 +222,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     data = [ im for im in data if im is not None ]
 
     if len(data) == 0:
-        if logger:
-            logger.warning('Skipping file %d = %s because all images were None',file_num,file_name)
+        logger.warning('Skipping file %d = %s because all images were None',file_num,file_name)
         return file_name, 0
 
     if builder.canAddHdus():
@@ -244,8 +237,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     args = (data, file_name)
     RetryIO(builder.writeFile, args, ntries, file_name, logger)
-    if logger:
-        logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
+    logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
     galsim.config.WriteExtraOutputs(config,data,logger)
     t2 = time.time()
@@ -350,10 +342,9 @@ def RetryIO(func, args, ntries, file_name, logger):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger:
-                    logger.warning('File %s: Caught IOError: %s',file_name,str(e))
-                    logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
-                                   itry,ntries,itry)
+                logger.warning('File %s: Caught IOError: %s',file_name,str(e))
+                logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
+                               itry,ntries,itry)
                 import time
                 time.sleep(itry * _sleep_mult)
                 continue

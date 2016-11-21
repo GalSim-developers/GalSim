@@ -42,6 +42,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
     @param file_num     The file number being worked on currently. [default: 0]
     @param logger       If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
 
     # We'll iterate through this list of keys a few times
@@ -69,8 +70,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
         config['extra_builder'] = {}
 
     for key in all_keys:
-        if logger:
-            logger.debug('file %d: Setup output item %s',file_num,key)
+        logger.debug('file %d: Setup output item %s',file_num,key)
 
         # Make the work space structures
         if use_manager:
@@ -93,8 +93,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
         # And store it in the config dict
         config['extra_builder'][key] = builder
 
-        if logger:
-            logger.debug('file %d: Setup output %s object',file_num,key)
+        logger.debug('file %d: Setup output %s object',file_num,key)
 
 
 def SetupExtraOutputsForImage(config, logger=None):
@@ -163,6 +162,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
     @param main_data    The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['index_key'] = 'file_num'
     output = config['output']
     if 'retry_io' in output:
@@ -204,17 +204,15 @@ def WriteExtraOutputs(config, main_data, logger=None):
         galsim.config.EnsureDir(file_name)
 
         if noclobber and os.path.isfile(file_name):  # pragma: no cover
-            if logger:
-                logger.warning('Not writing %s file %d = %s because output.noclobber = True' +
-                                ' and file exists',key,config['file_num'],file_name)
+            logger.warning('Not writing %s file %d = %s because output.noclobber = True' +
+                           ' and file exists',key,config['file_num'],file_name)
             continue
 
         if config['extra_last_file'].get(key, None) == file_name:
             # If we already wrote this file, skip it this time around.
             # (Typically this is applicable for psf, where we may only want 1 psf file.)
-            if logger:
-                logger.info('Not writing %s file %d = %s because already written',
-                            key,config['file_num'],file_name)
+            logger.info('Not writing %s file %d = %s because already written',
+                        key,config['file_num'],file_name)
             continue
 
         builder = config['extra_builder'][key]
@@ -227,8 +225,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
         args = (file_name,field,config,logger)
         galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
         config['extra_last_file'][key] = file_name
-        if logger:
-            logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
+        logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
 def AddExtraOutputHDUs(config, main_data, logger=None):

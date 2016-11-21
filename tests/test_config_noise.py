@@ -242,7 +242,7 @@ def test_ccdnoise():
 
     # Check that the CCDNoiseBuilder calculates the same variance as CCDNoise
     var1 = noise.getVariance()
-    var2 = galsim.config.noise.CCDNoiseBuilder().getNoiseVariance(config['image']['noise'],config)
+    var2 = galsim.config.CalculateNoiseVariance(config)
     np.testing.assert_almost_equal(var1, var2,
                                    err_msg="CCDNoiseBuidler calculates the wrong variance")
 
@@ -254,9 +254,8 @@ def test_ccdnoise():
     # without any real noise there yet.
     image2.fill(0)
     rng.reset(124)
-    galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'], config, image2, rng,
-            current_var = 1.e-20, draw_method='fft', logger=logger)
+    config['rng'] = rng
+    galsim.config.AddNoise(config, image2, current_var=1.e-20, logger=logger)
 
     print('with negligible current_var: ',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
@@ -266,9 +265,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=rn/gain)
     image2.addNoise(gn)
-    galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'], config, image2, rng,
-            current_var = (rn/gain)**2, draw_method='fft', logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(rn/gain)**2, logger=logger)
 
     print('current_var == read_noise: ',np.mean(image2.array),np.var(image2.array))
     # So far we've done this to very high accuracy, since we've been using the same rng seed,
@@ -281,9 +278,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=0.5*rn/gain)
     image2.addNoise(gn)
-    galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'], config, image2, rng,
-            current_var = (0.5*rn/gain)**2, draw_method='fft', logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(0.5*rn/gain)**2, logger=logger)
 
     print('current_var < read_noise: ',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
@@ -293,9 +288,7 @@ def test_ccdnoise():
     image2.fill(0)
     gn = galsim.GaussianNoise(rng=rng, sigma=2.*rn/gain)
     image2.addNoise(gn)
-    galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'], config, image2, rng,
-            current_var = (2.*rn/gain)**2, draw_method='fft', logger=logger)
+    galsim.config.AddNoise(config, image2, current_var=(2.*rn/gain)**2, logger=logger)
 
     print('current_var > read_noise',np.mean(image2.array),np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,

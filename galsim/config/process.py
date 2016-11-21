@@ -43,6 +43,7 @@ def MergeConfig(config1, config2, logger=None):
             Then the returned dict will have both.
     For real conflicts (the same value in both cases), config1's value takes precedence
     """
+    logger = LoggerWrapper(logger)
     for (key, value) in config2.items():
         if not key in config1:
             # If this key isn't in config1 yet, just add it
@@ -53,9 +54,8 @@ def MergeConfig(config1, config2, logger=None):
             MergeConfig(config1[key],value,logger)
         else:
             # Otherwise config1 takes precedence
-            if logger:
-                logger.info("Not merging key %s from the base config, since the later "
-                            "one takes precedence",key)
+            logger.info("Not merging key %s from the base config, since the later "
+                        "one takes precedence",key)
             pass
 
 def ReadYaml(config_file):
@@ -194,6 +194,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
 
     @returns list of config dicts
     """
+    logger = LoggerWrapper(logger)
     # Determine the file type from the extension if necessary:
     if file_type is None:
         import os
@@ -203,19 +204,15 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger:
-            logger.debug('File type determined to be %s', file_type)
+        logger.debug('File type determined to be %s', file_type)
     else:
-        if logger:
-            logger.debug('File type specified to be %s', file_type)
+        logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger:
-            logger.info('Reading YAML config file %s', config_file)
+        logger.info('Reading YAML config file %s', config_file)
         config = galsim.config.ReadYaml(config_file)
     else:
-        if logger:
-            logger.info('Reading JSON config file %s', config_file)
+        logger.info('Reading JSON config file %s', config_file)
         config = galsim.config.ReadJson(config_file)
 
     galsim.config.ConvertNones(config)
@@ -328,7 +325,14 @@ class LoggerWrapper(object):
     @param logger       The logger object to wrap.
     """
     def __init__(self, logger):
-        self.logger = logger
+        if isinstance(logger,LoggerWrapper):
+            self.logger = logger.logger
+        else:
+            self.logger = logger
+
+    def __bool__(self):
+        return self.logger is not None
+    __nonzero__ = __bool__
 
     def debug(self, *args, **kwargs):
         if self.logger and self.logger.isEnabledFor(logging.DEBUG):
@@ -371,34 +375,31 @@ def UpdateNProc(nproc, ntot, config, logger=None):
 
     @returns the number of processes to use.
     """
+    logger = LoggerWrapper(logger)
     # First if nproc < 0, update based on ncpu
     if nproc <= 0:
         # Try to figure out a good number of processes to use
         try:
             from multiprocessing import cpu_count
             nproc = cpu_count()
-            if logger:
-                logger.debug("ncpu = %d.",nproc)
+            logger.debug("ncpu = %d.",nproc)
         except KeyboardInterrupt:
             raise
         except Exception as e:
-            if logger:
-                logger.warning("nproc <= 0, but unable to determine number of cpus.")
-                logger.warning("Caught error: %s",e)
-                logger.warning("Using single process")
+            logger.warning("nproc <= 0, but unable to determine number of cpus.")
+            logger.warning("Caught error: %s",e)
+            logger.warning("Using single process")
             nproc = 1
 
     # Second, make sure we aren't already in a multiprocessing mode
     if nproc > 1 and 'current_nproc' in config:
-        if logger:
-            logger.debug("Already multiprocessing.  Ignoring image.nproc")
+        logger.debug("Already multiprocessing.  Ignoring image.nproc")
         nproc = 1
 
     # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
     # It just looks bad to have 3 images processed with 8 processes or something like that.
     if nproc > ntot:
-        if logger:
-            logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
+        logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
         nproc = ntot
     return nproc
 
@@ -590,10 +591,10 @@ def ProcessTemplate(config, logger=None):
     @param config           The configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     """
+    logger = LoggerWrapper(logger)
     if 'template' in config:
         template_string = config.pop('template')
-        if logger:
-            logger.debug("Processing template specified as %s",template_string)
+        logger.debug("Processing template specified as %s",template_string)
         if ':' in template_string:
             config_file, field = template_string.split(':')
         else:
@@ -649,6 +650,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     @param except_abort     Whether to abort processing when a file raises an exception (True)
                             or just report errors and continue on (False). [default: False]
     """
+    logger = LoggerWrapper(logger)
     import pprint
     if njobs < 1:
         raise ValueError("Invalid number of jobs %d"%njobs)
@@ -679,8 +681,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger:
-        logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
+    logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
     # Warn about any unexpected fields.
     unexpected = [ k for k in config if k not in top_level_fields ]
@@ -705,17 +706,15 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1
-    if logger:
-        logger.debug('nfiles = %d',nfiles)
+    logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:
         # Start each job at file_num = nfiles * job / njobs
         start = nfiles * (job-1) // njobs
         end = nfiles * job // njobs
-        if logger:
-            logger.warning('Splitting work into %d jobs.  Doing job %d',njobs,job)
-            logger.warning('Building %d out of %d total files: file_num = %d .. %d',
-                           end-start,nfiles,start,end-1)
+        logger.warning('Splitting work into %d jobs.  Doing job %d',njobs,job)
+        logger.warning('Building %d out of %d total files: file_num = %d .. %d',
+                       end-start,nfiles,start,end-1)
         nfiles = end-start
     else:
         start = 0
@@ -793,9 +792,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
         for task in iter(task_queue.get, 'STOP'):
             try :
-                if logger:
-                    logger.debug('%s: Received job to do %d %ss, starting with %s',
-                                 proc,len(task),item,task[0][1])
+                logger.debug('%s: Received job to do %d %ss, starting with %s',
+                             proc,len(task),item,task[0][1])
                 for kwargs, k in task:
                     t1 = time.time()
                     kwargs['config'] = config
@@ -808,11 +806,9 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger:
-                    logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
+                logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
-        if logger:
-            logger.debug('%s: Received STOP', proc)
+        logger.debug('%s: Received STOP', proc)
         if pr is not None:
             pr.disable()
             try:
@@ -831,8 +827,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     njobs = sum([len(task) for task in tasks])
 
     if nproc > 1:
-        if logger:
-            logger.warning("Using %d processes for %s processing",nproc,item)
+        logger.warning("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
