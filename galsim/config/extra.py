@@ -351,7 +351,7 @@ class ExtraOutputBuilder(object):
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
-        pass
+        pass  # pragma: no cover  (all our ExtraBuilders override this function.)
 
     def processImage(self, index, obj_nums, config, base, logger):
         """Perform any necessary processing at the end of each image construction.
