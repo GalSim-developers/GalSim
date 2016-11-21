@@ -535,5 +535,5 @@ _galsim._LookupTable2D.__hash__ = lambda self: \
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str
 _galsim._LookupTable2D.__repr__ = lambda self: \
-        'galsim._galsim._LookupTable(array(%r), array(%r), array(%r), %r)'%(
+        'galsim._galsim._LookupTable2D(array(%r), array(%r), %r, %r)'%(
         self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals(), self.getInterp())

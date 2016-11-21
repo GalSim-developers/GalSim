@@ -107,6 +107,7 @@ namespace galsim {
 
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
+        double getPadFactor() const { return _pad_factor; }
         ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
 
@@ -127,6 +128,7 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        const double _pad_factor;
         mutable double _stepk;
         mutable double _maxk;
         double _flux;

@@ -121,8 +121,8 @@ class AtmosphericScreen(object):
                 self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
                 self.tab2d)
         if self.alpha != 1.0:
-            s += ", _screen=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
-            s += ", _psi=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
+            s += ", _screen=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
+            s += ", _psi=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
         s += ")"
         return s
 

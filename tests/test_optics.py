@@ -90,6 +90,8 @@ def test_OpticalPSF_flux():
                 err_msg="Unaberrated Optical flux not quite unity.")
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics_test)
+    do_pickle(optics_test._psf)
+    do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
 
 
 @timer
@@ -813,6 +815,45 @@ def test_OpticalPSF_aper():
 
 
 @timer
+def test_stepk_maxk_iipad():
+    """Test options to specify (or not) stepk, maxk, and ii_pad_factor.
+    """
+    import time
+    lam = 500
+    diam = 4.0
+
+    t0 = time.time()
+    psf = galsim.OpticalPSF(lam=lam, diam=diam)
+    print("Time for OpticalPSF with default ii_pad_factor=4 {0:6.4f}".format(time.time()-t0))
+    stepk = psf.stepK()
+    maxk = psf.maxK()
+
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
+    np.testing.assert_almost_equal(
+            psf2.stepK(), stepk/1.5, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for stepK")
+    np.testing.assert_almost_equal(
+            psf2.maxK(), maxk*2.0, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for maxK")
+
+    do_pickle(psf2)
+
+    t0 = time.time()
+    psf3 = galsim.OpticalPSF(lam=lam, diam=diam, ii_pad_factor=1.)
+    print("Time for OpticalPSF with ii_pad_factor=1 {0:6.4f}".format(time.time()-t0))
+    do_pickle(psf3)
+
+    # The two images should be close, but not equivalent.
+    im = psf.drawImage(nx=16, ny=16, scale=0.2)
+    im3 = psf3.drawImage(nx=16, ny=16, scale=0.2)
+    assert im != im3, (
+            "Images drawn from InterpolatedImages with different pad_factor unexpectedly equal.")
+
+    # Peak is ~0.2, to 1e-5 is pretty good.
+    np.testing.assert_allclose(im.array, im3.array, rtol=0, atol=1e-5)
+
+
+@timer
 def test_ne():
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
     # any images (other than internally the PSF), so should be okay.
@@ -843,7 +884,13 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, pad_factor=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
-            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
+            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, ii_pad_factor=2.)]
+    stepk = objs[0].stepK()
+    maxk = objs[0].maxK()
+    objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
+             galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_maxk=maxk*2)]
+
     if __name__ == do_slow_tests:
         objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    suppress_warning=True),
@@ -865,4 +912,5 @@ if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_OpticalPSF_aper()
+    test_stepk_maxk_iipad()
     test_ne()
