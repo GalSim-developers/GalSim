@@ -732,7 +732,8 @@ def test_scattered():
 
     # When starting from the file state, there is some extra code to test about this, so
     # check that here.
-    config['output'] = { 'file_name' : 'output/test_scattered.fits' }
+    config['output'] = { 'type' : 'MultiFits', 'file_name' : 'output/test_scattered.fits',
+                         'nimages' : 2 }
     del config['input_objs']
     galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
