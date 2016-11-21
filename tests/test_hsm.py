@@ -791,6 +791,37 @@ def test_ksb_sig():
     np.testing.assert_array_less(result_wide.corrected_g1, result_narrow.corrected_g1,
                                  "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
 
+@timer
+def test_noncontiguous():
+    """Test running HSM module with non-C-contiguous images.
+
+    This test was inspired by a bug report in issue #833.
+    """
+    gal = galsim.Gaussian(sigma=1.3).shear(g1=0.1, g2=0.2)
+
+    # First a normal C-contiguous image as build by drawImage.
+    img = gal.drawImage(nx=64, ny=64, scale=0.2)
+    meas_shape1 = galsim.hsm.FindAdaptiveMom(img).observed_shape
+    print(meas_shape1)
+    np.testing.assert_almost_equal(meas_shape1.g1, 0.1, decimal=3)
+    np.testing.assert_almost_equal(meas_shape1.g2, 0.2, decimal=3)
+
+    # Transpose the image, which should just flip the sign of g1.
+    # Note, though, that this changes the ndarray from C-ordering to FORTRAN-ordering.
+    fimg = galsim.Image(img.array.T, scale=0.2)
+    meas_shape2 = galsim.hsm.FindAdaptiveMom(fimg).observed_shape
+    print(meas_shape2)
+    np.testing.assert_almost_equal(meas_shape2.g1, -0.1, decimal=3)
+    np.testing.assert_almost_equal(meas_shape2.g2, 0.2, decimal=3)
+
+    # Also test the real part of an ImageC, which not contiguous in either direction (step=2)
+    # This should have the negative shear from drawing in k space.
+    kimg = gal.drawKImage(nx=64, ny=64)
+    meas_shape3 = galsim.hsm.FindAdaptiveMom(kimg.real).observed_shape
+    print(meas_shape3)
+    np.testing.assert_almost_equal(meas_shape3.g1, -0.1, decimal=3)
+    np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3)
+
 
 if __name__ == "__main__":
     test_moments_basic()
@@ -804,3 +835,4 @@ if __name__ == "__main__":
     test_strict()
     test_bounds_centroid()
     test_ksb_sig()
+    test_noncontiguous()

@@ -274,10 +274,10 @@ namespace galsim {
 
         //@{
         /**
-         *  @brief Return an iterator to an arbitrary pixel.
+         *  @brief Return a pointer to the data at an arbitrary pixel.
          */
-        const_iterator getIter(int x, int y) const { return _data + addressPixel(x, y); }
-        const_iterator getIter(const Position<int>& pos) const { return getIter(pos.x,pos.y); }
+        const T* getPtr(int x, int y) const { return _data + addressPixel(x, y); }
+        const T* getPtr(const Position<int>& pos) const { return getPtr(pos.x,pos.y); }
         //@}
 
         /**
