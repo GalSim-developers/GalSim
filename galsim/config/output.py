@@ -255,11 +255,7 @@ def GetNImagesForFile(config, file_num):
     @returns the number of images
     """
     output = config['output']
-    if 'type' in config['output']:
-        output_type = output['type']
-    else:
-        output_type = 'Fits'
-
+    output_type = output['type']
     return valid_output_types[output_type].getNImages(output, config, file_num)
 
 
