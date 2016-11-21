@@ -497,41 +497,6 @@ namespace galsim {
             data -= T(_sky_level);
         }
 
-        /**
-         * @brief Add noise to an Image and also report variance of each pixel.
-         *
-         * Adds noise as in applyToView(Image) signature, but second Image is filled with
-         * variance of added noise.  Note: the variance image must be the same size as the
-         * data image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         * @param[in,out] var  The Image to fill with variance of applied noise.
-         */
-        template <class T>
-        void applyToVar(ImageView<T> data, ImageView<T> var)
-        {
-            // Typedef for image row iterable
-            typedef typename ImageView<T>::iterator ImIter;
-            assert(data.getBounds() == var.getBounds());
-            // Fill with the (constant) Gaussian contribution to variance
-            if (_read_noise > 0.) {
-                double sigma = _read_noise / (_gain > 0. ? _gain : 1.);
-                var.fill(sigma * sigma);
-            }
-            // Add the Poisson variance:
-            if (_gain > 0.) {
-                for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
-                    ImIter ee = data.rowEnd(y);
-                    ImIter it2 = var.rowBegin(y);
-                    for (ImIter it = data.rowBegin(y); it != ee; ++it, ++it2) {
-                        if (*it > 0.) *it2 += (*it + _sky_level) / _gain;
-                    }
-                }
-            }
-            // then call noise method to instantiate noise
-            applyToView(data);
-        }
-
     protected:
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyToView(data); }
