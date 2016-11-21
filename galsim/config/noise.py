@@ -333,13 +333,11 @@ class PoissonNoiseBuilder(NoiseBuilder):
         if draw_method == 'phot':
             # Only add in the noise from the sky.
             if isinstance(total_sky, galsim.Image):
-                total_sky.addNoise(galsim.PoissonNoise(rng))
-                if sky:
-                    total_sky -= sky
-                if extra_sky:
-                    total_sky -= extra_sky
+                noise_im = total_sky.copy()
+                noise_im.addNoise(galsim.PoissonNoise(rng))
+                noise_im -= total_sky
                 # total_sky should now have zero mean, but with the noise of the total sky level.
-                im += total_sky
+                im += noise_im
             else:
                 im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
                 # This deviate adds a noisy version of the sky, so need to subtract the mean
@@ -447,15 +445,13 @@ class CCDNoiseBuilder(NoiseBuilder):
         if draw_method == 'phot':
             # Add in the noise from the sky.
             if isinstance(total_sky, galsim.Image):
-                if gain != 1.0: total_sky *= gain
-                total_sky.addNoise(galsim.PoissonNoise(rng))
-                if gain != 1.0: total_sky /= gain
-                if sky:
-                    total_sky -= sky
-                if extra_sky:
-                    total_sky -= extra_sky
+                noise_im = total_sky.copy()
+                if gain != 1.0: noise_im *= gain
+                noise_im.addNoise(galsim.PoissonNoise(rng))
+                if gain != 1.0: noise_im /= gain
+                noise_im -= total_sky
                 # total_sky should now have zero mean, but with the noise of the total sky level.
-                im += total_sky
+                im += noise_im
             else:
                 if gain != 1.0: im *= gain
                 pd = galsim.PoissonDeviate(rng, mean=total_sky*gain)
