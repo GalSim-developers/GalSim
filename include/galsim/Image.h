@@ -257,21 +257,6 @@ namespace galsim {
         const T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
         //@}
 
-        /**
-         *  @brief const_iterator type for pixels within a row (unchecked).
-         */
-        typedef const T* const_iterator;
-
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        const_iterator rowBegin(int y) const { return _data + addressPixel(y); }
-
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        const_iterator rowEnd(int y) const { return _data + addressPixel(this->getXMax() + 1, y); }
-
         //@{
         /**
          *  @brief Return a pointer to the data at an arbitrary pixel.
@@ -558,28 +543,6 @@ namespace galsim {
         { at(x,y) = value; }
 
         /**
-         *  @brief iterator type for pixels within a row (unchecked).
-         */
-        typedef T* iterator;
-
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        iterator rowBegin(int r) { return this->_data + this->addressPixel(r); }
-
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        iterator rowEnd(int r)
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-
-        /**
-         *  @brief Return an iterator to an arbitrary pixel.
-         */
-        iterator getIter(int x, int y)
-        { return this->_data + this->addressPixel(x, y); }
-
-        /**
          *  @brief Deep-copy pixel values from rhs to this.
          *
          *  The bounds must be commensurate (i.e. the same shape).
@@ -792,44 +755,6 @@ namespace galsim {
          */
         void setValue(int x, int y, T value)
         { at(x,y) = value; }
-
-        //@{
-        /**
-         *  @brief Iterator type for pixels within a row (unchecked).
-         */
-        typedef T* iterator;
-        typedef const T* const_iterator;
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        iterator rowBegin(int r)
-        { return this->_data + this->addressPixel(r); }
-        const_iterator rowBegin(int r) const
-        { return this->_data + this->addressPixel(r); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        iterator rowEnd(int r)
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-        const_iterator rowEnd(int r) const
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to an arbitrary pixel.
-         */
-        iterator getIter(int x, int y)
-        { return this->_data + this->addressPixel(x, y); }
-        const_iterator getIter(int x, int y) const
-        { return this->_data + this->addressPixel(x, y); }
-        //@}
 
         /**
          *  @brief Deep-copy pixel values from rhs to this.
