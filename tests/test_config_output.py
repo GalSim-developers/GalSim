@@ -124,7 +124,7 @@ def test_fits():
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
-    print(cl.output)
+    #print(cl.output)
     # Unfortunately, the LoggerProxy doesn't really work right with the string logger used
     # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
     # logs and couldn't get it working.  So this just checks for an info log before the
