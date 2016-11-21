@@ -1,3 +1,22 @@
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+from __future__ import print_function
 import galsim
 import numpy as np
 import time
@@ -9,11 +28,11 @@ def test_CRG_noise(args):
     """
     t0 = time.time()
 
-    print "Constructing chromatic PSFs"
+    print("Constructing chromatic PSFs")
     in_PSF = galsim.ChromaticAiry(lam=700., diam=2.4)
     out_PSF = galsim.ChromaticAiry(lam=700., diam=1.2)
 
-    print "Constructing filters and SEDs"
+    print("Constructing filters and SEDs")
     waves = np.arange(550.0, 900.1, 10.0)
     visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'),
                               wave_type='nm')
@@ -26,18 +45,18 @@ def test_CRG_noise(args):
 
     SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
                        flux_type='fphotons', wave_type='nm').withFlux(1.0, visband)
-            for i in xrange(args.NSED)]
+            for i in range(args.NSED)]
 
-    print "Constructing input noise correlation functions"
+    print("Constructing input noise correlation functions")
     rng = galsim.BaseDeviate(args.seed)
     in_xis = [galsim.getCOSMOSNoise(cosmos_scale=args.in_scale, rng=rng)
               .dilate(1 + i * 0.05)
               .rotate(5 * i * galsim.degrees)
-              for i in xrange(args.Nim)]
+              for i in range(args.Nim)]
 
-    print "Creating noise images"
+    print("Creating noise images")
     img_sets = []
-    for i in xrange(args.Ntrial):
+    for i in range(args.Ntrial):
         imgs = []
         for j, xi in enumerate(in_xis):
             img = galsim.Image(args.in_Nx, args.in_Nx, scale=args.in_scale)
@@ -45,7 +64,7 @@ def test_CRG_noise(args):
             imgs.append(img)
         img_sets.append(imgs)
 
-    print "Constructing `ChromaticRealGalaxy`s"
+    print("Constructing `ChromaticRealGalaxy`s")
     crgs = []
     with ProgressBar(len(img_sets)) as bar:
         for imgs in img_sets:
@@ -53,17 +72,17 @@ def test_CRG_noise(args):
                                                    _xis=in_xis, _PSFs=in_PSF, maxk=maxk))
             bar.update()
 
-    print "Convolving by output PSF"
+    print("Convolving by output PSF")
     objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
 
-    print "Drawing through output filter"
+    print("Drawing through output filter")
     out_imgs = [obj.drawImage(visband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale,
                               iimult=args.iimult)
                 for obj in objs]
 
     noise = objs[0].noise
 
-    print "Measuring images' correlation functions"
+    print("Measuring images' correlation functions")
     xi_obs = galsim.correlatednoise.CorrelatedNoise(out_imgs[0])
     for img in out_imgs[1:]:
         xi_obs += galsim.correlatednoise.CorrelatedNoise(img)
@@ -71,11 +90,11 @@ def test_CRG_noise(args):
     xi_obs_img = galsim.Image(args.out_Nx, args.out_Nx, scale=args.out_scale)
     xi_obs.drawImage(xi_obs_img)
 
-    print "Observed image variance: ", xi_obs.getVariance()
-    print "Predicted image variance: ", noise.getVariance()
-    print "Predicted/Observed variance:", noise.getVariance()/xi_obs.getVariance()
+    print("Observed image variance: ", xi_obs.getVariance())
+    print("Predicted image variance: ", noise.getVariance())
+    print("Predicted/Observed variance:", noise.getVariance()/xi_obs.getVariance())
 
-    print "Took {} seconds".format(time.time()-t0)
+    print("Took {} seconds".format(time.time()-t0))
 
     if args.plot:
         import matplotlib.pyplot as plt
