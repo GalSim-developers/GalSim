@@ -673,14 +673,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     # Import any modules if requested
     ImportModules(config)
 
-    # If we don't have a root specified yet, we generate it from the current script.
-    if 'root' not in config:
-        import inspect
-        script_name = os.path.basename(
-            inspect.getfile(inspect.currentframe())) # script filename (usually with path)
-        # Strip off a final suffix if present.
-        config['root'] = os.path.splitext(script_name)[0]
-
     logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
     # Warn about any unexpected fields.
