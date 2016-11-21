@@ -164,6 +164,31 @@ namespace galsim {
         return f;
     }
 
+    // Some functionals that are useful for operating on images:
+    template <typename T>
+    class ConstReturn
+    {
+    public:
+        ConstReturn(const T v): val(v) {}
+        T operator()(const T ) const { return val; }
+    private:
+        T val;
+    };
+
+    template <typename T>
+    class ReturnInverse
+    {
+    public:
+        T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
+    };
+
+    template <typename T1, typename T2>
+    class ReturnSecond
+    {
+    public:
+        T1 operator()(T1, T2 v) const { return T1(v); }
+    };
+
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 

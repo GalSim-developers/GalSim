@@ -597,12 +597,7 @@ namespace galsim {
         {
             if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-            for (int y=this->getYMin(), y2=rhs.getYMin(); y <= this->getYMax(); ++y, ++y2) {
-                iterator it1 = rowBegin(y);
-                const iterator ee = rowEnd(y);
-                typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
-                while (it1 != ee) *(it1++) = T(*(it2++));
-            }
+            transform_pixel(*this, rhs, ReturnSecond<T,U>());
         }
     };
 

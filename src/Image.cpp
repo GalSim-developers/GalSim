@@ -772,33 +772,7 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
     return xim.subImage(Bounds<int>(-No2, No2-1, -No2, No2-1));
 }
 
-namespace {
-
-template <typename T>
-class ConstReturn
-{
-public:
-    ConstReturn(const T v): val(v) {}
-    T operator()(const T ) const { return val; }
-private:
-    T val;
-};
-
-template <typename T>
-class ReturnInverse
-{
-public:
-    T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
-};
-
-template <typename T>
-class ReturnSecond
-{
-public:
-    T operator()(T, T v) const { return v; }
-};
-
-} // anonymous
+// The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 
 template <typename T>
 void ImageView<T>::fill(T x)
@@ -817,7 +791,7 @@ void ImageView<T>::copyFrom(const BaseImage<T>& rhs)
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
         throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, ReturnSecond<T>());
+    transform_pixel(*this, rhs, ReturnSecond<T,T>());
 }
 
 // A helper function that will return the smallest 2^n or 3x2^n value that is
