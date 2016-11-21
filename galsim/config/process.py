@@ -872,6 +872,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 if except_abort or isinstance(res,KeyboardInterrupt):
                     for j in range(nproc):
                         p_list[j].terminate()
+                    del config['current_nproc']
                     raise res
             else:
                 # The normal case
@@ -894,7 +895,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         task_queue.close()
 
         # And clear this out, so we know that we're not multiprocessing anymore.
-        config['current_nproc'] = nproc
+        del config['current_nproc']
 
     else : # nproc == 1
         results = [ None ] * njobs

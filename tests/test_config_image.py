@@ -399,6 +399,14 @@ def test_reject():
     #print(cl.output)
     assert re.search("Process-.: Exception caught when building stamp",cl.output)
 
+    try:
+        with CaptureLog() as cl:
+            galsim.config.BuildImages(nimages, config, logger=cl.logger)
+    except (ValueError,IndexError,RuntimeError):
+        pass
+    #print(cl.output)
+    assert re.search("Process-.: Exception caught when building image",cl.output)
+
     # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
     # report that no files were written.
     config['stamp']['max_snr'] = 20 # If nothing else failed, min or max snr will reject.
