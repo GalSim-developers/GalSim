@@ -460,6 +460,22 @@ def test_extra_wt():
         im_wt = galsim.fits.read('output/test_wt_%d.fits'%k)
         np.testing.assert_almost_equal(im_wt.array, 1./(0.7 + k + im.array))
 
+    # If both output.nproc and image.nproc, then only use output.nproc
+    config['image']['nproc' ] = -1
+    config['image']['nobjects'] = 5
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger)
+    #print(cl.output)
+    #assert 'Already multiprocessing.  Ignoring image.nproc' in cl.output
+    # Note: This doesn't show up because cl.logger doesn't get through the multiprocessing,
+    #       but it does ignore image.nproc > 1.
+    # Do it manually to confirm.
+    config['current_nproc'] = 2
+    with CaptureLog() as cl:
+        nproc = galsim.config.UpdateNProc(2, 5, config, logger=cl.logger)
+    assert 'Already multiprocessing.  Ignoring image.nproc' in cl.output
+    assert nproc == 1
+
 
 @timer
 def test_extra_psf():
