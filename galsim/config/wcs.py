@@ -123,8 +123,8 @@ class SimpleWCSBuilder(WCSBuilder):
         kwargs, safe = galsim.config.GetAllParams(config, base, req, opt, single)
 
         # This would be weird, but might as well check...
-        if build_func._takes_rng:
-            kwargs['rng'] = base.get('rng',None)
+        if build_func._takes_rng: # pragma: no cover
+            kwargs['rng'] = galsim.config.check_for_rng(base, None, build_func.__name__)
         return kwargs
 
     def buildWCS(self, config, base):
