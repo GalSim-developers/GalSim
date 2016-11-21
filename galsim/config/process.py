@@ -805,7 +805,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             pr.disable()
             try:
                 from StringIO import StringIO
-            except:
+            except ImportError:
                 from io import StringIO
             s = StringIO()
             sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid

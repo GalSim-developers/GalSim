@@ -257,7 +257,11 @@ def main():
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        s = io.BytesIO()
+        try:
+            from StringIO import StringIO
+        except ImportError:
+            from io import StringIO
+        s = StringIO()
         sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
                          # alias for this that is backwards compatible to older versions
                          # of pstats.

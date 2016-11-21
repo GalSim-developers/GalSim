@@ -586,7 +586,7 @@ class CaptureLog(object):
         self.logger.setLevel(logging_levels[level])
         try:
             from StringIO import StringIO
-        except:
+        except ImportError:
             from io import StringIO
         self.stream = StringIO()
         self.handler = logging.StreamHandler(self.stream)
