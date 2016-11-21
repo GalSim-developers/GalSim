@@ -22,6 +22,7 @@ import os
 import sys
 import logging
 import math
+import re
 
 from galsim_test_helpers import *
 
@@ -244,14 +245,17 @@ def test_reject():
     # Make a custom function for rejecting COSMOSCatalog objects that use Sersics with n > 2.
     def HighN(config, base, value_type):
         gal = galsim.config.GetCurrentValue('gal',base)
-        #print('gal = ',gal)
         assert isinstance(gal, galsim.Transformation)
-        orig = gal.original
-        if isinstance(orig, galsim.Sum): # Reject all B+D galaxies (which are a minority)
+        gal = gal.original
+        assert isinstance(gal, galsim.Convolution)
+        gal = gal._obj_list[0]  # This is now the things obj COSMOSCatalog produced.
+        if isinstance(gal, galsim.Sum): # Reject all B+D galaxies (which are a minority)
             reject = True  # Reject all B+D galaxies (which are a minority)
         else:
-            assert isinstance(orig, galsim.Sersic)
-            reject = orig.getN() > 2
+            assert isinstance(gal, galsim.Transformation)
+            gal = gal.original
+            assert isinstance(gal, galsim.Sersic)
+            reject = gal.getN() > 2
         return reject, False
     galsim.config.RegisterValueType('HighN', HighN, [bool])
 
@@ -277,10 +281,19 @@ def test_reject():
             },
         },
         'gal' : {
-            'type' : 'COSMOSGalaxy',
-            'gal_type' : 'parametric',
-            # This is invalid about 1/3 of the time. (There are only 100 items in the catalog.)
-            'index' : { 'type' : 'Random', 'min' : 0, 'max' : 150 },
+            'type' : 'Convolve',
+            'items' : [
+                {
+                    'type' : 'COSMOSGalaxy',
+                    'gal_type' : 'parametric',
+                    # This is invalid about 1/3 of the time. (There are only 100 items in the
+                    # catalog.)
+                    'index' : { 'type' : 'Random', 'min' : 0, 'max' : 150 },
+                },
+                # This is essentially the PSF, but doing it this way covers a branch in the reject
+                # function that wouldn't be covered if we had a psf field.
+                { 'type' : 'Gaussian', 'sigma' : 0.15 }
+            ],
             'scale_flux' : {
                 'type' : 'Eval',
                 # This will raise an exception about half the time
@@ -296,7 +309,6 @@ def test_reject():
                 'p' : 0.05,
             },
         },
-        'psf' : { 'type' : 'Gaussian', 'sigma' : 0.15 },
         'input' : {
             'cosmos_catalog' : {
                 'dir' : '../examples/data',
@@ -354,7 +366,7 @@ def test_reject():
     config['stamp']['retry_failures'] = 10
     galsim.config.RemoveCurrent(config)
     try:
-        np.testing.assert_raises((ValueError,IndexError,RuntimeError), 
+        np.testing.assert_raises((ValueError,IndexError,RuntimeError),
                                  galsim.config.BuildStamps, nimages, config, do_noise=False)
     except ImportError:
         pass
@@ -365,7 +377,7 @@ def test_reject():
         pass
     #print(cl.output)
     assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
-    assert "Exception caught when building stamp 0" in cl.output
+    assert "Exception caught when building stamp" in cl.output
 
     # We can also do this with BuildImages which runs through a different code path.
     galsim.config.RemoveCurrent(config)
@@ -375,7 +387,17 @@ def test_reject():
     except (ValueError,IndexError,RuntimeError):
         pass
     #print(cl.output)
-    assert "Exception caught when building image 0" in cl.output
+    assert "Exception caught when building image" in cl.output
+
+    # When in nproc > 1 mode, the error message is slightly different.
+    config['image']['nproc'] = 2
+    try:
+        with CaptureLog() as cl:
+            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+    except (ValueError,IndexError,RuntimeError):
+        pass
+    #print(cl.output)
+    assert re.search("Process-.: Exception caught when building stamp",cl.output)
 
     # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
     # report that no files were written.
