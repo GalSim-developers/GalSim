@@ -426,7 +426,10 @@ class Image(with_metaclass(MetaImage, object)):
         return array, xmin, ymin
 
     def __repr__(self):
-        s = 'galsim.Image(bounds=%r, array=\n%r, wcs=%r'%(self.bounds, self.array, self.wcs)
+        s = 'galsim.Image(bounds=%r' % self.bounds
+        if self.bounds.isDefined():
+            s += ', array=\n%r' % self.array
+        s += ', wcs=%r' % self.wcs
         if self.isconst:
             s += ', make_const=True'
         s += ')'
@@ -1702,6 +1705,8 @@ galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%
         self.bounds, self.array)
 galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
         self.bounds, self.array)
+galsim._galsim.ImageAllocC.__repr__ = lambda self: 'galsim._galsim.ImageAllocC(%r,%r)'%(
+        self.bounds, self.array)
 
 galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
@@ -1715,6 +1720,8 @@ galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,
         self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewC.__repr__ = lambda self: 'galsim._galsim.ImageViewC(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 
 galsim._galsim.ConstImageViewUS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
@@ -1727,4 +1734,6 @@ galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImag
 galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewF(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewC.__repr__ = lambda self: 'galsim._galsim.ConstImageViewC(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)

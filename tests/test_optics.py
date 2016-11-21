@@ -90,6 +90,8 @@ def test_OpticalPSF_flux():
                 err_msg="Unaberrated Optical flux not quite unity.")
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics_test)
+    do_pickle(optics_test._psf)
+    do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
 
 
 @timer

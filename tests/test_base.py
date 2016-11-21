@@ -140,7 +140,7 @@ def test_gaussian():
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
-    do_pickle(galsim.GSObject(gauss))
+    do_pickle(galsim.GSObject(gauss), irreprable=True)
 
     # Should raise an exception if >=2 radii are provided.
     try:

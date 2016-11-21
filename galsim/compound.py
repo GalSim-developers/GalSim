@@ -526,7 +526,7 @@ class Deconvolution(galsim.GSObject):
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
 _galsim.SBDeconvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
+        'galsim._galsim.SBDeconvolve(%r, %r)'%self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -944,7 +944,7 @@ class RandomWalk(Sum):
     -------
 
     This class inherits from galsim.Sum. Additional methods are
-    
+
         calculateHLR:
             Calculate the actual half light radius of the generated points
 
@@ -1065,7 +1065,7 @@ class RandomWalk(Sum):
         sigma=self._gaussian_sigma
         gsparams=self._input_gsparams
         fluxper=self._flux/self._npoints
-        
+
         for p in points:
             g = galsim._galsim.SBGaussian(
                 sigma=sigma,
@@ -1159,5 +1159,3 @@ class RandomWalk(Sum):
             gsparams=repr(self._input_gsparams),
         )
         return rep
-
-
