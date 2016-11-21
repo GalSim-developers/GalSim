@@ -110,6 +110,17 @@ def test_roundtrip():
         do_pickle(interp)
         do_pickle(interp.SBProfile)
 
+    # Test using a non-c-contiguous image  (.T transposes the image, making it fourtran order)
+    image_T = galsim.Image(ref_array.astype(array_type).T)
+    interp = galsim.InterpolatedImage(image_T, scale=test_scale)
+    test_array = np.zeros(ref_array.T.shape, dtype=array_type)
+    image_out = galsim.Image(test_array, scale=test_scale)
+    interp.drawImage(image_out, method='no_pixel')
+    np.testing.assert_array_equal(
+            ref_array.T.astype(array_type),image_out.array,
+            err_msg="Transposed array failed InterpolatedImage roundtrip.")
+    check_basic(interp, "InterpolatedImage (Fortran ordering)", approx_maxsb=True)
+
     # Also check picklability of the Interpolants
     im = galsim.Gaussian(sigma=4).drawImage()
     test_func = lambda x : (
