@@ -1109,18 +1109,14 @@ class PhaseScreenPSF(GSObject):
     def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
         self.img = np.fft.fftshift(self.img)
-        self.img *= (flux / (self.img.sum() * self.scale**2))
+        self.img *= flux / self.img.sum()
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
-
-        calculate_stepk = self._serialize_stepk is None
-        calculate_maxk = self._serialize_maxk is None
 
         self.ii = galsim.InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
                 _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
-                calculate_stepk=calculate_stepk, calculate_maxk=calculate_maxk,
                 pad_factor=self._ii_pad_factor,
-                use_true_center=False, normalization='sb', gsparams=self._gsparams)
+                use_true_center=False, gsparams=self._gsparams)
 
         GSObject.__init__(self, self.ii)
 
@@ -1147,7 +1143,7 @@ class PhaseScreenPSF(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
-                                       use_true_center=False, normalization='sb',
+                                       use_true_center=False,
                                        pad_factor=self._ii_pad_factor,
                                        _serialize_stepk=self._serialize_stepk,
                                        _serialize_maxk=self._serialize_maxk,
