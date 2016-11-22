@@ -493,7 +493,7 @@ class InterpolatedImage(GSObject):
             self._offset = None
 
         # Bring the profile from image coordinates into world coordinates
-        prof = local_wcs.toWorld(prof)
+        prof = local_wcs._profileToWorld(prof)
 
         # If the user specified a flux, then set to that flux value.
         if flux is not None:

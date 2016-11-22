@@ -1467,7 +1467,7 @@ class GSObject(object):
 
         # Draw the image in k space.
         bounds = galsim.BoundsI(0,Nk/2,-Nk/2,Nk/2)
-        kimage = galsim.ImageC(bounds, scale=dk)
+        kimage = galsim.ImageC(bounds=bounds, scale=dk)
         self.SBProfile.drawK(kimage.image.view(), dk)
 
         # Wrap the full image to the size we want for the FT.

@@ -1104,7 +1104,7 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
-        expwf_grid = np.zeros_like(self.aper.illuminated).astype(np.complex128)
+        expwf_grid = np.zeros_like(self.aper.illuminated,dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
         self.img += np.abs(ftexpwf)**2
@@ -1113,7 +1113,7 @@ class PhaseScreenPSF(GSObject):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
         self.img = np.fft.fftshift(self.img)
         self.img *= flux / self.img.sum()
-        self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
+        self.img = galsim.ImageD(self.img, scale=self.scale)
 
         self.ii = galsim.InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
