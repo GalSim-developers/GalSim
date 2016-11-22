@@ -1128,24 +1128,23 @@ class ChromaticRealGalaxy(ChromaticSum):
         for i, (img, xi) in enumerate(zip(imgs, xis)):
 
             # Option 1) Using GalSim to Fourier transform
-            # re, im = xi.drawKImage(nx=nk, ny=nk, scale=stepk)
-            # pk[i] = re.array / xi.wcs.pixelArea()
-
-            # Option 2) Using numpy to Fourier transform
+            pks[i] = xi.drawKImage(nx=nkx, ny=nky, wcs=wcs).array.real / xi.wcs.pixelArea()
             ny, nx = img.array.shape
-            xi_img = galsim.Image(ny, nx, scale=img.scale, dtype=np.float64)
-            xi.drawImage(xi_img)
-            pk = np.ascontiguousarray(
-                np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(xi_img.array))).real)
-            xscale = 2*np.pi/(nx*img.scale)
-            yscale = 2*np.pi/(ny*img.scale)
-            tmpwcs = galsim.JacobianWCS(yscale, 0.0, 0.0, xscale)
-            tmp = galsim.ImageC(pk+0j, wcs=tmpwcs)
-            # re = galsim.Image(pk, wcs=tmpwcs)
-            # im = galsim.Image(pk*0, wcs=tmpwcs)
-            iki = galsim.InterpolatedKImage(tmp)
-            pk = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
-            pks[i] = pk.array.real * nx * ny
+            pks[i] *= nx * ny
+
+            # # Option 2) Using numpy to Fourier transform
+            # ny, nx = img.array.shape
+            # xi_img = galsim.Image(ny, nx, scale=img.scale, dtype=np.float64)
+            # xi.drawImage(xi_img)
+            # pk = np.ascontiguousarray(
+            #     np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(xi_img.array))).real)
+            # xscale = 2*np.pi/(nx*img.scale)
+            # yscale = 2*np.pi/(ny*img.scale)
+            # tmpwcs = galsim.JacobianWCS(yscale, 0.0, 0.0, xscale)
+            # tmp = galsim.ImageC(pk+0j, wcs=tmpwcs)
+            # iki = galsim.InterpolatedKImage(tmp)
+            # pk = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
+            # pks[i] = pk.array.real * nx * ny
 
         # Allocate and fill output coefficients and covariances.
         Sigma = np.empty((NSED, NSED, nky, nkx), dtype=np.complex128)

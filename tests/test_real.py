@@ -250,17 +250,14 @@ def test_crg_roundtrip():
     im_f606w_mom = galsim.hsm.FindAdaptiveMom(im_f606w)
     im_f814w_mom = galsim.hsm.FindAdaptiveMom(im_f814w)
 
-    print(np.max((orig_f606w.array - im_f606w.array)/np.max(orig_f606w.array)))
-    print(np.max((orig_f814w.array - im_f814w.array)/np.max(orig_f814w.array)))
-
-    # Images are only pixel-by-pixel consistent to ~10% or so.  However, if you actually plot the
+    # Images are only pixel-by-pixel consistent to ~5% or so.  However, if you actually plot the
     # residuals (which you can do by flipping False->True in printval above), they appear as ringing
     # over the whole image.  Probably it's unrealistic to expect this test to work perfectly since
     # we're effectively deconvolving and then reconvolving by the same PSF, not a fatter PSF.
     np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
-                               rtol=0., atol=1e-1*orig_f606w.array.max())
+                               rtol=0., atol=5e-2*orig_f606w.array.max())
     np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
-                               rtol=0., atol=1e-1*orig_f814w.array.max())
+                               rtol=0., atol=5e-2*orig_f814w.array.max())
 
     # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
     np.testing.assert_allclose(orig_f606w_mom.moments_amp,

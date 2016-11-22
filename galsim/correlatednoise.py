@@ -665,7 +665,7 @@ class _BaseCorrelatedNoise(object):
             image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
             add_to_image=add_to_image, use_true_center=False, wmult=wmult)
 
-    def drawKImage(self, re=None, im=None, nx=None, ny=None, scale=None, dtype=None, wmult=1.,
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None,
                    add_to_image=False):
         """A method for drawing profiles storing correlation functions (i.e., power spectra) in
         Fourier space.
@@ -677,36 +677,33 @@ class _BaseCorrelatedNoise(object):
         If `scale` is not set, and `re` and `im` have no `wcs` attributes, then this will use the
         wcs of the CorrelatedNoise object.
 
-        @param re           If provided, this will be the real part of the k-space image.  If `re`
-                            and `im` are None, then automatically-sized images will be created.  If
-                            they are given, but the bounds are undefined, then they will be resized
-                            appropriately base on the profile's size. [default: None]
-        @param im           If provided, this will be the imaginary part of the k-space image.  A
-                            provided `im` must match the size and scale of `re`.  If `im` is None,
-                            then `re` must also be None. [default: None]
-        @param scale        If provided, use this as the pixel scale, dk, for the images.  If
-                            `scale` is None and `re` and `im` are given, then take the provided
-                            images' pixel scale (which must be equal).  If `scale` is None and `re`
-                            and `im` are None, then use the Nyquist scale.
-                            If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
+        @param image        If provided, this will be the ImageC onto which to draw the k-space
+                            image.  If `image` is None, then an automatically-sized image will be
+                            created.  If `image` is given, but its bounds are undefined, then it
+                            will be resized appropriately based on the profile's size.
                             [default: None]
-        @param dtype        The data type to use for automatically constructed images.  Only valid
-                            if `re` and `im` are None. [default: None, which means to use
-                            numpy.float32]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD).  [default: 1.]
-        @param wmult        A multiplicative factor by which to enlarge (in each direction) the size
-                            of the image, if you are having drawKImage() automatically construct the
-                            images for you.  [default: 1]
-        @param add_to_image Whether to add to the existing images rather than clear out anything in
-                            the image before drawing.  Note: This requires that `re` and `im` be
-                            provided and that they have defined bounds. [default: False]
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
+        @param scale        If provided, use this as the pixel scale, dk, for the images.
+                            If `scale` is None and `image` is given, then take the provided
+                            images' pixel scale (which must be equal).
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            [default: None]
+        @param wcs          The wcs. [default: None]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it has defined
+                            bounds. [default: False]
 
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         return self._profile.drawKImage(
-            re=re, im=im, nx=nx, ny=ny, dtype=dtype, scale=scale, gain=1., wmult=wmult,
-            add_to_image=add_to_image)
+                image=image, nx=nx, ny=ny, bounds=bounds, scale=scale, wcs=wcs,
+                add_to_image=add_to_image)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
