@@ -416,7 +416,7 @@ class Image(with_metaclass(MetaImage, object)):
                 array = None
                 xmin = None
                 ymin = None
-        elif array.shape == (0,0):
+        elif array.shape[1] == 0:
             # Another way to indicate that we don't have a defined image.
             if 'dtype' not in kwargs:
                 kwargs['dtype'] = array.dtype.type
