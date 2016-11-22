@@ -898,6 +898,53 @@ def test_ne():
                                    pupil_angle=10*galsim.degrees, suppress_warning=True)]
     all_obj_diff(objs)
 
+@timer
+def test_noll():
+
+    # This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+    # It used to be in phase_screen.py, but now we use a faster lookup-table implementation.
+    # This reference version is still useful as a test.
+    def noll_to_zern(j):
+        if (j == 0):
+            raise ValueError("Noll indices start at 1. 0 is invalid.")
+        n = 0
+        j1 = j-1
+        while (j1 > n):
+            n += 1
+            j1 -= n
+        m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
+        return (n, m)
+
+    # Test that the version of _noll_to_zern in phase_screens.py is accurate.
+    for j in range(1,30):
+        true_n,true_m = noll_to_zern(j)
+        n,m = galsim.phase_screens._noll_to_zern(j)
+        #print('j=%d, noll = %d,%d, true_noll = %d,%d'%(j,n,m,true_n,true_m))
+        assert n == true_n
+        assert m == true_m
+        # These didn't turn out to be all that useful for fast conversions, but they're cute.
+        assert n == int(np.sqrt(8*j-7)-1)//2
+        mm = -m if (n//2)%2 == 0 else m
+        assert j == n*(n+1)/2 + (abs(2*mm+1)+1)//2
+
+    # Again, the reference version of this function used to be in phase_screens.py
+    def zern_rho_coefs(n, m):
+        """Compute coefficients of radial part of Zernike (n, m).
+        """
+        from galsim.phase_screens import _nCr
+        kmax = (n-abs(m)) // 2
+        A = np.zeros(n+1)
+        for k in range(kmax+1):
+            A[n-2*k] = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k)
+        return A
+
+    for j in range(1,30):
+        n,m = galsim.phase_screens._noll_to_zern(j)
+        true_coefs = zern_rho_coefs(n,m)
+        coefs = galsim.phase_screens._zern_rho_coefs(n,m)
+        #print('j=%d, coefs = %s'%(j,coefs))
+        np.testing.assert_array_equal(coefs,true_coefs)
+
 
 if __name__ == "__main__":
     test_OpticalPSF_flux()
@@ -914,3 +961,4 @@ if __name__ == "__main__":
     test_OpticalPSF_aper()
     test_stepk_maxk_iipad()
     test_ne()
+    test_noll()

@@ -400,7 +400,9 @@ def _nCr(n, r):
         return 0
 
 
-# This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+# Start off with the Zernikes up to j=15
+_noll_n = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,4,4]
+_noll_m = [0,0,1,-1,0,-2,2,-1,1,-3,3,0,2,-2,4,-4]
 def _noll_to_zern(j):
     """
     Convert linear Noll index to tuple of Zernike indices.
@@ -410,17 +412,22 @@ def _noll_to_zern(j):
     @return (n, m) tuple of Zernike indices
     @see <https://oeis.org/A176988>.
     """
-    if (j == 0):
-        raise ValueError("Noll indices start at 1. 0 is invalid.")
+    while len(_noll_n) <= j:
+        n = _noll_n[-1] + 1
+        _noll_n.extend( [n] * (n+1) )
+        if n % 2 == 0:
+            _noll_m.append(0)
+            m = 2
+        else:
+            m = 1
+        # pm = +1 if m values go + then - in pairs.
+        # pm = -1 if m values go - then + in pairs.
+        pm = +1 if (n//2) % 2 == 0 else -1
+        while m <= n:
+            _noll_m.extend([ pm * m , -pm * m ])
+            m += 2
 
-    n = 0
-    j1 = j-1
-    while (j1 > n):
-        n += 1
-        j1 -= n
-    m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
-    return (n, m)
-
+    return _noll_n[j], _noll_m[j]
 
 def _zern_norm(n, m):
     """Normalization coefficient for zernike (n, m).
@@ -476,6 +483,30 @@ def __zern_coef_array(n, m, eps, shape, annular):
         out[i, abs(m)] = c
     return out
 _zern_coef_array = utilities.LRU_Cache(__zern_coef_array)
+
+def __noll_coef_array(jmax, eps, annular):
+    """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
+    bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
+    a unit disc.
+
+    @param jmax     Maximum Noll coefficient
+    @param eps      Linear obscuration fraction.
+    @param shape    Output array shape
+    @param annular  Boolean indicating polynomials are orthogonal on a disk or an annulus.
+    @returns        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                    disk coordinates.
+    """
+    maxn = _noll_to_zern(jmax)[0]
+    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
+    shape1 = (maxn//2+1, maxn+1)
+
+    out = np.zeros(shape, dtype=np.complex128)
+    for j in range(1,jmax+1):
+        n,m = _noll_to_zern(j)
+        coef = _zern_coef_array(n,m,eps,shape1,annular)
+        out[:,:,j-1] = coef
+    return out
+_noll_coef_array = utilities.LRU_Cache(__noll_coef_array)
 
 # Following 3 functions from
 #
@@ -633,23 +664,25 @@ class OpticalScreen(object):
                 import warnings
                 warnings.warn(
                     "Detected non-zero value in aberrations[0] -- this value is ignored!")
+            aberrations = np.array(aberrations)
+        self.aberrations = aberrations
 
-        self.aberrations = np.array(aberrations)
         # strip any trailing zeros.
-        self.aberrations = np.trim_zeros(self.aberrations, trim='b')
+        if self.aberrations[-1] == 0:
+            self.aberrations = np.trim_zeros(self.aberrations, trim='b')
+            if len(self.aberrations) == 0:  # Don't let it be zero length.
+                self.aberrations = np.array([0])
         self.annular_zernike = annular_zernike
         self.obscuration = obscuration
         self.lam_0 = lam_0
 
-        maxn = _noll_to_zern(len(self.aberrations)-1)[0]
+        jmax = len(self.aberrations)-1
+        maxn = _noll_to_zern(jmax)[0]
         shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
         self.coef_array = np.zeros(shape, dtype=np.complex128)
 
-        for j, ab in enumerate(self.aberrations):
-            if j == 0: continue
-            n, m = _noll_to_zern(j)
-            self.coef_array += ab * _zern_coef_array(n, m, self.obscuration, shape,
-                                                     self.annular_zernike)
+        noll_coef = _noll_coef_array(jmax, self.obscuration, self.annular_zernike)
+        self.coef_array = np.dot(noll_coef, self.aberrations[1:])
 
     def __str__(self):
         return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
