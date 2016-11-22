@@ -349,8 +349,8 @@ class InterpolatedImage(GSObject):
             im_cen = self.image.bounds.center()
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
-        self.min_scale = local_wcs.minLinearScale()
-        self.max_scale = local_wcs.maxLinearScale()
+        self.min_scale = local_wcs._minScale()
+        self.max_scale = local_wcs._maxScale()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
