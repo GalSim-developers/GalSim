@@ -296,7 +296,7 @@ class InterpolatedImage(GSObject):
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
-        self.image = image.view()
+        self.image = image._view()
         self.use_cache = use_cache
 
         # Set the wcs if necessary
@@ -377,7 +377,7 @@ class InterpolatedImage(GSObject):
 
                 # We will change the bounds here, so make a new view to avoid modifying the
                 # input pad_image.
-                pad_image = pad_image.view()
+                pad_image = pad_image._view()
                 pad_image.setCenter(0,0)
                 new_pad_image.setCenter(0,0)
                 if new_pad_image.bounds.includes(pad_image.bounds):

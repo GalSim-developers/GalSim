@@ -1342,7 +1342,7 @@ class GSObject(object):
             return image
 
         # Making a view of the image lets us change the center without messing up the original.
-        imview = image.view()
+        imview = image._view()
         imview.setCenter(0,0)
         imview.wcs = galsim.PixelScale(1.0)
 

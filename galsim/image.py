@@ -848,6 +848,16 @@ class Image(with_metaclass(MetaImage, object)):
 
         return ret
 
+    def _view(self):
+        """Equivalent to im.view(), but without some of the sanity checks and extra options.
+        """
+        ret = Image.__new__(Image)
+        ret.image = self.image.view()
+        ret._array = self._array
+        ret.dtype = self.dtype
+        ret.wcs = self.wcs
+        return ret
+
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
 
