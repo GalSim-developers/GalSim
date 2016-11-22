@@ -674,7 +674,12 @@ class GSObject(object):
 
         @returns the dilated object.
         """
-        return self.expand(scale) * (1./scale**2)  # conserve flux
+        # equivalent to self.expand(scale) * (1./scale**2)
+        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
+
+        if hasattr(self, 'noise'):
+            new_obj.noise = self.noise.expand(scale) * scale**-4
+        return new_obj
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
