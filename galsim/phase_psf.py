@@ -409,9 +409,10 @@ class Aperture(object):
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
             # ensure that the image is one of the allowed types.  We ignore the scale.
-            int_im = galsim.InterpolatedImage(galsim.Image(pp_arr, scale=1., dtype=np.float64),
-                                              x_interpolant='linear', calculate_stepk=False,
-                                              calculate_maxk=False)
+            b = galsim._BoundsI(1,self.npix,1,self.npix)
+            im = galsim._Image(pp_arr, b, galsim.PixelScale(1.))
+            int_im = galsim.InterpolatedImage(im, x_interpolant='linear',
+                                              calculate_stepk=False, calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
             new_im = galsim.Image(pp_arr.shape[1], pp_arr.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
@@ -1113,7 +1114,8 @@ class PhaseScreenPSF(GSObject):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
         self.img = np.fft.fftshift(self.img)
         self.img *= flux / self.img.sum()
-        self.img = galsim.ImageD(self.img, scale=self.scale)
+        b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
+        self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))
 
         self.ii = galsim.InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,

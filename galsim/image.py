@@ -291,20 +291,24 @@ class Image(with_metaclass(MetaImage, object)):
             raise TypeError("Image constructor got unexpected keyword arguments: %s",kwargs)
 
         # Figure out what dtype we want:
-        if dtype in Image.alias_dtypes: dtype = Image.alias_dtypes[dtype]
+        dtype = Image.alias_dtypes.get(dtype,dtype)
         if dtype is not None and dtype not in Image.valid_dtypes:
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
             if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
-            if array.dtype.type in Image.alias_dtypes and dtype is None:
-                dtype = Image.alias_dtypes[array.dtype.type]
-            if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
-                raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
-                                 ".  Instead got "+str(array.dtype.type)+".  Or can set "+
-                                 "dtype explicitly.")
-            if dtype is not None and dtype != array.dtype.type:
+            if dtype is None:
+                dtype = array.dtype.type
+                if dtype in Image.alias_dtypes:
+                    dtype = Image.alias_dtypes[dtype]
+                    array = array.astype(dtype)
+                elif dtype not in Image.cpp_valid_dtypes:
+                    raise ValueError(
+                        "array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
+                        ".  Instead got "+str(array.dtype.type)+".  Or can set "+
+                        "dtype explicitly.")
+            elif dtype != array.dtype.type:
                 array = array.astype(dtype)
             # Be careful here: we have to watch out for little-endian / big-endian issues.
             # The path of least resistance is to check whether the array.dtype is equal to the
@@ -508,7 +512,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         This works for real or complex.  For real images, it acts the same as view().
         """
-        return Image(array=self.array.real, bounds=self.bounds, wcs=self.wcs)
+        return _Image(self.array.real, self.bounds, self.wcs)
 
     @property
     def imag(self):
@@ -519,7 +523,7 @@ class Image(with_metaclass(MetaImage, object)):
         This works for real or complex.  For real images, the returned array is read-only and
         all elements are 0.
         """
-        return Image(array=self.array.imag, bounds=self.bounds, wcs=self.wcs)
+        return _Image(self.array.imag, self.bounds, self.wcs)
 
     def conjugate(self):
         """Return the complex conjugate of an image.
@@ -529,10 +533,10 @@ class Image(with_metaclass(MetaImage, object)):
         Note that for complex images, this is not a conjugate view into the original image.
         So changing the original image does not change the conjugate (or vice versa).
         """
-        return Image(array=self.array.conjugate(), bounds=self.bounds, wcs=self.wcs)
+        return _Image(self.array.conjugate(), self.bounds, self.wcs)
 
     def copy(self):
-        return Image(image=self.image.copy(), wcs=self.wcs)
+        return _Image(self.array.copy(), self.bounds, self.wcs)
 
     def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
@@ -570,7 +574,7 @@ class Image(with_metaclass(MetaImage, object)):
         # NB. The wcs is still accurate, since the sub-image uses the same (x,y) values
         # as the original image did for those pixels.  It's only once you recenter or
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
-        return Image(image=subimage, wcs=self.wcs)
+        return _Image(subimage.array, bounds, self.wcs)
 
     def setSubImage(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
@@ -686,7 +690,7 @@ class Image(with_metaclass(MetaImage, object)):
             subimage = self.image.wrap(bounds, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
-        return Image(image=subimage, wcs=self.wcs)
+        return _Image(subimage.array, bounds, self.wcs)
 
     def calculate_fft(self):
         """Performs an FFT of an Image in real space to produce a k-space Image.
@@ -1277,6 +1281,25 @@ class Image(with_metaclass(MetaImage, object)):
     # Not immutable object.  So shouldn't be used as a hash.
     __hash__ = None
 
+def _Image(array, bounds, wcs):
+    """Equivalent to Image(array, bounds, wcs), but without the overhead of sanity checks,
+    and the other options for how to provide the arguments.
+    """
+    ret = Image.__new__(Image)
+    ret.wcs = wcs
+    ret.dtype = array.dtype.type
+    if ret.dtype in Image.alias_dtypes:
+        ret.dtype = Image.alias_dtypes[ret.dtype]
+        array = array.astype(ret.dtype)
+    ret._array = array
+    if not bounds.isDefined():
+        ret.image = _galsim.ImageAlloc[ret.dtype](bounds)
+    elif not array.flags.writeable:
+        ret.image = _galsim.ConstImageView[ret.dtype](array, bounds.xmin, bounds.ymin)
+    else:
+        ret.image = _galsim.ImageView[ret.dtype](array, bounds.xmin, bounds.ymin)
+    return ret
+
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageUS(*args, **kwargs):
@@ -1347,7 +1370,7 @@ def Image_add(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array + a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array + a, self.bounds, self.wcs)
 
 def Image_iadd(self, other):
     check_image_consistency(self, other)
@@ -1369,10 +1392,10 @@ def Image_sub(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array - a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array - a, self.bounds, self.wcs)
 
 def Image_rsub(self, other):
-    return Image(array=other-self.array, bounds=self.bounds, wcs=self.wcs)
+    return _Image(other-self.array, self.bounds, self.wcs)
 
 def Image_isub(self, other):
     check_image_consistency(self, other)
@@ -1394,7 +1417,7 @@ def Image_mul(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array * a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array * a, self.bounds, self.wcs)
 
 def Image_imul(self, other):
     check_image_consistency(self, other)
@@ -1416,10 +1439,10 @@ def Image_div(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array / a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array / a, self.bounds, self.wcs)
 
 def Image_rdiv(self, other):
-    return Image(array=other / self.array, bounds=self.bounds, wcs=self.wcs)
+    return _Image(other / self.array, self.bounds, self.wcs)
 
 def Image_idiv(self, other):
     check_image_consistency(self, other)
@@ -1443,11 +1466,11 @@ def Image_floordiv(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array // a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array // a, self.bounds, self.wcs)
 
 def Image_rfloordiv(self, other):
     check_image_consistency(self, other, integer=True)
-    return Image(array=other // self.array, bounds=self.bounds, wcs=self.wcs)
+    return _Image(other // self.array, self.bounds, self.wcs)
 
 def Image_ifloordiv(self, other):
     check_image_consistency(self, other, integer=True)
@@ -1469,11 +1492,11 @@ def Image_mod(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array % a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array % a, self.bounds, self.wcs)
 
 def Image_rmod(self, other):
     check_image_consistency(self, other, integer=True)
-    return Image(array=other % self.array, bounds=self.bounds, wcs=self.wcs)
+    return _Image(other % self.array, self.bounds, self.wcs)
 
 def Image_imod(self, other):
     check_image_consistency(self, other, integer=True)
@@ -1512,7 +1535,7 @@ def Image_and(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array & a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array & a, self.bounds, self.wcs)
 
 
 def Image_iand(self, other):
@@ -1529,7 +1552,7 @@ def Image_xor(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array ^ a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array ^ a, self.bounds, self.wcs)
 
 def Image_ixor(self, other):
     check_image_consistency(self, other, integer=True)
@@ -1545,7 +1568,7 @@ def Image_or(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array | a, bounds=self.bounds, wcs=self.wcs)
+    return _Image(self.array | a, self.bounds, self.wcs)
 
 def Image_ior(self, other):
     check_image_consistency(self, other, integer=True)
