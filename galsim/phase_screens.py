@@ -575,11 +575,12 @@ def horner(x, coef):
     @param coef  Polynomial coefficients of increasing powers of x.
     @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
     """
-    result = 0
+    result = np.zeros_like(x, dtype=np.complex128)
+    coef = np.trim_zeros(coef, trim='b')
     for c in coef[::-1]:
-        result = result*x + c
+        result *= x
+        if c != 0: result += c
     return result
-
 
 def horner2d(x, y, coefs):
     """Evaluate bivariate polynomial using nested Horner's method.
@@ -591,9 +592,10 @@ def horner2d(x, y, coefs):
                   increasing the power of x.
     @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
     """
-    result = 0
+    result = np.zeros_like(x, dtype=np.complex128)
     for coef in coefs[::-1]:
-        result = result*x + horner(y, coef)
+        result *= x
+        result += horner(y, coef)
     return result
 
 
