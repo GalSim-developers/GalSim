@@ -449,10 +449,18 @@ def _zern_rho_coefs(n, m):
     return A
 
 
-def _zern_coef_array(n, m, eps=0., shape=None, annular=False):
+def __zern_coef_array(n, m, eps, shape, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
+
+    @param n        Zernike radial coefficient
+    @param m        Zernike azimuthal coefficient
+    @param eps      Linear obscuration fraction.
+    @param shape    Output array shape
+    @param annular  Boolean indicating polynomials are orthogonal on a disk or an annulus.
+    @returns        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                    disk coordinates.
     """
     if shape is None:
         shape = ((n//2)+1, abs(m)+1)
@@ -467,6 +475,7 @@ def _zern_coef_array(n, m, eps=0., shape=None, annular=False):
     for i, c in enumerate(coefs[abs(m)::2]):
         out[i, abs(m)] = c
     return out
+_zern_coef_array = utilities.LRU_Cache(__zern_coef_array)
 
 # Following 3 functions from
 #
@@ -640,9 +649,9 @@ class OpticalScreen(object):
 
         for j, ab in enumerate(self.aberrations):
             if j == 0: continue
-            self.coef_array += ab * _zern_coef_array(*_noll_to_zern(j), shape=shape,
-                                                     eps=self.obscuration,
-                                                     annular=self.annular_zernike)
+            n, m = _noll_to_zern(j)
+            self.coef_array += ab * _zern_coef_array(n, m, self.obscuration, shape,
+                                                     self.annular_zernike)
 
     def __str__(self):
         return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
