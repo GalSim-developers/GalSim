@@ -573,11 +573,14 @@ def horner(x, coef):
     @param coef  Polynomial coefficients of increasing powers of x.
     @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
     """
-    result = np.zeros_like(x, dtype=np.complex128)
     coef = np.trim_zeros(coef, trim='b')
-    for c in coef[::-1]:
+    result = np.zeros_like(x, dtype=np.complex128)
+    if len(coef) == 0: return result
+    result += coef[-1]
+    for c in coef[-2::-1]:
         result *= x
         if c != 0: result += c
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
     return result
 
 def horner2d(x, y, coefs):
@@ -590,10 +593,12 @@ def horner2d(x, y, coefs):
                   increasing the power of x.
     @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
     """
-    result = np.zeros_like(x, dtype=np.complex128)
-    for coef in coefs[::-1]:
+    result = horner(y, coefs[-1])
+    for coef in coefs[-2::-1]:
         result *= x
         result += horner(y, coef)
+    # Useful when working on this... (Numpy method is much slower, btw.)
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
     return result
 
 
