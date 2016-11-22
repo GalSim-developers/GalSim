@@ -873,7 +873,7 @@ class GSObject(object):
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             N = self.getGoodImageSize(1.0/wmult)
             if odd: N += 1
-            bounds = galsim.BoundsI(1,N,1,N)
+            bounds = galsim._BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
 
@@ -1466,14 +1466,14 @@ class GSObject(object):
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
         # Draw the image in k space.
-        bounds = galsim.BoundsI(0,Nk/2,-Nk/2,Nk/2)
+        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
         kimage = galsim.ImageC(bounds=bounds, scale=dk)
         self.SBProfile.drawK(kimage.image.view(), dk)
 
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
-        bwrap = galsim.BoundsI(0, N/2, -N/2, N/2-1)
+        bwrap = galsim._BoundsI(0, N//2, -N//2, N//2-1)
         kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.j
