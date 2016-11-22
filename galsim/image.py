@@ -416,7 +416,7 @@ class Image(with_metaclass(MetaImage, object)):
                 array = None
                 xmin = None
                 ymin = None
-        elif np.prod(array.shape) == 0:
+        elif array.shape == (0,0):
             # Another way to indicate that we don't have a defined image.
             if 'dtype' not in kwargs:
                 kwargs['dtype'] = array.dtype.type
@@ -706,7 +706,7 @@ class Image(with_metaclass(MetaImage, object)):
         if not self.bounds.isDefined():
             raise ValueError("calculate_fft requires that the image have defined bounds.")
 
-        No2 = np.max((-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1))
+        No2 = max(-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1)
 
         full_bounds = galsim.BoundsI(-No2, No2-1, -No2, No2-1)
         if self.bounds == full_bounds:
@@ -754,7 +754,7 @@ class Image(with_metaclass(MetaImage, object)):
         if not self.bounds.includes(galsim.PositionI(0,0)):
             raise ValueError("calculate_inverse_fft requires that the image includes point (0,0)")
 
-        No2 = np.max((self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax))
+        No2 = max(self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax)
 
         target_bounds = galsim.BoundsI(0, No2, -No2, No2-1)
         if self.bounds == target_bounds:

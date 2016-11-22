@@ -1443,8 +1443,8 @@ class GSObject(object):
         N = self.getGoodImageSize(image.scale/wmult)
 
         # We must make something big enough to cover the target image size:
-        image_N = np.max(image.bounds.numpyShape())
-        N = np.max((N, image_N))
+        image_N = max(image.bounds.numpyShape())
+        N = max(N, image_N)
 
         # Round up to a good size for making FFTs:
         N = image.good_fft_size(N)
@@ -1823,7 +1823,7 @@ class GSObject(object):
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
-            dx = np.pi/( np.max(image.array.shape) // 2 * dk )
+            dx = np.pi/( max(image.array.shape) // 2 * dk )
         elif scale is None or scale <= 0:
             dx = self.nyquistScale()
         else:
