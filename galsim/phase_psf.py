@@ -1100,7 +1100,7 @@ class PhaseScreenPSF(GSObject):
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta)
-        expwf = np.exp(2j * np.pi * wf / self.lam)
+        expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated).astype(np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
