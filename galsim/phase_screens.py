@@ -640,10 +640,8 @@ class OpticalScreen(object):
         self.annular_zernike = annular_zernike
         self.obscuration = obscuration
         self.lam_0 = lam_0
-        try:
-            maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
-        except:
-            maxn = 0
+
+        maxn = _noll_to_zern(len(self.aberrations)-1)[0]
         shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
         self.coef_array = np.zeros(shape, dtype=np.complex128)
 
