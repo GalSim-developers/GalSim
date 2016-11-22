@@ -455,8 +455,7 @@ def _zern_rho_coefs(n, m):
     A[n-2*kmax] = val
     return A
 
-
-def __zern_coef_array(n, m, eps, shape, annular):
+def _zern_coef_array(n, m, eps, shape, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
@@ -482,7 +481,6 @@ def __zern_coef_array(n, m, eps, shape, annular):
     for i, c in enumerate(coefs[abs(m)::2]):
         out[i, abs(m)] = c
     return out
-_zern_coef_array = utilities.LRU_Cache(__zern_coef_array)
 
 def __noll_coef_array(jmax, eps, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
