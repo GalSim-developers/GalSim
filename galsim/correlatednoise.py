@@ -169,7 +169,7 @@ class _BaseCorrelatedNoise(object):
         On output the Image instance `image` will have been given additional noise according to the
         given CorrelatedNoise instance `correlated_noise`.  Normally, `image.scale` is used to
         determine the input Image pixel separation, and if `image.scale <= 0` a pixel scale of 1 is
-        assumed.  If the image has a non-unifrom WCS, the local uniform approximation at the center
+        assumed.  If the image has a non-uniform WCS, the local uniform approximation at the center
         of the image will be used.
 
         Note that the correlations defined in a correlated_noise object are defined in terms of
@@ -264,7 +264,7 @@ class _BaseCorrelatedNoise(object):
         is the case for the final noise to be uncorrelated.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-unifrom WCS,
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,
         the local uniform approximation at the center of the image will be used.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
@@ -363,7 +363,7 @@ class _BaseCorrelatedNoise(object):
         is the case for the final noise correlation function to be symmetric in the requested way.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-unifrom WCS,
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,
         the local uniform approximation at the center of the image will be used.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
