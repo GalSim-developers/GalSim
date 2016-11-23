@@ -300,6 +300,13 @@ namespace galsim {
          */
         ImageView<double> inverse_fft(bool shift_in=true, bool shift_out=true) const;
 
+        /**
+         *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
+         */
+        ImageView<std::complex<double> > cfft(bool inverse, bool shift_in=true,
+                                              bool shift_out=true) const;
+
+
     protected:
 
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage

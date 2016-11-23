@@ -48,9 +48,10 @@ def fft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The input array must be 2-dimensional.
-        - It must have dtype numpy.float64 or be convertible to numpy.float64.
         - It must be square.
         - The size in each direction must be even.
+        - If it has a real dtype, it will be coerced to numpy.float64.
+        - If it hsa a complex dtype, it will be coerced to numpy.complex128.
 
     The returned array will be complex with dtype numpy.complex128.
 
@@ -70,22 +71,21 @@ def fft2(a, shift_in=False, shift_out=False):
 
     @returns a complex numpy array
     """
-    # Start with rfft2, which is what we really have implemented.
-    kar = rfft2(a,shift_in,shift_out)
+    s = a.shape
+    if len(s) != 2:
+        raise ValueError("Input array must be 2D.")
+    N = s[0]
+    if N != s[1]:
+        raise ValueError("Input array must be square.")
 
-    # This only returns kx >= 0.  Fill out the full image.
-    N = a.shape[0]
-    full_kar = np.empty( (N,N), dtype=np.complex128)
-    if shift_out:
-        full_kar[:,N/2:N] = kar[:,0:N/2]
-        full_kar[0,0:N/2] = kar[0,N/2:0:-1].conjugate()
-        full_kar[1:N/2,0:N/2] = kar[N-1:N/2:-1,N/2:0:-1].conjugate()
-        full_kar[N/2:N,0:N/2] = kar[N/2:0:-1,N/2:0:-1].conjugate()
+    No2 = N // 2
+    if a.dtype.kind == 'c':
+        a = a.astype(np.complex128)
+        xim = galsim._galsim.ConstImageViewC(a, -No2, -No2)
     else:
-        full_kar[:,0:N/2] = kar[:,0:N/2]
-        full_kar[0,N/2:N] = kar[0,N/2:0:-1].conjugate()
-        full_kar[1:N,N/2:N] = kar[N-1:0:-1,N/2:0:-1].conjugate()
-    return full_kar
+        a = a.astype(np.float64)
+        xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
+    return xim.cfft(shift_in=shift_in, shift_out=shift_out).array
 
 
 def ifft2(a, shift_in=False, shift_out=False):
@@ -99,7 +99,6 @@ def ifft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The array must be 2-dimensional.
-        - It must have dtype numpy.complex128 or be convertible to numpy.complex128
         - It must be square.
         - The size in each direction must be even.
         - The array is assumed to be Hermitian, which means the k values with kx<0 are assumed
@@ -108,6 +107,8 @@ def ifft2(a, shift_in=False, shift_out=False):
           i.e. for kx >= N/2, ky > 0: a[ky, kx] == a[N-ky, N-kx].conjugate()
                for kx >= N/2, ky = 0: a[0, kx] == a[0, N-kx].conjugate()
           Only the elements a[:,0:N/2+1] are accessed by this function.
+        - If it has a real dtype, it will be coerced to numpy.float64.
+        - If it hsa a complex dtype, it will be coerced to numpy.complex128.
 
     The returned array will be real with dtype numpy.float64.
 
@@ -135,15 +136,15 @@ def ifft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must be square.")
 
     No2 = N // 2
-    if shift_in:
-        # In this case, the values we need aren't actually together in the input array.
-        # Need to make a temporary.
-        a1 = np.empty((N,No2+1), dtype=np.complex128)
-        a1[:,0:No2] = a[:,No2:N]
-        a1[:,No2] = a[:,0]
-        return irfft2(a1,shift_in,shift_out)
+    if a.dtype.kind == 'c':
+        a = a.astype(np.complex128)
+        xim = galsim._galsim.ConstImageViewC(a, -No2, -No2)
     else:
-        return irfft2(a[:,0:No2+1],shift_in,shift_out)
+        a = a.astype(np.float64)
+        xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
+    kim = xim.cfft(inverse=True, shift_in=shift_in, shift_out=shift_out)
+    kar = kim.array
+    return kar
 
 
 def rfft2(a, shift_in=False, shift_out=False):
@@ -157,7 +158,7 @@ def rfft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The input array must be 2-dimensional.
-        - It must have dtype numpy.float64 or be convertible to numpy.float64.
+        - If it does not have dtype numpy.float64, it will be cerced to numpy.float64.
         - It must be square.
         - The size in each direction must be even.
 
@@ -189,7 +190,7 @@ def rfft2(a, shift_in=False, shift_out=False):
     No2 = N // 2
     a = a.astype(np.float64)
     xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
-    kim = xim.fft(shift_in=shift_in, shift_out=shift_out)
+    kim = xim.rfft(shift_in=shift_in, shift_out=shift_out)
     kar = kim.array
     return kar
 
@@ -205,8 +206,8 @@ def irfft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The array must be 2-dimensional.
-        - It must have dtype numpy.complex128 or be convertible to numpy.complex128
-        - It must have shape (N, N/2+1)
+        - If it does not have dtype numpy.complex128, it will be cerced to numpy.complex128.
+        - It must have shape (N, N/2+1).
         - The size in the y direction (axis=0) must be even.
 
     The returned array will be real with dtype numpy.float64.
@@ -237,7 +238,7 @@ def irfft2(a, shift_in=False, shift_out=False):
 
     a = a.astype(np.complex128)
     kim = galsim._galsim.ConstImageViewC(a, 0, -No2)
-    xim = kim.inverse_fft(shift_in=shift_in, shift_out=shift_out)
+    xim = kim.irfft(shift_in=shift_in, shift_out=shift_out)
     xar = xim.array
     return xar
 

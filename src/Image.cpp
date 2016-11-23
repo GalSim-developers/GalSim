@@ -810,6 +810,82 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     return xim.subImage(Bounds<int>(-No2, No2-1, -No2, No2-1));
 }
 
+template <typename T>
+ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in, bool shift_out) const
+{
+    dbg<<"Start BaseImage::cfft\n";
+    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+
+    if (!_data or !this->_bounds.isDefined())
+        throw ImageError("Attempting to perform cfft on undefined image.");
+
+    const int No2 = this->_bounds.getXMax()+1;
+    const int N = No2 << 1;
+    dbg<<"N = "<<N<<std::endl;
+
+    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1 ||
+        this->_bounds.getXMin() != -No2)
+        throw ImageError("cfft requires bounds to be (-N/2, N/2-1, -N/2, N/2-1)");
+
+    ImageAlloc<std::complex<double> > kim(Bounds<int>(-No2, No2-1, -No2, No2-1));
+    const T* ptr = _data;
+    const int skip = this->getNSkip();
+    std::complex<double>* kptr = kim.getData();
+
+    if (shift_out) {
+        double fac = inverse ? 1./(N*N) : 1.;
+        if (_step == 1) {
+            for (int j=-No2; j<No2; ++j, ptr+=skip, fac=-fac)
+                for (int i=-No2; i<No2; ++i, fac=-fac)
+                    *kptr++ = fac * *ptr++;
+        } else {
+            for (int j=-No2; j<No2; ++j, ptr+=skip, fac=-fac)
+                for (int i=-No2; i<No2; ++i, ptr+=_step, fac=-fac)
+                    *kptr++ = fac * *ptr;
+        }
+    } else if (inverse) {
+        double fac = 1./(N*N);
+        if (_step == 1) {
+            for (int j=-No2; j<No2; ++j, ptr+=skip)
+                for (int i=-No2; i<No2; ++i)
+                    *kptr++ = fac * *ptr++;
+        } else {
+            for (int j=-No2; j<No2; ++j, ptr+=skip)
+                for (int i=-No2; i<No2; ++i, ptr+=_step)
+                    *kptr++ = fac * *ptr;
+        }
+    } else {
+        if (_step == 1) {
+            for (int j=-No2; j<No2; ++j, ptr+=skip)
+                for (int i=-No2; i<No2; ++i)
+                    *kptr++ = *ptr++;
+        } else {
+            for (int j=-No2; j<No2; ++j, ptr+=skip)
+                for (int i=-No2; i<No2; ++i, ptr+=_step)
+                    *kptr++ = *ptr;
+        }
+    }
+
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
+
+    fftw_plan plan = fftw_plan_dft_2d(N, N, kdata, kdata, inverse ? FFTW_BACKWARD : FFTW_FORWARD,
+                                      FFTW_ESTIMATE);
+    if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    if (shift_in) {
+        kptr = kim.getData();
+        double fac = 1.;
+        for (int j=-No2; j<No2; ++j, fac=-fac)
+            for (int i=-No2; i<No2; ++i, fac=-fac)
+                *kptr++ *= fac;
+    }
+
+    return kim.view();
+}
+
+
 namespace {
 
 template <typename T>

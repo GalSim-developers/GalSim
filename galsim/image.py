@@ -725,7 +725,7 @@ class Image(with_metaclass(MetaImage, object)):
         # dk = 2pi / (N dk)
         dk = np.pi / (No2 * dx)
 
-        imview = ximage.image.fft()
+        imview = ximage.image.rfft()
         imview *= dx*dx
         image = Image(imview, scale=dk)
         image.setOrigin(0,-No2)
@@ -777,7 +777,7 @@ class Image(with_metaclass(MetaImage, object)):
         # dx = 2pi / (N dk)
         dx = np.pi / (No2 * dk)
 
-        imview = kimage.image.inverse_fft()
+        imview = kimage.image.irfft()
         imview *= (dk * No2 / np.pi)**2
         image = Image(imview, scale=dx)
         image.setCenter(0,0)
