@@ -268,7 +268,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     first = len(main_data)
     for h in range(first,len(hdus)+first):
         if h not in hdus:
-            raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
+            raise ValueError("Cannot skip hdus.  No output found for hdu %d"%h)
     # Turn hdus into a list (in order)
     hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
     return main_data + hdulist

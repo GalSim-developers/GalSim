@@ -173,7 +173,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'gsparams' in param:
         gsparams = UpdateGSParams(gsparams, param['gsparams'], base)
 
-    # See if this type is registerd as a valid type.
+    # See if this type is registered as a valid type.
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
     elif type_name in galsim.__dict__:
