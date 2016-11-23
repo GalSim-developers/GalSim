@@ -169,3 +169,4 @@ from . import dcr
 from . import meta_data
 from . import cdmodel
 from . import optics
+from . import fft
