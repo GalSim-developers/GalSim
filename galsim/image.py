@@ -1385,7 +1385,7 @@ def Image_iadd(self, other):
     if dt == self.array.dtype:
         self.array[:,:] += a
     else:
-        self.array[:,:] = (self.array + a).astype(self.array.dtype)
+        self.array[:,:] = (self.array + a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_sub(self, other):
@@ -1410,7 +1410,7 @@ def Image_isub(self, other):
     if dt == self.array.dtype:
         self.array[:,:] -= a
     else:
-        self.array[:,:] = (self.array - a).astype(self.array.dtype)
+        self.array[:,:] = (self.array - a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_mul(self, other):
@@ -1432,7 +1432,7 @@ def Image_imul(self, other):
     if dt == self.array.dtype:
         self.array[:,:] *= a
     else:
-        self.array[:,:] = (self.array * a).astype(self.array.dtype)
+        self.array[:,:] = (self.array * a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_div(self, other):
@@ -1459,7 +1459,7 @@ def Image_idiv(self, other):
         # back to an integer array.  So for integers (or mixed types), don't use /=.
         self.array[:,:] /= a
     else:
-        self.array[:,:] = (self.array / a).astype(self.array.dtype)
+        self.array[:,:] = (self.array / a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_floordiv(self, other):
@@ -1485,7 +1485,7 @@ def Image_ifloordiv(self, other):
     if dt == self.array.dtype:
         self.array[:,:] //= a
     else:
-        self.array[:,:] = (self.array // a).astype(self.array.dtype)
+        self.array[:,:] = (self.array // a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_mod(self, other):
@@ -1511,7 +1511,7 @@ def Image_imod(self, other):
     if dt == self.array.dtype:
         self.array[:,:] %= a
     else:
-        self.array[:,:] = (self.array % a).astype(self.array.dtype)
+        self.array[:,:] = (self.array % a).astype(self.array.dtype, copy=False)
     return self
 
 def Image_pow(self, other):

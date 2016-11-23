@@ -82,10 +82,10 @@ def fft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must have even sizes")
 
     if a.dtype.kind == 'c':
-        a = a.astype(np.complex128)
+        a = a.astype(np.complex128, copy=False)
         xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
     else:
-        a = a.astype(np.float64)
+        a = a.astype(np.float64, copy=False)
         xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
     return xim.cfft(shift_in=shift_in, shift_out=shift_out).array
 
@@ -142,10 +142,10 @@ def ifft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must have even sizes")
 
     if a.dtype.kind == 'c':
-        a = a.astype(np.complex128)
+        a = a.astype(np.complex128, copy=False)
         xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
     else:
-        a = a.astype(np.float64)
+        a = a.astype(np.float64, copy=False)
         xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
     return xim.cfft(inverse=True, shift_in=shift_in, shift_out=shift_out).array
 
@@ -194,7 +194,7 @@ def rfft2(a, shift_in=False, shift_out=False):
     if M != Mo2*2 or N != No2*2:
         raise ValueError("Input array must have even sizes")
 
-    a = a.astype(np.float64)
+    a = a.astype(np.float64, copy=False)
     xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
     return xim.rfft(shift_in=shift_in, shift_out=shift_out).array
 
@@ -242,7 +242,7 @@ def irfft2(a, shift_in=False, shift_out=False):
     if M != Mo2*2:
         raise ValueError("Input array must have even sizes")
 
-    a = a.astype(np.complex128)
+    a = a.astype(np.complex128, copy=False)
     kim = galsim._galsim.ConstImageViewC(a, 0, -Mo2)
     return kim.irfft(shift_in=shift_in, shift_out=shift_out).array
 
