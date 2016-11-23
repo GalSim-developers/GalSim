@@ -84,10 +84,28 @@ def fft2(a, shift_in=False, shift_out=False):
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
         xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
+        kar = xim.cfft(shift_in=shift_in, shift_out=shift_out).array
     else:
         a = a.astype(np.float64, copy=False)
         xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
-    return xim.cfft(shift_in=shift_in, shift_out=shift_out).array
+        if False:
+            # This works, but it's a bit slower.
+            kar = xim.cfft(shift_in=shift_in, shift_out=shift_out).array
+        else:
+            # Start with rfft2 version
+            rkar = xim.rfft(shift_in=shift_in, shift_out=shift_out).array
+            # This only returns kx >= 0.  Fill out the full image.
+            kar = np.empty( (M,N), dtype=np.complex128)
+            if shift_out:
+                kar[:,N/2:N] = rkar[:,0:N/2]
+                kar[0,0:N/2] = rkar[0,N/2:0:-1].conjugate()
+                kar[1:M/2,0:N/2] = rkar[M-1:M/2:-1,N/2:0:-1].conjugate()
+                kar[M/2:M,0:N/2] = rkar[M/2:0:-1,N/2:0:-1].conjugate()
+            else:
+                kar[:,0:N/2] = rkar[:,0:N/2]
+                kar[0,N/2:N] = rkar[0,N/2:0:-1].conjugate()
+                kar[1:M,N/2:N] = rkar[M-1:0:-1,N/2:0:-1].conjugate()
+    return kar
 
 
 def ifft2(a, shift_in=False, shift_out=False):
