@@ -1482,7 +1482,7 @@ class GSObject(object):
         kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.j
-        real_image = kimage_wrap.inverse_fft(dk)
+        real_image = kimage_wrap.inverse_fft()
 
         # Add (a portion of) this to the original image.
         image.image += real_image.subImage(image.bounds)

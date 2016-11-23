@@ -189,7 +189,7 @@ def rfft2(a, shift_in=False, shift_out=False):
     No2 = N // 2
     a = a.astype(np.float64)
     xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
-    kim = xim.fft(1.0, shift_in=shift_in, shift_out=shift_out)
+    kim = xim.fft(shift_in=shift_in, shift_out=shift_out)
     kar = kim.array
     return kar
 
@@ -237,7 +237,7 @@ def irfft2(a, shift_in=False, shift_out=False):
 
     a = a.astype(np.complex128)
     kim = galsim._galsim.ConstImageViewC(a, 0, -No2)
-    xim = kim.inverse_fft(np.pi / No2, shift_in=shift_in, shift_out=shift_out)
+    xim = kim.inverse_fft(shift_in=shift_in, shift_out=shift_out)
     xar = xim.array
     return xar
 

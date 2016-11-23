@@ -1118,30 +1118,32 @@ def test_fft():
 def test_np_fft():
     """Test the equivalence between np.fft functions and the galsim versions
     """
-    N = 8
+    N = 6
 
     # fft2
+    noise = galsim.GaussianNoise(sigma=5, rng=galsim.BaseDeviate(1234))
     if True:
         xim = galsim.ImageD(N,N)
-        xim.addNoise(galsim.GaussianNoise(sigma=5, rng=galsim.BaseDeviate(1234)))
+        xim.addNoise(noise)
         xar = xim.array
     else:
+        N = 4
         xar = np.array([ [0,1,2,1],
                          [1,2,3,2],
                          [2,3,4,3],
                          [1,2,3,2] ])
     print('xar = ',xar)
-    kar = np.fft.fft2(xar)
-    print('numpy kar = ',kar)
+    kar1 = np.fft.fft2(xar)
+    print('numpy kar = ',kar1)
     kar2 = galsim.fft.fft2(xar)
     print('galsim kar = ',kar2)
-    np.testing.assert_almost_equal(kar, kar2, 9, "fft2 not equivalent to np.fft.fft2")
+    np.testing.assert_almost_equal(kar1, kar2, 9, "fft2 not equivalent to np.fft.fft2")
 
     # Check that kar is Hermitian in the way that we describe in the doc for ifft2
     for kx in range(N/2,N):
-        np.testing.assert_almost_equal(kar[0,kx], kar[0,N-kx].conjugate())
+        np.testing.assert_almost_equal(kar2[0,kx], kar2[0,N-kx].conjugate())
         for ky in range(1,N):
-            np.testing.assert_almost_equal(kar[ky,kx], kar[N-ky,N-kx].conjugate())
+            np.testing.assert_almost_equal(kar2[ky,kx], kar2[N-ky,N-kx].conjugate())
 
     # Check shift_in
     kar3 = np.fft.fft2(np.fft.fftshift(xar))
@@ -1159,8 +1161,9 @@ def test_np_fft():
     np.testing.assert_almost_equal(kar7, kar8, 9, "fft2(shift_in,shift_out) failed")
 
     # ifft2
-    xar1 = np.fft.ifft2(kar)
-    xar2 = galsim.fft.ifft2(kar)
+    print('ifft2')
+    xar1 = np.fft.ifft2(kar2)
+    xar2 = galsim.fft.ifft2(kar2)
     np.testing.assert_almost_equal(xar1, xar2, 9, "ifft2 not equivalent to np.fft.ifft2")
     np.testing.assert_almost_equal(xar2, xar, 9, "ifft2(fft2(a)) != a")
 
@@ -1180,9 +1183,10 @@ def test_np_fft():
     np.testing.assert_almost_equal(xar8, xar, 9, "ifft2(fft2(a)) != a with all shifts")
 
     # rfft2
-    rkar = np.fft.rfft2(xar)
+    print('rfft2')
+    rkar1 = np.fft.rfft2(xar)
     rkar2 = galsim.fft.rfft2(xar)
-    np.testing.assert_almost_equal(rkar, rkar2, 9, "rfft2 not equivalent to np.fft.rfft2")
+    np.testing.assert_almost_equal(rkar1, rkar2, 9, "rfft2 not equivalent to np.fft.rfft2")
 
     rkar3 = np.fft.rfft2(np.fft.fftshift(xar))
     rkar4 = galsim.fft.rfft2(xar, shift_in=True)
@@ -1197,8 +1201,9 @@ def test_np_fft():
     np.testing.assert_almost_equal(rkar7, rkar8, 9, "rfft2(shift_in,shift_out) failed")
 
     # irfft2
-    xar1 = np.fft.irfft2(rkar)
-    xar2 = galsim.fft.irfft2(rkar)
+    print('irfft2')
+    xar1 = np.fft.irfft2(rkar1)
+    xar2 = galsim.fft.irfft2(rkar1)
     np.testing.assert_almost_equal(xar1, xar2, 9, "irfft2 not equivalent to np.fft.irfft2")
     np.testing.assert_almost_equal(xar2, xar, 9, "irfft2(rfft2(a)) != a")
 

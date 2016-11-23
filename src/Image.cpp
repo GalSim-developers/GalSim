@@ -639,7 +639,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
 
 template <typename T>
-ImageView<std::complex<double> > BaseImage<T>::fft(double dx, bool shift_in, bool shift_out) const
+ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out) const
 {
     dbg<<"Start BaseImage::fft\n";
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
@@ -669,9 +669,9 @@ ImageView<std::complex<double> > BaseImage<T>::fft(double dx, bool shift_in, boo
 
     // The FT image that FFTW will return will have FT(0,0) placed at the origin.  We
     // want it placed in the middle instead.  We can make that happen by inverting every other
-    // column in the input image.  We also apply the factor dx^2.
-    double fac = dx*dx;
+    // row in the input image.
     if (shift_out) {
+        double fac = (shift_in && No2 % 2 == 1) ? -1 : 1.;
         if (_step == 1) {
             for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
                 for (int i=-No2; i<No2; ++i)
@@ -679,17 +679,17 @@ ImageView<std::complex<double> > BaseImage<T>::fft(double dx, bool shift_in, boo
         } else {
             for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
                 for (int i=-No2; i<No2; ++i, ptr+=_step)
-                    *xptr++ = fac * REAL(*ptr++);
+                    *xptr++ = fac * REAL(*ptr);
         }
     } else {
         if (_step == 1) {
             for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2)
                 for (int i=-No2; i<No2; ++i)
-                    *xptr++ = fac * REAL(*ptr++);
+                    *xptr++ = REAL(*ptr++);
         } else {
             for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2)
                 for (int i=-No2; i<No2; ++i, ptr+=_step)
-                    *xptr++ = fac * REAL(*ptr++);
+                    *xptr++ = REAL(*ptr);
         }
     }
 
@@ -703,8 +703,8 @@ ImageView<std::complex<double> > BaseImage<T>::fft(double dx, bool shift_in, boo
 
     // The resulting image will still have a checkerboard pattern of +-1 on it, which
     // we want to remove.
-    std::complex<double>* kptr = kim.getData();
     if (shift_in) {
+        std::complex<double>* kptr = kim.getData();
         double fac = 1.;
         const bool extra_flip = (No2 % 2 == 1);
         for (int j=-No2; j<No2; ++j, fac=(extra_flip?-fac:fac))
@@ -717,7 +717,7 @@ ImageView<std::complex<double> > BaseImage<T>::fft(double dx, bool shift_in, boo
 }
 
 template <typename T>
-ImageView<double> BaseImage<T>::inverse_fft(double dk, bool shift_in, bool shift_out) const
+ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
 {
     dbg<<"Start BaseImage::inverse_fft\n";
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
@@ -750,8 +750,8 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk, bool shift_in, bool shift
     // FFTW wants the locations of the + and - ky values swapped relative to how
     // we store it in an image.
     // Also, to put x=0 in center of array, we need to flop the sign of every other element
-    // and need to scale by (dk/2pi)^2.
-    double fac = dk * dk / (4*M_PI*M_PI);
+    // and need to scale by (1/N)^2.
+    double fac = 1./(N*N);
 
     const int start_offset = shift_in ? No2 * _stride : 0;
     const int mid_offset = shift_in ? 0 : No2 * _stride;
