@@ -30,7 +30,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
     This function will inspect its input argument to decide if a Transformation object or a
     ChromaticTransformation object is required to represent the resulting transformed object.
 
-    Note: the name of the flux_ratio parameter is techinically wrong here if the jacobian has a
+    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
     non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
     only refers to an overall amplitude ratio for the surface brightness profile.  The total
     flux scaling is actually |det(jac)| * flux_ratio.
@@ -88,7 +88,7 @@ class Transformation(galsim.GSObject):
     of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
     respectively.
 
-    Note: the name of the flux_ratio parameter is techinically wrong here if the jacobian has a
+    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
     non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
     only refers to an overall amplitude ratio for the surface brightness profile.  The total
     flux scaling is actually |det(jac)| * flux_ratio.
