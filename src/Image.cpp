@@ -309,9 +309,9 @@ void wrap_row(T*& ptr, T*& ptrwrap, int m, int step)
 {
     // Add contents of row j to row jj
     if (step == 1)
-        for(int i=0; i<m; ++i) *ptrwrap++ += *ptr++;
+        for(; m; --m) *ptrwrap++ += *ptr++;
     else
-        for(int i=0; i<m; ++i,ptr+=step,ptrwrap+=step) *ptrwrap += *ptr;
+        for(; m; --m,ptr+=step,ptrwrap+=step) *ptrwrap += *ptr;
 }
 
 template <typename T>
@@ -358,9 +358,9 @@ template <typename T>
 void wrap_row_conj(T*& ptr, T*& ptrwrap, int m, int step)
 {
     if (step == 1)
-        for(int i=0; i<m; ++i) *ptrwrap-- += CONJ(*ptr++);
+        for(; m; --m) *ptrwrap-- += CONJ(*ptr++);
     else
-        for(int i=0; i<m; ++i,ptr+=step,ptrwrap-=step) *ptrwrap += CONJ(*ptr);
+        for(; m; --m,ptr+=step,ptrwrap-=step) *ptrwrap += CONJ(*ptr);
 }
 
 // If j == jj, this needs to be slightly different.
@@ -368,12 +368,12 @@ template <typename T>
 void wrap_row_selfconj(T*& ptr, T*& ptrwrap, int m, int step)
 {
     if (step == 1)
-        for(int i=0; i<(m+1)/2; ++i,++ptr,--ptrwrap) {
+        for(int i=(m+1)/2; i; --i,++ptr,--ptrwrap) {
             *ptrwrap += CONJ(*ptr);
             *ptr = CONJ(*ptrwrap);
         }
     else
-        for(int i=0; i<(m+1)/2; ++i,ptr+=step,ptrwrap-=step) {
+        for(int i=(m+1)/2; i; --i,ptr+=step,ptrwrap-=step) {
             *ptrwrap += CONJ(*ptr);
             *ptr = CONJ(*ptrwrap);
         }
@@ -674,22 +674,22 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     if (shift_out) {
         double fac = (shift_in && Nyo2 % 2 == 1) ? -1 : 1.;
         if (_step == 1) {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=-Nxo2; i<Nxo2; ++i)
+            for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
+                for (int i=Nx; i; --i)
                     *xptr++ = fac * REAL(*ptr++);
         } else {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
+            for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
+                for (int i=Nx; i; --i, ptr+=_step)
                     *xptr++ = fac * REAL(*ptr);
         }
     } else {
         if (_step == 1) {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2)
-                for (int i=-Nxo2; i<Nxo2; ++i)
+            for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
+                for (int i=Nx; i; --i)
                     *xptr++ = REAL(*ptr++);
         } else {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2)
-                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
+            for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
+                for (int i=Nx; i; --i, ptr+=_step)
                     *xptr++ = REAL(*ptr);
         }
     }
@@ -708,8 +708,8 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
         std::complex<double>* kptr = kim.getData();
         double fac = 1.;
         const bool extra_flip = (Nxo2 % 2 == 1);
-        for (int j=-Nyo2; j<Nyo2; ++j, fac=(extra_flip?-fac:fac))
-            for (int i=0; i<=Nxo2; ++i, fac=-fac)
+        for (int j=Ny; j; --j, fac=(extra_flip?-fac:fac))
+            for (int i=Nxo2+1; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
 
@@ -764,39 +764,39 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
         const T* ptr = _data + start_offset;
         const bool extra_flip = (Nxo2 % 2 == 1);
         if (_step == 1) {
-            for (int j=0; j<Nyo2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=Nxo2; ++i, fac=-fac)
+            for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
             ptr = _data + mid_offset;
-            for (int j=Nyo2; j<Ny; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=Nxo2; ++i, fac=-fac)
+            for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=0; j<Nyo2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=Nxo2; ++i, ptr+=_step, fac=-fac)
+            for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
             ptr = _data + mid_offset;
-            for (int j=Nyo2; j<Ny; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=Nxo2; ++i, ptr+=_step, fac=-fac)
+            for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else {
         const T* ptr = _data + start_offset;
         if (_step == 1) {
-            for (int j=0; j<Nyo2; ++j, ptr+=skip)
-                for (int i=0; i<=Nxo2; ++i)
+            for (int j=Nyo2; j; --j, ptr+=skip)
+                for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
             ptr = _data + mid_offset;
-            for (int j=Nyo2; j<Ny; ++j, ptr+=skip)
-                for (int i=0; i<=Nxo2; ++i)
+            for (int j=Nyo2; j; --j, ptr+=skip)
+                for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=0; j<Nyo2; ++j, ptr+=skip)
-                for (int i=0; i<=Nxo2; ++i, ptr+=_step)
+            for (int j=Nyo2; j; --j, ptr+=skip)
+                for (int i=Nxo2+1; i; --i, ptr+=_step)
                     *kptr++ = fac * *ptr;
             ptr = _data + mid_offset;
-            for (int j=Nyo2; j<Ny; ++j, ptr+=skip)
-                for (int i=0; i<=Nxo2; ++i, ptr+=_step)
+            for (int j=Nyo2; j; --j, ptr+=skip)
+                for (int i=Nxo2+1; i; --i, ptr+=_step)
                     *kptr++ = fac * *ptr;
         }
     }
@@ -840,33 +840,33 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
         double fac = inverse ? 1./(Nx*Ny) : 1.;
         if (shift_in && (Nxo2 + Nyo2) % 2 == 1) fac = -fac;
         if (_step == 1) {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, fac=-fac)
-                for (int i=-Nxo2; i<Nxo2; ++i, fac=-fac)
+            for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
+                for (int i=Nx; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, fac=-fac)
-                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step, fac=-fac)
+            for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
+                for (int i=Nx; i; --i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else if (inverse) {
         double fac = 1./(Nx*Ny);
         if (_step == 1) {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
-                for (int i=-Nxo2; i<Nxo2; ++i)
+            for (int j=Ny; j; --j, ptr+=skip)
+                for (int i=Nx; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
-                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
+            for (int j=Ny; j; --j, ptr+=skip)
+                for (int i=Nx; i; --i, ptr+=_step)
                     *kptr++ = fac * *ptr;
         }
     } else {
         if (_step == 1) {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
-                for (int i=-Nxo2; i<Nxo2; ++i)
+            for (int j=Ny; j; --j, ptr+=skip)
+                for (int i=Nx; i; --i)
                     *kptr++ = *ptr++;
         } else {
-            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
-                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
+            for (int j=Ny; j; --j, ptr+=skip)
+                for (int i=Nx; i; --i, ptr+=_step)
                     *kptr++ = *ptr;
         }
     }
@@ -882,8 +882,8 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     if (shift_in) {
         kptr = kim.getData();
         double fac = 1.;
-        for (int j=-Nyo2; j<Nyo2; ++j, fac=-fac)
-            for (int i=-Nxo2; i<Nxo2; ++i, fac=-fac)
+        for (int j=Ny; j; --j, fac=-fac)
+            for (int i=Nx; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
 
