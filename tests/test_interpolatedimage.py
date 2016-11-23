@@ -110,7 +110,7 @@ def test_roundtrip():
         do_pickle(interp)
         do_pickle(interp.SBProfile)
 
-    # Test using a non-c-contiguous image  (.T transposes the image, making it fourtran order)
+    # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
     interp = galsim.InterpolatedImage(image_T, scale=test_scale)
     test_array = np.zeros(ref_array.T.shape, dtype=array_type)
