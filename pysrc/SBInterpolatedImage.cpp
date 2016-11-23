@@ -60,6 +60,7 @@ namespace galsim {
                 .def("getPaddedImage", &SBInterpolatedImage::getPaddedImage)
                 .def("getXInterp", &SBInterpolatedImage::getXInterp)
                 .def("getKInterp", &SBInterpolatedImage::getKInterp)
+                .def("getPadFactor", &SBInterpolatedImage::getPadFactor)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);

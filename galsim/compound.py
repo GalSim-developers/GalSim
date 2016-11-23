@@ -607,7 +607,7 @@ class Deconvolution(galsim.GSObject):
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
 _galsim.SBDeconvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
+        'galsim._galsim.SBDeconvolve(%r, %r)'%self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):

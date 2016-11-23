@@ -104,6 +104,7 @@ namespace galsim {
 
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
+        double getPadFactor() const;
 
         /**
          * @brief Refine the value of stepK if the input image was larger than necessary.

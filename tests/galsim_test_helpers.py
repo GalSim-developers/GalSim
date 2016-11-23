@@ -323,6 +323,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     import copy
     # In case the repr uses these:
     from numpy import array, uint16, uint32, int16, int32, float32, float64, ndarray
+    from astropy.units import Unit
+
     try:
         import astropy.io.fits
         from distutils.version import LooseVersion
@@ -370,33 +372,22 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    # A few objects we don't expect to work this way in GalSim, either because their repr strings
-    # are truncated or because they include floating point numbers with truncated precision.  For
-    # these, we just exit here.
-    if irreprable: return
+    # A few objects we don't expect to work this way in GalSim; when testing these, we set the
+    # `irreprable` kwarg to true.  Also, we skip anything with random deviates since these don't
+    # respect the eval/repr roundtrip.
 
-    try:
-        # It turns out that random deviates will still be successfully constructed even with a
-        # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
-        # here and just raise an exception to skip this test and get out of the try block.
-        if random:
-            raise TypeError
-        # A further complication is that the default numpy print options do not have sufficient
-        # precision for the eval string to exactly reproduce the original object.  So we temporarily
-        # bump up the numpy print precision.
-        with galsim.utilities.printoptions(precision=18):
-            #print('repr = ',repr(obj1))
+    if not random and not irreprable:
+        # A further complication is that the default numpy print options do not lead to sufficient
+        # precision for the eval string to exactly reproduce the original object, and start
+        # truncating the output for relatively small size arrays.  So we temporarily bump up the
+        # precision and truncation threshold for testing.
+        with galsim.utilities.printoptions(precision=18, threshold=1e6):
             obj5 = eval(repr(obj1))
-    except:
-        pass
-    else:
-        #print('obj1 = ',repr(obj1))
-        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
-        if random: f1 = func(obj1)
-        #print('func(obj1) = ',repr(f1))
-        #print('func(obj5) = ',repr(f5))
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
+    else:
+        # Even if we're not actually doing the test, still make the repr to check for syntax errors.
+        repr(obj1)
 
     # Try perturbing obj1 pickling arguments and verify that inequality results.
     # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
@@ -439,8 +430,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: flux_untruncated doesn't change anything if trunc == 0.
             if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
-            # Special case: can't change size of LVector without changing array
-            if classname == 'LVector' and i == 0:
+            # Special case: can't change size of LVector or PhotonArray without changing array
+            if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:

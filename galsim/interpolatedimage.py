@@ -795,7 +795,7 @@ class InterpolatedKImage(GSObject):
             self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
-        self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
+        self.getImage(), self.getXInterp(), self.getKInterp(), self.getPadFactor(),
         self.stepK(), self.maxK(), self.getGSParams())
 _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \

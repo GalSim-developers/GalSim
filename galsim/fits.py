@@ -1355,7 +1355,7 @@ class FitsHeader(object):
     def __repr__(self):
         from galsim._pyfits import pyfits_str
         if self._tag is None:
-            return "galsim.FitsHeader(header=%r)"%self.items()
+            return "galsim.FitsHeader(header=%r)"%list(self.items())
         else:
             return "galsim.FitsHeader(%s)"%self._tag
 

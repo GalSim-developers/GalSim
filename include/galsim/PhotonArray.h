@@ -66,21 +66,20 @@ namespace galsim {
          * @brief Allocate memory for optional arrays
          */
         void allocateAngleVectors();
-        void allocateLambdaVector();
+        void allocateWavelengthVector();
         /**
          * @}
          */
 
-        /** @brief reserve space in arrays for future elements
-         *
-         * @param[in] N number of elements to reserve space for.
+        /**
+         * @{
+         * @brief Return whether the optional arrays are allocated
          */
-        void reserve(int N)
-        {
-            _x.reserve(N);
-            _y.reserve(N);
-            _flux.reserve(N);
-        }
+        bool hasAllocatedAngles();
+        bool hasAllocatedWavelengths();
+        /**
+         * @}
+         */
 
         /**
          * @brief Set characteristics of a photon that are decided during photon shooting
@@ -144,7 +143,7 @@ namespace galsim {
          * @param[in] i Index of desired photon (no bounds checking)
          * @returns wavelength of photon
          */
-        double getLambda(int i) const { return _lambda[i]; }
+        double getWavelength(int i) const { return _wavelength[i]; }
 
         /**
          * @{
@@ -155,7 +154,8 @@ namespace galsim {
         std::vector<double>& getFluxVector() { return _flux; }
         std::vector<double>& getDXDZVector() { allocateAngleVectors(); return _dxdz; }
         std::vector<double>& getDYDZVector() { allocateAngleVectors(); return _dydz; }
-        std::vector<double>& getLambdaVector() { allocateLambdaVector(); return _lambda; }
+        std::vector<double>& getWavelengthVector()
+        { allocateWavelengthVector(); return _wavelength; }
         /**
          * @}
          */
@@ -261,7 +261,7 @@ namespace galsim {
         std::vector<double> _flux;      // Vector holding flux of photons
         std::vector<double> _dxdz;      // Vector holding dxdz of photons
         std::vector<double> _dydz;      // Vector holding dydz of photons
-        std::vector<double> _lambda;    // Vector holding wavelength of photons
+        std::vector<double> _wavelength; // Vector holding wavelength of photons
         bool _is_correlated;            // Are the photons correlated?
     };
 
