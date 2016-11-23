@@ -48,8 +48,8 @@ def fft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The input array must be 2-dimensional.
-        - It must be square.
-        - The size in each direction must be even.
+        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
+          not required.)
         - If it has a real dtype, it will be coerced to numpy.float64.
         - If it hsa a complex dtype, it will be coerced to numpy.complex128.
 
@@ -74,17 +74,19 @@ def fft2(a, shift_in=False, shift_out=False):
     s = a.shape
     if len(s) != 2:
         raise ValueError("Input array must be 2D.")
-    N = s[0]
-    if N != s[1]:
-        raise ValueError("Input array must be square.")
-
+    M, N = s
+    Mo2 = M // 2
     No2 = N // 2
+
+    if M != Mo2*2 or N != No2*2:
+        raise ValueError("Input array must have even sizes")
+
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128)
-        xim = galsim._galsim.ConstImageViewC(a, -No2, -No2)
+        xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
     else:
         a = a.astype(np.float64)
-        xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
+        xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
     return xim.cfft(shift_in=shift_in, shift_out=shift_out).array
 
 
@@ -100,7 +102,8 @@ def ifft2(a, shift_in=False, shift_out=False):
 
         - The array must be 2-dimensional.
         - It must be square.
-        - The size in each direction must be even.
+        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
+          not required.)
         - The array is assumed to be Hermitian, which means the k values with kx<0 are assumed
           to be equal to the conjuate of their inverse.  This will always be the case if
           a is an output of fft2 (with a real input array).
@@ -131,20 +134,20 @@ def ifft2(a, shift_in=False, shift_out=False):
     s = a.shape
     if len(s) != 2:
         raise ValueError("Input array must be 2D.")
-    N = s[0]
-    if N != s[1]:
-        raise ValueError("Input array must be square.")
-
+    M,N = s
+    Mo2 = M // 2
     No2 = N // 2
+
+    if M != Mo2*2 or N != No2*2:
+        raise ValueError("Input array must have even sizes")
+
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128)
-        xim = galsim._galsim.ConstImageViewC(a, -No2, -No2)
+        xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
     else:
         a = a.astype(np.float64)
-        xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
-    kim = xim.cfft(inverse=True, shift_in=shift_in, shift_out=shift_out)
-    kar = kim.array
-    return kar
+        xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
+    return xim.cfft(inverse=True, shift_in=shift_in, shift_out=shift_out).array
 
 
 def rfft2(a, shift_in=False, shift_out=False):
@@ -160,7 +163,8 @@ def rfft2(a, shift_in=False, shift_out=False):
         - The input array must be 2-dimensional.
         - If it does not have dtype numpy.float64, it will be cerced to numpy.float64.
         - It must be square.
-        - The size in each direction must be even.
+        - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
+          not required.)
 
     The returned array will be complex with dtype numpy.complex128.
 
@@ -183,16 +187,16 @@ def rfft2(a, shift_in=False, shift_out=False):
     s = a.shape
     if len(s) != 2:
         raise ValueError("Input array must be 2D.")
-    N = s[0]
-    if N != s[1]:
-        raise ValueError("Input array must be square.")
-
+    M,N = s
+    Mo2 = M // 2
     No2 = N // 2
+
+    if M != Mo2*2 or N != No2*2:
+        raise ValueError("Input array must have even sizes")
+
     a = a.astype(np.float64)
-    xim = galsim._galsim.ConstImageViewD(a, -No2, -No2)
-    kim = xim.rfft(shift_in=shift_in, shift_out=shift_out)
-    kar = kim.array
-    return kar
+    xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
+    return xim.rfft(shift_in=shift_in, shift_out=shift_out).array
 
 
 def irfft2(a, shift_in=False, shift_out=False):
@@ -207,8 +211,8 @@ def irfft2(a, shift_in=False, shift_out=False):
 
         - The array must be 2-dimensional.
         - If it does not have dtype numpy.complex128, it will be cerced to numpy.complex128.
-        - It must have shape (N, N/2+1).
-        - The size in the y direction (axis=0) must be even.
+        - It must have shape (M, N/2+1).
+        - The size M must be even. (Ideally 2^k or 3*2^k for speed, but this is not required.)
 
     The returned array will be real with dtype numpy.float64.
 
@@ -231,15 +235,15 @@ def irfft2(a, shift_in=False, shift_out=False):
     s = a.shape
     if len(s) != 2:
         raise ValueError("Input array must be 2D.")
-    N = s[0]
-    No2 = N // 2
-    if No2+1 != s[1]:
-        raise ValueError("Input array must have shape (N, N/2+1).")
+    M,No2 = s
+    No2 -= 1  # s is (M,No2+1)
+    Mo2 = M // 2
+
+    if M != Mo2*2:
+        raise ValueError("Input array must have even sizes")
 
     a = a.astype(np.complex128)
-    kim = galsim._galsim.ConstImageViewC(a, 0, -No2)
-    xim = kim.irfft(shift_in=shift_in, shift_out=shift_out)
-    xar = xim.array
-    return xar
+    kim = galsim._galsim.ConstImageViewC(a, 0, -Mo2)
+    return kim.irfft(shift_in=shift_in, shift_out=shift_out).array
 
 

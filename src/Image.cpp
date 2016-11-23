@@ -647,13 +647,14 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     if (!_data or !this->_bounds.isDefined())
         throw ImageError("Attempting to perform fft on undefined image.");
 
-    const int No2 = this->_bounds.getXMax()+1;
-    const int N = No2 << 1;
-    dbg<<"N = "<<N<<std::endl;
+    const int Nxo2 = this->_bounds.getXMax()+1;
+    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nx = Nxo2 << 1;
+    const int Ny = Nyo2 << 1;
+    dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1 ||
-        this->_bounds.getXMin() != -No2)
-        throw ImageError("fft requires bounds to be (-N/2, N/2-1, -N/2, N/2-1)");
+    if (this->_bounds.getYMin() != -Nyo2 || this->_bounds.getXMin() != -Nxo2)
+        throw ImageError("fft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
     // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
     // use it for the fftw array.
@@ -662,7 +663,7 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     // However, note that the complex array has two extra elements in the primary direction
     // (x in our case) to allow for the extra column.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(0, No2, -No2, No2-1));
+    ImageAlloc<std::complex<double> > kim(Bounds<int>(0, Nxo2, -Nyo2, Nyo2-1));
     double* xptr = reinterpret_cast<double*>(kim.getData());
     const T* ptr = _data;
     const int skip = this->getNSkip();
@@ -671,24 +672,24 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     // want it placed in the middle instead.  We can make that happen by inverting every other
     // row in the input image.
     if (shift_out) {
-        double fac = (shift_in && No2 % 2 == 1) ? -1 : 1.;
+        double fac = (shift_in && Nyo2 % 2 == 1) ? -1 : 1.;
         if (_step == 1) {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=-No2; i<No2; ++i)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2, fac=-fac)
+                for (int i=-Nxo2; i<Nxo2; ++i)
                     *xptr++ = fac * REAL(*ptr++);
         } else {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=-No2; i<No2; ++i, ptr+=_step)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2, fac=-fac)
+                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
                     *xptr++ = fac * REAL(*ptr);
         }
     } else {
         if (_step == 1) {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2)
-                for (int i=-No2; i<No2; ++i)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2)
+                for (int i=-Nxo2; i<Nxo2; ++i)
                     *xptr++ = REAL(*ptr++);
         } else {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2)
-                for (int i=-No2; i<No2; ++i, ptr+=_step)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, xptr+=2)
+                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
                     *xptr++ = REAL(*ptr);
         }
     }
@@ -696,7 +697,7 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
     double* xdata = reinterpret_cast<double*>(kim.getData());
 
-    fftw_plan plan = fftw_plan_dft_r2c_2d(N, N, xdata, kdata, FFTW_ESTIMATE);
+    fftw_plan plan = fftw_plan_dft_r2c_2d(Ny, Nx, xdata, kdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
     fftw_execute(plan);
     fftw_destroy_plan(plan);
@@ -706,9 +707,9 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     if (shift_in) {
         std::complex<double>* kptr = kim.getData();
         double fac = 1.;
-        const bool extra_flip = (No2 % 2 == 1);
-        for (int j=-No2; j<No2; ++j, fac=(extra_flip?-fac:fac))
-            for (int i=0; i<=No2; ++i, fac=-fac)
+        const bool extra_flip = (Nxo2 % 2 == 1);
+        for (int j=-Nyo2; j<Nyo2; ++j, fac=(extra_flip?-fac:fac))
+            for (int i=0; i<=Nxo2; ++i, fac=-fac)
                 *kptr++ *= fac;
     }
 
@@ -726,13 +727,15 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
         throw ImageError("Attempting to perform inverse fft on undefined image.");
 
     if (this->_bounds.getXMin() != 0)
-        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
+        throw ImageError("inverse_fft requires bounds to be (0, Nx/2, -Ny/2, Ny/2-1)");
 
-    const int No2 = this->_bounds.getXMax();
-    const int N = No2 << 1;
-    dbg<<"N = "<<N<<std::endl;
+    const int Nxo2 = this->_bounds.getXMax();
+    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nx = Nxo2 << 1;
+    const int Ny = Nyo2 << 1;
+    dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1)
+    if (this->_bounds.getYMin() != -Nyo2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
     // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
@@ -742,8 +745,8 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     // However, note that the real array needs two extra elements in the primary direction
     // (x in our case) to allow for the extra column in the k array.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
-    // The bounds we care about are (-No2, No2-1, -No2, No2-1).
-    ImageAlloc<double> xim(Bounds<int>(-No2, No2+1, -No2, No2-1));
+    // The bounds we care about are (-Nxo2, Nxo2-1, -Nyo2, Nyo2-1).
+    ImageAlloc<double> xim(Bounds<int>(-Nxo2, Nxo2+1, -Nyo2, Nyo2-1));
 
     std::complex<double>* kptr = reinterpret_cast<std::complex<double>*>(xim.getData());
 
@@ -751,49 +754,49 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     // we store it in an image.
     // Also, to put x=0 in center of array, we need to flop the sign of every other element
     // and need to scale by (1/N)^2.
-    double fac = 1./(N*N);
+    double fac = 1./(Nx*Ny);
 
-    const int start_offset = shift_in ? No2 * _stride : 0;
-    const int mid_offset = shift_in ? 0 : No2 * _stride;
+    const int start_offset = shift_in ? Nyo2 * _stride : 0;
+    const int mid_offset = shift_in ? 0 : Nyo2 * _stride;
 
     const int skip = this->getNSkip();
     if (shift_out) {
         const T* ptr = _data + start_offset;
-        const bool extra_flip = (No2 % 2 == 1);
+        const bool extra_flip = (Nxo2 % 2 == 1);
         if (_step == 1) {
-            for (int j=0; j<No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=No2; ++i, fac=-fac)
+            for (int j=0; j<Nyo2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=0; i<=Nxo2; ++i, fac=-fac)
                     *kptr++ = fac * *ptr++;
             ptr = _data + mid_offset;
-            for (int j=-No2; j<0; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=No2; ++i, fac=-fac)
+            for (int j=Nyo2; j<Ny; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=0; i<=Nxo2; ++i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=0; j<No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
+            for (int j=0; j<Nyo2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=0; i<=Nxo2; ++i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
             ptr = _data + mid_offset;
-            for (int j=No2; j<N; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
+            for (int j=Nyo2; j<Ny; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+                for (int i=0; i<=Nxo2; ++i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else {
         const T* ptr = _data + start_offset;
         if (_step == 1) {
-            for (int j=0; j<No2; ++j, ptr+=skip)
-                for (int i=0; i<=No2; ++i)
+            for (int j=0; j<Nyo2; ++j, ptr+=skip)
+                for (int i=0; i<=Nxo2; ++i)
                     *kptr++ = fac * *ptr++;
             ptr = _data + mid_offset;
-            for (int j=-No2; j<0; ++j, ptr+=skip)
-                for (int i=0; i<=No2; ++i)
+            for (int j=Nyo2; j<Ny; ++j, ptr+=skip)
+                for (int i=0; i<=Nxo2; ++i)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=0; j<No2; ++j, ptr+=skip)
-                for (int i=0; i<=No2; ++i, ptr+=_step)
+            for (int j=0; j<Nyo2; ++j, ptr+=skip)
+                for (int i=0; i<=Nxo2; ++i, ptr+=_step)
                     *kptr++ = fac * *ptr;
             ptr = _data + mid_offset;
-            for (int j=No2; j<N; ++j, ptr+=skip)
-                for (int i=0; i<=No2; ++i, ptr+=_step)
+            for (int j=Nyo2; j<Ny; ++j, ptr+=skip)
+                for (int i=0; i<=Nxo2; ++i, ptr+=_step)
                     *kptr++ = fac * *ptr;
         }
     }
@@ -801,13 +804,13 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     double* xdata = xim.getData();
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(xdata);
 
-    fftw_plan plan = fftw_plan_dft_c2r_2d(N, N, kdata, xdata, FFTW_ESTIMATE);
+    fftw_plan plan = fftw_plan_dft_c2r_2d(Ny, Nx, kdata, xdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
     // Now simply return a view of this image.
-    return xim.subImage(Bounds<int>(-No2, No2-1, -No2, No2-1));
+    return xim.subImage(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
 }
 
 template <typename T>
@@ -819,56 +822,58 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     if (!_data or !this->_bounds.isDefined())
         throw ImageError("Attempting to perform cfft on undefined image.");
 
-    const int No2 = this->_bounds.getXMax()+1;
-    const int N = No2 << 1;
-    dbg<<"N = "<<N<<std::endl;
+    const int Nxo2 = this->_bounds.getXMax()+1;
+    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nx = Nxo2 << 1;
+    const int Ny = Nyo2 << 1;
+    dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1 ||
-        this->_bounds.getXMin() != -No2)
-        throw ImageError("cfft requires bounds to be (-N/2, N/2-1, -N/2, N/2-1)");
+    if (this->_bounds.getYMin() != -Nyo2 && (this->_bounds.getXMin() != -Nxo2))
+        throw ImageError("cfft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(-No2, No2-1, -No2, No2-1));
+    ImageAlloc<std::complex<double> > kim(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
     const T* ptr = _data;
     const int skip = this->getNSkip();
     std::complex<double>* kptr = kim.getData();
 
     if (shift_out) {
-        double fac = inverse ? 1./(N*N) : 1.;
+        double fac = inverse ? 1./(Nx*Ny) : 1.;
+        if (shift_in && (Nxo2 + Nyo2) % 2 == 1) fac = -fac;
         if (_step == 1) {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, fac=-fac)
-                for (int i=-No2; i<No2; ++i, fac=-fac)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, fac=-fac)
+                for (int i=-Nxo2; i<Nxo2; ++i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=-No2; j<No2; ++j, ptr+=skip, fac=-fac)
-                for (int i=-No2; i<No2; ++i, ptr+=_step, fac=-fac)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip, fac=-fac)
+                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step, fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else if (inverse) {
-        double fac = 1./(N*N);
+        double fac = 1./(Nx*Ny);
         if (_step == 1) {
-            for (int j=-No2; j<No2; ++j, ptr+=skip)
-                for (int i=-No2; i<No2; ++i)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
+                for (int i=-Nxo2; i<Nxo2; ++i)
                     *kptr++ = fac * *ptr++;
         } else {
-            for (int j=-No2; j<No2; ++j, ptr+=skip)
-                for (int i=-No2; i<No2; ++i, ptr+=_step)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
+                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
                     *kptr++ = fac * *ptr;
         }
     } else {
         if (_step == 1) {
-            for (int j=-No2; j<No2; ++j, ptr+=skip)
-                for (int i=-No2; i<No2; ++i)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
+                for (int i=-Nxo2; i<Nxo2; ++i)
                     *kptr++ = *ptr++;
         } else {
-            for (int j=-No2; j<No2; ++j, ptr+=skip)
-                for (int i=-No2; i<No2; ++i, ptr+=_step)
+            for (int j=-Nyo2; j<Nyo2; ++j, ptr+=skip)
+                for (int i=-Nxo2; i<Nxo2; ++i, ptr+=_step)
                     *kptr++ = *ptr;
         }
     }
 
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
 
-    fftw_plan plan = fftw_plan_dft_2d(N, N, kdata, kdata, inverse ? FFTW_BACKWARD : FFTW_FORWARD,
+    fftw_plan plan = fftw_plan_dft_2d(Ny, Nx, kdata, kdata, inverse ? FFTW_BACKWARD : FFTW_FORWARD,
                                       FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
     fftw_execute(plan);
@@ -877,8 +882,8 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     if (shift_in) {
         kptr = kim.getData();
         double fac = 1.;
-        for (int j=-No2; j<No2; ++j, fac=-fac)
-            for (int i=-No2; i<No2; ++i, fac=-fac)
+        for (int j=-Nyo2; j<Nyo2; ++j, fac=-fac)
+            for (int i=-Nxo2; i<Nxo2; ++i, fac=-fac)
                 *kptr++ *= fac;
     }
 

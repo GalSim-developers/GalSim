@@ -1123,9 +1123,18 @@ def test_np_fft():
                                   [1,2,3,2],
                                   [2,3,4,3],
                                   [1,2,3,2] ], dtype=int ))
+    input_list.append( np.array([ [0,1],
+                                  [1,2],
+                                  [2,3],
+                                  [1,2] ], dtype=int ))
     noise = galsim.GaussianNoise(sigma=5, rng=galsim.BaseDeviate(1234))
     for N in [2,4,8,10]:
         xim = galsim.ImageD(N,N)
+        xim.addNoise(noise)
+        input_list.append(xim.array)
+
+    for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
+        xim = galsim.ImageD(Nx,Ny)
         xim.addNoise(noise)
         input_list.append(xim.array)
 
@@ -1135,21 +1144,30 @@ def test_np_fft():
         xim.imag.addNoise(noise)
         input_list.append(xim.array)
 
+    for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
+        xim = galsim.ImageC(Nx,Ny)
+        xim.real.addNoise(noise)
+        xim.imag.addNoise(noise)
+        input_list.append(xim.array)
+
     for xar in input_list:
-        print('xar = ',xar)
-        M,N = xar.shape
+        Ny,Nx = xar.shape
+        print('Nx,Ny = ',Nx,Ny)
+        if Nx + Ny < 10:
+            print('xar = ',xar)
         kar1 = np.fft.fft2(xar)
         #print('numpy kar = ',kar1)
         kar2 = galsim.fft.fft2(xar)
-        print('kar = ',kar2)
+        if Nx + Ny < 10:
+            print('kar = ',kar2)
         np.testing.assert_almost_equal(kar1, kar2, 9, "fft2 not equivalent to np.fft.fft2")
 
         # Check that kar is Hermitian in the way that we describe in the doc for ifft2
         if not np.iscomplexobj(xar):
-            for kx in range(N/2,N):
-                np.testing.assert_almost_equal(kar2[0,kx], kar2[0,N-kx].conjugate())
-                for ky in range(1,N):
-                    np.testing.assert_almost_equal(kar2[ky,kx], kar2[N-ky,N-kx].conjugate())
+            for kx in range(Nx/2,Nx):
+                np.testing.assert_almost_equal(kar2[0,kx], kar2[0,Nx-kx].conjugate())
+                for ky in range(1,Ny):
+                    np.testing.assert_almost_equal(kar2[ky,kx], kar2[Ny-ky,Nx-kx].conjugate())
 
         # Check shift_in
         kar3 = np.fft.fft2(np.fft.fftshift(xar))
@@ -1170,7 +1188,8 @@ def test_np_fft():
         #print('ifft2')
         xar1 = np.fft.ifft2(kar2)
         xar2 = galsim.fft.ifft2(kar2)
-        print('xar2 = ',xar2)
+        if Nx + Ny < 10:
+            print('xar2 = ',xar2)
         np.testing.assert_almost_equal(xar1, xar2, 9, "ifft2 not equivalent to np.fft.ifft2")
         np.testing.assert_almost_equal(xar2, xar, 9, "ifft2(fft2(a)) != a")
 
