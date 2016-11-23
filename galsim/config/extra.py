@@ -220,7 +220,7 @@ def WriteExtraOutputs(config, main_data, logger=None):
         # Do any final processing that needs to happen.
         builder.ensureFinalized(field, config, main_data, logger)
 
-        # Call the write function, possible multiple times to account for IO failures.
+        # Call the write function, possibly multiple times to account for IO failures.
         write_func = builder.writeFile
         args = (file_name,field,config,logger)
         galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
