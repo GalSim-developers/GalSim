@@ -856,7 +856,7 @@ def test_retry_io():
 
 @timer
 def test_config():
-    """Tests that configuration files is read, copied, and merged correctly.
+    """Test that configuration files are read, copied, and merged correctly.
     """
     config = {
         'gal' : { 'type' : 'Gaussian', 'sigma' : 2.3,
