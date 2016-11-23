@@ -1107,12 +1107,11 @@ class PhaseScreenPSF(GSObject):
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated,dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
-        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
+        ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
 
     def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img = np.fft.fftshift(self.img)
         self.img *= flux / self.img.sum()
         b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
         self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))

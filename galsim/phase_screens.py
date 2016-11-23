@@ -175,7 +175,7 @@ class AtmosphericScreen(object):
         """Generate a random phase screen with power spectrum given by self.psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
         noise = utilities.rand_arr(self.psi.shape, gd)
-        return np.fft.ifft2(np.fft.fft2(noise)*self.psi).real
+        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self.psi).real
 
     def advance(self):
         """Advance phase screen realization by self.time_step."""
