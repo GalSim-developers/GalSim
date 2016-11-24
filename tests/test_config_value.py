@@ -321,7 +321,7 @@ def test_float_value():
     nfw1 = galsim.config.ParseValue(config,'nfw',config, float)[0]
     np.testing.assert_almost_equal(nfw1, nfw_halo.getMagnification((6,8), 1.3))
 
-    # Too large magnificaiton should max out at 25
+    # Too large magnification should max out at 25
     galsim.config.RemoveCurrent(config)
     config['world_pos'] = galsim.PositionD(0.1,0.3)
     print("strong lensing mag = ",nfw_halo.getMagnification((0.1,0.3), 1.3))
