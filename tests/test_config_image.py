@@ -787,11 +787,17 @@ def test_scattered_whiten():
     """
     real_gal_dir = os.path.join('..','examples','data')
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    scale = 0.05
+    index = 79
+    flux = 10000
+    variance = 10
+    skip_prob = 0.2
+    nobjects = 30
     config = {
         'image' : {
             'type' : 'Scattered',
             'random_seed' : 12345,
-            'pixel_scale' : 0.05,
+            'pixel_scale' : scale,
             'size' : 100,
             'image_pos' : { 'type' : 'XY',
                             # Some of these will be completely off the main image.
@@ -799,20 +805,20 @@ def test_scattered_whiten():
                             'x' : { 'type' : 'Random', 'min': -50, 'max': 150 },
                             'y' : { 'type' : 'Random', 'min': -50, 'max': 150 },
                           },
-            'nobjects' : 30,
+            'nobjects' : nobjects,
             'noise' : {
                 'type' : 'Gaussian',
-                'variance' : 10,
+                'variance' : variance,
                 'whiten' : True,
             },
         },
         'gal' : {
             'type' : 'RealGalaxy',
-            'index' : 79,  # It's a bit faster if they all use the same index.
-            'flux' : 1000,
+            'index' : index,  # It's a bit faster if they all use the same index.
+            'flux' : flux,
 
             # This tests a special case in FlattenNoiseVariance
-            'skip' : { 'type': 'RandomBinomial', 'p': 0.2 }
+            'skip' : { 'type': 'RandomBinomial', 'p': skip_prob }
         },
         'psf' : {
             'type' : 'Gaussian',
@@ -828,26 +834,26 @@ def test_scattered_whiten():
 
     # First build by hand
     rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
-    gal = galsim.RealGalaxy(rgc, index=79, flux=1000)
+    gal = galsim.RealGalaxy(rgc, index=index, flux=flux)
     psf = galsim.Gaussian(sigma=0.1)
     final = galsim.Convolve(gal,psf)
-    im1 = galsim.Image(100,100, scale=0.05)
+    im1 = galsim.Image(100,100, scale=scale)
     cv_im = galsim.Image(100,100)
 
-    for k in range(30):
+    for k in range(nobjects):
         ud = galsim.UniformDeviate(12345 + k + 1)
 
         x = ud() * 200. - 50.
         y = ud() * 200. - 50.
 
-        skip_dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
+        skip_dev = galsim.BinomialDeviate(ud, N=1, p=skip_prob)
         if skip_dev() > 0: continue
 
         ix = int(math.floor(x+1))
         iy = int(math.floor(y+1))
         dx = x-ix+0.5
         dy = y-iy+0.5
-        stamp = final.drawImage(offset=(dx, dy), scale=0.05)
+        stamp = final.drawImage(offset=(dx, dy), scale=scale)
         stamp.setCenter(ix,iy)
 
         final.noise.rng.reset(ud)
@@ -865,7 +871,7 @@ def test_scattered_whiten():
     noise_im = max_cv - cv_im
     rng = galsim.BaseDeviate(12345)
     im1.addNoise(galsim.VariableGaussianNoise(rng, noise_im))
-    im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(10-max_cv)))
+    im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(variance-max_cv)))
 
     # Compare to what config builds
     im2 = galsim.config.BuildImage(config)
