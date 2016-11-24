@@ -347,7 +347,8 @@ def test_reject():
     assert "obj 1: Caught SkipThisObject: e = None" in cl.output
     assert "Skipping object 1" in cl.output
     assert "Object 0: Caught exception 105 index has gone past the number of entries" in cl.output
-    assert "Object 0: Caught exception inner_radius must be less than radius" in cl.output
+    assert ("Object 0: Caught exception inner_radius (5.369661) must be less than radius "+
+            "(3.931733) for type=RandomCircle") in cl.output
     assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
