@@ -244,19 +244,28 @@ def test_reject():
     """
     # Make a custom function for rejecting COSMOSCatalog objects that use Sersics with n > 2.
     def HighN(config, base, value_type):
+        # GetCurrentValue returns the constructed 'gal' object for this pass
         gal = galsim.config.GetCurrentValue('gal',base)
+        # First undo the two bits we did to the galaxy that COSMOSCatalog made
         assert isinstance(gal, galsim.Transformation)
         gal = gal.original
         assert isinstance(gal, galsim.Convolution)
-        gal = gal._obj_list[0]  # This is now the things obj COSMOSCatalog produced.
-        if isinstance(gal, galsim.Sum): # Reject all B+D galaxies (which are a minority)
-            reject = True  # Reject all B+D galaxies (which are a minority)
+        gal = gal._obj_list[0]
+        # Now gal is the object COSMOSCatalog produced.
+        if isinstance(gal, galsim.Sum):
+            # Reject all B+D galaxies (which are a minority)
+            reject = True
         else:
+            # For pure Sersics, reject those with n > 2.
             assert isinstance(gal, galsim.Transformation)
             gal = gal.original
             assert isinstance(gal, galsim.Sersic)
             reject = gal.getN() > 2
+        # The second item in the return tuple is "safe", which means is this value safe to
+        # cache and reuse (potentially saving calculation time for complex objects).
+        # Not really applicable here, so return False.
         return reject, False
+    # You need to register this function with a "type" name so config knows about it.
     galsim.config.RegisterValueType('HighN', HighN, [bool])
 
     config = {
@@ -347,7 +356,8 @@ def test_reject():
     assert "obj 1: Caught SkipThisObject: e = None" in cl.output
     assert "Skipping object 1" in cl.output
     assert "Object 0: Caught exception 105 index has gone past the number of entries" in cl.output
-    assert "Object 0: Caught exception inner_radius must be less than radius" in cl.output
+    assert ("Object 0: Caught exception inner_radius (5.369661) must be less than radius "+
+            "(3.931733) for type=RandomCircle") in cl.output
     assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
@@ -777,11 +787,17 @@ def test_scattered_whiten():
     """
     real_gal_dir = os.path.join('..','examples','data')
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    scale = 0.05
+    index = 79
+    flux = 10000
+    variance = 10
+    skip_prob = 0.2
+    nobjects = 30
     config = {
         'image' : {
             'type' : 'Scattered',
             'random_seed' : 12345,
-            'pixel_scale' : 0.05,
+            'pixel_scale' : scale,
             'size' : 100,
             'image_pos' : { 'type' : 'XY',
                             # Some of these will be completely off the main image.
@@ -789,20 +805,20 @@ def test_scattered_whiten():
                             'x' : { 'type' : 'Random', 'min': -50, 'max': 150 },
                             'y' : { 'type' : 'Random', 'min': -50, 'max': 150 },
                           },
-            'nobjects' : 30,
+            'nobjects' : nobjects,
             'noise' : {
                 'type' : 'Gaussian',
-                'variance' : 10,
+                'variance' : variance,
                 'whiten' : True,
             },
         },
         'gal' : {
             'type' : 'RealGalaxy',
-            'index' : 79,  # It's a bit faster if they all use the same index.
-            'flux' : 1000,
+            'index' : index,  # It's a bit faster if they all use the same index.
+            'flux' : flux,
 
             # This tests a special case in FlattenNoiseVariance
-            'skip' : { 'type': 'RandomBinomial', 'p': 0.2 }
+            'skip' : { 'type': 'RandomBinomial', 'p': skip_prob }
         },
         'psf' : {
             'type' : 'Gaussian',
@@ -818,26 +834,26 @@ def test_scattered_whiten():
 
     # First build by hand
     rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
-    gal = galsim.RealGalaxy(rgc, index=79, flux=1000)
+    gal = galsim.RealGalaxy(rgc, index=index, flux=flux)
     psf = galsim.Gaussian(sigma=0.1)
     final = galsim.Convolve(gal,psf)
-    im1 = galsim.Image(100,100, scale=0.05)
+    im1 = galsim.Image(100,100, scale=scale)
     cv_im = galsim.Image(100,100)
 
-    for k in range(30):
+    for k in range(nobjects):
         ud = galsim.UniformDeviate(12345 + k + 1)
 
         x = ud() * 200. - 50.
         y = ud() * 200. - 50.
 
-        skip_dev = galsim.BinomialDeviate(ud, N=1, p=0.2)
+        skip_dev = galsim.BinomialDeviate(ud, N=1, p=skip_prob)
         if skip_dev() > 0: continue
 
         ix = int(math.floor(x+1))
         iy = int(math.floor(y+1))
         dx = x-ix+0.5
         dy = y-iy+0.5
-        stamp = final.drawImage(offset=(dx, dy), scale=0.05)
+        stamp = final.drawImage(offset=(dx, dy), scale=scale)
         stamp.setCenter(ix,iy)
 
         final.noise.rng.reset(ud)
@@ -855,7 +871,7 @@ def test_scattered_whiten():
     noise_im = max_cv - cv_im
     rng = galsim.BaseDeviate(12345)
     im1.addNoise(galsim.VariableGaussianNoise(rng, noise_im))
-    im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(10-max_cv)))
+    im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(variance-max_cv)))
 
     # Compare to what config builds
     im2 = galsim.config.BuildImage(config)

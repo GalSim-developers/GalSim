@@ -34,7 +34,7 @@ except ImportError:
 
 @timer
 def test_gaussian():
-    """Test the Poisson noise builder
+    """Test the Gaussian noise builder
     """
     scale = 0.3
     sigma = 17.3

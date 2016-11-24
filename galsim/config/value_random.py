@@ -274,17 +274,15 @@ def _GenerateFromRandomCircle(config, base, value_type):
     opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     radius = kwargs['radius']
+    inner_radius = kwargs.get('inner_radius',0)
 
     ud = galsim.UniformDeviate(rng)
     max_rsq = radius**2
-    if 'inner_radius' in kwargs:
-        inner_radius = kwargs['inner_radius']
-        min_rsq = inner_radius**2
-    else:
-        min_rsq = 0.
+    min_rsq = inner_radius**2
 
     if min_rsq >= max_rsq:
-        raise ValueError("inner_radius must be less than radius for type=RandomCircle")
+        raise ValueError("inner_radius (%f) must be less than radius (%f) for type=RandomCircle"%(
+                         inner_radius, radius))
 
     # Emulate a do-while loop
     while True:
