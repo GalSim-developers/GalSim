@@ -1250,9 +1250,19 @@ def test_np_fft():
         np.testing.assert_almost_equal(xar7, xar8, 9, "irfft2(shift_in,shift_out) failed")
         np.testing.assert_almost_equal(xar8, xar, 9, "irfft2(rfft2(a)) != a with all shifts")
 
+        # ifft can also accept real arrays
+        xar9 = galsim.fft.fft2(galsim.fft.ifft2(xar))
+        np.testing.assert_almost_equal(xar9, xar, 9, "fft2(ifft2(a)) != a")
+        xar10 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_in=True),shift_out=True)
+        np.testing.assert_almost_equal(xar10, xar, 9, "fft2(ifft2(a)) != a with shift_in/out")
+        xar11 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_out=True),shift_in=True)
+        np.testing.assert_almost_equal(xar11, xar, 9, "fft2(ifft2(a)) != a with shift_out/in")
+        xar12 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_in=True,shift_out=True),
+                                shift_in=True,shift_out=True)
+        np.testing.assert_almost_equal(xar12, xar, 9, "fft2(ifft2(a)) != a with all shifts")
+
+
 if __name__ == "__main__":
-    test_np_fft()
-    quit()
     test_drawImage()
     test_draw_methods()
     test_drawKImage()
