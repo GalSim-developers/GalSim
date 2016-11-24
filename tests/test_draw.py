@@ -1164,7 +1164,7 @@ def test_np_fft():
 
         # Check that kar is Hermitian in the way that we describe in the doc for ifft2
         if not np.iscomplexobj(xar):
-            for kx in range(Nx/2,Nx):
+            for kx in range(Nx//2,Nx):
                 np.testing.assert_almost_equal(kar2[0,kx], kar2[0,Nx-kx].conjugate())
                 for ky in range(1,Ny):
                     np.testing.assert_almost_equal(kar2[ky,kx], kar2[Ny-ky,Nx-kx].conjugate())

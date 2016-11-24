@@ -97,14 +97,14 @@ def fft2(a, shift_in=False, shift_out=False):
             # This only returns kx >= 0.  Fill out the full image.
             kar = np.empty( (M,N), dtype=np.complex128)
             if shift_out:
-                kar[:,N/2:N] = rkar[:,0:N/2]
-                kar[0,0:N/2] = rkar[0,N/2:0:-1].conjugate()
-                kar[1:M/2,0:N/2] = rkar[M-1:M/2:-1,N/2:0:-1].conjugate()
-                kar[M/2:M,0:N/2] = rkar[M/2:0:-1,N/2:0:-1].conjugate()
+                kar[:,No2:N] = rkar[:,0:No2]
+                kar[0,0:No2] = rkar[0,No2:0:-1].conjugate()
+                kar[1:Mo2,0:No2] = rkar[M-1:Mo2:-1,No2:0:-1].conjugate()
+                kar[Mo2:M,0:No2] = rkar[Mo2:0:-1,No2:0:-1].conjugate()
             else:
-                kar[:,0:N/2] = rkar[:,0:N/2]
-                kar[0,N/2:N] = rkar[0,N/2:0:-1].conjugate()
-                kar[1:M,N/2:N] = rkar[M-1:0:-1,N/2:0:-1].conjugate()
+                kar[:,0:No2] = rkar[:,0:No2]
+                kar[0,No2:N] = rkar[0,No2:0:-1].conjugate()
+                kar[1:M,No2:N] = rkar[M-1:0:-1,No2:0:-1].conjugate()
     return kar
 
 
