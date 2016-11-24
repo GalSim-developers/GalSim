@@ -197,7 +197,7 @@ stamp :
     # The max_extra_noise parameter indicates how much extra noise per pixel we are
     # willing to tolerate as a fraction of the noise that we will be adding from the
     # sky (cf. the image.noise field).  In this case, we allow an extra 1% larger variance,
-    # but only for photon
+    # but only for photon shooting.  We use None here when the draw_method is fft.
     max_extra_noise :
         type: List
         items: [ None, 0.01 ]
