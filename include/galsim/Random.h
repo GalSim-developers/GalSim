@@ -238,6 +238,15 @@ namespace galsim {
          */
         double operator()() { return _val(); }
 
+        /**
+         * @brief Draw N new random numbers from the distribution and save the values in
+         * an array
+         *
+         * @param N     The number of values to draw
+         * @param data  The array into which to write the values
+         */
+        void generate(int N, double* data);
+
    protected:
 
         boost::shared_ptr<rng_type> _rng;

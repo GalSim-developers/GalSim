@@ -48,6 +48,7 @@ namespace galsim {
         double getFlux() const;
         double getSigma() const;
         const LVector& getBVec() const;
+        double maxSB() const;
 
         /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const

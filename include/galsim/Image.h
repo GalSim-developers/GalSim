@@ -210,9 +210,9 @@ namespace galsim {
         { return subImage(bounds); }
 
         /**
-         *  @brief Return the sum of the pixel values
+         *  @brief Return the smallest bounds that includes all non-zero elements of the image.
          */
-        T sumElements() const;
+        Bounds<int> nonZeroBounds() const;
 
         /**
          *  @brief Shift the bounding box of the image, changing the logical location of the pixels
@@ -284,6 +284,21 @@ namespace galsim {
          *  @brief BaseImage's assignTo just uses the normal copyFrom method.
          */
         void assignTo(ImageView<T> rhs) const { rhs.copyFrom(*this); }
+
+        /**
+         *  @brief Return the sum of the elements in the image.
+         */
+        T sumElements() const;
+
+        /**
+         *  @brief Perform a 2D FFT from real space to k-space.
+         */
+        ImageView<std::complex<double> > fft(double dk) const;
+
+        /**
+         *  @brief Perform a 2D FFT from k-space to real space.
+         */
+        ImageView<double> inverse_fft(double dk) const;
 
     protected:
 
@@ -505,6 +520,12 @@ namespace galsim {
         ImageView<T> operator[](const Bounds<int>& bounds)
         { return subImage(bounds); }
 
+        /**
+         *  @brief Wrap the full image onto a subset of the image and return that subset.
+         *
+         *  This is used to alias the data of a k-space image before doing the FFT to real space.
+         */
+        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
 
         //@{
         /**
@@ -723,6 +744,14 @@ namespace galsim {
         ConstImageView<T> subImage(const Bounds<int>& bounds) const
         { return view().subImage(bounds); }
         //@}
+
+        /**
+         *  @brief Wrap the full image onto a subset of the image and return that subset.
+         *
+         *  This is used to alias the data of a k-space image before doing the FFT to real space.
+         */
+        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy)
+        { return view().wrap(bounds, hermx, hermy); }
 
         //@{
         /**

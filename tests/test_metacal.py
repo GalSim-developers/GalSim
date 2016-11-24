@@ -128,8 +128,8 @@ def test_metacal_tracking():
         small_kval = 1.e-2    # Find the k where the given psf hits this kvalue
         smaller_kval = 3.e-3  # Target PSF will have this kvalue at the same k
 
-        kim_r, kim_i = psf.drawKImage(scale=dk)
-        karr_r = kim_r.array
+        kim = psf.drawKImage(scale=dk)
+        karr_r = kim.real.array
         # Find the smallest r where the kval < small_kval
         nk = karr_r.shape[0]
         kx, ky = np.meshgrid(np.arange(-nk/2,nk/2), np.arange(-nk/2,nk/2))
@@ -389,6 +389,35 @@ def test_metacal_tracking():
         check_symm_noise(final_image2, 'using alternate reverse shear does not work')
         print('Time for alternate reverse shear method = ',t4-t3)
 
+@timer
+def test_wcs():
+    """Reproduce an error Erin found and reported in #834.  This was never an error in a released
+    version, just temporarily on master, but the mistake hadn't been caught by any of our unit
+    tests, so this test catches the error.
+    """
+    wcs = galsim.JacobianWCS(0.01, -0.26, -0.28, -0.03)
+    gal = galsim.Exponential(half_light_radius=1.1, flux=237)
+    psf = galsim.Moffat(beta=3.5, half_light_radius=0.9)
+    obs = galsim.Convolve(gal,psf)
+
+    obs_im = obs.drawImage(nx=32, ny=32, offset=(0.3,-0.2), wcs=wcs)
+    psf_im = psf.drawImage(nx=32, ny=32, wcs=wcs)
+
+    ii = galsim.InterpolatedImage(obs_im)
+    psf_ii = galsim.InterpolatedImage(psf_im)
+    psf_inv = galsim.Deconvolve(psf_ii)
+
+    ii_nopsf = galsim.Convolve(ii, psf_inv)
+
+    newpsf=galsim.Moffat(beta=3.5, half_light_radius=0.95)
+    newpsf=newpsf.dilate(1.02)
+
+    new_ii = ii_nopsf.shear(g1=0.01,g2=0.0)
+    new_ii = galsim.Convolve(new_ii, newpsf)
+
+    new_im = new_ii.drawImage(image=obs_im.copy(), method='no_pixel')
+    np.testing.assert_almost_equal(new_im.array.sum()/237, obs_im.array.sum()/237, decimal=1)
 
 if __name__ == "__main__":
     test_metacal_tracking()
+    test_wcs()

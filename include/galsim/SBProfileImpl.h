@@ -21,7 +21,6 @@
 #define GalSim_SBProfileImpl_H
 
 #include "SBProfile.h"
-#include "FFT.h"
 #include "integ/Int.h"
 #include "TMV.h"
 
@@ -80,6 +79,7 @@ namespace galsim {
         virtual bool isAnalyticK() const =0;
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0;
+        virtual double maxSB() const =0;
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
 
         // Functions with default implementations:
@@ -96,14 +96,6 @@ namespace galsim {
         virtual double getPositiveFlux() const { return getFlux()>0. ? getFlux() : 0.; }
 
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
-
-        // Utility for drawing into Image data structures.
-        // returns flux integral
-        template <typename T>
-        double fillXImage(ImageView<T>& image, double gain) const;
-
-        // Utility for drawing a k grid into FFT data structures
-        void fillKGrid(KTable& kt) const;
 
         // Public so it can be directly used from SBProfile.
         const GSParamsPtr gsparams;

@@ -68,6 +68,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
 
         /**
          *
@@ -106,6 +107,7 @@ namespace galsim {
 
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
+        double getPadFactor() const { return _pad_factor; }
         ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
 
@@ -126,6 +128,7 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        const double _pad_factor;
         mutable double _stepk;
         mutable double _maxk;
         double _flux;
@@ -176,11 +179,8 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& realKImage,
-            const BaseImage<T>& imagKImage,
-            double dk, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<T>& kimage, double dk, double stepk,
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
@@ -213,6 +213,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 

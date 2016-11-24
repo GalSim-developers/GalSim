@@ -221,6 +221,14 @@ def test_uniform():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    u.seed(testseed)
+    test_array = np.empty(3)
+    u.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(uResult), precision,
+            err_msg='Wrong uniform random number sequence from generate.')
+
     # Test filling an image
     u.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -334,6 +342,14 @@ def test_gaussian():
     assert testResult5 != testResult2
     assert testResult5 != testResult3
     assert testResult5 != testResult4
+
+    # Test generate
+    g.seed(testseed)
+    test_array = np.empty(3)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gResult), precision,
+            err_msg='Wrong Gaussian random number sequence from generate.')
 
     # Test filling an image
     g.seed(testseed)
@@ -547,6 +563,14 @@ def test_binomial():
     #assert testResult5 != testResult3
     #assert testResult5 != testResult4
 
+    # Test generate
+    b.seed(testseed)
+    test_array = np.empty(3)
+    b.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(bResult), precision,
+            err_msg='Wrong binomial random number sequence from generate.')
+
     # Test filling an image
     b.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -659,6 +683,14 @@ def test_poisson():
     #assert testResult5 != testResult2
     #assert testResult5 != testResult3
     #assert testResult5 != testResult4
+
+    # Test generate
+    p.seed(testseed)
+    test_array = np.empty(3)
+    p.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(pResult), precision,
+            err_msg='Wrong poisson random number sequence from generate.')
 
     # Test filling an image
     p.seed(testseed)
@@ -878,6 +910,14 @@ def test_weibull():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    w.seed(testseed)
+    test_array = np.empty(3)
+    w.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(wResult), precision,
+            err_msg='Wrong weibull random number sequence from generate.')
+
     # Test filling an image
     w.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -989,6 +1029,14 @@ def test_gamma():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    g.seed(testseed)
+    test_array = np.empty(3)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gammaResult), precision,
+            err_msg='Wrong gamma random number sequence from generate.')
+
     # Test filling an image
     g.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1099,6 +1147,14 @@ def test_chi2():
     assert testResult5 != testResult2
     assert testResult5 != testResult3
     assert testResult5 != testResult4
+
+    # Test generate
+    c.seed(testseed)
+    test_array = np.empty(3)
+    c.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(chi2Result), precision,
+            err_msg='Wrong Chi^2 random number sequence from generate.')
 
     # Test filling an image
     c.seed(testseed)
@@ -1248,6 +1304,14 @@ def test_distfunction():
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated with auto-lambda function')
 
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
     # Test filling an image
     d.seed(testseed)
     print('d = ',d)
@@ -1353,6 +1417,14 @@ def test_distLookupTable():
             d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
+
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
 
     # Test filling an image
     d.seed(testseed)
@@ -1673,6 +1745,18 @@ def test_permute():
     # Make sure that everything is sensible
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    # Repeat with same seed, should do same permutation.
+    my_list = copy.deepcopy(my_list_copy)
+    galsim.random.permute(312, my_list)
+    for ind in range(n_list):
+        assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    try:
+        # permute with no lists should raise TypeError
+        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
+    except ImportError:
+        pass
 
 
 @timer

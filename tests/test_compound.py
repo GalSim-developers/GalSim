@@ -110,11 +110,60 @@ def test_convolve():
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
 
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv.centroid(), cen)
+    np.testing.assert_almost_equal(conv.getFlux(), psf.flux * pixel.flux)
+    np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
+    # Not almost_equal.  Convolutions don't give a very good estimate.
+    # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
+    np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
+
+    check_basic(conv, "Moffat * Pixel")
+
     # Test photon shooting.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"Moffat * Pixel")
+    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
+    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
+    # Convolution of just one argument should be equivalent to that argument.
+    single = galsim.Convolve(psf)
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolve([psf])
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolution(psf)
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolution([psf])
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Convolve)
+        np.testing.assert_raises(TypeError, galsim.Convolve, myImg)
+        np.testing.assert_raises(TypeError, galsim.Convolve, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf], realspace=False)
+        np.testing.assert_raises(TypeError, galsim.Convolution)
+        np.testing.assert_raises(TypeError, galsim.Convolution, myImg)
+        np.testing.assert_raises(TypeError, galsim.Convolution, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf], realspace=False)
+    except ImportError:
+        pass
 
 @timer
 def test_convolve_flux_scaling():
@@ -217,11 +266,15 @@ def test_shearconvolve():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
 
+    check_basic(conv, "sheared Gaussian * Pixel")
+
     # Test photon shooting.
     import warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
+    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
+    galsim.GSObject.drawImage.__globals__['__warningregistry__'].clear()
 
 
 @timer
@@ -282,14 +335,56 @@ def test_realspace_convolve():
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
+    check_basic(conv, "Truncated Moffat*Box", approx_maxsb=True)
+
     # Test kvalues
-    do_kvalue(conv,img,"Truncated Moffat convolved with Box")
+    do_kvalue(conv,img,"Truncated Moffat*Box")
 
     # Check picklability
     do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
     do_pickle(conv.SBProfile)
+
+    # Check some warnings that should be raised
+
+    try:
+        # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
+        # 2 with hard edges gives a warning if we ask it not to use real_space
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
+        # >2 of any kind give a warning if we ask it to use real_space
+        g = galsim.Gaussian(sigma=2)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
+        # non-analytic profiles cannot do real_space
+        d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
+    except ImportError:
+        pass
+
+    # Repeat some of the above for AutoConvolve and AutoCorrelate
+    conv = galsim.AutoConvolve(psf,real_space=True)
+    check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
+    do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
+
+    conv = galsim.AutoCorrelate(psf,real_space=True)
+    check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
+    do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
+
+    try:
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
+    except ImportError:
+        pass
+
 
 
 @timer
@@ -412,74 +507,110 @@ def test_add():
 
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
-    sum = galsim.Add(gauss1,gauss2)
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2)
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(sum_gauss.centroid(), cen)
+    np.testing.assert_almost_equal(sum_gauss.getFlux(), gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
+
     # Check with default_params
-    sum = galsim.Add(gauss1,gauss2,gsparams=default_params)
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with default_params disagrees with "
             "expected result")
-    sum = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with GSParams() disagrees with "
             "expected result")
 
     # Other ways to do the sum:
-    sum = gauss1 + gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = gauss1 + gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum = gauss1
-    sum += gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = gauss1
+    sum_gauss += gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
-    sum = galsim.Add([gauss1,gauss2])
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add([gauss1,gauss2])
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
-    sum = 0.75 * gauss1 + 0.25 * gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = 0.75 * gauss1 + 0.25 * gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
-    sum = 0.75 * gauss1
-    sum += 0.25 * gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = 0.75 * gauss1
+    sum_gauss += 0.25 * gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
 
+    check_basic(sum_gauss, "sum of 2 Gaussians")
+
     # Test photon shooting.
-    do_shoot(sum,myImg,"sum of 2 Gaussians")
+    do_shoot(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Test kvalues
-    do_kvalue(sum,myImg,"sum of 2 Gaussians")
+    do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
-    do_pickle(sum, lambda x: x.drawImage(method='sb'))
-    do_pickle(sum)
-    do_pickle(sum.SBProfile)
+    do_pickle(sum_gauss.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
+    do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
+    do_pickle(sum_gauss)
+    do_pickle(sum_gauss.SBProfile)
+
+    # Sum of just one argument should be equivalent to that argument.
+    single = galsim.Add(gauss1)
+    gsobject_compare(single, gauss1)
+    check_basic(single, "`sum' of 1 Gaussian")
+    do_pickle(single)
+
+    single = galsim.Add([gauss1])
+    gsobject_compare(single, gauss1)
+    check_basic(single, "`sum' of 1 Gaussian")
+    do_pickle(single)
+
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Add)
+        np.testing.assert_raises(TypeError, galsim.Add, myImg)
+        np.testing.assert_raises(TypeError, galsim.Add, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1], real_space=False)
+        np.testing.assert_raises(TypeError, galsim.Sum)
+        np.testing.assert_raises(TypeError, galsim.Sum, myImg)
+        np.testing.assert_raises(TypeError, galsim.Sum, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
+    except ImportError:
+        pass
 
 
 @timer
@@ -554,6 +685,101 @@ def test_add_flux_scaling():
 
 
 @timer
+def test_deconvolve():
+    """Test that deconvolution works as expected
+    """
+    dx = 0.4
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
+
+    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    inv_psf = galsim.Deconvolve(psf)
+    psf.drawImage(myImg1, method='no_pixel')
+    conv = galsim.Convolve(psf,psf,inv_psf)
+    conv.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Image of Deconvolve * obj^2 doesn't match obj alone")
+
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(inv_psf.centroid(), cen)
+    np.testing.assert_almost_equal(inv_psf.getFlux(), 1./psf.flux)
+    np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
+    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve maxSB.
+    np.testing.assert_almost_equal(inv_psf.maxSB(), -psf.maxSB() / psf.flux**2)
+
+    check_basic(inv_psf, "Deconvolve(Moffat)", do_x=False)
+
+    # Also check Deconvolve with an asymmetric profile.
+    obj1 = galsim.Gaussian(sigma=3., flux=4).shift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3).shift(0.3, 0.3)
+    obj = galsim.Add(obj1, obj2)
+    inv_obj = galsim.Deconvolve(obj)
+    conv = galsim.Convolve([inv_obj, obj, obj])
+    conv.drawImage(myImg1, method='no_pixel')
+    obj.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Image of Deconvolve of asymmetric sum of Gaussians doesn't match obj alone")
+
+    np.testing.assert_equal(inv_obj.centroid(), -obj.centroid())
+    np.testing.assert_almost_equal(inv_obj.getFlux(), 1./obj.flux)
+    np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
+    np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
+
+    check_basic(inv_obj, "Deconvolve(asym)", do_x=False)
+
+    # Check picklability
+    do_pickle(inv_obj)
+    do_pickle(inv_obj.SBProfile)
+
+    # And a significantly transformed deconvolve object
+    jac = (0.3, -0.8, -0.7, 0.4)
+    transformed_obj = obj.transform(*jac)
+    transformed_inv_obj = inv_obj.transform(*jac)
+    # Fix the flux -- most of the transformation commutes with deconvolution, but not flux scaling
+    transformed_inv_obj /= transformed_obj.flux * transformed_inv_obj.flux
+    check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
+    conv = galsim.Convolve([transformed_inv_obj, transformed_obj, obj])
+    conv.drawImage(myImg1, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Transformed Deconvolve didn't cancel transformed original")
+
+    np.testing.assert_equal(transformed_inv_obj.centroid(), -transformed_obj.centroid())
+    np.testing.assert_almost_equal(transformed_inv_obj.getFlux(), 1./transformed_obj.flux)
+    np.testing.assert_almost_equal(transformed_inv_obj.flux, 1./transformed_obj.flux)
+    np.testing.assert_almost_equal(transformed_inv_obj.maxSB(),
+                                   -transformed_obj.maxSB() / transformed_obj.flux**2)
+
+    check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
+
+    # Check picklability
+    do_pickle(transformed_inv_obj)
+    do_pickle(transformed_inv_obj.SBProfile)
+
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Deconvolve)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, myImg1)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, [psf])
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, real_space=False)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, myImg1)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, [psf])
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, real_space=False)
+    except ImportError:
+        pass
+
+
+@timer
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
     """
@@ -585,6 +811,23 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Using AutoConvolve with GSParams() disagrees with expected result")
 
+    check_basic(conv, "AutoConvolve(Moffat)")
+
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+
+    # Check picklability
+    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(conv2)
+    do_pickle(conv2.SBProfile)
+
+    # Test photon shooting.
+    do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+
     # For a symmetric profile, AutoCorrelate is the same thing:
     conv2 = galsim.AutoCorrelate(psf)
     conv2.drawImage(myImg2, method='no_pixel')
@@ -605,8 +848,11 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Using AutoCorrelate with GSParams() disagrees with expected result")
 
-    # Test photon shooting.
-    do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
     # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
@@ -615,19 +861,36 @@ def test_autoconvolve():
     add = galsim.Add(obj1, obj2)
     conv = galsim.Convolve([add, add])
     conv.drawImage(myImg1, method='no_pixel')
-    corr = galsim.AutoConvolve(add)
-    corr.drawImage(myImg2, method='no_pixel')
+    autoconv = galsim.AutoConvolve(add)
+    autoconv.drawImage(myImg2, method='no_pixel')
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
 
-    # Check picklability
-    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
-    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(conv2)
-    do_pickle(conv2.SBProfile)
+    cen = 2. * add.centroid()
+    np.testing.assert_equal(autoconv.centroid(), cen)
+    np.testing.assert_almost_equal(autoconv.getFlux(), add.flux**2)
+    np.testing.assert_almost_equal(autoconv.flux, add.flux**2)
+    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
+
+    check_basic(autoconv, "AutoConvolve(asym)")
+
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, [psf])
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, realspace=False)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, [psf])
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, realspace=False)
+    except ImportError:
+        pass
 
 
 @timer
@@ -658,6 +921,8 @@ def test_autocorrelate():
             err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
             "AutoCorrelate result")
 
+    check_basic(conv, "AutoCorrelate")
+
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")
 
@@ -667,6 +932,20 @@ def test_autocorrelate():
     do_pickle(corr)
     do_pickle(corr.SBProfile)
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, [obj1])
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, obj2)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, realspace=False)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, [obj1])
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, obj2)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, realspace=False)
+    except ImportError:
+        pass
 
 @timer
 def test_ne():
@@ -714,12 +993,10 @@ def test_ne():
     all_obj_diff(gals)
 
 
+@timer
 def test_fourier_sqrt():
     """Test that the FourierSqrt operator is the inverse of auto-convolution.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.4
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
@@ -740,6 +1017,8 @@ def test_fourier_sqrt():
             myImg1.array, myImg2.array, 4,
             err_msg="Moffat sqrt convolved with self disagrees with original")
 
+    check_basic(sqrt1, "FourierSqrt", do_x=False)
+
     # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
     a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
     a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
@@ -758,6 +1037,11 @@ def test_fourier_sqrt():
     np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
     np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
     np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
+    np.testing.assert_almost_equal(check.xValue(check.centroid()), check.maxSB())
+    print('check.maxSB = ',check.maxSB())
+    print('sqrt.maxSB = ',sqrt.maxSB())
+    # This isn't super accurate...
+    np.testing.assert_allclose(check.maxSB(), sqrt.maxSB(), rtol=0.1)
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
@@ -769,9 +1053,22 @@ def test_fourier_sqrt():
     do_pickle(sqrt1)
     do_pickle(sqrt1.SBProfile)
 
-    t2 = time.time()
-    print('time for %s = %.2f'%(funcname(),t2-t1))
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, myImg1)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, [psf])
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
+    except ImportError:
+        pass
 
+@timer
 def test_sum_transform():
     """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes
     got messed up for a Transform(Sum(Transform())) object.
@@ -821,6 +1118,81 @@ def test_sum_transform():
         do_pickle(gal1)
         do_pickle(gal2)  # And this.
 
+@timer
+def test_compound_noise():
+    """Test that noise propagation works properly for compount objects.
+    """
+    obj1 = galsim.Gaussian(sigma=1.7)
+    obj2 = galsim.Gaussian(sigma=2.3)
+    obj1.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.2)
+    obj2.noise = galsim.UncorrelatedNoise(variance=0.5, scale=0.2)
+    obj3 = galsim.Gaussian(sigma=2.9)
+
+    # Sum adds the variance of the components
+    sum2 = galsim.Sum([obj1,obj2])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.8,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum2 = galsim.Sum([obj1,obj3])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.3,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum2 = galsim.Sum([obj2,obj3])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.5,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum3 = galsim.Sum([obj1,obj2,obj3])
+    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
+            err_msg = "Sum of three objects did not add noise varinace")
+    sum3 = obj1 + obj2 + obj3
+    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
+            err_msg = "Sum of three objects did not add noise varinace")
+
+    # Adding noise objects with different WCSs will raise a warning.
+    obj4 = galsim.Gaussian(sigma=3.3)
+    obj4.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.8)
+    try:
+        np.testing.assert_warns(UserWarning, galsim.Sum, [obj1, obj4])
+    except:
+        pass
+
+    # Convolve convolves the noise from a single component
+    conv2 = galsim.Convolution([obj1,obj3])
+    noise = galsim.Convolve([obj1.noise._profile, obj3, obj3])
+    # xValue is too slow here.  Use drawImage to get variance.  (Just as CorrelatedNoise does.)
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+    conv2 = galsim.Convolution([obj2,obj3])
+    noise = galsim.Convolve([obj2.noise._profile, obj3, obj3])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+
+    # Convolution of multiple objects with noise attributes raises a warning and fails
+    # to propagate noise properly.  (It takes the input noise from the first one.)
+    try:
+        conv2 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2])
+        conv3 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2, obj3])
+        # Other types don't propagate noise and give a warning about it.
+        np.testing.assert_warns(UserWarning, galsim.Deconvolve, obj1)
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, obj1)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
+        np.testing.assert_warns(UserWarning, galsim.FourierSqrt, obj1)
+    except:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            conv2 = galsim.Convolution([obj1,obj2])
+            conv3 = galsim.Convolution([obj1,obj2,obj3])
+
+    obj2.noise = None  # Remove obj2 noise for the rest.
+    noise = galsim.Convolve([obj1.noise._profile, obj2, obj2])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+    noise = galsim.Convolve([obj1.noise._profile, obj2, obj2, obj3, obj3])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv3.noise.getVariance(), variance,
+            err_msg = "Convolution of three objects did not correctly propagate noise varinace")
+
 
 if __name__ == "__main__":
     test_convolve()
@@ -832,8 +1204,10 @@ if __name__ == "__main__":
     test_add()
     test_sub_neg()
     test_add_flux_scaling()
+    test_deconvolve()
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
     test_fourier_sqrt()
     test_sum_transform()
+    test_compound_noise()

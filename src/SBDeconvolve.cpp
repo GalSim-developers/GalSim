@@ -32,6 +32,12 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
+    SBProfile SBDeconvolve::getObj() const
+    {
+        assert(dynamic_cast<const SBDeconvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBDeconvolveImpl&>(*_pimpl).getObj();
+    }
+
     std::string SBDeconvolve::SBDeconvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -121,10 +127,10 @@ namespace galsim {
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
-        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,++ptr) {
                 double ksq = kx*kx + ky*ky;
                 if (ksq > _maxksq) *ptr = 0.;
                 else {
@@ -144,6 +150,23 @@ namespace galsim {
     double SBDeconvolve::SBDeconvolveImpl::getFlux() const
     { return 1./_adaptee.getFlux(); }
 
+    double SBDeconvolve::SBDeconvolveImpl::maxSB() const
+    {
+        // The only way to really give this any meaning is to consider it in the context
+        // of being part of a larger convolution with other components.  The calculation
+        // of maxSB for Convolve is
+        //     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
+        //
+        // A deconvolution will contribute a -sigma^2 to the sum, so a logical choice for
+        // maxSB is to have flux / maxSB = -flux_adaptee / maxSB_adaptee, so its contribution
+        // to the Sum_i 2pi sigma^2 is to subtract its adaptee's value of sigma^2.
+        //
+        // maxSB = -flux * maxSB_adaptee / flux_adaptee
+        //       = -maxSB_adaptee / flux_adaptee^2
+        //
+        return -_adaptee.maxSB() / std::abs(_adaptee.getFlux() * _adaptee.getFlux());
+    }
+ 
     boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
         int N, UniformDeviate u) const
     {

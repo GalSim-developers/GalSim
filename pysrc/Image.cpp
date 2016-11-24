@@ -217,6 +217,8 @@ struct PyImage {
             .add_property("array", &GetConstArray)
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
+            .def("inverse_fft", &BaseImage<T>::inverse_fft, bp::args("dk"))
+            .def("fft", &BaseImage<T>::fft, bp::args("dx"))
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
         ADD_CORNER(pyBaseImage, getYMin, ymin);
@@ -237,6 +239,8 @@ struct PyImage {
                     &MakeAllocFromArray, bp::default_call_policies(),
                     (bp::arg("bounds"), bp::arg("array"))))
             .def("subImage", subImage_func_type(&ImageAlloc<T>::subImage), bp::args("bounds"))
+            .def("wrap", &ImageAlloc<T>::wrap,
+                 (bp::arg("bounds"), bp::arg("hermx")=false, bp::arg("hermy")=false))
             .def("view", view_func_type(&ImageAlloc<T>::view))
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
@@ -286,6 +290,7 @@ struct PyImage {
                     (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)))
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
             .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
+            .def("wrap", &ImageView<T>::wrap, bp::args("bounds"))
             .def("view", &ImageView<T>::view)
             .add_property("array", &GetArray)
             .def("__call__", at) // always used checked accessors in Python

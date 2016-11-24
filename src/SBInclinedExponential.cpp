@@ -17,6 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
+// See https://www.dropbox.com/s/z6h14bgd199czsi/Inclined_Exponential.pdf?dl=0
+// for a write-up of much of the math involved in this file.
+
 // #define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
@@ -213,6 +216,19 @@ namespace galsim {
             xdbg << "clipk = " << clipk << std::endl;
             xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
+    }
+
+    double SBInclinedExponential::SBInclinedExponentialImpl::maxSB() const
+    {
+        // When the disk is face on, the max SB is flux / 2 pi r0^2
+        // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
+        double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
+        // The relationship for inclinations in between these is not linear.
+        // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
+        // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
+        double sc = sqrt(std::abs(_cosi));
+        maxsb *= (_h0 * sc + _r0 * (1.-sc)) / _h0;
+        return std::abs(maxsb);
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
