@@ -803,24 +803,30 @@ def test_noncontiguous():
     img = gal.drawImage(nx=64, ny=64, scale=0.2)
     meas_shape1 = galsim.hsm.FindAdaptiveMom(img).observed_shape
     print(meas_shape1)
-    np.testing.assert_almost_equal(meas_shape1.g1, 0.1, decimal=3)
-    np.testing.assert_almost_equal(meas_shape1.g2, 0.2, decimal=3)
+    np.testing.assert_almost_equal(meas_shape1.g1, 0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
+    np.testing.assert_almost_equal(meas_shape1.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
 
     # Transpose the image, which should just flip the sign of g1.
     # Note, though, that this changes the ndarray from C-ordering to FORTRAN-ordering.
     fimg = galsim.Image(img.array.T, scale=0.2)
     meas_shape2 = galsim.hsm.FindAdaptiveMom(fimg).observed_shape
     print(meas_shape2)
-    np.testing.assert_almost_equal(meas_shape2.g1, -0.1, decimal=3)
-    np.testing.assert_almost_equal(meas_shape2.g2, 0.2, decimal=3)
+    np.testing.assert_almost_equal(meas_shape2.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
+    np.testing.assert_almost_equal(meas_shape2.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
 
     # Also test the real part of an ImageC, which not contiguous in either direction (step=2)
     # This should have the negative shear from drawing in k space.
     kimg = gal.drawKImage(nx=64, ny=64)
     meas_shape3 = galsim.hsm.FindAdaptiveMom(kimg.real).observed_shape
     print(meas_shape3)
-    np.testing.assert_almost_equal(meas_shape3.g1, -0.1, decimal=3)
-    np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3)
+    np.testing.assert_almost_equal(meas_shape3.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
+    np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
 
 
 if __name__ == "__main__":
