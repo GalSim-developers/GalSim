@@ -244,19 +244,28 @@ def test_reject():
     """
     # Make a custom function for rejecting COSMOSCatalog objects that use Sersics with n > 2.
     def HighN(config, base, value_type):
+        # GetCurrentValue returns the constructed 'gal' object for this pass
         gal = galsim.config.GetCurrentValue('gal',base)
+        # First undo the two bits we did to the galaxy that COSMOSCatalog made
         assert isinstance(gal, galsim.Transformation)
         gal = gal.original
         assert isinstance(gal, galsim.Convolution)
-        gal = gal._obj_list[0]  # This is now the things obj COSMOSCatalog produced.
-        if isinstance(gal, galsim.Sum): # Reject all B+D galaxies (which are a minority)
-            reject = True  # Reject all B+D galaxies (which are a minority)
+        gal = gal._obj_list[0]
+        # Now gal is the object COSMOSCatalog produced.
+        if isinstance(gal, galsim.Sum):
+            # Reject all B+D galaxies (which are a minority)
+            reject = True
         else:
+            # For pure Sersics, reject those with n > 2.
             assert isinstance(gal, galsim.Transformation)
             gal = gal.original
             assert isinstance(gal, galsim.Sersic)
             reject = gal.getN() > 2
+        # The second item in the return tuple is "safe", which means is this value safe to
+        # cache and reuse (potentially saving calculation time for complex objects).
+        # Not really applicable here, so return False.
         return reject, False
+    # You need to register this function with a "type" name so config knows about it.
     galsim.config.RegisterValueType('HighN', HighN, [bool])
 
     config = {
