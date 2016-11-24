@@ -674,7 +674,12 @@ class GSObject(object):
 
         @returns the dilated object.
         """
-        return self.expand(scale) * (1./scale**2)  # conserve flux
+        # equivalent to self.expand(scale) * (1./scale**2)
+        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
+
+        if hasattr(self, 'noise'):
+            new_obj.noise = self.noise.expand(scale) * scale**-4
+        return new_obj
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -873,7 +878,7 @@ class GSObject(object):
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             N = self.getGoodImageSize(1.0/wmult)
             if odd: N += 1
-            bounds = galsim.BoundsI(1,N,1,N)
+            bounds = galsim._BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
 
@@ -1342,7 +1347,7 @@ class GSObject(object):
             return image
 
         # Making a view of the image lets us change the center without messing up the original.
-        imview = image.view()
+        imview = image._view()
         imview.setCenter(0,0)
         imview.wcs = galsim.PixelScale(1.0)
 
@@ -1443,8 +1448,8 @@ class GSObject(object):
         N = self.getGoodImageSize(image.scale/wmult)
 
         # We must make something big enough to cover the target image size:
-        image_N = np.max(image.bounds.numpyShape())
-        N = np.max((N, image_N))
+        image_N = max(image.bounds.numpyShape())
+        N = max(N, image_N)
 
         # Round up to a good size for making FFTs:
         N = image.good_fft_size(N)
@@ -1466,18 +1471,18 @@ class GSObject(object):
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
         # Draw the image in k space.
-        bounds = galsim.BoundsI(0,Nk/2,-Nk/2,Nk/2)
-        kimage = galsim.ImageC(bounds, scale=dk)
+        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
+        kimage = galsim.ImageC(bounds=bounds, scale=dk)
         self.SBProfile.drawK(kimage.image.view(), dk)
 
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
-        bwrap = galsim.BoundsI(0, N/2, -N/2, N/2-1)
+        bwrap = galsim._BoundsI(0, N//2, -N//2, N//2-1)
         kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.j
-        real_image = kimage_wrap.inverse_fft(dk)
+        real_image = kimage_wrap.irfft()
 
         # Add (a portion of) this to the original image.
         image.image += real_image.subImage(image.bounds)
@@ -1823,7 +1828,7 @@ class GSObject(object):
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
-            dx = np.pi/( np.max(image.array.shape) // 2 * dk )
+            dx = np.pi/( max(image.array.shape) // 2 * dk )
         elif scale is None or scale <= 0:
             dx = self.nyquistScale()
         else:
