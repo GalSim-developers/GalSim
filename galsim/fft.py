@@ -67,19 +67,21 @@ def fft2(a, shift_in=False, shift_out=False):
 
     @param a            The input array to be transformed
     @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
+                        [default: False]
     @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
+                        [default: False]
 
     @returns a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.")
+        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
     M, N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes")
+        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -119,7 +121,6 @@ def ifft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The array must be 2-dimensional.
-        - It must be square.
         - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
           not required.)
         - The array is assumed to be Hermitian, which means the k values with kx<0 are assumed
@@ -145,19 +146,21 @@ def ifft2(a, shift_in=False, shift_out=False):
 
     @param a            The input array to be transformed
     @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
+                        [default: False]
     @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
+                        [default: False]
 
     @returns a real numpy array
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.")
+        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes")
+        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -180,7 +183,6 @@ def rfft2(a, shift_in=False, shift_out=False):
 
         - The input array must be 2-dimensional.
         - If it does not have dtype numpy.float64, it will be coerced to numpy.float64.
-        - It must be square.
         - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
           not required.)
 
@@ -198,19 +200,21 @@ def rfft2(a, shift_in=False, shift_out=False):
 
     @param a            The input array to be transformed
     @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
+                        [default: False]
     @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
+                        [default: False]
 
     @returns a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.")
+        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes")
+        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
 
     a = a.astype(np.float64, copy=False)
     xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
@@ -246,19 +250,21 @@ def irfft2(a, shift_in=False, shift_out=False):
 
     @param a            The input array to be transformed
     @param shift_in     Whether to shift the input array so that the center is moved to (0,0).
+                        [default: False]
     @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
+                        [default: False]
 
     @returns a real numpy array
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.")
+        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
     M,No2 = s
     No2 -= 1  # s is (M,No2+1)
     Mo2 = M // 2
 
     if M != Mo2*2:
-        raise ValueError("Input array must have even sizes")
+        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
 
     a = a.astype(np.complex128, copy=False)
     kim = galsim._galsim.ConstImageViewC(a, 0, -Mo2)
