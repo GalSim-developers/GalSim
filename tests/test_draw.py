@@ -1271,3 +1271,4 @@ if __name__ == "__main__":
     test_offset()
     test_drawImage_area_exptime()
     test_fft()
+    test_np_fft()
