@@ -455,24 +455,25 @@ def _zern_rho_coefs(n, m):
     A[n-2*kmax] = val
     return A
 
-def _zern_coef_array(n, m, eps, shape, annular):
+def _zern_coef_array(n, m, obscuration, shape, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
 
-    @param n        Zernike radial coefficient
-    @param m        Zernike azimuthal coefficient
-    @param eps      Linear obscuration fraction.
-    @param shape    Output array shape
-    @param annular  Boolean indicating polynomials are orthogonal on a disk or an annulus.
-    @returns        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
-                    disk coordinates.
+    @param n            Zernike radial coefficient
+    @param m            Zernike azimuthal coefficient
+    @param obscuration  Linear obscuration fraction.
+    @param shape        Output array shape
+    @param annular      Boolean indicating polynomials are orthogonal on a disk or an annulus.
+
+    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                disk coordinates.
     """
     if shape is None:
         shape = ((n//2)+1, abs(m)+1)
     out = np.zeros(shape, dtype=np.complex128)
     if annular:
-        coefs = np.array(_annular_zern_rho_coefs(n, m, eps), dtype=np.complex128)
+        coefs = np.array(_annular_zern_rho_coefs(n, m, obscuration), dtype=np.complex128)
     else:
         coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
     coefs /= _zern_norm(n, m)
@@ -482,17 +483,17 @@ def _zern_coef_array(n, m, eps, shape, annular):
         out[i, abs(m)] = c
     return out
 
-def __noll_coef_array(jmax, eps, annular):
+def __noll_coef_array(jmax, obscuration, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
 
-    @param jmax     Maximum Noll coefficient
-    @param eps      Linear obscuration fraction.
-    @param shape    Output array shape
-    @param annular  Boolean indicating polynomials are orthogonal on a disk or an annulus.
-    @returns        2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
-                    disk coordinates.
+    @param jmax         Maximum Noll coefficient
+    @param obscuration  Linear obscuration fraction.
+    @param annular      Boolean indicating polynomials are orthogonal on a disk or an annulus.
+
+    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                disk coordinates.
     """
     maxn = _noll_to_zern(jmax)[0]
     shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
@@ -501,7 +502,7 @@ def __noll_coef_array(jmax, eps, annular):
     out = np.zeros(shape, dtype=np.complex128)
     for j in range(1,jmax+1):
         n,m = _noll_to_zern(j)
-        coef = _zern_coef_array(n,m,eps,shape1,annular)
+        coef = _zern_coef_array(n,m,obscuration,shape1,annular)
         out[:,:,j-1] = coef
     return out
 _noll_coef_array = utilities.LRU_Cache(__noll_coef_array)
