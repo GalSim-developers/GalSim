@@ -193,7 +193,7 @@ BoundsI.__init__ = _new_BoundsI_init
 
 def _BoundsI(xmin, xmax, ymin, ymax):
     """Equivalent to BoundsI constructor, but skips some sanity checks and argument parsing.
-    This requires the four values already be int types.
+    This requires that the four values already be int types.
     """
     ret = BoundsI.__new__(BoundsI)
     _orig_BoundsI_init(ret, xmin, xmax, ymin, ymax)

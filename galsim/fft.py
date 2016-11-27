@@ -51,7 +51,7 @@ def fft2(a, shift_in=False, shift_out=False):
         - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
           not required.)
         - If it has a real dtype, it will be coerced to numpy.float64.
-        - If it hsa a complex dtype, it will be coerced to numpy.complex128.
+        - If it has a complex dtype, it will be coerced to numpy.complex128.
 
     The returned array will be complex with dtype numpy.complex128.
 
@@ -129,7 +129,7 @@ def ifft2(a, shift_in=False, shift_out=False):
                for kx >= N/2, ky = 0: a[0, kx] == a[0, N-kx].conjugate()
           Only the elements a[:,0:N/2+1] are accessed by this function.
         - If it has a real dtype, it will be coerced to numpy.float64.
-        - If it hsa a complex dtype, it will be coerced to numpy.complex128.
+        - If it has a complex dtype, it will be coerced to numpy.complex128.
 
     The returned array will be real with dtype numpy.float64.
 
@@ -179,7 +179,7 @@ def rfft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The input array must be 2-dimensional.
-        - If it does not have dtype numpy.float64, it will be cerced to numpy.float64.
+        - If it does not have dtype numpy.float64, it will be coerced to numpy.float64.
         - It must be square.
         - The size in each direction must be even. (Ideally 2^k or 3*2^k for speed, but this is
           not required.)
@@ -228,7 +228,7 @@ def irfft2(a, shift_in=False, shift_out=False):
     Restrictions on this version vs the numpy version:
 
         - The array must be 2-dimensional.
-        - If it does not have dtype numpy.complex128, it will be cerced to numpy.complex128.
+        - If it does not have dtype numpy.complex128, it will be coerced to numpy.complex128.
         - It must have shape (M, N/2+1).
         - The size M must be even. (Ideally 2^k or 3*2^k for speed, but this is not required.)
 

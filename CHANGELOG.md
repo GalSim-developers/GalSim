@@ -106,7 +106,7 @@ New Features
 - Added galsim.fft module that includes functions that act as drop-in
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
-  are genarally somewhat faster than the numpy functions. (#840)
+  are generally somewhat faster than the numpy functions. (#840)
 
 
 New config features
