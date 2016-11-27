@@ -471,7 +471,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
