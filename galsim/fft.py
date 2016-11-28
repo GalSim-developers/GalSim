@@ -75,13 +75,13 @@ def fft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
+        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
     M, N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
+        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -154,13 +154,13 @@ def ifft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
+        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
+        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
@@ -208,13 +208,13 @@ def rfft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
+        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
     M,N = s
     Mo2 = M // 2
     No2 = N // 2
 
     if M != Mo2*2 or N != No2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
+        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     a = a.astype(np.float64, copy=False)
     xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
@@ -258,13 +258,13 @@ def irfft2(a, shift_in=False, shift_out=False):
     """
     s = a.shape
     if len(s) != 2:
-        raise ValueError("Input array must be 2D.  Got shape=%s"%s)
+        raise ValueError("Input array must be 2D.  Got shape=%s"%str(s))
     M,No2 = s
     No2 -= 1  # s is (M,No2+1)
     Mo2 = M // 2
 
     if M != Mo2*2:
-        raise ValueError("Input array must have even sizes. Got shape=%s"%s)
+        raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     a = a.astype(np.complex128, copy=False)
     kim = galsim._galsim.ConstImageViewC(a, 0, -Mo2)

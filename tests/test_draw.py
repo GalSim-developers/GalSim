@@ -1261,6 +1261,44 @@ def test_np_fft():
                                 shift_in=True,shift_out=True)
         np.testing.assert_almost_equal(xar12, xar, 9, "fft2(ifft2(a)) != a with all shifts")
 
+    # Check for invalid inputs
+    try:
+        # Must be 2-d arrays
+        xar_1d = input_list[0].ravel()
+        xar_3d = input_list[0].reshape(2,2,4)
+        xar_4d = input_list[0].reshape(2,2,2,2)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_4d)
+
+        # Must have even sizes
+        xar_oo = input_list[0][:3,:3]
+        xar_oe = input_list[0][:3,:]
+        xar_eo = input_list[0][:,:3]
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oe)
+        # eo is ok, since the second dimension is actually N/2+1
+    except ImportError:
+        pass
+
 
 if __name__ == "__main__":
     test_drawImage()
