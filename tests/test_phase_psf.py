@@ -82,7 +82,7 @@ def test_structure_function():
 
     atm = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
                                    r0_500=r0_500, L0=L0, rng=rng)
-    phase = atm.tab2d.table.getVals()[:-1, :-1].copy()
+    phase = atm._tab2d.table.getVals()[:-1, :-1].copy()
     phase *= 2 * np.pi / 500.0  # nm -> radians
     im = galsim.Image(phase, scale=screen_scale)
     D_sim = galsim.utilities.structure_function(im)
@@ -112,17 +112,17 @@ def test_phase_screen_list():
 
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
     do_pickle(ar1)
-    do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
+    do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x.wavefront(aper).sum())
 
-    assert ar1.time == 0.0, "AtmosphericScreen initialized with non-zero time."
+    assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
 
     # Check that can't rewind a screen with alpha != 1.0
     try:
-        np.assert_raises(ar1.rewind())
-        np.assert_raises(ar1.rewind_by(1))
-    except:
-        pass
+        np.testing.assert_raises(TypeError, ar1.rewind)
+        np.testing.assert_raises(TypeError, ar1.rewind_by, 1)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
@@ -140,7 +140,7 @@ def test_phase_screen_list():
                             r0_500=0.15,
                             rng=rng)
     atm.append(ar3)
-    assert atm.time == 0.0, "Wrong time for Atmosphere"
+    assert atm._time == 0.0, "Wrong time for Atmosphere"
     do_pickle(atm)
     do_pickle(atm, func=lambda x:x.wavefront(aper).sum())
 
@@ -158,7 +158,7 @@ def test_phase_screen_list():
     # Test building from empty PhaseScreenList
     atm3 = galsim.PhaseScreenList()
     atm3.extend(atm2)
-    assert atm == atm2
+    assert atm == atm3
 
     # Test constructing from existing PhaseScreenList
     atm4 = galsim.PhaseScreenList(atm3)
@@ -188,9 +188,9 @@ def test_phase_screen_list():
     atm5 = copy.copy(atm)
     assert atm[0] == atm5[0]
     assert atm[0] is atm5[0]
-    assert atm.time == 0.0, "Wrong time for Atmosphere"
+    assert atm._time == 0.0, "Wrong time for Atmosphere"
     atm.advance()
-    assert atm.time == atm.time_step, "Wrong time for Atmosphere"
+    assert atm._time == atm.time_step, "Wrong time for Atmosphere"
     assert atm[0] == atm5[0]
     assert atm[0] is atm5[0]
     # Deepcopy actually makes an indepedent object in memory.
@@ -198,8 +198,9 @@ def test_phase_screen_list():
     assert atm[0] == atm5[0]
     assert atm[0] is not atm5[0]
     atm.advance()
-    assert atm.time == 2*atm.time_step, "Wrong time for Atmosphere"
-    assert atm[0] != atm5[0]
+    assert atm._time == 2*atm.time_step, "Wrong time for Atmosphere"
+    # But we still get equality, since this doesn't depend on mutable internal state:
+    assert atm[0] == atm5[0]
 
     # Constructor should accept both list and indiv layers as arguments.
     atm6 = galsim.PhaseScreenList(atm[0])
@@ -214,17 +215,17 @@ def test_phase_screen_list():
     # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
     # relatively large pupil_plane_scale to speed up the unit test.
     t = atm.advance_by(1.0)
-    np.testing.assert_allclose(2*atm.time_step+t, atm.time, err_msg="Wrong time for Atmosphere")
+    np.testing.assert_allclose(2*atm.time_step+t, atm._time, err_msg="Wrong time for Atmosphere")
     do_pickle(atm)
     atm.reset()
-    assert atm.time == 0.0, "Wrong time for Atmosphere"
+    assert atm._time == 0.0, "Wrong time for Atmosphere"
     kwargs = dict(exptime=0.05, diam=1.0, lam=1000.0)
     psf = atm.makePSF(**kwargs)
-    assert atm.time == kwargs['exptime'], "Wrong time for Atmsphere"
+    assert atm._time == kwargs['exptime'], "Wrong time for Atmosphere"
     atm.rewind()
-    assert atm.time == kwargs['exptime']-atm.time_step, "Wrong time for Atmsphere"
+    assert atm._time == kwargs['exptime']-atm.time_step, "Wrong time for Atmosphere"
     atm.rewind_by(0.025)
-    assert atm.time == 0.0, "Wrong time for Atmsphere"
+    assert atm._time == 0.0, "Wrong time for Atmosphere"
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
@@ -262,18 +263,18 @@ def test_frozen_flow():
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper)
     screen.advance_by(t)
-    assert screen.time == t, "Wrong time for AtmosphericScreen"
+    assert screen._time == t, "Wrong time for AtmosphericScreen"
     wf1 = screen.wavefront(aper, theta=(45*galsim.degrees, 0*galsim.degrees))
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
 
     # We should be able to rewind too.
     screen.rewind()  # 0.01
-    np.testing.assert_allclose(screen.time, t-dt, err_msg="Wrong time for AtmosphericScreen")
+    np.testing.assert_allclose(screen._time, t-dt, err_msg="Wrong time for AtmosphericScreen")
     screen.rewind()  # 0.02
-    np.testing.assert_allclose(screen.time, t-2*dt, err_msg="Wrong time for AtmosphericScreen")
+    np.testing.assert_allclose(screen._time, t-2*dt, err_msg="Wrong time for AtmosphericScreen")
     screen.rewind_by(t-0.02)  # and the rest.
-    np.testing.assert_allclose(screen.time, 0.0, rtol=0, atol=1e-10,
+    np.testing.assert_allclose(screen._time, 0.0, rtol=0, atol=1e-10,
                                err_msg="Wrong time for AtmosphericScreen")
 
     wf2 = screen.wavefront(aper)
@@ -424,7 +425,6 @@ def test_ne():
     rng = galsim.BaseDeviate(1)
     objs = [galsim.AtmosphericScreen(10.0, rng=rng),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),
-            galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),  # advance this one below
             galsim.AtmosphericScreen(10.0, rng=rng, vy=1.0),
             galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999),
             galsim.AtmosphericScreen(10.0, rng=rng, altitude=1.0),
@@ -433,7 +433,6 @@ def test_ne():
             galsim.AtmosphericScreen(10.0, rng=rng, L0=10.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=10.0),
             ]
-    objs[2].advance()
     all_obj_diff(objs)
 
     # Test OpticalScreen __ne__
@@ -456,10 +455,8 @@ def test_ne():
     # Test PhaseScreenList __ne__
     atm = galsim.Atmosphere(10.0, vx=1.0)
     objs = [galsim.PhaseScreenList(atm),
-            galsim.PhaseScreenList(copy.deepcopy(atm)),  # advance down below
             galsim.PhaseScreenList(objs),  # Reuse list of OpticalScreens above
             galsim.PhaseScreenList(objs[0:2])]
-    objs[1].advance()
     all_obj_diff(objs)
 
     # Test PhaseScreenPSF __ne__

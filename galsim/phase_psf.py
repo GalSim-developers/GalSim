@@ -711,7 +711,7 @@ class PhaseScreenList(object):
 
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attributes are
-        # self.time_step, self.time, and self.rng.
+        # self.time_step, self._time, and self.rng.
         # Could have made these each a @property instead of defining _update_attrs(), but then
         # failures would occur late rather than early, which makes debugging more difficult.
 
@@ -724,11 +724,11 @@ class PhaseScreenList(object):
         else:
             raise ValueError("Layer time steps must all be identical or None")
 
-        time = set([layer.time for layer in self if hasattr(layer, 'time')])
-        if len(time) == 0:
-            self.time = None
-        elif len(time) == 1:
-            self.time = time.pop()
+        _time = set([layer._time for layer in self if hasattr(layer, '_time')])
+        if len(_time) == 0:
+            self._time = None
+        elif len(_time) == 1:
+            self._time = _time.pop()
         else:
             raise ValueError("Layer times must be identical or None")
 

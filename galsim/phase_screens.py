@@ -42,7 +42,7 @@ class AtmosphericScreen(object):
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
     @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.03]
+                         [default: 0.025]
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [default: 0.2]
@@ -70,8 +70,7 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.025,
-                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None,
-                 _orig_rng=None, _tab2d=None, _psi=None, _screen=None, _origin=None):
+                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
 
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
@@ -93,44 +92,32 @@ class AtmosphericScreen(object):
         if rng is None:
             rng = galsim.BaseDeviate()
 
-        # Should only be using private constructor variables when reconstituting from
-        # eval(repr(obj)).
-        if _orig_rng is not None:
-            self.orig_rng = _orig_rng
-            self.rng = rng
-            self.tab2d = _tab2d
-            # Last two might get quickly deleted if alpha==1, but that's okay.
-            self.psi = _psi
-            self.screen = _screen
-            self.origin = _origin
-        else:
-            self.orig_rng = rng
-            self._init_psi()
-            self.reset()
+        self._orig_rng = rng.duplicate()
+        self._init_psi()
+        self.reset()
 
         # Free some RAM for frozen-flow screen.
         if self.alpha == 1.0:
-            del self.psi, self.screen
+            del self._psi, self._screen
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        s = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, r0_500=%r, L0=%r, " +
-             "vx=%r, vy=%r, alpha=%r, rng=%r, _origin=array(%r), _orig_rng=%r, _tab2d=%r") % (
-                self.screen_size, self.screen_scale, self.altitude, self.time_step, self.r0_500,
-                self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
-                self.tab2d)
-        if self.alpha != 1.0:
-            s += ", _screen=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
-            s += ", _psi=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
-        s += ")"
-        return s
+        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, r0_500=%r, L0=%r, " +
+                "vx=%r, vy=%r, alpha=%r, rng=%r)") % (
+                        self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                        self.r0_500, self.L0, self.vx, self.vy, self.alpha, self._orig_rng)
 
+    # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
+    # object as immutable under the python data model.  The requirements for hashability are that
+    # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
+    # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
+    # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
+    # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
+    # computational convenience, and don't "define" the object and are not even strictly necessary
+    # for its implementation.
     def __eq__(self, other):
-        # This is a bit draconian since two phase screens with different `time_step`s but otherwise
-        # equivalent attributes at least start out equal.  However, I like the idea of comparing
-        # rng, orig_rng, and time_step better than comparing self.tab2d, so I'm going with that.
         return (isinstance(other, galsim.AtmosphericScreen) and
                 self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
@@ -140,13 +127,16 @@ class AtmosphericScreen(object):
                 self.vx == other.vx and
                 self.vy == other.vy and
                 self.alpha == other.alpha and
-                self.orig_rng == other.orig_rng and
-                self.rng == other.rng and
                 self.time_step == other.time_step and
-                np.array_equal(self.origin, other.origin))
+                self._orig_rng == other._orig_rng)
 
-    # No hash since this is a mutable class
-    __hash__ = None
+    def __hash__(self):
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    "galsim.AtmosphericScreen", self.screen_size, self.screen_scale, self.altitude,
+                    self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.time_step,
+                    repr(self._orig_rng.serialize())))
+        return self._hash
 
     def __ne__(self, other): return not self == other
 
@@ -155,7 +145,7 @@ class AtmosphericScreen(object):
     # It nearly impossible to figure this out from a single source, but it can be derived from a
     # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
     # sure like to work alone... )
-    kolmogorov_constant = np.sqrt(0.00058)
+    _kolmogorov_constant = np.sqrt(0.00058)
 
     def _init_psi(self):
         """Assemble 2D von Karman sqrt power spectrum.
@@ -165,29 +155,30 @@ class AtmosphericScreen(object):
 
         L0_inv = 1./self.L0 if self.L0 is not None else 0.0
         old_settings = np.seterr(all='ignore')
-        self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                    self.npix * np.sqrt(np.sqrt(2.0)))
+        self._psi = (1./self.screen_size*self._kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
+                     (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
+                     self.npix * np.sqrt(np.sqrt(2.0)))
         np.seterr(**old_settings)
-        self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
-        self.psi[0, 0] = 0.0
+        self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
+        self._psi[0, 0] = 0.0
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self.psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
-        noise = utilities.rand_arr(self.psi.shape, gd)
-        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self.psi).real
+        noise = utilities.rand_arr(self._psi.shape, gd)
+        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
 
     def advance(self):
         """Advance phase screen realization by self.time_step."""
         # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
         # moving the screen with the wind.
-        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
+        self._origin -= (self.vx*self.time_step, self.vy*self.time_step)
         # "Boil" the atmsopheric screen if alpha not 1.
         if self.alpha != 1.0:
-            self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
-        self.time += self.time_step
+            self._screen *= self.alpha
+            self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
+            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+        self._time += self.time_step
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -214,8 +205,8 @@ class AtmosphericScreen(object):
             raise TypeError("Cannot rewind phase screen with alpha != 1.0")
         # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
         # moving the screen with the wind.
-        self.origin += (self.vx*self.time_step, self.vy*self.time_step)
-        self.time -= self.time_step
+        self._origin += (self.vx*self.time_step, self.vy*self.time_step)
+        self._time -= self.time_step
 
     def rewind_by(self, dt):
         """Rewind phase screen by specified amount of time.
@@ -225,7 +216,7 @@ class AtmosphericScreen(object):
                    multiple of self.time_step.
         """
         if self.alpha != 1:
-            raise ValueError("Cannot rewind phase screen with alpha != 1 backwards in time.")
+            raise TypeError("Cannot rewind phase screen with alpha != 1 backwards in time.")
         return self.advance_by(-dt)
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
@@ -263,8 +254,8 @@ class AtmosphericScreen(object):
             u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
         else:
             u, v = aper.u, aper.v
-        return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta[0].tan(),
-                          v + self.origin[1] + 1000*self.altitude*theta[1].tan())
+        return self._tab2d(u + self._origin[0] + 1000*self.altitude*theta[0].tan(),
+                           v + self._origin[1] + 1000*self.altitude*theta[1].tan())
 
     def wavefront_grad_at(self, u, v, t, diam=None, theta=None):
         """
@@ -279,21 +270,21 @@ class AtmosphericScreen(object):
         """
         u += -t*self.vx + 1000*self.altitude*theta[0].tan()
         v += -t*self.vy + 1000*self.altitude*theta[1].tan()
-        return self.tab2d.gradient(u, v)
+        return self._tab2d.gradient(u, v)
 
     def reset(self):
         """Reset phase screen back to time=0."""
-        self.rng = self.orig_rng.duplicate()
-        self.origin = np.array([0.0, 0.0])
-        self.time = 0.0
+        self.rng = self._orig_rng.duplicate()
+        self._origin = np.array([0.0, 0.0])
+        self._time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
-            self.screen = self._random_screen()
+        if self.alpha != 1.0 or not hasattr(self, '_tab2d'):
+            self._screen = self._random_screen()
             self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
                                    endpoint=False)
             self._ys = self._xs
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
+            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
 
 def Atmosphere(screen_size, rng=None, **kwargs):
