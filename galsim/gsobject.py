@@ -1481,7 +1481,7 @@ class GSObject(object):
         bwrap = galsim._BoundsI(0, N//2, -N//2, N//2-1)
         kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
-        # Perform the fourier transform.j
+        # Perform the fourier transform.
         real_image = kimage_wrap.irfft()
 
         # Add (a portion of) this to the original image.
