@@ -237,6 +237,14 @@ def test_uniform():
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
 
+    # Test filling an image with Fortran ordering
+    u.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(galsim.DeviateNoise(u))
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(uResult), precision,
+            err_msg="Wrong uniform randoms generated for Fortran-ordered Image")
+
     # Check picklability
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
@@ -367,6 +375,14 @@ def test_gaussian():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(gResult)-gMean, precision,
             err_msg="GaussianNoise applied to Images does not reproduce expected sequence")
+
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(gn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(gResult)-gMean, precision,
+            err_msg="Wrong Gaussian noise generated for Fortran-ordered Image")
 
     # Check GaussianNoise variance:
     np.testing.assert_almost_equal(
@@ -708,6 +724,14 @@ def test_poisson():
     np.testing.assert_array_equal(
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg='Wrong poisson random number sequence generated using PoissonNoise')
+
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(pn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(pResult)-pMean,
+            err_msg="Wrong Poisson noise generated for Fortran-ordered Image")
 
     # Check PoissonNoise variance:
     np.testing.assert_almost_equal(
@@ -1474,6 +1498,15 @@ def test_ccdnoise():
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
                 " using addNoise")
+
+        # Test filling an image with Fortran ordering
+        rng.seed(testseed)
+        testImageF = galsim.Image(np.zeros((2, 2)).T, dtype=types[i])
+        testImageF.fill(sky)
+        testImageF.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(
+                testImageF.array, cResult, prec,
+                err_msg="Wrong CCD noise generated for Fortran-ordered Image"+typestrings[i])
 
         # Now include sky_level in ccdnoise
         rng.seed(testseed)
