@@ -1082,10 +1082,12 @@ class PixelScale(LocalWCS):
         return v / self._scale
 
     def _profileToWorld(self, image_profile):
-        return image_profile.dilate(self._scale)
+        return galsim._Transform(image_profile, self._scale, 0., 0., self._scale,
+                                 flux_ratio=self._scale**-2)
 
     def _profileToImage(self, world_profile):
-        return world_profile.dilate(1./self._scale)
+        return galsim._Transform(world_profile, 1./self._scale, 0., 0., 1./self._scale,
+                                 flux_ratio=self._scale**2)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1333,15 +1335,13 @@ class JacobianWCS(LocalWCS):
         return (-self._dvdx * u + self._dudx * v)/self._det
 
     def _profileToWorld(self, image_profile):
-        ret = image_profile.transform(self._dudx, self._dudy, self._dvdx, self._dvdy)
-        ret /= self._pixelArea()
-        return ret
+        return galsim._Transform(image_profile, self._dudx, self._dudy, self._dvdx, self._dvdy,
+                                 flux_ratio=1./self._pixelArea())
 
     def _profileToImage(self, world_profile):
-        ret = world_profile.transform(self._dvdy/self._det, -self._dudy/self._det,
-                                      -self._dvdx/self._det, self._dudx/self._det)
-        ret *= self._pixelArea()
-        return ret
+        return galsim._Transform(world_profile, self._dvdy/self._det, -self._dudy/self._det,
+                                 -self._dvdx/self._det, self._dudx/self._det,
+                                 flux_ratio=self._pixelArea())
 
     def _pixelArea(self):
         return abs(self._det)

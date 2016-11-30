@@ -103,6 +103,10 @@ New Features
   (#827)
 - Added `ii_pad_factor` kwarg to PhaseScreenPSF and OpticalPSF to control the
   zero-padding of the underlying InterpolatedImage. (#835)
+- Added galsim.fft module that includes functions that act as drop-in
+  replacements for np.fft functions, but using the C-layer FFTW package.
+  Our functions have more restrictions on the input arrays, but when valid
+  are generally somewhat faster than the numpy functions. (#840)
 
 
 New config features
