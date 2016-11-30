@@ -67,6 +67,12 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getKInterp();
     }
 
+    double SBInterpolatedImage::getPadFactor() const
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getPadFactor();
+    }
+
     void SBInterpolatedImage::calculateStepK(double max_stepk) const
     {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
@@ -100,11 +106,11 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _xInterp(xInterp), _kInterp(kInterp), _stepk(stepk), _maxk(maxk),
+        _xInterp(xInterp), _kInterp(kInterp), _pad_factor(pad_factor), _stepk(stepk), _maxk(maxk),
         _readyToShoot(false)
     {
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
-        dbg<<"pad_factor = "<<pad_factor<<std::endl;
+        dbg<<"pad_factor = "<<_pad_factor<<std::endl;
         assert(_xInterp.get());
         assert(_kInterp.get());
 
@@ -114,7 +120,7 @@ namespace galsim {
         _init_bounds = image.getBounds();
         dbg<<"Ninitial = "<<_Ninitial<<std::endl;
         assert(pad_factor > 0.);
-        _Nk = goodFFTSize(int(pad_factor*_Ninitial));
+        _Nk = goodFFTSize(int(_pad_factor*_Ninitial));
         dbg<<"_Nk = "<<_Nk<<std::endl;
         double sum = 0.;
         double sumx = 0.;
@@ -445,7 +451,7 @@ namespace galsim {
         oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
         oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
 
-        oss << "1., "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
+        oss << _pad_factor << ", "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
