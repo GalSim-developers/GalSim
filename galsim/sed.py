@@ -841,10 +841,10 @@ class SED(object):
         a bandpass.
 
         @param nphotons  Number of samples (photons) to randomly draw.
-        @param bandpass  A Bandpass object representing a filter, or None to sample over the full 
+        @param bandpass  A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
-        @param rng       If provided, a random number generator that is any kind of BaseDeviate 
-                         object. If `rng` is None, one will be automatically created, using the 
+        @param rng       If provided, a random number generator that is any kind of BaseDeviate
+                         object. If `rng` is None, one will be automatically created, using the
                          time as a seed. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
                          tables. [default: 256]
@@ -904,9 +904,12 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r' +
+        # For some reason, the dimensionless astropy unit, Unit(), doesn't eval/repr roundtrip, so
+        # we use a custom repr for this case.
+        flux_type = "Unit(1)" if self.dimensionless else repr(self.flux_type)
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
-                      self._orig_spec, self.wave_type, self.flux_type, self.redshift, self.fast,
+                      self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit, self.red_limit)
         return outstr
 

@@ -225,6 +225,24 @@ class Transformation(galsim.GSObject):
         self.__dict__ = d
         self.__init__(self._original, self._jac, self._offset, self._flux_ratio, self._gsparams)
 
+def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0.),
+               flux_ratio=1., gsparams=None):
+    """Approximately equivalent to Transform (but with jac expanded out), but without all the
+    sanity checks and options.
+
+    This is only valid for GSObjects.  For ChromaticObjects, you must use the regular Transform.
+    """
+    ret = Transformation.__new__(Transformation)
+    if hasattr(obj, 'original'):
+        ret._original = obj.original
+    else:
+        ret._original = obj
+    sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                gsparams)
+    galsim.GSObject.__init__(ret, sbt)
+    ret._gsparams = gsparams
+    return ret
+
 
 def SBTransform_init(self):
     obj = self.getObj()

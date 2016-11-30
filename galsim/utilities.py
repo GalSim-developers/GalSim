@@ -1093,9 +1093,9 @@ def combine_wave_list(*args):
     wave_list = np.array([], dtype=float)
     for obj in args:
         if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
-            blue_limit = np.max([blue_limit, obj.blue_limit])
+            blue_limit = max(blue_limit, obj.blue_limit)
         if hasattr(obj, 'red_limit') and obj.red_limit is not None:
-            red_limit = np.min([red_limit, obj.red_limit])
+            red_limit = min(red_limit, obj.red_limit)
         wave_list = np.union1d(wave_list, obj.wave_list)
     wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
     return wave_list, blue_limit, red_limit

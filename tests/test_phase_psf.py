@@ -342,6 +342,30 @@ def test_scale_unit():
 
 
 @timer
+def test_stepk_maxk():
+    """Test options to specify (or not) stepk and maxk.
+    """
+    aper = galsim.Aperture(diam=1.0)
+    rng = galsim.BaseDeviate(1234)
+    # Test frozen AtmosphericScreen first
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
+    psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
+    stepk = psf.stepK()
+    maxk = psf.maxK()
+
+    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
+                                 _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
+    np.testing.assert_almost_equal(
+            psf2.stepK(), stepk/1.5, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for stepK")
+    np.testing.assert_almost_equal(
+            psf2.maxK(), maxk*2.0, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for maxK")
+    do_pickle(psf)
+    do_pickle(psf2)
+
+
+@timer
 def test_ne():
     """Test Apertures, PhaseScreens, PhaseScreenLists, and PhaseScreenPSFs for not-equals."""
     import copy
@@ -417,6 +441,12 @@ def test_ne():
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
     psl.reset()
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
+    stepk = objs[0].stepK()
+    maxk = objs[0].maxK()
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_stepk=stepk/1.5)]
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_maxk=maxk*2.0)]
     all_obj_diff(objs)
 
 
@@ -430,4 +460,5 @@ if __name__ == "__main__":
     test_phase_psf_batch()
     test_opt_indiv_aberrations()
     test_scale_unit()
+    test_stepk_maxk()
     test_ne()

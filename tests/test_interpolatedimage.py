@@ -103,12 +103,22 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()),
-                  irreprable=True)
+        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
         do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
         do_pickle(interp.SBProfile)
+
+    # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
+    image_T = galsim.Image(ref_array.astype(array_type).T)
+    interp = galsim.InterpolatedImage(image_T, scale=test_scale)
+    test_array = np.zeros(ref_array.T.shape, dtype=array_type)
+    image_out = galsim.Image(test_array, scale=test_scale)
+    interp.drawImage(image_out, method='no_pixel')
+    np.testing.assert_array_equal(
+            ref_array.T.astype(array_type),image_out.array,
+            err_msg="Transposed array failed InterpolatedImage roundtrip.")
+    check_basic(interp, "InterpolatedImage (Fortran ordering)", approx_maxsb=True)
 
     # Also check picklability of the Interpolants
     im = galsim.Gaussian(sigma=4).drawImage()
@@ -294,9 +304,13 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Sheared InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+
+    # The do_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
+    # really long time, so we only do that if __name__ == "__main__".
+    irreprable = not __name__ == "__main__"
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Magnify it, and compare with expectations from GSObjects directly
     test_mag = 1.08
@@ -319,9 +333,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Magnified InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Lens it (shear and magnify), and compare with expectations from GSObjects directly
     test_g1 = -0.03
@@ -346,9 +360,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Lensed InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Rotate it, and compare with expectations from GSObjects directly
     test_rot_angle = 32.*galsim.degrees
@@ -371,9 +385,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Rotated InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Shift it, and compare with expectations from GSObjects directly
     x_shift = -0.31
@@ -397,9 +411,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Shifted InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
 
 @timer

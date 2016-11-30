@@ -67,6 +67,12 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getKInterp();
     }
 
+    double SBInterpolatedImage::getPadFactor() const
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getPadFactor();
+    }
+
     void SBInterpolatedImage::calculateStepK(double max_stepk) const
     {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
@@ -100,11 +106,11 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _xInterp(xInterp), _kInterp(kInterp), _stepk(stepk), _maxk(maxk),
+        _xInterp(xInterp), _kInterp(kInterp), _pad_factor(pad_factor), _stepk(stepk), _maxk(maxk),
         _readyToShoot(false)
     {
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
-        dbg<<"pad_factor = "<<pad_factor<<std::endl;
+        dbg<<"pad_factor = "<<_pad_factor<<std::endl;
         assert(_xInterp.get());
         assert(_kInterp.get());
 
@@ -114,7 +120,7 @@ namespace galsim {
         _init_bounds = image.getBounds();
         dbg<<"Ninitial = "<<_Ninitial<<std::endl;
         assert(pad_factor > 0.);
-        _Nk = goodFFTSize(int(pad_factor*_Ninitial));
+        _Nk = goodFFTSize(int(_pad_factor*_Ninitial));
         dbg<<"_Nk = "<<_Nk<<std::endl;
         double sum = 0.;
         double sumx = 0.;
@@ -423,14 +429,21 @@ namespace galsim {
         oss << "galsim._galsim.ConstImageViewD(array([";
 
         ConstImageView<double> im = getImage();
-        Bounds<int> _bds = im.getBounds();
-        for (int y = _bds.getYMin(); y<=_bds.getYMax(); ++y) {
-            if (y > _bds.getYMin()) oss <<",";
-            BaseImage<double>::const_iterator it = im.rowBegin(y);
-            oss << "[" << *it++;
-            for (; it != im.rowEnd(y); ++it) oss << "," << *it;
+        const double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        const int step = im.getStep();
+        const int xmin = im.getXMin();
+        const int xmax = im.getXMax();
+        const int ymin = im.getYMin();
+        const int ymax = im.getYMax();
+        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
+            if (j > ymin) oss <<",";
+            oss << "[" << *ptr;
+            ptr += step;
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << *ptr;
             oss << "]";
         }
+
         oss<<"],dtype=float)), ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
@@ -438,7 +451,7 @@ namespace galsim {
         oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
         oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
 
-        oss << "1., "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
+        oss << _pad_factor << ", "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
@@ -987,19 +1000,24 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedKImage(";
-
         oss << "galsim._galsim.ConstImageViewD(array([";
+
         ConstImageView<double> data = getKData();
-        Bounds<int> _bds = data.getBounds();
-        int ymin = _bds.getYMin();
-        int ymax = _bds.getYMax();
-        for (int y = ymin; y<=ymax; ++y) {
-            if (y > 0) oss <<",";
-            BaseImage<double>::const_iterator it = data.rowBegin(y);
-            oss << "[" << *it++;
-            for (; it != data.rowEnd(y); ++it) oss << "," << *it;
+        const double* ptr = data.getData();
+        const int skip = data.getNSkip();
+        const int step = data.getStep();
+        const int xmin = data.getXMin();
+        const int xmax = data.getXMax();
+        const int ymin = data.getYMin();
+        const int ymax = data.getYMax();
+        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
+            if (j > ymin) oss <<",";
+            oss << "[" << *ptr;
+            ptr += step;
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << *ptr;
             oss << "]";
         }
+
         oss<<"],dtype=float)), ";
 
         oss << _ktab->getDk() << ", " << stepK() << ", " << maxK() << ", ";

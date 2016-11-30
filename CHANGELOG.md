@@ -90,7 +90,7 @@ New Features
   doing so are `im.calculate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
-- Added new profile `galsim.RandomWalk`, a class for generating a set of 
+- Added new profile `galsim.RandomWalk`, a class for generating a set of
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
@@ -98,9 +98,17 @@ New Features
   image from either nx,ny or bounds. (#820)
 - Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
   random wavelengths from an SED. (#822)
+- Added function assignPhotonAngles to add arrival directions (in the form of
+  dx/dz and dy/dz slopes) to an existing photon array. (#823)
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.
   (#827)
+- Added `ii_pad_factor` kwarg to PhaseScreenPSF and OpticalPSF to control the
+  zero-padding of the underlying InterpolatedImage. (#835)
+- Added galsim.fft module that includes functions that act as drop-in
+  replacements for np.fft functions, but using the C-layer FFTW package.
+  Our functions have more restrictions on the input arrays, but when valid
+  are generally somewhat faster than the numpy functions. (#840)
 
 
 New config features
