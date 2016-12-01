@@ -125,6 +125,10 @@ namespace galsim {
         /// @brief Returns the truncation radius
         double getTrunc() const;
 
+        // Declare the more-complicated inclined profile as a friend, so it can access private
+        // methods of this class
+        friend class SBInclinedSersic;
+
     protected:
 
         class SBSersicImpl;

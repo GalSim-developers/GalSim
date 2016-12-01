@@ -85,6 +85,10 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        // Declare the more-complicated inclined profile as a friend, so it can access private
+        // methods of this class
+        friend class SBInclinedSersicImpl;
+
     private:
 
         SersicInfo(const SersicInfo& rhs); ///< Hide the copy constructor.
