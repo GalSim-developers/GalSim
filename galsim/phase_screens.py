@@ -94,7 +94,7 @@ class AtmosphericScreen(object):
 
         self._orig_rng = rng.duplicate()
         self._init_psi()
-        self.reset()
+        self._reset()
 
         # Free some RAM for frozen-flow screen.
         if self.alpha == 1.0:
@@ -168,56 +168,24 @@ class AtmosphericScreen(object):
         noise = utilities.rand_arr(self._psi.shape, gd)
         return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
 
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
-        # moving the screen with the wind.
-        self._origin -= (self.vx*self.time_step, self.vy*self.time_step)
-        # "Boil" the atmsopheric screen if alpha not 1.
+    def _seek(self, t):
+        if t == self._time:
+            return
         if self.alpha != 1.0:
-            self._screen *= self.alpha
-            self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
-            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
-        self._time += self.time_step
-
-    def advance_by(self, dt):
-        """Advance phase screen by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to update the screen.
-        @returns   The actual amount of time updated, which will differ from `dt` when `dt` is not a
-                   multiple of self.time_step.
-        """
-        if dt < 0 and self.alpha != 1:
-            raise ValueError("Cannot advance phase screen with alpha != 1 backwards in time.")
-        _nstep = int(np.round(abs(dt)/self.time_step))
-        if _nstep == 0:
-            _nstep = 1
-        for i in range(_nstep):
-            if dt > 0:
-                self.advance()
-            else:
-                self.rewind()
-        return np.sign(dt)*_nstep*self.time_step  # return the time *actually* advanced
-
-    def rewind(self):
-        """Rewind phase screen realization by self.time_step."""
-        if self.alpha != 1.0:
-            raise TypeError("Cannot rewind phase screen with alpha != 1.0")
-        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
-        # moving the screen with the wind.
-        self._origin += (self.vx*self.time_step, self.vy*self.time_step)
-        self._time -= self.time_step
-
-    def rewind_by(self, dt):
-        """Rewind phase screen by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to rewind the screen.
-        @returns   The actual amount of time rewound, which will differ from `dt` when `dt` is not a
-                   multiple of self.time_step.
-        """
-        if self.alpha != 1:
-            raise TypeError("Cannot rewind phase screen with alpha != 1 backwards in time.")
-        return self.advance_by(-dt)
+            if t < self._time:
+                raise ValueError("Cannot seek backwards for AtmosphericScreen with alpha != 1.0")
+            # Find number of boiling updates we need to perform.
+            previous_update_number = int(self._time // self.time_step)
+            final_update_number = int(t // self.time_step)
+            n_updates = final_update_number - previous_update_number
+            if n_updates > 0:
+                for _ in range(n_updates):
+                    self._screen *= self.alpha
+                    self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
+                self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
+        dt = t - self._time
+        self._origin -= (self.vx*dt, self.vy*dt)
+        self._time = t
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -272,7 +240,7 @@ class AtmosphericScreen(object):
         v += -t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d.gradient(u, v)
 
-    def reset(self):
+    def _reset(self):
         """Reset phase screen back to time=0."""
         self.rng = self._orig_rng.duplicate()
         self._origin = np.array([0.0, 0.0])

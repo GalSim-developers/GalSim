@@ -639,9 +639,6 @@ class PhaseScreenList(object):
     -------
     makePSF()          Obtain a PSF from this set of phase screens.  See PhaseScreenPSF docstring
                        for more details.
-    advance()          Advance each phase screen in list by self.time_step.
-    advance_by()       Advance each phase screen in list by specified amount.
-    reset()            Reset each phase screen to t=0.
     wavefront()        Compute the cumulative wavefront due to all screens.
 
     @param layers  Sequence of phase screens.
@@ -710,28 +707,6 @@ class PhaseScreenList(object):
     __hash__ = None  # Mutable means not hashable.
 
     def _update_attrs(self):
-        # Update object attributes for current set of layers.  Currently the only attributes are
-        # self.time_step, self._time, and self.rng.
-        # Could have made these each a @property instead of defining _update_attrs(), but then
-        # failures would occur late rather than early, which makes debugging more difficult.
-
-        # Each layer must have same value for time_step or no attr time_step.
-        time_step = set([layer.time_step for layer in self if hasattr(layer, 'time_step')])
-        if len(time_step) == 0:
-            self.time_step = None
-        elif len(time_step) == 1:
-            self.time_step = time_step.pop()
-        else:
-            raise ValueError("Layer time steps must all be identical or None")
-
-        _time = set([layer._time for layer in self if hasattr(layer, '_time')])
-        if len(_time) == 0:
-            self._time = None
-        elif len(_time) == 1:
-            self._time = _time.pop()
-        else:
-            raise ValueError("Layer times must be identical or None")
-
         # If any of the wrapped PhaseScreens have an rng, then eval(repr(screen_list)) will run, but
         # fail to round-trip to the original object.  So we search for that here and set/delete a
         # dummy rng sentinel attribute so do_pickle() will know to skip the obj == eval(repr(obj))
@@ -740,56 +715,21 @@ class PhaseScreenList(object):
         if any(hasattr(l, 'rng') for l in self):
             self.rng = None
 
-    def advance(self):
-        """Advance each phase screen in list by self.time_step."""
+    def _seek(self, t):
+        """Seek all layers to time t."""
         for layer in self:
             try:
-                layer.advance()
-            except AttributeError:
-                # Time indep phase screen.
-                pass
-        self._update_attrs()
-
-    def advance_by(self, dt):
-        """Advance each phase screen in list by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to update the screens.
-        @returns   The actual amount of time updated, which can potentially (though not necessarily)
-                   differ from `dt` when `dt` is not a multiple of self.time_step.
-        """
-        for layer in self:
-            try:
-                out = layer.advance_by(dt)
+                layer._seek(t)
             except AttributeError:
                 # Time indep phase screen
                 pass
         self._update_attrs()
-        return out
 
-    def rewind(self):
-        """Rewind each phase screen in list by self.time_step."""
-        for layer in self:
-            try:
-                layer.rewind()
-            except AttributeError:
-                # Time indep phase screen.
-                pass
-        self._update_attrs()
-
-    def rewind_by(self, dt):
-        """Rewind each phase screen in list by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to rewind the screens.
-        @returns   The actual amount of time rewound, which can potentially (though not necessarily)
-                   differ from `dt` when `dt` is not a multiple of self.time_step.
-        """
-        return self.advance_by(-dt)
-
-    def reset(self):
+    def _reset(self):
         """Reset phase screens back to time=0."""
         for layer in self:
             try:
-                layer.reset()
+                layer._reset()
             except AttributeError:
                 # Time indep phase screen
                 pass
@@ -830,8 +770,11 @@ class PhaseScreenList(object):
         to reset the time to t=0.  See the galsim.PhaseScreenPSF docstring for more details.
 
         @param lam                 Wavelength in nanometers at which to compute PSF.
+        @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
         @param exptime             Time in seconds overwhich to accumulate evolving instantaneous
                                    PSF.  [default: 0.0]
+        @param time_step           Time interval in seconds with which to sample phase screens.
+                                   [default: 0.025]
         @param flux                Flux of output PSF.  [default: 1.0]
         @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or
                                    iterable of 2-tuples.
@@ -885,6 +828,7 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
+        from heapq import heappush, heappop
         # Assemble theta as an iterable over 2-tuples of Angles.
         single = False
         theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
@@ -911,15 +855,22 @@ class PhaseScreenList(object):
             # difference with either loop order, so we just always make the PSF loop the inner loop.
             kwargs['_eval_now'] = False
             PSFs = []
-            for th in theta:
-                PSFs.append(PhaseScreenPSF(self, lam, theta=th, **kwargs))
+            # Use a heap to track next sampling time of any of the PSFs.
+            heap = []
+            for i, th in enumerate(theta):
+                PSF = PhaseScreenPSF(self, lam, theta=th, **kwargs)
+                heappush(heap, (PSF.t0, i))
+                PSFs.append(PSF)
 
             flux = kwargs.get('flux', 1.0)
-            _nstep = PSFs[0]._nstep
-            for i in range(_nstep):
-                for PSF in PSFs:
-                    PSF._step()
-                self.advance()
+            while(heap):
+                t, i = heappop(heap)
+                self._seek(t)
+                PSF = PSFs[i]
+                PSF._step()
+                t += PSF.time_step
+                if t < PSF.t0 + PSF.exptime:
+                    heappush(heap, (t, i))
 
             suppress_warning = kwargs.pop('suppress_warning', False)
             for PSF in PSFs:
@@ -983,8 +934,11 @@ class PhaseScreenPSF(GSObject):
 
     @param screen_list         PhaseScreenList object from which to create PSF.
     @param lam                 Wavelength in nanometers at which to compute PSF.
+    @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
     @param exptime             Time in seconds overwhich to accumulate evolving instantaneous PSF.
                                [default: 0.0]
+    @param time_step           Time interval in seconds with which to sample phase screens.
+                               [default: 0.025]
     @param flux                Flux of output PSF [default: 1.0]
     @param aper                Aperture to use to compute PSF(s).  [default: None]
     @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or iterable
@@ -1044,7 +998,7 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
-    def __init__(self, screen_list, lam, exptime=0.0, flux=1.0, aper=None,
+    def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
                  scale_unit=galsim.arcsec, suppress_warning=False, ii_pad_factor=4., gsparams=None,
                  _eval_now=True, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
@@ -1055,7 +1009,9 @@ class PhaseScreenPSF(GSObject):
             screen_list = PhaseScreenList(screen_list)
         self.screen_list = screen_list
         self.lam = float(lam)
+        self.t0 = float(t0)
         self.exptime = float(exptime)
+        self.time_step = float(time_step)
         if aper is None:
             # Check here for diameter.
             if 'diam' not in kwargs:
@@ -1086,13 +1042,6 @@ class PhaseScreenPSF(GSObject):
 
         if self.exptime < 0:
             raise ValueError("Cannot integrate PSF for negative time.")
-        if self.screen_list.time_step is None:
-            self._nstep = 1
-        else:
-            self._nstep = int(np.round(self.exptime/self.screen_list.time_step))
-        # Generate at least one time sample
-        if self._nstep == 0:
-            self._nstep = 1
 
         self._ii_pad_factor = ii_pad_factor
 
@@ -1100,10 +1049,14 @@ class PhaseScreenPSF(GSObject):
         # of the normal iterate over time loop.  So only do the time loop here and now if we're not
         # doing a makePSFs().
         if _eval_now:
-            for i in range(self._nstep):
+            self.screen_list._seek(self.t0)
+            self._step()
+            t = self.t0 + self.time_step
+            while(t < self.t0+self.exptime):
+                self.screen_list._seek(t)
                 self._step()
-                self.screen_list.advance()
-                if _bar is not None:  # pragma: no cover
+                t += self.time_step
+                if _bar is not None:  # pragma no cover
                     _bar.update()
             self._finalize(flux, suppress_warning)
 
