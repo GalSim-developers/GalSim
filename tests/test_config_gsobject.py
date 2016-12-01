@@ -813,6 +813,15 @@ def test_add():
                 { 'type' : 'Exponential' , 'half_light_radius' : 2.3, 'flux' : 0 }
             ]
         },
+        'gal8' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian', 'sigma' : 2, 'flux' : 0.3 },
+                { 'type' : 'Exponential', 'half_light_radius' : 2.3, 'flux' : 0.5 },
+                { 'type' : 'Sersic', 'n': 3, 'half_light_radius' : 1.2 }
+            ],
+            'flux' : 170.
+        },
      }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -871,6 +880,23 @@ def test_add():
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.Gaussian(sigma = 2)
     gsobject_compare(gal7a, gal7b)
+
+    # If the last flux is omitted, then it is set to make the toal = 1.
+    gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
+    gal8b_1 = galsim.Gaussian(sigma = 2, flux = 0.3)
+    gal8b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 0.5)
+    gal8b_3 = galsim.Sersic(n = 3, half_light_radius = 1.2, flux = 0.2)
+    gal8b = galsim.Add([gal8b_1, gal8b_2, gal8b_3])
+    gal8b = gal8b.withFlux(170)
+    gsobject_compare(gal8a, gal8b)
+
+    # If the sum comes out larger than 1, emit a warning
+    config['gal8']['items'][1]['flux'] = 0.9
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.BuildGSObject(config, 'gal8', logger=cl.logger)
+    assert ("Warning: Automatic flux for the last item in Sum (to make the total flux=1) " +
+            "resulted in negative flux = -0.200000 for that item") in cl.output
 
 
 @timer

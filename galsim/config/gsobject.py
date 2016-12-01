@@ -293,15 +293,16 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         # Special: if the last item in a Sum doesn't specify a flux, we scale it
         # to bring the total flux up to 1.
         if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
-            sum = 0
+            sum_flux = 0
             for item in items[0:-1]:
-                sum += galsim.config.GetCurrentValue('flux',item,float,base)
-            f = 1. - sum
+                sum_flux += galsim.config.GetCurrentValue('flux',item,float,base)
+            f = 1. - sum_flux
             if (f < 0):
-                import warnings
-                warnings.warn(
-                    "Automatically scaling the last item in Sum to make the total flux\n" +
-                    "equal 1 requires the last item to have negative flux = %f"%f)
+                logger.warning(
+                    "Warning: Automatic flux for the last item in Sum (to make the total flux=1) "
+                    "resulted in negative flux = %f for that item"%f)
+            logger.debug('obj %d: Rescaling final object in sum to have flux = %f',
+                         base.get('obj_num',0), f)
             gsobjects[-1] = gsobjects[-1].withFlux(f)
         if gsparams: gsparams = galsim.GSParams(**gsparams)
         else: gsparams = None
