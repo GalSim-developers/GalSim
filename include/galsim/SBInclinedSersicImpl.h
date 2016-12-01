@@ -21,121 +21,23 @@
 #define GalSim_SBSersicImpl_H
 
 #include "SBProfileImpl.h"
+#include "SBInclinedSersic.h"
 #include "SBSersic.h"
+#include "SBSersicImpl.h"
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
 #include "Table.h"
 
 namespace galsim {
 
-    /// @brief A private class that caches the needed parameters for each Sersic index `n`.
-    class SersicInfo
+    class SBInclinedSersic::SBInclinedSersicImpl : public SBProfileImpl
     {
     public:
-        /// @brief Constructor
-        SersicInfo(double n, double trunc, const GSParamsPtr& gsparams);
+        SBInclinedSersicImpl(double n, Angle inclination, double size, double height,
+                SBSersic::RadiusType rType, double flux,
+                double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
-        /// @brief Destructor: deletes photon-shooting classes if necessary
-        ~SersicInfo() {}
-
-        /**
-         * @brief Returns the unnormalized real space value of the Sersic function.
-         *
-         * The input `rsq` should be (r_actual^2 / r0^2).
-         * The returned value should then be multiplied by flux * getXNorm() / r0^2.
-         */
-        double xValue(double rsq) const;
-
-        /**
-         * @brief Returns the unnormalized value of the fourier transform.
-         *
-         * The input `ksq` should be (k_actual^2 * r0^2).
-         * The returned value should then be multiplied by flux.
-         */
-        double kValue(double ksq) const;
-
-        double maxK() const;
-        double stepK() const;
-
-        /// @brief The half-light radius in units of r0.
-        double getHLR() const;
-
-        /// @brief The fractional flux relative to the untruncated profile.
-        double getFluxFraction() const;
-
-        /**
-         * @brief The factor by which to multiply the returned value from xValue.
-         *
-         * Since the returned value needs to be multiplied by flux/r0^2 anyway, we also let
-         * the caller of xValue multiply by the normalization, which we calculate for them here.
-         */
-        double getXNorm() const;
-
-        /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
-        double calculateScaleForTruncatedHLR(double re, double trunc) const;
-
-        /**
-         * @brief Shoot photons through unit-size, unnormalized profile
-         * Sersic profiles are sampled with a numerical method, using class
-         * `OneDimensionalDeviate`.
-         *
-         * @param[in] N  Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-
-    private:
-
-        SersicInfo(const SersicInfo& rhs); ///< Hide the copy constructor.
-        void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
-
-        // Input variables:
-        double _n;       ///< Sersic index.
-        double _trunc;   ///< Truncation radius `trunc` in units of r0.
-        const GSParamsPtr _gsparams; ///< The GSParams object.
-
-        // Some derived values calculated in the constructor:
-        double _invn;      ///< 1/n
-        double _inv2n;     ///< 1/(2n)
-        double _trunc_sq;  ///< trunc^2
-        bool _truncated;   ///< True if this Sersic profile is truncated.
-        double _gamma2n;   ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
-
-        // Parameters calculated when they are first needed, and then stored:
-        mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
-        mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
-        mutable double _re;      ///< The HLR in units of r0.
-        mutable double _b;       ///< b = re^(1/n)
-        mutable double _flux;    ///< Flux relative to the untruncated profile.
-
-        // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
-        mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
-        mutable double _kderiv4; ///< Quartic dependence of F near k=0.
-        mutable double _ksq_min; ///< Minimum ksq to use lookup table.
-        mutable double _ksq_max; ///< Maximum ksq to use lookup table.
-        mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
-        mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
-
-        // Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
-
-        // Helper functions used internally:
-        void buildFT() const;
-        void calculateHLR() const;
-        double calculateMissingFluxRadius(double missing_flux_frac) const;
-    };
-
-    class SBSersic::SBSersicImpl : public SBProfileImpl
-    {
-    public:
-        SBSersicImpl(double n, double size, RadiusType rType, double flux,
-                     double trunc, bool flux_untruncated,
-                     const GSParamsPtr& gsparams);
-
-        ~SBSersicImpl() {}
+        ~SBInclinedSersicImpl() {}
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
@@ -153,13 +55,13 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (!_truncated or inclination!=0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (!_truncated or inclination!=0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
             else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
 
@@ -183,10 +85,14 @@ namespace galsim {
 
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }
+        /// @brief Returns the inclination angle
+        Angle getInclination() const { return _inclination; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
+        /// @brief Returns the scale height
+        double getScaleHeight() const { return _h0; }
         /// @brief Returns the truncation radius
         double getTrunc() const { return _trunc; }
 
@@ -208,25 +114,42 @@ namespace galsim {
 
     private:
         double _n;       ///< Sersic index.
+        Angle _inclination; ///< Inclination angle
         double _flux;    ///< Actual flux (may differ from that specified at the constructor).
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
+        double _h0;          ///< Scale height specified at the constructor.
         double _trunc;   ///< The truncation radius (if any)
         bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
+        double _inv_r0;
+        double _half_pi_h_sini_over_r;
+        double _cosi;
         double _r0_sq;
         double _inv_r0;
         double _inv_r0_sq;
         double _trunc_sq;
 
+        // Some derived values calculated in the constructor:
+        double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
+        double _maxk;    ///< Value of k beyond which aliasing can be neglected.
+        double _stepk;   ///< Sampling in k space necessary to avoid folding.
+
         boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         // Copy constructor and op= are undefined.
-        SBSersicImpl(const SBSersicImpl& rhs);
-        void operator=(const SBSersicImpl& rhs);
+        SBInclinedSersicImpl(const SBInclinedSersicImpl& rhs);
+        void operator=(const SBInclinedSersicImpl& rhs);
+
+        // Helper function to get k values
+        double kValueHelper(double kx, double ky) const;
+
+        // Helper functor to solve for the proper _maxk
+        class SBInclinedSersicKValueFunctor;
 
         static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
 

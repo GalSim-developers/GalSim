@@ -17,31 +17,21 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBSersic_H
-#define GalSim_SBSersic_H
+#ifndef GalSim_SBInclinedSersic_H
+#define GalSim_SBInclinedSersic_H
 /**
- * @file SBSersic.h @brief SBProfile that implements a Sersic profile.
+ * @file SBInclinedSersic.h @brief SBProfile that implements a Sersic profile, inclined to the line
+ * of sight.
  */
 
+#include "Angle.h"
 #include "SBProfile.h"
+#include "SBSersic.h"
 
 namespace galsim {
 
-    namespace sbp {
-
-        // Constrain range of allowed Sersic index n to those for which testing was done
-        // Note: If these change, update the comments about the allowed range both below and
-        // in galsim/base.py.
-        const double minimum_sersic_n = 0.3;   // (Lower bounds has hard limit at ~0.29)
-        const double maximum_sersic_n = 6.2;
-
-        // How many Sersic profiles to save in the cache
-        const int max_sersic_cache = 100;
-
-    }
-
     /**
-     * @brief Sersic Surface Brightness Profile.
+     * @brief Inclined Sersic Surface Brightness Profile.
      *
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
      * `n`, its `flux`, and the half-light radius `re` (or scale radius `r0`).  Given these
@@ -77,21 +67,31 @@ namespace galsim {
      * There are two special cases of the Sersic profile that have their own SBProfiles: n=1
      * (SBExponential), n=0.5 (SBGaussian).  These special cases use several simplifications in
      * all calculations, whereas for general n, the Fourier transform must be treated numerically.
+     *
+     * This implementation of the Sersic profile additionally allows inclination relative to the
+     * line of sight. The true profile is assumed to follow a Sersic distribution in R, multiplied
+     * by sech^2(z/Hs), where Hs is the scale height of the disk and z is the distance along the
+     * minor axis. The inclination angle determines how elliptical the profile appears.
+     *
+     * Note that the position angle is always zero. A profile with a different position angle can be
+     * obtained through the rotate() method of the corresponding Python class.
+     *
+     * If the inclination will always be zero (face-on), the SBSersic class can instead be used
+     * as a slightly faster alternative. If no truncation radius will be applied and n=1, the
+     * SBInclinedExponential class can be used as a much faster alternative.
      */
-    class SBSersic : public SBProfile
+    class SBInclinedSersic : public SBProfile
     {
     public:
-        enum  RadiusType
-        {
-            HALF_LIGHT_RADIUS,
-            SCALE_RADIUS
-        };
 
         /**
          * @brief Constructor.
          *
          * @param[in] n                 Sersic index.
+         * @param[in] inclination       Inclination of the disk relative to line of sight, where
+         *                              0 = face-on and pi/2 = edge-on.
          * @param[in] size              Size specification.
+         * @param[in] height            Scale height of the disk.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
          * @param[in] flux              Flux.
@@ -104,14 +104,15 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBSersic(double n, double size, RadiusType rType, double flux,
+        SBInclinedSersic(double n, Angle inclination, double size, double height,
+                 SBSersic::RadiusType rType, double flux,
                  double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
-        SBSersic(const SBSersic& rhs);
+        SBInclinedSersic(const SBInclinedSersic& rhs);
 
         /// @brief Destructor.
-        ~SBSersic();
+        ~SBInclinedSersic();
 
         /// @brief Returns the Sersic index `n` of the profile.
         double getN() const;
@@ -119,20 +120,26 @@ namespace galsim {
         /// @brief Returns the scale radius r0 of the Sersic profile `exp[-(r/r_0)^(1/n)]`.
         double getScaleRadius() const;
 
-        /// @brief Returns the half light radius of the Sersic profile.
+        /// @brief Returns the half light radius of the Sersic profile (if it were face-on).
         double getHalfLightRadius() const;
+
+        /// @brief Returns the scale height h0 of the disk profile
+        double getScaleHeight() const;
+
+        /// @brief Returns the inclination angle of the profile as an Angle instance
+        Angle getInclination() const;
 
         /// @brief Returns the truncation radius
         double getTrunc() const;
 
     protected:
 
-        class SBSersicImpl;
+        class SBInclinedSersicImpl;
 
     private:
 
         // op= is undefined
-        void operator=(const SBSersic& rhs);
+        void operator=(const SBInclinedSersic& rhs);
     };
 }
 
