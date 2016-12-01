@@ -215,7 +215,6 @@ def test_phase_screen_list():
     assert atm[0]._time == 0.0, "Wrong time for AtmosphericScreen"
     kwargs = dict(exptime=0.05, time_step=0.025, diam=1.0, lam=1000.0)
     psf = atm.makePSF(**kwargs)
-    assert atm[0]._time == kwargs['exptime']-kwargs['time_step'], "Wrong time for AtmosphericScreen"
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 

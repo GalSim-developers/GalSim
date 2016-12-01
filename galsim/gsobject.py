@@ -979,6 +979,9 @@ class GSObject(object):
 
         return wcs
 
+    def _prepareDraw(self):
+        pass
+
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
@@ -1297,6 +1300,10 @@ class GSObject(object):
                 raise ValueError("poisson_flux is only relevant for method='phot'")
             if surface_ops != ():
                 raise ValueError("surface_ops are only relevant for method='phot'")
+
+        # Do any delayed computation needed by fft or real_space drawing.
+        if method != 'phot':
+            self._prepareDraw()
 
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)

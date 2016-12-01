@@ -197,6 +197,9 @@ class Transformation(galsim.GSObject):
             s += ' * %s'%self.flux_ratio
         return s
 
+    def _prepareDraw(self):
+        self._original._prepareDraw()
+
     def shoot(self, N, ud):
         photon_array = self.original.shoot(N, ud)
         x = photon_array.getXArray()

@@ -54,6 +54,7 @@ Atmosphere
 
 from itertools import chain
 from builtins import range
+from heapq import heappush, heappop
 
 import numpy as np
 import galsim
@@ -662,6 +663,8 @@ class PhaseScreenList(object):
         # to list() below.
         self._layers = list(layers)
         self._update_attrs()
+        self._pending = []  # Pending PSFs to calculate upon first drawImage.
+        self._update_time_heap = []  # Heap to store each PSF's next time-of-update.
 
     def __len__(self):
         return len(self._layers)
@@ -734,6 +737,44 @@ class PhaseScreenList(object):
                 # Time indep phase screen
                 pass
         self._update_attrs()
+
+    def _delayCalculation(self, psf):
+        """Add psf to delayed calculation list."""
+        self._pending.append(psf)
+        heappush(self._update_time_heap, (psf.t0, len(self._pending)-1))
+
+    def _prepareDraw(self):
+        """Calculate previously delayed PSFs."""
+        # First, see if we have any time-evolving screens.  If not, then we can immediately compute
+        # each PSF in a simple loop.
+        if not self._pending:
+            return
+        if not any(hasattr(l, '_time') for l in self):
+            for psf in self._pending:
+                psf._step()
+                psf._finalize()
+            self._pending = []
+            self._update_time_heap = []
+            return
+
+        # If we do have time-evolving screens, then iteratively increment the time while being
+        # careful to always stop at multiples of each PSF's time_step attribute to update that PSF.
+        # Use a heap to track the next time to stop at.
+        while(self._update_time_heap):
+            # Get and seek to next time that has a PSF update.
+            t, i = heappop(self._update_time_heap)
+            self._seek(t)
+            # Update that PSF
+            psf = self._pending[i]
+            psf._step()
+            # If that PSF's next possible update time doesn't extend past its exptime, then
+            # push it back on the heap.
+            t += psf.time_step
+            if t < psf.t0 + psf.exptime:
+                heappush(self._update_time_heap, (t, i))
+            else:
+                psf._finalize()
+        self._pending = []
 
     def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
@@ -837,9 +878,7 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
-        from heapq import heappush, heappop
         # Assemble theta as an iterable over 2-tuples of Angles.
-        single = False
         theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
         # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
         # generator of pointings we need to look at the first item.  If the first item is
@@ -848,43 +887,11 @@ class PhaseScreenList(object):
         # item is scalar, then assume that it's the x-component of a single field angle.
         theta = iter(theta)
         th0 = next(theta)
-        if hasattr(th0, '__iter__'):
-            theta = chain([th0], theta)
-        else:
+        if not hasattr(th0, '__iter__'):
             theta = [th0, next(theta)]
-            single = True
-
-        if single:
             return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
-        else:
-            # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
-            # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
-            # order of the PSF and time loops so we're not recomputing screens needlessly when we go
-            # from PSF1 to PSF2 and so on.  For frozen-flow AtmosphericScreens, there's not much
-            # difference with either loop order, so we just always make the PSF loop the inner loop.
-            kwargs['_eval_now'] = False
-            PSFs = []
-            # Use a heap to track next sampling time of any of the PSFs.
-            heap = []
-            for i, th in enumerate(theta):
-                PSF = PhaseScreenPSF(self, lam, theta=th, **kwargs)
-                heappush(heap, (PSF.t0, i))
-                PSFs.append(PSF)
-
-            flux = kwargs.get('flux', 1.0)
-            while(heap):
-                t, i = heappop(heap)
-                self._seek(t)
-                PSF = PSFs[i]
-                PSF._step()
-                t += PSF.time_step
-                if t < PSF.t0 + PSF.exptime:
-                    heappush(heap, (t, i))
-
-            suppress_warning = kwargs.pop('suppress_warning', False)
-            for PSF in PSFs:
-                PSF._finalize(flux, suppress_warning)
-            return PSFs
+        theta = chain([th0], theta)
+        return [PhaseScreenPSF(self, lam, theta=th, **kwargs) for th in theta]
 
     @property
     def r0_500_effective(self):
@@ -1014,18 +1021,17 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
-        if not isinstance(screen_list, PhaseScreenList):
-            screen_list = PhaseScreenList(screen_list)
-        self.screen_list = screen_list
-        self.lam = float(lam)
+        self._screen_list = PhaseScreenList(screen_list)
         self.t0 = float(t0)
+        self._screen_list._delayCalculation(self)
+        self.lam = float(lam)
         self.exptime = float(exptime)
         self.time_step = float(time_step)
         if aper is None:
             # Check here for diameter.
             if 'diam' not in kwargs:
                 raise ValueError("Diameter required if aperture not specified directly.")
-            aper = Aperture(lam=lam, screen_list=screen_list, gsparams=gsparams, **kwargs)
+            aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
         self.aper = aper
         if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
             raise TypeError("theta must be 2-tuple of galsim.Angle's.")
@@ -1035,17 +1041,17 @@ class PhaseScreenPSF(GSObject):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
         self._gsparams = gsparams
-        self._serialize_stepk = _force_stepk
-        self._serialize_maxk = _force_maxk
-
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
-        # scale.
-        if self._serialize_stepk is not None:
-            self._serialize_stepk *= self.scale
-        if self._serialize_maxk is not None:
-            self._serialize_maxk *= self.scale
+        if _force_stepk is None:
+            _force_stepk = self.aper._stepK(self.lam, self.scale_unit)
+        self._force_stepk = _force_stepk
+        self._serialize_stepk = _force_stepk * self.scale
+
+        if _force_maxk is None:
+            _force_maxk = self.aper._maxK(self.lam, self.scale_unit)
+        self._force_maxk = _force_maxk
+        self._serialize_maxk = _force_maxk * self.scale
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1054,40 +1060,44 @@ class PhaseScreenPSF(GSObject):
 
         self._ii_pad_factor = ii_pad_factor
 
-        # PhaseScreenList.makePSFs() optimizes multiple PSF evaluation by iterating over PSFs inside
-        # of the normal iterate over time loop.  So only do the time loop here and now if we're not
-        # doing a makePSFs().
-        if _eval_now:
-            self.screen_list._seek(self.t0)
-            self._step()
-            t = self.t0 + self.time_step
-            while(t < self.t0+self.exptime):
-                self.screen_list._seek(t)
-                self._step()
-                t += self.time_step
-                if _bar is not None:  # pragma no cover
-                    _bar.update()
-            self._finalize(flux, suppress_warning)
-
+        self._bar = _bar
         self._flux = flux
+        self._suppress_warning = suppress_warning
+
+        # Need to put in a placeholder SBProfile so that calls to, for example,
+        # self.SBProfile.stepK(), still work.  Also make temporary SBProfile have the right flux.
+        array = np.array([[self._flux]], dtype=np.float)
+        bounds = galsim._BoundsI(1, 1, 1, 1)
+        wcs = galsim.PixelScale(self.scale)
+        image = galsim._Image(array, bounds, wcs)
+        dummy_obj = galsim.InterpolatedImage(
+                image, pad_factor=1.0,
+                _serialize_stepk=self._serialize_stepk,
+                _serialize_maxk=self._serialize_maxk)
+        GSObject.__init__(self, dummy_obj)
 
     def getFlux(self):
         return self._flux
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
-                (self.screen_list, self.lam, self.exptime))
+                (self._screen_list, self.lam, self.exptime))
 
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
                   "interpolant=%r, scale_unit=%r, gsparams=%r)")
-        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
+        return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
                          self.interpolant, self.scale_unit, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
-        return (self.img == other.img and
+        return (self._screen_list == other._screen_list and
+                self.aper == other.aper and
+                self.t0 == other.t0 and
+                self.exptime == other.exptime and
+                self.time_step == other.time_step and
+                self._flux == other._flux and
                 self.interpolant == other.interpolant and
                 self._serialize_stepk == other._serialize_stepk and
                 self._serialize_maxk == other._serialize_maxk and
@@ -1095,22 +1105,29 @@ class PhaseScreenPSF(GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.PhaseScreenPSF", self.ii))
+        return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.aper, self.t0,
+                     self.exptime, self.time_step, self._flux, self.interpolant,
+                     self._serialize_stepk, self._serialize_maxk, self._ii_pad_factor,
+                     self.gsparams))
+
+    def _prepareDraw(self):
+        # Trigger delayed compuation of all pending PSFs.
+        self._screen_list._prepareDraw()
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
-        wf = self.screen_list.wavefront(u, v, None, self.theta)
+        wf = self._screen_list.wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
 
-    def _finalize(self, flux, suppress_warning):
+    def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img *= flux / self.img.sum()
+        self.img *= self._flux / self.img.sum()
         b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
         self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))
 
@@ -1122,7 +1139,7 @@ class PhaseScreenPSF(GSObject):
 
         GSObject.__init__(self, self.ii)
 
-        if not suppress_warning:
+        if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
             observed_stepk = self.SBProfile.stepK()
 
@@ -1135,9 +1152,11 @@ class PhaseScreenPSF(GSObject):
                     "Increasing pad_factor is recommended.")
 
     def __getstate__(self):
+        # Finish calculating before pickling.
+        self._prepareDraw()
+        d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        d = self.__dict__.copy()
         del d['SBProfile']
         del d['ii']
         return d
@@ -1408,7 +1427,6 @@ class OpticalPSF(GSObject):
                  "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
                  "be used to adjust the size of the internal InterpolatedImage.")
 
-
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
@@ -1485,7 +1503,7 @@ class OpticalPSF(GSObject):
         return self._flux
 
     def __str__(self):
-        screen = self._psf.screen_list[0]
+        screen = self._psf._screen_list[0]
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
@@ -1500,7 +1518,7 @@ class OpticalPSF(GSObject):
         return s
 
     def __repr__(self):
-        screen = self._psf.screen_list[0]
+        screen = self._psf._screen_list[0]
         s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
@@ -1520,15 +1538,29 @@ class OpticalPSF(GSObject):
         return s
 
     def __eq__(self, other):
-        # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler
-        # to just vote no, so I'm doing that for now, though I'm certainly open to changing this.
         return (isinstance(other, galsim.OpticalPSF) and
-                self._psf == other._psf)
+                self._lam == other._lam and
+                self._aper == other._aper and
+                self._psf._screen_list == other._psf._screen_list and
+                self._flux == other._flux and
+                self._interpolant == other._interpolant and
+                self._scale_unit == other._scale_unit and
+                self._force_stepk == other._force_stepk and
+                self._force_maxk == other._force_maxk and
+                self._ii_pad_factor == other._ii_pad_factor and
+                self._gsparams == other._gsparams)
 
     def __hash__(self):
-        return hash(("galsim.OpticalPSF", self._psf))
+        return hash(("galsim.OpticalPSF", self._lam, self._aper, self._psf._screen_list[0],
+                     self._flux, self._interpolant, self._scale_unit, self._force_stepk,
+                     self._force_maxk, self._ii_pad_factor, self._gsparams))
+
+    def _prepareDraw(self):
+        self._psf._prepareDraw()
+        GSObject.__init__(self, self._psf)
 
     def __getstate__(self):
+        self._prepareDraw()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()

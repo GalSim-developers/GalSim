@@ -174,6 +174,10 @@ class Sum(galsim.GSObject):
         return '(' + ' + '.join(str_list) + ')'
         #return 'galsim.Sum([%s])'%', '.join(str_list)
 
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
 
@@ -469,6 +473,10 @@ class Convolution(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
 
@@ -592,6 +600,9 @@ class Deconvolution(galsim.GSObject):
 
     def __str__(self):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -725,6 +736,9 @@ class AutoConvolution(galsim.GSObject):
             s += ', real_space=True'
         s += ')'
         return s
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -885,6 +899,9 @@ class AutoCorrelation(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
 
@@ -1016,6 +1033,9 @@ class FourierSqrtProfile(galsim.GSObject):
 
     def __str__(self):
         return 'galsim.FourierSqrt(%s)'%self.orig_obj
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
 
     def __getstate__(self):
         d = self.__dict__.copy()
