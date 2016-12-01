@@ -184,7 +184,6 @@ class AtmosphericScreen(object):
                     self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
                 self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
         dt = t - self._time
-        self._origin -= (self.vx*dt, self.vy*dt)
         self._time = t
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
@@ -203,47 +202,81 @@ class AtmosphericScreen(object):
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
+        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param compact  If true, then only return wavefront for illuminated pixels in a
-                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
-                        return wavefront as a 2d array for the full Aperture pupil plane.
-                        [default: True]
-        @returns        Wavefront lag or lead in nanometers over aperture.
+        @returns        Wavefront lag or lead in nanometers.
         """
-        if compact:
-            u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        # Special undocumented value for t: None means use self._time.
+        if t is None:
+            return self._wavefront(u, v, self._time, theta)
+        if self.alpha == 1.0:
+            return self._wavefront(u, v, t, theta)
         else:
-            u, v = aper.u, aper.v
-        return self._tab2d(u + self._origin[0] + 1000*self.altitude*theta[0].tan(),
-                           v + self._origin[1] + 1000*self.altitude*theta[1].tan())
+            out = np.empty_like(u, dtype=np.float64)
+            tmin = np.min(t)
+            tmax = np.max(t)
+            tt = (tmin // self.time_step) * self.time_step
+            while tt <= tmax:
+                self._seek(tt)
+                here = tt <= t < tt+self.time_step
+                out[here] = self._wavefront(u[here], v[here], t[here], theta)
+                tt += self.time_step
+            return out
 
-    def wavefront_grad_at(self, u, v, t, diam=None, theta=None):
+    def _wavefront(self, u, v, t, theta):
+        """ Same as wavefront(), but assumes that boiling atmosphere has already been properly
+        boiled for all times t.
         """
+        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
+        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
+        return self._tab2d(u, v)
+
+    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Calculate gradient of wavefront due to atmospheric phase screen.
+
         @param u        Horizontal pupil plane coordinate in meters.
         @param v        Vertical pupil plane coordinate in meters.
         @param t        Arrival times of photons
         @param diam     Diameter of illuminated pupil.  Not needed here, but needed for
                         OpticalScreen.wavefront_grad_at, so it's part of the method signature.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @returns        Arrays dWdu, dWdv.
         """
-        u += -t*self.vx + 1000*self.altitude*theta[0].tan()
-        v += -t*self.vy + 1000*self.altitude*theta[1].tan()
+        if self.alpha == 1.0:
+            return self._wavefront_gradient(u, v, t, theta)
+        else:
+            out = np.empty_like(u, dtype=np.float64)
+            tmin = np.min(t)
+            tmax = np.max(t)
+            tt = (tmin // self.time_step) * self.time_step
+            while tt <= tmax:
+                self._seek(tt)
+                here = tt <= t < tt+self.time_step
+                out[here] = self._wavefront_gradient(u[here], v[here], t[here], theta)
+                tt += self.time_step
+            return out
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        """ Same as wavefront_gradient(), but assumes that boiling atmosphere has already been
+        properly boiled for all times t.
+        """
+        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
+        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d.gradient(u, v)
 
     def _reset(self):
         """Reset phase screen back to time=0."""
         self.rng = self._orig_rng.duplicate()
-        self._origin = np.array([0.0, 0.0])
         self._time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
@@ -612,6 +645,7 @@ class OpticalScreen(object):
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
+    @param diam             Diameter of pupil in meters.
     @param tip              Tip aberration in units of reference wavelength.  [default: 0]
     @param tilt             Tilt aberration in units of reference wavelength.  [default: 0]
     @param defocus          Defocus in units of reference wavelength. [default: 0]
@@ -643,9 +677,10 @@ class OpticalScreen(object):
     @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
     """
-    def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
-                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, annular_zernike=False,
-                 obscuration=0.0, lam_0=500.0):
+    def __init__(self, diam, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0,
+                 coma2=0.0, trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None,
+                 annular_zernike=False, obscuration=0.0, lam_0=500.0):
+        self.diam = diam
         if aberrations is None:
             aberrations = np.zeros(12)
             aberrations[2] = tip
@@ -689,12 +724,14 @@ class OpticalScreen(object):
 
         noll_coef = _noll_coef_array(jmax, self.obscuration, self.annular_zernike)
         self.coef_array = np.dot(noll_coef, self.aberrations[1:])
+        # Convert from unit disk coefficients to full aperture (diam != 2) coefficients.
+        self.coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
 
     def __str__(self):
-        return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
+        return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)
 
     def __repr__(self):
-        s = "galsim.OpticalScreen(lam_0=%r" % self.lam_0
+        s = "galsim.OpticalScreen(diam=%r, lam_0=%r" % (self.diam, self.lam_0)
         if any(self.aberrations):
             s += ", aberrations=%r"%self.aberrations
         if self.annular_zernike:
@@ -705,6 +742,7 @@ class OpticalScreen(object):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.OpticalScreen)
+                and self.diam == other.diam
                 and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
                 and self.annular_zernike == other.annular_zernike)
 
@@ -712,7 +750,8 @@ class OpticalScreen(object):
 
     # This screen is immutable, so make a hash for it.
     def __hash__(self):
-        return hash(("galsim.AtmosphericScreen", tuple((self.aberrations*self.lam_0).ravel())))
+        return hash(("galsim.AtmosphericScreen", self.diam, self.obscuration, self.annular_zernike,
+                     tuple((self.aberrations*self.lam_0).ravel())))
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -734,51 +773,42 @@ class OpticalScreen(object):
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
-    def _wavefront_r(self, r):
+    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Compute wavefront due to atmospheric phase screen.
+
+        Wavefront here indicates the distance by which the physical wavefront lags or leads the
+        ideal plane wave.
+
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
+        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+        @returns        Wavefront lag or lead in nanometers.
+        """
+        # Note, this phase screen is actually independent of time and theta.
+        r = u + 1j*v
         rsqr = np.abs(r)**2
         return horner2d(rsqr, r, self.coef_array).real * self.lam_0
 
-    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
-        """ Compute wavefront due to optical phase screen.
+    _wavefront = wavefront
 
-        Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal converging Gaussian reference spherical wave.
+    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Calculate gradient of wavefront due to optical phase screen.
 
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param compact  If true, then only return wavefront for illuminated pixels in a
-                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
-                        return wavefront as a 2d array for the full Aperture pupil plane.
-                        [default: True]
-        @returns        Wavefront lag or lead in nanometers over aperture.
-        """
-        # ignore theta
-        if compact:
-            r = aper.rho[aper.illuminated]
-        else:
-            r = aper.rho
-        return self._wavefront_r(r)
-
-    def wavefront_grad_at(self, u, v, t, diam, theta=None):
-        """
         @param u        Horizontal pupil plane coordinate in meters.
         @param v        Vertical pupil plane coordinate in meters.
         @param t        Arrival times of photons
-        @param diam     Diameter of illuminated pupil.  Required here to convert u and v from meters
-                        to unit-disk coords.
-        @param theta    Field angle of center of output array, not currently needed here, but part
-                        of signature for compatibility with OpticalScreen.wavefront_grad_at.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @returns        Arrays dWdu, dWdv.
         """
-        u_ = u / (0.5*diam)
-        v_ = v / (0.5*diam)
+        # Note, this phase screen is actually independent of time and theta.
+        du = dv = 0.01*self.diam
 
-        # Doing the derivative calculation by brute force for now.  Note though that anayltic
-        # expressions are definitely available.
-        rho_0 = u_ + 1j * v_
-        rho_x = u_+0.01 + 1j * v_
-        rho_y = u_ + 1j*(v_+0.01)
-        gradx = (self._wavefront_r(rho_x) - self._wavefront_r(rho_0)) / (0.5*diam) / 0.01
-        grady = (self._wavefront_r(rho_y) - self._wavefront_r(rho_0)) / (0.5*diam) / 0.01
-        return gradx, grady
+        w0 = self.wavefront(u, v, t, theta)
+        gradu = (self.wavefront(u+du, v, t, theta) - w0) / du
+        gradv = (self.wavefront(u, v+dv, t, theta) - w0) / dv
+        return gradu, gradv
+
+    _wavefront_gradient = wavefront_gradient

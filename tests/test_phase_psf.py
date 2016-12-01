@@ -46,7 +46,7 @@ def test_aperture():
     do_pickle(aper2)
     # Automatically created Aperture should match one created via OpticalScreen
     aper1 = galsim.Aperture(diam=1.0)
-    aper2 = galsim.Aperture(diam=1.0, lam=500, screen_list=[galsim.OpticalScreen()])
+    aper2 = galsim.Aperture(diam=1.0, lam=500, screen_list=[galsim.OpticalScreen(diam=1.0)])
     err_str = ("Aperture created implicitly using Airy does not match Aperture created using "
                "OpticalScreen.")
     assert aper1 == aper2, err_str
@@ -113,7 +113,7 @@ def test_phase_screen_list():
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
     do_pickle(ar1)
     do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
-    do_pickle(ar1, func=lambda x: x.wavefront(aper).sum())
+    do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, None).sum())
 
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
 
@@ -129,9 +129,9 @@ def test_phase_screen_list():
     # Create a couple new screens with different types/parameters
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
-    ar3 = galsim.OpticalScreen(aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
+    ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
     do_pickle(ar3)
-    do_pickle(ar3, func=lambda x:x.wavefront(aper).sum())
+    do_pickle(ar3, func=lambda x:x.wavefront(aper.u, aper.v, None).sum())
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
@@ -140,7 +140,7 @@ def test_phase_screen_list():
                             rng=rng)
     atm.append(ar3)
     do_pickle(atm)
-    do_pickle(atm, func=lambda x:x.wavefront(aper).sum())
+    do_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, None).sum())
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
@@ -171,10 +171,10 @@ def test_phase_screen_list():
     atm4[0], atm4[1] = atm4[1], atm4[0]
     assert atm == atm4
 
-    wf = atm.wavefront(aper)
-    wf2 = atm2.wavefront(aper)
-    wf3 = atm3.wavefront(aper)
-    wf4 = atm4.wavefront(aper)
+    wf = atm.wavefront(aper.u, aper.v, None)
+    wf2 = atm2.wavefront(aper.u, aper.v, None)
+    wf3 = atm3.wavefront(aper.u, aper.v, None)
+    wf4 = atm4.wavefront(aper.u, aper.v, None)
 
     np.testing.assert_array_equal(wf, wf2, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(wf, wf3, "PhaseScreenLists are inconsistent")
@@ -244,18 +244,17 @@ def test_frozen_flow():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
-    wf0 = screen.wavefront(aper)
+    wf0 = screen.wavefront(aper.u, aper.v, None)
     screen._seek(t)
     assert screen._time == t, "Wrong time for AtmosphericScreen"
-    wf1 = screen.wavefront(aper, theta=(45*galsim.degrees, 0*galsim.degrees))
+    wf1 = screen.wavefront(aper.u, aper.v, None, theta=(45*galsim.degrees, 0*galsim.degrees))
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
 
     # We should be able to rewind too.
     screen._seek(0.01)
     np.testing.assert_allclose(screen._time, 0.01, err_msg="Wrong time for AtmosphericScreen")
-    screen._seek(0.0)
-    wf2 = screen.wavefront(aper)
+    wf2 = screen.wavefront(aper.u, aper.v, 0.0)
     np.testing.assert_array_almost_equal(wf0, wf2, 5, "Flow is not frozen")
 
 
@@ -266,28 +265,28 @@ def test_phase_psf_reset():
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(diam=1.0, lam=500.0)
-    wf1 = atm.wavefront(aper)
+    wf1 = atm.wavefront(aper.u, aper.v, None)
     atm._seek(1.0)
-    wf2 = atm.wavefront(aper)
+    wf2 = atm.wavefront(aper.u, aper.v, None)
     # Verify that atmosphere did advance
     assert not np.all(wf1 == wf2)
 
     # Now verify that reset brings back original atmosphere
     atm._reset()
-    wf3 = atm.wavefront(aper)
+    wf3 = atm.wavefront(aper.u, aper.v, None)
     np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
     # Now check with boiling, but no wind.
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, rng=rng)
-    wf1 = atm.wavefront(aper)
+    wf1 = atm.wavefront(aper.u, aper.v, None)
     atm._seek(0.1)
-    wf2 = atm.wavefront(aper)
+    wf2 = atm.wavefront(aper.u, aper.v, None)
     # Verify that atmosphere did advance
     assert not np.all(wf1 == wf2)
 
     # Now verify that reset brings back original atmosphere
     atm._reset()
-    wf3 = atm.wavefront(aper)
+    wf3 = atm.wavefront(aper.u, aper.v, None)
     np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
 
@@ -323,10 +322,10 @@ def test_phase_psf_batch():
 @timer
 def test_opt_indiv_aberrations():
     """Test that aberrations specified by name match those specified in `aberrations` list."""
-    screen1 = galsim.OpticalScreen(tip=0.2, tilt=0.3, defocus=0.4, astig1=0.5, astig2=0.6,
+    screen1 = galsim.OpticalScreen(diam=4.0, tip=0.2, tilt=0.3, defocus=0.4, astig1=0.5, astig2=0.6,
                                    coma1=0.7, coma2=0.8, trefoil1=0.9, trefoil2=1.0, spher=1.1)
-    screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
-                                                1.0, 1.1])
+    screen2 = galsim.OpticalScreen(diam=4.0, aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,
+                                                          0.8, 0.9, 1.0, 1.1])
 
     psf1 = galsim.PhaseScreenList(screen1).makePSF(diam=4.0, lam=500.0)
     psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
@@ -412,19 +411,19 @@ def test_ne():
     all_obj_diff(objs)
 
     # Test OpticalScreen __ne__
-    objs = [galsim.OpticalScreen(),
-            galsim.OpticalScreen(tip=1.0),
-            galsim.OpticalScreen(tilt=1.0),
-            galsim.OpticalScreen(defocus=1.0),
-            galsim.OpticalScreen(astig1=1.0),
-            galsim.OpticalScreen(astig2=1.0),
-            galsim.OpticalScreen(coma1=1.0),
-            galsim.OpticalScreen(coma2=1.0),
-            galsim.OpticalScreen(trefoil1=1.0),
-            galsim.OpticalScreen(trefoil2=1.0),
-            galsim.OpticalScreen(spher=1.0),
-            galsim.OpticalScreen(spher=1.0, lam_0=100.0),
-            galsim.OpticalScreen(aberrations=[0,0,1.1]), # tip=1.1
+    objs = [galsim.OpticalScreen(diam=1.0, ),
+            galsim.OpticalScreen(diam=1.0, tip=1.0),
+            galsim.OpticalScreen(diam=1.0, tilt=1.0),
+            galsim.OpticalScreen(diam=1.0, defocus=1.0),
+            galsim.OpticalScreen(diam=1.0, astig1=1.0),
+            galsim.OpticalScreen(diam=1.0, astig2=1.0),
+            galsim.OpticalScreen(diam=1.0, coma1=1.0),
+            galsim.OpticalScreen(diam=1.0, coma2=1.0),
+            galsim.OpticalScreen(diam=1.0, trefoil1=1.0),
+            galsim.OpticalScreen(diam=1.0, trefoil2=1.0),
+            galsim.OpticalScreen(diam=1.0, spher=1.0),
+            galsim.OpticalScreen(diam=1.0, spher=1.0, lam_0=100.0),
+            galsim.OpticalScreen(diam=1.0, aberrations=[0,0,1.1]), # tip=1.1
             ]
     all_obj_diff(objs)
 

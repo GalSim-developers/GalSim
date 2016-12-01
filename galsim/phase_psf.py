@@ -735,29 +735,38 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
-    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave (pre-optics) or spherical wave (post-optics).
 
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
+        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param compact  If true, then only return wavefront for illuminated pixels in a
-                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
-                        return wavefront as a 2d array for the full Aperture pupil plane.
-                        [default: True]
-        @returns        Wavefront lag or lead in nanometers over aperture.
+        @returns        Wavefront lag or lead in nanometers.
         """
         if len(self._layers) > 1:
-            return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
+            return np.sum([layer.wavefront(u, v, t, theta) for layer in self], axis=0)
         else:
-            return self._layers[0].wavefront(aper, theta, compact)
+            return self._layers[0].wavefront(u, v, t, theta)
 
-    def wavefront_grad_at(self, u, v, t, diam=None, theta=None):
-        return np.sum([layer.wavefront_grad_at(u, v, t, diam, theta) for layer in self],
-                      axis=0)
+    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Compute cumulative wavefront gradient due to all phase screens in PhaseScreenList.
+
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
+        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+        @returns        Arrays dWdu, dWdv.
+        """
+        if len(self._layers) > 1:
+            return np.sum([layer.wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
+        else:
+            return self._layers[0].wavefront_gradient(u, v, t, theta)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -1090,9 +1099,11 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        wf = self.screen_list.wavefront(self.aper, self.theta)
+        u = self.aper.u[self.aper.illuminated]
+        v = self.aper.v[self.aper.illuminated]
+        wf = self.screen_list.wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
-        expwf_grid = np.zeros_like(self.aper.illuminated,dtype=np.complex128)
+        expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
@@ -1157,7 +1168,7 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
-        x, y = self.screen_list.wavefront_grad_at(u, v, t, self.aper.diam, self.theta)
+        x, y = self._screen_list.wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265
 
@@ -1428,7 +1439,7 @@ class OpticalPSF(GSObject):
 
         # Make the optical screen.
         optics_screen = galsim.OpticalScreen(
-                defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+                diam=diam, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
                 obscuration=obscuration, annular_zernike=annular_zernike, lam_0=lam)
         self._screens = galsim.PhaseScreenList(optics_screen)

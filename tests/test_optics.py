@@ -710,13 +710,15 @@ def test_Zernike_orthonormality():
     diam = 4.0
     pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
     aper = galsim.Aperture(diam=diam, pad_factor=pad_factor)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
     area = np.pi*(diam/2)**2
     for j1 in range(1, jmax+1):
-        screen1 = galsim.OpticalScreen(aberrations=[0]*(j1+1)+[1])
-        wf1 = screen1.wavefront(aper) / 500.0  # nm -> waves
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1])
+        wf1 = screen1.wavefront(u, v, None) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
-            screen2 = galsim.OpticalScreen(aberrations=[0]*(j2+1)+[1])
-            wf2 = screen2.wavefront(aper) / 500.0
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1])
+            wf2 = screen2.wavefront(u, v, None) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -730,21 +732,23 @@ def test_Zernike_orthonormality():
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
 
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v, None)))
 
     # Repeat for Annular Zernikes
     jmax = 14  # Going up to 14 annular Zernikes takes about ~1 sec on my laptop
     obscuration = 0.3
     aper = galsim.Aperture(diam=diam, pad_factor=pad_factor, obscuration=obscuration)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
     area = np.pi*(diam/2)**2*(1 - obscuration**2)
     for j1 in range(1, jmax+1):
-        screen1 = galsim.OpticalScreen(aberrations=[0]*(j1+1)+[1], obscuration=obscuration,
-                                       annular_zernike=True)
-        wf1 = screen1.wavefront(aper) / 500.0  # nm -> waves
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1],
+                                       obscuration=obscuration, annular_zernike=True)
+        wf1 = screen1.wavefront(u, v, None) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
-            screen2 = galsim.OpticalScreen(aberrations=[0]*(j2+1)+[1], obscuration=obscuration,
-                                           annular_zernike=True)
-            wf2 = screen2.wavefront(aper) / 500.0
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1],
+                                           obscuration=obscuration, annular_zernike=True)
+            wf2 = screen2.wavefront(u, v, None) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -757,7 +761,7 @@ def test_Zernike_orthonormality():
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v, None)))
 
 
 @timer
