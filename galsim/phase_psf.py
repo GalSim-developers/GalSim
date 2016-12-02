@@ -809,6 +809,18 @@ class PhaseScreenList(object):
         else:
             return self._layers[0].wavefront_gradient(u, v, t, theta)
 
+    def _wavefront(self, u, v, t, theta):
+        if len(self._layers) > 1:
+            return np.sum([layer._wavefront(u, v, t, theta) for layer in self], axis=0)
+        else:
+            return self._layers[0]._wavefront(u, v, t, theta)
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        if len(self._layers) > 1:
+            return np.sum([layer._wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
+        else:
+            return self._layers[0]._wavefront_gradient(u, v, t, theta)
+
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
         of `theta`.  If `theta` is an iterable of 2-tuples, then return a list of PSFs at the
@@ -1164,7 +1176,7 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
-        wf = self._screen_list.wavefront(u, v, None, self.theta)
+        wf = self._screen_list._wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
@@ -1233,7 +1245,7 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
-        x, y = self._screen_list.wavefront_gradient(u, v, t, self.theta)
+        x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265
 

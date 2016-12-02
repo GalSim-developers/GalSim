@@ -236,6 +236,8 @@ class AtmosphericScreen(object):
         """ Same as wavefront(), but assumes that boiling atmosphere has already been properly
         boiled for all times t.
         """
+        if t is None:
+            t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d(u, v)
@@ -270,6 +272,8 @@ class AtmosphericScreen(object):
         """ Same as wavefront_gradient(), but assumes that boiling atmosphere has already been
         properly boiled for all times t.
         """
+        if t is None:
+            t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d.gradient(u, v)
