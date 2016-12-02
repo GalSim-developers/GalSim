@@ -1070,8 +1070,9 @@ class PhaseScreenPSF(GSObject):
         bounds = galsim._BoundsI(1, 1, 1, 1)
         wcs = galsim.PixelScale(self.scale)
         image = galsim._Image(array, bounds, wcs)
+        dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
         dummy_obj = galsim.InterpolatedImage(
-                image, pad_factor=1.0,
+                image, pad_factor=1.0, x_interpolant=dummy_interpolant,
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
         GSObject.__init__(self, dummy_obj)
@@ -1237,9 +1238,9 @@ class PhaseScreenPSF(GSObject):
         y *= 1e-9 * 206265
 
         photon_array = galsim._galsim.PhotonArray(n_photons)
-        photon_array.getXArray()[:] = x
-        photon_array.getYArray()[:] = y
-        photon_array.getFluxArray()[:] = 1.0
+        photon_array.x = x
+        photon_array.y = y
+        photon_array.flux = self._flux/n_photons
         return photon_array
 
 

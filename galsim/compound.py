@@ -932,8 +932,8 @@ class AutoCorrelation(galsim.GSObject):
         result2 = self._orig_obj.shoot(n_photons, ud)
 
         # Flip sign of (x, y) in one of the results
-        result2.getXArray()[:] *= -1
-        result2.getYArray()[:] *= -1
+        result2.x *= -1
+        result2.y *= -1
 
         result.convolve(result2, ud)
         return result
