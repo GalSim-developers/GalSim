@@ -1238,10 +1238,16 @@ class PhaseScreenPSF(GSObject):
         else:
             raise TypeError("The rng provided is not a BaseDeviate")
 
-        t = self.t0 + np.squeeze(utilities.rand_arr((n_photons, 1), ud)) * self.exptime
+        t = np.empty((n_photons,), dtype=float)
+        ud.generate(t)
+        t *= self.exptime
+        t += self.t0
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
-        pick = (np.squeeze(utilities.rand_arr((n_photons, 1), ud)) * len(u)).astype(int)
+        pick = np.empty((n_photons,), dtype=float)
+        ud.generate(pick)
+        pick *= len(u)
+        pick = pick.astype(int)
         u = u[pick]
         v = v[pick]
 
