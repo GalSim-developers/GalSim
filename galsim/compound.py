@@ -177,6 +177,8 @@ class Sum(galsim.GSObject):
     def _prepareDraw(self):
         for obj in self._obj_list:
             obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBAdd(SBList, self._gsparams)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -476,6 +478,8 @@ class Convolution(galsim.GSObject):
     def _prepareDraw(self):
         for obj in self._obj_list:
             obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self._gsparams)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -603,6 +607,7 @@ class Deconvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self._gsparams)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -739,6 +744,8 @@ class AutoConvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoConvolve(self._orig_obj.SBProfile, self._real_space,
+                                                       self._gsparams)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -901,6 +908,8 @@ class AutoCorrelation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoCorrelate(self._orig_obj.SBProfile,
+                                                        self._real_space, self._gsparams)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -1036,6 +1045,7 @@ class FourierSqrtProfile(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self._gsparams)
 
     def __getstate__(self):
         d = self.__dict__.copy()

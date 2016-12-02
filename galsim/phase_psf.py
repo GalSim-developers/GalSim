@@ -1043,15 +1043,15 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        if _force_stepk is None:
-            _force_stepk = self.aper._stepK(self.lam, self.scale_unit)
-        self._force_stepk = _force_stepk
-        self._serialize_stepk = _force_stepk * self.scale
+        self._serialize_stepk = _force_stepk
+        self._serialize_maxk = _force_maxk
 
-        if _force_maxk is None:
-            _force_maxk = self.aper._maxK(self.lam, self.scale_unit)
-        self._force_maxk = _force_maxk
-        self._serialize_maxk = _force_maxk * self.scale
+        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
+        # scale.
+        if self._serialize_stepk is not None:
+            self._serialize_stepk *= self.scale
+        if self._serialize_maxk is not None:
+            self._serialize_maxk *= self.scale
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1065,7 +1065,7 @@ class PhaseScreenPSF(GSObject):
         self._suppress_warning = suppress_warning
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
-        # self.SBProfile.stepK(), still work.  Also make temporary SBProfile have the right flux.
+        # self.SBProfile.stepK(), still work.
         array = np.array([[self._flux]], dtype=np.float)
         bounds = galsim._BoundsI(1, 1, 1, 1)
         wcs = galsim.PixelScale(self.scale)
@@ -1093,6 +1093,7 @@ class PhaseScreenPSF(GSObject):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
         return (self._screen_list == other._screen_list and
+                self.lam == other.lam and
                 self.aper == other.aper and
                 self.t0 == other.t0 and
                 self.exptime == other.exptime and
@@ -1105,14 +1106,58 @@ class PhaseScreenPSF(GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.aper, self.t0,
-                     self.exptime, self.time_step, self._flux, self.interpolant,
+        return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
+                     self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
                      self._serialize_stepk, self._serialize_maxk, self._ii_pad_factor,
                      self.gsparams))
 
     def _prepareDraw(self):
-        # Trigger delayed compuation of all pending PSFs.
+        # Trigger delayed computation of all pending PSFs.
         self._screen_list._prepareDraw()
+
+    # A few items which need the profile to have been drawn.
+    def maxK(self):
+        """Returns value of k beyond which aliasing can be neglected.
+        """
+        self._prepareDraw()
+        return self.SBProfile.maxK()
+
+    def nyquistScale(self):
+        """Returns Image pixel spacing that does not alias maxK.
+        """
+        self._prepareDraw()
+        return self.SBProfile.nyquistDx()
+
+    def stepK(self):
+        """Returns sampling in k space necessary to avoid folding of image in x space.
+        """
+        self._prepareDraw()
+        return self.SBProfile.stepK()
+
+    def centroid(self):
+        """Returns the (x, y) centroid of an object as a Position.
+        """
+        self._prepareDraw()
+        return self.SBProfile.centroid()
+
+    def maxSB(self):
+        """Returns an estimate of the maximum surface brightness of the object.
+
+        Some profiles will return the exact peak SB, typically equal to the value of
+        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how to
+        calculate this value without just drawing the image and checking what the maximum value is.
+        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
+        which will generally be conservative on the high side.
+
+        This routine is mainly used by the photon shooting process, where an overestimate of
+        the maximum surface brightness is acceptable.
+
+        Note, for negative-flux profiles, this will return the absolute value of the most negative
+        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
+        rather than the maximum value.  For most profiles, these are the same thing.
+        """
+        self._prepareDraw()
+        return self.SBProfile.maxSB()
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1497,6 +1542,8 @@ class OpticalPSF(GSObject):
                                           suppress_warning=self._suppress_warning,
                                           _force_maxk=_force_maxk, _force_stepk=_force_stepk,
                                           ii_pad_factor=ii_pad_factor)
+
+        self._psf._prepareDraw()  # No need to delay an OpticalPSF.
         GSObject.__init__(self, self._psf)
 
     def getFlux(self):
@@ -1555,12 +1602,7 @@ class OpticalPSF(GSObject):
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
-    def _prepareDraw(self):
-        self._psf._prepareDraw()
-        GSObject.__init__(self, self._psf)
-
     def __getstate__(self):
-        self._prepareDraw()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
@@ -1579,4 +1621,5 @@ class OpticalPSF(GSObject):
                                           _force_maxk=self._force_maxk,
                                           _force_stepk=self._force_stepk,
                                           ii_pad_factor=self._ii_pad_factor)
+        self._psf._prepareDraw()
         GSObject.__init__(self, self._psf)

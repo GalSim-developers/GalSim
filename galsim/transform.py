@@ -199,6 +199,11 @@ class Transformation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._original._prepareDraw()
+        dudx, dudy, dvdx, dvdy = self.getJac()
+        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
+                                                    dudx, dudy, dvdx, dvdy,
+                                                    self.getOffset(), self.getFluxRatio(),
+                                                    self._gsparams)
 
     def shoot(self, N, ud):
         photon_array = self.original.shoot(N, ud)
