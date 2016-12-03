@@ -950,6 +950,51 @@ def test_noll():
         np.testing.assert_array_equal(coefs,true_coefs)
 
 
+@timer
+def test_phase_gradient_shoot():
+    """Test that phase gradient photon shooting is reasonably consistent with Fourier optics."""
+    jmax = 20
+    bd = galsim.BaseDeviate(11111111)
+    u = galsim.UniformDeviate(bd)
+
+    lam = 500.0
+    diam = 4.0
+
+    for i in range(4):  # Do a few random tests.  Takes about 1 sec.
+        aberrations = [0]+[u()*0.1 for i in range(jmax)]
+        opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations)
+
+        # Use really good seeing, so that the optics contribution actually matters.
+        psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
+        im_shoot = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=100000, rng=u)
+        im_fft = psf.drawImage(nx=32, ny=32, scale=0.2)
+
+        printval(im_fft, im_shoot)
+        shoot_moments = galsim.hsm.FindAdaptiveMom(im_shoot)
+        fft_moments = galsim.hsm.FindAdaptiveMom(im_fft)
+
+        # 40th of a pixel centroid tolerance.
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.x, fft_moments.moments_centroid.x, rtol=0, atol=0.025,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.y, fft_moments.moments_centroid.y, rtol=0, atol=0.025,
+            err_msg="")
+        # 1% size tolerance
+        np.testing.assert_allclose(
+            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.01, atol=0,
+            err_msg="")
+        # Not amazing ellipticity consistency at the moment.  0.01 tolerance.
+        print(fft_moments.observed_shape)
+        print(shoot_moments.observed_shape)
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g1, fft_moments.observed_shape.g1, rtol=0, atol=0.01,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g2, fft_moments.observed_shape.g2, rtol=0, atol=0.01,
+            err_msg="")
+
+
 if __name__ == "__main__":
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
@@ -966,3 +1011,4 @@ if __name__ == "__main__":
     test_stepk_maxk_iipad()
     test_ne()
     test_noll()
+    test_phase_gradient_shoot()

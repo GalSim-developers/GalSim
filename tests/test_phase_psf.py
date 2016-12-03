@@ -447,6 +447,108 @@ def test_ne():
     all_obj_diff(objs)
 
 
+@timer
+def test_phase_gradient_shoot():
+    # Make the atmosphere
+    seed = 12345
+    r0_500 = 0.2  # m
+    nlayers = 6
+    time_step = 0.025  # s
+    screen_size = 102.4  # m
+    screen_scale = 0.1  # m
+    max_speed = 20  # m/s
+
+    rng = galsim.BaseDeviate(seed)
+    u = galsim.UniformDeviate(rng)
+    Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+    Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+    Ellerbroek_interp = galsim.LookupTable(
+            Ellerbroek_alts,
+            Ellerbroek_weights,
+            interpolant='linear')
+    alts = np.max(Ellerbroek_alts)*np.arange(nlayers)/(nlayers-1)
+    weights = Ellerbroek_interp(alts)
+    weights /= sum(weights)
+
+    spd = []  # Wind speed in m/s
+    dirn = [] # Wind direction in radians
+    r0_500s = [] # Fried parameter in m at a wavelength of 500 nm.
+    for i in range(nlayers):
+        spd.append(u()*max_speed)
+        dirn.append(u()*360*galsim.degrees)
+        r0_500s.append(r0_500*weights[i]**(-3./5))
+    atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
+                            time_step=time_step, screen_size=screen_size,
+                            screen_scale=screen_scale)
+
+    lam = 500.0
+    diam = 4.0
+    pad_factor = 1.0
+    oversampling = 1.0
+    wf_pad_factor = 0.5
+    wf_oversampling = 0.5
+
+    aper = galsim.Aperture(diam=diam, lam=lam,
+                           screen_list=atm, pad_factor=pad_factor,
+                           oversampling=oversampling)
+
+    xs = np.empty((10,), dtype=float)
+    ys = np.empty((10,), dtype=float)
+    u.generate(xs)
+    u.generate(ys)
+    thetas = [(x*galsim.degrees, y*galsim.degrees) for x, y in zip(xs, ys)]
+
+    if __name__ == '__main__':
+        exptime = 15.0
+        centroid_tolerance = 0.05
+        second_moment_tolerance = 0.5
+    else:
+        exptime = 0.2
+        centroid_tolerance = 0.2
+        second_moment_tolerance = 1.5
+
+    psfs = atm.makePSF(lam, diam=diam, theta=thetas, exptime=exptime, aper=aper)
+    shoot_moments = []
+    fft_moments = []
+
+    # At the moment, Ixx and Iyy (but not Ixy) are systematically smaller in phase gradient shooting
+    # mode than in FFT mode.  For now, I'm willing to accept this, but we should revisit it once we
+    # get the "second kick" approximation implemented.
+    offset = [0.5, 0.5, 0.0]
+
+    for psf in psfs:
+        im_shoot = psf.drawImage(nx=48, ny=48, scale=0.05, method='phot', n_photons=100000, rng=rng)
+        im_fft = psf.drawImage(nx=48, ny=48, scale=0.05)
+
+        shoot_moment = np.array(getmoments(im_shoot))
+        fft_moment = np.array(getmoments(im_fft))
+
+        # centroids
+        np.testing.assert_allclose(
+                shoot_moment[:2], fft_moment[:2], rtol=0, atol=centroid_tolerance,
+                err_msg='Phase gradient centroid not close to fft centroid')
+
+        # Second moments
+        np.testing.assert_allclose(
+                shoot_moment[2:]+offset, fft_moment[2:], rtol=0, atol=second_moment_tolerance,
+                err_msg='Phase gradient second moments not close to fft moments')
+
+        shoot_moments.append(shoot_moment)
+        fft_moments.append(fft_moment)
+
+    # Constraints on the ensemble should be tighter than for individual PSFs.
+    mean_shoot_moment = np.mean(shoot_moments, axis=0)
+    mean_fft_moment = np.mean(fft_moments, axis=0)
+
+    np.testing.assert_allclose(
+            mean_shoot_moment[:2], mean_fft_moment[:2], rtol=0, atol=centroid_tolerance/3,
+            err_msg="Mean phase gradient centroid not close to fft centroid")
+    np.testing.assert_allclose(
+            mean_shoot_moment[2:]+offset, mean_fft_moment[2:], rtol=0,
+            atol=second_moment_tolerance/3,
+            err_msg="Mean phase gradient second moments not close to fft second moments")
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -459,3 +561,4 @@ if __name__ == "__main__":
     test_scale_unit()
     test_stepk_maxk()
     test_ne()
+    test_phase_gradient_shoot()

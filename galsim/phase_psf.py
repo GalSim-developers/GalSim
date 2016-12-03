@@ -984,6 +984,11 @@ class PhaseScreenPSF(GSObject):
                                you its best guess about how high you might want to raise it.
                                However, you can suppress this warning by using
                                `suppress_warning=True`.  [default: False]
+    @param use_phase_shooting  If True, then when drawing using photon shooting, use geometric
+                               optics approximation where the photon angles are derived from the
+                               phase screen gradient.  If False, then first draw using Fourier
+                               optics and then shoot from the derived InterpolatedImage.
+                               [default: True]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -1028,8 +1033,9 @@ class PhaseScreenPSF(GSObject):
     """
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
-                 scale_unit=galsim.arcsec, suppress_warning=False, ii_pad_factor=4., gsparams=None,
-                 _eval_now=True, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
+                 scale_unit=galsim.arcsec, ii_pad_factor=4., suppress_warning=False,
+                 use_phase_shooting=True, gsparams=None,
+                 _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1075,6 +1081,7 @@ class PhaseScreenPSF(GSObject):
         self._bar = _bar
         self._flux = flux
         self._suppress_warning = suppress_warning
+        self._use_phase_shooting = use_phase_shooting
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
         # self.SBProfile.stepK(), still work.
@@ -1230,6 +1237,9 @@ class PhaseScreenPSF(GSObject):
         GSObject.__init__(self, self.ii)
 
     def shoot(self, n_photons, rng=None):
+        if not self._use_phase_shooting:
+            self._prepareDraw()
+            return self.ii.shoot(n_photons, rng)
         # Setup the rng if not provided one.
         if rng is None:
             ud = galsim.UniformDeviate()
@@ -1405,6 +1415,11 @@ class OpticalPSF(GSObject):
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using `suppress_warning=True`.
                             [default: False]
+    @param use_phase_shooting  If True, then when drawing using photon shooting, use geometric
+                            optics approximation where the photon angles are derived from the
+                            phase screen gradient.  If False, then first draw using Fourier
+                            optics and then shoot from the derived InterpolatedImage.
+                            [default: True]
     @param flux             Total flux of the profile. [default: 1.]
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
@@ -1484,7 +1499,7 @@ class OpticalPSF(GSObject):
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  _force_maxk=None, _force_stepk=None,
-                 suppress_warning=False, max_size=None):
+                 suppress_warning=False, use_phase_shooting=True, max_size=None):
         if max_size is not None: # pragma: no cover
             from .deprecated import depr
             depr('max_size', 1.4, '',
@@ -1549,6 +1564,7 @@ class OpticalPSF(GSObject):
         self._scale_unit = scale_unit
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
+        self._use_phase_shooting = use_phase_shooting
         self._aper = aper
         self._force_maxk = _force_maxk
         self._force_stepk = _force_stepk
@@ -1559,6 +1575,7 @@ class OpticalPSF(GSObject):
                                           aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
                                           suppress_warning=self._suppress_warning,
+                                          use_phase_shooting=self._use_phase_shooting,
                                           _force_maxk=_force_maxk, _force_stepk=_force_stepk,
                                           ii_pad_factor=ii_pad_factor)
 
@@ -1642,3 +1659,6 @@ class OpticalPSF(GSObject):
                                           ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
         GSObject.__init__(self, self._psf)
+
+    def shoot(self, n_photons, rng=None):
+        return self._psf.shoot(n_photons, rng)
