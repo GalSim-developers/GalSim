@@ -386,8 +386,12 @@ namespace galsim {
         V f01 = vals[(i-1)*Ny+j];
         V f10 = vals[i*Ny+j-1];
         V f11 = vals[i*Ny+j];
-        dfdx = (f11 + f10 - f01 - f00) / (2.*dx);
-        dfdy = (f11 - f10 + f01 - f00) / (2.*dy);
+        A ax = (xargs[i] - x) / (xargs[i] - xargs[i-1]);
+        A bx = 1.0 - ax;
+        A ay = (yargs[j] - y) / (yargs[j] - yargs[j-1]);
+        A by = 1.0 - ay;
+        dfdx = ( (f10-f00)*ay + (f11-f01)*by ) / dx;
+        dfdy = ( (f01-f00)*ax + (f11-f10)*bx ) / dy;
     }
 
     /// Estimate many df/dx and df/dy values

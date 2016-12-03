@@ -432,17 +432,17 @@ def test_table2d_gradient():
 
     # Try a simpler interpolation function.  Derivatives should be exact.
     def f(x_, y_):
-        return 2*x_ + 3*y_
+        return 2*x_ + 3*y_ - 4*x_*y_
 
     z = f(xx, yy)
 
     tab2d = galsim.LookupTable2D(x, y, z)
     test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
-    np.testing.assert_almost_equal(test_dfdx, 2., decimal=7)
-    np.testing.assert_almost_equal(test_dfdy, 3., decimal=7)
+    np.testing.assert_almost_equal(test_dfdx, 2.-4*newyy, decimal=7)
+    np.testing.assert_almost_equal(test_dfdy, 3.-4*newxx, decimal=7)
 
     # Check single value functionality.
-    np.testing.assert_almost_equal(tab2d.gradient(x1,y1), (2., 3.))
+    np.testing.assert_almost_equal(tab2d.gradient(x1,y1), (2.-4*y1, 3.-4*x1))
 
     # Check edge wrapping
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
