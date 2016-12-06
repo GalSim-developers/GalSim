@@ -101,19 +101,17 @@ namespace galsim {
     LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
         SBInclinedSersic::SBInclinedSersicImpl::cache(sbp::max_sersic_cache);
 
-    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle Inclination, double size,
+    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size,
                                          double height, RadiusType rType, double flux,
                                          double trunc, bool flux_untruncated,
                                          const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
-        _h0(scale_height),
+        _h0(height),
         _flux(flux),
         _trunc(trunc),
         _trunc_sq(trunc*trunc),
-        _inv_r0(1./scale_radius),
-        _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
         _cosi(std::abs(inclination.cos())),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
@@ -183,6 +181,9 @@ namespace galsim {
         }
         dbg<<"hlr = "<<_re<<std::endl;
         dbg<<"r0 = "<<_r0<<std::endl;
+
+        _inv_r0 = 1./_r0;
+        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0,
 
         _r0_sq = _r0*_r0;
         _inv_r0 = 1./_r0;

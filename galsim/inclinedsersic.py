@@ -112,7 +112,7 @@ class InclinedSersic(GSObject):
     _takes_rng = False
 
     def __init__(self, n, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
-                 scale_h_over_r=0.1, flux=1., gsparams=None):
+                 scale_h_over_r=0.1, flux=1., trunc=0., flux_untruncated=False, gsparams=None):
 
         if scale_height is None:
             scale_height = scale_h_over_r * scale_radius
@@ -123,7 +123,8 @@ class InclinedSersic(GSObject):
             raise TypeError("Input inclination should be an Angle")
 
         GSObject.__init__(self, _galsim.SBInclinedSersic(n,
-                inclination, scale_radius, scale_height, flux, trunc, flux_untruncated, gsparams))
+                inclination, scale_radius, scale_height, half_light_radius, flux, trunc, flux_untruncated,
+                gsparams))
         self._gsparams = gsparams
 
     def getN(self):
@@ -201,7 +202,7 @@ class InclinedSersic(GSObject):
                 self.inclination, self.scale_radius, self.scale_height)
         if self.flux != 1.0:
             s += ', flux=%s' % self.flux
-        if self.trunc != None:
+        if self.trunc != 0.:
             s += ', trunc=%s' % self.trunc
         s += ')'
         return s

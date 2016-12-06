@@ -26,7 +26,6 @@
 
 #include "Angle.h"
 #include "SBProfile.h"
-#include "SBSersic.h"
 
 namespace galsim {
 
@@ -83,6 +82,11 @@ namespace galsim {
     class SBInclinedSersic : public SBProfile
     {
     public:
+        enum  RadiusType
+        {
+            HALF_LIGHT_RADIUS,
+            SCALE_RADIUS
+        };
 
         /**
          * @brief Constructor.
@@ -105,7 +109,7 @@ namespace galsim {
          *                              default.
          */
         SBInclinedSersic(double n, Angle inclination, double size, double height,
-                 SBSersic::RadiusType rType, double flux,
+                 RadiusType rType, double flux,
                  double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.

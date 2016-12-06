@@ -17,12 +17,11 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBSersicImpl_H
-#define GalSim_SBSersicImpl_H
+#ifndef GalSim_SBInclinedSersicImpl_H
+#define GalSim_SBInclinedSersicImpl_H
 
 #include "SBProfileImpl.h"
 #include "SBInclinedSersic.h"
-#include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
@@ -34,7 +33,7 @@ namespace galsim {
     {
     public:
         SBInclinedSersicImpl(double n, Angle inclination, double size, double height,
-                SBSersic::RadiusType rType, double flux,
+                RadiusType rType, double flux,
                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         ~SBInclinedSersicImpl() {}
@@ -55,22 +54,22 @@ namespace galsim {
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated or inclination!=0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (!_truncated or _inclination.sin() != 0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated or inclination!=0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (!_truncated or _inclination.sin() != 0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
             else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
 
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
         }
 
-        bool isAxisymmetric() const { return true; }
+        bool isAxisymmetric() const { return false; }
         bool hasHardEdges() const { return _truncated; }
-        bool isAnalyticX() const { return true; }
+        bool isAnalyticX() const { return false; } // not yet implemented, would require lookup table
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
         Position<double> centroid() const
@@ -97,12 +96,6 @@ namespace galsim {
         double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
-        void fillXImage(ImageView<double> im,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXImage(ImageView<double> im,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
         void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
@@ -129,7 +122,6 @@ namespace galsim {
         double _half_pi_h_sini_over_r;
         double _cosi;
         double _r0_sq;
-        double _inv_r0;
         double _inv_r0_sq;
         double _trunc_sq;
 
@@ -149,7 +141,18 @@ namespace galsim {
         double kValueHelper(double kx, double ky) const;
 
         // Helper functor to solve for the proper _maxk
-        class SBInclinedSersicKValueFunctor;
+        class SBInclinedSersicKValueFunctor
+        {
+            public:
+                SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
+            double target_k_value);
+            double operator() (double k) const;
+            private:
+            const SBInclinedSersic::SBInclinedSersicImpl * _p_owner;
+            double _target_k_value;
+        };
+
+        friend class SBInclinedSersicKValueFunctor;
 
         static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
 
