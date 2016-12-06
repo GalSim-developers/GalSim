@@ -309,9 +309,8 @@ namespace galsim {
 
             for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
                 double kx = kx0;
-                double kysq = ky0*ky0;
                 for (int i=0;i<m;++i,kx+=dkx)
-                    *ptr++ = _flux * _info->kValue(kx*kx + kysq);
+                    *ptr++ = _flux * kValueHelper(kx,ky0);
             }
         }
     }
