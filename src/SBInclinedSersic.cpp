@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -27,6 +27,8 @@
 #include "SBInclinedSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
+
+set_verbose(3);
 
 namespace galsim {
 
@@ -350,6 +352,8 @@ namespace galsim {
         double kx, double ky) const
     {
         // Get the base value for a Sersic profile
+
+        xxdbg << "Calling SBInclinedSersic::SBInclinedSersicImpl::kValueHelper on " << kx << ", " << ky << "." << std::endl;
 
         double ky_cosi = ky*_cosi;
 
