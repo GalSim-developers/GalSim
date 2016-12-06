@@ -28,8 +28,6 @@
 #include "integ/Int.h"
 #include "Solve.h"
 
-set_verbose(3);
-
 namespace galsim {
 
     SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, double height,
@@ -120,6 +118,7 @@ namespace galsim {
         // Start with untruncated SersicInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {
+        set_verbose(3);
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -185,7 +184,10 @@ namespace galsim {
         dbg<<"r0 = "<<_r0<<std::endl;
 
         _inv_r0 = 1./_r0;
-        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0,
+        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0;
+
+        dbg << "_inv_r0 = " << _inv_r0 << std::endl;
+        dbg << "_half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
 
         _r0_sq = _r0*_r0;
         _inv_r0 = 1./_r0;
@@ -270,6 +272,27 @@ namespace galsim {
             xdbg << "clipk = " << clipk << std::endl;
             xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
+
+        // For small k, we can use up to quartic in the taylor expansion of both terms
+        // in the calculation.
+        // This is acceptable when the next term is less than kvalue_accuracy.
+        // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
+        // This is a bit conservative, note, assuming kx = 0
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy /
+                            (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
+    }
+
+    double SBInclinedSersic::SBInclinedSersicImpl::maxSB() const
+    {
+        // When the disk is face on, the max SB is flux / 2 pi r0^2
+        // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
+        double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
+        // The relationship for inclinations in between these is not linear.
+        // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
+        // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
+        double sc = sqrt(std::abs(_cosi));
+        maxsb *= (_h0 * sc + _r0 * (1.-sc)) / _h0;
+        return std::abs(maxsb);
     }
 
     double SBInclinedSersic::SBInclinedSersicImpl::xValue(const Position<double>& p) const
@@ -353,6 +376,7 @@ namespace galsim {
     {
         // Get the base value for a Sersic profile
 
+        set_verbose(3);
         xxdbg << "Calling SBInclinedSersic::SBInclinedSersicImpl::kValueHelper on " << kx << ", " << ky << "." << std::endl;
 
         double ky_cosi = ky*_cosi;
@@ -376,6 +400,8 @@ namespace galsim {
 
         double scaled_ky = _half_pi_h_sini_over_r*ky;
         double scaled_ky_squared = scaled_ky*scaled_ky;
+
+        xxdbg << "scaled_ky = " << scaled_ky << std::endl;
 
         if (scaled_ky_squared < _ksq_min)
         {

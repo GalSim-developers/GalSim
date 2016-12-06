@@ -77,7 +77,7 @@ namespace galsim {
 
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
-        double maxSB() const { return _xnorm; }
+        double maxSB() const;
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
