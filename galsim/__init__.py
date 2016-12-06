@@ -122,6 +122,7 @@ from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .inclinedexponential import InclinedExponential
+from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from .interpolatedimage import InterpolatedImage, InterpolatedKImage
