@@ -114,15 +114,15 @@ namespace galsim {
 
         // Helper functor to solve for the proper _maxk
         class SBInclinedExponentialKValueFunctor
-    {
-    public:
-        SBInclinedExponentialKValueFunctor(const SBInclinedExponential::SBInclinedExponentialImpl * p_owner,
-    double target_k_value);
-    double operator() (double k) const;
-    private:
-    const SBInclinedExponential::SBInclinedExponentialImpl * _p_owner;
-    double _target_k_value;
-    };
+        {
+            public:
+                SBInclinedExponentialKValueFunctor(const SBInclinedExponential::SBInclinedExponentialImpl * p_owner,
+            double target_k_value);
+            double operator() (double k) const;
+            private:
+            const SBInclinedExponential::SBInclinedExponentialImpl * _p_owner;
+            double _target_k_value;
+        };
 
         friend class SBInclinedExponentialKValueFunctor;
     };
