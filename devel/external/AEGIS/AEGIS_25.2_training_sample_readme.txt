@@ -26,9 +26,7 @@ MAG: magnitude (MAG_AUTO calculated from sextractor).
 
 BAND: Passband for the observed image (F814W/F606W).
 
-WEIGHT: A weight factor to use to account for the fact that larger galaxies are
-preferentially excluded from this catalog due to the proximity to CCD edges.
-(Currently all weights are set to 1.0).
+WEIGHT: A weight factor to use to account for size dependent selection effects.
 
 GAL_FILENAME: Name of the file containing the galaxy image.  This is just a
 filename, not including a full path.
@@ -65,7 +63,6 @@ min_mask_dist_pixels: Distance from the center of postage stamp tp the nearest m
 average_mask_adjacent_pixel_count: Average pixel value of the 3*3 pixel region around the nearest masked pixel, before masking.
 
 peak_image_pixel_count: Highest pixel value of central object in postage stamp.
-
 
 (5) Files acs_[VI]_unrot_sci_20_cf.fits containing information that GalSim
 needs to understand the noise fields in the postage stamps.
