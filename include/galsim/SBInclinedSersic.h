@@ -124,7 +124,7 @@ namespace galsim {
         /// @brief Returns the inclination angle of the profile as an Angle instance
         Angle getInclination() const;
 
-        /// @brief Returns the scale radius r0 of the Sersic profile `exp[-(r/r_0)^(1/n)]`.
+        /// @brief Returns the scale radius r0 of the Sersic profile.
         double getScaleRadius() const;
 
         /// @brief Returns the half light radius of the Sersic profile (if it were face-on).
