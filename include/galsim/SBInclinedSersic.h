@@ -121,6 +121,9 @@ namespace galsim {
         /// @brief Returns the Sersic index `n` of the profile.
         double getN() const;
 
+        /// @brief Returns the inclination angle of the profile as an Angle instance
+        Angle getInclination() const;
+
         /// @brief Returns the scale radius r0 of the Sersic profile `exp[-(r/r_0)^(1/n)]`.
         double getScaleRadius() const;
 
@@ -129,9 +132,6 @@ namespace galsim {
 
         /// @brief Returns the scale height h0 of the disk profile
         double getScaleHeight() const;
-
-        /// @brief Returns the inclination angle of the profile as an Angle instance
-        Angle getInclination() const;
 
         /// @brief Returns the truncation radius
         double getTrunc() const;
