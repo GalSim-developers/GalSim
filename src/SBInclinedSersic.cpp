@@ -18,6 +18,7 @@
  */
 
 #define DEBUGLOGGING
+#define VERBOSITY_LEVEL 1
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -118,7 +119,7 @@ namespace galsim {
         // Start with untruncated SersicInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {
-        set_verbose(3);
+        set_verbose(VERBOSITY_LEVEL);
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -186,16 +187,27 @@ namespace galsim {
         _inv_r0 = 1./_r0;
         _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0;
 
-        dbg << "_inv_r0 = " << _inv_r0 << std::endl;
-        dbg << "_half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
+        dbg << "inv_r0 = " << _inv_r0 << std::endl;
+        dbg << "half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
 
         _r0_sq = _r0*_r0;
         _inv_r0 = 1./_r0;
         _inv_r0_sq = _inv_r0*_inv_r0;
+        _inv_re = 1./_re;
 
         _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
         _xnorm = _shootnorm * _inv_r0_sq;
         dbg<<"norms = "<<_xnorm<<", "<<_shootnorm<<std::endl;
+
+        // For small k, we can use up to quartic in the taylor expansion of both terms
+        // in the calculation.
+        // This is acceptable when the next term is less than kvalue_accuracy.
+        // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
+        // This is a bit conservative, note, assuming kx = 0
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy /
+                            (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
+
+        dbg << "ksq_min = " << _ksq_min << std::endl;
 
         // Solve for the proper _maxk and _ksq_max
 
@@ -238,16 +250,35 @@ namespace galsim {
 
             SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
             Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
-            maxk_solver.setMethod(Brent);
 
-            if(maxk_func(maxk_min)<=0)
-                maxk_solver.bracketLowerWithLimit(0.);
-            else
-                maxk_solver.bracketUpper();
+            // Try with Brent solver first
+            try
+            {
+                maxk_solver.setMethod(Brent);
 
-            // Get the _maxk from the solver here. We add back on the tolerance to the result to
-            // ensure that the k-value will be below the threshold.
-            _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+                if(maxk_func(maxk_min)<=0)
+                    maxk_solver.bracketLowerWithLimit(0.);
+                else
+                    maxk_solver.bracketUpper();
+
+                // Get the _maxk from the solver here. We add back on the tolerance to the result to
+                // ensure that the k-value will be below the threshold.
+                _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+            } catch (std::runtime_error const & e) {
+                if (!(e.what()=="RuntimeError: Solve error: Maximum number of iterations exceeded in zbrent"))
+                {
+                    maxk_solver.setMethod(Bisect);
+
+                    if(maxk_func(maxk_min)<=0)
+                        maxk_solver.bracketLowerWithLimit(0.);
+                    else
+                        maxk_solver.bracketUpper();
+
+                    // Get the _maxk from the solver here. We add back on the tolerance to the result to
+                    // ensure that the k-value will be below the threshold.
+                    _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+                }
+            }
 
             xdbg << "_maxk = " << _maxk << std::endl;
             xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
@@ -272,14 +303,6 @@ namespace galsim {
             xdbg << "clipk = " << clipk << std::endl;
             xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
-
-        // For small k, we can use up to quartic in the taylor expansion of both terms
-        // in the calculation.
-        // This is acceptable when the next term is less than kvalue_accuracy.
-        // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
-        // This is a bit conservative, note, assuming kx = 0
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy /
-                            (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
     }
 
     double SBInclinedSersic::SBInclinedSersicImpl::maxSB() const
@@ -368,15 +391,22 @@ namespace galsim {
         }
     }
 
-    double SBInclinedSersic::SBInclinedSersicImpl::maxK() const { return _info->maxK() * _inv_r0; }
-    double SBInclinedSersic::SBInclinedSersicImpl::stepK() const { return _info->stepK() * _inv_r0; }
+    double SBInclinedSersic::SBInclinedSersicImpl::maxK() const
+    {
+        return _maxk * _inv_r0;
+    }
+    double SBInclinedSersic::SBInclinedSersicImpl::stepK() const
+    {
+        double stepk = _info->stepK() * _inv_re;
+        xdbg << "pi/stepK = " << M_PI/stepk << "; HLR = " << _re << "; HLR_factor = " << M_PI/stepk/_re << std::endl;
+        return stepk;
+    }
 
     double SBInclinedSersic::SBInclinedSersicImpl::kValueHelper(
         double kx, double ky) const
     {
         // Get the base value for a Sersic profile
 
-        set_verbose(3);
         xxdbg << "Calling SBInclinedSersic::SBInclinedSersicImpl::kValueHelper on " << kx << ", " << ky << "." << std::endl;
 
         double ky_cosi = ky*_cosi;
@@ -408,12 +438,12 @@ namespace galsim {
             // Use Taylor expansion to speed up calculation
             res_conv = (1. - 0.16666666667*scaled_ky_squared *
                           (1. - 0.116666666667*scaled_ky_squared));
-            xxdbg << "res_conv (lower limit) = " << res_conv << std::endl;
+            xxdbg << "res_conv (lower limit) = " << res_conv << "; ksq_min = " << _ksq_min << std::endl;
         }
         else
         {
             res_conv = scaled_ky / std::sinh(scaled_ky);
-            xxdbg << "res_conv (normal) = " << res_conv << std::endl;
+            xxdbg << "res_conv (normal) = " << res_conv << "; ksq_min = " << _ksq_min << std::endl;
         }
 
 
@@ -439,7 +469,13 @@ namespace galsim {
         SBInclinedSersicKValueFunctor::operator()(double k) const
     {
         assert(_p_owner);
-        double k_value = std::max(_p_owner->kValueHelper(0.,k),_p_owner->kValueHelper(k,0.));
+        double kx_value = _p_owner->kValueHelper(k,0.);
+        double ky_value = _p_owner->kValueHelper(0.,k);
+        double k_value = std::max(kx_value,ky_value);
+
+        xdbg << "k = " << k << "; k_value = " << k_value << "; target_k_value = " << _target_k_value << std::endl;
+        xdbg << "kx_value = " << kx_value << "; ky_value = " << ky_value << std::endl;
+
         return k_value - _target_k_value;
     }
 }
