@@ -199,7 +199,7 @@ class InclinedSersic(GSObject):
 
     def __str__(self):
         s = 'galsim.InclinedSersic(n=%s, inclination=%s, scale_radius=%s, scale_height=%s' % (
-                self.n, self.inclination, self.scale_radius, self.scale_height)
+                self.n, self.inclination, self.scale_radius, self.scale_height )
         if self.flux != 1.0:
             s += ', flux=%s' % self.flux
         if self.trunc != 0.:
