@@ -70,7 +70,7 @@ New Features
 - `SED`s can now be constructed with flexible units via the `astropy.units`
   module. (#789).
 - Added new surface brightness profile, 'InclinedExponential'. This represents
-  the 2D projection the 3D profile:
+  the 2D projection of the 3D profile:
       I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s),
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
@@ -107,6 +107,9 @@ New Features
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
   are generally somewhat faster than the numpy functions. (#840)
+- Added new surface brightness profile, 'InclinedSersic'. This is a
+  generalization of the InclinedExponential profile, allowing profiles of
+  any Sersic index and also allowing truncation of the disk. (#811)
 
 
 New config features
