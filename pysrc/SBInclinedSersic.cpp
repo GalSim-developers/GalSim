@@ -49,6 +49,7 @@ namespace galsim {
                 s = bp::extract<double>(scale_radius);
                 rType = SBInclinedSersic::SCALE_RADIUS;
             }
+            std::cout << n << " " << inclination << " " << s << std::endl;
             return new SBInclinedSersic(n, inclination, s, scale_height, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
@@ -59,7 +60,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("n"),
-                          bp::arg("inclination")=bp::object(),
+                          bp::arg("inclination"),
                           bp::arg("scale_radius")=bp::object(),
                           bp::arg("scale_height")=bp::object(),
                           bp::arg("half_light_radius")=bp::object(),
@@ -71,9 +72,9 @@ namespace galsim {
                 .def(bp::init<const SBInclinedSersic &>())
                 .def("getN", &SBInclinedSersic::getN)
                 .def("getHalfLightRadius", &SBInclinedSersic::getHalfLightRadius)
-                .def("getInclination", &SBInclinedSersic::getScaleRadius)
+                .def("getInclination", &SBInclinedSersic::getInclination)
                 .def("getScaleRadius", &SBInclinedSersic::getScaleRadius)
-                .def("getScaleHeight", &SBInclinedSersic::getScaleRadius)
+                .def("getScaleHeight", &SBInclinedSersic::getScaleHeight)
                 .def("getTrunc", &SBInclinedSersic::getTrunc)
                 .enable_pickling()
                 ;
