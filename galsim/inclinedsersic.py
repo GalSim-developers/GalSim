@@ -125,6 +125,7 @@ class InclinedSersic(GSObject):
         GSObject.__init__(self, _galsim.SBInclinedSersic(n,
                 inclination, scale_radius, scale_height, half_light_radius, flux, trunc, flux_untruncated,
                 gsparams))
+        self._flux_untruncated = flux_untruncated
         self._gsparams = gsparams
 
     def getN(self):

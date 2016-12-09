@@ -35,6 +35,8 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+    
+save_profiles = True
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
@@ -61,9 +63,18 @@ def get_prof(mode, *args, **kwargs):
             new_kwargs["scale_radius"] = args[1]
         if len(args)>2:
             new_kwargs["scale_height"] = args[2]
-        return galsim.InclinedSersic(n=1.,trunc=0.,**new_kwargs)
+            
+        if not "trunc" in new_kwargs:
+            new_kwargs["trunc"] = 0.
+            
+        prof = galsim.InclinedSersic(n=1.,**new_kwargs)
     else:
-        return galsim.InclinedExponential(*args,**kwargs)
+        new_kwargs = deepcopy(kwargs)
+        if "trunc" in new_kwargs:
+            del new_kwargs["trunc"]
+        prof = galsim.InclinedExponential(*args,**new_kwargs)
+        
+    return prof
 
 @timer
 def test_regression():
@@ -96,10 +107,15 @@ def test_regression():
     
             # Rotate it by the position angle
             test_profile = test_profile.rotate(pos_angle*galsim.radians)
-    
+            
             # Draw it onto an image
             test_image = galsim.Image(image_nx,image_ny,scale=1.0)
             test_profile.drawImage(test_image,offset=(0.5,0.5)) # Offset to match Lance's
+            
+            # Save if desired
+            if save_profiles:
+                test_image_filename = image_filename.replace(".fits","_"+mode+".fits")
+                test_image.write(test_image_filename, image_dir, clobber=True)
     
             # Compare to the example - Due to the different fourier transforms used, some offset is
             # expected, so we just compare in the core to two decimal places
@@ -109,11 +125,9 @@ def test_regression():
     
             ratio_core = image_core / test_image_core
     
-            # galsim.fits.write(test_image,"test_"+image_filename,image_dir)
-    
             np.testing.assert_array_almost_equal(
                     ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core),
-                    decimal = 1,
+                    decimal = 2,
                     err_msg = "Error in comparison of "+mode+" profile to "+image_filename,
                     verbose=True)
 
@@ -302,7 +316,8 @@ def test_k_limits():
             # Check that we're not missing too much flux
             total_flux = 1.
             np.testing.assert_((total_flux-contained_flux)/(total_flux)<gsparams.folding_threshold,
-                               msg="Too much flux lost due to folding.\nTotal flux = " +
+                               msg="Too much flux lost due to folding.\nFolding threshold = " +
+                               str(gsparams.folding_threshold) + "\nTotal flux = " +
                                str(total_flux) + "\nContained flux = " + str(contained_flux) +
                                "\nLost = " + str((total_flux-contained_flux)/(total_flux)))
 
@@ -314,7 +329,7 @@ def test_eq_ne():
     for mode in ("InclinedExponential","InclinedSersic"):
 
         # First test that some different initializations that should be equivalent:
-        gals = [get_prof(mode,0.1*galsim.radians, 3.0),
+        same_gals = [get_prof(mode,0.1*galsim.radians, 3.0),
                 get_prof(mode,0.1*galsim.radians, 3.0, 0.3),  # default h/r = 0.1
                 get_prof(mode,0.1*galsim.radians, 3.0, scale_height=0.3),
                 get_prof(mode,0.1*galsim.radians, 3.0, scale_h_over_r=0.1),
@@ -327,11 +342,11 @@ def test_eq_ne():
                 get_prof(mode,flux=1.0, scale_radius=3.0,
                                            scale_height=0.3, inclination=0.1*galsim.radians)]
     
-        for gal in gals[1:]:
+        for gal in same_gals[1:]:
             print(gal)
-            gsobject_compare(gal, gals[0])
+            gsobject_compare(gal, same_gals[0])
     
-        gals = [get_prof(mode,0.1*galsim.radians, 3.0, 0.3),
+        diff_gals = [get_prof(mode,0.1*galsim.radians, 3.0, 0.3),
                 get_prof(mode,0.1*galsim.degrees, 3.0, 0.3),
                 get_prof(mode,0.1*galsim.degrees, 3.0, scale_h_over_r=0.2),
                 get_prof(mode,0.1*galsim.radians, 3.0, 3.0),
@@ -340,7 +355,7 @@ def test_eq_ne():
                 get_prof(mode,0.1*galsim.radians, 3.1),
                 get_prof(mode,0.1*galsim.radians, 3.0, 0.3, flux=0.5),
                 get_prof(mode,0.1*galsim.radians, 3.0, 0.3, gsparams=gsp)]
-        all_obj_diff(gals)
+        all_obj_diff(diff_gals)
 
 @timer
 def test_pickle():
@@ -348,27 +363,27 @@ def test_pickle():
     
     for mode in ("InclinedExponential","InclinedSersic"):
 
-        prof = get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0,
+        prof = get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0,
                                          scale_height=0.3)
         do_pickle(prof)
         do_pickle(prof.SBProfile)
-        do_pickle(get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0))
-        do_pickle(get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0,
+        do_pickle(get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0))
+        do_pickle(get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0,
                                              scale_h_over_r=0.2))
-        do_pickle(get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0,
+        do_pickle(get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0))
-        do_pickle(get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0,
+        do_pickle(get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0,
                                              scale_height=0.3,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
-        do_pickle(get_prof(mode,inclination=0.1*galsim.radians, scale_radius=3.0,
+        do_pickle(get_prof(mode,trunc=4.5,inclination=0.1*galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
-    test_regression()
-    test_exponential()
-    test_edge_on()
     test_sanity()
     test_k_limits()
     test_eq_ne()
     test_pickle()
+    test_exponential()
+    test_edge_on()
+    test_regression()
