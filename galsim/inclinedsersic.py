@@ -207,9 +207,9 @@ class InclinedSersic(GSObject):
         s += ')'
         return s
 
-_galsim.SBInclinedSersic.__getinitargs__ = lambda self: (
-        self.getInclination(), self.getScaleRadius(), self.getScaleHeight(), self.getFlux(),
-        self.getGSParams())
+_galsim.SBInclinedSersic.__getinitargs__ = lambda self: ( self.getN(),
+        self.getInclination(), self.getScaleRadius(), self.getScaleHeight(), None,
+        self.getFlux(), self.getTrunc(), False, self.getGSParams())
 _galsim.SBInclinedSersic.__getstate__ = lambda self: None
 _galsim.SBInclinedSersic.__repr__ = lambda self: \
-        'galsim._galsim.SBInclinedSersic(%r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()
+        'galsim._galsim.SBInclinedSersic(%r, %r, %r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()
