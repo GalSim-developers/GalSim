@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
-#define VERBOSITY_LEVEL 1
+//#define DEBUGLOGGING
+//#define VERBOSITY_LEVEL 1
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -193,7 +193,9 @@ namespace galsim {
         _r0_sq = _r0*_r0;
         _inv_r0 = 1./_r0;
         _inv_r0_sq = _inv_r0*_inv_r0;
-        _inv_re = 1./_re;
+
+        // Get the inverse exponential HLR, which is used for calculating stepK
+        _inv_exp_re = 1./(1.6783469900166605*_r0);
 
         _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
         _xnorm = _shootnorm * _inv_r0_sq;
@@ -251,34 +253,16 @@ namespace galsim {
             SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
             Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
 
-            // Try with Brent solver first
-            try
-            {
-                maxk_solver.setMethod(Brent);
+            maxk_solver.setMethod(Brent);
 
-                if(maxk_func(maxk_min)<=0)
-                    maxk_solver.bracketLowerWithLimit(0.);
-                else
-                    maxk_solver.bracketUpper();
+            if(maxk_func(maxk_min)<=0)
+                maxk_solver.bracketLowerWithLimit(0.);
+            else
+                maxk_solver.bracketUpper();
 
-                // Get the _maxk from the solver here. We add back on the tolerance to the result to
-                // ensure that the k-value will be below the threshold.
-                _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
-            } catch (std::runtime_error const & e) {
-                if (!(e.what()=="RuntimeError: Solve error: Maximum number of iterations exceeded in zbrent"))
-                {
-                    maxk_solver.setMethod(Bisect);
-
-                    if(maxk_func(maxk_min)<=0)
-                        maxk_solver.bracketLowerWithLimit(0.);
-                    else
-                        maxk_solver.bracketUpper();
-
-                    // Get the _maxk from the solver here. We add back on the tolerance to the result to
-                    // ensure that the k-value will be below the threshold.
-                    _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
-                }
-            }
+            // Get the _maxk from the solver here. We add back on the tolerance to the result to
+            // ensure that the k-value will be below the threshold.
+            _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
 
             xdbg << "_maxk = " << _maxk << std::endl;
             xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
@@ -303,13 +287,18 @@ namespace galsim {
             xdbg << "clipk = " << clipk << std::endl;
             xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
+
+        dbg << "info maxk = " << _info->maxK() << std::endl;
+        dbg << "maxk = " << _maxk << std::endl;
+        dbg << "ksq_max = " << _ksq_max << std::endl;
+        dbg << "info stepk = " << _info->stepK() << std::endl;
     }
 
     double SBInclinedSersic::SBInclinedSersicImpl::maxSB() const
     {
-        // When the disk is face on, the max SB is flux / 2 pi r0^2
-        // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
-        double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
+        // When the disk is face on, the max SB is _xnorm
+        // When the disk is edge on, the max SB is _xnorm
+        double maxsb = _xnorm;
         // The relationship for inclinations in between these is not linear.
         // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
         // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
@@ -397,8 +386,7 @@ namespace galsim {
     }
     double SBInclinedSersic::SBInclinedSersicImpl::stepK() const
     {
-        double stepk = _info->stepK() * _inv_re;
-        xdbg << "pi/stepK = " << M_PI/stepk << "; HLR = " << _re << "; HLR_factor = " << M_PI/stepk/_re << std::endl;
+        double stepk = _info->stepK() * _inv_exp_re;
         return stepk;
     }
 

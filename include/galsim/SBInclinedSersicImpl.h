@@ -119,7 +119,7 @@ namespace galsim {
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _inv_r0;
-        double _inv_re;
+        double _inv_exp_re;
         double _half_pi_h_sini_over_r;
         double _cosi;
         double _r0_sq;

@@ -66,12 +66,16 @@ def get_prof(mode, *args, **kwargs):
             
         if not "trunc" in new_kwargs:
             new_kwargs["trunc"] = 0.
+        if not "n" in new_kwargs:
+            new_kwargs["n"] = 1.
             
-        prof = galsim.InclinedSersic(n=1.,**new_kwargs)
+        prof = galsim.InclinedSersic(**new_kwargs)
     else:
         new_kwargs = deepcopy(kwargs)
         if "trunc" in new_kwargs:
             del new_kwargs["trunc"]
+        if "n" in new_kwargs:
+            del new_kwargs["n"]
         prof = galsim.InclinedExponential(*args,**new_kwargs)
         
     return prof
@@ -133,7 +137,8 @@ def test_regression():
 
 @timer
 def test_exponential():
-    """ Test that it looks identical to an exponential when inclination is zero. """
+    """ Test that InclinedExponential looks identical to an exponential when inclination is zero.
+    """
 
     scale_radius = 3.0
     
@@ -142,23 +147,71 @@ def test_exponential():
     exp_image = galsim.Image(image_nx, image_ny, scale=1.0)
     exp_profile.drawImage(exp_image)
        
-    for mode in ("InclinedExponential","InclinedSersic"):
+    mode = "InclinedExponential"
 
-        inc_profile = get_prof(mode,0*galsim.radians, scale_radius=scale_radius,
-                                                     scale_height=scale_radius/10.)
+    inc_profile = get_prof(mode,0*galsim.radians, scale_radius=scale_radius,
+                                                 scale_height=scale_radius/10.)
+
+    inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
+
+    inc_profile.drawImage(inc_image)
+
+    # Check that they're the same
+    np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
+
+    # The face-on version should get the maxSB value exactly right.
+    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
+
+    check_basic(inc_profile, "Face-on "+ mode)
+
+@timer
+def test_sersic():
+    """ Test that InclinedSersic looks identical to a Sersic when inclination is zero. 
+    """
+    
+    ns = (1.1, 1.1, 2.5, 2.5)
+    truncs = (0, 13.5, 0, 18.0)
+    scale_radius = 1.0
+    
+    for n, trunc in zip(ns,truncs):
+    
+        # Prepare the sersic profile's image
+        sersic_profile = galsim.Sersic(n=n, scale_radius=scale_radius, trunc=trunc)
+        sersic_image = galsim.Image(image_nx, image_ny, scale=1.0)
+        sersic_profile.drawImage(sersic_image)
+        
+        mode = "InclinedSersic"
+    
+        inc_profile = get_prof(mode,n=n,trunc=trunc, inclination=0*galsim.radians, scale_radius=scale_radius,
+                               scale_height=scale_radius/10.)
     
         inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
     
         inc_profile.drawImage(inc_image)
+        
+        if save_profiles:
+            sersic_image.write("test_sersic.fits", image_dir, clobber=True)
+            inc_image.write("test_inclined_sersic.fits", image_dir, clobber=True)
     
-        # Check that they're the same
-        np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
+        # Check that they're the same. Note that since the inclined Sersic profile isn't
+        # Real-space analytic and has hard edges in the truncated case,
+        # we have to be a bit lax on rtol and atol
+        if trunc != 0:
+            rtol = 5e-3
+            atol = 5e-5
+        else:
+            rtol = 1e-3
+            atol = 1e-5
+            
+        d_array = atol + rtol*np.abs(sersic_image.array)
+        badness_array = np.abs(inc_image.array-sersic_image.array)/d_array
+            
+        np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
     
         # The face-on version should get the maxSB value exactly right.
-        np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
+        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB())
     
         check_basic(inc_profile, "Face-on "+ mode)
-
 
 @timer
 def test_edge_on():
@@ -385,5 +438,6 @@ if __name__ == "__main__":
     test_eq_ne()
     test_pickle()
     test_exponential()
+    test_sersic()
     test_edge_on()
     test_regression()
