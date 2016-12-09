@@ -107,9 +107,6 @@ New Features
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
   are generally somewhat faster than the numpy functions. (#840)
-- Added new surface brightness profile, 'InclinedSersic'. This is a
-  generalization of the InclinedExponential profile, allowing profiles of
-  any Sersic index and also allowing truncation of the disk. (#811)
 
 
 New config features
