@@ -250,6 +250,13 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     following parameters: \texttt{inclination} and \texttt{scale\_radius}.
     \texttt{scale\_height} can optionally provided; if not, it will default to 0.1*\texttt{scale\_radius}.
 \item[$\circ$]
+  \texttt{galsim.}\texttt{InclinedSersic}\texttt{(n, inclination, scale\_radius, scale\_height=0.1*scale\_radius, trunc=0., flux=1.)}
+    \newline
+    An Inclined Sersic galaxy disc profile, and a generalization of the InclinedExponential profile. Requires the
+    following parameters: \texttt{n}, \texttt{inclination}, and \texttt{scale\_radius} or \texttt{half\_light\_radius}.
+    \texttt{scale\_height} can optionally provided; if not, it will default to 0.1*\texttt{scale\_radius}. Allows a truncation radius
+    \texttt{trunc} for the disk.
+\item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}}\texttt{(half\_light\_radius, flux=1.)}
     \newline
     A De Vaucouleurs galaxy bulge profile, a S\'{e}rsic

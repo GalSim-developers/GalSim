@@ -90,6 +90,9 @@ New Features
   doing so are `im.calculate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
+- Added new surface brightness profile, 'InclinedSersic'. This is a
+  generalization of the InclinedExponential profile, allowing Sersic disks and
+  a truncation radius for the disk. (#811)
 - Added new profile `galsim.RandomWalk`, a class for generating a set of
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
