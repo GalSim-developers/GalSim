@@ -42,7 +42,6 @@ import os
 import numpy as np
 
 import galsim
-from . import utilities
 from . import _galsim
 
 class GSObject(object):
@@ -890,20 +889,21 @@ class GSObject(object):
 
         return image
 
-    def _local_wcs(self, wcs, image, offset, use_true_center):
+    def _local_wcs(self, wcs, image, offset, use_true_center, new_bounds):
         # Get the local WCS at the location of the object.
 
         if wcs.isUniform():
             return wcs.local()
         elif image is None:
-            # Should have already checked for this, but just to be safe, repeat the check here.
-            raise ValueError("Cannot provide non-local wcs when image is None")
-        elif not image.bounds.isDefined():
-            raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
-        elif use_true_center:
-            obj_cen = image.bounds.trueCenter()
+            bounds = new_bounds
         else:
-            obj_cen = image.bounds.center()
+            bounds = image.bounds
+        if not bounds.isDefined():
+            raise ValueError("Cannot provide non-local wcs with automatically sized image")
+        elif use_true_center:
+            obj_cen = bounds.trueCenter()
+        else:
+            obj_cen = bounds.center()
             # Convert from PositionI to PositionD
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
@@ -920,18 +920,17 @@ class GSObject(object):
                 # Let python raise the appropriate exception if this isn't valid.
                 return galsim.PositionD(offset[0], offset[1])
 
-    def _get_shape(self, image, nx, ny, bounds):
+    def _get_new_bounds(self, image, nx, ny, bounds):
         if image is not None and image.bounds.isDefined():
-            shape = image.array.shape
+            return image.bounds
         elif nx is not None and ny is not None:
-            shape = (ny,nx)
+            return galsim.BoundsI(1,nx,1,ny)
         elif bounds is not None and bounds.isDefined():
-            shape = (bounds.ymax-bounds.ymin+1, bounds.xmax-bounds.xmin+1)
+            return bounds
         else:
-            shape = (0,0)
-        return shape
+            return galsim.BoundsI()
 
-    def _fix_center(self, shape, offset, use_true_center, reverse):
+    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
         # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -940,6 +939,7 @@ class GSObject(object):
             # Also, remember that numpy's shape is ordered as [y,x]
             dx = offset.x
             dy = offset.y
+            shape = new_bounds.numpyShape()
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
             offset = galsim.PositionD(dx,dy)
@@ -958,11 +958,6 @@ class GSObject(object):
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if not wcs.isUniform():
-                if image is None:
-                    raise ValueError("Cannot provide non-local wcs when image is None")
-                if not image.bounds.isDefined():
-                    raise ValueError("Cannot provide non-local wcs when image has undefined bounds")
             if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if image is not None: image.wcs = None
@@ -1306,8 +1301,11 @@ class GSObject(object):
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
 
+        # Determine the bounds of the new image for use below (if it can be known yet)
+        new_bounds = self._get_new_bounds(image, nx, ny, bounds)
+
         # Get the local WCS, accounting for the offset correctly.
-        local_wcs = self._local_wcs(wcs, image, offset, use_true_center)
+        local_wcs = self._local_wcs(wcs, image, offset, use_true_center, new_bounds)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.toImage(self)
@@ -1335,8 +1333,7 @@ class GSObject(object):
             prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0), real_space=real_space)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        shape = prof._get_shape(image, nx, ny, bounds)
-        prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
+        prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult=wmult)
@@ -1608,7 +1605,7 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
+    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
                  surface_ops=(), gain=1.0):
         """
         Draw this profile into an Image by shooting photons.

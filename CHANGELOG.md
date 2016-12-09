@@ -94,6 +94,8 @@ New Features
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
   to represent knots of star formation. (#819)
+- Allowed drawImage to take a non-uniform WCS when default constructing the
+  image from either nx,ny or bounds. (#820)
 - Added 'generate' function to BaseDeviate and 'sed.sampleWavelength' to draw
   random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
@@ -114,3 +116,17 @@ New config features
 
 - Output slightly more information about the COSMOSCatalog() (if any) being used
   as the basis of simulations, at the default verbosity level. (#804)
+- Changed the name of galsim.config.CalculateNoiseVar to the slightly more
+  verbose, but also more readable CalculateNoiseVariance. (#820)
+- Setting config['rng'] is no longer required when manually running commands
+  like `galsim.config.BuildGSObject`.  If you do not care about deterministic
+  pseudo-rngs, then it will just use /dev/urandom for you. (#820)
+- Allow PoissonNoise without any sky level, in which case only the shot noise
+  in the signal photons contribute to the noise.  Likewise for CCDNoise. (#820)
+- Let 'None' in the config file mean `None`. (#820)
+- Require 'max_extra_noise' to be explicitly set for photon shooting if you
+  want it rather than have it default to 0.01.  (#820)
+- Added --except_abort option to galsim executable to abort execution if a file
+  has an error, rather than just reporting the exception and continuing on
+  (which is still the default behavior). (#820)
+- Added optional probability parameter 'p' for Random bool values. (#820)

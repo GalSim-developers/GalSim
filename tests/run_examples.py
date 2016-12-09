@@ -70,6 +70,8 @@ def check_same(f1, f2):
         check_diff.report(f1,f2)
     return same
 
+logging.basicConfig(format="%(message)s", stream=sys.stdout)
+
 @timer
 @in_examples
 def test_demo1():
@@ -78,11 +80,11 @@ def test_demo1():
     import demo1
     print('Running demo1.py')
     demo1.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo1.yaml', logger=logger)[0]
     print('Running demo1.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     # There is no assert at the end of this one, since they are not expected to be identical
     # due to the lack of a specified seed.  This just checks for syntax errors.
 
@@ -94,11 +96,11 @@ def test_demo2():
     import demo2
     print('Running demo2.py')
     demo2.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
-    config = galsim.config.ReadConfig('demo2.yaml', logger=logger)[0]
+    logger.setLevel(logging.WARNING)
+    config = galsim.config.ReadConfig('demo2.yaml', file_type='yaml', logger=logger)[0]
     print('Running demo2.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/demo2.fits', 'output_yaml/demo2.fits')
 
 @timer
@@ -109,11 +111,11 @@ def test_demo3():
     import demo3
     print('Running demo3.py')
     demo3.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo3.yaml', logger=logger)[0]
     print('Running demo3.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/demo3.fits', 'output_yaml/demo3.fits')
     assert check_same('output/demo3_epsf.fits', 'output_yaml/demo3_epsf.fits')
 
@@ -125,11 +127,11 @@ def test_demo4():
     import demo4
     print('Running demo4.py')
     demo4.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo4.yaml', logger=logger)[0]
     print('Running demo4.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/multi.fits', 'output_yaml/multi.fits')
 
 @timer
@@ -140,11 +142,11 @@ def test_demo5():
     import demo5
     print('Running demo5.py')
     demo5.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo5.yaml', logger=logger)[0]
     print('Running demo5.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/g08_psf.fits', 'output_yaml/g08_psf.fits')
     assert check_same('output/g08_gal.fits', 'output_yaml/g08_gal.fits')
 
@@ -156,13 +158,13 @@ def test_demo6():
     import demo6
     print('Running demo6.py')
     demo6.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     configs = galsim.config.ReadConfig('demo6.yaml', logger=logger)
     print('Running demo6.yaml pass #1')
-    galsim.config.Process(configs[0], logger=logger)
+    galsim.config.Process(configs[0], logger=logger, except_abort=True)
     print('Running demo6.yaml pass #2')
-    galsim.config.Process(configs[1], logger=logger)
+    galsim.config.Process(configs[1], logger=logger, except_abort=True)
     assert check_same('output/psf_real.fits', 'output_yaml/psf_real.fits')
     assert check_same('output/cube_real.fits', 'output_yaml/cube_real.fits')
 
@@ -176,11 +178,11 @@ def test_demo7():
     import shutil
     print('Running demo7.py')
     demo7.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo7.yaml', logger=logger)[0]
     print('Running demo7.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     # gzip class in python 2.6 doesn't implement context correctly.  So do that one manually,
     # even though with gzip.open(...) as f_in would work fine on 2.7+
     f_in = gzip.open('output/cube_phot.fits.gz', 'rb')
@@ -201,13 +203,13 @@ def test_demo8():
     import demo8
     print('Running demo8.py')
     demo8.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     configs = galsim.config.ReadConfig('demo8.yaml', logger=logger)
     print('Running demo8.yaml pass #1')
-    galsim.config.Process(configs[0], logger=logger)
+    galsim.config.Process(configs[0], logger=logger, except_abort=True)
     print('Running demo8.yaml pass #2')
-    galsim.config.Process(configs[1], logger=logger)
+    galsim.config.Process(configs[1], logger=logger, except_abort=True)
     assert check_same('output/bpd_single.fits', 'output_yaml/bpd_single.fits')
     assert check_same('output/bpd_multi.fits', 'output_yaml/bpd_multi.fits')
 
@@ -222,16 +224,19 @@ def test_demo9():
     import demo9
     print('Running demo9.py')
     demo9.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('json/demo9.json', logger=logger)[0]
     print('Running demo9.json')
     new_params = { 'output.skip' : { 'type' : 'List', 'items' : [0,0,0,0,0,1] } }
-    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=1)
-    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=2)
-    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=3)
+    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=1,
+                          except_abort=True)
+    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=2,
+                          except_abort=True)
+    galsim.config.Process(config, logger=logger, new_params=new_params, njobs=3, job=3,
+                          except_abort=True)
     new_params = { 'output.noclobber' : True }
-    galsim.config.Process(config, logger=logger, new_params=new_params)
+    galsim.config.Process(config, logger=logger, new_params=new_params, except_abort=True)
     for dir_num in range(1,5):
         for file_num in range(5):
             file_name = 'nfw%d/cluster%04d.fits'%(dir_num, file_num)
@@ -247,11 +252,11 @@ def test_demo10():
     import demo10
     print('Running demo10.py')
     demo10.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo10.yaml', logger=logger)[0]
     print('Running demo10.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/power_spectrum.fits', 'output_yaml/power_spectrum.fits')
 
 @timer
@@ -262,11 +267,11 @@ def test_demo11():
     import demo11
     print('Running demo11.py')
     demo11.main([])
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo11.yaml', logger=logger)[0]
     print('Running demo11.yaml')
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/tabulated_power_spectrum.fits.fz',
                       'output_yaml/tabulated_power_spectrum.fits.fz')
 
@@ -308,14 +313,14 @@ def test_des():
         import draw_psf
         print('Running draw_psf.py')
         draw_psf.main(['last=1'])
-        logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
         logger = logging.getLogger('galsim')
+        logger.setLevel(logging.WARNING)
 
         print('Running draw_psf.yaml')
         configs = galsim.config.ReadConfig('draw_psf.yaml', logger=logger)
         for config in configs:
             config['output']['nfiles'] = 1
-            galsim.config.Process(config, logger=logger)
+            galsim.config.Process(config, logger=logger, except_abort=True)
         assert check_same('output/DECam_00154912_01_psfex_image.fits',
                           'output_yaml/DECam_00154912_01_psfex_image.fits')
         assert check_same('output/DECam_00154912_01_fitpsf_image.fits',
@@ -328,16 +333,16 @@ def test_des():
         config['input']['cosmos_catalog']['file_name'] = '../data/real_galaxy_catalog_23.5_example.fits'
         del config['input']['cosmos_catalog']['sample']
         config['input']['des_wcs']['bad_ccds'] = list(range(2,63))  # All but CCD 1
-        galsim.config.Process(config, logger=logger)
+        galsim.config.Process(config, logger=logger, except_abort=True)
 
         input_cosmos = config['input']['cosmos_catalog'] # Save example COSMOS catalog spec.
         config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
-        galsim.config.Process(config, logger=logger)
+        galsim.config.Process(config, logger=logger, except_abort=True)
 
         config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
         config['input']['cosmos_catalog'] = input_cosmos
         config['input']['des_psfex']['file_name']['num'] = 1
-        galsim.config.Process(config, logger=logger)
+        galsim.config.Process(config, logger=logger, except_abort=True)
 
     finally:
         os.chdir(original_dir)
@@ -353,8 +358,8 @@ def test_great3():
         new_dir = os.getcwd()
         if new_dir not in sys.path:
             sys.path.append(new_dir)
-        logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
         logger = logging.getLogger('galsim')
+        logger.setLevel(logging.WARNING)
         # Some changes to speed up the run, since we mostly just want to check that all the
         # template and reject features work properly, which doesn't require many galaxies.
         p1 = { 'output.nfiles' : 1, 'output.noclobber' : False,
@@ -371,7 +376,8 @@ def test_great3():
             else:
                 new_params = p2
             for config in configs:
-                galsim.config.Process(config, logger=logger, new_params=new_params)
+                galsim.config.Process(config, logger=logger, new_params=new_params,
+                                      except_abort=True)
     finally:
         os.chdir(original_dir)
 

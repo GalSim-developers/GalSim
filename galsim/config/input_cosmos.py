@@ -37,13 +37,14 @@ class COSMOSLoader(InputLoader):
             if 'input' in base:
                 if 'cosmos_catalog' in base['input']:
                     cc = base['input']['cosmos_catalog']
+                    if isinstance(cc,list): cc = cc[0]
                     out_str = ''
-                    if 'sample' in cc[0]:
-                        out_str += '\n  sample = %s'%cc[0]['sample']
-                    if 'dir' in cc[0]:
-                        out_str += '\n  dir = %s'%cc[0]['dir']
-                    if 'file_name' in cc[0]:
-                        out_str += '\n  file_name = %s'%cc[0]['file_name']
+                    if 'sample' in cc:
+                        out_str += '\n  sample = %s'%cc['sample']
+                    if 'dir' in cc:
+                        out_str += '\n  dir = %s'%cc['dir']
+                    if 'file_name' in cc:
+                        out_str += '\n  file_name = %s'%cc['file_name']
                     if out_str != '':
                         logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
@@ -76,18 +77,16 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for type = COSMOSGalaxy")
-        kwargs['rng'] = base['rng']
+        kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
 
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= cosmos_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
+    # NB. Even though index is officially optional, the call to SetDefaultIndex above
+    #     means that it will always be present.
+    index = kwargs['index']
+    if index >= cosmos_cat.getNObjects():
+        raise IndexError(
+            "%s index has gone past the number of entries in the catalog"%index)
 
-    if logger:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
+    logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base.get('obj_num',0),kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
 
