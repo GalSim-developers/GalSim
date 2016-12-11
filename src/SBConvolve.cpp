@@ -480,7 +480,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
         boost::shared_ptr<PhotonArray> result2 = _adaptee.shoot(N, u);
         // Flip sign of (x,y) in one of the results
-        for (int i=0; i<result2->size(); i++) {
+        for (size_t i=0; i<result2->size(); i++) {
             Position<double> negxy = -Position<double>(result2->getX(i), result2->getY(i));
             result2->setPhoton(i, negxy.x, negxy.y, result2->getFlux(i));
         }

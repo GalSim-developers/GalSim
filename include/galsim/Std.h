@@ -123,7 +123,7 @@ public:
     FormatAndThrow& operator<<(const T& t)
     { oss << t; return *this; }
 
-    ~FormatAndThrow() { throw E(oss.str()); }
+    ~FormatAndThrow() noexcept(false) { throw E(oss.str()); }
 private:
     std::ostringstream oss;
 };

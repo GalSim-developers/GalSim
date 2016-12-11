@@ -742,7 +742,7 @@ namespace galsim {
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
         boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
-        for (int i=0; i<result->size(); i++) {
+        for (size_t i=0; i<result->size(); i++) {
             Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i)))+_cen;
             result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_fluxScaling);
         }
