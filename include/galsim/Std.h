@@ -123,7 +123,12 @@ public:
     FormatAndThrow& operator<<(const T& t)
     { oss << t; return *this; }
 
-    ~FormatAndThrow() noexcept(false) { throw E(oss.str()); }
+    ~FormatAndThrow()
+#if __cplusplus >= 201103L
+        noexcept(false)
+#endif
+    { throw E(oss.str()); }
+
 private:
     std::ostringstream oss;
 };
