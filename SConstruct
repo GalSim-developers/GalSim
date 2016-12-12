@@ -179,16 +179,16 @@ def ErrorExit(*args, **kwargs):
     libraries, compiler, etc., we don't want to cache the result.
     On the other hand, if we delete the .scon* files now, then they aren't
     available to diagnose any problems.
-    So we write a file called gs.error that
+    So we write a file called gs_error.txt that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
 
     import shutil
 
-    out = open("gs.error","wb")
+    out = open("gs_error.txt","wb")
 
-    # Start with the error message to output both to the screen and to the end of gs.error:
+    # Start with the error message to output both to the screen and to gs_error.txt:
     print
     for s in args:
         print s
@@ -289,6 +289,13 @@ def ErrorExit(*args, **kwargs):
     print 'Note: you may want to look through the file INSTALL.md for advice.'
     print 'Also, if you are having trouble, please check the INSTALL FAQ at '
     print '   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ'
+    print
+    print 'If nothing there seems helpful, feel free to post an issue here:'
+    print '   https://github.com/GalSim-developers/GalSim/issues'
+    print 'describing the problem along with the particulars of your system and'
+    print 'configuration.  Include a copy of the above output to the screen, and'
+    print 'post and copy of the file gs_error.txt, which will help people diagnose'
+    print 'the problem.'
     print
     Exit(1)
 
@@ -2000,12 +2007,12 @@ env['all_builds'] = []
 
 if not GetOption('help'):
 
-    # If there is a gs.error file, then this means the last run ended
+    # If there is a gs_error.txt file, then this means the last run ended
     # in an error, so we don't want to cache any of the configuration
     # tests from that run in case things in the environment changed.
     # (SCons isn't usually very good at detecting these kinds of changes.)
-    if os.path.exists("gs.error"):
-        os.remove("gs.error")
+    if os.path.exists("gs_error.txt"):
+        os.remove("gs_error.txt")
         ClearCache()
 
     if env['PYTHON'] == '':
