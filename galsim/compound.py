@@ -322,18 +322,26 @@ class Convolution(galsim.GSObject):
             else:
                 real_space = False
 
-        # Warn if doing DFT convolution for objects with hard edges.
+        # Warn if doing DFT convolution for objects with hard edges
         if not real_space and hard_edge:
-            import warnings
-            if len(args) == 2:
-                msg = """
-                Doing convolution of 2 objects, both with hard edges.
-                This might be more accurate and/or faster using real_space=True"""
-            else:
-                msg = """
-                Doing convolution where all objects have hard edges.
-                There might be some inaccuracies due to ringing in k-space."""
-            warnings.warn(msg)
+            
+            # If any aren't analytic, we don't have a choice here, so suppress the warning
+            all_analytic = True
+            for obj in args:
+                if not obj.isAnalyticX():
+                    all_analytic = False
+                    
+            if all_analytic:
+                import warnings
+                if len(args) == 2:
+                    msg = """
+                    Doing convolution of 2 objects, both with hard edges.
+                    This might be more accurate and/or faster using real_space=True"""
+                else:
+                    msg = """
+                    Doing convolution where all objects have hard edges.
+                    There might be some inaccuracies due to ringing in k-space."""
+                warnings.warn(msg)
 
         if real_space:
             # Can't do real space if nobj > 2
