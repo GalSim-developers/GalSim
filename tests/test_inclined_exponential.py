@@ -50,12 +50,12 @@ image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
 image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 
 # InclinedSersic-only test cases
-sersic_image_ns = ("1.5","1.5","2.5","2.5")
-sersic_image_inc_angles = ("0.1","0.1","0.1","0.1")
-sersic_image_scale_radii = ("2.0","2.0","2.0","2.0")
-sersic_image_scale_heights = ("1.0","1.0","1.0","1.0")
-sersic_image_trunc_factors = ("20","4.5","20","4.5")
-sersic_image_pos_angles = ("-0.2","-0.2","-0.2","-0.2")
+sersic_image_ns = ("1.0","1.5","2.0","1.5","2.5","2.5","1.5","1.5","2.5","2.5")
+sersic_image_inc_angles = ("0.0","0.0","0.0","0.0","0.0","0.0","0.1","0.1","0.1","0.1")
+sersic_image_scale_radii = ("3.0","3.0","3.0","3.0","3.0","3.0","2.0","2.0","2.0","2.0")
+sersic_image_scale_heights = ("1.0","1.0","1.0","1.0","1.0","1.0","1.0","1.0","1.0","1.0")
+sersic_image_trunc_factors = ("20","20","20","4.5","20","4.5","20","4.5","20","4.5")
+sersic_image_pos_angles = ("0.0","0.0","0.0","0.0","0.0","0.0","-0.2","-0.2","-0.2","-0.2")
 
 image_nx = 64
 image_ny = 64
@@ -168,8 +168,9 @@ def test_regression():
         pos_angle=float(pos_angle)
 
         # Now make a test image
-        test_profile = get_prof(mode, inc_angle*galsim.radians, scale_radius, scale_height,
-                                n=sersic_n, trunc=trunc_factor*scale_radius)
+#         test_profile = get_prof(mode, inc_angle*galsim.radians, scale_radius, scale_height,
+#                                 n=sersic_n, trunc=trunc_factor*scale_radius)
+        test_profile = galsim.Sersic(n=sersic_n,scale_radius=scale_radius,trunc=trunc_factor*scale_radius)
         check_basic(test_profile, mode)
 
         # Rotate it by the position angle
@@ -497,11 +498,11 @@ def test_pickle():
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
-#     test_sanity()
-#     test_k_limits()
-#     test_eq_ne()
-#     test_pickle()
-#     test_exponential()
-#     test_sersic()
-#     test_edge_on()
+    test_sanity()
+    test_k_limits()
+    test_eq_ne()
+    test_pickle()
+    test_exponential()
+    test_sersic()
+    test_edge_on()
     test_regression()
