@@ -22,7 +22,6 @@ Spectral energy distribution class.  Used by galsim/chromatic.py
 import numpy as np
 
 import galsim
-from . import utilities
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -727,7 +726,7 @@ class SED(object):
             spec_native_units = self._spec(rest_wave_native_units)
 
             # Note that this is thinning in native units, not nm and photons/nm.
-            newx, newf = utilities.thin_tabulated_values(
+            newx, newf = galsim.utilities.thin_tabulated_values(
                     rest_wave_native_units, spec_native_units,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 

@@ -36,7 +36,7 @@
 # - obj type : InterpolatedImage(image, scale)
 # - obj type : COSMOSGalaxy
 # - obj : scale_flus
-# - image : draw_method (no_pixel)
+# - stamp : draw_method (no_pixel)
 # - input : power_spectrum (e_power_file, delta2, units)
 # - input : cosmos_catalog (file_name, dir, use_real)
 # - image : index_convention

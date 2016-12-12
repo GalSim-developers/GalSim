@@ -1617,7 +1617,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            E_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            E_k = np.empty((self.ny,self.nx), dtype=complex)
             E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
             # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
             self._make_hermitian(E_k)
@@ -1627,7 +1627,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            B_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            B_k = np.empty((self.ny,self.nx), dtype=complex)
             B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
             # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
             # However, we later multiply this by i, so that means here B_k[-k] = conj(B_k[k])
@@ -1759,7 +1759,6 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    import galsim.utilities
     if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
         g1 = g1.array
         g2 = g2.array

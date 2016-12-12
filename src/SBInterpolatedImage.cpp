@@ -429,14 +429,21 @@ namespace galsim {
         oss << "galsim._galsim.ConstImageViewD(array([";
 
         ConstImageView<double> im = getImage();
-        Bounds<int> _bds = im.getBounds();
-        for (int y = _bds.getYMin(); y<=_bds.getYMax(); ++y) {
-            if (y > _bds.getYMin()) oss <<",";
-            BaseImage<double>::const_iterator it = im.rowBegin(y);
-            oss << "[" << *it++;
-            for (; it != im.rowEnd(y); ++it) oss << "," << *it;
+        const double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        const int step = im.getStep();
+        const int xmin = im.getXMin();
+        const int xmax = im.getXMax();
+        const int ymin = im.getYMin();
+        const int ymax = im.getYMax();
+        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
+            if (j > ymin) oss <<",";
+            oss << "[" << *ptr;
+            ptr += step;
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << *ptr;
             oss << "]";
         }
+
         oss<<"],dtype=float)), ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
@@ -980,19 +987,24 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedKImage(";
-
         oss << "galsim._galsim.ConstImageViewD(array([";
+
         ConstImageView<double> data = getKData();
-        Bounds<int> _bds = data.getBounds();
-        int ymin = _bds.getYMin();
-        int ymax = _bds.getYMax();
-        for (int y = ymin; y<=ymax; ++y) {
-            if (y > 0) oss <<",";
-            BaseImage<double>::const_iterator it = data.rowBegin(y);
-            oss << "[" << (*it++ + 0.0);  //annoying "+ 0.0", but needed to convert -0 to 0.
-            for (; it != data.rowEnd(y); ++it) oss << "," << (*it + 0.0);
+        const double* ptr = data.getData();
+        const int skip = data.getNSkip();
+        const int step = data.getStep();
+        const int xmin = data.getXMin();
+        const int xmax = data.getXMax();
+        const int ymin = data.getYMin();
+        const int ymax = data.getYMax();
+        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
+            if (j > ymin) oss <<",";
+            oss << "[" << (*ptr + 0.0); // annoying `+ 0.0`, but needed to convert `-0` to `0`.
+            ptr += step;
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << (*ptr+0.0);
             oss << "]";
         }
+
         oss<<"],dtype=float)), ";
 
         oss << stepK() << ", " << maxK() << ", ";

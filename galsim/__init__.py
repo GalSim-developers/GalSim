@@ -92,7 +92,7 @@ version = __version__
 
 # First some basic building blocks that don't usually depend on anything else
 from .position import PositionI, PositionD
-from .bounds import BoundsI, BoundsD
+from .bounds import BoundsI, BoundsD, _BoundsI
 from .shear import Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
@@ -100,7 +100,7 @@ from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI, _Image
 
 # PhotonArray
 from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles
@@ -129,7 +129,7 @@ from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile
 from .compound import RandomWalk
-from .transform import Transform, Transformation
+from .transform import Transform, Transformation, _Transform
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
@@ -169,3 +169,5 @@ from . import dcr
 from . import meta_data
 from . import cdmodel
 from . import optics
+from . import utilities
+from . import fft

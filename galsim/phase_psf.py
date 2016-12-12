@@ -57,7 +57,6 @@ from builtins import range
 
 import numpy as np
 import galsim
-from . import utilities
 from galsim import GSObject
 
 
@@ -329,11 +328,11 @@ class Aperture(object):
             # Add the initial rotation if requested, converting to radians.
             rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
+                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in range(nstruts):
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
+                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale,
@@ -409,9 +408,10 @@ class Aperture(object):
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
             # ensure that the image is one of the allowed types.  We ignore the scale.
-            int_im = galsim.InterpolatedImage(galsim.Image(pp_arr, scale=1., dtype=np.float64),
-                                              x_interpolant='linear', calculate_stepk=False,
-                                              calculate_maxk=False)
+            b = galsim._BoundsI(1,self.npix,1,self.npix)
+            im = galsim._Image(pp_arr, b, galsim.PixelScale(1.))
+            int_im = galsim.InterpolatedImage(im, x_interpolant='linear',
+                                              calculate_stepk=False, calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
             new_im = galsim.Image(pp_arr.shape[1], pp_arr.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
@@ -779,7 +779,10 @@ class PhaseScreenList(object):
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
+        if len(self._layers) > 1:
+            return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
+        else:
+            return self._layers[0].wavefront(aper, theta, compact)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -1100,27 +1103,23 @@ class PhaseScreenPSF(GSObject):
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta)
-        expwf = np.exp(2j * np.pi * wf / self.lam)
-        expwf_grid = np.zeros_like(self.aper.illuminated).astype(np.complex128)
+        expwf = np.exp((2j*np.pi/self.lam) * wf)
+        expwf_grid = np.zeros_like(self.aper.illuminated,dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
-        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
+        ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
 
     def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img = np.fft.fftshift(self.img)
-        self.img *= (flux / (self.img.sum() * self.scale**2))
-        self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
-
-        calculate_stepk = self._serialize_stepk is None
-        calculate_maxk = self._serialize_maxk is None
+        self.img *= flux / self.img.sum()
+        b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
+        self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))
 
         self.ii = galsim.InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
                 _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
-                calculate_stepk=calculate_stepk, calculate_maxk=calculate_maxk,
                 pad_factor=self._ii_pad_factor,
-                use_true_center=False, normalization='sb', gsparams=self._gsparams)
+                use_true_center=False, gsparams=self._gsparams)
 
         GSObject.__init__(self, self.ii)
 
@@ -1147,7 +1146,7 @@ class PhaseScreenPSF(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
-                                       use_true_center=False, normalization='sb',
+                                       use_true_center=False,
                                        pad_factor=self._ii_pad_factor,
                                        _serialize_stepk=self._serialize_stepk,
                                        _serialize_maxk=self._serialize_maxk,

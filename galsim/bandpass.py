@@ -22,7 +22,6 @@ Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 import numpy as np
 
 import galsim
-from . import utilities
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -553,10 +552,10 @@ class Bandpass(object):
         if len(self.wave_list) > 0:
             x = self.wave_list
             f = self(x)
-            newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         trim_zeros=trim_zeros,
-                                                         preserve_range=preserve_range,
-                                                         fast_search=fast_search)
+            newx, newf = galsim.utilities.thin_tabulated_values(x, f, rel_err=rel_err,
+                                                                trim_zeros=trim_zeros,
+                                                                preserve_range=preserve_range,
+                                                                fast_search=fast_search)
             tp = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx)
             red_limit = np.max(newx)

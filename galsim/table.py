@@ -115,8 +115,8 @@ class LookupTable(object):
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
-        x = np.asarray(x).astype(float)
-        f = np.asarray(f).astype(float)
+        x = np.array(x, dtype=float)
+        f = np.array(f, dtype=float)
         self.x = x
         self.f = f
 
@@ -130,11 +130,11 @@ class LookupTable(object):
 
         # make and store table
         if x_log:
-            if np.any(np.array(x) <= 0.):
+            if np.any(x <= 0.):
                 raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
             x = np.log(x)
         if f_log:
-            if np.any(np.array(f) <= 0.):
+            if np.any(f <= 0.):
                 raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
             f = np.log(f)
 
@@ -195,20 +195,20 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.empty_like(x.ravel()).astype(float)
-                self.table.interpMany(x.astype(float).ravel(),f)
+                f = np.empty_like(x.ravel(), dtype=float)
+                self.table.interpMany(x.astype(float,copy=False).ravel(),f)
                 f = f.reshape(x.shape)
             else:
-                f = np.empty_like(x).astype(float)
-                self.table.interpMany(x.astype(float),f)
+                f = np.empty_like(x, dtype=float)
+                self.table.interpMany(x.astype(float,copy=False),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = np.empty_like(x).astype(float)
+            f = np.empty_like(x, dtype=float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = np.empty_like(x).astype(float)
+            f = np.empty_like(x, dtype=float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = list(f)
         # option 4: a single value
@@ -449,7 +449,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x).astype(float)
+            f = np.empty_like(x, dtype=float)
             self.table.interpMany(x, y, f)
             f = f.reshape(shape)
             return f
@@ -471,7 +471,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x).astype(float)
+            f = np.empty_like(x)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))

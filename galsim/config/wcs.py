@@ -123,10 +123,8 @@ class SimpleWCSBuilder(WCSBuilder):
         kwargs, safe = galsim.config.GetAllParams(config, base, req, opt, single)
 
         # This would be weird, but might as well check...
-        if build_func._takes_rng:
-            if 'rng' not in base:
-                raise ValueError("No base['rng'] available for %s.type = %s"%(key,wcs_type))
-            kwargs['rng'] = base['rng']
+        if build_func._takes_rng: # pragma: no cover
+            kwargs['rng'] = galsim.config.check_for_rng(base, None, build_func.__name__)
         return kwargs
 
     def buildWCS(self, config, base):
@@ -216,7 +214,7 @@ def RegisterWCSType(wcs_type, builder, input_type=None):
     valid_wcs_types[wcs_type] = builder
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):
+        if isinstance(input_type, list):  # pragma: no cover
             for key in input_type:
                 RegisterInputConnectedType(key, wcs_type)
         else:

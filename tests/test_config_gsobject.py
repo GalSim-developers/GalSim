@@ -593,7 +593,8 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 }
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
+        'gal6' : { 'type' : 'RealGalaxyOriginal' },
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -638,6 +639,23 @@ def test_realgalaxy():
     gsobject_compare(gal5a, gal5b, conv=conv)
     # Also check that the noise attribute is correct.
     gsobject_compare(gal5a.noise._profile, gal5b.noise._profile, conv=conv)
+
+    # Should work if rng not in base config dict.
+    del config['rng']
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    galsim.config.BuildGSObject(config, 'gal5')
+
+    # If there is a logger, there should be a warning message emitted.
+    with CaptureLog() as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
+    assert "No base['rng'] available" in cl.output
+
+    config['obj_num'] = 5
+    gal1a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal1b = galsim.RealGalaxy(real_cat, index=0).original_gal
+    # The convolution here
+    gsobject_compare(gal1a, gal1b, conv=conv)
 
 
 @timer
@@ -712,6 +730,21 @@ def test_interpolated_image():
         test_g2, 0.7, decimal=3,
         err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
 
+    # gal5, gal6 should work with default rngs
+    del config['rng']
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    galsim.config.BuildGSObject(config, 'gal5')
+    galsim.config.BuildGSObject(config, 'gal6')
+
+    # If there is a logger, there should be a warning message emitted, but only the first time.
+    with CaptureLog() as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal5', logger=cl.logger)
+    assert "No base['rng'] available" in cl.output
+    with CaptureLog(level=1) as cl:
+        galsim.config.RemoveCurrent(config)
+        galsim.config.BuildGSObject(config, 'gal6', logger=cl.logger)
+    assert cl.output == ''
 
 @timer
 def test_add():
@@ -766,8 +799,30 @@ def test_add():
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
-        }
-    }
+        },
+        'gal6' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+            ]
+        },
+        'gal7' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+                { 'type' : 'Exponential' , 'half_light_radius' : 2.3, 'flux' : 0 }
+            ]
+        },
+        'gal8' : {
+            'type' : 'Add' ,
+            'items' : [
+                { 'type' : 'Gaussian', 'sigma' : 2, 'flux' : 0.3 },
+                { 'type' : 'Exponential', 'half_light_radius' : 2.3, 'flux' : 0.5 },
+                { 'type' : 'Sersic', 'n': 3, 'half_light_radius' : 1.2 }
+            ],
+            'flux' : 170.
+        },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -815,6 +870,33 @@ def test_add():
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # "Adding" 1 item is equivalent to just that item alone
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal6a, gal6b)
+
+    # Also if an item has 0 flux, it is ignored (for efficiency)
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal7a, gal7b)
+
+    # If the last flux is omitted, then it is set to make the toal = 1.
+    gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
+    gal8b_1 = galsim.Gaussian(sigma = 2, flux = 0.3)
+    gal8b_2 = galsim.Exponential(half_light_radius = 2.3, flux = 0.5)
+    gal8b_3 = galsim.Sersic(n = 3, half_light_radius = 1.2, flux = 0.2)
+    gal8b = galsim.Add([gal8b_1, gal8b_2, gal8b_3])
+    gal8b = gal8b.withFlux(170)
+    gsobject_compare(gal8a, gal8b)
+
+    # If the sum comes out larger than 1, emit a warning
+    config['gal8']['items'][1]['flux'] = 0.9
+    galsim.config.RemoveCurrent(config)
+    with CaptureLog() as cl:
+        galsim.config.BuildGSObject(config, 'gal8', logger=cl.logger)
+    assert ("Warning: Automatic flux for the last item in Sum (to make the total flux=1) " +
+            "resulted in negative flux = -0.200000 for that item") in cl.output
 
 
 @timer
@@ -872,8 +954,14 @@ def test_convolve():
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
-        }
-    }
+        },
+        'gal6' : {
+            'type' : 'Convolve' ,
+            'items' : [
+                { 'type' : 'Gaussian' , 'sigma' : 2 },
+            ]
+        },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -920,6 +1008,11 @@ def test_convolve():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # "Convolving" 1 item is equivalent to just that item alone
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.Gaussian(sigma = 2)
+    gsobject_compare(gal6a, gal6b)
 
 
 @timer
@@ -998,141 +1091,103 @@ def test_list():
 
 
 @timer
-def test_ring():
-    """Test building a GSObject from a ring test:
+def test_repeat():
+    """Test use of the repeat option for an object
     """
     config = {
-        'stamp' : {
-            'type' : 'Ring' ,
-            'num' : 2,
-        },
+        'rng' : galsim.BaseDeviate(1234),
         'gal' : {
-            'type' : 'Gaussian' ,
-            'sigma' : 2,
-            'ellip' : {
-                'type' : 'E1E2',
-                'e1' : { 'type' : 'List' ,
-                            'items' : [ 0.3, 0.2, 0.8 ],
-                            'index' : { 'type' : 'Sequence', 'repeat' : 2 }
-                        },
-                'e2' : 0.1
-            }
+            'repeat' : 3,
+            'type' : 'Gaussian',
+            'sigma' : { 'type' : 'Random', 'min' : 1, 'max' : 2 },
+            'flux' : '$(obj_num + 1) * 100'
         }
     }
 
-    gauss = galsim.Gaussian(sigma=2)
-    e1_list = [ 0.3, -0.3, 0.2, -0.2, 0.8, -0.8 ]
-    e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
+    ud = galsim.UniformDeviate(1234)
+    config['obj_num'] = 0
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal1b = galsim.Gaussian(sigma=ud()+1, flux=100)
+    gsobject_compare(gal1a, gal1b)
 
-    galsim.config.SetupConfigImageNum(config, 0, 0)
-    ignore = galsim.config.stamp_ignore
-    ring_builder = galsim.config.stamp_ring.RingBuilder()
-    for k in range(6):
-        galsim.config.SetupConfigObjNum(config, k)
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
-        gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
-        print('gal1a = ',gal1a)
-        print('gal1b = ',gal1b)
-        gsobject_compare(gal1a, gal1b)
+    # Next 2 should be the same.
+    config['obj_num'] = 1
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal1a, gal1b)
+    config['obj_num'] = 2
+    gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal1a, gal1b)
+
+    # Then next 3 should be a new object.
+    config['obj_num'] = 3
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gal2b = galsim.Gaussian(sigma=ud()+1, flux=400)
+    gsobject_compare(gal2a, gal2b)
+    config['obj_num'] = 4
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal2a, gal2b)
+    config['obj_num'] = 5
+    gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+    gsobject_compare(gal2a, gal2b)
+
+
+@timer
+def test_usertype():
+    """Test a user-defined type
+    """
+    # A custom GSObject class that will use BuildSimple
+    class PseudoDelta(galsim.GSObject):
+        _req_params = {}
+        _opt_params = { "flux" : float }
+        _single_params = []
+        _takes_rng = False
+        def __init__(self, flux=1., gsparams=None):
+            obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
+            galsim.GSObject.__init__(self, obj)
+
+    galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 
     config = {
-        'stamp' : {
-            'type' : 'Ring' ,
-            'num' : 10,
-        },
-        'gal' : {
-            'type' : 'Exponential', 'half_light_radius' : 2,
-            'ellip' : galsim.Shear(e2=0.3)
-        },
+        'gal1' : { 'type' : 'PseudoDelta' },
+        'gal2' : { 'type' : 'PseudoDelta', 'flux' : 100 },
+        'gal3' : { 'type' : 'PseudoDelta', 'flux' : 1.e5,
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
+                 },
     }
 
-    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    psf = galsim.Gaussian(sigma=2.3)
 
-    galsim.config.SetupConfigImageNum(config, 0, 0)
-    for k in range(25):
-        galsim.config.SetupConfigObjNum(config, k)
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal2a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
-        gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
-        gsobject_compare(gal2a, gal2b)
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.Gaussian(sigma=1.e-8, flux=1)
+    gsobject_compare(gal1a, gal1b, conv=psf)
 
-    config = {
-        'stamp' : {
-            'type' : 'Ring' ,
-            'num' : 5,
-            'full_rotation' : 360. * galsim.degrees,
-            'index' : { 'type' : 'Sequence', 'repeat' : 4 }
-        },
-        'gal' : {
-            'type' : 'Sum',
-            'items' : [
-                { 'type' : 'Exponential', 'half_light_radius' : 2,
-                    'ellip' : galsim.Shear(e2=0.3)
-                },
-                { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
-                    'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
-                }
-            ]
-        },
-    }
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.Gaussian(sigma=1.e-8, flux = 100)
+    gsobject_compare(gal2a, gal2b, conv=psf)
 
-    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
-    bulge = galsim.Sersic(n=3, half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
-    sum = disk + bulge
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.Gaussian(sigma=1.e-8, flux = 1.e5)
+    gal3b = gal3b.shift(dx = 0.7, dy = -1.2)
+    gsobject_compare(gal3a, gal3b, conv=psf)
 
-    galsim.config.SetupConfigImageNum(config, 0, 0)
-    for k in range(25):
-        galsim.config.SetupConfigObjNum(config, k)
-        index = k // 4  # make sure we use integer division
-        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal3a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
-        gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
-        gsobject_compare(gal3a, gal3b)
+    # Now an equivalent thing, but implemented with a builder rather than a class.
+    def BuildPseudoDelta(config, base, ignore, gsparams, logger):
+        opt = { 'flux' : float }
+        kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+        gsparams = galsim.GSParams(**gsparams)  # within config, it is passed around as a dict
+        return galsim.Gaussian(sigma=1.e-8, gsparams=gsparams, **kwargs), safe
 
-    # Check that the ring items correctly inherit their gsparams from the top level
-    config = {
-        'stamp' : {
-            'type' : 'Ring' ,
-            'num' : 20,
-            'full_rotation' : 360. * galsim.degrees,
-            'gsparams' : { 'maxk_threshold' : 1.e-2,
-                           'folding_threshold' : 1.e-2,
-                           'stepk_minimum_hlr' : 3 }
-        },
-        'gal' : {
-            'type' : 'Sum',
-            'items' : [
-                { 'type' : 'Exponential', 'half_light_radius' : 2,
-                    'ellip' : galsim.Shear(e2=0.3)
-                },
-                { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
-                    'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
-                }
-            ]
-        },
-    }
+    galsim.config.RegisterObjectType('PseudoDelta', BuildPseudoDelta)
 
-    galsim.config.SetupConfigImageNum(config, 0, 0)
-    galsim.config.SetupConfigObjNum(config, 0)
-    ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-    gal4a = ring_builder.buildProfile(config['stamp'], config, None, config['stamp']['gsparams'],
-                                      None)
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
-    disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
-    bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)
-    gal4b = disk + bulge
-    gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
+    galsim.config.RemoveCurrent(config)   # Clear the cached values, so it rebuilds.
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gsobject_compare(gal1a, gal1b, conv=psf)
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
-        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
-        gal4c = disk + bulge
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gsobject_compare(gal2a, gal2b, conv=psf)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gsobject_compare(gal3a, gal3b, conv=psf)
 
 
 if __name__ == "__main__":
@@ -1150,4 +1205,5 @@ if __name__ == "__main__":
     test_add()
     test_convolve()
     test_list()
-    test_ring()
+    test_repeat()
+    test_usertype()

@@ -36,7 +36,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src', 'pysrc', 'bin', 'galsim', 'share']
+subdirs=['src', 'pysrc', 'bin', 'share', 'galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -233,8 +233,8 @@ def ErrorExit(*args, **kwargs):
             else:
                 cmd = env['PYTHON'] + " < " + conftest
             cmd = PrependLibraryPaths(cmd,env)
-            p = subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, shell=False)
+            p = subprocess.Popen(['bash -c ' + cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, shell=True)
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
@@ -251,9 +251,23 @@ def ErrorExit(*args, **kwargs):
                 otool_out = p.stdout.readlines()
                 out.write('Output of the command %s is:\n'%cmd)
                 out.write(''.join(otool_out) + '\n')
-    except:
+            else:
+                conftest_num = int(conftest.replace('.sconf_temp/conftest_',''))
+                conftest_mod = '.sconf_temp/conftest_%d_mod/'%(conftest_num-1)
+                if os.path.exists(conftest_mod):
+                    if sys.platform.find('darwin') != -1:
+                        cmd = 'otool -L ' + os.path.join(conftest_mod, 'check_*.so')
+                    else:
+                        cmd = 'ldd ' + os.path.join(conftest_mod, 'check_*.so')
+                    p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         shell=True)
+                    mod_out = p.stdout.readlines()
+                    out.write('Output of the command %s is:\n'%cmd)
+                    out.write(''.join(mod_out) + '\n')
+    except Exception as e:
         out.write("Error trying to get output of conftest executables.\n")
-        out.write(sys.exc_info()[0])
+        out.write("Caught exception: " + str(e) + '\n')
+        out.write(str(sys.exc_info()) + '\n')
 
     # Give a helpful message if running El Capitan.
     if sys.platform.find('darwin') != -1:
@@ -531,7 +545,7 @@ def GetCompilerVersion(env):
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
         import subprocess
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
         lines = p.stdout.readlines()
 
         # Check if g++ is a symlink for something else:
@@ -1840,7 +1854,7 @@ def GetNCPU():
                 return ncpus
         else: # OSX:
             import subprocess
-            p = subprocess.Popen(['sysctl','-n','hw.ncpu'],stdout=subprocess.PIPE,shell=True)
+            p = subprocess.Popen(['sysctl -n hw.ncpu'],stdout=subprocess.PIPE,shell=True)
             return int(p.stdout.read().strip())
     # Windows:
     if os.environ.has_key('NUMBER_OF_PROCESSORS'):
