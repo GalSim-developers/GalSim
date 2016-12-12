@@ -20,7 +20,6 @@ from builtins import range, zip
 
 import numpy as np
 import galsim
-from . import utilities
 
 class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
@@ -174,7 +173,7 @@ class AtmosphericScreen(object):
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self.psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
-        noise = utilities.rand_arr(self.psi.shape, gd)
+        noise = galsim.utilities.rand_arr(self.psi.shape, gd)
         return galsim.fft.ifft2(galsim.fft.fft2(noise)*self.psi).real
 
     def advance(self):
@@ -350,17 +349,17 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
-    kwargs['screen_size'] = utilities.listify(screen_size)
+    kwargs['screen_size'] = galsim.utilities.listify(screen_size)
 
     # Set default r0_500 here, so that by default it gets broadcasted below such that the
     # _total_ r0_500 from _all_ screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
-    kwargs['r0_500'] = utilities.listify(kwargs['r0_500'])
+    kwargs['r0_500'] = galsim.utilities.listify(kwargs['r0_500'])
 
     # Turn speed, direction into vx, vy
     if 'speed' in kwargs:
-        kwargs['speed'] = utilities.listify(kwargs['speed'])
+        kwargs['speed'] = galsim.utilities.listify(kwargs['speed'])
         if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
@@ -380,7 +379,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
     return galsim.PhaseScreenList(AtmosphericScreen(**kw)
-                                  for kw in utilities.lod_to_dol(kwargs, nmax))
+                                  for kw in galsim.utilities.lod_to_dol(kwargs, nmax))
 
 
 # Some utilities for working with Zernike polynomials
@@ -505,7 +504,7 @@ def __noll_coef_array(jmax, obscuration, annular):
         coef = _zern_coef_array(n,m,obscuration,shape1,annular)
         out[:,:,j-1] = coef
     return out
-_noll_coef_array = utilities.LRU_Cache(__noll_coef_array)
+_noll_coef_array = galsim.utilities.LRU_Cache(__noll_coef_array)
 
 # Following 3 functions from
 #
@@ -520,7 +519,7 @@ def __h(m, j, eps):
         num = -(2*(2*j+2*m-1)) * _Q(m-1, j+1, eps)[0]
         den = (j+m)*(1-eps**2) * _Q(m-1, j, eps)[0]
         return num/den * _h(m-1, j, eps)
-_h = utilities.LRU_Cache(__h)
+_h = galsim.utilities.LRU_Cache(__h)
 
 # Mahajan's Q-function for annular Zernikes.
 def __Q(m, j, eps):
@@ -535,7 +534,7 @@ def __Q(m, j, eps):
             qq = qq*qq[0]  # Don't use *= here since it modifies the cache!
             summation[:i+1] += qq/_h(m-1, i, eps)
         return summation * num / den
-_Q = utilities.LRU_Cache(__Q)
+_Q = galsim.utilities.LRU_Cache(__Q)
 
 def __annular_zern_rho_coefs(n, m, eps):
     """Compute coefficients of radial part of annular Zernike (n, m), with fractional linear
@@ -552,7 +551,7 @@ def __annular_zern_rho_coefs(n, m, eps):
         for i, coef in enumerate(coefs):
             if i % 2 == 1: continue
             j = i // 2
-            more_coefs = (norm**j) * utilities.binomial(-eps**2, 1, j)
+            more_coefs = (norm**j) * galsim.utilities.binomial(-eps**2, 1, j)
             out[0:i+1:2] += coef*more_coefs
     elif m == n:  # Equation (25)
         norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
@@ -562,7 +561,7 @@ def __annular_zern_rho_coefs(n, m, eps):
         norm = np.sqrt((1-eps**2)/(2*(2*j+m+1) * _h(m,j,eps)))
         out[m::2] = norm * _Q(m, j, eps)
     return out
-_annular_zern_rho_coefs = utilities.LRU_Cache(__annular_zern_rho_coefs)
+_annular_zern_rho_coefs = galsim.utilities.LRU_Cache(__annular_zern_rho_coefs)
 
 def horner(x, coef):
     """Evaluate univariate polynomial using Horner's method.

@@ -144,12 +144,12 @@ namespace galsim {
 
     void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud)
     {
-        int N = size();
-        if (rhs.size() != N)
+        if (rhs.size() != size())
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         double xSave=0.;
         double ySave=0.;
         double fluxSave=0.;
+        int N = size();
 
         for (int iOut = N-1; iOut>=0; iOut--) {
             // Randomly select an input photon to use at this output

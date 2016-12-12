@@ -81,11 +81,10 @@ class TruthBuilder(ExtraOutputBuilder):
         if 'types' not in self.scratch:
             self.scratch['types'] = types
         elif self.scratch['types'] != types: # pragma: no cover
-            if logger:
-                logger.error("Type mismatch found when building truth catalog at object %d",
-                    base['obj_num'])
-                logger.error("Types for current object = %s",repr(types))
-                logger.error("Expecting types = %s",repr(self.scratch['types']))
+            logger.error("Type mismatch found when building truth catalog at object %d",
+                         base['obj_num'])
+            logger.error("Types for current object = %s",repr(types))
+            logger.error("Expecting types = %s",repr(self.scratch['types']))
             raise RuntimeError("Type mismatch found when building truth catalog.")
         self.scratch[obj_num] = row
 
