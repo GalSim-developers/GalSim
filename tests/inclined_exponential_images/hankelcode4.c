@@ -38,7 +38,7 @@
 // set the image domain oversampling - must match the PSF oversampling
 int oversampling = 5;
 
-int makecirculargalaxy(double sersic_n, double trunc_factor, double rfiducial, int modeldim, double *f)
+int makecirculargalaxy(double sersic_n, double rfiducial, double trunc_factor, int modeldim, double *f)
 {
   // make an oversampled galaxy model
   double xx, yy, r;
@@ -513,10 +513,10 @@ int main(int argc, char * argv[])
   // Check we have enough cline-args
   if(argc!=8)
   {
-      printf("This program must be run with file command-line arguments:");
-      printf("eg. ./Inclined_Exponential_Profile <n> <i> <R> <h> <t> <p> <output_name>");
+	  printf("This program must be run with file command-line arguments:");
+	  printf("eg. ./Inclined_Exponential_Profile <n> <i> <R> <h> <t> <p> <output_name>");
       fflush(stdout);
-      return 1;
+	  return 1;
   }
 
   double sersic_n = strtod(argv[1], NULL);
@@ -680,11 +680,11 @@ int main(int argc, char * argv[])
 
   if(sini_squared==0)
   {
-      emod = 0.;
+	  emod = 0.;
   }
   else
   {
-      emod = (2. - sini_squared + 2*sqrt(1-sini_squared))/sini_squared;
+	  emod = (2. - sini_squared + 2*sqrt(1-sini_squared))/sini_squared;
   }
 
   double e1 = emod * cos(2*pos_angle);
