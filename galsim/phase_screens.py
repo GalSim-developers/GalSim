@@ -92,11 +92,13 @@ class AtmosphericScreen(object):
             rng = galsim.BaseDeviate()
 
         self._orig_rng = rng.duplicate()
+        self.dynamic = True
+        self.reversible = self.alpha == 1.0
+
         self._init_psi()
         self._reset()
-
         # Free some RAM for frozen-flow screen.
-        if self.alpha == 1.0:
+        if self.reversible:
             del self._psi, self._screen
 
     def __str__(self):
@@ -170,9 +172,10 @@ class AtmosphericScreen(object):
     def _seek(self, t):
         if t == self._time:
             return
-        if self.alpha != 1.0:
+        if not self.reversible:
+            # Can't reverse, so reset and move forward.
             if t < self._time:
-                raise ValueError("Cannot seek backwards for AtmosphericScreen with alpha != 1.0")
+                self._reset()
             # Find number of boiling updates we need to perform.
             previous_update_number = int(self._time // self.time_step)
             final_update_number = int(t // self.time_step)
@@ -217,7 +220,7 @@ class AtmosphericScreen(object):
         # Special undocumented value for t: None means use self._time.
         if t is None:
             return self._wavefront(u, v, self._time, theta)
-        if self.alpha == 1.0:
+        if self.reversible:
             return self._wavefront(u, v, t, theta)
         else:
             out = np.empty_like(u, dtype=np.float64)
@@ -253,7 +256,7 @@ class AtmosphericScreen(object):
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @returns        Arrays dWdu, dWdv.
         """
-        if self.alpha == 1.0:
+        if self.reversible:
             return self._wavefront_gradient(u, v, t, theta)
         else:
             out = np.empty_like(u, dtype=np.float64)
@@ -283,7 +286,7 @@ class AtmosphericScreen(object):
         self._time = 0.0
 
         # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if self.alpha != 1.0 or not hasattr(self, '_tab2d'):
+        if not self.reversible or not hasattr(self, '_tab2d'):
             self._screen = self._random_screen()
             self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
                                    endpoint=False)
@@ -729,6 +732,9 @@ class OpticalScreen(object):
         self.coef_array = np.dot(noll_coef, self.aberrations[1:])
         # Convert from unit disk coefficients to full aperture (diam != 2) coefficients.
         self.coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+
+        self.dynamic = False
+        self.reversible = True
 
     def __str__(self):
         return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)

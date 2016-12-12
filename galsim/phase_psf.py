@@ -716,6 +716,8 @@ class PhaseScreenList(object):
         self.__dict__.pop('rng', None)
         if any(hasattr(l, 'rng') for l in self):
             self.rng = None
+        self.dynamic = any(l.dynamic for l in self)
+        self.reversible = all(l.reversible for l in self)
 
     def _seek(self, t):
         """Seek all layers to time t."""
@@ -744,11 +746,11 @@ class PhaseScreenList(object):
 
     def _prepareDraw(self):
         """Calculate previously delayed PSFs."""
-        # First, see if we have any time-evolving screens.  If not, then we can immediately compute
-        # each PSF in a simple loop.
         if not self._pending:
             return
-        if not any(hasattr(l, '_time') for l in self):
+            # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
+            # in a simple loop.
+        if not self.dynamic:
             for psf in self._pending:
                 psf._step()
                 psf._finalize()
@@ -1239,6 +1241,7 @@ class PhaseScreenPSF(GSObject):
         if not self._use_phase_shooting:
             self._prepareDraw()
             return self.ii.shoot(n_photons, rng)
+
         # Setup the rng if not provided one.
         if rng is None:
             ud = galsim.UniformDeviate()

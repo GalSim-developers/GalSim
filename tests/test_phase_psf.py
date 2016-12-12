@@ -117,12 +117,6 @@ def test_phase_screen_list():
 
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
 
-    # Check that can't rewind a screen with alpha != 1.0
-    try:
-        np.testing.assert_raises(ValueError, ar1._seek, -1)
-    except ImportError:
-        print('The assert_raises tests require nose')
-
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
     assert ar1 == ar2
