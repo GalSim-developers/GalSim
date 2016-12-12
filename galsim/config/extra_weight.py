@@ -40,11 +40,12 @@ class WeightBuilder(ExtraOutputBuilder):
     def processStamp(self, obj_num, config, base, logger):
         if base['do_noise_in_stamps']:
             weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
-            if 'include_obj_var' in base['output']['weight']:
+            if 'include_obj_var' in config:
                 include_obj_var = galsim.config.ParseValue(
-                        base['output']['weight'], 'include_obj_var', config, bool)[0]
+                        config, 'include_obj_var', base, bool)[0]
             else:
                 include_obj_var = False
+            base['current_noise_image'] = base['current_stamp']
             galsim.config.AddNoiseVariance(base,weight_im,include_obj_var,logger)
             self.scratch[obj_num] = weight_im
 
@@ -56,7 +57,7 @@ class WeightBuilder(ExtraOutputBuilder):
             for obj_num in obj_nums:
                 stamp = self.scratch[obj_num]
                 b = stamp.bounds & image.getBounds()
-                if b.isDefined():
+                if b.isDefined(): # pragma: no branch
                     # This next line is equivalent to:
                     #    image[b] += stamp[b]
                     # except that this doesn't work through the proxy.  We can only call methods
@@ -64,19 +65,13 @@ class WeightBuilder(ExtraOutputBuilder):
                     image.setSubImage(b, image.subImage(b) + stamp[b])
         else:
             # Otherwise, build the variance map now.
-            if 'include_obj_var' in base['output']['weight']:
+            if 'include_obj_var' in config:
                 include_obj_var = galsim.config.ParseValue(
-                        base['output']['weight'], 'include_obj_var', config, bool)[0]
+                        config, 'include_obj_var', base, bool)[0]
             else:
                 include_obj_var = False
-            if isinstance(image, galsim.Image):
-                galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
-            else:
-                # If we are using a Proxy for the image, the code in AddNoiseVar won't work
-                # properly.  The easiest workaround is to build a new image here and copy it over.
-                im2 = galsim.ImageF(image.getBounds(), wcs=base['wcs'], init_value=0.)
-                galsim.config.AddNoiseVariance(base,im2,include_obj_var,logger)
-                image.copyFrom(im2)
+            base['current_noise_image'] = base['current_image']
+            galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
 
         # Now invert the variance image to get weight map.
         # Note that any zeros present in the image are maintained as zeros after inversion.

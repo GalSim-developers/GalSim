@@ -484,7 +484,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the
         # draw function does.
-        prof = prof._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
+        prof = prof._fix_center(self.image.bounds, offset, use_true_center, reverse=True)
 
         # Save the offset we will need when pickling.
         if hasattr(prof, 'offset'):

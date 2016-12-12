@@ -1,0 +1,7 @@
+-I../include
+-I../include/galsim
+-I../include/galsim/boost1_48_0
+-I../include/galsim/integ
+-I../include/galsim/hsm
+-I../include/galsim/bessel
+-I/sw/opt/boost-1_58/include

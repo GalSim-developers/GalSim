@@ -58,7 +58,6 @@ from heapq import heappush, heappop
 
 import numpy as np
 import galsim
-from . import utilities
 from galsim import GSObject
 
 
@@ -330,11 +329,11 @@ class Aperture(object):
             # Add the initial rotation if requested, converting to radians.
             rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
+                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in range(nstruts):
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
+                rot_u, rot_v = galsim.utilities.rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale,

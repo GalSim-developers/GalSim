@@ -108,6 +108,11 @@
         "items" : [ "fft" , "phot" ]
     },
 
+    "max_extra_noise" : {
+        "type" : "List",
+        "items" : [ "None", 0.01 ]
+    },
+
     "noise" : { "sky_level" : 1e4 },
     "random_seed" : { "type" : "Sequence" , "first" : 553728 , "index_key" : "image_num" },
 

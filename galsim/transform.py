@@ -30,11 +30,17 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
     This function will inspect its input argument to decide if a Transformation object or a
     ChromaticTransformation object is required to represent the resulting transformed object.
 
+    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
+    non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
+    only refers to an overall amplitude ratio for the surface brightness profile.  The total
+    flux scaling is actually |det(jac)| * flux_ratio.
+
     @param obj              The object to be transformed.
     @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
                             of the transformation. [default: (1,0,0,1)]
     @param offset           A galsim.PositionD giving the offset by which to shift the profile.
-    @param flux_ratio       A factor by which to multiply the flux of the object. [default: 1]
+    @param flux_ratio       A factor by which to multiply the surface brightness of the object.
+                            (Technically, not necessarily the flux.  See above.) [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -82,11 +88,17 @@ class Transformation(galsim.GSObject):
     of transform() and shift(), which are described by (dudx,dudy,dvdx,dvdy) and (dx,dy)
     respectively.
 
+    Note: the name of the flux_ratio parameter is technically wrong here if the jacobian has a
+    non-unit determinant, since that would also scale the flux.  The flux_ratio parameter actually
+    only refers to an overall amplitude ratio for the surface brightness profile.  The total
+    flux scaling is actually |det(jac)| * flux_ratio.
+
     @param obj              The object to be transformed.
     @param jac              A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
                             of the transformation. [default: (1,0,0,1)]
     @param offset           A galsim.PositionD giving the offset by which to shift the profile.
-    @param flux_ratio       A factor by which to multiply the flux of the object. [default: 1]
+    @param flux_ratio       A factor by which to multiply the surface brightness of the object.
+                            (Technically, not necessarily the flux.  See above.) [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -96,7 +108,7 @@ class Transformation(galsim.GSObject):
     original        The original object that is being transformed.
     jac             The jacobian of the transformation matrix.
     offset          The offset being applied.
-    flux_ratio      The amount by which the original flux is multiplied.
+    flux_ratio      The amount by which the overall surface brightness amplitude is multiplied.
     gsparams        The usual gsparams attribute that all GSObjects have.
 
     Note: if `gsparams` is unspecified (or None), then the Transformation instance inherits the

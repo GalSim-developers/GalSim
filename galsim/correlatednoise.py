@@ -21,8 +21,6 @@ Python layer documentation and functions for handling correlated noise in GalSim
 
 import numpy as np
 import galsim
-from . import base
-from . import utilities
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -79,7 +77,7 @@ class _BaseCorrelatedNoise(object):
         if rng is not None and not isinstance(rng, galsim.BaseDeviate):
             raise TypeError(
                 "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
-        if not isinstance(gsobject, base.GSObject):
+        if not isinstance(gsobject, galsim.GSObject):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
@@ -171,8 +169,8 @@ class _BaseCorrelatedNoise(object):
         On output the Image instance `image` will have been given additional noise according to the
         given CorrelatedNoise instance `correlated_noise`.  Normally, `image.scale` is used to
         determine the input Image pixel separation, and if `image.scale <= 0` a pixel scale of 1 is
-        assumed.  If the image has a non-trivial WCS, it must at least be "uniform", i.e.,
-        `image.wcs.isUniform() == True`.
+        assumed.  If the image has a non-uniform WCS, the local uniform approximation at the center
+        of the image will be used.
 
         Note that the correlations defined in a correlated_noise object are defined in terms of
         world coordinates (i.e. typically arcsec on the sky).  Some care is thus required if you
@@ -222,14 +220,10 @@ class _BaseCorrelatedNoise(object):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
-        if image.wcs is not None and not image.wcs.isUniform():
-            raise NotImplementedError("Sorry, correlated noise cannot be applied to an "+
-                                      "image with a non-uniform WCS.")
-
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs
+            wcs = image.wcs.local(image.trueCenter())
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
         rootps = self._get_update_rootps(image.array.shape, wcs)
@@ -270,8 +264,8 @@ class _BaseCorrelatedNoise(object):
         is the case for the final noise to be uncorrelated.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-trivial WCS,
-        it must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,
+        the local uniform approximation at the center of the image will be used.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after whitening, the whitenImage() method in fact returns this variance.  For example:
@@ -326,7 +320,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs
+            wcs = image.wcs.local(image.trueCenter())
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
@@ -369,8 +363,8 @@ class _BaseCorrelatedNoise(object):
         is the case for the final noise correlation function to be symmetric in the requested way.
 
         Normally, `image.scale` is used to determine the input Image pixel separation, and if
-        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-trivial WCS,
-        it must at least be "uniform", i.e., `image.wcs.isUniform() == True`.
+        `image.wcs` is None, it will use the wcs of the noise.  If the image has a non-uniform WCS,
+        the local uniform approximation at the center of the image will be used.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
@@ -418,7 +412,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs
+            wcs = image.wcs.local(image.trueCenter())
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
         # and the total variance of the combination.
@@ -1149,7 +1143,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             store_rootps = False
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
-        cf_array_prelim = utilities.roll2d(
+        cf_array_prelim = galsim.utilities.roll2d(
             cf_array_prelim, (cf_array_prelim.shape[0] // 2, cf_array_prelim.shape[1] // 2))
 
         # The underlying C++ object is expecting the CF to be represented by an odd-dimensioned
@@ -1191,7 +1185,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         elif scale is not None:
             cf_image.scale = scale
         elif image is not None and image.wcs is not None:
-            cf_image.wcs = image.wcs
+            cf_image.wcs = image.wcs.local(image.trueCenter())
 
         # If wcs is still None at this point or is a PixelScale <= 0., use scale=1.
         if cf_image.wcs is None or (cf_image.wcs.isPixelScale() and cf_image.wcs.scale <= 0):
@@ -1201,7 +1195,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         if x_interpolant is None:
             x_interpolant = galsim.Linear(tol=1.e-4)
         else:
-            x_interpolant = utilities.convert_interpolant(x_interpolant)
+            x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
@@ -1382,7 +1376,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     if x_interpolant is None:
         x_interpolant = galsim.Linear(tol=1.e-4)
     else:
-        x_interpolant = utilities.convert_interpolant(x_interpolant)
+        x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
 
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
