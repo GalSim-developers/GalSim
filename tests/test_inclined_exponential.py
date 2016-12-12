@@ -16,9 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-"""This file contains tests for the InclinedExponential class. Since the InclinedSersic
-   class is a generalization of this, we test it here as well in the case where we expect
-   it to behave the same.
+"""This file contains tests for the InclinedExponential and InclinedSersic classes.
 """
 
 from __future__ import print_function
@@ -43,11 +41,23 @@ save_profiles = True
 image_dir = './inclined_exponential_images'
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
+
+# InclinedExponential test cases, which we'll also test InclinedSersic with
 fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
 image_inc_angles = ("0.0", "1.3", "0.2", "0.01", "0.1", "0.78")
 image_scale_radii = ("3.0", "3.0", "3.0", "3.0", "2.0", "2.0")
 image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
 image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
+
+# InclinedSersic-only test cases
+sersic_image_ns = ("1.5","1.5","2.5","2.5")
+sersic_fluxes = ("1.0","1.0","1.0","1.0")
+sersic_image_inc_angles = ("0.78","0.78","0.78","0.78")
+sersic_image_scale_radii = ("2.0","2.0","2.0","2.0")
+sersic_image_scale_heights = ("0.5","0.5","0.5","0.5")
+sersic_image_trunc_factors = ("20","4.5","20","4.5")
+sersic_image_pos_angles = ("-0.2","-0.2","-0.2","-0.2")
+
 image_nx = 64
 image_ny = 64
 
@@ -134,6 +144,59 @@ def test_regression():
                     decimal = 2,
                     err_msg = "Error in comparison of "+mode+" profile to "+image_filename,
                     verbose=True)
+            
+    # Now do Sersic-only tests
+    for (sersic_n, inc_angle, scale_radius, scale_height,
+         trunc_factor, pos_angle) in zip(image_inc_angles,
+                                         image_scale_radii,
+                                         image_scale_heights,
+                                         image_pos_angles):
+
+        image_filename = ("galaxy_"+sersic_n+"_"+inc_angle+"_"+scale_radius+
+                          "_"+scale_height+"_"+trunc_factor+"_"+pos_angle+".fits")
+        print("Comparing "+mode+" against "+image_filename+"...")
+        
+        image = galsim.fits.read(image_filename, image_dir)
+
+        # Get float values for the details
+        sersic_n=float(sersic_n)
+        inc_angle=float(inc_angle)
+        scale_radius=float(scale_radius)
+        scale_height=float(scale_height)
+        trunc_factor=float(trunc_factor)
+        pos_angle=float(pos_angle)
+
+        # Now make a test image
+        test_profile = get_prof(mode, n=sersic_n, trunc=trunc_factor*scale_radius,
+                                inc_angle*galsim.radians, scale_radius, scale_height)
+        check_basic(test_profile, mode)
+
+        # Rotate it by the position angle
+        test_profile = test_profile.rotate(pos_angle*galsim.radians)
+        
+        # Draw it onto an image
+        test_image = galsim.Image(image_nx,image_ny,scale=1.0)
+        test_profile.drawImage(test_image,offset=(0.5,0.5)) # Offset to match Lance's
+        
+        # Save if desired
+        if save_profiles:
+            test_image_filename = image_filename.replace(".fits","_"+mode+".fits")
+            test_image.write(test_image_filename, image_dir, clobber=True)
+
+        # Compare to the example - Due to the different fourier transforms used, some offset is
+        # expected, so we just compare in the core to two decimal places
+
+        image_core = image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
+        test_image_core = test_image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
+
+        ratio_core = image_core / test_image_core
+
+        np.testing.assert_array_almost_equal(
+                ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core),
+                decimal = 2,
+                err_msg = "Error in comparison of "+mode+" profile to "+image_filename,
+                verbose=True)
+    
 
 @timer
 def test_exponential():
