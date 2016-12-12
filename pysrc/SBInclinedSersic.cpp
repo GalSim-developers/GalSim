@@ -49,7 +49,6 @@ namespace galsim {
                 s = bp::extract<double>(scale_radius);
                 rType = SBInclinedSersic::SCALE_RADIUS;
             }
-            std::cout << n << " " << inclination << " " << s << std::endl;
             return new SBInclinedSersic(n, inclination, s, scale_height, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
