@@ -51,10 +51,9 @@ image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 
 # InclinedSersic-only test cases
 sersic_image_ns = ("1.5","1.5","2.5","2.5")
-sersic_fluxes = ("1.0","1.0","1.0","1.0")
-sersic_image_inc_angles = ("0.78","0.78","0.78","0.78")
+sersic_image_inc_angles = ("0.1","0.1","0.1","0.1")
 sersic_image_scale_radii = ("2.0","2.0","2.0","2.0")
-sersic_image_scale_heights = ("0.5","0.5","0.5","0.5")
+sersic_image_scale_heights = ("1.0","1.0","1.0","1.0")
 sersic_image_trunc_factors = ("20","4.5","20","4.5")
 sersic_image_pos_angles = ("-0.2","-0.2","-0.2","-0.2")
 
@@ -147,10 +146,12 @@ def test_regression():
             
     # Now do Sersic-only tests
     for (sersic_n, inc_angle, scale_radius, scale_height,
-         trunc_factor, pos_angle) in zip(image_inc_angles,
-                                         image_scale_radii,
-                                         image_scale_heights,
-                                         image_pos_angles):
+         trunc_factor, pos_angle) in zip(sersic_image_ns,
+                                         sersic_image_inc_angles,
+                                         sersic_image_scale_radii,
+                                         sersic_image_scale_heights,
+                                         sersic_image_trunc_factors,
+                                         sersic_image_pos_angles):
 
         image_filename = ("galaxy_"+sersic_n+"_"+inc_angle+"_"+scale_radius+
                           "_"+scale_height+"_"+trunc_factor+"_"+pos_angle+".fits")
@@ -167,8 +168,8 @@ def test_regression():
         pos_angle=float(pos_angle)
 
         # Now make a test image
-        test_profile = get_prof(mode, n=sersic_n, trunc=trunc_factor*scale_radius,
-                                inc_angle*galsim.radians, scale_radius, scale_height)
+        test_profile = get_prof(mode, inc_angle*galsim.radians, scale_radius, scale_height,
+                                n=sersic_n, trunc=trunc_factor*scale_radius)
         check_basic(test_profile, mode)
 
         # Rotate it by the position angle
@@ -496,11 +497,11 @@ def test_pickle():
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
-    test_sanity()
-    test_k_limits()
-    test_eq_ne()
-    test_pickle()
-    test_exponential()
-    test_sersic()
-    test_edge_on()
+#     test_sanity()
+#     test_k_limits()
+#     test_eq_ne()
+#     test_pickle()
+#     test_exponential()
+#     test_sersic()
+#     test_edge_on()
     test_regression()
