@@ -168,8 +168,6 @@ def test_regression():
         pos_angle=float(pos_angle)
 
         # Now make a test image
-#         test_profile = get_prof(mode, inc_angle*galsim.radians, scale_radius, scale_height,
-#                                 n=sersic_n, trunc=trunc_factor*scale_radius)
         test_profile = galsim.Sersic(n=sersic_n,scale_radius=scale_radius,trunc=trunc_factor*scale_radius)
         check_basic(test_profile, mode)
 
@@ -252,7 +250,7 @@ def test_sersic():
     
         inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
     
-        inc_profile.drawImage(inc_image)
+        inc_profile.drawImage(inc_image,method="fft")
         
         if save_profiles:
             sersic_image.write("test_sersic.fits", image_dir, clobber=True)
@@ -267,9 +265,6 @@ def test_sersic():
         else:
             rtol = 1e-3
             atol = 1e-5
-            
-        d_array = atol + rtol*np.abs(sersic_image.array)
-        badness_array = np.abs(inc_image.array-sersic_image.array)/d_array
             
         np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
     
