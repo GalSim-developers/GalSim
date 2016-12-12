@@ -20,7 +20,7 @@
 // Testbed code for fast generation of galaxy model surface brightness distributions
 //
 // Lance Miller June/July/August 2016
-// Bryan Gillis August 2016
+// Bryan Gillis August/December 2016
 
 // library dependencies:
 //     cfitsio
@@ -38,16 +38,14 @@
 // set the image domain oversampling - must match the PSF oversampling
 int oversampling = 5;
 
-int makecirculargalaxy(double sersic, double rfiducial, int modeldim, double *f)
+int makecirculargalaxy(double sersic_n, double trunc_factor, double rfiducial, int modeldim, double *f)
 {
   // make an oversampled galaxy model
-  double rmax, xx, yy, r;
+  double xx, yy, r;
   int cen, x, y, os, p, ox, oy, xs, ys;
 
   // galaxy parameters
   cen = modeldim/2;
-  // rmax = 4.5;
-  rmax = 20;
 
   // image domain oversampling (only for this model generation) - not the same as oversampling in the rest of the code
   os = 5;
@@ -72,9 +70,9 @@ int makecirculargalaxy(double sersic, double rfiducial, int modeldim, double *f)
                 {
                   xx = x + (0.5+(double)ox)/(double)os - 0.5 - cen;
                   r = sqrt( pow(yy,2) + pow(xx,2) )/rfiducial;
-                  if (r < rmax)
+                  if (r < trunc_factor)
                     {
-                      r = pow( r, (1./sersic) );
+                      r = pow( r, (1./sersic_n) );
                       f[p] += exp(-r)/(os*os);
                     }
                 }
@@ -513,23 +511,27 @@ int main(int argc, char * argv[])
   // the GenerateModel function
 
   // Check we have enough cline-args
-  if(argc!=6)
+  if(argc!=8)
   {
-	  printf("This program must be run with file command-line arguments:");
-	  printf("eg. ./Inclined_Exponential_Profile <i> <R> <h> <p> <output_name>");
+      printf("This program must be run with file command-line arguments:");
+      printf("eg. ./Inclined_Exponential_Profile <n> <i> <R> <h> <t> <p> <output_name>");
       fflush(stdout);
-	  return 1;
+      return 1;
   }
 
-  double inc_angle = strtod(argv[1], NULL);
-  double scale_radius = strtod(argv[2], NULL);
-  double scale_height = strtod(argv[3], NULL);
-  double pos_angle = strtod(argv[4], NULL);
-  char * output_name = argv[5];
+  double sersic_n = strtod(argv[1], NULL);
+  double inc_angle = strtod(argv[2], NULL);
+  double scale_radius = strtod(argv[3], NULL);
+  double scale_height = strtod(argv[4], NULL);
+  double trunc_factor = strtod(argv[5], NULL);
+  double pos_angle = strtod(argv[6], NULL);
+  char * output_name = argv[7];
 
+  printf("Sersic Index: %1.1f\n",sersic_n);
   printf("Inclination angle: %1.4f\n",inc_angle);
   printf("Scale radius: %3.2f\n",scale_radius);
   printf("Scale height: %3.2f\n",scale_height);
+  printf("Truncation factor: %3.2f\n",trunc_factor);
   printf("Position angle: %1.4f\n",pos_angle);
   fflush(stdout);
 
@@ -550,7 +552,6 @@ int main(int argc, char * argv[])
   // that we wish to simulate
   int mdim, hmdim, nsersic;
   double *model;
-  double sersic;
   fftw_complex *modelft;
   fftw_plan bigmodel;
   // set the dimension of the large input circular galaxy.  Note that this must be a large
@@ -570,10 +571,8 @@ int main(int argc, char * argv[])
     {
       // allocate memory for this model FT
       rmodelft[i] = (float*)calloc(hmdim, sizeof(float));
-      // define the sersic index value (as set here, will be 1 or 2)
-      sersic = 1. + (double)i;
       // make a large circular galaxy profile
-      makecirculargalaxy(sersic, rfiducial, mdim, model);
+      makecirculargalaxy(sersic_n, rfiducial, trunc_factor, mdim, model);
       // FFT
       fftw_execute(bigmodel);
       // convert FT complex to float Hankel and store with separate index for each model component
@@ -681,11 +680,11 @@ int main(int argc, char * argv[])
 
   if(sini_squared==0)
   {
-	  emod = 0.;
+      emod = 0.;
   }
   else
   {
-	  emod = (2. - sini_squared + 2*sqrt(1-sini_squared))/sini_squared;
+      emod = (2. - sini_squared + 2*sqrt(1-sini_squared))/sini_squared;
   }
 
   double e1 = emod * cos(2*pos_angle);
