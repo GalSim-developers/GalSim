@@ -250,7 +250,11 @@ def test_sersic():
     
         inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
     
-        inc_profile.drawImage(inc_image,method="fft")
+        if trunc==0:
+            method = "fft"
+        else:
+            method = "real_space"
+        inc_profile.drawImage(inc_image,method=method)
         
         if save_profiles:
             sersic_image.write("test_sersic.fits", image_dir, clobber=True)
