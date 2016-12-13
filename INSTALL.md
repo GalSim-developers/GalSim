@@ -47,7 +47,7 @@ bandpasses and SEDs can be enabled if you have the pandas module (but the code
 will work, albeit more slowly, without this module).
 
 There are alternative modules to enable some of the GalSim functionality, such
-as pyfits, starlink, and so on (listed below as optional), but the above list is
+as pyfits and so on (listed below as optional), but the above list is
 a minimal set of dependencies to get started.  The sections below give a lot
 more details about how to obtain these dependencies; many are available from
 sources like pip or easy_install, rather than having to be installed from
