@@ -1512,19 +1512,32 @@ PyMODINIT_FUNC initcheck_numpy(void)
         ErrorExit('Unable to build a python loadable module that uses numpy')
 
     config.Result(1)
+
+    result, numpy_ver = TryScript(config,"import numpy; print(numpy.__version__)",python)
+    print 'Numpy version is',numpy_ver
+
     return 1
 
 def CheckPyFITS(config):
     config.Message('Checking for PyFITS... ')
 
     result, output = TryScript(config,"import pyfits",python)
+    astropy = False
     if not result:
         result, output = TryScript(config,"import astropy.io.fits",python)
+        astropy = True
     if not result:
         ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
                   python)
-
     config.Result(1)
+
+    if astropy:
+        result, astropy_ver = TryScript(config,"import astropy; print(astropy.__version__)",python)
+        print 'Astropy version is',astropy_ver
+    else:
+        result, pyfits_ver = TryScript(config,"import pyfits; print(pyfits.__version__)",python)
+        print 'PyFITS version is',pyfits_ver
+
     return 1
 
 def CheckFuture(config):
@@ -1533,8 +1546,11 @@ def CheckFuture(config):
     result, output = TryScript(config,"import future",python)
     if not result:
         ErrorExit("Unable to import future using the python executable:\n" + python)
-
     config.Result(1)
+
+    result, future_ver = TryScript(config,"import future; print(future.__version__)",python)
+    print 'Future version is',future_ver
+
     return 1
 
 def CheckBoostPython(config):
@@ -1764,7 +1780,7 @@ int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
     ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
-    print 'TMV version is '+tmv_version.strip()
+    print 'TMV version is',tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
