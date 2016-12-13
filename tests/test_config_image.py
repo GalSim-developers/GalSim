@@ -361,8 +361,11 @@ def test_reject():
     assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
-    assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
-    assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
+    # This next one can end up with slightly different numerical values depending on numpy version
+    #assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
+    #assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
+    assert re.search("Object 0: Measured flux = 3253.17[0-9]* < 0.95 \* 3457.712670.", cl.output)
+    assert re.search("Object 0: Measured snr = 60.992[0-9]* > 50.0.", cl.output)
 
     # For test coverage to get all branches, do min_snr and max_snr separately.
     del config['stamp']['max_snr']
@@ -370,7 +373,7 @@ def test_reject():
     with CaptureLog() as cl:
         im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
     #print(cl.output)
-    assert "Object 8: Measured snr = 9.157386 < 20.0." in cl.output
+    assert re.search("Object 8: Measured snr = 9.1573[0-9]* < 20.0.", cl.output)
 
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
