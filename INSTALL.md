@@ -38,11 +38,13 @@ recent versions will also work:
 - Boost (1.61)
 
 A few optional dependencies provide additional functionality, but GalSim can
-otherwise be compiled and used without them.  To get WCS functionality with
-astropy, scipy is required (since it is a dependency of astropy WCS tools).  To
-use yaml for config parsing, the pyyaml module is needed.  Faster text file
-parsing for reading in bandpasses and SEDs can be enabled if you have the pandas
-module (but the code will work, albeit more slowly, without this module).
+otherwise be compiled and used without them.  Basic WCS functionality is native
+to GalSim, but for users with more complicated WCS needs, we recommend
+installing starlink-pyast. Astropy's WCS package is also supported, but note
+that it requires scipy as an additional dependency.  To use yaml for config
+parsing, the pyyaml module is needed.  Faster text file parsing for reading in
+bandpasses and SEDs can be enabled if you have the pandas module (but the code
+will work, albeit more slowly, without this module).
 
 There are alternative modules to enable some of the GalSim functionality, such
 as pyfits, starlink, and so on (listed below as optional), but the above list is
