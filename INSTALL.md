@@ -61,7 +61,9 @@ The GalSim package also requires
   or as part of the astropy library:
       http://www.astropy.org/
   The latter is preferred, since this is now where all future development of
-  this package is happening.
+  this package is happening.  Currently GalSim is regularly tested to ensure 
+  it works with astropy version 1.1.1, but it is likely that most recent 
+  versions will also work.
 
 * the future module, which is used to ease compatibility between Python 2
   and Python 3.
@@ -247,8 +249,10 @@ v) Boost C++ (http://www.boost.org)
 -----------------------------------
 
 GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
-must be installed. It is particularly important that your installed Boost
-library links to the same version of Python which which you will be using
+must be installed. Currently GalSim is regularly tested to ensure it works with
+Boost version 1.61, but it is likely that most versions released within the 
+last several years will also work. It is particularly important that your installed 
+Boost library links to the same version of Python which which you will be using
 GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
 Boost can be downloaded from the above website, and must be installed per the
 (rather limited) instructions there, which essentially amount to using a command
