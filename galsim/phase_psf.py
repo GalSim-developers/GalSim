@@ -1111,7 +1111,7 @@ class PhaseScreenPSF(GSObject):
 
     def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        self.img *= flux / self.img.sum()
+        self.img *= flux / self.img.sum(dtype=float)
         b = galsim._BoundsI(1,self.aper.npix,1,self.aper.npix)
         self.img = galsim._Image(self.img, b, galsim.PixelScale(self.scale))
 
