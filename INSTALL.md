@@ -24,12 +24,18 @@ Table of Contents:
 
 While the sections below detail how to install GalSim including its required and
 optional dependencies, this section gives a brief summary.  A minimal
-installation of GalSim requires Python (versions 2.6, 2.7, 3.4, or 4.5) along
-with the following dependencies: (a) SCons (versions 2.0 or 2.1 recommended),
-(b) NumPy (version 1.11 recommended), (c) astropy (version 1.1.1 recommended),
-(d) the future module (version 0.16.0 recommended), (e) FFTW (version >=3, often
-called fftw3), (f) TMV (version >=0.72), and (g) boost (version 1.61
-recommended).
+installation of GalSim requires the following dependencies. This dependency list
+includes a canonical version number that is known to work. In most cases, other
+recent versions will also work:
+
+- Python (2.7, 3.4, 3.5)
+- SCons (2.1.0)
+- NumPy (1.11)
+- Astropy (1.1.1)
+- Future (0.16.0)
+- FFTW (3.3)
+- TMV (0.73)
+- Boost (1.61)
 
 A few optional dependencies provide additional functionality, but GalSim can
 otherwise be compiled and used without them.  To get WCS functionality with
