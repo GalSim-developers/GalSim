@@ -66,12 +66,15 @@ The GalSim package also requires
   versions will also work.
 
 * the future module, which is used to ease compatibility between Python 2
-  and Python 3.
+  and Python 3.  Currently GalSim is regularly tested to ensure 
+  it works with version 0.16.0 of this module, but other versions may work.
 
 * the PyYAML package for parsing YAML files (http://pyyaml.org/wiki/PyYAML)
   Note: PyYAML is only technically required if you are using the `galsim`
   executable for parsing YAML config files.  Users who will only use GalSim
   in Python (or use only JSON config files) may skip this dependency.
+  Currently GalSim is regularly tested to ensure it works with version 3.12
+  of this package, but other versions may work.
 
 * Optional dependency: PyAst WCS package.  This is a really nice front end
   for the Starlink AST astrometry code.  It seems to support pretty much
