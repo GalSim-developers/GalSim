@@ -5,6 +5,8 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
+0. [Overall summary](#0-overall-summary)
+
 1. [Software required before building GalSim](#1-software-required-before-building-galsim)
 
 2. [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
@@ -17,6 +19,32 @@ Table of Contents:
 
 6. [More SCons options](#6-more-scons-options)
 
+0. Overall summary
+==================
+
+While the sections below detail how to install GalSim including its required and
+optional dependencies, this section gives a brief summary.  A minimal
+installation of GalSim requires Python (versions 2.6, 2.7, 3.4, or 4.5) along
+with the following dependencies: (a) SCons (versions 2.0 or 2.1 recommended),
+(b) NumPy, (c) astropy (version 1.1.1 recommended), (d) the future module
+(version 0.16.0 recommended), (e) FFTW (version >=3, often called fftw3), (f)
+TMV (version >=0.72), and (g) boost (version 1.61 recommended).
+
+A few optional dependencies provide additional functionality, but GalSim can
+otherwise be compiled and used without them.  To get WCS functionality, scipy is
+required (since it is a dependency of astropy WCS tools).  To use yaml for
+config parsing, the pyyaml module is needed.  Faster text file parsing for
+reading in bandpasses and SEDs can be enabled if you have the pandas module (but
+the code will work, albeit more slowly, without this module).
+
+There are alternative modules to enable some of the GalSim functionality, such
+as pyfits, starlink, and so on (listed below as optional), but the above list is
+a minimal set of dependencies to get started.  The sections below give a lot
+more details about how to obtain these dependencies; many are available from
+sources like pip or easy_install, rather than having to be installed from
+source. Third party packages like Anaconda often include many of these
+dependencies automatically.  GalSim and all of its dependencies can be installed
+via fink, for users with Macs.
 
 1. Software required before building GalSim
 ===========================================
