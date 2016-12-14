@@ -5,19 +5,20 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
-0. [Overall summary](#0-overall-summary)
+0) [Overall summary](#0-overall-summary)
 
-1. [Software required before building GalSim](#1-software-required-before-building-galsim)
+1) [Software required before building GalSim](#1-software-required-before-building-galsim)
 
-2. [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
+2) [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
 
-3. [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
+3) [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
 
-4. [Running example scripts](#4-running-example-scripts)
+4) [Running example scripts](#4-running-example-scripts)
 
-5. [Platform-specific notes](#5-platform-specific-notes)
+5) [Platform-specific notes](#5-platform-specific-notes)
 
-6. [More SCons options](#6-more-scons-options)
+6) [More SCons options](#6-more-scons-options)
+
 
 0. Overall summary
 ==================
