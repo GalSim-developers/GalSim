@@ -123,8 +123,6 @@ namespace galsim {
 
         friend class SBInclinedSersicKValueFunctor;
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
-
     };
 }
 

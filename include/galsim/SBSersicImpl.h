@@ -21,6 +21,7 @@
 #define GalSim_SBSersicImpl_H
 
 #include "SBProfileImpl.h"
+#include "SBInclinedSersic.h"
 #include "SBSersic.h"
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
@@ -229,6 +230,9 @@ namespace galsim {
         void operator=(const SBSersicImpl& rhs);
 
         static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
+
+        friend class SBInclinedSersic;
+        friend class SBInclinedSersic::SBInclinedSersicImpl;
 
     };
 }

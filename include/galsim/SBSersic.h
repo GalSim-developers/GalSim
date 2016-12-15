@@ -133,6 +133,8 @@ namespace galsim {
 
         // op= is undefined
         void operator=(const SBSersic& rhs);
+
+        friend class SBInclinedSersic;
     };
 }
 

@@ -26,6 +26,7 @@
 
 #include "Angle.h"
 #include "SBProfile.h"
+#include "SBSersic.h"
 
 namespace galsim {
 
@@ -118,6 +119,8 @@ namespace galsim {
 
         // op= is undefined
         void operator=(const SBInclinedSersic& rhs);
+
+        friend class SBSersic;
     };
 }
 
