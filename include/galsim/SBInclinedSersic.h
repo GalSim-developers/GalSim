@@ -87,6 +87,11 @@ namespace galsim {
             HALF_LIGHT_RADIUS,
             SCALE_RADIUS
         };
+        enum  HeightType
+        {
+            SCALE_H_OVER_R,
+            SCALE_HEIGHT
+        };
 
         /**
          * @brief Constructor.
@@ -95,9 +100,11 @@ namespace galsim {
          * @param[in] inclination       Inclination of the disk relative to line of sight, where
          *                              0 = face-on and pi/2 = edge-on.
          * @param[in] size              Size specification.
-         * @param[in] height            Scale height of the disk.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
+         * @param[in] height            Height specification.
+         * @param[in] rType             Kind of height being specified (SCALE_H_OVER_R or
+         *                              SCALE_HEIGHT).
          * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                              `trunc = 0.` for no truncation.
@@ -108,8 +115,8 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedSersic(double n, Angle inclination, double size, double height,
-                 RadiusType rType, double flux,
+        SBInclinedSersic(double n, Angle inclination, double size, RadiusType rType,
+                 double height, RadiusType hType, double flux,
                  double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.

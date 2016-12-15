@@ -31,10 +31,10 @@
 
 namespace galsim {
 
-    SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, double height,
-            SBInclinedSersic::RadiusType rType, double flux,
+    SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, SBInclinedSersic::RadiusType rType,
+            double height, SBInclinedSersic::HeightType hType, double flux,
             double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
-        SBProfile(new SBInclinedSersicImpl(n, inclination, size, height, rType, flux, trunc,
+        SBProfile(new SBInclinedSersicImpl(n, inclination, size, rType, height, hType, flux, trunc,
                 flux_untruncated, gsparams)) {}
 
     SBInclinedSersic::SBInclinedSersic(const SBInclinedSersic& rhs) : SBProfile(rhs) {}
@@ -102,14 +102,13 @@ namespace galsim {
     LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
         SBInclinedSersic::SBInclinedSersicImpl::cache(sbp::max_sersic_cache);
 
-    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size,
-                                         double height, RadiusType rType, double flux,
+    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
+                                         double height, HeightType hType, double flux,
                                          double trunc, bool flux_untruncated,
                                          const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
-        _h0(height),
         _flux(flux),
         _trunc(trunc),
         _trunc_sq(trunc*trunc),
@@ -124,7 +123,6 @@ namespace galsim {
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
         dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
-        dbg<<"scale height = "<<_h0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
         dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
 
@@ -181,13 +179,26 @@ namespace galsim {
           default:
                throw SBError("Unknown SBInclinedSersic::RadiusType");
         }
-        dbg<<"hlr = "<<_re<<std::endl;
-        dbg<<"r0 = "<<_r0<<std::endl;
+        dbg << "hlr = " <<_re << std::endl;
+        dbg << "r0 = " <<_r0 << std::endl;
 
         _inv_r0 = 1./_r0;
+        dbg << "inv_r0 = " << _inv_r0 << std::endl;
+
+        // Get the scale height, depending on what height parameter we were given
+        switch (hType) {
+        case SCALE_H_OVER_R:
+            _h0 = height * _r0;
+        case SCALE_HEIGHT:
+            _h0 = height;
+        default:
+             throw SBError("Unknown SBInclinedSersic::HeightType");
+        }
+
+        dbg << "scale height = "<<_h0<<std::endl;
+
         _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0;
 
-        dbg << "inv_r0 = " << _inv_r0 << std::endl;
         dbg << "half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
 
         _r0_sq = _r0*_r0;

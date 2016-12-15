@@ -32,8 +32,8 @@ namespace galsim {
     class SBInclinedSersic::SBInclinedSersicImpl : public SBProfileImpl
     {
     public:
-        SBInclinedSersicImpl(double n, Angle inclination, double size, double height,
-                RadiusType rType, double flux,
+        SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
+                double height, HeightType hType, double flux,
                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         ~SBInclinedSersicImpl() {}
