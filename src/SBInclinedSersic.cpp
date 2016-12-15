@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
-#define VERBOSITY_LEVEL 1
+// #define DEBUGLOGGING
+// #define VERBOSITY_LEVEL 1
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -118,7 +118,6 @@ namespace galsim {
         // Start with untruncated SersicInfo regardless of value of trunc
         _info(SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {
-        set_verbose(VERBOSITY_LEVEL);
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
