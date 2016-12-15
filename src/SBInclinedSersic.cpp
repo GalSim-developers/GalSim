@@ -17,8 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
-//#define VERBOSITY_LEVEL 1
+#define DEBUGLOGGING
+#define VERBOSITY_LEVEL 1
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -160,24 +160,23 @@ namespace galsim {
                }
                break;
           case SCALE_RADIUS:
-               {
-                   _r0 = size;
-                   if (_truncated) {
-                       // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
-
+              {
+                  _r0 = size;
+                  if (_truncated) {
+                      // Update _info with the correct truncated version.
+                      _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                                                          this->gsparams.duplicate()));
                        if (flux_untruncated) {
-                           // Update the stored _flux with the correct value
-                           _flux *= _info->getFluxFraction();
-                       }
-                   }
-                   // In all cases, _re is the real HLR
-                   _re = _r0 * _info->getHLR();
-               }
-               break;
+                          // Update the stored _flux with the correct value
+                          _flux *= _info->getFluxFraction();
+                      }
+                  }
+                  // In all cases, _re is the real HLR
+                  _re = _r0 * _info->getHLR();
+              }
+              break;
           default:
-               throw SBError("Unknown SBInclinedSersic::RadiusType");
+              throw SBError("Unknown SBInclinedSersic::RadiusType");
         }
         dbg << "hlr = " <<_re << std::endl;
         dbg << "r0 = " <<_r0 << std::endl;
@@ -189,10 +188,12 @@ namespace galsim {
         switch (hType) {
         case SCALE_H_OVER_R:
             _h0 = height * _r0;
+            break;
         case SCALE_HEIGHT:
             _h0 = height;
+            break;
         default:
-             throw SBError("Unknown SBInclinedSersic::HeightType");
+            throw SBError("Unknown SBInclinedSersic::HeightType");
         }
 
         dbg << "scale height = "<<_h0<<std::endl;
