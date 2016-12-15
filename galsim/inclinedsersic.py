@@ -103,20 +103,20 @@ class InclinedSersic(GSObject):
 
     def __init__(self, n, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
                  scale_h_over_r=None, flux=1., trunc=0., flux_untruncated=False, gsparams=None):
-        
+
         # Check that the scale/half-light radius is valid
         if scale_radius is not None:
-            if not scale_radius>0.:
+            if not scale_radius > 0.:
                 raise Exception("scale_radius must be > zero.")
         else:
-            if not half_light_radius>0.:
+            if not half_light_radius > 0.:
                 raise Exception("half_light_radius must be > zero.")
 
         # Check if we need to use default scale_h_over_r
         if scale_height is None:
             if scale_h_over_r is None:
                 scale_h_over_r = 0.1
-                
+
             # Set the scale height here if we know the scale radius
             if scale_radius is not None:
                 scale_height = scale_h_over_r * scale_radius
@@ -125,8 +125,8 @@ class InclinedSersic(GSObject):
             if scale_h_over_r is not None:
                 raise Exception("At most one of scale_height and scale_h_over_r may be specified.")
             elif scale_radius is not None:
-                scale_h_over_r = scale_height/scale_radius
-                
+                scale_h_over_r = scale_height / scale_radius
+
         # Check that trunc is valid
         if trunc < 0.:
             raise Exception("trunc must be >= zero (zero implying no truncation).")
@@ -214,7 +214,7 @@ class InclinedSersic(GSObject):
 
     def __str__(self):
         s = 'galsim.InclinedSersic(n=%s, inclination=%s, scale_radius=%s, scale_height=%s' % (
-                self.n, self.inclination, self.scale_radius, self.scale_height )
+                self.n, self.inclination, self.scale_radius, self.scale_height)
         if self.flux != 1.0:
             s += ', flux=%s' % self.flux
         if self.trunc != 0.:
@@ -222,7 +222,7 @@ class InclinedSersic(GSObject):
         s += ')'
         return s
 
-_galsim.SBInclinedSersic.__getinitargs__ = lambda self: ( self.getN(),
+_galsim.SBInclinedSersic.__getinitargs__ = lambda self: (self.getN(),
         self.getInclination(), self.getScaleRadius(), None, self.getScaleHeight(), None,
         self.getFlux(), self.getTrunc(), False, self.getGSParams())
 _galsim.SBInclinedSersic.__getstate__ = lambda self: None
