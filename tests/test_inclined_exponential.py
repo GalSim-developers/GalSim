@@ -43,19 +43,20 @@ image_dir = './inclined_exponential_images'
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
 
 # InclinedExponential test cases, which we'll also test InclinedSersic with
-fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
-image_inc_angles = ("0.0", "1.3", "0.2", "0.01", "0.1", "0.78")
-image_scale_radii = ("3.0", "3.0", "3.0", "3.0", "2.0", "2.0")
-image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
-image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
+both_fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
+both_inc_angles = ("0.0", "1.3", "0.2", "0.01", "0.1", "0.78")
+both_scale_radii = ("3.0", "3.0", "3.0", "3.0", "2.0", "2.0")
+both_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
+both_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 
 # InclinedSersic-only test cases
-sersic_image_ns = ("1.0", "1.5", "2.0", "1.5", "2.5", "2.5", "1.5", "1.5", "2.5", "2.5")
-sersic_image_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.1", "0.1", "0.1", "0.1")
-sersic_image_scale_radii = ("3.0", "3.0", "3.0", "3.0", "3.0", "3.0", "2.0", "2.0", "2.0", "2.0")
-sersic_image_scale_heights = ("1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0")
-sersic_image_trunc_factors = ("20", "20", "20", "4.5", "20", "4.5", "20", "4.5", "20", "4.5")
-sersic_image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2", "-0.2", "-0.2")
+sersic_fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
+sersic_ns = ("1.0", "1.5", "2.0", "1.5", "2.5", "2.5", "1.5", "1.5", "2.5", "2.5")
+sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.1", "0.1", "0.1", "0.1")
+sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", "3.0", "3.0", "2.0", "2.0", "2.0", "2.0")
+sersic_scale_heights = ("1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0")
+sersic_trunc_factors = ("20", "20", "20", "4.5", "20", "4.5", "20", "4.5", "20", "4.5")
+sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2", "-0.2", "-0.2")
 
 image_nx = 64
 image_ny = 64
@@ -97,10 +98,10 @@ def test_regression():
 
     for mode in ("InclinedExponential", "InclinedSersic"):
 
-        for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,
-                                                                    image_scale_radii,
-                                                                    image_scale_heights,
-                                                                    image_pos_angles):
+        for inc_angle, scale_radius, scale_height, pos_angle in zip(both_inc_angles,
+                                                                    both_scale_radii,
+                                                                    both_scale_heights,
+                                                                    both_pos_angles):
 
             image_filename = "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
             print("Comparing " + mode + " against " + image_filename + "...")
@@ -146,12 +147,12 @@ def test_regression():
 
     # Now do Sersic-only tests
     for (sersic_n, inc_angle, scale_radius, scale_height,
-         trunc_factor, pos_angle) in zip(sersic_image_ns,
-                                         sersic_image_inc_angles,
-                                         sersic_image_scale_radii,
-                                         sersic_image_scale_heights,
-                                         sersic_image_trunc_factors,
-                                         sersic_image_pos_angles):
+         trunc_factor, pos_angle) in zip(sersic_ns,
+                                         sersic_inc_angles,
+                                         sersic_scale_radii,
+                                         sersic_scale_heights,
+                                         sersic_trunc_factors,
+                                         sersic_pos_angles):
 
         image_filename = ("galaxy_" + sersic_n + "_" + inc_angle + "_" + scale_radius +
                           "_" + scale_height + "_" + trunc_factor + "_" + pos_angle + ".fits")
@@ -316,59 +317,75 @@ def test_edge_on():
 def test_sanity():
     """ Performs various sanity checks on a set of InclinedExponential and InclinedSersic profiles. """
 
+    def run_sanity_checks(mode, flux,inc_angle,scale_radius,scale_height,pos_angle,
+                          n=1.,trunc=0.):
+        # Get float values for the details
+        flux = float(flux)
+        inc_angle = float(inc_angle)
+        scale_radius = float(scale_radius)
+        scale_height = float(scale_height)
+        pos_angle = float(pos_angle)
+        print(flux, inc_angle, scale_radius, scale_height, pos_angle, n, trunc)
+
+        # Now make a test image
+        test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
+                                scale_height, flux=flux, n=n, trunc=trunc)
+
+        check_basic(test_profile, mode)
+
+        # Check that h/r is properly given by the method and property for it
+        np.testing.assert_almost_equal(test_profile.scale_height / test_profile.scale_radius,
+                                       test_profile.scale_h_over_r)
+        np.testing.assert_almost_equal(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
+                                       test_profile.getScaleHOverR())
+
+        # Rotate it by the position angle
+        test_profile = test_profile.rotate(pos_angle * galsim.radians)
+
+        # Check that the k value for (0,0) is the flux
+        np.testing.assert_almost_equal(test_profile.kValue(kx=0., ky=0.), flux)
+
+        # Check that the drawn flux for a large image is indeed the flux
+        test_image = galsim.Image(5 * image_nx, 5 * image_ny, scale=1.0)
+        test_profile.drawImage(test_image)
+        test_flux = test_image.array.sum()
+        np.testing.assert_almost_equal(test_flux, flux, decimal=3)
+
+        # Check that the centroid is (0,0)
+        centroid = test_profile.centroid()
+        np.testing.assert_equal(centroid.x, 0.)
+        np.testing.assert_equal(centroid.y, 0.)
+
+        # Check maxSB
+        # We don't do a great job at estimating this, but it should be in the right ball park,
+        # and typically too large.
+        test_profile.drawImage(test_image, method='sb', use_true_center=False)
+        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
+        np.testing.assert_allclose(test_image.array.max(), test_profile.maxSB(), rtol=0.3)
+        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
+
+    # Run tests applicable to both profiles
     for mode in ("InclinedExponential", "InclinedSersic"):
 
-        print('flux, inc_angle, scale_radius, scale_height, pos_angle')
-        for flux, inc_angle, scale_radius, scale_height, pos_angle in zip(fluxes,
-                                                                          image_inc_angles,
-                                                                          image_scale_radii,
-                                                                          image_scale_heights,
-                                                                          image_pos_angles):
-
-            # Get float values for the details
-            flux = float(flux)
-            inc_angle = float(inc_angle)
-            scale_radius = float(scale_radius)
-            scale_height = float(scale_height)
-            pos_angle = float(pos_angle)
-            print(flux, inc_angle, scale_radius, scale_height, pos_angle)
-
-            # Now make a test image
-            test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
-                                    scale_height, flux=flux)
-
-            check_basic(test_profile, mode)
-
-            # Check that h/r is properly given by the method and property for it
-            np.testing.assert_almost_equal(test_profile.scale_height / test_profile.scale_radius,
-                                           test_profile.scale_h_over_r)
-            np.testing.assert_almost_equal(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
-                                           test_profile.getScaleHOverR())
-
-            # Rotate it by the position angle
-            test_profile = test_profile.rotate(pos_angle * galsim.radians)
-
-            # Check that the k value for (0,0) is the flux
-            np.testing.assert_almost_equal(test_profile.kValue(kx=0., ky=0.), flux)
-
-            # Check that the drawn flux for a large image is indeed the flux
-            test_image = galsim.Image(5 * image_nx, 5 * image_ny, scale=1.0)
-            test_profile.drawImage(test_image)
-            test_flux = test_image.array.sum()
-            np.testing.assert_almost_equal(test_flux, flux, decimal=3)
-
-            # Check that the centroid is (0,0)
-            centroid = test_profile.centroid()
-            np.testing.assert_equal(centroid.x, 0.)
-            np.testing.assert_equal(centroid.y, 0.)
-
-            # Check maxSB
-            # We don't do a great job at estimating this, but it should be in the right ball park,
-            # and typically too large.
-            test_profile.drawImage(test_image, method='sb', use_true_center=False)
-            print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
-            np.testing.assert_allclose(test_image.array.max(), test_profile.maxSB(), rtol=0.3)
-            np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
+        print('flux, inc_angle, scale_radius, scale_height, pos_angle, n, trunc')
+        for flux, inc_angle, scale_radius, scale_height, pos_angle in zip(both_fluxes,
+                                                                          both_inc_angles,
+                                                                          both_scale_radii,
+                                                                          both_scale_heights,
+                                                                          both_pos_angles):
+            run_sanity_checks(mode, flux, inc_angle, scale_radius, scale_height, pos_angle)
+            
+    # Run tests for InclinedSersic only
+    for (flux, inc_angle, scale_radius,
+         scale_height, pos_angle, n, trunc) in zip(sersic_fluxes,
+                                                   sersic_inc_angles,
+                                                   sersic_scale_radii,
+                                                   sersic_scale_heights,
+                                                   sersic_pos_angles,
+                                                   sersic_ns,
+                                                   sersic_trunc_factors):
+        run_sanity_checks("InclinedSersic", flux, inc_angle, scale_radius, scale_height, pos_angle)
+            
 
 
 @timer
@@ -377,8 +394,8 @@ def test_k_limits():
 
     for mode in ("InclinedExponential", "InclinedSersic"):
 
-        for inc_angle, scale_radius, scale_height in zip(image_inc_angles, image_scale_radii,
-                                                         image_scale_heights):
+        for inc_angle, scale_radius, scale_height in zip(both_inc_angles, both_scale_radii,
+                                                         both_scale_heights):
             # Get float values for the details
             inc_angle = float(inc_angle)
             scale_radius = float(scale_radius)
