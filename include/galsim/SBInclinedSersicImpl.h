@@ -68,7 +68,8 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return false; }
-        bool hasHardEdges() const { return _truncated; }
+        bool hasHardEdges() const { return false; } // Actually true, and might need to be changed so if made analytic in real-space,
+                                                    // depending on tests of if it's more efficient/accurate
         bool isAnalyticX() const { return false; } // not yet implemented, would require lookup table
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
