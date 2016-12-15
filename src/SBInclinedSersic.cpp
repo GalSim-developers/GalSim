@@ -26,6 +26,8 @@
 
 #include "SBInclinedSersic.h"
 #include "SBInclinedSersicImpl.h"
+#include "SBSersic.h"
+#include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
 
@@ -93,26 +95,12 @@ namespace galsim {
     std::string SBInclinedSersic::SBInclinedSersicImpl::serialize() const
     {
         std::ostringstream oss(" ");
-        // NB. The choice of digits10 + 4 is because the normal general output
-        // scheme for double uses fixed notation if >= 0.0001, but then switches
-        // to scientific for smaller numbers.  So those first 4 digits in 0.0001 don't
-        // count for the number of required digits, which is nominally given by digits10.
-        // cf. http://stackoverflow.com/questions/4738768/printing-double-without-losing-precision
-        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for
-        // printing the repr of a double that always works and doesn't print more digits than
-        // it needs.  This is the reason why we reimplement the __repr__ methods in python
-        // for all the SB classes except SBProfile.  Only the last one can't be done properly
-        // in python, so it will use the C++ virtual function to get the right thing for
-        // any subclass.  But possibly with ugly extra digits.
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInclinedSersic("<<getN()<<", "<<getInclination()<<", "<<getScaleRadius();
         oss <<", "<<getScaleHeight()<<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
-
-    LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
-        SBInclinedSersic::SBInclinedSersicImpl::cache(sbp::max_sersic_cache);
 
     SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
                                          double height, HeightType hType, double flux,
@@ -128,7 +116,7 @@ namespace galsim {
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
+        _info(SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {
         set_verbose(VERBOSITY_LEVEL);
         dbg<<"Start SBInclinedSersic constructor:\n";
@@ -157,7 +145,7 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                       _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
                                                            this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
@@ -176,7 +164,7 @@ namespace galsim {
                   _r0 = size;
                   if (_truncated) {
                       // Update _info with the correct truncated version.
-                      _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
+                      _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
                                                           this->gsparams.duplicate()));
                        if (flux_untruncated) {
                           // Update the stored _flux with the correct value
