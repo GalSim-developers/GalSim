@@ -205,8 +205,8 @@ namespace galsim {
         _inv_r0 = 1./_r0;
         _inv_r0_sq = _inv_r0*_inv_r0;
 
-        // Get the inverse exponential HLR, which is used for calculating stepK
-        _inv_exp_re = 1./(1.6783469900166605*_r0);
+        // Get the inverse HLR, which is used for calculating stepK
+        _inv_re = 1./_re;
 
         _xnorm = _flux * _info->getXNorm() * _inv_r0_sq;
         dbg<<"xnorm = "<<_xnorm<<std::endl;
