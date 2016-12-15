@@ -209,9 +209,8 @@ namespace galsim {
         // Get the inverse exponential HLR, which is used for calculating stepK
         _inv_exp_re = 1./(1.6783469900166605*_r0);
 
-        _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
-        _xnorm = _shootnorm * _inv_r0_sq;
-        dbg<<"norms = "<<_xnorm<<", "<<_shootnorm<<std::endl;
+        _xnorm = _flux * _info->getXNorm() * _inv_r0_sq;
+        dbg<<"xnorm = "<<_xnorm<<std::endl;
 
         // For small k, we can use up to quartic in the taylor expansion of both terms
         // in the calculation.
