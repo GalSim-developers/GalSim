@@ -31,6 +31,18 @@
 
 namespace galsim {
 
+    // Helper functor to solve for the proper _maxk
+    class SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicKValueFunctor
+    {
+        public:
+            SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
+        double target_k_value);
+        double operator() (double k) const;
+        private:
+        const SBInclinedSersic::SBInclinedSersicImpl * _p_owner;
+        double _target_k_value;
+    };
+
     SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, SBInclinedSersic::RadiusType rType,
             double height, SBInclinedSersic::HeightType hType, double flux,
             double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :

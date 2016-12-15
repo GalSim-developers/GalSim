@@ -119,16 +119,7 @@ namespace galsim {
         double kValueHelper(double kx, double ky) const;
 
         // Helper functor to solve for the proper _maxk
-        class SBInclinedSersicKValueFunctor
-        {
-            public:
-                SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
-            double target_k_value);
-            double operator() (double k) const;
-            private:
-            const SBInclinedSersic::SBInclinedSersicImpl * _p_owner;
-            double _target_k_value;
-        };
+        class SBInclinedSersicKValueFunctor;
 
         friend class SBInclinedSersicKValueFunctor;
 
