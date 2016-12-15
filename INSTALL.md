@@ -5,18 +5,53 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
-1. [Software required before building GalSim](#1-software-required-before-building-galsim)
+0) [Overall summary](#0-overall-summary)
 
-2. [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
+1) [Software required before building GalSim](#1-software-required-before-building-galsim)
 
-3. [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
+2) [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
 
-4. [Running example scripts](#4-running-example-scripts)
+3) [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
 
-5. [Platform-specific notes](#5-platform-specific-notes)
+4) [Running example scripts](#4-running-example-scripts)
 
-6. [More SCons options](#6-more-scons-options)
+5) [Platform-specific notes](#5-platform-specific-notes)
 
+6) [More SCons options](#6-more-scons-options)
+
+
+0. Overall summary
+==================
+
+While the sections below detail how to install GalSim including its required and
+optional dependencies, this section gives a brief summary.  A minimal
+installation of GalSim requires the following dependencies. This dependency list
+includes a canonical version number that is known to work. In most cases, other
+recent versions will also work:
+
+- Python (2.7, 3.4, 3.5)
+- SCons (2.1.0)
+- NumPy (1.11)
+- Astropy (1.1.1)
+- Future (0.16.0)
+- FFTW (3.3)
+- TMV (0.73)
+- Boost (1.61)
+
+A few optional dependencies provide additional functionality, but GalSim can
+otherwise be compiled and used without them.  Basic WCS functionality is native
+to GalSim, but for users with more complicated WCS needs, we recommend
+installing starlink-pyast. Astropy's WCS package is also supported, but note
+that it requires scipy as an additional dependency.  To use yaml for config
+parsing, the pyyaml module is needed.  Faster text file parsing for reading in
+bandpasses and SEDs can be enabled if you have the pandas module (but the code
+will work, albeit more slowly, without this module).
+
+The sections below give a lot more details about how to obtain these
+dependencies; many are available from sources like pip or easy_install, rather
+than having to be installed from source. Third party packages like Anaconda
+often include many of these dependencies automatically.  GalSim and all of its
+dependencies can be installed via fink, for users with Macs.
 
 1. Software required before building GalSim
 ===========================================
@@ -53,7 +88,9 @@ For a list of places to download Python, see http://www.python.org/download/.
 
 The GalSim package also requires
 
-* the numerical Python module NumPy (http://www.numpy.org)
+* the numerical Python module NumPy (http://www.numpy.org).  Currently GalSim is
+  regularly tested to ensure it works with NumPy 1.11.2, but other versions will
+  likely work.
 
 * the astronomical FITS file input/output module PyFITS available
   either as a standalone package:
@@ -255,7 +292,7 @@ GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed. Currently GalSim is regularly tested to ensure it works with
 Boost version 1.61, but it is likely that most versions released within the 
 last several years will also work. It is particularly important that your installed 
-Boost library links to the same version of Python which which you will be using
+Boost library links to the same version of Python with which you will be using
 GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
 Boost can be downloaded from the above website, and must be installed per the
 (rather limited) instructions there, which essentially amount to using a command
