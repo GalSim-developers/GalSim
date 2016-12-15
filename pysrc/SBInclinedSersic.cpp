@@ -68,7 +68,7 @@ namespace galsim {
             if (scale_height.ptr() != Py_None)
             {
                 h = bp::extract<double>(scale_height);
-                rType = SBInclinedSersic::SCALE_HEIGHT;
+                hType = SBInclinedSersic::SCALE_HEIGHT;
             }
 
             return new SBInclinedSersic(n, inclination, s, rType, h, hType, flux, trunc, flux_untruncated, gsparams);
