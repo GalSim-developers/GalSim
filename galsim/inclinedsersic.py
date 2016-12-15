@@ -62,26 +62,28 @@ class InclinedSersic(GSObject):
     Initialization
     --------------
 
-    @param n                The Sersic index, n.
-    @param inclination      The inclination angle, which must be a galsim.Angle instance
-    @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
-                            This can be compared to the 'scale_radius' parameter of the
-                            galsim.Exponential class, and in the face-on case, the same same scale
-                            radius will result in the same 2D light distribution as with that
-                            class.
-    @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
-                            [default: None]
-    @param scale_h_over_r   In lieu of the scale height, you may also specify the ratio of the
-                            scale height to the scale radius. [default: 0.1]
-    @param flux             The flux (in photons) of the profile. [default: 1]
-    @param trunc            An optional truncation radius at which the profile is made to drop to
-                            zero, in the same units as the size parameter.
-                            [default: 0, indicating no truncation]
-    @param flux_untruncated Should the provided `flux` and `half_light_radius` refer to the
-                            untruncated profile? See the documentation of the Sersic class for more
-                            details. [default: False]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    @param n                  The Sersic index, n.
+    @param inclination        The inclination angle, which must be a galsim.Angle instance
+    @param scale_radius       The scale radius of the disk.  Typically given in arcsec.
+                              This can be compared to the 'scale_radius' parameter of the
+                              galsim.Sersic class, and in the face-on case, the same same scale
+                              radius will result in the same 2D light distribution as with that
+                              class. Exactly one of this and half_light_radius must be provided.
+    @param half_light_radius  The half-light radius of disk when seen face-on. Exactly one of this
+                              and scale_radius must be provided.
+    @param scale_height       The scale height of the exponential disk.  Typically given in arcsec.
+                              [default: None]
+    @param scale_h_over_r     In lieu of the scale height, you may specify the ratio of the
+                              scale height to the scale radius. [default: 0.1]
+    @param flux               The flux (in photons) of the profile. [default: 1]
+    @param trunc              An optional truncation radius at which the profile is made to drop to
+                              zero, in the same units as the size parameter.
+                              [default: 0, indicating no truncation]
+    @param flux_untruncated   Should the provided `flux` and `half_light_radius` refer to the
+                              untruncated profile? See the documentation of the Sersic class for more
+                              details. [default: False]
+    @param gsparams           An optional GSParams argument.  See the docstring for GSParams for
+                              details. [default: None]
 
     Methods
     -------
