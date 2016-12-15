@@ -36,7 +36,7 @@ class InclinedSersic(GSObject):
     Sersic index `n', its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
     its scale radius, and its scale height. The 3D light distribution function is:
 
-        I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp[-b*(r/r_s)^{1/n}]
+        I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp[-b*(R/r_s)^{1/n}]
 
     where z is the distance along the minor axis, R is the radial distance from the minor axis,
     r_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
