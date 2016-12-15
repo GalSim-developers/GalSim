@@ -448,7 +448,7 @@ def test_eq_ne():
                 get_prof(mode, 0.1 * galsim.radians, 3.0, scale_h_over_r=0.1),
                 get_prof(mode, 0.1 * galsim.radians, 3.0, flux=1.0),  # default flux=1
                 get_prof(mode, -0.1 * galsim.radians, 3.0),  # negative i is equivalent
-                get_prof(mode, (np.pi - -0.1) * galsim.radians, 3.0),  # also pi-theta
+                get_prof(mode, (np.pi - 0.1) * galsim.radians, 3.0),  # also pi-theta
                 get_prof(mode, 18. / np.pi * galsim.degrees, 3.0),
                 get_prof(mode, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                            scale_height=0.3, flux=1.0),
