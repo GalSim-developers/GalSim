@@ -226,77 +226,68 @@ namespace galsim {
         double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
         double clipk_min = std::pow(this->gsparams->kvalue_accuracy, -1./3.);
 
-        // Check for face-on exponential case, which doesn't need the solver
-        if(_cosi==1 and _n==1)
+        // Bracket it appropriately, starting with guesses based on the 1/cosi scaling
+        double maxk_max, clipk_max;
+        // Check bounds on _cosi to make sure initial guess range isn't too big or small
+        if(_cosi>0.01)
         {
-            _maxk = maxk_min;
-            _ksq_max = clipk_min*clipk_min;
-        }
-        else // Use the solver
-        {
-            // Bracket it appropriately, starting with guesses based on the 1/cosi scaling
-            double maxk_max, clipk_max;
-            // Check bounds on _cosi to make sure initial guess range isn't too big or small
-            if(_cosi>0.01)
+            if(_cosi<0.96)
             {
-                if(_cosi<0.96)
-                {
-                    maxk_max = maxk_min/_cosi;
-                    clipk_max = clipk_min/_cosi;
-                }
-                else
-                {
-                    maxk_max = 1.05*maxk_min;
-                    clipk_max = 1.05*clipk_min;
-                }
+                maxk_max = maxk_min/_cosi;
+                clipk_max = clipk_min/_cosi;
             }
             else
             {
-                maxk_max = 100*maxk_min;
-                clipk_max = 100*clipk_min;
+                maxk_max = 1.05*maxk_min;
+                clipk_max = 1.05*clipk_min;
             }
-
-            xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
-            xdbg << "F(" << maxk_min << ") = " << std::max(kValueHelper(maxk_min,0.),kValueHelper(0.,maxk_min)) << std::endl;
-            xdbg << "F(" << maxk_max << ") = " << std::max(kValueHelper(maxk_max,0.),kValueHelper(0.,maxk_max)) << std::endl;
-
-            SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
-            Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
-
-            maxk_solver.setMethod(Brent);
-
-            if(maxk_func(maxk_min)<=0)
-                maxk_solver.bracketLowerWithLimit(0.);
-            else
-                maxk_solver.bracketUpper();
-
-            // Get the _maxk from the solver here. We add back on the tolerance to the result to
-            // ensure that the k-value will be below the threshold.
-            _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
-
-            xdbg << "_maxk = " << _maxk << std::endl;
-            xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
-
-            xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
-            xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
-            xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
-
-            SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
-            Solve<SBInclinedSersicKValueFunctor> clipk_solver(clipk_func, clipk_min, clipk_max);
-
-            if(clipk_func(clipk_min)<=0)
-                clipk_solver.bracketLowerWithLimit(0.);
-            else
-                clipk_solver.bracketUpper();
-
-            // Get the clipk from the solver here. We add back on the tolerance to the result to
-            // ensure that the k-value will be below the threshold.
-            double clipk = clipk_solver.root() + clipk_solver.getXTolerance();
-            _ksq_max = clipk*clipk;
-
-            xdbg << "clipk = " << clipk << std::endl;
-            xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
+        else
+        {
+            maxk_max = 100*maxk_min;
+            clipk_max = 100*clipk_min;
+        }
+
+        xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
+        xdbg << "F(" << maxk_min << ") = " << std::max(kValueHelper(maxk_min,0.),kValueHelper(0.,maxk_min)) << std::endl;
+        xdbg << "F(" << maxk_max << ") = " << std::max(kValueHelper(maxk_max,0.),kValueHelper(0.,maxk_max)) << std::endl;
+
+        SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
+        Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
+
+        maxk_solver.setMethod(Brent);
+
+        if(maxk_func(maxk_min)<=0)
+            maxk_solver.bracketLowerWithLimit(0.);
+        else
+            maxk_solver.bracketUpper();
+
+        // Get the _maxk from the solver here. We add back on the tolerance to the result to
+        // ensure that the k-value will be below the threshold.
+        _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+
+        xdbg << "_maxk = " << _maxk << std::endl;
+        xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
+
+        xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
+        xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
+        xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
+
+        SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
+        Solve<SBInclinedSersicKValueFunctor> clipk_solver(clipk_func, clipk_min, clipk_max);
+
+        if(clipk_func(clipk_min)<=0)
+            clipk_solver.bracketLowerWithLimit(0.);
+        else
+            clipk_solver.bracketUpper();
+
+        // Get the clipk from the solver here. We add back on the tolerance to the result to
+        // ensure that the k-value will be below the threshold.
+        double clipk = clipk_solver.root() + clipk_solver.getXTolerance();
+        _ksq_max = clipk*clipk;
+
+        xdbg << "clipk = " << clipk << std::endl;
+        xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
 
         dbg << "info maxk = " << _info->maxK() << std::endl;
         dbg << "maxk = " << _maxk << std::endl;
