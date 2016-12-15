@@ -44,29 +44,6 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
-        {
-            splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
-            else { xmin = -_trunc; xmax = _trunc; }
-        }
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
-        {
-            splits.push_back(0.);
-            if (!_truncated or _inclination.sin() != 0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else { ymin = -_trunc; ymax = _trunc; }
-        }
-
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
-        {
-            if (!_truncated or _inclination.sin() != 0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
-            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
-
-            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
-        }
-
         bool isAxisymmetric() const { return false; }
         bool hasHardEdges() const { return false; } // Actually true, and might need to be changed so if made analytic in real-space,
                                                     // depending on tests of if it's more efficient/accurate
