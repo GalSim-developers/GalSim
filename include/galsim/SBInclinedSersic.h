@@ -32,45 +32,12 @@ namespace galsim {
     /**
      * @brief Inclined Sersic Surface Brightness Profile.
      *
-     * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
-     * `n`, its `flux`, and the half-light radius `re` (or scale radius `r0`).  Given these
-     * properties, the surface brightness profile scales as `I(r) propto exp[-(r/r0)^{1/n}]`, or
-     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  The code is limited to 0.3 <= n <= 6.2, with an
-     * exception thrown for values outside that range.
-     *
-     * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
-     * a given radius, by the parameter `trunc`.  Internal Sersic information are cached according
-     * to the `(n, trunc/r0)` pair.  All internal calculations are based on the scale radius `r0`.
-     * If the profile is specified by the half-light radius `re`, the corresponding scale radius
-     * `r0` is calculated, and vice versa.
-     *
-     * When the Sersic profile is specfied by the scale radius with truncation, the normalization is
-     * adjusted such that the truncated profile has the specified flux (its half-light radius will
-     * differ from an equivalent Sersic without truncation).  Similarly, when the Sersic profile is
-     * specified by the half-light radius with truncation, SBSersic generates a profile whose flux
-     * and half-light radius is as specified, by adjusting its normalization and scale radius.
-     *
-     * Another optional parameter, `flux_untruncated = true`, allows the setting of the flux to
-     * the untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
-     * the same with respect to the untruncated case).  This facilitates the comparison of
-     * truncated and untruncated Sersic, as the amplitude (as well as the scale radius `r0`,
-     * if half-light radius is specified) changes when a truncated Sersic is specified with
-     * `flux_untruncated = false`.  The `flux_untruncated` variable is ignored if `trunc = 0`.
-     *
-     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual flux will not be
-     * the same as the specified value; its true flux is returned by the getFlux() method.
-     * Similarly for the half-light radius, when the Sersic profile is specified by the half-light
-     * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
-     * radius will remain at the same value, if this quantity was used to specify the profile.
-     *
-     * There are two special cases of the Sersic profile that have their own SBProfiles: n=1
-     * (SBExponential), n=0.5 (SBGaussian).  These special cases use several simplifications in
-     * all calculations, whereas for general n, the Fourier transform must be treated numerically.
-     *
-     * This implementation of the Sersic profile additionally allows inclination relative to the
+     * This class is similar to a Sersic profile, additionally allowing inclination relative to the
      * line of sight. The true profile is assumed to follow a Sersic distribution in R, multiplied
      * by sech^2(z/Hs), where Hs is the scale height of the disk and z is the distance along the
      * minor axis. The inclination angle determines how elliptical the profile appears.
+     *
+     * See the documentation for the SBSersic class for further details on Sersic profiles.
      *
      * Note that the position angle is always zero. A profile with a different position angle can be
      * obtained through the rotate() method of the corresponding Python class.
