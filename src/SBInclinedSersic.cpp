@@ -387,7 +387,7 @@ namespace galsim {
     }
     double SBInclinedSersic::SBInclinedSersicImpl::stepK() const
     {
-        double stepk = _info->stepK() * _inv_exp_re;
+        double stepk = _info->stepK() * _inv_re;
         return stepk;
     }
 
