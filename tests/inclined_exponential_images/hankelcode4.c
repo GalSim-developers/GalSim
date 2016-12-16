@@ -600,7 +600,7 @@ int main(int argc, char * argv[])
   // to optimise the speed for small galaxy model generation
 
   int idim, odim, hdim;
-  odim = 64; // output galaxy array size: this value could be chosen to match the output model galaxy size
+  odim = 2*(int)(32.*scale_radius/3.0*pow(sersic_n,2)) ;
   idim = odim*oversampling;  // size of oversampled galaxy image
   hdim = 1 + idim/2;  // x-axis dimension of FFTW hermitian array
 

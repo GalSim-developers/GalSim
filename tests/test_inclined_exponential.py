@@ -57,13 +57,13 @@ both_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 # sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
 # sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
 # sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
-sersic_fluxes = ("1.0", "2.0" )#, "1.5", "1.1", "10.0", "1.0e6", "1.0e-6", "2.3e4",)
-sersic_ns = ("1.0", "1.5" )#, "2.0", "2.5", "1.0", "1.5", "2.0", "2.5",)
-sersic_inc_angles = ("0.0", "0.0")#, "0.0", "0.0", "0.1", "0.2", "0.3", "0.5",)
-sersic_scale_radii = ("3.0", "3.0")#, "3.0", "3.0", "1.9", "2.1", "3.4", "1.8",)
-sersic_scale_heights = ("0.3", "0.3")#, "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
-sersic_trunc_factors = ("0.0", "0.0")#, "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
-sersic_pos_angles = ("0.0", "0.0")#, "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
+sersic_fluxes = ("1.0", "2.0", "1.5", "1.1", )#"10.0", "1.0e6", "1.0e-6", "2.3e4",)
+sersic_ns = ("1.0", "1.5", "2.0", "2.5", )#"1.0", "1.5", "2.0", "2.5",)
+sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", )#"0.1", "0.2", "0.3", "0.5",)
+sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", )#"1.9", "2.1", "3.4", "1.8",)
+sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", )#"0.3", "0.2", "0.1", "0.5", )
+sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", )#"4.5", "3.9", "5.0", "2.5", )
+sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", )#"0.3", "0.6", "-0.9", "7.3",)
 
 image_nx = 64
 image_ny = 64
@@ -130,7 +130,7 @@ def test_regression():
             test_profile = test_profile.rotate(pos_angle * galsim.radians)
 
             # Draw it onto an image
-            test_image = galsim.Image(image_nx, image_ny, scale=1.0)
+            test_image = galsim.Image(np.zeros_like(image.array), scale=1.0)
             test_profile.drawImage(test_image, offset=(0.5, 0.5))  # Offset to match Lance's
 
             # Save if desired
@@ -430,8 +430,10 @@ def test_k_limits():
 
             # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
             rmax = np.pi / test_profile.stepK()
+            
+            pixel_scale = 0.1
 
-            test_image = galsim.Image(int(10 * rmax), int(10 * rmax), scale=1.0)
+            test_image = galsim.Image(int(10 * rmax/pixel_scale), int(10 * rmax/pixel_scale), scale=pixel_scale)
             test_profile.drawImage(test_image)
 
             image_center = test_image.center()
@@ -443,16 +445,21 @@ def test_k_limits():
             x -= image_center.x
             y -= image_center.y
 
-            r = np.sqrt(np.square(x) + np.square(y))
+            r = pixel_scale*np.sqrt(np.square(x) + np.square(y))
 
-            good = r < rmax
+            good = r+np.sqrt(2.)*pixel_scale < rmax
 
             # Get flux within the limits
             contained_flux = np.ravel(test_image.array)[np.ravel(good)].sum()
 
             # Check that we're not missing too much flux
-            total_flux = 1.
-            np.testing.assert_((total_flux - contained_flux) / (total_flux) < gsparams.folding_threshold,
+            
+            # This won't be exact due to inaccuracies in the SersicInfo class. Temp fudge till that's fixed
+            folding_threshold_temp_fix_factor = 1.0
+            
+            total_flux = np.sum(test_image.array)
+            np.testing.assert_((total_flux - contained_flux) / (total_flux) <
+                                    folding_threshold_temp_fix_factor*gsparams.folding_threshold,
                                msg="Too much flux lost due to folding.\nFolding threshold = " +
                                str(gsparams.folding_threshold) + "\nTotal flux = " +
                                str(total_flux) + "\nContained flux = " + str(contained_flux) +
