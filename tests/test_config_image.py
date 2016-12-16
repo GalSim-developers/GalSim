@@ -339,7 +339,7 @@ def test_reject():
     im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
     # For this particular config, only 6 of them are real images.  The others were skipped.
     # The skipped ones are present in the list, but their flux is 0
-    fluxes = [im.array.sum() if im is not None else 0 for im in im_list]
+    fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
     expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 1341]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
@@ -361,8 +361,11 @@ def test_reject():
     assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
-    assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
-    assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
+    # This next one can end up with slightly different numerical values depending on numpy version
+    #assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
+    #assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
+    assert re.search("Object 0: Measured flux = 3253.17[0-9]* < 0.95 \* 3457.712670.", cl.output)
+    assert re.search("Object 0: Measured snr = 60.992[0-9]* > 50.0.", cl.output)
 
     # For test coverage to get all branches, do min_snr and max_snr separately.
     del config['stamp']['max_snr']
@@ -370,7 +373,7 @@ def test_reject():
     with CaptureLog() as cl:
         im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
     #print(cl.output)
-    assert "Object 8: Measured snr = 9.157386 < 20.0." in cl.output
+    assert re.search("Object 8: Measured snr = 9.1573[0-9]* < 20.0.", cl.output)
 
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
@@ -480,7 +483,7 @@ def test_snr():
     ud = galsim.UniformDeviate(1234 + 1)
     gal = galsim.Gaussian(sigma=1.7)
     im1a = gal.drawImage(nx=32, ny=32, scale=0.4)
-    sn_meas = math.sqrt( np.sum(im1a.array**2) / 50 )
+    sn_meas = math.sqrt( np.sum(im1a.array**2, dtype=float) / 50 )
     print('measured s/n = ',sn_meas)
     im1a *= 70 / sn_meas
     im1a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
@@ -500,7 +503,7 @@ def test_snr():
     config['stamp']['n_photons'] = 100  # Need something here otherwise it will shoot 1 photon.
     ud.seed(1234 + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=0.4, method='phot', n_photons=100, rng=ud)
-    sn_meas = math.sqrt( np.sum(im2a.array**2) / 50 )
+    sn_meas = math.sqrt( np.sum(im2a.array**2, dtype=float) / 50 )
     print('measured s/n = ',sn_meas)
     im2a *= 70 / sn_meas
     im2a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
@@ -701,7 +704,7 @@ def test_scattered():
 
             xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
                                        np.arange(size) + image.getYMin())
-            obs_flux = np.sum(image.array)
+            obs_flux = np.sum(image.array, dtype=float)
             cenx = np.sum(xgrid * image.array) / flux
             ceny = np.sum(ygrid * image.array) / flux
             ixx = np.sum((xgrid-cenx)**2 * image.array) / flux

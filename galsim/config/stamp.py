@@ -732,7 +732,7 @@ class StampBuilder(object):
         # Then a few things cancel and we find that
         # S/N = sqrt( sum I(x,y)^2 / var )
 
-        sn_meas = math.sqrt( np.sum(image.array**2) / noise_var )
+        sn_meas = math.sqrt( np.sum(image.array**2, dtype=float) / noise_var )
         # Now we rescale the flux to get our desired S/N
         scale_factor = sn_target / sn_meas
         return scale_factor
@@ -794,7 +794,7 @@ class StampBuilder(object):
                 raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
                                  "a single GSObject profile.")
             expected_flux = prof.flux
-            measured_flux = np.sum(image.array)
+            measured_flux = np.sum(image.array, dtype=float)
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
             logger.debug('obj %d: flux_frac = %f', base.get('obj_num',0),
                          measured_flux / expected_flux)
@@ -807,7 +807,7 @@ class StampBuilder(object):
                 raise ValueError("Cannot apply min_snr for stamp types that do not use "+
                                 "a single GSObject profile.")
             var = galsim.config.CalculateNoiseVariance(base)
-            sumsq = np.sum(image.array**2)
+            sumsq = np.sum(image.array**2, dtype=float)
             snr = np.sqrt(sumsq / var)
             logger.debug('obj %d: snr = %f', base.get('obj_num',0), snr)
             if 'min_snr' in config:
