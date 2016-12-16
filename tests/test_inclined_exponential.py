@@ -180,7 +180,7 @@ def test_regression():
         # Now make a test image
         test_profile = get_prof("InclinedSersic",n=sersic_n, scale_radius=scale_radius, scale_height=scale_height,
                                 inclination=inc_angle*galsim.radians, trunc=trunc_factor * scale_radius, flux=flux)
-        # check_basic(test_profile, mode)
+        check_basic(test_profile, mode)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)
