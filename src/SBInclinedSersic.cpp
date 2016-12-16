@@ -24,6 +24,8 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 
+#include <boost/math/special_functions/gamma.hpp>
+
 #include "SBInclinedSersic.h"
 #include "SBInclinedSersicImpl.h"
 #include "SBSersic.h"
@@ -296,13 +298,14 @@ namespace galsim {
     double SBInclinedSersic::SBInclinedSersicImpl::maxSB() const
     {
         // When the disk is face on, the max SB is _xnorm
-        // When the disk is edge on, the max SB is _xnorm
+        // When the disk is edge on, the max SB is _xnorm * _h0/_r0 * gamma(_n)/_n
         double maxsb = _xnorm;
         // The relationship for inclinations in between these is not linear.
         // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
         // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
         double sc = sqrt(std::abs(_cosi));
-        maxsb *= (_h0 * sc + _r0 * (1.-sc)) / _h0;
+        double h0_gamma_n = _h0*boost::math::tgamma(_n);
+        maxsb *= (h0_gamma_n * sc + _r0 * _n * (1.-sc)) / h0_gamma_n;
         return std::abs(maxsb);
     }
 

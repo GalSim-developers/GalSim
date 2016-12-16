@@ -23,6 +23,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+from scipy.special import gamma
 from copy import deepcopy
 
 from galsim_test_helpers import *
@@ -287,17 +288,25 @@ def test_edge_on():
     """
 
     scale_radius = 3.0
+    sersic_n = 2.0
 
     inclinations = (np.arccos(0.01), 2 * np.pi - np.arccos(0.01), np.pi / 2.)
 
     for mode in ("InclinedExponential", "InclinedSersic"):
+        
+        if mode == "InclinedExponential":
+            n = 1.0
+            comp_prof = galsim.Exponential(scale_radius=scale_radius)
+        else:
+            n = sersic_n
+            comp_prof = galsim.Sersic(n=n,scale_radius=scale_radius)
 
         images = []
 
         for inclination in inclinations:
             # Set up the profile
             prof = get_prof(mode, inclination * galsim.radians, scale_radius=scale_radius,
-                            scale_h_over_r=0.1)
+                            scale_h_over_r=0.1, n=n, gsparams=galsim.GSParams(maximum_fft_size=5132))
 
             check_basic(prof, "Edge-on " + mode)
 
@@ -312,9 +321,8 @@ def test_edge_on():
         np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
-        # Also the edge-on version should get the maxSB value exactly right = exp.maxSB * r/h.
-        exp = galsim.Exponential(scale_radius=scale_radius)
-        np.testing.assert_array_almost_equal(prof.maxSB(), exp.maxSB() / 0.1)
+        # Also the edge-on version should get the maxSB value exactly right = comp_prof.maxSB * r/h * n/gamma(n).
+        np.testing.assert_array_almost_equal(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n))
         prof.drawImage(image, method='sb', use_true_center=False)
         print('max pixel: ', image.array.max(), ' cf.', prof.maxSB())
         np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
@@ -524,11 +532,11 @@ def test_pickle():
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
+    test_edge_on()
     test_sanity()
     test_k_limits()
     test_eq_ne()
     test_pickle()
     test_exponential()
     test_sersic()
-    test_edge_on()
     test_regression()
