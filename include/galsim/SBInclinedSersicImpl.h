@@ -96,7 +96,6 @@ namespace galsim {
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
 
         double _inv_r0;
-        double _inv_re;
         double _half_pi_h_sini_over_r;
         double _cosi;
         double _r0_sq;

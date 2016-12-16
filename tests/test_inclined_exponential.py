@@ -50,13 +50,20 @@ both_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
 both_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 
 # InclinedSersic-only test cases
-sersic_fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
-sersic_ns = ("1.0", "1.5", "2.0", "1.5", "2.5", "2.5", "1.5", "1.5", "2.5", "2.5")
-sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "0.1", "0.1", "0.1", "0.1")
-sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", "3.0", "3.0", "2.0", "2.0", "2.0", "2.0")
-sersic_scale_heights = ("1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0", "1.0")
-sersic_trunc_factors = ("20", "20", "20", "4.5", "20", "4.5", "20", "4.5", "20", "4.5")
-sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2", "-0.2", "-0.2")
+# sersic_fluxes = ("1.0", "2.0", "1.5", "1.1", "10.0", "1.0e6", "1.0e-6", "2.3e4",)
+# sersic_ns = ("1.0", "1.5", "2.0", "2.5", "1.0", "1.5", "2.0", "2.5",)
+# sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.1", "0.2", "0.3", "0.5",)
+# sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", "1.9", "2.1", "3.4", "1.8",)
+# sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
+# sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
+# sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
+sersic_fluxes = ("1.0", "2.0" )#, "1.5", "1.1", "10.0", "1.0e6", "1.0e-6", "2.3e4",)
+sersic_ns = ("1.0", "1.5" )#, "2.0", "2.5", "1.0", "1.5", "2.0", "2.5",)
+sersic_inc_angles = ("0.0", "0.0")#, "0.0", "0.0", "0.1", "0.2", "0.3", "0.5",)
+sersic_scale_radii = ("3.0", "3.0")#, "3.0", "3.0", "1.9", "2.1", "3.4", "1.8",)
+sersic_scale_heights = ("0.3", "0.3")#, "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
+sersic_trunc_factors = ("0.0", "0.0")#, "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
+sersic_pos_angles = ("0.0", "0.0")#, "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
 
 image_nx = 64
 image_ny = 64
@@ -334,22 +341,22 @@ def test_sanity():
         check_basic(test_profile, mode)
 
         # Check that h/r is properly given by the method and property for it
-        np.testing.assert_almost_equal(test_profile.scale_height / test_profile.scale_radius,
-                                       test_profile.scale_h_over_r)
-        np.testing.assert_almost_equal(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
-                                       test_profile.getScaleHOverR())
+        np.testing.assert_allclose(test_profile.scale_height / test_profile.scale_radius,
+                                       test_profile.scale_h_over_r, rtol=1e-4)
+        np.testing.assert_allclose(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
+                                       test_profile.getScaleHOverR(), rtol=1e-4)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)
 
         # Check that the k value for (0,0) is the flux
-        np.testing.assert_almost_equal(test_profile.kValue(kx=0., ky=0.), flux)
+        np.testing.assert_allclose(test_profile.kValue(kx=0., ky=0.), flux, rtol=1e-4)
 
         # Check that the drawn flux for a large image is indeed the flux
         test_image = galsim.Image(5 * image_nx, 5 * image_ny, scale=1.0)
         test_profile.drawImage(test_image)
         test_flux = test_image.array.sum()
-        np.testing.assert_almost_equal(test_flux, flux, decimal=3)
+        np.testing.assert_allclose(test_flux, flux, rtol=1e-4)
 
         # Check that the centroid is (0,0)
         centroid = test_profile.centroid()
