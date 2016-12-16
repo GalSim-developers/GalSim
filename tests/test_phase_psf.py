@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import *
+from galsim_test_helpers import timer, do_pickle, all_obj_diff, getmoments
 
 try:
     import galsim
@@ -371,7 +371,6 @@ def test_stepk_maxk():
 @timer
 def test_ne():
     """Test Apertures, PhaseScreens, PhaseScreenLists, and PhaseScreenPSFs for not-equals."""
-    import copy
     pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
 
     # Test galsim.Aperture __ne__
@@ -479,8 +478,6 @@ def test_phase_gradient_shoot():
     diam = 4.0
     pad_factor = 1.0
     oversampling = 1.0
-    wf_pad_factor = 0.5
-    wf_oversampling = 0.5
 
     aper = galsim.Aperture(diam=diam, lam=lam,
                            screen_list=atm, pad_factor=pad_factor,
