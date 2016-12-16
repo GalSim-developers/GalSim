@@ -1318,3 +1318,7 @@ class RandomWalk(Sum):
             gsparams=repr(self._input_gsparams),
         )
         return rep
+
+    def _prepareDraw(self):
+        # RandomWalk never wraps a PhaseScreenPSF, so no need to prepare anything.
+        pass
