@@ -51,20 +51,13 @@ both_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
 both_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 
 # InclinedSersic-only test cases
-# sersic_fluxes = ("1.0", "2.0", "1.5", "1.1", "10.0", "1.0e6", "1.0e-6", "2.3e4",)
-# sersic_ns = ("1.0", "1.5", "2.0", "2.5", "1.0", "1.5", "2.0", "2.5",)
-# sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.1", "0.2", "0.3", "0.5",)
-# sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", "1.9", "2.1", "3.4", "1.8",)
-# sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
-# sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
-# sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
-sersic_fluxes = ("1.0", "2.0", "1.5", "1.1", )#"10.0", "1.0e6", "1.0e-6", "2.3e4",)
-sersic_ns = ("1.0", "1.5", "2.0", "2.5", )#"1.0", "1.5", "2.0", "2.5",)
-sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", )#"0.1", "0.2", "0.3", "0.5",)
-sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", )#"1.9", "2.1", "3.4", "1.8",)
-sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", )#"0.3", "0.2", "0.1", "0.5", )
-sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", )#"4.5", "3.9", "5.0", "2.5", )
-sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", )#"0.3", "0.6", "-0.9", "7.3",)
+sersic_fluxes = ("1.0", "2.0", "1.5", "1.1", "10.0", "1.0e6", "1.0e-6", "2.3e4",)
+sersic_ns = ("1.0", "1.5", "2.0", "2.5", "1.0", "1.5", "2.0", "2.5",)
+sersic_inc_angles = ("0.0", "0.0", "0.0", "0.0", "0.1", "0.2", "0.3", "0.5",)
+sersic_scale_radii = ("3.0", "3.0", "3.0", "3.0", "1.9", "2.1", "3.4", "1.8",)
+sersic_scale_heights = ("0.3", "0.3", "0.3", "0.3", "0.3", "0.2", "0.1", "0.5", )
+sersic_trunc_factors = ("0.0", "0.0", "0.0", "0.0", "4.5", "3.9", "5.0", "2.5", )
+sersic_pos_angles = ("0.0", "0.0", "0.0", "0.0", "0.3", "0.6", "-0.9", "7.3",)
 
 image_nx = 64
 image_ny = 64
@@ -106,17 +99,20 @@ def test_regression():
 
     for mode in ("InclinedExponential", "InclinedSersic"):
 
-        for inc_angle, scale_radius, scale_height, pos_angle in zip(both_inc_angles,
-                                                                    both_scale_radii,
-                                                                    both_scale_heights,
-                                                                    both_pos_angles):
+        for flux, inc_angle, scale_radius, scale_height, pos_angle in zip(both_fluxes,
+                                                                          both_inc_angles,
+                                                                          both_scale_radii,
+                                                                          both_scale_heights,
+                                                                          both_pos_angles):
 
             image_filename = "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
             print("Comparing " + mode + " against " + image_filename + "...")
 
             image = galsim.fits.read(image_filename, image_dir)
+            nx, ny = np.shape(image.array)
 
             # Get float values for the details
+            flux = float(flux)
             inc_angle = float(inc_angle)
             scale_radius = float(scale_radius)
             scale_height = float(scale_height)
@@ -124,7 +120,7 @@ def test_regression():
 
             # Now make a test image
             test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
-                                    scale_height)
+                                    scale_height, flux=flux)
             check_basic(test_profile, mode)
 
             # Rotate it by the position angle
@@ -142,20 +138,23 @@ def test_regression():
             # Compare to the example - Due to the different fourier transforms used, some offset is
             # expected, so we just compare in the core to two decimal places
 
-            image_core = image.array[image_ny // 2 - 2:image_ny // 2 + 3, image_nx // 2 - 2:image_nx // 2 + 3]
-            test_image_core = test_image.array[image_ny // 2 - 2:image_ny // 2 + 3, image_nx // 2 - 2:image_nx // 2 + 3]
+            image_core      =      image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
+            test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
-            ratio_core = image_core / test_image_core
+            ratio_core = test_image_core / image_core
 
-            np.testing.assert_array_almost_equal(
+            np.testing.assert_allclose(
                     ratio_core, np.mean(ratio_core) * np.ones_like(ratio_core),
-                    decimal=2,
+                    rtol=2e-2,
                     err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                     verbose=True)
+            
+            np.testing.assert_allclose(ratio_core*image.array.sum(),flux,rtol=2e-2)
 
     # Now do Sersic-only tests
-    for (sersic_n, inc_angle, scale_radius, scale_height,
-         trunc_factor, pos_angle) in zip(sersic_ns,
+    for (flux, sersic_n, inc_angle, scale_radius, scale_height,
+         trunc_factor, pos_angle) in zip(sersic_fluxes,
+                                         sersic_ns,
                                          sersic_inc_angles,
                                          sersic_scale_radii,
                                          sersic_scale_heights,
@@ -167,8 +166,10 @@ def test_regression():
         print("Comparing " + mode + " against " + image_filename + "...")
 
         image = galsim.fits.read(image_filename, image_dir)
+        nx, ny = np.shape(image.array)
 
         # Get float values for the details
+        flux = float(flux)
         sersic_n = float(sersic_n)
         inc_angle = float(inc_angle)
         scale_radius = float(scale_radius)
@@ -177,14 +178,15 @@ def test_regression():
         pos_angle = float(pos_angle)
 
         # Now make a test image
-        test_profile = galsim.Sersic(n=sersic_n, scale_radius=scale_radius, trunc=trunc_factor * scale_radius)
-        check_basic(test_profile, mode)
+        test_profile = get_prof("InclinedSersic",n=sersic_n, scale_radius=scale_radius, scale_height=scale_height,
+                                inclination=inc_angle*galsim.radians, trunc=trunc_factor * scale_radius, flux=flux)
+        # check_basic(test_profile, mode)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)
 
         # Draw it onto an image
-        test_image = galsim.Image(image_nx, image_ny, scale=1.0)
+        test_image = galsim.Image(nx, ny, scale=1.0)
         test_profile.drawImage(test_image, offset=(0.5, 0.5))  # Offset to match Lance's
 
         # Save if desired
@@ -195,16 +197,18 @@ def test_regression():
         # Compare to the example - Due to the different fourier transforms used, some offset is
         # expected, so we just compare in the core to two decimal places
 
-        image_core = image.array[image_ny // 2 - 2:image_ny // 2 + 3, image_nx // 2 - 2:image_nx // 2 + 3]
-        test_image_core = test_image.array[image_ny // 2 - 2:image_ny // 2 + 3, image_nx // 2 - 2:image_nx // 2 + 3]
+        image_core      =      image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
+        test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
-        ratio_core = image_core / test_image_core
+        ratio_core = test_image_core / image_core  
 
-        np.testing.assert_array_almost_equal(
+        np.testing.assert_allclose(
                 ratio_core, np.mean(ratio_core) * np.ones_like(ratio_core),
-                decimal=2,
+                rtol=5e-2,
                 err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                 verbose=True)
+        
+        np.testing.assert_allclose(ratio_core*image.array.sum(),flux,rtol=5e-2)
 
 
 @timer
@@ -532,11 +536,11 @@ def test_pickle():
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
-    test_edge_on()
+    test_regression()
     test_sanity()
     test_k_limits()
     test_eq_ne()
     test_pickle()
     test_exponential()
     test_sersic()
-    test_regression()
+    test_edge_on()
