@@ -114,6 +114,7 @@ def test_phase_screen_list():
     do_pickle(ar1)
     do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, None).sum())
+    do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
 
@@ -135,6 +136,7 @@ def test_phase_screen_list():
     atm.append(ar3)
     do_pickle(atm)
     do_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, None).sum())
+    do_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
@@ -197,6 +199,9 @@ def test_phase_screen_list():
     atm6 = galsim.PhaseScreenList(atm[0])
     atm7 = galsim.PhaseScreenList([atm[0]])
     assert atm6 == atm7
+    do_pickle(atm6, func=lambda x:x.wavefront(aper.u, aper.v, None).sum())
+    do_pickle(atm6, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
+
     atm6 = galsim.PhaseScreenList(atm[0], atm[1])
     atm7 = galsim.PhaseScreenList([atm[0], atm[1]])
     atm8 = galsim.PhaseScreenList(atm[0:2])  # Slice returns PhaseScreenList, so this works too.
@@ -238,11 +243,16 @@ def test_frozen_flow():
         warnings.simplefilter("ignore")
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper.u, aper.v, None)
+    dwdu0, dwdv0 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time)
     screen._seek(t)
     assert screen._time == t, "Wrong time for AtmosphericScreen"
     wf1 = screen.wavefront(aper.u, aper.v, None, theta=(45*galsim.degrees, 0*galsim.degrees))
+    dwdu1, dwdv1 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time,
+                                             theta=(45*galsim.degrees, 0*galsim.degrees))
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
+    np.testing.assert_array_almost_equal(dwdu0, dwdu1, 5, "Flow is not frozen")
+    np.testing.assert_array_almost_equal(dwdu0, dwdu1, 5, "Flow is not frozen")
 
     # We should be able to rewind too.
     screen._seek(0.01)

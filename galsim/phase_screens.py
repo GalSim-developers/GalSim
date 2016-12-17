@@ -86,7 +86,7 @@ class AtmosphericScreen(object):
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
-        self.time = 0.0
+        self._time = 0.0
 
         if rng is None:
             rng = galsim.BaseDeviate()
@@ -175,6 +175,8 @@ class AtmosphericScreen(object):
         if not self.reversible:
             # Can't reverse, so reset and move forward.
             if t < self._time:
+                if t < 0.0:
+                    raise ValueError("Can't rewind irreversible screen to t < 0.0")
                 self._reset()
             # Find number of boiling updates we need to perform.
             previous_update_number = int(self._time // self.time_step)
@@ -186,7 +188,7 @@ class AtmosphericScreen(object):
                     self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
                 self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen,
                                                    edge_mode='wrap')
-        self._time = t
+        self._time = float(t)
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -210,34 +212,55 @@ class AtmosphericScreen(object):
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
-        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Wavefront lag or lead in nanometers.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Array of wavefront lag or lead in nanometers.
         """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+
         # Special undocumented value for t: None means use self._time.
         if t is None:
-            return self._wavefront(u, v, self._time, theta)
+            t = np.empty_like(u)
+            t.fill(self._time)
+            return self._wavefront(u, v, t, theta)
+
+        from numbers import Real
+        if isinstance(t, Real):
+            tmp = np.empty_like(u)
+            tmp.fill(t)
+            t = tmp
+        else:
+            t = np.array(t, dtype=float)
+            if t.shape != u.shape:
+                raise ValueError("t.shape must match u.shape if t is not a scalar")
+
         if self.reversible:
             return self._wavefront(u, v, t, theta)
         else:
-            out = np.empty_like(u, dtype=np.float64)
+            out = np.empty_like(u, dtype=float)
             tmin = np.min(t)
             tmax = np.max(t)
             tt = (tmin // self.time_step) * self.time_step
             while tt <= tmax:
                 self._seek(tt)
-                here = tt <= t < tt+self.time_step
+                here = ((tt <= t) & (t < tt+self.time_step))
                 out[here] = self._wavefront(u[here], v[here], t[here], theta)
                 tt += self.time_step
             return out
 
     def _wavefront(self, u, v, t, theta):
-        """ Same as wavefront(), but assumes that boiling atmosphere has already been properly
-        boiled for all times t.
-        """
+        # Same as wavefront(), but no argument checking and no boiling updates.
         if t is None:
             t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
@@ -245,37 +268,52 @@ class AtmosphericScreen(object):
         return self._tab2d(u, v)
 
     def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
-        """ Calculate gradient of wavefront due to atmospheric phase screen.
+        """ Compute gradient of wavefront due to atmospheric phase screen.
 
-        @param u        Horizontal pupil plane coordinate in meters.
-        @param v        Vertical pupil plane coordinate in meters.
-        @param t        Arrival times of photons
-        @param diam     Diameter of illuminated pupil.  Not needed here, but needed for
-                        OpticalScreen.wavefront_grad_at, so it's part of the method signature.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Arrays dWdu, dWdv.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+
+        from numbers import Real
+        if isinstance(t, Real):
+            tmp = np.empty_like(u)
+            tmp.fill(t)
+            t = tmp
+        else:
+            t = np.array(t, dtype=float)
+            if t.shape != u.shape:
+                raise ValueError("t.shape must match u.shape if t is not a scalar")
+
         if self.reversible:
             return self._wavefront_gradient(u, v, t, theta)
         else:
-            out = np.empty_like(u, dtype=np.float64)
+            dwdu = np.empty_like(u, dtype=np.float64)
+            dwdv = np.empty_like(u, dtype=np.float64)
             tmin = np.min(t)
             tmax = np.max(t)
             tt = (tmin // self.time_step) * self.time_step
             while tt <= tmax:
                 self._seek(tt)
-                here = tt <= t < tt+self.time_step
-                out[here] = self._wavefront_gradient(u[here], v[here], t[here], theta)
+                here = ((tt <= t) & (t < tt+self.time_step))
+                dwdu[here], dwdv[here] = self._wavefront_gradient(u[here], v[here], t[here], theta)
                 tt += self.time_step
-            return out
+            return dwdu, dwdv
 
     def _wavefront_gradient(self, u, v, t, theta):
-        """ Same as wavefront_gradient(), but assumes that boiling atmosphere has already been
-        properly boiled for all times t.
-        """
-        if t is None:
-            t = self._time
+        # Same as wavefront(), but no argument checking and no boiling updates.
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d.gradient(u, v)
@@ -783,41 +821,63 @@ class OpticalScreen(object):
         return obj.stepK()
 
     def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
-        """ Compute wavefront due to atmospheric phase screen.
+        """ Compute wavefront due to optical phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
-        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Wavefront lag or lead in nanometers.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Array of wavefront lag or lead in nanometers.
         """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+        return self._wavefront(u, v, t, theta)
+
+    def _wavefront(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
         # Note, this phase screen is actually independent of time and theta.
         r = u + 1j*v
         rsqr = np.abs(r)**2
         return horner2d(rsqr, r, self.coef_array).real * self.lam_0
 
-    _wavefront = wavefront
-
     def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
-        """ Calculate gradient of wavefront due to optical phase screen.
+        """ Compute gradient of wavefront due to atmospheric phase screen.
 
-        @param u        Horizontal pupil plane coordinate in meters.
-        @param v        Vertical pupil plane coordinate in meters.
-        @param t        Arrival times of photons
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Arrays dWdu, dWdv.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+        return self._wavefront_gradient(u, v, t, theta)
+
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
         # Note, this phase screen is actually independent of time and theta.
         du = dv = 0.01*self.diam
-
-        w0 = self.wavefront(u, v, t, theta)
-        gradu = (self.wavefront(u+du, v, t, theta) - w0) / du
-        gradv = (self.wavefront(u, v+dv, t, theta) - w0) / dv
+        w0 = self._wavefront(u, v, t, theta)
+        gradu = (self._wavefront(u+du, v, t, theta) - w0) / du
+        gradv = (self._wavefront(u, v+dv, t, theta) - w0) / dv
         return gradu, gradv
-
-    _wavefront_gradient = wavefront_gradient
