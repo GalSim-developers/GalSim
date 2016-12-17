@@ -111,12 +111,17 @@ def test_phase_screen_list():
     aper = galsim.Aperture(diam=1.0)
 
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
+    assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
     do_pickle(ar1)
     do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, None).sum())
     do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
-
-    assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
+    t = np.empty_like(aper.u)
+    ud = galsim.UniformDeviate(rng.duplicate())
+    ud.generate(t.ravel())
+    t *= 0.1  # Only do a few boiling steps
+    do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, t).sum())
+    do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, t)))
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
