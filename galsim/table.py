@@ -486,7 +486,7 @@ class LookupTable2D(object):
             return self._call_raise(x, y)
         elif self.edge_mode == 'wrap':
             return self._call_wrap(x, y)
-        elif self.edge_mode == 'constant':
+        else: # constant
             return self._call_constant(x, y)
 
     def _gradient_raise(self, x, y):
@@ -543,7 +543,7 @@ class LookupTable2D(object):
             return self._gradient_raise(x, y)
         elif self.edge_mode == 'wrap':
             return self._gradient_wrap(x, y)
-        elif self.edge_mode == 'constant':
+        else: # constant
             return self._gradient_constant(x, y)
 
     def __str__(self):

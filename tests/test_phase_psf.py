@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_pickle, all_obj_diff, getmoments
+from galsim_test_helpers import timer, do_shoot, do_pickle, all_obj_diff, getmoments
 
 try:
     import galsim
@@ -367,6 +367,9 @@ def test_scale_unit():
             im1.array, im2.array,
             'PhaseScreenPSF inconsistent use of scale_unit')
 
+    opt_psf1 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit=galsim.arcsec)
+    opt_psf2 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit='arcsec')
+    assert opt_psf1 == opt_psf2, "scale unit did not parse as string"
 
 @timer
 def test_stepk_maxk():
@@ -390,6 +393,14 @@ def test_stepk_maxk():
             err_msg="PhaseScreenPSF did not adopt forced value for maxK")
     do_pickle(psf)
     do_pickle(psf2)
+
+    # Try out non-geometric-shooting
+    psf3 = atm.makePSF(lam=500.0, aper=aper, geometric_shooting=False)
+    img = galsim.Image(64, 64, scale=psf3.nyquistScale())
+    do_shoot(psf3, img, "PhaseScreenPSF")
+    # Also make sure a few other methods at least run
+    psf3.centroid()
+    psf3.maxSB()
 
 
 @timer

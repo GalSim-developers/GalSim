@@ -1136,7 +1136,7 @@ class PhaseScreenPSF(GSObject):
         # Trigger delayed computation of all pending PSFs.
         self._screen_list._prepareDraw()
 
-    # A few items which need the profile to have been drawn.
+    # A few items which need the InterpolatedImage to have been prepared before accessing.
     def maxK(self):
         """Returns value of k beyond which aliasing can be neglected.
         """

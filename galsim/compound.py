@@ -208,7 +208,7 @@ class Sum(galsim.GSObject):
 
         # Get photons from each summand, using BinomialDeviate to randomize
         # the distribution of photons among summands
-        for i, obj in enumerate(self.obj_list):
+        for i, obj in enumerate(self.obj_list): # pragma: no branch
             thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
 
             # How many photons to shoot from this summand?
