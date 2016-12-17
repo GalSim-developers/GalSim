@@ -124,6 +124,8 @@ def test_convolve():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"Moffat * Pixel")
+    # Verify that shoot with rng=None still runs
+    conv.shoot(100, rng=None)
     # Clear the warnings registry for later so we can test that appropriate warnings are raised.
     galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
@@ -574,6 +576,8 @@ def test_add():
 
     # Test photon shooting.
     do_shoot(sum_gauss,myImg,"sum of 2 Gaussians")
+    # Verify that shoot with rng=None still runs
+    sum_gauss.shoot(100, rng=None)
 
     # Test kvalues
     do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
@@ -827,6 +831,8 @@ def test_autoconvolve():
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+    # Verify that shoot with rng=None still runs
+    conv2.shoot(100, rng=None)
 
     # For a symmetric profile, AutoCorrelate is the same thing:
     conv2 = galsim.AutoCorrelate(psf)
@@ -925,6 +931,8 @@ def test_autocorrelate():
 
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")
+    # Verify that shoot with rng=None still runs
+    corr.shoot(100, rng=None)
 
     # Check picklability
     do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))

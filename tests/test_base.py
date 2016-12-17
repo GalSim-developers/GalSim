@@ -118,6 +118,8 @@ def test_gaussian():
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
+    # Verify that shoot with rng=None still runs
+    gauss.shoot(100, rng=None)
 
     # Test kvalues
     do_kvalue(gauss,myImg,"Gaussian")

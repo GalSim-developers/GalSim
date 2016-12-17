@@ -217,8 +217,23 @@ class Transformation(galsim.GSObject):
                                                     self.getOffset(), self.getFluxRatio(),
                                                     self._gsparams)
 
-    def shoot(self, N, ud):
-        photon_array = self.original.shoot(N, ud)
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        """
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+        photon_array = self.original.shoot(n_photons, ud)
         new = np.dot(self.jac, np.vstack([photon_array.x, photon_array.y]))
         photon_array.x = new[0, :] + self.offset.x
         photon_array.y = new[1, :] + self.offset.y
