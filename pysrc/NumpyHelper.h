@@ -259,7 +259,9 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
         bp::throw_error_already_set();
     }
     if (GetNumpyArrayNDim(array.ptr()) != ndim) {
-        PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has must be 2-d");
+        std::ostringstream oss;
+        oss<<"numpy.ndarray argument must be "<<ndim<<"-d"<<"\n";
+        PyErr_SetString(PyExc_ValueError, oss.str().c_str());
         bp::throw_error_already_set();
     }
     if (!isConst && !(GetNumpyArrayFlags(array.ptr()) & NPY_ARRAY_WRITEABLE)) {
