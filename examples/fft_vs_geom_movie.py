@@ -16,6 +16,25 @@
 #    and/or other materials provided with the distribution.
 #
 
+"""@file fft_vs_geom_movie.py
+Script to demonstrate the geometric approximation to Fourier optics.  Simulates both a randomly
+evolving set of Zernike aberrations and a frozen-flow Kolmogorov atmospheric phase screen.
+
+To visualize only the Zernike aberrations, add `--nlayers 0` as a command line argument.
+
+To visualize only atmospheric effects, add `--sigma 0` as a command line argument.
+
+Some suggested command lines, appropriate for LSST:
+
+Optics only simulation:
+  $ python fft_vs_geom_movie.py --diam 8.36 --obscuration 0.61 --sigma 0.05 --nlayers 0
+
+Atmosphere only simulation:
+  $ python fft_vs_geom_movie.py --diam 8.36 --obscuration 0.61 --sigma 0.0 --nlayers 6 --size 3.0
+
+"""
+
+
 import numpy as np
 import galsim
 
@@ -59,6 +78,8 @@ def ellip(mom):
 
 def make_movie(args):
     rng = galsim.BaseDeviate(args.seed)
+    u = galsim.UniformDeviate(rng)
+    # Generate 1D Gaussian random fields for each aberration.
     t = np.arange(-args.n/2, args.n/2)
     corr = np.exp(-0.5*t**2/args.ell**2)
     pk = np.fft.fft(np.fft.fftshift(corr))
@@ -66,15 +87,37 @@ def make_movie(args):
     phi = np.random.uniform(size=(args.n, args.jmax))
     zk = ak[:, None]*np.exp(2j*np.pi*phi)
     aberrations = args.n/2*np.fft.ifft(zk, axis=0).real
-
     measured_std = np.mean(np.std(aberrations, axis=0))
     aberrations *= args.sigma/measured_std
-    # Make the mean of each aberration zero.
     aberrations -= np.mean(aberrations, axis=0)
 
-    lam = args.lam
-    diam = args.diam
-    obscuration = args.obscuration
+    # Generate an atmosphere.  Same procedure as in psf_wf_movie.py
+    Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+    Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+    Ellerbroek_interp = galsim.LookupTable(Ellerbroek_alts, Ellerbroek_weights,
+                                           interpolant='linear')
+    alts = np.max(Ellerbroek_alts)*np.arange(args.nlayers)/(args.nlayers-1)
+    weights = Ellerbroek_interp(alts)  # interpolate the weights
+    weights /= sum(weights)  # and renormalize
+    max_speed = 20  # Pick (an arbitrary) maximum wind speed in m/s.
+    spd = []  # Wind speed in m/s
+    dirn = [] # Wind direction in radians
+    r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
+    for i in range(args.nlayers):
+        spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
+        dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
+        r0_500.append(args.r0_500*weights[i]**(-3./5))
+        print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
+               "and r0_500 {:5.3f} m."
+               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
+    if args.nlayers > 0:
+        atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
+                                time_step=args.time_step, screen_size=args.screen_size,
+                                screen_scale=args.screen_scale)
+    else:
+        atm = galsim.PhaseScreenList()
+
+    # Setup Fourier and geometric apertures
     fft_aper = galsim.Aperture(args.diam, args.lam, obscuration=args.obscuration,
                                pad_factor=args.pad_factor, oversampling=args.oversampling,
                                nstruts=args.nstruts, strut_thick=args.strut_thick,
@@ -123,7 +166,6 @@ def make_movie(args):
         ztext.append(fig.text(x, y, "Z{:d} = {:5.3f}".format(i, 0.0)))
         ztext[-1].set_color('w')
 
-
     I_fft = fft_ax.text(0.05, 0.955, '', transform=fft_ax.transAxes)
     I_fft.set_color('w')
     I_phot = geom_ax.text(0.05, 0.955, '', transform=geom_ax.transAxes)
@@ -141,15 +183,20 @@ def make_movie(args):
 
     with ProgressBar(args.n) as bar:
         with writer.saving(fig, args.out+"movie.mp4", 100):
+            t0 = 0.0
             for i, aberration in enumerate(aberrations):
-                fft_psf = galsim.OpticalPSF(lam=lam, diam=diam, obscuration=obscuration,
-                                            aper=fft_aper, aberrations=[0]+aberration.tolist())
+                optics = galsim.OpticalScreen(args.diam, obscuration=args.obscuration,
+                                              aberrations=[0]+aberration.tolist())
+                psl = galsim.PhaseScreenList(atm._layers+[optics])
+                fft_psf = psl.makePSF(lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
+                geom_psf = psl.makePSF(lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
+
                 fft_img = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
 
-                geom_psf = galsim.OpticalPSF(lam=lam, diam=diam, obscuration=obscuration,
-                                             aper=geom_aper, aberrations=[0]+aberration.tolist())
                 geom_img = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
                                               method='phot', n_photons=100000)
+
+                t0 += args.time_step
 
                 fft_im.set_array(fft_img.array)
                 geom_im.set_array(geom_img.array)
@@ -200,7 +247,7 @@ def make_movie(args):
     # Centroid plot
     fig, axes = plt.subplots(1, 2, figsize=(10, 6))
     axes[0].scatter(fft_mom[:, 0], geom_mom[:, 0])
-    axes[1].scatter(fft_mom[:, 0], geom_mom[:, 0])
+    axes[1].scatter(fft_mom[:, 1], geom_mom[:, 1])
     axes[0].set_title("Ix")
     axes[1].set_title("Iy")
     for ax in axes:
@@ -246,7 +293,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed.  Default: 1")
-    parser.add_argument("--n", type=int, default=100,
+    parser.add_argument("-n", type=int, default=100,
                         help="Number of frames to generate.  Default: 100")
     parser.add_argument("--jmax", type=int, default=15,
                         help="Maximum Zernike to include.  Default: 15")
@@ -254,6 +301,19 @@ if __name__ == '__main__':
                         help="Correlation length of Zernike coefficients in frames.  Default: 4.0")
     parser.add_argument("--sigma", type=float, default=0.05,
                         help="Amplitude of Zernike coefficient fluctuations.  Default: 0.05")
+
+    parser.add_argument("--r0_500", type=float, default=0.2,
+                        help="Fried parameter at wavelength 500 nm in meters.  Default: 0.2")
+    parser.add_argument("--nlayers", type=int, default=6,
+                        help="Number of atmospheric layers.  Default: 6")
+    parser.add_argument("--time_step", type=float, default=0.025,
+                        help="Incremental time step for advancing phase screens and accumulating "
+                             "instantaneous PSFs in seconds.  Default: 0.025")
+    parser.add_argument("--screen_size", type=float, default=102.4,
+                        help="Size of atmospheric screen in meters.  Note that the screen wraps "
+                             "with periodic boundary conditions.  Default: 102.4")
+    parser.add_argument("--screen_scale", type=float, default=0.1,
+                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
 
     parser.add_argument("--lam", type=float, default=700.0,
                         help="Wavelength in nanometers.  Default: 700.0")
