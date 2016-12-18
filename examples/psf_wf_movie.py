@@ -173,21 +173,25 @@ def make_movie(args):
     etext.set_color('w')
 
     nstep = int(args.exptime / args.time_step)
+    t0 = 0.0
     # Use astropy ProgressBar to keep track of progress and show an estimate for time to completion.
     with ProgressBar(nstep) as bar:
         with writer.saving(fig, args.outfile, 100):
             for i in range(nstep):
-                # The wavefront() method with `compact=False` returns a 2D array over the pupil
-                # plane described by `aper`.  Here, we just get the wavefront for visualization;
-                # this step is normally handled automatically by the PhasePSF code behind the
-                # scenes.
-                wf = atm.wavefront(aper, theta, compact=False) * 2*np.pi / args.lam  # radians
+                # The wavefront() method accepts pupil plane coordinates `u` and `v` in meters, a
+                # time `t` in seconds, and possibly a field angle `theta`.  It returns the wavefront
+                # lag or lead in nanometers with respect to the "perfect" planar wavefront at the
+                # specified location angle and time.  In normal use for computing atmospheric PSFs,
+                # this is just an implementation detail.  In this script, however, we include the
+                # wavefront in the visualization.
+                wf = atm.wavefront(aper.u, aper.v, t0, theta=theta) * 2*np.pi/args.lam  # radians
                 # To make an actual PSF GSObject, we use the makePSF() method, including arguments
-                # for the wavelength `lam`, the field angle `theta`, the aperture `aper`, and the
-                # exposure time `exptime`.  Here, since we're making a movie, we set the exptime
-                # equal to just a single timestep, though normally we'd want to set this to the
-                # full exposure time.
-                psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper, exptime=args.time_step)
+                # for the wavelength `lam`, the field angle `theta`, the aperture `aper`, the
+                # starting time t0, and the exposure time `exptime`.  Here, since we're making a
+                # movie, we set the exptime equal to just a single timestep, though normally we'd
+                # want to set this to the full exposure time.
+                psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper,
+                                  t0=t0, exptime=args.time_step)
                 # `psf` is now just like an any other GSObject, ready to be convolved, drawn, or
                 # transformed.  Here, we just draw it into an image to add to our movie.
                 psf_img0 = psf.drawImage(nx=args.psf_nx, ny=args.psf_nx, scale=args.psf_scale)
@@ -200,6 +204,9 @@ def make_movie(args):
 
                 # Calculate simple estimate of ellipticity
                 e = ellip(simple_moments(psf_img))
+
+                # Update t0 for the next movie frame.
+                t0 += args.time_step
 
                 # Matplotlib code updating plot elements
                 wf_im.set_array(wf)
