@@ -976,6 +976,7 @@ class GSObject(object):
         return wcs
 
     def _prepareDraw(self):
+        # Do any work that was postponed until drawImage.
         pass
 
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
