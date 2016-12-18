@@ -209,7 +209,7 @@ class Sum(galsim.GSObject):
 
         # Get photons from each summand, using BinomialDeviate to randomize
         # the distribution of photons among summands
-        for i, obj in enumerate(self.obj_list): # pragma: no branch
+        for i, obj in enumerate(self.obj_list):
             thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
 
             # How many photons to shoot from this summand?
@@ -228,8 +228,8 @@ class Sum(galsim.GSObject):
                 istart += thisN
             remainingN -= thisN
             remainingAbsoluteFlux -= thisAbsoluteFlux
-            if remainingN <= 0: break
-            if remainingAbsoluteFlux <= 0: break
+        assert remainingN == 0
+        assert np.isclose(remainingAbsoluteFlux, 0.0)
 
         # This process produces correlated photons, so mark the resulting array as such.
         if len(self.obj_list) > 1:
