@@ -1238,6 +1238,15 @@ class PhaseScreenPSF(GSObject):
         GSObject.__init__(self, self.ii)
 
     def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
         if not self._geometric_shooting:
             self._prepareDraw()
             return self.ii.shoot(n_photons, rng)
@@ -1663,4 +1672,13 @@ class OpticalPSF(GSObject):
         GSObject.__init__(self, self._psf)
 
     def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
         return self._psf.shoot(n_photons, rng)

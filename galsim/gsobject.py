@@ -1746,6 +1746,7 @@ class GSObject(object):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+        @returns PhotonArray.
         """
         # Setup the rng if not provided one.
         if rng is None:

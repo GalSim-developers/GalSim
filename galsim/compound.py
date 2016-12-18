@@ -188,6 +188,7 @@ class Sum(galsim.GSObject):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+        @returns PhotonArray.
         """
         # Setup the rng if not provided one.
         if rng is None:
@@ -489,6 +490,7 @@ class Convolution(galsim.GSObject):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+        @returns PhotonArray.
         """
         # Setup the rng if not provided one.
         if rng is None:
@@ -755,6 +757,7 @@ class AutoConvolution(galsim.GSObject):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+        @returns PhotonArray.
         """
         # Setup the rng if not provided one.
         if rng is None:
@@ -919,6 +922,7 @@ class AutoCorrelation(galsim.GSObject):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+        @returns PhotonArray.
         """
         # Setup the rng if not provided one.
         if rng is None:
