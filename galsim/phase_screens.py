@@ -408,7 +408,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          or PSF correlations functions. Note that screen_size may be tweaked by the
                          initializer to ensure screen_size is a multiple of screen_scale.
     @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.03]
+                         [default: 0.025]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
@@ -416,9 +416,12 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          for a power spectrum without an outer scale.  [default: 25.0]
     @param speed         Wind speed in meters/second.  [default: 0.0]
     @param direction     Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
-    @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
-                         1-alpha is then the amount of turbulence freshly generated in each step.
-                         [default: 1.0]
+    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
+                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
+                         is then the amount of turbulence freshly generated in each step.  Setting
+                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
+                         from frozen-flow atmospheres may be significantly faster than computing
+                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results.

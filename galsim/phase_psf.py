@@ -23,6 +23,9 @@ PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
 
 where x, y are focal plane coordinates and u, v are pupil plane coordinates.
 
+Alternatively, drawing using photon-shooting can use a fast geometric optics approximation to
+Fourier optics.
+
 The main classes of note are:
 
 Aperture
@@ -608,38 +611,12 @@ class PhaseScreenList(object):
         # Switch the first and second layer.  Silly, but works...
         >>> screens[0], screens[1] = screens[1], screens[0]
 
-    Note that creating new PhaseScreenLists from old PhaseScreenLists copies the wrapped phase
-    screens by reference, not value.  Thus, advancing the screens in one list will also advance the
-    screens in a copy:
-
-        >>> more_screens = screens[0:2]
-        >>> more_screens.advance()
-        >>> assert more_screens[0] == screens[0]  # Both advanced
-        >>> assert more_screens[0] is screens[0]  # Because they're really the same screen!
-
-        >>> more_screens = galsim.PhaseScreenList(screens)     # get a fresh copy
-        >>> screens.reset()                                    # reset to t=0
-        >>> psf = screens.makePSF(exptime=exptime, ...)        # starts at t=0
-        >>> psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime !
-        >>> assert psf != psf2
-
-    If you really want an independent copy of a PhaseScreenList, you can get one with
-    copy.deepcopy():
-
-        >>> import copy
-        >>> screens.reset()
-        >>> even_more_screens = copy.deepcopy(screens)
-        >>> assert screens[0] == even_more_screens[0]          # Equal
-        >>> assert screens[0] is not even_more_screens[0]      # But not the same object.
-        >>> psf = screens.makePSF(exptime=exptime)             # Starts at t=0
-        >>> psf2 = even_more_screens.makePSF(exptime=exptime)  # Also starts at t=0
-        >>> assert psf == psf2
-
     Methods
     -------
     makePSF()          Obtain a PSF from this set of phase screens.  See PhaseScreenPSF docstring
                        for more details.
     wavefront()        Compute the cumulative wavefront due to all screens.
+    wavefront_gradient()   Compute the cumulative wavefront gradient due to all screens.
 
     @param layers  Sequence of phase screens.
     """
@@ -783,12 +760,17 @@ class PhaseScreenList(object):
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave (pre-optics) or spherical wave (post-optics).
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
-        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Wavefront lag or lead in nanometers.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Array of wavefront lag or lead in nanometers.
         """
         if len(self._layers) > 1:
             return np.sum([layer.wavefront(u, v, t, theta) for layer in self], axis=0)
@@ -798,12 +780,17 @@ class PhaseScreenList(object):
     def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute cumulative wavefront gradient due to all phase screens in PhaseScreenList.
 
-        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.
-        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.
-        @param t        Times (in seconds) at which to evaluate wavefront.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @returns        Arrays dWdu, dWdv.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
         if len(self._layers) > 1:
             return np.sum([layer.wavefront_gradient(u, v, t, theta) for layer in self], axis=0)
@@ -823,14 +810,7 @@ class PhaseScreenList(object):
             return self._layers[0]._wavefront_gradient(u, v, t, theta)
 
     def makePSF(self, lam, **kwargs):
-        """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
-        of `theta`.  If `theta` is an iterable of 2-tuples, then return a list of PSFs at the
-        specified field angles.  If `theta` is a single 2-tuple, then return a single PSF at the
-        specified field angle.
-
-        Note that this method advances each PhaseScreen in the PhaseScreenList, so consecutive calls
-        with the same arguments will generally return different PSFs.  Use PhaseScreenList.reset()
-        to reset the time to t=0.  See the galsim.PhaseScreenPSF docstring for more details.
+        """Create a PSF from the current PhaseScreenList.
 
         @param lam                 Wavelength in nanometers at which to compute PSF.
         @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
@@ -839,8 +819,7 @@ class PhaseScreenList(object):
         @param time_step           Time interval in seconds with which to sample phase screens.
                                    [default: 0.025]
         @param flux                Flux of output PSF.  [default: 1.0]
-        @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or
-                                   iterable of 2-tuples.
+        @param theta               Field angle of PSF as a 2-tuple of Angles.
                                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @param scale_unit          Units to use for the sky coordinates of the output profile.
                                    [default: galsim.arcsec]
@@ -891,8 +870,10 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
-        # Assemble theta as an iterable over 2-tuples of Angles.
+        # Determine if theta is a single 2-tuple of Angles (okay) or an iterable of 2-tuples of
+        # Angles (deprecated).
         theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
+
         # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
         # generator of pointings we need to look at the first item.  If the first item is
         # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
@@ -903,8 +884,11 @@ class PhaseScreenList(object):
         if not hasattr(th0, '__iter__'):
             theta = [th0, next(theta)]
             return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
-        theta = chain([th0], theta)
-        return [PhaseScreenPSF(self, lam, theta=th, **kwargs) for th in theta]
+        else:
+            from .deprecated import depr
+            depr('list of `theta`s', 1.5, '[psl.makePSF(..., theta=th) for th in theta]')
+            theta = chain([th0], theta)
+            return [PhaseScreenPSF(self, lam, theta=th, **kwargs) for th in theta]
 
     @property
     def r0_500_effective(self):
@@ -934,28 +918,9 @@ class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
     derived from a set of phase screens and an aperture.
 
-    There are at least three ways to construct a PhaseScreenPSF given a PhaseScreenList.  The
-    following two statements are equivalent:
+    There are two equivalent ways to construct a PhaseScreenPSF given a PhaseScreenList:
         >>> psf = screen_list.makePSF(...)
         >>> psf = PhaseScreenPSF(screen_list, ...)
-
-    The third option is to use screen_list.makePSF() to obtain multiple PSFs at different field
-    angles from the same PhaseScreenList over the same simulated time interval.  Depending on the
-    details of PhaseScreenList and other arguments, this may be significantly faster than manually
-    looping over makePSF().
-        >>> psfs = screen_list.makePSF(..., theta=[th0, th1, th2, ...])
-
-    Note that constructing a PhaseScreenPSF advances each PhaseScreen in `screen_list`, so PSFs
-    constructed consecutively with the same arguments will generally be different.  Use
-    PhaseScreenList.reset() to reset the time to t=0.
-
-        >>> screen_list.reset()
-        >>> psf1 = screen_list.makePSF(...)
-        >>> psf2 = screen_list.makePSF(...)
-        >>> assert psf1 != psf2
-        >>> screen_list.reset()
-        >>> psf3 = screen_list.makePSF(...)
-        >>> assert psf1 == psf3
 
     Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
@@ -970,8 +935,8 @@ class PhaseScreenPSF(GSObject):
                                [default: 0.025]
     @param flux                Flux of output PSF [default: 1.0]
     @param aper                Aperture to use to compute PSF(s).  [default: None]
-    @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or iterable
-                               of 2-tuples.  [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+    @param theta               Field angle of PSF as a 2-tuple of Angles.
+                               [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
     @param interpolant         Either an Interpolant instance or a string indicating which
                                interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                                'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -1040,9 +1005,8 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
-        self._screen_list = PhaseScreenList(screen_list)
+        self._screen_list = screen_list
         self.t0 = float(t0)
-        self._screen_list._delayCalculation(self)
         self.lam = float(lam)
         self.exptime = float(exptime)
         self.time_step = float(time_step)
@@ -1096,6 +1060,8 @@ class PhaseScreenPSF(GSObject):
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
         GSObject.__init__(self, dummy_obj)
+
+        self._screen_list._delayCalculation(self)
 
     def getFlux(self):
         return self._flux

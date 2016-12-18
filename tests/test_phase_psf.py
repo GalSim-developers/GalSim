@@ -309,7 +309,7 @@ def test_phase_psf_reset():
 
 @timer
 def test_phase_psf_batch():
-    """Test that PSFs generated serially match those generated in batch."""
+    """Test that PSFs generated and drawn serially match those generated and drawn in batch."""
     import time
     NPSFs = 10
     exptime = 0.3
@@ -320,19 +320,20 @@ def test_phase_psf_batch():
     kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)
 
     t1 = time.time()
-    psfs = atm.makePSF(theta=theta, **kwargs)
+    psfs = [atm.makePSF(theta=th, **kwargs) for th in theta]
+    imgs = [psf.drawImage() for psf in psfs]
     print('time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1))
 
     t2 = time.time()
-    more_psfs = []
+    more_imgs = []
     for th in theta:
-        atm._reset()
-        more_psfs.append(atm.makePSF(theta=th, **kwargs))
+        psf = atm.makePSF(theta=th, **kwargs)
+        more_imgs.append(psf.drawImage())
     print('time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t2))
 
-    for psf1, psf2 in zip(psfs, more_psfs):
+    for img1, img2 in zip(imgs, more_imgs):
         np.testing.assert_array_equal(
-            psf1.img, psf2.img,
+            img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
 
@@ -533,7 +534,7 @@ def test_phase_gradient_shoot():
         centroid_tolerance = 0.2
         second_moment_tolerance = 1.5
 
-    psfs = atm.makePSF(lam, diam=diam, theta=thetas, exptime=exptime, aper=aper)
+    psfs = [atm.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper) for th in thetas]
     shoot_moments = []
     fft_moments = []
 
