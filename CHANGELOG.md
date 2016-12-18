@@ -22,6 +22,9 @@ API Changes
 - Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
+- Dynamic PhaseScreenPSFs now require an explicit start time and time step.
+  Clock management of phase screens now handled implicitly. (#824)
+- OpticalScreen now requires `diam` argument. (#824)
 
 
 Dependency Changes
@@ -54,6 +57,9 @@ Deprecated Features
   sense.  If you had been using it, you should instead just divide the
   returned image by gain, which will have the same effect and probably
   be clearer in your own code about what you meant. (#799)
+- Deprecated ability to create multiple PhaseScreenPSFs with single call
+  to makePSF, since it's now just as efficient to call makePSF multiple
+  times. (#824)
 
 
 New Features
@@ -100,6 +106,9 @@ New Features
   random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
   dx/dz and dy/dz slopes) to an existing photon array. (#823)
+- Added geometric approximation to Fourier optics for photon-shooting through
+  phase screens. (#824)
+- Added gradient method to LookupTable2D. (#824)
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.
   (#827)
