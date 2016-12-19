@@ -570,11 +570,15 @@ class Image(with_metaclass(MetaImage, object)):
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
-        subimage = self.image.subImage(bounds)
+        i1 = bounds.ymin - self.bounds.ymin
+        i2 = bounds.ymax - self.bounds.ymin + 1
+        j1 = bounds.xmin - self.bounds.xmin
+        j2 = bounds.xmax - self.bounds.xmin + 1
+        subarray = self.array[i1:i2, j1:j2]
         # NB. The wcs is still accurate, since the sub-image uses the same (x,y) values
         # as the original image did for those pixels.  It's only once you recenter or
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
-        return _Image(subimage.array, bounds, self.wcs)
+        return _Image(subarray, bounds, self.wcs)
 
     def setSubImage(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
