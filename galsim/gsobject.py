@@ -1480,7 +1480,7 @@ class GSObject(object):
 
         # Perform the fourier transform.
         real_image = galsim.Image(galsim._BoundsI(-N//2, N//2+1, -N//2, N//2-1), dtype=float)
-        kimage_wrap.irfft(real_image.image)
+        _galsim.irfft(kimage_wrap,real_image.image)
         real_image = real_image.subImage(galsim._BoundsI(-N//2, N//2-1, -N//2, N//2-1))
 
         # Add (a portion of) this to the original image.

@@ -217,18 +217,26 @@ struct PyImage {
             .add_property("array", &GetConstArray)
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
-            .def("rfft", &BaseImage<T>::fft,
-                 (bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true))
-            .def("irfft", &BaseImage<T>::inverse_fft,
-                 (bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true))
-            .def("cfft", &BaseImage<T>::cfft,
-                 (bp::arg("out"), bp::arg("inverse")=false,
-                  bp::arg("shift_in")=true, bp::arg("shift_out")=true))
             ;
+
         ADD_CORNER(pyBaseImage, getXMin, xmin);
         ADD_CORNER(pyBaseImage, getYMin, ymin);
         ADD_CORNER(pyBaseImage, getXMax, xmax);
         ADD_CORNER(pyBaseImage, getYMax, ymax);
+
+        typedef void (*rfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
+                                       bool, bool);
+        typedef void (*irfft_func_type)(const BaseImage<T>&, ImageView<double>, bool, bool);
+        typedef void (*cfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
+                                       bool, bool, bool);
+
+        bp::def("rfft", rfft_func_type(&rfft),
+            (bp::arg("in"), bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true));
+        bp::def("irfft", irfft_func_type(&irfft),
+            (bp::arg("in"), bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true));
+        bp::def("cfft", cfft_func_type(&cfft),
+            (bp::arg("in"), bp::arg("out"), bp::arg("inverse")=false,
+            bp::arg("shift_in")=true, bp::arg("shift_out")=true));
 
         bp::class_< ImageAlloc<T>, bp::bases< BaseImage<T> > >
             pyImageAlloc(("ImageAlloc" + suffix).c_str(), "", bp::no_init);

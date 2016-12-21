@@ -639,21 +639,22 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
 
 template <typename T>
-void BaseImage<T>::fft(ImageView<std::complex<double> > out, bool shift_in, bool shift_out) const
+void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+          bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::fft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start rfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform fft on undefined image.");
 
-    const int Nxo2 = this->_bounds.getXMax()+1;
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax()+1;
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2 || this->_bounds.getXMin() != -Nxo2)
+    if (in.getBounds().getYMin() != -Nyo2 || in.getBounds().getXMin() != -Nxo2)
         throw ImageError("fft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
     if (out.getBounds().getXMin() != 0 || out.getBounds().getXMax() != Nxo2 ||
@@ -669,31 +670,31 @@ void BaseImage<T>::fft(ImageView<std::complex<double> > out, bool shift_in, bool
     // (x in our case) to allow for the extra column.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
     double* xptr = reinterpret_cast<double*>(out.getData());
-    const T* ptr = _data;
-    const int skip = this->getNSkip();
+    const T* ptr = in.getData();
+    const int skip = in.getNSkip();
 
     // The FT image that FFTW will return will have FT(0,0) placed at the origin.  We
     // want it placed in the middle instead.  We can make that happen by inverting every other
     // row in the input image.
     if (shift_out) {
         double fac = (shift_in && Nyo2 % 2 == 1) ? -1 : 1.;
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
                 for (int i=Nx; i; --i)
                     *xptr++ = fac * REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *xptr++ = fac * REAL(*ptr);
         }
     } else {
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
                 for (int i=Nx; i; --i)
                     *xptr++ = REAL(*ptr++);
         } else {
             for (int j=Ny; j; --j, ptr+=skip, xptr+=2)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *xptr++ = REAL(*ptr);
         }
     }
@@ -719,24 +720,24 @@ void BaseImage<T>::fft(ImageView<std::complex<double> > out, bool shift_in, bool
 }
 
 template <typename T>
-void BaseImage<T>::inverse_fft(ImageView<double> out, bool shift_in, bool shift_out) const
+void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::inverse_fft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start irfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform inverse fft on undefined image.");
 
-    if (this->_bounds.getXMin() != 0)
+    if (in.getBounds().getXMin() != 0)
         throw ImageError("inverse_fft requires bounds to be (0, Nx/2, -Ny/2, Ny/2-1)");
 
-    const int Nxo2 = this->_bounds.getXMax();
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax();
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2)
+    if (in.getBounds().getYMin() != -Nyo2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
     if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2+1 ||
@@ -761,47 +762,47 @@ void BaseImage<T>::inverse_fft(ImageView<double> out, bool shift_in, bool shift_
     // and need to scale by (1/N)^2.
     double fac = 1./(Nx*Ny);
 
-    const int start_offset = shift_in ? Nyo2 * _stride : 0;
-    const int mid_offset = shift_in ? 0 : Nyo2 * _stride;
+    const int start_offset = shift_in ? Nyo2 * in.getStride() : 0;
+    const int mid_offset = shift_in ? 0 : Nyo2 * in.getStride();
 
-    const int skip = this->getNSkip();
+    const int skip = in.getNSkip();
     if (shift_out) {
-        const T* ptr = _data + start_offset;
+        const T* ptr = in.getData() + start_offset;
         const bool extra_flip = (Nxo2 % 2 == 1);
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
                 for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
                 for (int i=Nxo2+1; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
-                for (int i=Nxo2+1; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else {
-        const T* ptr = _data + start_offset;
-        if (_step == 1) {
+        const T* ptr = in.getData() + start_offset;
+        if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=_step)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
-            ptr = _data + mid_offset;
+            ptr = in.getData() + mid_offset;
             for (int j=Nyo2; j; --j, ptr+=skip)
-                for (int i=Nxo2+1; i; --i, ptr+=_step)
+                for (int i=Nxo2+1; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
         }
     }
@@ -816,22 +817,22 @@ void BaseImage<T>::inverse_fft(ImageView<double> out, bool shift_in, bool shift_
 }
 
 template <typename T>
-void BaseImage<T>::cfft(ImageView<std::complex<double> > out,
-                        bool inverse, bool shift_in, bool shift_out) const
+void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+          bool inverse, bool shift_in, bool shift_out)
 {
-    dbg<<"Start BaseImage::cfft\n";
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"Start cfft\n";
+    dbg<<"self bounds = "<<in.getBounds()<<std::endl;
 
-    if (!_data or !this->_bounds.isDefined())
+    if (!in.getData() or !in.getBounds().isDefined())
         throw ImageError("Attempting to perform cfft on undefined image.");
 
-    const int Nxo2 = this->_bounds.getXMax()+1;
-    const int Nyo2 = this->_bounds.getYMax()+1;
+    const int Nxo2 = in.getBounds().getXMax()+1;
+    const int Nyo2 = in.getBounds().getYMax()+1;
     const int Nx = Nxo2 << 1;
     const int Ny = Nyo2 << 1;
     dbg<<"Nx,Ny = "<<Nx<<','<<Ny<<std::endl;
 
-    if (this->_bounds.getYMin() != -Nyo2 && (this->_bounds.getXMin() != -Nxo2))
+    if (in.getBounds().getYMin() != -Nyo2 && (in.getBounds().getXMin() != -Nxo2))
         throw ImageError("cfft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
     if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2-1 ||
@@ -841,41 +842,41 @@ void BaseImage<T>::cfft(ImageView<std::complex<double> > out,
     if ((uintptr_t) out.getData() % 16 != 0)
         throw ImageError("cfft requires out.data to be 16 byte aligned");
 
-    const T* ptr = _data;
-    const int skip = this->getNSkip();
+    const T* ptr = in.getData();
+    const int skip = in.getNSkip();
     std::complex<double>* kptr = out.getData();
 
     if (shift_out) {
         double fac = inverse ? 1./(Nx*Ny) : 1.;
         if (shift_in && (Nxo2 + Nyo2) % 2 == 1) fac = -fac;
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
                 for (int i=Nx; i; --i, fac=-fac)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip, fac=-fac)
-                for (int i=Nx; i; --i, ptr+=_step, fac=-fac)
+                for (int i=Nx; i; --i, ptr+=in.getStep(), fac=-fac)
                     *kptr++ = fac * *ptr;
         }
     } else if (inverse) {
         double fac = 1./(Nx*Ny);
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = fac * *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *kptr++ = fac * *ptr;
         }
     } else {
-        if (_step == 1) {
+        if (in.getStep() == 1) {
             for (int j=Ny; j; --j, ptr+=skip)
                 for (int i=Nx; i; --i)
                     *kptr++ = *ptr++;
         } else {
             for (int j=Ny; j; --j, ptr+=skip)
-                for (int i=Nx; i; --i, ptr+=_step)
+                for (int i=Nx; i; --i, ptr+=in.getStep())
                     *kptr++ = *ptr;
         }
     }
@@ -938,33 +939,34 @@ int goodFFTSize(int input)
 
 // instantiate for expected types
 
-template class BaseImage<double>;
-template class BaseImage<float>;
-template class BaseImage<int32_t>;
-template class BaseImage<int16_t>;
-template class BaseImage<uint32_t>;
-template class BaseImage<uint16_t>;
-template class BaseImage<std::complex<double> >;
-template class ImageAlloc<double>;
-template class ImageAlloc<float>;
-template class ImageAlloc<int32_t>;
-template class ImageAlloc<int16_t>;
-template class ImageAlloc<uint32_t>;
-template class ImageAlloc<uint16_t>;
-template class ImageAlloc<std::complex<double> >;
-template class ImageView<double>;
-template class ImageView<float>;
-template class ImageView<int32_t>;
-template class ImageView<int16_t>;
-template class ImageView<uint32_t>;
-template class ImageView<uint16_t>;
-template class ImageView<std::complex<double> >;
-template class ConstImageView<double>;
-template class ConstImageView<float>;
-template class ConstImageView<int32_t>;
-template class ConstImageView<int16_t>;
-template class ConstImageView<uint32_t>;
-template class ConstImageView<uint16_t>;
-template class ConstImageView<std::complex<double> >;
+#define T double
+#include "Image.inst"
+#undef T
+
+#define T float
+#include "Image.inst"
+#undef T
+
+#define T int32_t
+#include "Image.inst"
+#undef T
+
+#define T int16_t
+#include "Image.inst"
+#undef T
+
+#define T uint32_t
+#include "Image.inst"
+#undef T
+
+#define T uint16_t
+#include "Image.inst"
+#undef T
+
+#define T std::complex<double>
+#include "Image.inst"
+#undef T
+
+
 } // namespace galsim
 

@@ -743,7 +743,7 @@ class Image(with_metaclass(MetaImage, object)):
         dk = np.pi / (No2 * dx)
 
         out = Image(galsim.BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
-        ximage.image.rfft(out.image)
+        _galsim.rfft(ximage.image, out.image)
         out *= dx*dx
         out.setOrigin(0,-No2)
         return out
@@ -796,7 +796,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         # For the inverse, we need a bit of extra space for the fft.
         out_extra = Image(galsim.BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
-        kimage.image.irfft(out_extra.image)
+        _galsim.irfft(kimage.image, out_extra.image)
         # Now cut off the bit we don't need.
         out = out_extra.subImage(galsim.BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2

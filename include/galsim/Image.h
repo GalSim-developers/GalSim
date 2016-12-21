@@ -275,24 +275,6 @@ namespace galsim {
          */
         T sumElements() const;
 
-        /**
-         *  @brief Perform a 2D FFT from real space to k-space.
-         */
-        void fft(ImageView<std::complex<double> > out,
-                 bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D inverse FFT from k-space to real space.
-         */
-        void inverse_fft(ImageView<double> out, bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
-         */
-        void cfft(ImageView<std::complex<double> > out,
-                  bool inverse, bool shift_in=true, bool shift_out=true) const;
-
-
     protected:
 
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
@@ -779,6 +761,30 @@ namespace galsim {
      * even and >= the input integer.
      */
     int goodFFTSize(int input);
+
+
+    /**
+     *  @brief Perform a 2D FFT from real space to k-space.
+     */
+    template <typename T>
+    void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+             bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D inverse FFT from k-space to real space.
+     */
+    template <typename T>
+    void irfft(const BaseImage<T>& in, ImageView<double> out,
+               bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
+     */
+    template <typename T>
+    void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+              bool inverse, bool shift_in=true, bool shift_out=true);
+
+
 
 } // namespace galsim
 
