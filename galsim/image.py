@@ -338,8 +338,7 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self._array = self._make_empty(bounds.numpyShape(), dtype=self.dtype)
             self._bounds = bounds
-            if bounds.isDefined():
-                self.fill(init_value)
+            self.fill(init_value)
         elif array is not None:
             self._array = array.view()
             nrow,ncol = array.shape
@@ -1056,19 +1055,25 @@ class Image(with_metaclass(MetaImage, object)):
         The arguments here may be either (x, y) or a PositionI instance.
         Or you can provide x, y as named kwargs.
         """
-        if not self.bounds.isDefined():
-            raise RuntimeError("Attempt to access values of an undefined image")
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
-        if not self.bounds.includes(pos):
-            raise RuntimeError("Attempt to access position %s, not in bounds %s"%(pos,self.bounds))
-        return self._array[pos.y-self.ymin, pos.x-self.xmin]
+        return self.getValue(pos.x,pos.y)
 
     def getValue(self, x, y):
         """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
         does not have to parse the different options available for __call__.  (i.e. im(x,y) or
         im(pos) or im(x=x,y=y))
         """
-        return self.image(x,y)
+        if not self.bounds.isDefined():
+            raise RuntimeError("Attempt to access values of an undefined image")
+        if not self.bounds.includes(galsim.PositionI(x,y)):
+            raise RuntimeError("Attempt to access position %s,%s, not in bounds %s"%(x,y,self.bounds))
+        return self._getValue(x,y)
+
+    def _getValue(self, x, y):
+        """Equivalent to self.getValue(x,y), except there are no checks that the values fall
+        within the bounds of the image.
+        """
+        return self._array[y-self.ymin, x-self.xmin]
 
     def setValue(self, *args, **kwargs):
         """Set the pixel value at given (x,y) position
@@ -1086,7 +1091,13 @@ class Image(with_metaclass(MetaImage, object)):
                                                      others=['value'])
         if not self.bounds.includes(pos):
             raise RuntimeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
-        self._array[pos.y-self.ymin, pos.x-self.xmin] = value
+        self._setValue(pos.x,pos.y,value)
+
+    def _setValue(self, x, y, value):
+        """Equivalent to self.setValue(x,y,value) except that there are no checks that the values
+        fall within the bounds of the image.
+        """
+        self._array[y-self.ymin, x-self.xmin] = value
 
     def addValue(self, *args, **kwargs):
         """Add some amount to the pixel value at given (x,y) position
@@ -1104,16 +1115,27 @@ class Image(with_metaclass(MetaImage, object)):
                                                      others=['value'])
         if not self.bounds.includes(pos):
             raise RuntimeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
-        self._array[pos.y-self.ymin, pos.x-self.xmin] += value
+        self._addValue(pos.x,pos.y,value)
+
+    def _addValue(self, x, y, value):
+        """Equivalent to self.addValue(x,y,value) except that there are no checks that the values
+        fall within the bounds of the image.
+        """
+        self._array[y-self.ymin, x-self.xmin] += value
 
     def fill(self, value):
         """Set all pixel values to the given `value`
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        if not self.bounds.isDefined():
-            raise RuntimeError("Attempt to set values of an undefined image")
+        if not self.bounds.isDefined(): return
         if value is None: value = 0
+        self._fill(value)
+
+    def _fill(self, value):
+        """Equivalent to self.fill(value), except that there are no checks that the bounds
+        are defined.
+        """
         self._array[:,:] = value
 
     def setZero(self):
@@ -1131,6 +1153,12 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to set values of an undefined image")
+        self._invertSelf()
+
+    def _invertSelf(self):
+        """Equivalent to self.invertSelf(), except that there are no checks that the bounds
+        are defined.
+        """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
         self.image.invertSelf()
 

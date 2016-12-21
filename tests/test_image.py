@@ -183,7 +183,8 @@ def test_Image_basic():
                 im1.setValue(x, y, 100 + 10*x + y)
                 im1a.setValue(x+3, y+6, 100 + 10*x + y)
                 im1b.setValue(x=x-1, y=y-1, value=100 + 10*x + y)
-                im2_view.setValue(x=x, y=y, value=100 + 10*x + y)
+                im2_view._setValue(x, y, 100 + 10*x)
+                im2_view._addValue(x, y, y)
 
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
@@ -216,7 +217,7 @@ def test_Image_basic():
                 assert im1.view(make_const=True).getValue(x,y) == value2
                 assert im2.getValue(x=x, y=y) == value2
                 assert im2_view.getValue(x,y) == value2
-                assert im2_cview.getValue(x,y) == value2
+                assert im2_cview._getValue(x,y) == value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
@@ -1855,7 +1856,7 @@ def test_Image_resize():
                 for y in range(ymin,ymax+1):
                     val = simple_types[i](ud()*500)
                     im1.setValue(x,y,val)
-                    im2.setValue(x,y,val)
+                    im2._setValue(x,y,val)
                     im3.setValue(x,y,val)
 
             # They should be equal now.  This doesn't completely guarantee that nothing is
@@ -2080,7 +2081,7 @@ def test_Image_view():
     """
     im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22,
                        galsim.PositionI(13,13)))
-    im.fill(17)
+    im._fill(17)
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.
