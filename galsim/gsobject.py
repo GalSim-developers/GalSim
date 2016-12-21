@@ -1482,7 +1482,7 @@ class GSObject(object):
         real_image = kimage_wrap.irfft()
 
         # Add (a portion of) this to the original image.
-        image.image += real_image.subImage(image.bounds)
+        image += real_image.subImage(image.bounds)
         added_photons = real_image.subImage(image.bounds).array.sum(dtype=float)
 
         return added_photons
@@ -1850,9 +1850,8 @@ class GSObject(object):
             # This is a hack that won't get all use cases right, but probably most of them.
             re._array = image._array.real
             im._array = image._array.imag
-            b = image.bounds
-            re.image = _galsim.ImageView[np.float64](re._array, b.xmin, b.ymin)
-            im.image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
+            re._bounds = image.bounds
+            im._bounds = image.bounds
             re.scale = image.scale
             im.scale = image.scale
             re.setOrigin(image.origin())
