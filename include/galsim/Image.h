@@ -278,18 +278,19 @@ namespace galsim {
         /**
          *  @brief Perform a 2D FFT from real space to k-space.
          */
-        ImageView<std::complex<double> > fft(bool shift_in=true, bool shift_out=true) const;
+        void fft(ImageView<std::complex<double> > out,
+                 bool shift_in=true, bool shift_out=true) const;
 
         /**
          *  @brief Perform a 2D inverse FFT from k-space to real space.
          */
-        ImageView<double> inverse_fft(bool shift_in=true, bool shift_out=true) const;
+        void inverse_fft(ImageView<double> out, bool shift_in=true, bool shift_out=true) const;
 
         /**
          *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
          */
-        ImageView<std::complex<double> > cfft(bool inverse, bool shift_in=true,
-                                              bool shift_out=true) const;
+        void cfft(ImageView<std::complex<double> > out,
+                  bool inverse, bool shift_in=true, bool shift_out=true) const;
 
 
     protected:

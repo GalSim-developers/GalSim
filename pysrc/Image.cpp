@@ -218,11 +218,12 @@ struct PyImage {
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
             .def("rfft", &BaseImage<T>::fft,
-                 (bp::arg("shift_in")=true, bp::arg("shift_out")=true))
+                 (bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true))
             .def("irfft", &BaseImage<T>::inverse_fft,
-                 (bp::arg("shift_in")=true, bp::arg("shift_out")=true))
+                 (bp::arg("out"), bp::arg("shift_in")=true, bp::arg("shift_out")=true))
             .def("cfft", &BaseImage<T>::cfft,
-                 (bp::arg("inverse")=false, bp::arg("shift_in")=true, bp::arg("shift_out")=true))
+                 (bp::arg("out"), bp::arg("inverse")=false,
+                  bp::arg("shift_in")=true, bp::arg("shift_out")=true))
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
         ADD_CORNER(pyBaseImage, getYMin, ymin);

@@ -639,7 +639,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
 
 template <typename T>
-ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out) const
+void BaseImage<T>::fft(ImageView<std::complex<double> > out, bool shift_in, bool shift_out) const
 {
     dbg<<"Start BaseImage::fft\n";
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
@@ -656,15 +656,19 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     if (this->_bounds.getYMin() != -Nyo2 || this->_bounds.getXMin() != -Nxo2)
         throw ImageError("fft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
-    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
-    // use it for the fftw array.
-    // We will use the same array for input and output.  It's simplest if we create the
-    // output image and just cast to double for the input.
+    if (out.getBounds().getXMin() != 0 || out.getBounds().getXMax() != Nxo2 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("fft requires out.bounds to be (0, Nx/2, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("fft requires out.data to be 16 byte aligned");
+
+    // We will use the same array for input and output.
+    // For the input, we just cast the memory to double to use for the input data.
     // However, note that the complex array has two extra elements in the primary direction
     // (x in our case) to allow for the extra column.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(0, Nxo2, -Nyo2, Nyo2-1));
-    double* xptr = reinterpret_cast<double*>(kim.getData());
+    double* xptr = reinterpret_cast<double*>(out.getData());
     const T* ptr = _data;
     const int skip = this->getNSkip();
 
@@ -694,8 +698,8 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
         }
     }
 
-    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
-    double* xdata = reinterpret_cast<double*>(kim.getData());
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
+    double* xdata = reinterpret_cast<double*>(out.getData());
 
     fftw_plan plan = fftw_plan_dft_r2c_2d(Ny, Nx, xdata, kdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
@@ -705,20 +709,17 @@ ImageView<std::complex<double> > BaseImage<T>::fft(bool shift_in, bool shift_out
     // The resulting image will still have a checkerboard pattern of +-1 on it, which
     // we want to remove.
     if (shift_in) {
-        std::complex<double>* kptr = kim.getData();
+        std::complex<double>* kptr = out.getData();
         double fac = 1.;
         const bool extra_flip = (Nxo2 % 2 == 1);
         for (int j=Ny; j; --j, fac=(extra_flip?-fac:fac))
             for (int i=Nxo2+1; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
-
-    // Now simply return a view of this image.
-    return kim.view();
 }
 
 template <typename T>
-ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
+void BaseImage<T>::inverse_fft(ImageView<double> out, bool shift_in, bool shift_out) const
 {
     dbg<<"Start BaseImage::inverse_fft\n";
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
@@ -738,17 +739,21 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
     if (this->_bounds.getYMin() != -Nyo2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
-    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
-    // use it for the fftw array.
-    // We will use the same array for input and output.  It's simplest if we create the
-    // output image and just cast to complex for the input.
+    if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2+1 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("inverse_fft requires out.bounds to be (-Nx/2, Nx/2+1, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("inverse_fft requires out.data to be 16 byte aligned");
+
+    // We will use the same array for input and output.
+    // For the input, we just cast the memory to complex<double> to use for the input data.
     // However, note that the real array needs two extra elements in the primary direction
     // (x in our case) to allow for the extra column in the k array.
     // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
     // The bounds we care about are (-Nxo2, Nxo2-1, -Nyo2, Nyo2-1).
-    ImageAlloc<double> xim(Bounds<int>(-Nxo2, Nxo2+1, -Nyo2, Nyo2-1));
 
-    std::complex<double>* kptr = reinterpret_cast<std::complex<double>*>(xim.getData());
+    std::complex<double>* kptr = reinterpret_cast<std::complex<double>*>(out.getData());
 
     // FFTW wants the locations of the + and - ky values swapped relative to how
     // we store it in an image.
@@ -801,20 +806,18 @@ ImageView<double> BaseImage<T>::inverse_fft(bool shift_in, bool shift_out) const
         }
     }
 
-    double* xdata = xim.getData();
+    double* xdata = out.getData();
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(xdata);
 
     fftw_plan plan = fftw_plan_dft_c2r_2d(Ny, Nx, kdata, xdata, FFTW_ESTIMATE);
     if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
     fftw_execute(plan);
     fftw_destroy_plan(plan);
-
-    // Now simply return a view of this image.
-    return xim.subImage(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
 }
 
 template <typename T>
-ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in, bool shift_out) const
+void BaseImage<T>::cfft(ImageView<std::complex<double> > out,
+                        bool inverse, bool shift_in, bool shift_out) const
 {
     dbg<<"Start BaseImage::cfft\n";
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
@@ -831,10 +834,16 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     if (this->_bounds.getYMin() != -Nyo2 && (this->_bounds.getXMin() != -Nxo2))
         throw ImageError("cfft requires bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
 
-    ImageAlloc<std::complex<double> > kim(Bounds<int>(-Nxo2, Nxo2-1, -Nyo2, Nyo2-1));
+    if (out.getBounds().getXMin() != -Nxo2 || out.getBounds().getXMax() != Nxo2-1 ||
+        out.getBounds().getYMin() != -Nyo2 || out.getBounds().getYMax() != Nyo2-1)
+        throw ImageError("cfft requires out.bounds to be (-Nx/2, Nx/2-1, -Ny/2, Ny/2-1)");
+
+    if ((uintptr_t) out.getData() % 16 != 0)
+        throw ImageError("cfft requires out.data to be 16 byte aligned");
+
     const T* ptr = _data;
     const int skip = this->getNSkip();
-    std::complex<double>* kptr = kim.getData();
+    std::complex<double>* kptr = out.getData();
 
     if (shift_out) {
         double fac = inverse ? 1./(Nx*Ny) : 1.;
@@ -871,7 +880,7 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
         }
     }
 
-    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
 
     fftw_plan plan = fftw_plan_dft_2d(Ny, Nx, kdata, kdata, inverse ? FFTW_BACKWARD : FFTW_FORWARD,
                                       FFTW_ESTIMATE);
@@ -880,14 +889,12 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
     fftw_destroy_plan(plan);
 
     if (shift_in) {
-        kptr = kim.getData();
+        kptr = out.getData();
         double fac = 1.;
         for (int j=Ny; j; --j, fac=-fac)
             for (int i=Nx; i; --i, fac=-fac)
                 *kptr++ *= fac;
     }
-
-    return kim.view();
 }
 
 

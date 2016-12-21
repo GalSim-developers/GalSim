@@ -743,11 +743,11 @@ class Image(with_metaclass(MetaImage, object)):
         # dk = 2pi / (N dk)
         dk = np.pi / (No2 * dx)
 
-        imview = ximage.image.rfft()
-        imview *= dx*dx
-        image = Image(imview, scale=dk)
-        image.setOrigin(0,-No2)
-        return image
+        out = Image(galsim.BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
+        ximage.image.rfft(out.image)
+        out *= dx*dx
+        out.setOrigin(0,-No2)
+        return out
 
     def calculate_inverse_fft(self):
         """Performs an inverse FFT of an Image in k-space to produce a real-space Image.
@@ -795,11 +795,14 @@ class Image(with_metaclass(MetaImage, object)):
         # dx = 2pi / (N dk)
         dx = np.pi / (No2 * dk)
 
-        imview = kimage.image.irfft()
-        imview *= (dk * No2 / np.pi)**2
-        image = Image(imview, scale=dx)
-        image.setCenter(0,0)
-        return image
+        # For the inverse, we need a bit of extra space for the fft.
+        out_extra = Image(galsim.BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
+        kimage.image.irfft(out_extra.image)
+        # Now cut off the bit we don't need.
+        out = out_extra.subImage(galsim.BoundsI(-No2,No2-1,-No2,No2-1))
+        out *= (dk * No2 / np.pi)**2
+        out.setCenter(0,0)
+        return out
 
     @classmethod
     def good_fft_size(cls, input_size):
