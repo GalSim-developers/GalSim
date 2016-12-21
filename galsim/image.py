@@ -330,13 +330,13 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("nrow, ncol must be integers")
             ncol = int(ncol)
             nrow = int(nrow)
-            self._array = np.empty(shape=(nrow,ncol), dtype=self.dtype)
+            self._array = self._make_empty(shape=(nrow,ncol), dtype=self.dtype)
             self._bounds = galsim.BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
             self.fill(init_value)
         elif bounds is not None:
             if not isinstance(bounds, galsim.BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
-            self._array = np.empty(bounds.numpyShape(), dtype=self.dtype)
+            self._array = self._make_empty(bounds.numpyShape(), dtype=self.dtype)
             self._bounds = bounds
             if bounds.isDefined():
                 self.fill(init_value)
@@ -362,7 +362,7 @@ class Image(with_metaclass(MetaImage, object)):
                         # Allow dtype to force a retyping of the provided image
                         # e.g. im = ImageF(...)
                         #      im2 = ImageD(im)
-                        self._array = np.empty(shape=image.bounds.numpyShape(), dtype=dtype)
+                        self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=dtype)
                         self._array[:,:] = image.array[:,:]
                         self.dtype = dtype
                     else:
@@ -544,6 +544,18 @@ class Image(with_metaclass(MetaImage, object)):
     def copy(self):
         return _Image(self.array.copy(), self.bounds, self.wcs)
 
+    def _make_empty(self, shape, dtype):
+        """Helper function to make an empty numpy array of the given shape, making sure that
+        the array is 16-btye aligned so it is usable by FFTW.
+        """
+        # cf. http://stackoverflow.com/questions/9895787/memory-alignment-for-fast-fft-in-python-using-shared-arrrays
+        nbytes = shape[0] * shape[1] * np.dtype(dtype).itemsize
+        buf = np.empty(nbytes + 16, dtype=np.uint8)
+        start_index = -buf.ctypes.data % 16
+        a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
+        assert a.ctypes.data % 16 == 0
+        return a
+
     def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
@@ -560,7 +572,7 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify an immutable Image")
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
-        self._array = np.empty(shape=bounds.numpyShape(), dtype=self.dtype)
+        self._array = self._make_empty(shape=bounds.numpyShape(), dtype=self.dtype)
         self._bounds = bounds
         if wcs is not None:
             self.wcs = wcs
