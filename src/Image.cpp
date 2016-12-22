@@ -481,29 +481,25 @@ void wrap_hermx_cols(T*& ptr, int m, int mwrap, int step)
 }
 
 template <typename T>
-ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
+void wrapImage(ImageView<T> im, const Bounds<int>& b, bool hermx, bool hermy)
 {
-    // Get this at the start to check for invalid bounds and raise the exception before
-    // possibly writing data past the edge of the image.
-    ImageView<T> ret = subImage(b);
-
     dbg<<"Start ImageView::wrap: b = "<<b<<std::endl;
-    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    dbg<<"self bounds = "<<im.getBounds()<<std::endl;
     //set_verbose(2);
 
-    const int i1 = b.getXMin()-this->_bounds.getXMin();
-    const int i2 = b.getXMax()-this->_bounds.getXMin()+1;  // +1 for "1 past the end"
-    const int j1 = b.getYMin()-this->_bounds.getYMin();
-    const int j2 = b.getYMax()-this->_bounds.getYMin()+1;
+    const int i1 = b.getXMin()-im.getBounds().getXMin();
+    const int i2 = b.getXMax()-im.getBounds().getXMin()+1;  // +1 for "1 past the end"
+    const int j1 = b.getYMin()-im.getBounds().getYMin();
+    const int j2 = b.getYMax()-im.getBounds().getYMin()+1;
     xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
     const int mwrap = i2-i1;
     const int nwrap = j2-j1;
-    const int skip = this->getNSkip();
-    const int step = this->getStep();
-    const int stride = this->getStride();
-    const int m = this->getNCol();
-    const int n = this->getNRow();
-    T* ptr = this->getData();
+    const int skip = im.getNSkip();
+    const int step = im.getStep();
+    const int stride = im.getStride();
+    const int m = im.getNCol();
+    const int n = im.getNRow();
+    T* ptr = im.getData();
 
     if (hermx) {
         // In the hermitian x case, we need to wrap the columns first, otherwise the bookkeeping
@@ -518,8 +514,8 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
         int mid = (n-1)/2;  // The value of j that corresponds to the j==0 in the normal notation.
 
-        T* ptr1 = getData() + (i2-1)*step;
-        T* ptr2 = getData() + (n-1)*stride + (i2-1)*step;
+        T* ptr1 = im.getData() + (i2-1)*step;
+        T* ptr2 = im.getData() + (n-1)*stride + (i2-1)*step;
 
         // These skips will take us from the end of one row to the i2-1 element in the next row.
         int skip1 = skip + (i2-1)*step;
@@ -527,13 +523,13 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
         for (int j=0; j<mid; ++j, ptr1+=skip1, ptr2+=skip2) {
             xdbg<<"Wrap rows "<<j<<","<<n-j-1<<" into columns ["<<i1<<','<<i2<<")\n";
-            xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+            xdbg<<"ptrs = "<<ptr1-im.getData()<<"  "<<ptr2-im.getData()<<std::endl;
             wrap_hermx_cols_pair(ptr1, ptr2, m, mwrap, step);
         }
         // Finally, the row that is really j=0 (but here is j=(n-1)/2) also needs to be wrapped
         // singly.
         xdbg<<"Wrap row "<<mid<<" into columns ["<<i1<<','<<i2<<")\n";
-        xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+        xdbg<<"ptrs = "<<ptr1-im.getData()<<"  "<<ptr2-im.getData()<<std::endl;
         wrap_hermx_cols(ptr1, m, mwrap, step);
     }
 
@@ -562,7 +558,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
         // we are overwriting the input data as we go, so we would double add it if we did
         // it the normal way.
         xdbg<<"Wrap first row "<<jj<<" onto row = "<<jj<<" using conjugation.\n";
-        xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+        xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
         wrap_row_selfconj(ptr, ptrwrap, m, step);
 
         ptr += skip;
@@ -573,7 +569,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             int k = std::min(n-j,jj);  // How many conjugate rows to do?
             for (; k; --k, ++j, --jj, ptr+=skip, ptrwrap-=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<" using conjugation.\n";
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row_conj(ptr, ptrwrap, m, step);
             }
             assert(j==n || jj == j1);
@@ -587,7 +583,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             k = std::min(n-j,nwrap-1);  // How many non-conjugate rows to do?
             for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row(ptr, ptrwrap, m, step);
             }
             assert(j==n || jj == j2-1);
@@ -616,7 +612,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
             int k = std::min(n-j,j2-jj);  // How many to do before looping back.
             for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                xdbg<<"ptrs = "<<ptr-im.getData()<<"  "<<ptrwrap-im.getData()<<std::endl;
                 wrap_row(ptr, ptrwrap, m, step);
             }
             jj = j1;
@@ -626,15 +622,13 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
     // In the normal (not hermx) case, we now wrap rows [j1,j2) into the columns [i1,i2).
     if (!hermx) {
-        ptr = getData() + j1*stride;
+        ptr = im.getData() + j1*stride;
         for (int j=j1; j<j2; ++j, ptr+=skip) {
             xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
-            xdbg<<"ptr = "<<ptr-this->getData()<<std::endl;
+            xdbg<<"ptr = "<<ptr-im.getData()<<std::endl;
             wrap_cols(ptr, m, mwrap, i1, i2, step);
         }
     }
-
-    return ret;
 }
 
 

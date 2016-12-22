@@ -691,23 +691,26 @@ class Image(with_metaclass(MetaImage, object)):
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
+        # Get this at the start to check for invalid bounds and raise the exception before
+        # possibly writing data past the edge of the image.
+        ret = self.subImage(bounds);
         if not hermitian:
-            self.image.wrap(bounds, False, False)
+            _galsim.wrapImage(self.image, bounds, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
             if bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
-            self.image.wrap(bounds, True, False)
+            _galsim.wrapImage(self.image, bounds, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
             if bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
-            self.image.wrap(bounds, False, True)
+            _galsim.wrapImage(self.image, bounds, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
-        return self.subImage(bounds);
+        return ret;
 
     def calculate_fft(self):
         """Performs an FFT of an Image in real space to produce a k-space Image.
