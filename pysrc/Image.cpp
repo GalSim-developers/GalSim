@@ -262,7 +262,6 @@ struct PyImage {
             .def("setValue", &ImageAlloc<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageAlloc<T>::fill)
             .def("setZero", &ImageAlloc<T>::setZero)
-            .def("invertSelf", &ImageAlloc<T>::invertSelf)
             .def("shift", &ImageAlloc<T>::shift, bp::args("delta"))
             .def("resize", &CallResize)
             .enable_pickling()
@@ -308,7 +307,6 @@ struct PyImage {
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
-            .def("invertSelf", &ImageView<T>::invertSelf)
             .def("shift", &ImageView<T>::shift, bp::args("delta"))
             .enable_pickling()
             ;
@@ -323,6 +321,8 @@ struct PyImage {
         typedef void (*wrap_func_type)(ImageView<T>, const Bounds<int>&, bool, bool);
         bp::def("wrapImage", wrap_func_type(&wrapImage),
             (bp::arg("im"), bp::arg("bounds"), bp::arg("hermx"), bp::arg("hermy")));
+        typedef void (*invert_func_type)(ImageView<T>);
+        bp::def("invertImage", invert_func_type(&invertImage));
 
         return pyImageView;
     }

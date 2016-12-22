@@ -1543,6 +1543,19 @@ def test_Image_inplace_divide():
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
 
+        # Test image.invertSelf()
+        # Intentionally make some elements zero, so we test that 1/0 -> 0.
+        image1 = galsim.Image((ref_array // 11 - 3).astype(types[i]))
+        image2 = image1.copy()
+        mask1 = image1.array == 0
+        mask2 = image1.array != 0
+        image2.invertSelf()
+        np.testing.assert_array_equal(image2.array[mask1], 0,
+                err_msg="invertSelf did not do 1/0 -> 0.")
+        np.testing.assert_array_equal(image2.array[mask2],
+                (1./image1.array[mask2]).astype(types[i]),
+                err_msg="invertSelf gave wrong answer for non-zero elements")
+
         for j in range(i): # Only divide simpler types into this one.
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = (2*(large_array+1)**2).astype(types[i])[::3,::2]

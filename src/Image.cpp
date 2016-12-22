@@ -892,6 +892,9 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
     }
 }
 
+template <typename T>
+void invertImage(ImageView<T> im)
+{ im.invertSelf(); }
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 

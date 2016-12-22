@@ -30,3 +30,4 @@ template void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
         bool inverse, bool shift_in, bool shift_out);
 
 template void wrapImage(ImageView<T> im, const Bounds<int>& b, bool hermx, bool hermy);
+template void invertImage(ImageView<T> im);

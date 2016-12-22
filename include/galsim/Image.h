@@ -777,6 +777,14 @@ namespace galsim {
     template <typename T>
     void wrapImage(ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
 
+    /**
+     *  @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+     *
+     *  Note that if an element is zero, then this function quietly returns its inverse as zero.
+     */
+    template <typename T>
+    void invertImage(ImageView<T> im);
+
 
 
 

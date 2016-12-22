@@ -1163,7 +1163,7 @@ class Image(with_metaclass(MetaImage, object)):
         are defined.
         """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
-        self.image.invertSelf()
+        _galsim.invertImage(self.image)
 
     def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
         """Returns the half-light radius of a drawn object.
