@@ -1,6 +1,7 @@
 branches:
     only:
         - master
+        - noboost
 
 language: python
 python:
