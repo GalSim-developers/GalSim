@@ -330,7 +330,6 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
             SCA_index_list.append(SCA)
 
     # Save images to file.
-    n_ims = len(im_list)
     galsim.fits.writeMulti(im_list, filename, clobber=clobber)
 
     # Add data to file, after constructing a FITS table.  Watch out for clobbering.

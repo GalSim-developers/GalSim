@@ -218,7 +218,7 @@ class DES_PSFEx(object):
         if pol_group2 != 1:
             raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
         if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
+            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
         if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
             raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
         if basis.shape[0] != psf_axis3:
@@ -272,6 +272,7 @@ class DES_PSFEx(object):
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
         elif pixel_scale:  # pragma: no cover
+            from ..deprecated import depr
             depr('pixel_scale',1.1,'wcs=PixelScale(pixel_scale) in the constructor for DES_PSFEx')
             psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
@@ -379,4 +380,3 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
 
 # Register this builder with the config framework:
 galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
-
