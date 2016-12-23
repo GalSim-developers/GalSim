@@ -27,6 +27,8 @@ See documentation here:
     https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
+from past.builtins import basestring
+
 import galsim
 import galsim.config
 import numpy as np
@@ -104,7 +106,7 @@ class DES_PSFEx(object):
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
-            if not isinstance(file_name, str):
+            if not isinstance(file_name, basestring):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
@@ -123,7 +125,7 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim._pyfits import pyfits
-        if isinstance(self.file_name, str):
+        if isinstance(self.file_name, basestring):
             hdu_list = pyfits.open(self.file_name)
             hdu = hdu_list[1]
         else:
