@@ -109,7 +109,7 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
 
-        # Check basic features of array built by ImageAlloc constructor
+        # Check basic features of array built by Image
         np.testing.assert_array_equal(im1.array, 0.)
         assert im1.array.shape == (nrow,ncol)
         assert im1.array.dtype.type == np_array_type

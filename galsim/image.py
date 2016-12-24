@@ -16,8 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file image.py
-The Image class and some modifications to the docs for the C++ layer ImageAlloc and ImageView
-classes.
+The Image class
 """
 
 from __future__ import division
@@ -27,17 +26,15 @@ import numpy as np
 import galsim
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
-# when doing arithmetic with images.  So just make sure both of them point to ImageAllocI in the
-# ImageAlloc dict.  One of them is what you get when you just write numpy.int32.  The other is
+# when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
+# ImageView dict.  One of them is what you get when you just write numpy.int32.  The other is
 # what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the
-# ImageAlloc dict, but we assign both versions just to be sure.
+# ImageView dict, but we assign both versions just to be sure.
 
-_galsim.ImageAlloc[np.int32] = _galsim.ImageAllocI
 _galsim.ImageView[np.int32] = _galsim.ImageViewI
 _galsim.ConstImageView[np.int32] = _galsim.ConstImageViewI
 
 alt_int32 = ( np.array([0]).astype(np.int32) + 1).dtype.type
-_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
@@ -45,12 +42,10 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # just in case there are systems where this doesn't work but the above does.
 alt_int32 = ( np.array([0]).astype(np.int16) +
               np.array([0]).astype(np.int32) ).dtype.type
-_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
-_all_cpp_image_types = tuple(list(_galsim.ImageAlloc.values()) +
-                             list(_galsim.ImageView.values()) +
+_all_cpp_image_types = tuple(list(_galsim.ImageView.values()) +
                              list(_galsim.ConstImageView.values()))
 
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
@@ -354,8 +349,7 @@ class Image(with_metaclass(MetaImage, object)):
                 image = image.image
             self._array = None
             for im_dtype in Image.cpp_valid_dtypes:
-                if ( isinstance(image,_galsim.ImageAlloc[im_dtype]) or
-                     isinstance(image,_galsim.ImageView[im_dtype]) or
+                if ( isinstance(image,_galsim.ImageView[im_dtype]) or
                      isinstance(image,_galsim.ConstImageView[im_dtype]) ):
                     if dtype is not None and im_dtype != dtype:
                         # Allow dtype to force a retyping of the provided image
@@ -468,9 +462,7 @@ class Image(with_metaclass(MetaImage, object)):
 
     @property
     def image(self):
-        if not self.bounds.isDefined():
-            return _galsim.ImageAlloc[self.dtype](self.bounds)
-        elif not self.array.flags.writeable:
+        if not self.array.flags.writeable:
             return _galsim.ConstImageView[self.dtype](self.array, self.xmin, self.ymin)
         else:
             return _galsim.ImageView[self.dtype](self.array, self.xmin, self.ymin)
@@ -1423,7 +1415,6 @@ def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
         raise ValueError("Image must have integer values, not %s"%im1.dtype)
     if ( isinstance(im2, Image) or
-         type(im2) in _galsim.ImageAlloc.values() or
          type(im2) in _galsim.ImageView.values() or
          type(im2) in _galsim.ConstImageView.values()):
         if im1.array.shape != im2.array.shape:
@@ -1645,30 +1636,9 @@ def Image_ior(self, other):
         self.array[:,:] |= other
     return self
 
-def Image_copy(self):
-    # self can be an ImageAlloc or an ImageView, but the return type needs to be an ImageAlloc.
-    # So use the array.dtype.type attribute to get the type of the underlying data,
-    # which in turn can be used to index our ImageAlloc dictionary:
-    return _galsim.ImageAlloc[self.array.dtype.type](self)
-
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
     return self.array, self.xmin, self.ymin
-
-# An ImageAlloc is really pickled as an ImageView (unless bounds are not defined)
-def ImageAlloc_getstate(self):
-    if self.bounds.isDefined():
-        return (self.array, self.xmin, self.ymin)
-    else:
-        return ()
-
-def ImageAlloc_setstate(self, args):
-    if len(args) == 0:
-        self.__init__()
-    else:
-        self_type = args[0].dtype.type
-        self.__class__ = _galsim.ImageView[self_type]
-        self.__init__(*args)
 
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
@@ -1705,32 +1675,6 @@ Image.__iand__ = Image_iand
 Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
 
-# inject these as methods of ImageAlloc classes
-for Class in _galsim.ImageAlloc.values():
-    Class.__add__ = Image_add
-    Class.__radd__ = Image_add
-    Class.__iadd__ = Image_iadd
-    Class.__sub__ = Image_sub
-    Class.__rsub__ = Image_rsub
-    Class.__isub__ = Image_isub
-    Class.__mul__ = Image_mul
-    Class.__rmul__ = Image_mul
-    Class.__imul__ = Image_imul
-    Class.__div__ = Image_div
-    Class.__rdiv__ = Image_rdiv
-    Class.__truediv__ = Image_div
-    Class.__rtruediv__ = Image_rdiv
-    Class.__idiv__ = Image_idiv
-    Class.__itruediv__ = Image_idiv
-    Class.__ipow__ = Image_ipow
-    Class.__neg__ = Image_neg
-    Class.__pow__ = Image_pow
-    Class.copy = Image_copy
-    Class.__getstate_manages_dict__ = 1
-    Class.__getstate__ = ImageAlloc_getstate
-    Class.__setstate__ = ImageAlloc_setstate
-    Class.__hash__ = None
-
 for Class in _galsim.ImageView.values():
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
@@ -1750,7 +1694,6 @@ for Class in _galsim.ImageView.values():
     Class.__ipow__ = Image_ipow
     Class.__pow__ = Image_pow
     Class.__neg__ = Image_neg
-    Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
@@ -1767,12 +1710,11 @@ for Class in _galsim.ConstImageView.values():
     Class.__rtruediv__ = Image_rdiv
     Class.__pow__ = Image_pow
     Class.__neg__ = Image_neg
-    Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
 for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
-    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
+    for Class in [ _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__floordiv__ = Image_floordiv
         Class.__rfloordiv__ = Image_rfloordiv
@@ -1784,7 +1726,7 @@ for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
         Class.__rand__ = Image_and
         Class.__rxor__ = Image_xor
         Class.__ror__ = Image_or
-    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type] ]:
+    for Class in [ _galsim.ImageView[int_type] ]:
         Class.__ifloordiv__ = Image_ifloordiv
         Class.__imod__ = Image_imod
         Class.__iand__ = Image_iand
@@ -1792,21 +1734,6 @@ for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
         Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace
-
-galsim._galsim.ImageAllocUS.__repr__ = lambda self: 'galsim._galsim.ImageAllocUS(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocUI.__repr__ = lambda self: 'galsim._galsim.ImageAllocUI(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
-        self.bounds, self.array)
-galsim._galsim.ImageAllocC.__repr__ = lambda self: 'galsim._galsim.ImageAllocC(%r,%r)'%(
-        self.bounds, self.array)
 
 galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
