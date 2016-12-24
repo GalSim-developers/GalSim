@@ -34,7 +34,7 @@ namespace galsim {
         static void wrap() {
             bp::def("_calculateCovarianceMatrix",
                 calculateCovarianceMatrix,
-                (bp::arg("sbprofile"), bp::arg("bounds"), bp::arg("dx"))
+                (bp::arg("cov"), bp::arg("sbprofile"), bp::arg("bounds"), bp::arg("dx"))
             );
         }
 

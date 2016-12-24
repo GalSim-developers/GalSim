@@ -18,6 +18,7 @@
 
 import galsim
 from galsim.deprecated import depr
+import numpy as np
 
 def CN_applyWhiteningTo(self, image):
     """A deprecated synonym for whitenImage"""
@@ -172,7 +173,10 @@ def CN_calculateCovarianceMatrix(self, bounds, scale):
     depr('calculateCovarianceMatrix',1.3,'',
          'This functionality has been removed. If you have a need for it, please open '+
          'an issue requesting the functionality.')
-    return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
+    covdim = np.prod(bounds.numpyShape())
+    cov = galsim.ImageD(covdim,covdim)
+    galsim._galsim._calculateCovarianceMatrix(cov.image,self._profile.SBProfile, bounds, scale)
+    return cov
 
 galsim.correlatednoise._BaseCorrelatedNoise.applyWhiteningTo = CN_applyWhiteningTo
 galsim.correlatednoise._BaseCorrelatedNoise.createExpanded = CN_createExpanded
