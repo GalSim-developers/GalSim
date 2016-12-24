@@ -212,12 +212,13 @@ class Bandpass(object):
                     test_wave = 700
                 try:
                     self._tp = galsim.utilities.math_eval('lambda wave : ' + self._orig_tp)
-                    self._tp(test_wave)
+                    from numbers import Real
+                    assert isinstance(self._tp(test_wave), Real)
                 except Exception as e:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0}\n".format(self._orig_tp) +
+                        "Input provided: {0!r}\n".format(self._orig_tp) +
                         "Caught error: {0}".format(e))
         else:
             self._tp = self._orig_tp

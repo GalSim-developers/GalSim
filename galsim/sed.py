@@ -192,14 +192,15 @@ class SED(object):
                 # Are there any other types of errors we should trap here?
                 try:
                     self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
-                    self._spec(700)
+                    from numbers import Real
+                    assert isinstance(self._spec(700), Real)
                 except ArithmeticError:
                     pass
                 except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0}\n".format(self._orig_spec) +
+                        "Input provided: {0!r}\n".format(self._orig_spec) +
                         "Caught error: {0}".format(e))
 
         else:
