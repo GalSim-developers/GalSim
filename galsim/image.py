@@ -21,7 +21,6 @@ classes.
 """
 
 from __future__ import division
-from future.utils import with_metaclass
 from . import _galsim
 import numpy as np
 import galsim
@@ -57,25 +56,7 @@ _all_cpp_image_types = tuple(list(_galsim.ImageAlloc.values()) +
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
 # http://projects.scipy.org/numpy/ticket/1246
 
-# This meta class thing is to allow the obsolete syntax Image[float32](ncol,nrow).
-# For that, we need to allow for the __getitem__ method to be a staticmethod.
-# cf. http://stackoverflow.com/questions/6187932/how-to-write-a-static-python-getitem-method
-class MetaImage(type):
-    def __getitem__(cls,t):
-        """A deprecated syntax that treats Image as a dict indexed by type"""
-        from galsim.deprecated import depr
-        depr('Image[type]', 1.1, 'Image(..., dtype=type)')
-        Image_dict = {
-            np.uint16 : ImageUS,
-            np.uint32 : ImageUI,
-            np.int16 : ImageS,
-            np.int32 : ImageI,
-            np.float32 : ImageF,
-            np.float64 : ImageD
-        }
-        return Image_dict[t]
-
-class Image(with_metaclass(MetaImage, object)):
+class Image(object):
     """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
@@ -796,17 +777,6 @@ class Image(with_metaclass(MetaImage, object)):
         the FFT.
         """
         return galsim._galsim.goodFFTSize(int(input_size))
-
-    def __iter__(self):
-        if self.iscomplex:
-            # To enable the syntax re, im = obj.drawKImage(...), we let ImageC be iterable,
-            # but give a deprecation warning if people use it.
-            from galsim.deprecated import depr
-            depr('re, im = imagec', 1.5, 're = imagec.real; im = imagec.imag')
-            yield self.real
-            yield self.imag
-        else:
-            raise TypeError("'Image' object is not iterable")
 
     def copyFrom(self, rhs):
         """Copy the contents of another image

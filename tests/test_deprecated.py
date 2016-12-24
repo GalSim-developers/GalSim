@@ -61,25 +61,6 @@ def check_dep(f, *args, **kwargs):
     assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
-def check_dep_tuple2(rhs):
-    """Check that (x,y) = rhs raises a GalSimDeprecationWarning as a warning, but not an error.
-    """
-    #print('check dep tuple2: ',rhs)
-    import warnings
-    # Cause all warnings to always be triggered.
-    # Important in case we want to trigger the same one twice in the test suite.
-    warnings.simplefilter("always")
-
-    with warnings.catch_warnings(record=True) as w:
-        x,y = rhs
-    #print('x,y = ',x,y)
-    #print('w = ',w)
-    assert len(w) >= 1, "Converting %s to a tuple did not raise a warning"%str(rhs)
-    #print([ str(wk.message) for wk in w ])
-    assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
-    return x,y
-
-
 @timer
 def test_dep_bandpass():
     """Test the deprecated methods in galsim/deprecated/bandpass.py.
@@ -195,8 +176,10 @@ def test_dep_base():
     np.testing.assert_equal(im1.bounds, im2.bounds)
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
-    im1, im1b = check_dep_tuple2(check_dep(g.drawK))
-    im2, im2b = check_dep_tuple2(g.drawKImage())
+    im1 = check_dep(g.drawK)
+    im1, im1b = im1.real, im1.imag
+    im2 = g.drawKImage()
+    im2, im2b = im2.real, im2.imag
     np.testing.assert_almost_equal(im1.scale, im2.scale)
     np.testing.assert_almost_equal(im1b.scale, im2b.scale)
     np.testing.assert_equal(im1.bounds, im2.bounds)
@@ -509,119 +492,6 @@ def test_dep_gsobject_ring():
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
         print('The assert_raises tests require nose')
-
-
-@timer
-def test_dep_image():
-    """Test that the old obsolete syntax still works (for now)
-    """
-    # This is the old version of the test_Image_basic function from version 1.0
-
-    ntypes = 4  # Note: Most tests below only run through the first 4 types.
-                # test_Image_basic tests all 6 types including the aliases.
-    types = [np.int16, np.int32, np.float32, np.float64, int, float]
-    tchar = ['S', 'I', 'F', 'D', 'I', 'D']
-
-    ncol = 7
-    nrow = 5
-    test_shape = (ncol, nrow)  # shape of image arrays for all tests
-    ref_array = np.array([
-        [11, 21, 31, 41, 51, 61, 71],
-        [12, 22, 32, 42, 52, 62, 72],
-        [13, 23, 33, 43, 53, 63, 73],
-        [14, 24, 34, 44, 54, 64, 74],
-        [15, 25, 35, 45, 55, 65, 75] ]).astype(np.int16)
-
-    check_dep(galsim.ImageViewS, ref_array.astype(np.int16))
-    check_dep(galsim.ImageViewI, ref_array.astype(np.int32))
-    check_dep(galsim.ImageViewF, ref_array.astype(np.float32))
-    check_dep(galsim.ImageViewD, ref_array.astype(np.float64))
-    check_dep(galsim.ConstImageViewS, ref_array.astype(np.int16))
-    check_dep(galsim.ConstImageViewI, ref_array.astype(np.int32))
-    check_dep(galsim.ConstImageViewF, ref_array.astype(np.float32))
-    check_dep(galsim.ConstImageViewD, ref_array.astype(np.float64))
-
-    for i in range(ntypes):
-        array_type = types[i]
-        check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
-        check_dep(galsim.ConstImageView[array_type], ref_array.astype(array_type))
-        # This next one is normally executed as im = galsim.Image[type]
-        check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)
-
-    # The rest of this is taken from an older version of the Image class test suite that
-    # tests the old syntax.  Might as well keep it.
-    for i in range(ntypes):
-        # Check basic constructor from ncol, nrow
-        array_type = types[i]
-        im1 = check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)(ncol,nrow)
-        bounds = galsim.BoundsI(1,ncol,1,nrow)
-
-        assert im1.getXMin() == 1
-        assert im1.getXMax() == ncol
-        assert im1.getYMin() == 1
-        assert im1.getYMax() == nrow
-        assert im1.getBounds() == bounds
-        assert im1.bounds == bounds
-
-        # Check basic constructor from ncol, nrow
-        # Also test alternate name of image type: ImageD, ImageF, etc.
-        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
-        im2 = image_type(bounds)
-        im2_view = im2.view()
-
-        assert im2_view.getXMin() == 1
-        assert im2_view.getXMax() == ncol
-        assert im2_view.getYMin() == 1
-        assert im2_view.getYMax() == nrow
-        assert im2_view.bounds == bounds
-
-        # Check various ways to set and get values
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                im1.setValue(x,y, 100 + 10*x + y)
-                im2_view.setValue(x,y, 100 + 10*x + y)
-
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert check_dep(im1.at,x,y) == 100+10*x+y
-                assert check_dep(im1.view().at,x,y) == 100+10*x+y
-                assert check_dep(im2.at,x,y) == 100+10*x+y
-                assert check_dep(im2_view.at,x,y) == 100+10*x+y
-                im1.setValue(x,y, 10*x + y)
-                im2_view.setValue(x,y, 10*x + y)
-                assert im1(x,y) == 10*x+y
-                assert im1.view()(x,y) == 10*x+y
-                assert im2(x,y) == 10*x+y
-                assert im2_view(x,y) == 10*x+y
-
-        # Check view of given data
-        im3_view = check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert im3_view(x,y) == 10*x+y
-
-        # Check shift ops
-        im1_view = im1.view() # View with old bounds
-        dx = 31
-        dy = 16
-        im1.shift(dx,dy)
-        im2_view.setOrigin( 1+dx , 1+dy )
-        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
-        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
-
-        assert im1.bounds == shifted_bounds
-        assert im2_view.bounds == shifted_bounds
-        assert im3_view.bounds == shifted_bounds
-        # Others shouldn't have changed
-        assert im1_view.bounds == bounds
-        assert im2.bounds == bounds
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert im1(x+dx,y+dy) == 10*x+y
-                assert im1_view(x,y) == 10*x+y
-                assert im2(x,y) == 10*x+y
-                assert im2_view(x+dx,y+dy) == 10*x+y
-                assert im3_view(x+dx,y+dy) == 10*x+y
 
 
 @timer
@@ -1175,7 +1045,8 @@ def test_dep_drawKImage():
     #   - create new images
     #   - return the new images
     #   - set the scale to 2pi/(N*obj.nyquistScale())
-    re1, im1 = check_dep_tuple2(obj.drawKImage())
+    im1 = obj.drawKImage()
+    re1, im1 = im1.real, im1.imag
     re1.setOrigin(1,1)  # Go back to old convention on bounds
     im1.setOrigin(1,1)
     N = 1163
@@ -1206,7 +1077,8 @@ def test_dep_drawKImage():
     #   - zero out any existing data
     re3 = galsim.ImageD(1149,1149)
     im3 = galsim.ImageD(1149,1149)
-    re4, im4 = check_dep_tuple2(check_dep(obj.drawKImage, re3, im3))
+    im4 = check_dep(obj.drawKImage, re3, im3)
+    re4, im4 = im4.real, im4.imag
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
                                    "obj.drawKImage(re3,im3) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
@@ -1254,7 +1126,8 @@ def test_dep_drawKImage():
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
     scale = 0.51   # Just something different from 1 or dx_nyq
-    re7, im7 = check_dep_tuple2(obj.drawKImage(scale=scale))
+    im7 = obj.drawKImage(scale=scale)
+    re7, im7 = im7.real, im7.imag
     np.testing.assert_almost_equal(re7.scale, scale, 9,
                                    "obj.drawKImage(dx) produced real image with wrong scale")
     np.testing.assert_almost_equal(im7.scale, scale, 9,
@@ -1388,7 +1261,8 @@ def test_dep_drawKImage():
     #   - set the scale
     nx = 200  # Some randome non-square size
     ny = 100
-    re4, im4 = check_dep_tuple2(obj.drawKImage(nx=nx, ny=ny, scale=scale))
+    im4 = obj.drawKImage(nx=nx, ny=ny, scale=scale)
+    re4, im4 = im4.real, im4.imag
     np.testing.assert_almost_equal(
         re4.scale, scale, 9,
         "obj.drawKImage(nx,ny,scale) produced real image with wrong scale")
@@ -1406,7 +1280,8 @@ def test_dep_drawKImage():
     #   - create a new image with the right size
     #   - set the scale
     bounds = galsim.BoundsI(1,nx,1,ny)
-    re4, im4 = check_dep_tuple2(obj.drawKImage(bounds=bounds, scale=stepk))
+    im4 = obj.drawKImage(bounds=bounds, scale=stepk)
+    re4, im4 = im4.real, im4.imag
     np.testing.assert_almost_equal(
         re4.scale, stepk, 9,
         "obj.drawKImage(bounds,scale) produced real image with wrong scale")
@@ -1468,7 +1343,8 @@ def test_dep_kroundtrip():
     g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
     final = g1 + g2 + g3
     a = final
-    real_a, imag_a = check_dep_tuple2(a.drawKImage())
+    im_a = a.drawKImage()
+    real_a, imag_a = im_a.real, im_a.imag
     b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
     # Check picklability
@@ -1484,7 +1360,8 @@ def test_dep_kroundtrip():
 
     np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
 
-    real_b, imag_b = check_dep_tuple2(check_dep(b.drawKImage, real_a.copy(), imag_a.copy()))
+    im_b = check_dep(b.drawKImage, real_a.copy(), imag_a.copy())
+    real_b, imag_b = im_b.real, im_b.imag
     # Fails at 4th decimal
     np.testing.assert_array_almost_equal(real_a.array, real_b.array, 3,
                                          "InterpolatedKImage kimage drawn incorrectly.")
@@ -1501,8 +1378,8 @@ def test_dep_kroundtrip():
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
         shape = real_a.array.shape
-        real_a, imag_a = check_dep_tuple2(a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy,
-                                          scale=real_a.scale))
+        im_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=real_a.scale)
+        real_a, imag_a = im_a.real, im_a.imag
         b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
         np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
@@ -1521,21 +1398,24 @@ def test_dep_kroundtrip():
 
     # Does the stepk parameter do anything?
     a = final
-    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
-    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
+    im_a = a.drawKImage()
+    b = check_dep(galsim.InterpolatedKImage, im_a.real, im_a.imag)
+    c = check_dep(galsim.InterpolatedKImage, im_a.real, im_a.imag, stepk=2*b.stepK())
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
-        b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+        im_a = a.drawKImage()
+        b = check_dep(galsim.InterpolatedKImage, im_a.real, im_a.imag)
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
         np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
 
     # Test convolution with another object.
     a = final
-    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+    im_a = a.drawKImage()
+    b = check_dep(galsim.InterpolatedKImage, im_a.real, im_a.imag)
     c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
     a_conv_c = galsim.Convolve(a, c)
     b_conv_c = galsim.Convolve(b, c)
@@ -1552,7 +1432,6 @@ if __name__ == "__main__":
     test_dep_chromatic()
     test_dep_correlatednoise()
     test_dep_gsobject_ring()
-    test_dep_image()
     test_dep_noise()
     test_dep_random()
     test_dep_scene()
