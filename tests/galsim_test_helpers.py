@@ -54,7 +54,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
 def printval(image1, image2):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
-    print("Sum of values: ", np.sum(image1.array), np.sum(image2.array))
+    print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
     print("Maximum image value: ", np.max(image1.array), np.max(image2.array))
     print("Peak location: ", image1.array.argmax(), image2.array.argmax())
@@ -111,9 +111,9 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     #print('  image scale,bounds = ',dx,image.bounds)
     if scale is None:
         assert image.scale == prof.nyquistScale()
-    print('  flux: ',prof.flux, image.array.sum()*dx**2, image.added_flux)
+    print('  flux: ',prof.flux, image.array.sum(dtype=float)*dx**2, image.added_flux)
     np.testing.assert_allclose(
-            image.array.sum() * dx**2, image.added_flux, 1.e-5,
+            image.array.sum(dtype=float) * dx**2, image.added_flux, 1.e-5,
             err_msg="%s profile drawImage(method='sb') returned wrong added_flux"%name)
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
@@ -207,7 +207,7 @@ def do_shoot(prof, img, name):
     flux_max = img.array.max()
     print('prof.getFlux = ',prof.getFlux())
     print('flux_max = ',flux_max)
-    flux_tot = img.array.sum()
+    flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
     if flux_max > 1.:
         # Since the number of photons required for a given accuracy level (in terms of
@@ -229,7 +229,7 @@ def do_shoot(prof, img, name):
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
     print('prof.getFlux => ',prof.getFlux())
-    print('img.sum => ',img.array.sum())
+    print('img.sum => ',img.array.sum(dtype=float))
     print('img.max => ',img.array.max())
     print('nphot = ',nphot)
     img2 = img.copy()
@@ -239,7 +239,7 @@ def do_shoot(prof, img, name):
     rng = galsim.UniformDeviate(12345)
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print('img2.sum => ',img2.array.sum())
+    print('img2.sum => ',img2.array.sum(dtype=float))
     #printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -257,8 +257,8 @@ def do_shoot(prof, img, name):
         img = galsim.ImageD(128,128, scale=dx)
     prof = prof.withFlux(test_flux)
     prof.drawImage(img)
-    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
+    print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
+    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
     # maxSB is not always very accurate, but it should be an overestimate if wrong.
     assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, "maxSB for %s is too small."%name
@@ -270,8 +270,8 @@ def do_shoot(prof, img, name):
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
+    print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
+    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.maxSB()*dx**2)
     print('ratio = ',img.array.max() / (prof.maxSB()*dx**2))
@@ -521,7 +521,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         if isinstance(obj, galsim.ChromaticDeconvolution):
             continue
         np.testing.assert_allclose(
-                obj.evaluateAtWavelength(wave).drawImage().array.sum(),
+                obj.evaluateAtWavelength(wave).drawImage().array.sum(dtype=float),
                 desired,
                 rtol=1e-2)
 
@@ -529,10 +529,10 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         for bp in bps:
             calc_flux = obj.calculateFlux(bp)
             np.testing.assert_equal(obj.SED.calculateFlux(bp), calc_flux)
-            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(), rtol=1e-2)
+            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(dtype=float), rtol=1e-2)
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
-                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(), rtol=1e-2)
+                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
 
 def funcname():
     import inspect

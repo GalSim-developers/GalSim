@@ -1485,7 +1485,7 @@ class GSObject(object):
 
         # Add (a portion of) this to the original image.
         image.image += real_image.subImage(image.bounds)
-        added_photons = real_image.subImage(image.bounds).array.sum()
+        added_photons = real_image.subImage(image.bounds).array.sum(dtype=float)
 
         return added_photons
 
