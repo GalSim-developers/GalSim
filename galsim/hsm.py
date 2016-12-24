@@ -322,7 +322,7 @@ def _convertMask(image, weight=None, badpix=None):
         raise RuntimeError("No pixels are being used!")
 
     # finally, return the Image for the weight map
-    return mask.image
+    return mask
 
 
 # A simpler helper function to force images to be of type ImageF or ImageD
@@ -338,8 +338,7 @@ def _convertImage(image):
     if (image.dtype == np.int32 or image.dtype == np.uint32):
         image = galsim.ImageD(image)
 
-    # Return this as an ImageView
-    return image.image
+    return image
 
 
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
@@ -441,14 +440,14 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     @returns a ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
-    gal_image_view = _convertImage(gal_image)
-    PSF_image_view = _convertImage(PSF_image)
-    weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
+    gal_image = _convertImage(gal_image)
+    PSF_image = _convertImage(PSF_image)
+    weight = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
         guess_centroid = gal_image.trueCenter()
     try:
-        result = _galsim._EstimateShearView(gal_image_view, PSF_image_view, weight_view,
+        result = _galsim._EstimateShearView(gal_image.image, PSF_image.image, weight.image,
                                             sky_var = sky_var,
                                             shear_est = shear_est.upper(),
                                             recompute_flux = recompute_flux.upper(),
@@ -551,14 +550,14 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     @returns a ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
-    object_image_view = _convertImage(object_image)
-    weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
+    object_image = _convertImage(object_image)
+    weight = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
         guess_centroid = object_image.trueCenter()
 
     try:
-        result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
+        result = _galsim._FindAdaptiveMomView(object_image.image, weight.image,
                                               guess_sig = guess_sig, precision =  precision,
                                               guess_centroid = guess_centroid,
                                               hsmparams = hsmparams)
