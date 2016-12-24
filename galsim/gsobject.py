@@ -1470,7 +1470,7 @@ class GSObject(object):
         # Draw the image in k space.
         bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
         kimage = galsim.ImageC(bounds=bounds, scale=dk)
-        self.SBProfile.drawK(kimage.image.view(), dk)
+        self.SBProfile.drawK(kimage.image, dk)
 
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
@@ -1863,7 +1863,7 @@ class GSObject(object):
         # Making views of the images lets us change the centers without messing up the originals.
         image.setCenter(0,0)
 
-        self.SBProfile.drawK(image.image.view(), dk)
+        self.SBProfile.drawK(image.image, dk)
 
         if gain is not None:  # pragma: no cover
             image /= gain
@@ -1899,6 +1899,14 @@ def SBProfile_setstate(self, state):
     self.__class__ = eval(cls)
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
+
+def SBProfile_copy(self):
+    import galsim
+    from numpy import array, int16, int32, float32, float64
+    return eval(repr(self))
+_galsim.SBProfile.__copy__ = SBProfile_copy
+_galsim.SBProfile.__deepcopy__ = lambda self, memo : SBProfile_copy(self)
+
 # Quick and dirty.  Just check serializations are equal.
 _galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)

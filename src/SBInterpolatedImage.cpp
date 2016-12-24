@@ -426,7 +426,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedImage(";
-        oss << "galsim._galsim.ConstImageViewD(array([";
+        oss << "galsim.ImageD(array([";
 
         ConstImageView<double> im = getImage();
         const double* ptr = im.getData();
@@ -444,7 +444,7 @@ namespace galsim {
             oss << "]";
         }
 
-        oss<<"],dtype=float)), ";
+        oss<<"],dtype=float)).image, ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
@@ -1000,7 +1000,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedKImage(";
-        oss << "galsim._galsim.ConstImageViewD(array([";
+        oss << "galsim.ImageD(array([";
 
         ConstImageView<double> data = getKData();
         const double* ptr = data.getData();
@@ -1012,18 +1012,21 @@ namespace galsim {
         const int ymax = data.getYMax();
         for (int j=ymin; j<=ymax; j++, ptr+=skip) {
             if (j > ymin) oss <<",";
-            oss << "[" << *ptr;
+            oss << "[" << (*ptr == 0. ? 0. : *ptr);
             ptr += step;
-            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << *ptr;
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << (*ptr == 0. ? 0. : *ptr);
             oss << "]";
         }
 
-        oss<<"],dtype=float)), ";
+        oss<<"],dtype=float)).image, ";
 
         oss << _ktab->getDk() << ", " << stepK() << ", " << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
         oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
-        oss << _xcentroid << ", " << _ycentroid << ", " << _cenIsSet <<", ";
+        if (_cenIsSet)
+            oss << _xcentroid << ", " << _ycentroid << ", " << _cenIsSet <<", ";
+        else
+            oss << 0. << ", " << 0. << ", " << _cenIsSet <<", ";
         oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }

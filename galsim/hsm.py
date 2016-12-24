@@ -322,7 +322,7 @@ def _convertMask(image, weight=None, badpix=None):
         raise RuntimeError("No pixels are being used!")
 
     # finally, return the Image for the weight map
-    return mask.image.view()
+    return mask.image
 
 
 # A simpler helper function to force images to be of type ImageF or ImageD
@@ -339,7 +339,7 @@ def _convertImage(image):
         image = galsim.ImageD(image)
 
     # Return this as an ImageView
-    return image.image.view()
+    return image.image
 
 
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,

@@ -343,31 +343,23 @@ class Image(with_metaclass(MetaImage, object)):
             if init_value is not None:
                 raise TypeError("Cannot specify init_value with array")
         elif image is not None:
-            if isinstance(image, Image):
-                if wcs is None and scale is None:
-                    wcs = image.wcs
-                image = image.image
-            self._array = None
-            for im_dtype in Image.cpp_valid_dtypes:
-                if ( isinstance(image,_galsim.ImageView[im_dtype]) or
-                     isinstance(image,_galsim.ConstImageView[im_dtype]) ):
-                    if dtype is not None and im_dtype != dtype:
-                        # Allow dtype to force a retyping of the provided image
-                        # e.g. im = ImageF(...)
-                        #      im2 = ImageD(im)
-                        self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=dtype)
-                        self._array[:,:] = image.array[:,:]
-                        self.dtype = dtype
-                    else:
-                        self._array = image.array
-                        self.dtype = self._array.dtype.type
-                    break
-            if self._array is None:
-                # Then never found the dtype above:
-                raise TypeError("image must be an Image or BaseImage type")
-            self._bounds = image.bounds
+            if not isinstance(image, Image):
+                raise TypeError("image must be an Image")
             if init_value is not None:
                 raise TypeError("Cannot specify init_value with image")
+            if wcs is None and scale is None:
+                wcs = image.wcs
+            self._bounds = image.bounds
+            if dtype is not None and image.dtype != dtype:
+                # Allow dtype to force a retyping of the provided image
+                # e.g. im = ImageF(...)
+                #      im2 = ImageD(im)
+                self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=dtype)
+                self._array[:,:] = image.array[:,:]
+                self.dtype = dtype
+            else:
+                self._array = image.array
+                self.dtype = self._array.dtype.type
         else:
             self._array = np.empty(shape=(1,1), dtype=self.dtype)
             self._bounds = galsim.BoundsI()
@@ -1636,10 +1628,6 @@ def Image_ior(self, other):
         self.array[:,:] |= other
     return self
 
-# Some functions to enable pickling of images
-def ImageView_getinitargs(self):
-    return self.array, self.xmin, self.ymin
-
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -1675,92 +1663,3 @@ Image.__iand__ = Image_iand
 Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
 
-for Class in _galsim.ImageView.values():
-    Class.__add__ = Image_add
-    Class.__radd__ = Image_add
-    Class.__iadd__ = Image_iadd
-    Class.__sub__ = Image_sub
-    Class.__rsub__ = Image_rsub
-    Class.__isub__ = Image_isub
-    Class.__mul__ = Image_mul
-    Class.__rmul__ = Image_mul
-    Class.__imul__ = Image_imul
-    Class.__div__ = Image_div
-    Class.__rdiv__ = Image_rdiv
-    Class.__truediv__ = Image_div
-    Class.__rtruediv__ = Image_rdiv
-    Class.__idiv__ = Image_idiv
-    Class.__itruediv__ = Image_idiv
-    Class.__ipow__ = Image_ipow
-    Class.__pow__ = Image_pow
-    Class.__neg__ = Image_neg
-    Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = None
-
-for Class in _galsim.ConstImageView.values():
-    Class.__add__ = Image_add
-    Class.__radd__ = Image_add
-    Class.__sub__ = Image_sub
-    Class.__rsub__ = Image_rsub
-    Class.__mul__ = Image_mul
-    Class.__rmul__ = Image_mul
-    Class.__div__ = Image_div
-    Class.__rdiv__ = Image_rdiv
-    Class.__truediv__ = Image_div
-    Class.__rtruediv__ = Image_rdiv
-    Class.__pow__ = Image_pow
-    Class.__neg__ = Image_neg
-    Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = None
-
-for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
-    for Class in [ _galsim.ImageView[int_type],
-                   _galsim.ConstImageView[int_type] ]:
-        Class.__floordiv__ = Image_floordiv
-        Class.__rfloordiv__ = Image_rfloordiv
-        Class.__mod__ = Image_mod
-        Class.__rmod__ = Image_rmod
-        Class.__and__ = Image_and
-        Class.__xor__ = Image_xor
-        Class.__or__ = Image_or
-        Class.__rand__ = Image_and
-        Class.__rxor__ = Image_xor
-        Class.__ror__ = Image_or
-    for Class in [ _galsim.ImageView[int_type] ]:
-        Class.__ifloordiv__ = Image_ifloordiv
-        Class.__imod__ = Image_imod
-        Class.__iand__ = Image_iand
-        Class.__ixor__ = Image_ixor
-        Class.__ior__ = Image_ior
-
-del Class    # cleanup public namespace
-
-galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewUI.__repr__ = lambda self: 'galsim._galsim.ImageViewUI(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewC.__repr__ = lambda self: 'galsim._galsim.ImageViewC(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-
-galsim._galsim.ConstImageViewUS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUS(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewUI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUI(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewF(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewC.__repr__ = lambda self: 'galsim._galsim.ConstImageViewC(%r,%r,%r)'%(
-        self.array, self.xmin, self.ymin)

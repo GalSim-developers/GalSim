@@ -794,25 +794,15 @@ class InterpolatedKImage(GSObject):
         self.SBProfile = galsim._galsim.SBInterpolatedKImage(
             self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
-_galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
-        self.getImage(), self.getXInterp(), self.getKInterp(), self.getPadFactor(),
-        self.stepK(), self.maxK(), self.getGSParams())
-_galsim.SBInterpolatedImage.__getstate__ = lambda self: None
-_galsim.SBInterpolatedImage.__repr__ = lambda self: \
-        'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
+def new_sbi(cls):
+    return cls.__new__(cls)
 
-def _SBIKI_getinitargs(self):
-    if self._cenIsSet():
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
-                self.centroid().x, self.centroid().y, True, self.getGSParams())
-    else:
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
-                0.0, 0.0, False, self.getGSParams())
-_galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
-_galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
-_galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
-    %self.__getinitargs__())
+_galsim.SBInterpolatedImage.__reduce__ = lambda self: (
+        new_sbi, (self.__class__,), self.__getstate__())
+_galsim.SBInterpolatedKImage.__reduce__ = lambda self: (
+        new_sbi, (self.__class__,), self.__getstate__())
+_galsim.SBInterpolatedImage.__reduce__ = lambda self: (eval, (self.__getstate__(),))
+_galsim.SBInterpolatedKImage.__reduce__ = lambda self: (eval, (self.__getstate__(),))
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
