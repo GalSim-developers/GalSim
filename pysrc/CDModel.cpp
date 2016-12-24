@@ -33,12 +33,15 @@ namespace galsim {
         template <typename U>
         static void wrapTemplates() {
 
-            typedef ImageAlloc<U> (*ApplyCD_func)(const BaseImage<U>&, ConstImageView<double>,
-                ConstImageView<double>, ConstImageView<double>, ConstImageView<double>,
-                const int, const double);
+            typedef void (*ApplyCD_func)(
+                ImageView<U>& , const BaseImage<U>& ,
+                const BaseImage<double>& , const BaseImage<double>& ,
+                const BaseImage<double>& , const BaseImage<double>& ,
+                const int , const double );
             bp::def("_ApplyCD",
                 ApplyCD_func(&ApplyCD),
-                (bp::arg("image"), bp::arg("aL"), bp::arg("aR"), bp::arg("aB"), bp::arg("aT"),
+                (bp::arg("output"), bp::arg("input"),
+                 bp::arg("aL"), bp::arg("aR"), bp::arg("aB"), bp::arg("aT"),
                 bp::arg("dmax"), bp::arg("gain_ratio")),
                 "Apply an Antilogus et al (2014) charge deflection model to an image.");
 
