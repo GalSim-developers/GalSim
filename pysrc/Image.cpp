@@ -22,7 +22,6 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp" // header that includes Python.h always needs to come first
 
-#include "NumpyHelper.h"
 #include "Image.h"
 
 namespace bp = boost::python;
@@ -34,38 +33,19 @@ namespace galsim {
 template <typename T>
 struct PyImage {
 
-    static void BuildConstructorArgs(
-        const bp::object& array, int xmin, int ymin, bool isConst,
-        T*& data, boost::shared_ptr<T>& owner, int& step, int& stride, Bounds<int>& bounds)
-    {
-        CheckNumpyArray(array,2,isConst,data,owner,step,stride);
-        bounds = Bounds<int>(
-            xmin, xmin + GetNumpyArrayDim(array.ptr(), 1) - 1,
-            ymin, ymin + GetNumpyArrayDim(array.ptr(), 0) - 1
-        );
-    }
-
     static ImageView<T>* MakeFromArray(
-        const bp::object& array, int xmin, int ymin)
+        size_t idata, int step, int stride, const Bounds<int>& bounds)
     {
-        Bounds<int> bounds;
-        int step = 0;
-        int stride = 0;
-        T* data = 0;
+        T* data = reinterpret_cast<T*>(idata);
         boost::shared_ptr<T> owner;
-        BuildConstructorArgs(array, xmin, ymin, false, data, owner, step, stride, bounds);
         return new ImageView<T>(data, owner, step, stride, bounds);
     }
 
     static ConstImageView<T>* MakeConstFromArray(
-        const bp::object& array, int xmin, int ymin)
+        size_t idata, int step, int stride, const Bounds<int>& bounds)
     {
-        Bounds<int> bounds;
-        int step = 0;
-        int stride = 0;
-        T* data = 0;
+        T* data = reinterpret_cast<T*>(idata);
         boost::shared_ptr<T> owner;
-        BuildConstructorArgs(array, xmin, ymin, true, data, owner, step, stride, bounds);
         return new ConstImageView<T>(data, owner, step, stride, bounds);
     }
 
@@ -106,7 +86,7 @@ struct PyImage {
         pyImageView
             .def("__init__", bp::make_constructor(
                     &MakeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)))
+                    (bp::arg("data"), bp::arg("step"), bp::arg("stride"), bp::arg("bounds"))))
             ;
 
         typedef void (*wrap_func_type)(ImageView<T>, const Bounds<int>&, bool, bool);
@@ -127,7 +107,7 @@ struct PyImage {
         pyConstImageView
             .def("__init__", bp::make_constructor(
                     &MakeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)))
+                    (bp::arg("data"), bp::arg("step"), bp::arg("stride"), bp::arg("bounds"))))
             ;
 
         return pyConstImageView;
@@ -147,25 +127,23 @@ void pyExportImage() {
 
     bp::dict pyConstImageViewDict;
 
-    pyConstImageViewDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapConstImageView("US");
-    pyConstImageViewDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapConstImageView("UI");
-    pyConstImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
-    pyConstImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
-    pyConstImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
-    pyConstImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
-    pyConstImageViewDict[GetNumPyType<std::complex<double> >()] =
-        PyImage<std::complex<double> >::wrapConstImageView("C");
+    pyConstImageViewDict["US"] = PyImage<uint16_t>::wrapConstImageView("US");
+    pyConstImageViewDict["UI"] = PyImage<uint32_t>::wrapConstImageView("UI");
+    pyConstImageViewDict["S"] = PyImage<int16_t>::wrapConstImageView("S");
+    pyConstImageViewDict["I"] = PyImage<int32_t>::wrapConstImageView("I");
+    pyConstImageViewDict["F"] = PyImage<float>::wrapConstImageView("F");
+    pyConstImageViewDict["D"] = PyImage<double>::wrapConstImageView("D");
+    pyConstImageViewDict["C"] = PyImage<std::complex<double> >::wrapConstImageView("C");
 
     bp::dict pyImageViewDict;
 
-    pyImageViewDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapImageView("US");
-    pyImageViewDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapImageView("UI");
-    pyImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
-    pyImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
-    pyImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapImageView("F");
-    pyImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapImageView("D");
-    pyImageViewDict[GetNumPyType<std::complex<double> >()] =
-        PyImage<std::complex<double> >::wrapImageView("C");
+    pyImageViewDict["US"] = PyImage<uint16_t>::wrapImageView("US");
+    pyImageViewDict["UI"] = PyImage<uint32_t>::wrapImageView("UI");
+    pyImageViewDict["S"] = PyImage<int16_t>::wrapImageView("S");
+    pyImageViewDict["I"] = PyImage<int32_t>::wrapImageView("I");
+    pyImageViewDict["F"] = PyImage<float>::wrapImageView("F");
+    pyImageViewDict["D"] = PyImage<double>::wrapImageView("D");
+    pyImageViewDict["C"] = PyImage<std::complex<double> >::wrapImageView("C");
 
     bp::scope scope;  // a default constructed scope represents the module we're creating
     scope.attr("ConstImageView") = pyConstImageViewDict;

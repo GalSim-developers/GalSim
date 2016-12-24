@@ -121,6 +121,7 @@ class Image(object):
                     >>> image_double = galsim.Image(image_float, dtype=numpy.float64)
 
                 To get a deep copy, use the `copy` method rather than the `Image` constructor.
+                You can see a list of valid values for dtype in `galsim.Image.valid_dtypes`.
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -199,8 +200,17 @@ class Image(object):
 
     """
 
-    cpp_valid_dtypes = list(_galsim.ImageView)
-    alias_dtypes = {
+    _typechar = { np.uint16 : 'US',
+                  np.uint32 : 'UI',
+                  np.int16 : 'S',
+                  np.int32 : 'I',
+                  np.float32 : 'F',
+                  np.float64 : 'D',
+                  np.complex128 : 'C'
+                }
+    _cpp_valid_dtypes = list(_typechar.keys())
+
+    _alias_dtypes = {
         int : np.int32,          # So that user gets what they would expect
         float : np.float64,      # if using dtype=int or float or complex
         complex : np.complex128,
@@ -212,7 +222,9 @@ class Image(object):
     #     int : numpy.zeros(1,dtype=int).dtype.type
     # If this becomes too confusing, we might need to add an ImageL class that uses int64.
     # Hard to imagine a use case where this would be required though...
-    valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
+
+    # This one is in the public API.  (No leading underscore.)
+    valid_dtypes = _cpp_valid_dtypes + list(_alias_dtypes.keys())
 
     def __init__(self, *args, **kwargs):
         # Parse the args, kwargs
@@ -267,7 +279,7 @@ class Image(object):
             raise TypeError("Image constructor got unexpected keyword arguments: %s",kwargs)
 
         # Figure out what dtype we want:
-        dtype = Image.alias_dtypes.get(dtype,dtype)
+        dtype = Image._alias_dtypes.get(dtype,dtype)
         if dtype is not None and dtype not in Image.valid_dtypes:
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
@@ -276,12 +288,12 @@ class Image(object):
                 raise TypeError("array must be a numpy.ndarray instance")
             if dtype is None:
                 dtype = array.dtype.type
-                if dtype in Image.alias_dtypes:
-                    dtype = Image.alias_dtypes[dtype]
+                if dtype in Image._alias_dtypes:
+                    dtype = Image._alias_dtypes[dtype]
                     array = array.astype(dtype)
-                elif dtype not in Image.cpp_valid_dtypes:
+                elif dtype not in Image._cpp_valid_dtypes:
                     raise ValueError(
-                        "array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
+                        "array's dtype.type must be one of "+str(Image._cpp_valid_dtypes)+
                         ".  Instead got "+str(array.dtype.type)+".  Or can set "+
                         "dtype explicitly.")
             elif dtype != array.dtype.type:
@@ -436,9 +448,13 @@ class Image(object):
     @property
     def image(self):
         if not self.array.flags.writeable:
-            return _galsim.ConstImageView[self.dtype](self.array, self.xmin, self.ymin)
+            cls = _galsim.ConstImageView[self._typechar[self.dtype]]
         else:
-            return _galsim.ImageView[self.dtype](self.array, self.xmin, self.ymin)
+            cls = _galsim.ImageView[self._typechar[self.dtype]]
+        return cls(self._array.ctypes.data,
+                   self._array.strides[1]//self._array.itemsize,
+                   self._array.strides[0]//self._array.itemsize,
+                   self._bounds)
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -1314,13 +1330,12 @@ def _Image(array, bounds, wcs):
     ret = Image.__new__(Image)
     ret.wcs = wcs
     ret.dtype = array.dtype.type
-    if ret.dtype in Image.alias_dtypes:
-        ret.dtype = Image.alias_dtypes[ret.dtype]
+    if ret.dtype in Image._alias_dtypes:
+        ret.dtype = Image._alias_dtypes[ret.dtype]
         array = array.astype(ret.dtype)
     ret._array = array
     ret._bounds = bounds
     return ret
-
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageUS(*args, **kwargs):
