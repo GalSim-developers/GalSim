@@ -107,6 +107,8 @@ def test_roundtrip():
         do_pickle(interp)
         do_pickle(interp.SBProfile, irreprable=True)
         do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
+        # interp.SBProfile is not actually an SBInterpolatedImage.  That's stored as _sbii.
+        do_pickle(interp._sbii, irreprable=True)
 
     # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
