@@ -105,7 +105,8 @@ def test_roundtrip():
         # Check picklability
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
-        do_pickle(interp.SBProfile)
+        do_pickle(interp.SBProfile, irreprable=True)
+        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
 
     # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
