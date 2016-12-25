@@ -1901,11 +1901,15 @@ def SBProfile_setstate(self, state):
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
 
 def SBProfile_copy(self):
-    import galsim
-    from numpy import array, int16, int32, float32, float64
-    return eval(repr(self))
+    cls = self.__class__
+    if hasattr(self,'__getinitargs__'):
+        return cls(*self.__getinitargs__())
+    else:
+        new_obj = cls.__new__(cls)
+        new_obj.__setstate__(self.__getstate__())
+        return new_obj
 _galsim.SBProfile.__copy__ = SBProfile_copy
-_galsim.SBProfile.__deepcopy__ = lambda self, memo : SBProfile_copy(self)
+_galsim.SBProfile.__deepcopy__ = lambda self, memo : self.__copy__()
 
 # Quick and dirty.  Just check serializations are equal.
 _galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
