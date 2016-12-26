@@ -96,6 +96,10 @@ def test_real_galaxy_ideal():
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
     except ImportError:
         print('The assert_raises tests require nose')
+    # Different RNGs give different random galaxies.
+    rg_3 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(12345))
+    rg_4 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890))
+    assert rg_3.index != rg_4.index, 'Different seeds did not give different random objects!'
 
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
