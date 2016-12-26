@@ -979,6 +979,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         else:
             if real_galaxy_catalogs is None:
                 raise ValueError("No RealGalaxyCatalog(s) specified!")
+
             # Get the index to use in the catalog
             if index is not None:
                 if id is not None or random is True:
@@ -1001,11 +1002,11 @@ class ChromaticRealGalaxy(ChromaticSum):
             # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
             imgs = [rgc.getGalImage(use_index) for rgc in real_galaxy_catalogs]
             if logger:
-                logger.debug('ChromaticRealGalaxy %d: Got gal_image',use_index)
+                logger.debug('ChromaticRealGalaxy %d: Got gal_image', use_index)
 
             PSFs = [rgc.getPSF(use_index) for rgc in real_galaxy_catalogs]
             if logger:
-                logger.debug('ChromaticRealGalaxy %d: Got psf',use_index)
+                logger.debug('ChromaticRealGalaxy %d: Got psf', use_index)
 
             bands = [rgc.getBandpass() for rgc in real_galaxy_catalogs]
 
@@ -1028,18 +1029,8 @@ class ChromaticRealGalaxy(ChromaticSum):
             self.catalog_files = [rgc.getFileName() for rgc in real_galaxy_catalogs]
 
         if SEDs is None:
-            # Use polynomial SEDs by default; up to the number of bands provided.
-            waves = []
-            for bp in bands:
-                waves = np.union1d(waves, bp.wave_list)
-            self.SEDs = []
-            for i in range(len(bands)):
-                self.SEDs.append(
-                        galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
-                                   'nm', 'fphotons')
-                        .withFlux(1.0, bands[0]))
-        else:
-            self.SEDs = SEDs
+            SEDs = self._poly_SEDs(bands)
+        self.SEDs = SEDs
 
         self._k_interpolant = k_interpolant
         self._gsparams = gsparams
@@ -1193,6 +1184,20 @@ class ChromaticRealGalaxy(ChromaticSum):
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
         ChromaticSum.__init__(self, objlist)
+
+    @staticmethod
+    def _poly_SEDs(bands):
+        # Use polynomial SEDs by default; up to the number of bands provided.
+        waves = []
+        for bp in bands:
+            waves = np.union1d(waves, bp.wave_list)
+        SEDs = []
+        for i in range(len(bands)):
+            SEDs.append(
+                    galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
+                               'nm', 'fphotons')
+                    .withFlux(1.0, bands[0]))
+        return SEDs
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticRealGalaxy) and
