@@ -140,9 +140,9 @@ class RealGalaxy(GSObject):
                     "flux" : float ,
                     "flux_rescale" : float ,
                     "pad_factor" : float,
-                    "noise_pad_size" : float,
+                    "noise_pad_size" : float
                   }
-    _single_params = [ { "index" : int , "id" : str } ]
+    _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
