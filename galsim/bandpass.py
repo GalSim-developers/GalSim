@@ -213,7 +213,10 @@ class Bandpass(object):
                 try:
                     self._tp = galsim.utilities.math_eval('lambda wave : ' + self._orig_tp)
                     from numbers import Real
-                    assert isinstance(self._tp(test_wave), Real)
+                    if not isinstance(self._tp(test_wave), Real):
+                        raise ValueError("The given throughput function, %r, did not return a valid"
+                                         " number at test wavelength %s"%(
+                                         self._orig_tp, test_wave))
                 except Exception as e:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+

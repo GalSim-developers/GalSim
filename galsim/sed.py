@@ -193,7 +193,10 @@ class SED(object):
                 try:
                     self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
                     from numbers import Real
-                    assert isinstance(self._spec(700), Real)
+                    if not isinstance(self._spec(700.0), Real):
+                        raise ValueError("The given SED function, %r, did not return a valid"
+                                         " number at test wavelength %s"%(
+                                         self._spec, 700.0))
                 except ArithmeticError:
                     pass
                 except Exception as e:
