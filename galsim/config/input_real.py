@@ -32,9 +32,13 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    # But not if they specify 'id' which overrides that.
+    # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        if 'random' not in config:
+            galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        else:
+            if not config['random']:
+                galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,

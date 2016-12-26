@@ -66,9 +66,6 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     ignore = ignore + ['num']
 
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
-
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.COSMOSCatalog.makeGalaxy._req_params,
         opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
@@ -76,11 +73,19 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
         ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+    if 'index' not in kwargs:
+        make_kwargs = {}
+        make_kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+        kwargs['index'] = cosmos_cat.selectRandomIndices(1, **make_kwargs)
 
-    # NB. Even though index is officially optional, the call to SetDefaultIndex above
-    #     means that it will always be present.
+    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
+        if 'make_kwargs' in locals():
+            kwargs['rng'] = make_kwargs.get('rng',None)
+        else:
+            kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+
+    # NB. Even though index is officially optional, it will always be present, either because it was
+    #     set by a call to selectRandomIndices or because it was specified explicitly.
     index = kwargs['index']
     if index >= cosmos_cat.getNObjects():
         raise IndexError(
