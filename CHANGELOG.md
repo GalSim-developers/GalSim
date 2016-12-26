@@ -75,6 +75,9 @@ New Features
       I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s),
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
+- Allow selection of random galaxies from a RealGalaxyCatalog or COSMOSCatalog
+  in a way that accounts for any selection effects in catalog creation, using
+  the 'weight' entries in the catalog. (#787)
 - Added possibility of using `dtype=complex` for Images, the shorthand alias
   for which is called ImageC. (#799)
 - Added `maxSB()` method to GSObjects to return an estimate of the maximum
