@@ -615,7 +615,10 @@ class COSMOSCatalog(object):
             # to remove the catalog-level selection effects (flux_radius-dependent probability
             # of making a postage stamp for a given object).
             test_vals = np.zeros(n_random)
+            # The test values should not necessarily go up to 1, but rather to the maximum weight in
+            # the catalog.  This is necessary to ensure convergence.
             ud.generate(test_vals)
+            test_vals *= np.max(self.real_cat.weight)
             # The ones with mask==True are the ones we should replace.
             mask = test_vals > self.real_cat.weight[self.orig_index[index]]
             while np.any(mask):
@@ -632,7 +635,10 @@ class COSMOSCatalog(object):
                           'selection effects (requires existence of real catalog with '
                           'weights in addition to parametric one).')
 
-        return index
+        if n_random>1:
+            return index
+        else:
+            return index[0]
 
     def _makeReal(self, indices, noise_pad_size, rng, gsparams):
         return [ galsim.RealGalaxy(self.real_cat, index=self.orig_index[i],
@@ -947,6 +953,7 @@ class COSMOSCatalog(object):
                                "noise_pad_size" : float,
                                "deep" : bool,
                                "sersic_prec": float,
+                               "n_random": int
                              }
     makeGalaxy._single_params = []
     makeGalaxy._takes_rng = True
