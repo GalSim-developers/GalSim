@@ -597,12 +597,14 @@ class COSMOSCatalog(object):
         if rng is None:
             rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
-            raise TypeError("The rng provided to makeGalaxy is not a BaseDeviate")
+            raise TypeError("The rng provided to selectRandomIndices() is not a BaseDeviate")
         ud = galsim.UniformDeviate(rng)
 
         # Sanity check the requested number of random indices.
-        if not isinstance(n_random, int) or n_random < 1:
-            raise TypeError("n_random must be an integer >= 1!")
+        # Note: we do not require that the type be an int, as long as the value is consistent with
+        # an integer value (i.e., it could be a float 1.0 or 1).
+        if not n_random-int(n_random) == 0 or n_random < 1:
+            raise ValueError("n_random must be an integer >= 1.")
 
         # We first make a random list of integer indices.
         index = np.zeros(n_random)
@@ -615,19 +617,24 @@ class COSMOSCatalog(object):
             # to remove the catalog-level selection effects (flux_radius-dependent probability
             # of making a postage stamp for a given object).
             test_vals = np.zeros(n_random)
-            # The test values should not necessarily go up to 1, but rather to the maximum weight in
-            # the catalog.  This is necessary to ensure convergence.
+            # Note that the weight values by definition have a maximum of 1, as enforced in real.py
             ud.generate(test_vals)
-            test_vals *= np.max(self.real_cat.weight)
             # The ones with mask==True are the ones we should replace.
             mask = test_vals > self.real_cat.weight[self.orig_index[index]]
             while np.any(mask):
-                # Update the index values for those that failed. We have to do this by generating
-                # random numbers into a new array, because ud.generate() does not enable us to
-                # directly populate a sub-array index[mask].
-                new_arr = np.zeros(mask.astype(int).sum())
+                # Update the index and test values for those that failed. We have to do this by
+                # generating random numbers into new arrays, because ud.generate() does not enable
+                # us to directly populate a sub-array like index[mask] or test_vals[mask].
+                n_fail = mask.astype(int).sum()
+                # First update the indices that failed.
+                new_arr = np.zeros(n_fail)
                 ud.generate(new_arr)
                 index[mask] = (self.nobjects*new_arr).astype(int)
+                # Then update the test values that failed.
+                new_test_vals = np.zeros(n_fail)
+                ud.generate(new_test_vals)
+                test_vals[mask] = new_test_vals
+                # Finally, update the test array used to determine whether any galaxies failed.
                 mask = test_vals > self.real_cat.weight[self.orig_index[index]]
         else:
             import warnings
