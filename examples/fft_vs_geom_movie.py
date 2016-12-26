@@ -309,8 +309,8 @@ if __name__ == '__main__':
 
     parser.add_argument("--r0_500", type=float, default=0.2,
                         help="Fried parameter at wavelength 500 nm in meters.  Default: 0.2")
-    parser.add_argument("--nlayers", type=int, default=6,
-                        help="Number of atmospheric layers.  Default: 6")
+    parser.add_argument("--nlayers", type=int, default=0,
+                        help="Number of atmospheric layers.  Default: 0")
     parser.add_argument("--time_step", type=float, default=0.025,
                         help="Incremental time step for advancing phase screens and accumulating "
                              "instantaneous PSFs in seconds.  Default: 0.025")
