@@ -79,10 +79,10 @@ class DES_Shapelet(object):
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
 
-        if not file_type:
+        if not file_type:  # pragma: no branch
             if self.file_name.lower().endswith('.fits'):
                 file_type = 'FITS'
-            else:
+            else:  # pragma: no cover
                 file_type = 'ASCII'
         file_type = file_type.upper()
         if file_type not in ['FITS', 'ASCII']:

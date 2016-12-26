@@ -315,17 +315,7 @@ class PSFExLoader(galsim.config.InputLoader):
 
         if 'image_file_name' not in kwargs:
             if 'wcs' in base:
-                wcs = base['wcs']
-                if wcs.isLocal():
-                    # Then the wcs is already fine.
-                    pass
-                elif 'image_pos' in base:
-                    image_pos = base['image_pos']
-                    wcs = wcs.local(image_pos)
-                    safe = False
-                else:
-                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
-                kwargs['wcs'] = wcs
+                kwargs['wcs'] = base['wcs']
             else:
                 # Then we aren't doing normal config processing, so just use pixel scale = 1.
                 kwargs['wcs'] = galsim.PixelScale(1.)
