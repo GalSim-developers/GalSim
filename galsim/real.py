@@ -189,7 +189,7 @@ class RealGalaxy(GSObject):
                     # If weight factors are available, make sure the random selection uses the
                     # weights to remove the catalog-level selection effects (flux_radius-dependent
                     # probability of making a postage stamp for a given object).
-                    while ud() > self.real_cat.weight[use_index]:
+                    while ud() > real_galaxy_catalog.weight[use_index]:
                         # Pick another one to try.
                         use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
