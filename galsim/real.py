@@ -65,9 +65,7 @@ class RealGalaxy(GSObject):
 
     This initializes `real_galaxy` with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
-    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
-    options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).
+    keywords for choosing a galaxy; exactly one must be set.
 
     Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
@@ -468,8 +466,14 @@ class RealGalaxyCatalog(object):
         self.variance = self.cat.field('noise_variance') # noise variance for image
         self.mag = self.cat.field('mag')   # apparent magnitude
         self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        self.weight = self.cat.field('weight') # weight factor to account for size-dependent
-                                               # probability
+        # Add the weight factor to the catalog only if it behaves properly.  In particular, it
+        # should be a float between 0 and 1 (so that random selections of indices can use it to
+        # remove any selection effects in the catalog creation process).  If the weight does not
+        # behave like this, then the catalog simply won't have a weight column.
+        weight = self.cat.field('weight')
+        if np.min(weight) >= 0. and np.max(weight) <= 1. and \
+                not np.any(np.isnan(weight)) and not np.any(np.isinf(weight)):
+            self.weight = weight # weight factor to account for size-dependent probability
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
 
