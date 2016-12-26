@@ -473,7 +473,10 @@ class RealGalaxyCatalog(object):
         weight = self.cat.field('weight')
         if np.min(weight) >= 0. and np.max(weight) <= 1. and \
                 not np.any(np.isnan(weight)) and not np.any(np.isinf(weight)):
-            self.weight = weight # weight factor to account for size-dependent probability
+            # Note the renormalization by the maximum.  If the maximum is below 1, that just means
+            # that all galaxies were subsampled at some level, and here we only want to account for
+            # relative selection effects within the catalog, not absolute subsampling.
+            self.weight = weight/np.max(weight)
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
 
@@ -692,8 +695,6 @@ class RealGalaxyCatalog(object):
         self.loaded_lock = Lock()
         self.noise_lock = Lock()
         pass
-
-
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
             rand_rotate=True, rng=None, target_flux=1000.0, image=None):
