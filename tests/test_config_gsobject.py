@@ -595,6 +595,7 @@ def test_realgalaxy():
                  },
         'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
         'gal6' : { 'type' : 'RealGalaxyOriginal' },
+        'gal7' : { 'type' : 'RealGalaxy' , 'random' : True}
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -652,11 +653,17 @@ def test_realgalaxy():
     assert "No base['rng'] available" in cl.output
 
     config['obj_num'] = 5
-    gal1a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal1b = galsim.RealGalaxy(real_cat, index=0).original_gal
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
     # The convolution here
     gsobject_compare(gal1a, gal1b, conv=conv)
 
+    config['obj_num'] = 6
+    # Since we are comparing the random functionality, we need to reset the RNG.
+    config['rng'] = galsim.UniformDeviate(1234)
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.RealGalaxy(real_cat, random=True, rng=galsim.BaseDeviate(1234))
+    gsobject_compare(gal7a, gal7b, conv=conv)
 
 @timer
 def test_interpolated_image():
