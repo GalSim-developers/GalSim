@@ -118,7 +118,7 @@ class COSMOSCatalog(object):
     @param use_real         Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
-                            spent on I/O when initializing the COSMOSCatalog, and if the real
+                            spent on I/O when initializing the COSMOSCatalog. If the real
                             catalog is not available for some reason, it will still be possible to
                             make parametric images.
     @param exclusion_level  Level of additional cuts to make on the galaxies based on the quality
@@ -454,11 +454,14 @@ class COSMOSCatalog(object):
         @param index            Index of the desired galaxy in the catalog for which a GSObject
                                 should be constructed.  You may also provide a list or array of
                                 indices, in which case a list of objects is returned. If None,
-                                then a single galaxy is chosen at random.  [default: None]
+                                then a single galaxy is chosen at random, correcting for
+                                catalog-level selection effects if weights are available.
+                                [default: None]
         @param gal_type         Either 'real' or 'parametric'.  This determines which kind of
                                 galaxy model is made. [If catalog was loaded with `use_real=False`,
                                 then this defaults to 'parametric', and in fact 'real' is
-                                not allowed.]
+                                not allowed.  If catalog was loaded with `use_real=True`, then
+                                this defaults to 'real'.]
         @param chromatic        Make this a chromatic object, or not?  [default: False]
         @param noise_pad_size   For realistic galaxies, the size of region to pad with noise,
                                 in arcsec.  [default: 5, an arbitrary, but not completely
@@ -489,6 +492,9 @@ class COSMOSCatalog(object):
                 gal_type = 'parametric'
             elif gal_type != 'parametric':
                 raise ValueError("Only 'parametric' galaxy type is allowed when use_real == False")
+        else:
+            if gal_type is None:
+                gal_type = 'real'
 
         if gal_type not in ['real', 'parametric']:
             raise ValueError("Invalid galaxy type %r"%gal_type)
@@ -507,6 +513,18 @@ class COSMOSCatalog(object):
         if index is None:
             ud = galsim.UniformDeviate(rng)
             index = int(self.nobjects * ud())
+            if hasattr(self, 'real_cat') and hasattr(self.real_cat, 'weight'):
+                # If weight factors are available, make sure the random selection uses the weights
+                # to remove the catalog-level selection effects (flux_radius-dependent probability
+                # of making a postage stamp for a given object).
+                while ud() > self.real_cat.weight[self.orig_index[index]]:
+                    # Pick another one to try.
+                    index = int(self.nobjects * ud())
+            else:
+                import warnings
+                warnings.warn('Selecting random object without correcting for catalog-level '
+                              'selection effects (requires existence of real catalog with '
+                              'weights in addition to parametric one).')
 
         if hasattr(index, '__iter__'):
             indices = index

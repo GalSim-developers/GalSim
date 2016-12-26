@@ -92,7 +92,11 @@ class RealGalaxy(GSObject):
                             `random` is required.]
     @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
                             or `random` is required.]
-    @param random           If True, then just select a completely random galaxy from the catalog.
+    @param random           If True, then select a random galaxy from the catalog.  If the catalog
+                            has a 'weight' associated with it to allow for correction of selection
+                            effects in which galaxies were included, the 'weight' factor is used to
+                            remove those selection effects rather than selecting a completely random
+                            object.
                             [One of `index`, `id`, or `random` is required.]
     @param rng              A random number generator to use for selecting a random galaxy
                             (may be any kind of BaseDeviate or None) and to use in generating
@@ -179,8 +183,15 @@ class RealGalaxy(GSObject):
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random is True:
-                uniform_deviate = galsim.UniformDeviate(self.rng)
-                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate())
+                ud = galsim.UniformDeviate(self.rng)
+                use_index = int(real_galaxy_catalog.nobjects * ud())
+                if hasattr(real_galaxy_catalog, 'weight'):
+                    # If weight factors are available, make sure the random selection uses the
+                    # weights to remove the catalog-level selection effects (flux_radius-dependent
+                    # probability of making a postage stamp for a given object).
+                    while ud() > self.real_cat.weight[use_index]:
+                        # Pick another one to try.
+                        use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
                 raise AttributeError('No method specified for selecting a galaxy!')
             if logger:
@@ -743,12 +754,12 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         real_galaxy = real_galaxy.rotate(rotation_angle)
     elif rotation_angle is None and rand_rotate == True:
         if rng is None:
-            uniform_deviate = galsim.UniformDeviate()
+            ud = galsim.UniformDeviate()
         elif isinstance(rng,galsim.BaseDeviate):
-            uniform_deviate = galsim.UniformDeviate(rng)
+            ud = galsim.UniformDeviate(rng)
         else:
             raise TypeError("The rng provided is not a BaseDeviate")
-        rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
+        rand_angle = galsim.Angle(math.pi*ud(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 
     # set fluxes
