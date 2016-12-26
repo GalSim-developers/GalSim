@@ -570,11 +570,15 @@ class Image(with_metaclass(MetaImage, object)):
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
-        subimage = self.image.subImage(bounds)
+        i1 = bounds.ymin - self.bounds.ymin
+        i2 = bounds.ymax - self.bounds.ymin + 1
+        j1 = bounds.xmin - self.bounds.xmin
+        j2 = bounds.xmax - self.bounds.xmin + 1
+        subarray = self.array[i1:i2, j1:j2]
         # NB. The wcs is still accurate, since the sub-image uses the same (x,y) values
         # as the original image did for those pixels.  It's only once you recenter or
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
-        return _Image(subimage.array, bounds, self.wcs)
+        return _Image(subarray, bounds, self.wcs)
 
     def setSubImage(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
@@ -1116,7 +1120,7 @@ class Image(with_metaclass(MetaImage, object)):
             center = self.trueCenter()
 
         if flux is None:
-            flux = np.sum(self.array)
+            flux = np.sum(self.array, dtype=float)
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
@@ -1128,7 +1132,7 @@ class Image(with_metaclass(MetaImage, object)):
         indx = np.argsort(rsq.ravel())
         rsqf = rsq.ravel()[indx]
         data = self.array.ravel()[indx]
-        cumflux = np.cumsum(data)
+        cumflux = np.cumsum(data, dtype=float)
 
         # Find the first value with cumflux > 0.5 * flux
         k = np.argmax(cumflux > flux_frac * flux)
@@ -1178,7 +1182,7 @@ class Image(with_metaclass(MetaImage, object)):
             center = self.trueCenter()
 
         if flux is None:
-            flux = np.sum(self.array)
+            flux = np.sum(self.array, dtype=float)
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
@@ -1188,16 +1192,16 @@ class Image(with_metaclass(MetaImage, object)):
         if rtype in ['trace', 'both']:
             # Calculate trace measure:
             rsq = x*x + y*y
-            Irr = np.sum(rsq * self.array) / flux
+            Irr = np.sum(rsq * self.array, dtype=float) / flux
 
             # This has all been done in pixels.  So normalize according to the pixel scale.
             sigma_trace = (Irr/2.)**0.5 * self.scale
 
         if rtype in ['det', 'both']:
             # Calculate det measure:
-            Ixx = np.sum(x*x * self.array) / flux
-            Iyy = np.sum(y*y * self.array) / flux
-            Ixy = np.sum(x*y * self.array) / flux
+            Ixx = np.sum(x*x * self.array, dtype=float) / flux
+            Iyy = np.sum(y*y * self.array, dtype=float) / flux
+            Ixy = np.sum(x*y * self.array, dtype=float) / flux
 
             # This has all been done in pixels.  So normalize according to the pixel scale.
             sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * self.scale

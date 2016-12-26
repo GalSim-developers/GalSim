@@ -50,7 +50,7 @@ namespace galsim {
                     --end;
                     conserve = false;
                 }
-                int n = strtol(str.substr(7,end).c_str(),0,0);
+                int n = strtol(str.c_str()+7,0,0);
                 if (n <= 0) {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();

@@ -179,16 +179,16 @@ def ErrorExit(*args, **kwargs):
     libraries, compiler, etc., we don't want to cache the result.
     On the other hand, if we delete the .scon* files now, then they aren't
     available to diagnose any problems.
-    So we write a file called gs.error that
+    So we write a file called gs_error.txt that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
 
     import shutil
 
-    out = open("gs.error","wb")
+    out = open("gs_error.txt","wb")
 
-    # Start with the error message to output both to the screen and to the end of gs.error:
+    # Start with the error message to output both to the screen and to gs_error.txt:
     print
     for s in args:
         print s
@@ -289,6 +289,13 @@ def ErrorExit(*args, **kwargs):
     print 'Note: you may want to look through the file INSTALL.md for advice.'
     print 'Also, if you are having trouble, please check the INSTALL FAQ at '
     print '   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ'
+    print
+    print 'If nothing there seems helpful, feel free to post an issue here:'
+    print '   https://github.com/GalSim-developers/GalSim/issues'
+    print 'describing the problem along with the particulars of your system and'
+    print 'configuration.  Include a copy of the above output to the screen, and'
+    print 'post and copy of the file gs_error.txt, which will help people diagnose'
+    print 'the problem.'
     print
     Exit(1)
 
@@ -1505,19 +1512,32 @@ PyMODINIT_FUNC initcheck_numpy(void)
         ErrorExit('Unable to build a python loadable module that uses numpy')
 
     config.Result(1)
+
+    result, numpy_ver = TryScript(config,"import numpy; print(numpy.__version__)",python)
+    print 'Numpy version is',numpy_ver
+
     return 1
 
 def CheckPyFITS(config):
     config.Message('Checking for PyFITS... ')
 
     result, output = TryScript(config,"import pyfits",python)
+    astropy = False
     if not result:
         result, output = TryScript(config,"import astropy.io.fits",python)
+        astropy = True
     if not result:
         ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
                   python)
-
     config.Result(1)
+
+    if astropy:
+        result, astropy_ver = TryScript(config,"import astropy; print(astropy.__version__)",python)
+        print 'Astropy version is',astropy_ver
+    else:
+        result, pyfits_ver = TryScript(config,"import pyfits; print(pyfits.__version__)",python)
+        print 'PyFITS version is',pyfits_ver
+
     return 1
 
 def CheckFuture(config):
@@ -1526,8 +1546,11 @@ def CheckFuture(config):
     result, output = TryScript(config,"import future",python)
     if not result:
         ErrorExit("Unable to import future using the python executable:\n" + python)
-
     config.Result(1)
+
+    result, future_ver = TryScript(config,"import future; print(future.__version__)",python)
+    print 'Future version is',future_ver
+
     return 1
 
 def CheckBoostPython(config):
@@ -1757,7 +1780,7 @@ int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
     ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
-    print 'TMV version is '+tmv_version.strip()
+    print 'TMV version is',tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
@@ -2000,12 +2023,12 @@ env['all_builds'] = []
 
 if not GetOption('help'):
 
-    # If there is a gs.error file, then this means the last run ended
+    # If there is a gs_error.txt file, then this means the last run ended
     # in an error, so we don't want to cache any of the configuration
     # tests from that run in case things in the environment changed.
     # (SCons isn't usually very good at detecting these kinds of changes.)
-    if os.path.exists("gs.error"):
-        os.remove("gs.error")
+    if os.path.exists("gs_error.txt"):
+        os.remove("gs_error.txt")
         ClearCache()
 
     if env['PYTHON'] == '':
