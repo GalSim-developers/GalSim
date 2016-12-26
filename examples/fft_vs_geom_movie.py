@@ -34,7 +34,7 @@ Atmosphere only simulation:
 
 """
 
-
+import os
 import numpy as np
 import galsim
 
@@ -181,8 +181,13 @@ def make_movie(args):
     fft_mom = np.empty((args.n, 8), dtype=float)
     geom_mom = np.empty((args.n, 8), dtype=float)
 
+    fullpath = args.out+"movie.mp4"
+    subdir, filename = os.path.split(fullpath)
+    if subdir and not os.path.isdir(subdir):
+        os.makedirs(subdir)
+
     with ProgressBar(args.n) as bar:
-        with writer.saving(fig, args.out+"movie.mp4", 100):
+        with writer.saving(fig, fullpath, 100):
             t0 = 0.0
             for i, aberration in enumerate(aberrations):
                 optics = galsim.OpticalScreen(args.diam, obscuration=args.obscuration,
