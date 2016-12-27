@@ -102,8 +102,6 @@ def test_smallshear():
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
-    # Verify that shoot with rng=None still runs
-    gauss.shoot(100, rng=None)
 
     # Test kvalues
     do_kvalue(gauss,myImg,"sheared Gaussian")

@@ -202,6 +202,9 @@ def do_shoot(prof, img, name):
     test_flux = 1.8
 
     print('Start do_shoot')
+    # Verify that shoot with rng=None runs
+    prof.shoot(100, rng=None)
+
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
@@ -590,6 +593,3 @@ class CaptureLog(object):
         self.handler.flush()
         self.output = self.stream.getvalue().strip()
         self.handler.close()
-
-
-
