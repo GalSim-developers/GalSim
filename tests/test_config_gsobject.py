@@ -682,7 +682,7 @@ def test_cosmosgalaxy():
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
     config = {
 
-        'input' : { 'cosmos_catalog' : 
+        'input' : { 'cosmos_catalog' :
                     { 'dir' : real_gal_dir ,
                       'file_name' : real_gal_cat,
                       'preload' : True}
@@ -744,6 +744,39 @@ def test_cosmosgalaxy():
         np.testing.assert_raises(IndexError, galsim.config.BuildGSObject, config, 'gal4')
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # One more test: make sure that if we specified from the start not to use real galaxies, that
+    # failure to specify gal_type is treated properly (should default to parametric).
+    real_gal_cat = 'real_galaxy_catalog_23.5_example_fits.fits'
+    config = {
+
+        'input' : { 'cosmos_catalog' :
+                    { 'dir' : real_gal_dir ,
+                      'file_name' : real_gal_cat,
+                      'use_real' : False,
+                      'preload' : True}
+                    },
+
+        # Use defaults for gal_type (parametric, since we used the actual catalog and not the
+        # parametric one) and select a random galaxy using internal routines.
+        'gal1' : { 'type' : 'COSMOSGalaxy' },
+        }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
+
+    galsim.config.ProcessInput(config)
+
+    cosmos_cat = galsim.COSMOSCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
+
+    config['obj_num'] = 0
+    # It is going to complain that it doesn't have weight factors.  We want to ignore this.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+        gal1b = cosmos_cat.makeGalaxy(rng=rng)
+    gsobject_compare(gal1a, gal1b, conv=conv)
 
 @timer
 def test_interpolated_image():
