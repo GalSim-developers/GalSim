@@ -79,9 +79,17 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'index' not in kwargs:
-        make_kwargs = {}
-        make_kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
-        kwargs['index'] = cosmos_cat.selectRandomIndices(1, **make_kwargs)
+        make_kwargs = {'_n_rng_calls': True}
+        rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+        make_kwargs['rng'] = rng
+        kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndices(1, **make_kwargs)
+
+        # Make sure this process gives consistent results regardless of the number of processes
+        # being used.
+        if not isinstance(cosmos_cat, galsim.COSMOSCatalog) and rng is not None:
+            # Then cosmos_cat is really a proxy, which means the rng was pickled, so we need to
+            # discard the same number of random calls from the one in the config dict.
+            rng.discard(n_rng_calls)
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'make_kwargs' in locals():

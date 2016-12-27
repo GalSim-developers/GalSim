@@ -581,16 +581,16 @@ class COSMOSCatalog(object):
         else:
             return gal_list[0]
 
-    def selectRandomIndices(self, n_random, rng=None):
+    def selectRandomIndices(self, n_random, rng=None, _n_rng_calls=False):
         """
         Routine to select random indices out of the catalog.  This routine does a weighted random
         selection with replacement (i.e., there is no guarantee of uniqueness of the selected
         indices).  Weighting uses the weight factors available in the catalog, if any; these weights
         are typically meant to remove any selection effects in the catalog creation process.
 
-        @param n_random  Number of random indices to return.
-        @param rng       A random number generator to use for selecting a random galaxy
-                         (may be any kind of BaseDeviate or None). [default: None]
+        @param n_random     Number of random indices to return.
+        @param rng          A random number generator to use for selecting a random galaxy
+                            (may be any kind of BaseDeviate or None). [default: None]
         @returns A NumPy array containing the randomly-selected indices.
         """
         # Set up the random number generator.
@@ -609,6 +609,10 @@ class COSMOSCatalog(object):
         # We first make a random list of integer indices.
         index = np.zeros(n_random)
         ud.generate(index)
+        if _n_rng_calls:
+            # Here we use the undocumented kwarg (for internal use by config) to track the number of
+            # RNG calls.
+            n_rng_calls = n_random
         index = (self.nobjects*index).astype(int)
 
         # Then we account for the weights, if possible.
@@ -619,6 +623,8 @@ class COSMOSCatalog(object):
             test_vals = np.zeros(n_random)
             # Note that the weight values by definition have a maximum of 1, as enforced in real.py
             ud.generate(test_vals)
+            if _n_rng_calls:
+                n_rng_calls += n_random
             # The ones with mask==True are the ones we should replace.
             mask = test_vals > self.real_cat.weight[self.orig_index[index]]
             while np.any(mask):
@@ -634,6 +640,8 @@ class COSMOSCatalog(object):
                 new_test_vals = np.zeros(n_fail)
                 ud.generate(new_test_vals)
                 test_vals[mask] = new_test_vals
+                if _n_rng_calls:
+                    n_rng_calls += 2*n_fail
                 # Finally, update the test array used to determine whether any galaxies failed.
                 mask = test_vals > self.real_cat.weight[self.orig_index[index]]
         else:
@@ -643,9 +651,15 @@ class COSMOSCatalog(object):
                           'weights in addition to parametric one).')
 
         if n_random>1:
-            return index
+            if _n_rng_calls:
+                return index, n_rng_calls
+            else:
+                return index
         else:
-            return index[0]
+            if _n_rng_calls:
+                return index[0], n_rng_calls
+            else:
+                return index[0]
 
     def _makeReal(self, indices, noise_pad_size, rng, gsparams):
         return [ galsim.RealGalaxy(self.real_cat, index=self.orig_index[i],
