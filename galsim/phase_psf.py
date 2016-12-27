@@ -208,7 +208,7 @@ class Aperture(object):
         # comparing it to the sampling GalSim would have used for an (obscured) Airy profile.  So
         # it's okay to specify an obscuration and a pupil_plane_im together, for example, but not
         # a pupil_plane_im and struts.
-        is_default_geom = (circular_pupil == True and
+        is_default_geom = (circular_pupil and
                            nstruts == 0 and
                            strut_thick == 0.05 and
                            strut_angle == 0.0*galsim.degrees)
@@ -296,7 +296,6 @@ class Aperture(object):
             raise RuntimeError("Created pupil plane array that is too large, {0} "
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
-
 
     def _generate_pupil_plane(self, circular_pupil, obscuration, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
@@ -1192,12 +1191,12 @@ class PhaseScreenPSF(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
-                                       use_true_center=False,
-                                       pad_factor=self._ii_pad_factor,
-                                       _serialize_stepk=self._serialize_stepk,
-                                       _serialize_maxk=self._serialize_maxk,
-                                       gsparams=self._gsparams)
+        self.ii = galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
+                                           use_true_center=False,
+                                           pad_factor=self._ii_pad_factor,
+                                           _serialize_stepk=self._serialize_stepk,
+                                           _serialize_maxk=self._serialize_maxk,
+                                           gsparams=self._gsparams)
         GSObject.__init__(self, self.ii)
 
     def shoot(self, n_photons, rng=None):

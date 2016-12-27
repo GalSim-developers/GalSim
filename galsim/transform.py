@@ -270,7 +270,7 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     else:
         ret._original = obj
     sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                gsparams)
+                              gsparams)
     galsim.GSObject.__init__(ret, sbt)
     ret._gsparams = gsparams
     return ret

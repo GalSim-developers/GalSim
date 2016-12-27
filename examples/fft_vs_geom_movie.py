@@ -113,9 +113,9 @@ def make_movie(args):
         spd.append(u()*args.max_speed)  # Use a random speed between 0 and args.max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         r0_500.append(args.r0_500*weights[i]**(-3./5))
-        print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
-               "and r0_500 {:5.3f} m."
-               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
+        print("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
+              "and r0_500 {:5.3f} m."
+              .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
     if args.nlayers > 0:
         atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
                                 time_step=args.time_step, screen_size=args.screen_size,
@@ -240,8 +240,8 @@ def make_movie(args):
                               e_fft['e1'], e_fft['e2'], e_fft['rsqr'])
 
                 geom_mom[i] = (mom_phot['Ix'], mom_phot['Iy'],
-                              mom_phot['Ixx'], mom_phot['Iyy'], mom_phot['Ixy'],
-                              e_phot['e1'], e_phot['e2'], e_phot['rsqr'])
+                               mom_phot['Ixx'], mom_phot['Iyy'], mom_phot['Ixy'],
+                               e_phot['e1'], e_phot['e2'], e_phot['rsqr'])
 
                 writer.grab_frame(facecolor=fig.get_facecolor())
 

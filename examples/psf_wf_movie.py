@@ -104,9 +104,9 @@ def make_movie(args):
         # distribute the input "net" Fried parameter into a Fried parameter for each layer.  For
         # Kolmogorov turbulence, this is r0_500 ~ (structure function)**(-3/5):
         r0_500.append(args.r0_500*weights[i]**(-3./5))
-        print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
-               "and r0_500 {:5.3f} m."
-               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
+        print("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
+              "and r0_500 {:5.3f} m."
+              .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
 
     # Additionally, we set the screen temporal evolution `time_step`, and the screen size and scale.
     atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,

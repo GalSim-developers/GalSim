@@ -301,8 +301,8 @@ def test_table2d():
 
     np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
     np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
-                                                                   for y0 in newy]
-                                                                  for x0 in newx]))
+                                                                     for y0 in newy]
+                                                                    for x0 in newx]))
 
     # Test edge exception
     try:

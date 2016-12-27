@@ -21,7 +21,6 @@ import numpy as np
 import os
 import sys
 import logging
-import io
 
 path, filename = os.path.split(__file__)
 try:
@@ -224,7 +223,7 @@ def do_shoot(prof, img, name):
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
     elif flux_max < 0.1:
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max;
+        scale = 0.1 / flux_max
         print('scale = ',scale)
         prof *= scale
         img *= scale
@@ -548,7 +547,6 @@ def timer(f):
     @functools.wraps(f)
     def f2(*args, **kwargs):
         import time
-        import inspect
         t0 = time.time()
         result = f(*args, **kwargs)
         t1 = time.time()
