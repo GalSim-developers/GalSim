@@ -81,7 +81,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     rng = None
     if 'index' not in kwargs:
         rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
-        kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndices(1, rng=rng, _n_rng_calls=True)
+        kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
 
         # Make sure this process gives consistent results regardless of the number of processes
         # being used.
@@ -96,7 +96,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
         kwargs['rng'] = rng
 
     # NB. Even though index is officially optional, it will always be present, either because it was
-    #     set by a call to selectRandomIndices, explicitly by the user, or due to the call to
+    #     set by a call to selectRandomIndex, explicitly by the user, or due to the call to
     #     SetDefaultIndex.
     index = kwargs['index']
     if index >= cosmos_cat.getNObjects():

@@ -515,7 +515,7 @@ class COSMOSCatalog(object):
         # Select random indices if necessary (no index given).
         if index is None:
             if n_random is None: n_random = 1
-            index = self.selectRandomIndices(n_random, rng=rng)
+            index = self.selectRandomIndex(n_random, rng=rng)
         else:
             if n_random is not None:
                 import warnings
@@ -581,23 +581,24 @@ class COSMOSCatalog(object):
         else:
             return gal_list[0]
 
-    def selectRandomIndices(self, n_random, rng=None, _n_rng_calls=False):
+    def selectRandomIndex(self, n_random=1, rng=None, _n_rng_calls=False):
         """
         Routine to select random indices out of the catalog.  This routine does a weighted random
         selection with replacement (i.e., there is no guarantee of uniqueness of the selected
         indices).  Weighting uses the weight factors available in the catalog, if any; these weights
         are typically meant to remove any selection effects in the catalog creation process.
 
-        @param n_random     Number of random indices to return.
+        @param n_random     Number of random indices to return. [default: 1]
         @param rng          A random number generator to use for selecting a random galaxy
                             (may be any kind of BaseDeviate or None). [default: None]
-        @returns A NumPy array containing the randomly-selected indices.
+        @returns A single index if n_random==1 or a NumPy array containing the randomly-selected
+        indices if n_random>1.
         """
         # Set up the random number generator.
         if rng is None:
             rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
-            raise TypeError("The rng provided to selectRandomIndices() is not a BaseDeviate")
+            raise TypeError("The rng provided to selectRandomIndex() is not a BaseDeviate")
         ud = galsim.UniformDeviate(rng)
 
         # Sanity check the requested number of random indices.
@@ -647,8 +648,8 @@ class COSMOSCatalog(object):
         else:
             import warnings
             warnings.warn('Selecting random object without correcting for catalog-level '
-                          'selection effects (requires existence of real catalog with '
-                          'weights in addition to parametric one).')
+                          'selection effects.  This correction requires the existence of '
+                          'real catalog with valid weights in addition to parametric one.')
 
         if n_random>1:
             if _n_rng_calls:
