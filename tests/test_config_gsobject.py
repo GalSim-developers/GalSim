@@ -566,7 +566,6 @@ def test_pixel():
         gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2)
         gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
-
 @timer
 def test_realgalaxy():
     """Test various ways to build a RealGalaxy
@@ -664,6 +663,79 @@ def test_realgalaxy():
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.RealGalaxy(real_cat, random=True, rng=galsim.BaseDeviate(1234))
     gsobject_compare(gal7a, gal7b, conv=conv)
+
+@timer
+def test_cosmosgalaxy():
+    """Test various ways to build a COSMOSGalaxy
+    """
+    # I don't want to gratuitously copy the real_catalog catalog, so use the
+    # version in the examples directory.
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    config = {
+
+        'input' : { 'cosmos_catalog' : 
+                    { 'dir' : real_gal_dir ,
+                      'file_name' : real_gal_cat,
+                      'preload' : True}
+                    },
+
+        # First one uses defaults for gal_type (real, since we used the actual catalog and not the
+        # parametric one) and selects a random galaxy using internal routines
+        # (the default if index is unspecified).
+        'gal1' : { 'type' : 'COSMOSGalaxy', 'scale_flux' : 3.14 },
+
+        # Second uses parametric gal_type and selects a random galaxy using the config sequence
+        # option.  Includes flux modifications and rotation.
+        'gal2' : { 'type' : 'COSMOSGalaxy', 'gal_type' : 'parametric',
+                   'index' : { 'type' : 'Sequence', 'nitems' : 1},
+                   'scale_flux' : 0.3,
+                   'rotate' : 30 * galsim.degrees },
+
+        # Third uses parametric gal_type and a specific galaxy index.  Includes flux modifications,
+        # shear and magnification.
+        'gal3' : {'type' : 'COSMOSGalaxy', 'gal_type' : 'parametric',
+                  'index' : 27, 'scale_flux' : 1.e6,
+                  'magnify' : 0.9, 'shear' : galsim.Shear(g1=0.01, g2=-0.07)},
+
+        # Fourth tries to select outside the catalog; make sure the exception is caught.
+        'gal4' : {'type' : 'COSMOSGalaxy', 'gal_type' : 'parametric',
+                  'index' : 1001}
+    }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
+
+    galsim.config.ProcessInput(config)
+
+    cosmos_cat = galsim.COSMOSCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
+
+    # For these profiles, we convolve by a gaussian to smooth out the profile.
+    # This makes the comparison much faster without changing the validity of the test.
+    conv = galsim.Gaussian(sigma = 1)
+
+    config['obj_num'] = 0
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = 3.14*cosmos_cat.makeGalaxy(rng=rng)
+    gsobject_compare(gal1a, gal1b, conv=conv)
+
+    config['obj_num'] = 1
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = cosmos_cat.makeGalaxy(index=0, gal_type='parametric', rng=rng)
+    gal2b = gal2b.withScaledFlux(0.3).rotate(30*galsim.degrees)
+    gsobject_compare(gal2a, gal2b, conv=conv)
+
+    config['obj_num'] = 2
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = cosmos_cat.makeGalaxy(index=27, gal_type='parametric', rng=rng)
+    gal3b = gal3b.withScaledFlux(1.e6).magnify(0.9).shear(g1=0.01, g2=-0.07)
+    gsobject_compare(gal3a, gal3b, conv=conv)
+
+    config['obj_num'] = 3
+    try:
+        np.testing.assert_raises(IndexError, galsim.config.BuildGSObject, config, 'gal4')
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 @timer
 def test_interpolated_image():
@@ -1208,6 +1280,7 @@ if __name__ == "__main__":
     test_devaucouleurs()
     test_pixel()
     test_realgalaxy()
+    test_cosmosgalaxy()
     test_interpolated_image()
     test_add()
     test_convolve()
