@@ -17,8 +17,9 @@
 #
 
 """@file fft_vs_geom_movie.py
-Script to demonstrate the geometric approximation to Fourier optics.  Simulates both a randomly
-evolving set of Zernike aberrations and a frozen-flow Kolmogorov atmospheric phase screen.
+Script to demonstrate the geometric approximation to Fourier optics.  Simulates a randomly evolving
+set of Zernike aberrations and/or a frozen-flow Kolmogorov atmospheric phase screen.  Note that the
+ffmpeg command line tool is required to run this script.
 
 To visualize only the Zernike aberrations, add `--nlayers 0` as a command line argument.
 
@@ -293,8 +294,30 @@ def make_movie(args):
     fig.savefig(args.out+"ellipticity.png", dpi=300)
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    parser = ArgumentParser(description=(
+"""
+Script to demonstrate the geometric approximation to Fourier optics.  Simulates
+a randomly evolving set of Zernike aberrations and/or a frozen-flow Kolmogorov
+atmospheric phase screen.  Note that the ffmpeg command line tool is required
+to run this script.
+
+To visualize only the Zernike aberrations, add `--nlayers 0` as a command line
+argument.
+
+To visualize only atmospheric effects, add `--sigma 0` as a command line
+argument.
+
+Some suggested command lines, appropriate for LSST:
+
+Optics only simulation:
+  $ python fft_vs_geom_movie.py --diam 8.36 --obscuration 0.61 --sigma 0.05 \\
+    --nlayers 0
+
+Atmosphere only simulation:
+  $ python fft_vs_geom_movie.py --diam 8.36 --obscuration 0.61 --sigma 0.0 \\
+    --nlayers 6 --size 3.0
+"""), formatter_class=RawDescriptionHelpFormatter)
 
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed.  Default: 1")
