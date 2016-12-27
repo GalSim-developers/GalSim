@@ -594,7 +594,10 @@ def test_realgalaxy():
                  },
         'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
         'gal6' : { 'type' : 'RealGalaxyOriginal' },
-        'gal7' : { 'type' : 'RealGalaxy' , 'random' : True}
+        'gal7' : { 'type' : 'RealGalaxy' , 'random' : True},
+        # I admit the one below is odd (why would you specify "random" and have it be False?) but
+        # one could imagine setting it based on some probabilistic process...
+        'gal8' : { 'type' : 'RealGalaxy' , 'random' : False}
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -663,6 +666,11 @@ def test_realgalaxy():
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.RealGalaxy(real_cat, random=True, rng=galsim.BaseDeviate(1234))
     gsobject_compare(gal7a, gal7b, conv=conv)
+
+    config['obj_num'] = 7
+    gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
+    gal8b = galsim.RealGalaxy(real_cat, index=0)
+    gsobject_compare(gal8a, gal8b, conv=conv)
 
 @timer
 def test_cosmosgalaxy():

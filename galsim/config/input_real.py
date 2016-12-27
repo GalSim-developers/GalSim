@@ -39,6 +39,9 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
         else:
             if not config['random']:
                 galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+                # Need to do this to avoid being caught by the GetAllParams() call, which will flag
+                # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
+                del config['random']
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,
