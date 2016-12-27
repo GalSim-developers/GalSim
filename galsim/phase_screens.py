@@ -801,7 +801,7 @@ class OpticalScreen(object):
 
     # This screen is immutable, so make a hash for it.
     def __hash__(self):
-        return hash(("galsim.AtmosphericScreen", self.diam, self.obscuration, self.annular_zernike,
+        return hash(("galsim.OpticalScreen", self.diam, self.obscuration, self.annular_zernike,
                      tuple((self.aberrations*self.lam_0).ravel())))
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
