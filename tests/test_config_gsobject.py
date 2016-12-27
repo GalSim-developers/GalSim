@@ -656,7 +656,7 @@ def test_realgalaxy():
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
     # The convolution here
-    gsobject_compare(gal1a, gal1b, conv=conv)
+    gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['obj_num'] = 6
     # Since we are comparing the random functionality, we need to reset the RNG.
