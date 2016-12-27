@@ -563,6 +563,9 @@ def test_phase_gradient_shoot():
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
 
+    # Verify that shoot with rng=None runs
+    psf.shoot(100, rng=None)
+
     # Constraints on the ensemble should be tighter than for individual PSFs.
     mean_shoot_moment = np.mean(shoot_moments, axis=0)
     mean_fft_moment = np.mean(fft_moments, axis=0)
