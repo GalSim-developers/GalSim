@@ -266,6 +266,18 @@ def test_cosmos_random():
     assert ind_cc==ind_rgc,\
         'Different unweighted random index selected from COSMOSCatalog and RealGalaxyCatalog'
 
+    # Check that setting _n_rng_calls properly tracks the RNG calls for n_random=1 and >1.
+    test_seed = 123456
+    ud = galsim.UniformDeviate(test_seed)
+    obj, n_rng_calls = cat.selectRandomIndex(1, rng=ud, _n_rng_calls=True)
+    ud2 = galsim.UniformDeviate(test_seed)
+    ud2.discard(n_rng_calls)
+    assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
+    ud = galsim.UniformDeviate(test_seed)
+    obj, n_rng_calls = cat.selectRandomIndex(17, rng=ud, _n_rng_calls=True)
+    ud2 = galsim.UniformDeviate(test_seed)
+    ud2.discard(n_rng_calls)
+    assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
 
 if __name__ == "__main__":
     test_cosmos_basic()
