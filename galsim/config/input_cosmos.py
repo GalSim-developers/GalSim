@@ -89,7 +89,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
         if not isinstance(cosmos_cat, galsim.COSMOSCatalog) and rng is not None:
             # Then cosmos_cat is really a proxy, which means the rng was pickled, so we need to
             # discard the same number of random calls from the one in the config dict.
-            rng.discard(n_rng_calls)
+            rng.discard(int(n_rng_calls))
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'make_kwargs' in locals():
