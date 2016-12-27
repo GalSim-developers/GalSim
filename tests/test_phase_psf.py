@@ -226,7 +226,7 @@ def test_phase_screen_list():
     # relatively large pupil_plane_scale to speed up the unit test.
     atm._reset()
     assert atm[0]._time == 0.0, "Wrong time for AtmosphericScreen"
-    kwargs = dict(exptime=0.05, time_step=0.025, diam=1.0, lam=1000.0)
+    kwargs = dict(exptime=0.05, time_step=0.01, diam=1.1, lam=1000.0)
     psf = atm.makePSF(**kwargs)
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
