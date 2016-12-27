@@ -49,7 +49,7 @@ import galsim.des
 
 def main(argv):
 
-    root = 'DECam_00154912' 
+    root = 'DECam_00154912'
 
     data_dir = 'des_data'
 
@@ -78,7 +78,7 @@ def main(argv):
     out_dir = 'output'
 
     # The random seed, so the results are deterministic
-    random_seed = 1339201           
+    random_seed = 1339201
 
     x_col = 'X_IMAGE'
     y_col = 'Y_IMAGE'
@@ -104,7 +104,7 @@ def main(argv):
         fitpsf_file = '%s_%02d_fitpsf.fits'%(root,chipnum)
         psfex_image_file = '%s_%02d_psfex_image.fits'%(root,chipnum)
         fitpsf_image_file = '%s_%02d_fitpsf_image.fits'%(root,chipnum)
-    
+
         # Get some parameters about the image from the data image header information
         image_header = galsim.FitsHeader(image_file, dir=data_dir)
         xsize = image_header[xsize_key]
@@ -138,7 +138,7 @@ def main(argv):
 
             # Get the position from the galaxy catalog
             x = cat.getFloat(k,x_col)
-            y = cat.getFloat(k,y_col) 
+            y = cat.getFloat(k,y_col)
             image_pos = galsim.PositionD(x,y)
             #print '    pos = ',image_pos
             x += 0.5   # + 0.5 to account for even-size postage stamps
@@ -206,7 +206,7 @@ def main(argv):
         psfex_image.addNoise(noise)
         # Reset the random seed to match the action of the yaml version
         # Note: the difference between seed and reset matters here.
-        # reset would sever the connection between this rng instance and the one stored in noise.  
+        # reset would sever the connection between this rng instance and the one stored in noise.
         # seed changes the seed while keeping the connection between them.
         rng.seed(random_seed)
         fitpsf_image.addNoise(noise)

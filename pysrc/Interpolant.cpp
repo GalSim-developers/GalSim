@@ -50,7 +50,7 @@ namespace galsim {
                     --end;
                     conserve = false;
                 }
-                int n = strtol(str.substr(7,end).c_str(),0,0);
+                int n = strtol(str.c_str()+7,0,0);
                 if (n <= 0) {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();
@@ -119,7 +119,7 @@ namespace galsim {
             "interpolant (see its documentation for details).\n\n"
             "Tolerance `tol` determines how far onto sinc wiggles the xval will go.  Very far, by\n"
             "default! (default `tol=1e-4`)\n";
-            bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc, 
+            bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc,
                                                                 bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
                 .enable_pickling()
@@ -181,7 +181,7 @@ namespace galsim {
         }
 
     };
- 
+
     void pyExportInterpolant()
     { PyInterpolant::wrap(); }
 

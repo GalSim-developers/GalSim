@@ -23,12 +23,30 @@ from . import _galsim
 from ._galsim import BoundsI, BoundsD
 from .utilities import set_func_doc
 
+def Bounds_repr(self):
+    if self.isDefined():
+        return "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_str(self):
+    if self.isDefined():
+        return "galsim.%s(%s,%s,%s,%s)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_initargs(self):
+    if self.isDefined():
+        return (self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return ()
+
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__repr__ = Bounds_repr
+    Class.__str__ = Bounds_str
+    Class.__getinitargs__ = Bounds_initargs
     # Quick and dirty.  Just check reprs are equal.
     Class.__eq__ = lambda self, other: repr(self) == repr(other)
     Class.__ne__ = lambda self, other: not self.__eq__(other)
@@ -173,9 +191,20 @@ def _new_BoundsI_init(self, *args, **kwargs):
         _orig_BoundsI_init(self, *args, **kwargs)
 BoundsI.__init__ = _new_BoundsI_init
 
+def _BoundsI(xmin, xmax, ymin, ymax):
+    """Equivalent to BoundsI constructor, but skips some sanity checks and argument parsing.
+    This requires that the four values already be int types.
+    """
+    ret = BoundsI.__new__(BoundsI)
+    _orig_BoundsI_init(ret, xmin, xmax, ymin, ymax)
+    return ret
+
 def BoundsI_numpyShape(self):
     """A simple utility function to get the numpy shape that corresponds to this Bounds object.
     """
-    return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    if self.isDefined():
+        return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    else:
+        return 0,0
 
 BoundsI.numpyShape = BoundsI_numpyShape

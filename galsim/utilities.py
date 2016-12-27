@@ -76,17 +76,15 @@ def g1g2_to_e1e2(g1, g2):
     # b/a = (1-g)/(1+g)
     # e = (1-(b/a)^2) / (1+(b/a)^2)
     gsq = g1*g1 + g2*g2
-    if gsq > 0.:
+    if gsq == 0.:
+        return 0., 0.
+    else:
         g = np.sqrt(gsq)
         boa = (1-g) / (1+g)
         e = (1 - boa*boa) / (1 + boa*boa)
         e1 = g1 * (e/g)
         e2 = g2 * (e/g)
         return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
@@ -244,9 +242,7 @@ def rand_arr(shape, deviate):
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
     """
-    if interpolant is None:
-        return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant):
+    if isinstance(interpolant, galsim.Interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
@@ -938,6 +934,7 @@ class LRU_Cache:
         # Cache miss: evaluate and insert new key/value at root, then increment root
         #             so that just-evaluated value is in last position.
         result = self.user_function(*key)
+        root = self.root  # re-establish root in case user_function modified it due to recursion
         root[2] = key
         root[3] = result
         oldroot = root
@@ -1074,6 +1071,96 @@ def structure_function(image):
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
+def combine_wave_list(*args):
+    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+
+    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @returns        wave_list, blue_limit, red_limit
+    """
+    if len(args) == 1:
+        if isinstance(args[0],
+                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+            args = [args[0]]
+        elif isinstance(args[0], (list, tuple)):
+            args = args[0]
+        else:
+            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
+                            " ChromaticObject or a (possibly mixed) list of them.")
+
+    blue_limit = 0.0
+    red_limit = np.inf
+    wave_list = np.array([], dtype=float)
+    for obj in args:
+        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+            blue_limit = max(blue_limit, obj.blue_limit)
+        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+            red_limit = min(red_limit, obj.red_limit)
+        wave_list = np.union1d(wave_list, obj.wave_list)
+    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    return wave_list, blue_limit, red_limit
+
+def functionize(f):
+    """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
+    arguments that can be either scalars or _functions_.  If the arguments include univariate
+    (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
+    okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
+    M-variate function arguments.
+
+    As an example:
+
+    >>> def f(x, y):      # Function of two scalars.
+    ...     return x + y
+    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
+    >>> result = f(2, 3)  # 5
+    >>> result = f(2, lambda u: u)  # Generates a TypeError
+    >>> result = decorated(2, 3)  # Scalar args returns a scalar
+    >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
+    >>> print(result(5))  # 7
+    >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
+    >>> print(result(5, 7))  # 2 + (5*7) = 37
+
+    We can use arguments that accept keyword arguments too:
+
+    >>> def f2(u, v=None):
+    ...    if v is None:
+    ...        v = 6.0
+    ...    return u / v
+    >>> result = decorated(2, f2)
+    >>> print(result(12))  # 2 + (12./6) = 4.0
+    >>> print(result(12, v=4))  # 2 + (12/4) = 5
+
+    Note that you can also use python's decorator syntax:
+
+    >>> @functionize
+    >>> def f(x, y):
+    ...     return x + y
+
+    @param f  The function to be decorated.
+    @returns  The decorated function.
+
+    """
+    import functools
+
+    @functools.wraps(f)
+    def ff(*args, **kwargs):
+        # First check if any of the arguments are callable...
+        if not any(hasattr(arg, '__call__') for arg in args+tuple(kwargs.values())):
+            return f(*args, **kwargs)  # ... if not, then keep output type a scalar ...
+        else:
+            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: `fff`.
+                new_args = [arg
+                            if not hasattr(arg, '__call__')
+                            else arg(*inner_args, **inner_kwargs)
+                            for arg in args]
+                new_kwargs = dict([(k, v)
+                                   if not hasattr(v, '__call__')
+                                   else (k, v(*inner_args, **inner_kwargs))
+                                   for k, v in iteritems(kwargs)])
+                return f(*new_args, **new_kwargs)
+            return fff
+    return ff
+
 def math_eval(str, other_modules=()):
     """Evaluate a string that may include numpy, np, or math commands.
 
@@ -1094,3 +1181,30 @@ def math_eval(str, other_modules=()):
         exec_('import ' + m, gdict)
     return eval(str, gdict)
 
+def binomial(a, b, n):
+    """Return xy coefficients of (ax + by)^n ordered by descending powers of a.
+
+    For example:
+
+    # (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3
+    >>>  print(binomial(1, 1, 3))
+    array([ 1.,  3.,  3.,  1.])
+
+
+    # (2 x + y)^3 = 8 x^3 + 12 x^2 y + 6 x y^2 + 1 y^3
+    >>>  print(binomial(2, 1, 3))
+    array([ 8.,  12.,  6.,  1.])
+
+    @param a    First scalar in binomial to be expanded.
+    @param b    Second scalar in binomial to be expanded.
+    @param n    Exponent of expansion.
+    @returns    Array of coefficients in expansion.
+    """
+    b_over_a = float(b)/float(a)
+    def generate():
+        c = a**n
+        yield c
+        for i in range(n):
+            c *= b_over_a * (n-i)/(i+1)
+            yield c
+    return np.fromiter(generate(), float, n+1)

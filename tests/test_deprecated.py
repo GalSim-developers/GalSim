@@ -22,6 +22,7 @@ import sys
 import numpy as np
 
 from galsim_test_helpers import *
+from test_draw import CalculateScale
 
 try:
     import galsim
@@ -29,6 +30,20 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+test_hlr = 1.8
+test_fwhm = 1.8
+test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+test_scale = [1.8, 0.05, 0.002, 0.002]
+test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
+test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
+if __name__ == "__main__":
+    # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
+    # Two should be enough to notice if there is a problem, and the full list will be tested
+    # when running python test_base.py to try to diagnose the problem.
+    test_sersic_n = [1.5, -4]
+    test_scale = [1.8, 0.002]
+
 
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
@@ -42,9 +57,27 @@ def check_dep(f, *args, **kwargs):
     with warnings.catch_warnings(record=True) as w:
         res = f(*args, **kwargs)
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    print([ str(wk.message) for wk in w ])
+    #print([ str(wk.message) for wk in w ])
     assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
+
+def check_dep_tuple2(rhs):
+    """Check that (x,y) = rhs raises a GalSimDeprecationWarning as a warning, but not an error.
+    """
+    #print('check dep tuple2: ',rhs)
+    import warnings
+    # Cause all warnings to always be triggered.
+    # Important in case we want to trigger the same one twice in the test suite.
+    warnings.simplefilter("always")
+
+    with warnings.catch_warnings(record=True) as w:
+        x,y = rhs
+    #print('x,y = ',x,y)
+    #print('w = ',w)
+    assert len(w) >= 1, "Converting %s to a tuple did not raise a warning"%str(rhs)
+    #print([ str(wk.message) for wk in w ])
+    assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
+    return x,y
 
 
 @timer
@@ -53,6 +86,8 @@ def test_dep_bandpass():
     """
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
     d = lambda w: w**2
+
+    check_dep(b.copy)
 
     # fn / Bandpass
     #e = d/b
@@ -160,8 +195,8 @@ def test_dep_base():
     np.testing.assert_equal(im1.bounds, im2.bounds)
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
-    im1, im1b = check_dep(g.drawK)
-    im2, im2b = g.drawKImage()
+    im1, im1b = check_dep_tuple2(check_dep(g.drawK))
+    im2, im2b = check_dep_tuple2(g.drawKImage())
     np.testing.assert_almost_equal(im1.scale, im2.scale)
     np.testing.assert_almost_equal(im1b.scale, im2b.scale)
     np.testing.assert_equal(im1.bounds, im2.bounds)
@@ -174,6 +209,31 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, gsp2.folding_threshold)
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
+    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    test_gal_copy = check_dep(test_gal.copy)
+    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
+    test_gal_copy = check_dep(test_gal.copy)
+
+    for n, scale in zip(test_sersic_n, test_scale) :
+        if n == -4:
+            test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+        else:
+            test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
+        test_gal_copy = check_dep(test_gal1.copy)
+
+    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
+    test_gal_copy = check_dep(test_gal.copy)
+
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
+                             fwhm = test_fwhm)
+    test_gal_copy = check_dep(test_gal.copy)
+    test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
+    test_gal_copy = check_dep(test_gal.copy)
+
+    for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
+        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
+        test_gal_copy = check_dep(test_gal.copy)
 
 @timer
 def test_dep_bounds():
@@ -226,6 +286,7 @@ def test_dep_chromatic():
     g = galsim.Gaussian(sigma=0.34)
     sed = galsim.SED('wave**3', 'nm', 'flambda')
     obj = g * sed
+    check_dep(obj.copy)
     band = galsim.Bandpass('1-((wave-700)/100)**2', 'nm', blue_limit=600., red_limit=800.)
 
     im1 = check_dep(obj.draw, bandpass=band)
@@ -489,82 +550,78 @@ def test_dep_image():
 
     # The rest of this is taken from an older version of the Image class test suite that
     # tests the old syntax.  Might as well keep it.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    for i in range(ntypes):
+        # Check basic constructor from ncol, nrow
+        array_type = types[i]
+        im1 = check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)(ncol,nrow)
+        bounds = galsim.BoundsI(1,ncol,1,nrow)
 
-        for i in range(ntypes):
-            # Check basic constructor from ncol, nrow
-            array_type = types[i]
-            im1 = galsim.Image[array_type](ncol,nrow)
-            bounds = galsim.BoundsI(1,ncol,1,nrow)
+        assert im1.getXMin() == 1
+        assert im1.getXMax() == ncol
+        assert im1.getYMin() == 1
+        assert im1.getYMax() == nrow
+        assert im1.getBounds() == bounds
+        assert im1.bounds == bounds
 
-            assert im1.getXMin() == 1
-            assert im1.getXMax() == ncol
-            assert im1.getYMin() == 1
-            assert im1.getYMax() == nrow
-            assert im1.getBounds() == bounds
-            assert im1.bounds == bounds
+        # Check basic constructor from ncol, nrow
+        # Also test alternate name of image type: ImageD, ImageF, etc.
+        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
+        im2 = image_type(bounds)
+        im2_view = im2.view()
 
-            # Check basic constructor from ncol, nrow
-            # Also test alternate name of image type: ImageD, ImageF, etc.
-            image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
-            im2 = image_type(bounds)
-            im2_view = im2.view()
+        assert im2_view.getXMin() == 1
+        assert im2_view.getXMax() == ncol
+        assert im2_view.getYMin() == 1
+        assert im2_view.getYMax() == nrow
+        assert im2_view.bounds == bounds
 
-            assert im2_view.getXMin() == 1
-            assert im2_view.getXMax() == ncol
-            assert im2_view.getYMin() == 1
-            assert im2_view.getYMax() == nrow
-            assert im2_view.bounds == bounds
+        # Check various ways to set and get values
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                im1.setValue(x,y, 100 + 10*x + y)
+                im2_view.setValue(x,y, 100 + 10*x + y)
 
-            # Check various ways to set and get values
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    im1.setValue(x,y, 100 + 10*x + y)
-                    im2_view.setValue(x,y, 100 + 10*x + y)
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert check_dep(im1.at,x,y) == 100+10*x+y
+                assert check_dep(im1.view().at,x,y) == 100+10*x+y
+                assert check_dep(im2.at,x,y) == 100+10*x+y
+                assert check_dep(im2_view.at,x,y) == 100+10*x+y
+                im1.setValue(x,y, 10*x + y)
+                im2_view.setValue(x,y, 10*x + y)
+                assert im1(x,y) == 10*x+y
+                assert im1.view()(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x,y) == 10*x+y
 
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im1.at(x,y) == 100+10*x+y
-                    assert im1.view().at(x,y) == 100+10*x+y
-                    assert im2.at(x,y) == 100+10*x+y
-                    assert im2_view.at(x,y) == 100+10*x+y
-                    im1.setValue(x,y, 10*x + y)
-                    im2_view.setValue(x,y, 10*x + y)
-                    assert im1(x,y) == 10*x+y
-                    assert im1.view()(x,y) == 10*x+y
-                    assert im2(x,y) == 10*x+y
-                    assert im2_view(x,y) == 10*x+y
+        # Check view of given data
+        im3_view = check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im3_view(x,y) == 10*x+y
 
-            # Check view of given data
-            im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im3_view(x,y) == 10*x+y
+        # Check shift ops
+        im1_view = im1.view() # View with old bounds
+        dx = 31
+        dy = 16
+        im1.shift(dx,dy)
+        im2_view.setOrigin( 1+dx , 1+dy )
+        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
+        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
 
-            # Check shift ops
-            im1_view = im1.view() # View with old bounds
-            dx = 31
-            dy = 16
-            im1.shift(dx,dy)
-            im2_view.setOrigin( 1+dx , 1+dy )
-            im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
-            shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
-
-            assert im1.bounds == shifted_bounds
-            assert im2_view.bounds == shifted_bounds
-            assert im3_view.bounds == shifted_bounds
-            # Others shouldn't have changed
-            assert im1_view.bounds == bounds
-            assert im2.bounds == bounds
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im1(x+dx,y+dy) == 10*x+y
-                    assert im1_view(x,y) == 10*x+y
-                    assert im2(x,y) == 10*x+y
-                    assert im2_view(x+dx,y+dy) == 10*x+y
-                    assert im3_view(x+dx,y+dy) == 10*x+y
+        assert im1.bounds == shifted_bounds
+        assert im2_view.bounds == shifted_bounds
+        assert im3_view.bounds == shifted_bounds
+        # Others shouldn't have changed
+        assert im1_view.bounds == bounds
+        assert im2.bounds == bounds
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1(x+dx,y+dy) == 10*x+y
+                assert im1_view(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x+dx,y+dy) == 10*x+y
+                assert im3_view(x+dx,y+dy) == 10*x+y
 
 
 @timer
@@ -742,6 +799,8 @@ def test_dep_sed():
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons', redshift=0.4)
     b = lambda w: w**2
+
+    check_dep(a.copy)
 
     # function divided by SED
     #c = b/a
@@ -1033,6 +1092,458 @@ def test_dep_optics():
     image = check_dep(galsim.optics.ptf_image, array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
+@timer
+def test_dep_wmult():
+    """Test drawImage with wmult parameter.
+
+    (A subset of the test_drawImage function in test_draw.py.)
+    """
+    test_flux = 1.8
+    obj = galsim.Exponential(flux=test_flux, scale_radius=2)
+    im1 = obj.drawImage(method='no_pixel')
+    obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
+    nyq_scale = obj2.nyquistScale()
+    scale = 0.51   # Just something different from 1 or dx_nyq
+    im3 = galsim.ImageD(56,56)
+    im5 = galsim.ImageD()
+    obj.drawImage(im5)
+
+    # Test if we provide wmult.  It should:
+    #   - create a new image that is wmult times larger in each direction.
+    #   - return the new image
+    #   - set the scale to obj2.nyquistScale()
+    im6 = check_dep(obj.drawImage, wmult=4.)
+    np.testing.assert_almost_equal(im6.scale, nyq_scale, 9,
+                                   "obj.drawImage(wmult) produced image with wrong scale")
+    # Can assert accuracy to 4 decimal places now, since we're capturing much more
+    # of the flux on the image.
+    np.testing.assert_almost_equal(im6.array.astype(float).sum(), test_flux, 4,
+                                   "obj.drawImage(wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
+                                   "Measured wrong scale after obj.drawImage(wmult)")
+    assert im6.bounds == galsim.BoundsI(1,220,1,220),(
+            "obj.drawImage(wmult) produced image with wrong bounds")
+
+    # Test if we provide an image argument and wmult.  It should:
+    #   - write to the existing image
+    #   - also return that image
+    #   - set the scale to obj2.nyquistScale()
+    #   - zero out any existing data
+    #   - the calculation of the convolution should be slightly more accurate than for im3
+    im3.setZero()
+    im5.setZero()
+    check_dep(obj.drawImage, im3, wmult=4.)
+    obj.drawImage(im5)
+    np.testing.assert_almost_equal(im3.scale, nyq_scale, 9,
+                                   "obj.drawImage(im3) produced image with wrong scale")
+    np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
+                                   "obj.drawImage(im3,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im3), 2, 1,
+                                   "Measured wrong scale after obj.drawImage(im3,wmult)")
+    assert ((im3.array-im5.array)**2).sum() > 0, (
+            "obj.drawImage(im3,wmult) produced the same image as without wmult")
+
+    # Test with dx and wmult.  It should:
+    #   - create a new image using that dx for the scale
+    #   - set the size a factor of wmult times larger in each direction.
+    #   - return the new image
+    im8 = check_dep(obj.drawImage, scale=scale, wmult=4.)
+    np.testing.assert_almost_equal(im8.scale, scale, 9,
+                                   "obj.drawImage(dx,wmult) produced image with wrong scale")
+    np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 4,
+                                   "obj.drawImage(dx,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
+                                   "Measured wrong scale after obj.drawImage(dx,wmult)")
+    assert im8.bounds == galsim.BoundsI(1,270,1,270),(
+            "obj.drawImage(dx,wmult) produced image with wrong bounds")
+
+@timer
+def test_dep_drawKImage():
+    """Test the various optional parameters to the drawKImage function.
+       In particular test the parameters image, and scale in various combinations.
+    """
+    # We use a Moffat profile with beta = 1.5, since its real-space profile is
+    #    flux / (2 pi rD^2) * (1 + (r/rD)^2)^3/2
+    # and the 2-d Fourier transform of that is
+    #    flux * exp(-rD k)
+    # So this should draw in Fourier space the same image as the Exponential drawn in
+    # test_drawImage().
+    test_flux = 1.8
+    obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
+
+    # First test drawKImage() with no kwargs.  It should:
+    #   - create new images
+    #   - return the new images
+    #   - set the scale to 2pi/(N*obj.nyquistScale())
+    re1, im1 = check_dep_tuple2(obj.drawKImage())
+    re1.setOrigin(1,1)  # Go back to old convention on bounds
+    im1.setOrigin(1,1)
+    N = 1163
+    assert re1.bounds == galsim.BoundsI(1,N,1,N),(
+            "obj.drawKImage() produced image with wrong bounds")
+    assert im1.bounds == galsim.BoundsI(1,N,1,N),(
+            "obj.drawKImage() produced image with wrong bounds")
+    nyq_scale = obj.nyquistScale()
+    stepk = obj.stepK()
+    np.testing.assert_almost_equal(re1.scale, stepk, 9,
+                                   "obj.drawKImage() produced real image with wrong scale")
+    np.testing.assert_almost_equal(im1.scale, stepk, 9,
+                                   "obj.drawKImage() produced imag image with wrong scale")
+    np.testing.assert_almost_equal(CalculateScale(re1), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage()")
+
+    # The flux in Fourier space is just the value at k=0
+    np.testing.assert_almost_equal(re1(re1.bounds.center()), test_flux, 2,
+                                   "obj.drawKImage() produced real image with wrong flux")
+    # Imaginary component should all be 0.
+    np.testing.assert_almost_equal(im1.array.sum(), 0., 3,
+                                   "obj.drawKImage() produced non-zero imaginary image")
+
+    # Test if we provide an image argument.  It should:
+    #   - write to the existing image
+    #   - also return that image
+    #   - set the scale to obj.stepK()
+    #   - zero out any existing data
+    re3 = galsim.ImageD(1149,1149)
+    im3 = galsim.ImageD(1149,1149)
+    re4, im4 = check_dep_tuple2(check_dep(obj.drawKImage, re3, im3))
+    np.testing.assert_almost_equal(re3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 2,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im3.array.sum(), 0., 3,
+                                   "obj.drawKImage(re3,im3) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re3,im3)")
+    np.testing.assert_array_equal(re3.array, re4.array,
+                                  "re4, im4 = obj.drawKImage(re3,im3) produced re4 != re3")
+    np.testing.assert_array_equal(im3.array, im4.array,
+                                  "re4, im4 = obj.drawKImage(re3,im3) produced im4 != im3")
+    re3.fill(9.8)
+    im3.fill(9.8)
+    np.testing.assert_array_equal(re3.array, re4.array,
+                                  "re4, im4 = obj.drawKImage(re3,im3) produced re4 is not re3")
+    np.testing.assert_array_equal(im3.array, im4.array,
+                                  "re4, im4 = obj.drawKImage(re3,im3) produced im4 is not im3")
+
+    # Test if we provide an image with undefined bounds.  It should:
+    #   - resize the provided image
+    #   - also return that image
+    #   - set the scale to obj.stepK()
+    re5 = galsim.ImageD()
+    im5 = galsim.ImageD()
+    check_dep(obj.drawKImage, re5, im5)
+    np.testing.assert_almost_equal(re5.scale, stepk, 9,
+                                   "obj.drawKImage(re5,im5) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im5.scale, stepk, 9,
+                                   "obj.drawKImage(re5,im5) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re5(re5.bounds.center()), test_flux, 2,
+                                   "obj.drawKImage(re5,im5) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im5.array.sum(), 0., 3,
+                                   "obj.drawKImage(re5,im5) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re5), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re5,im5)")
+    im5.setOrigin(1,1)
+    assert im5.bounds == galsim.BoundsI(1,N,1,N),(
+            "obj.drawKImage(re5,im5) produced image with wrong bounds")
+
+    # Test if we provide a scale to use.  It should:
+    #   - create a new image using that scale for the scale
+    #   - return the new image
+    #   - set the size large enough to contain 99.5% of the flux
+    scale = 0.51   # Just something different from 1 or dx_nyq
+    re7, im7 = check_dep_tuple2(obj.drawKImage(scale=scale))
+    np.testing.assert_almost_equal(re7.scale, scale, 9,
+                                   "obj.drawKImage(dx) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im7.scale, scale, 9,
+                                   "obj.drawKImage(dx) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re7(re7.bounds.center()), test_flux, 2,
+                                   "obj.drawKImage(dx) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im7.array.astype(float).sum(), 0., 2,
+                                   "obj.drawKImage(dx) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re7), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(dx)")
+    # This image is smaller because not using nyquist scale for stepk
+    im7.setOrigin(1,1)
+    assert im7.bounds == galsim.BoundsI(1,73,1,73),(
+            "obj.drawKImage(dx) produced image with wrong bounds")
+
+    # Test if we provide an image with a defined scale.  It should:
+    #   - write to the existing image
+    #   - use the image's scale
+    nx = 401
+    re9 = galsim.ImageD(nx,nx, scale=scale)
+    im9 = galsim.ImageD(nx,nx, scale=scale)
+    check_dep(obj.drawKImage, re9, im9)
+    np.testing.assert_almost_equal(re9.scale, scale, 9,
+                                   "obj.drawKImage(re9,im9) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im9.scale, scale, 9,
+                                   "obj.drawKImage(re9,im9) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re9(re9.bounds.center()), test_flux, 4,
+                                   "obj.drawKImage(re9,im9) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im9.array.sum(), 0., 5,
+                                   "obj.drawKImage(re9,im9) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re9), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re9,im9)")
+
+    # Test if we provide an image with a defined scale <= 0.  It should:
+    #   - write to the existing image
+    #   - set the scale to obj.stepK()
+    re3.scale = -scale
+    im3.scale = -scale
+    re3.setZero()
+    check_dep(obj.drawKImage, re3, im3)
+    np.testing.assert_almost_equal(re3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
+                                   "obj.drawKImage(re3,im3) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re3,im3)")
+    re3.scale = 0
+    im3.scale = 0
+    re3.setZero()
+    check_dep(obj.drawKImage, re3, im3)
+    np.testing.assert_almost_equal(re3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong scale")
+    np.testing.assert_almost_equal(im3.scale, stepk, 9,
+                                   "obj.drawKImage(re3,im3) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
+                                   "obj.drawKImage(re3,im3) produced real image with wrong flux")
+    np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
+                                   "obj.drawKImage(re3,im3) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re3,im3)")
+
+    # Test if we provide an image and dx.  It should:
+    #   - write to the existing image
+    #   - use the provided dx
+    #   - write the new dx value to the image's scale
+    re9.scale = scale + 0.3  # Just something other than scale
+    im9.scale = scale + 0.3
+    re9.setZero()
+    check_dep(obj.drawKImage, re9, im9, scale=scale)
+    np.testing.assert_almost_equal(
+            re9.scale, scale, 9,
+            "obj.drawKImage(re9,im9,scale) produced real image with wrong scale")
+    np.testing.assert_almost_equal(
+            im9.scale, scale, 9,
+            "obj.drawKImage(re9,im9,scale) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(
+            re9(re9.bounds.center()), test_flux, 4,
+            "obj.drawKImage(re9,im9,scale) produced real image with wrong flux")
+    np.testing.assert_almost_equal(
+            im9.array.sum(), 0., 5,
+            "obj.drawKImage(re9,im9,scale) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re9), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re9,im9,scale)")
+
+    # Test if we provide an image and scale <= 0.  It should:
+    #   - write to the existing image
+    #   - set the scale to obj.stepK()
+    re3.scale = scale + 0.3
+    im3.scale = scale + 0.3
+    re3.setZero()
+    check_dep(obj.drawKImage, re3, im3, scale=-scale)
+    np.testing.assert_almost_equal(
+            re3.scale, stepk, 9,
+            "obj.drawKImage(re3,im3,scale<0) produced real image with wrong scale")
+    np.testing.assert_almost_equal(
+            im3.scale, stepk, 9,
+            "obj.drawKImage(re3,im3,scale<0) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(
+            re3(re3.bounds.center()), test_flux, 4,
+            "obj.drawKImage(re3,im3,scale<0) produced real image with wrong flux")
+    np.testing.assert_almost_equal(
+            im3.array.sum(), 0., 5,
+            "obj.drawKImage(re3,im3,scale<0) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re3,im3,scale<0)")
+    re3.scale = scale + 0.3
+    im3.scale = scale + 0.3
+    re3.setZero()
+    check_dep(obj.drawKImage, re3, im3, scale=0)
+    np.testing.assert_almost_equal(
+        re3.scale, stepk, 9,
+        "obj.drawKImage(re3,im3,scale=0) produced real image with wrong scale")
+    np.testing.assert_almost_equal(
+        im3.scale, stepk, 9,
+        "obj.drawKImage(re3,im3,scale=0) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(
+        re3(re3.bounds.center()), test_flux, 4,
+        "obj.drawKImage(re3,im3,scale=0) produced real image with wrong flux")
+    np.testing.assert_almost_equal(
+        im3.array.sum(), 0., 5,
+        "obj.drawKImage(re3,im3,scale=0) produced non-zero imaginary image")
+    np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
+                                   "Measured wrong scale after obj.drawKImage(re3,im3,scale=0)")
+
+    # Test if we provide nx, ny, and scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale
+    nx = 200  # Some randome non-square size
+    ny = 100
+    re4, im4 = check_dep_tuple2(obj.drawKImage(nx=nx, ny=ny, scale=scale))
+    np.testing.assert_almost_equal(
+        re4.scale, scale, 9,
+        "obj.drawKImage(nx,ny,scale) produced real image with wrong scale")
+    np.testing.assert_almost_equal(
+        im4.scale, scale, 9,
+        "obj.drawKImage(nx,ny,scale) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(
+        re4.array.shape, (ny, nx), 9,
+        "obj.drawKImage(nx,ny,scale) produced real image with wrong shape")
+    np.testing.assert_almost_equal(
+        im4.array.shape, (ny, nx), 9,
+        "obj.drawKImage(nx,ny,scale) produced imag image with wrong shape")
+
+    # Test if we provide bounds and scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale
+    bounds = galsim.BoundsI(1,nx,1,ny)
+    re4, im4 = check_dep_tuple2(obj.drawKImage(bounds=bounds, scale=stepk))
+    np.testing.assert_almost_equal(
+        re4.scale, stepk, 9,
+        "obj.drawKImage(bounds,scale) produced real image with wrong scale")
+    np.testing.assert_almost_equal(
+        im4.scale, stepk, 9,
+        "obj.drawKImage(bounds,scale) produced imag image with wrong scale")
+    np.testing.assert_almost_equal(
+        re4.array.shape, (ny, nx), 9,
+        "obj.drawKImage(bounds,scale) produced real image with wrong shape")
+    np.testing.assert_almost_equal(
+        im4.array.shape, (ny, nx), 9,
+        "obj.drawKImage(bounds,scale) produced imag image with wrong shape")
+
+@timer
+def test_dep_drawKImage_Gaussian():
+    """Test the drawKImage function using known symmetries of the Gaussian Hankel transform.
+
+    See http://en.wikipedia.org/wiki/Hankel_transform.
+    """
+    test_flux = 2.3     # Choose a non-unity flux
+    test_sigma = 17.    # ...likewise for sigma
+    test_imsize = 45    # Dimensions of comparison image, doesn't need to be large
+
+    # Define a Gaussian GSObject
+    gal = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
+    # Then define a related object which is in fact the opposite number in the Hankel transform pair
+    # For the Gaussian this is straightforward in our definition of the Fourier transform notation,
+    # and has sigma -> 1/sigma and flux -> flux * 2 pi / sigma**2
+    gal_hankel = galsim.Gaussian(sigma=1./test_sigma, flux=test_flux*2.*np.pi/test_sigma**2)
+
+    # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
+    np.testing.assert_almost_equal(
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
+
+    image_test = galsim.ImageD(test_imsize, test_imsize)
+    rekimage_test = galsim.ImageD(test_imsize, test_imsize)
+    imkimage_test = galsim.ImageD(test_imsize, test_imsize)
+
+    # Then compare these two objects at a couple of different scale (reasonably matched for size)
+    for scale_test in (0.03 / test_sigma, 0.4 / test_sigma):
+        check_dep(gal.drawKImage,re=rekimage_test, im=imkimage_test, scale=scale_test)
+        gal_hankel.drawImage(image_test, scale=scale_test, use_true_center=False, method='sb')
+        np.testing.assert_array_almost_equal(
+            rekimage_test.array, image_test.array, decimal=12,
+            err_msg="Test object drawKImage() and drawImage() from Hankel conjugate do not match "
+            "for grid spacing scale = "+str(scale_test))
+        np.testing.assert_array_almost_equal(
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
+            err_msg="Non-zero imaginary part for drawKImage from test object that is purely "
+            "centred on the origin.")
+
+@timer
+def test_dep_kroundtrip():
+    KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
+    KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
+    g1 = galsim.Gaussian(sigma = 3.1, flux=2.4).shear(g1=0.2,g2=0.1)
+    g2 = galsim.Gaussian(sigma = 1.9, flux=3.1).shear(g1=-0.4,g2=0.3).shift(-0.3,0.5)
+    g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
+    final = g1 + g2 + g3
+    a = final
+    real_a, imag_a = check_dep_tuple2(a.drawKImage())
+    b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
+
+    # Check picklability
+    do_pickle(b)
+    do_pickle(b, lambda x: x.drawImage())
+    do_pickle(b.SBProfile)
+    do_pickle(b.SBProfile, lambda x: repr(x))
+
+    for kx, ky in zip(KXVALS, KYVALS):
+        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
+            err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
+                     .format(kx, ky)))
+
+    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+
+    real_b, imag_b = check_dep_tuple2(check_dep(b.drawKImage, real_a.copy(), imag_a.copy()))
+    # Fails at 4th decimal
+    np.testing.assert_array_almost_equal(real_a.array, real_b.array, 3,
+                                         "InterpolatedKImage kimage drawn incorrectly.")
+    # Fails at 4th decimal
+    np.testing.assert_array_almost_equal(imag_a.array, imag_b.array, 3,
+                                         "InterpolatedKImage kimage drawn incorrectly.")
+
+    img_a = a.drawImage()
+    img_b = b.drawImage(img_a.copy())
+    # This is the one that matters though; fails at 6th decimal
+    np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
+                                         "InterpolatedKImage image drawn incorrectly.")
+
+    # Try some (slightly larger maxk) non-even kimages:
+    for dx, dy in zip((2,3,3), (3,2,3)):
+        shape = real_a.array.shape
+        real_a, imag_a = check_dep_tuple2(a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy,
+                                          scale=real_a.scale))
+        b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
+
+        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        img_b = b.drawImage(img_a.copy())
+        # One of these fails at 6th decimal
+        np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)
+
+    # Try some additional transformations:
+    a = a.shear(g1=0.2, g2=-0.2).shift(1.1, -0.2).dilate(0.7)
+    b = b.shear(g1=0.2, g2=-0.2).shift(1.1, -0.2).dilate(0.7)
+    img_a = a.drawImage()
+    img_b = b.drawImage(img_a.copy())
+    # Fails at 6th decimal
+    np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
+                                         "Transformed InterpolatedKImage image drawn incorrectly.")
+
+    # Does the stepk parameter do anything?
+    a = final
+    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
+    np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
+    np.testing.assert_almost_equal(b.maxK(), c.maxK())
+
+    # Test centroid
+    for dx, dy in zip(KXVALS, KYVALS):
+        a = final.shift(dx, dy)
+        b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+
+    # Test convolution with another object.
+    a = final
+    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+    c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
+    a_conv_c = galsim.Convolve(a, c)
+    b_conv_c = galsim.Convolve(b, c)
+    a_conv_c_img = a_conv_c.drawImage()
+    b_conv_c_img = b_conv_c.drawImage(image=a_conv_c_img.copy())
+    # Fails at 6th decimal.
+    np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
+                                         "Convolution of InterpolatedKImage drawn incorrectly.")
 
 if __name__ == "__main__":
     test_dep_bandpass()
@@ -1049,3 +1560,7 @@ if __name__ == "__main__":
     test_dep_shapelet()
     test_dep_shear()
     test_dep_optics()
+    test_dep_wmult()
+    test_dep_drawKImage()
+    test_dep_drawKImage_Gaussian()
+    test_dep_kroundtrip()

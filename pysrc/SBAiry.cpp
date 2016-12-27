@@ -29,9 +29,9 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAiry 
+    struct PySBAiry
     {
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
                 .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
@@ -46,7 +46,7 @@ namespace galsim {
         }
     };
 
-    void pyExportSBAiry() 
+    void pyExportSBAiry()
     {
         PySBAiry::wrap();
     }

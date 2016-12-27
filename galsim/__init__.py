@@ -92,7 +92,7 @@ version = __version__
 
 # First some basic building blocks that don't usually depend on anything else
 from .position import PositionI, PositionD
-from .bounds import BoundsI, BoundsD
+from .bounds import BoundsI, BoundsD, _BoundsI
 from .shear import Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
@@ -100,7 +100,10 @@ from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI, _Image
+
+# PhotonArray
+from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
@@ -110,7 +113,9 @@ from .noise import DeviateNoise, VariableGaussianNoise
 from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 
 # GSObject
-from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
+from .gsobject import GSObject
+from .gsparams import GSParams
+from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
@@ -123,10 +128,11 @@ from .interpolatedimage import InterpolatedImage, InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile
-from .transform import Transform, Transformation
+from .compound import RandomWalk
+from .transform import Transform, Transformation, _Transform
 
 # Chromatic
-from .chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
+from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
 from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
 from .chromatic import ChromaticFourierSqrtProfile
@@ -163,3 +169,5 @@ from . import dcr
 from . import meta_data
 from . import cdmodel
 from . import optics
+from . import utilities
+from . import fft

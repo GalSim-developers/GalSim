@@ -213,7 +213,8 @@ namespace {
         static bp::object convertGetVals(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& v = table2d.getVals();
-            return MakeNumpyArray(&v[0], table2d.getNx(), table2d.getNy(), table2d.getNy(), true);
+            return MakeNumpyArray(&v[0], table2d.getNx(), table2d.getNy(), 1, table2d.getNy(),
+                                  true);
         }
 
         static std::string convertGetInterp(const Table2D<double,double>& table2d)

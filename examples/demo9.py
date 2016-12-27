@@ -22,7 +22,7 @@ The ninth script in our tutorial about using GalSim in python scripts: examples/
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
-applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
+applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 draw 20 lensed galaxies located at random positions in the image.  The PSF is appropriate for a
@@ -64,7 +64,7 @@ import galsim
 def main(argv):
     """
     Make 4 directories, each with 5 files, each of which has 20 galaxies.
-    
+
     Also, each directory corresponds to a different mass halo.
     The files in each direction are just different noise realizations and galaxy locations.
 
@@ -132,18 +132,18 @@ def main(argv):
         # Build the image onto which we will draw the galaxies.
         full_image = galsim.ImageF(image_size, image_size)
 
-        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
+        # The "true" center of the image is allowed to be halfway between two pixels, as is the
         # case for even-sized images.  full_image.bounds.center() is an integer position,
         # which would be 1/2 pixel up and to the right of the true center in this case.
         im_center = full_image.bounds.trueCenter()
 
         # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
-        # and v(x,y) functions.  We use a simple cubic radial function to create a 
+        # and v(x,y) functions.  We use a simple cubic radial function to create a
         # pincushion distortion.  This is a typical kind of telescope distortion, although
         # we exaggerate the magnitude of the effect to make it more apparent.
         # The pixel size in the center of the image is 0.05, but near the corners (r=362),
-        # the pixel size is approximately 0.075, which is much more distortion than is 
-        # normally present in typical telescopes.  But it makes the effect of the variable 
+        # the pixel size is approximately 0.075, which is much more distortion than is
+        # normally present in typical telescopes.  But it makes the effect of the variable
         # pixel area obvious when you look at the weight image in the output files.
         ufunc1 = lambda x,y : 0.05 * x * (1. + 2.e-6 * (x**2 + y**2))
         vfunc1 = lambda x,y : 0.05 * y * (1. + 2.e-6 * (x**2 + y**2))
@@ -157,7 +157,7 @@ def main(argv):
         # Let w = sqrt(u**2 + v**2) and r = sqrt(x**2 + y**2).  Then the solutions are:
         # x = (u/w) r and y = (u/w) r, and we use Cardano's method to solve for r given w:
         # See http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method
-        # 
+        #
         # w = 0.05 r + 2.e-6 * 0.05 * r**3
         # r = 100 * ( ( 5 sqrt(w**2 + 5.e3/27) + 5 w )**(1./3.) -
         #           - ( 5 sqrt(w**2 + 5.e3/27) - 5 w )**(1./3.) )
@@ -165,7 +165,7 @@ def main(argv):
         def xfunc1(u,v):
             import math
             wsq = u*u + v*v
-            if wsq == 0.: 
+            if wsq == 0.:
                 return 0.
             else:
                 w = math.sqrt(wsq)
@@ -176,7 +176,7 @@ def main(argv):
         def yfunc1(u,v):
             import math
             wsq = u*u + v*v
-            if wsq == 0.: 
+            if wsq == 0.:
                 return 0.
             else:
                 w = math.sqrt(wsq)
@@ -186,10 +186,10 @@ def main(argv):
 
         # You could pass the above functions to UVFunction, and normally we would do that.
         # The only down side to doing so is that the specification of the WCS in the FITS
-        # file is rather ugly.  GalSim is able to turn the python byte code into strings, 
+        # file is rather ugly.  GalSim is able to turn the python byte code into strings,
         # but they are basically a really ugly mess of random-looking characters.  GalSim
         # will be able to read it back in, but human readers will have no idea what WCS
-        # function was used.  To see what they look like, uncomment this line and comment 
+        # function was used.  To see what they look like, uncomment this line and comment
         # out the later wcs line.
         #wcs = galsim.UVFunction(ufunc1, vfunc1, xfunc1, yfunc1, origin=im_center)
 
@@ -220,7 +220,7 @@ def main(argv):
         weight_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # It is common for astrometric images to also have a bad pixel mask.  We don't have any
-        # defect simulation currently, so our bad pixel masks are currently all zeros. 
+        # defect simulation currently, so our bad pixel masks are currently all zeros.
         # But someday, we plan to add defect functionality to GalSim, at which point, we'll
         # be able to mark those defects on a bad pixel mask.
         # Note: the S in ImageS means to use "short int" for the data type.
@@ -228,15 +228,15 @@ def main(argv):
         badpix_image = galsim.ImageS(image_size, image_size, wcs=wcs)
 
         # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
-        # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
-        # of image.  But in this case, it's fun to look at the psf image, especially with 
-        # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
+        # and since some of the PSFs overlap, it's not necessarily so useful to have this kind
+        # of image.  But in this case, it's fun to look at the psf image, especially with
+        # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with
         # struts can look when there is no atmospheric component to blur it out.
         psf_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # We will also write some truth information to an output catalog.
         # In real simulations, it is often useful to have a catalog of the truth values
-        # to compare to measurements either directly or as cuts on the galaxy sample to 
+        # to compare to measurements either directly or as cuts on the galaxy sample to
         # find where systematic errors are largest.
         # For now, we just make an empty OutputCatalog object with the names and types of the
         # columns.
@@ -255,15 +255,15 @@ def main(argv):
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
                              omega_m=omega_m, omega_lam=omega_lam)
-        # Note: the last two are optional.  If they are omitted, then (omega_m=0.3, omega_lam=0.7) 
-        # are actually the defaults.  If you only specify one of them, the other is set so that 
+        # Note: the last two are optional.  If they are omitted, then (omega_m=0.3, omega_lam=0.7)
+        # are actually the defaults.  If you only specify one of them, the other is set so that
         # the total is 1.  But you can define both values so that the total is not 1 if you want.
         # Radiation is assumed to be zero and dark energy equation of state w = -1.
         # If you want to include either radiation or more complicated dark energy models,
-        # you can define your own cosmology class that defines the functions a(z), E(a), and 
+        # you can define your own cosmology class that defines the functions a(z), E(a), and
         # Da(z_source, z_lens).  Then you can pass this to NFWHalo as a `cosmo` parameter.
 
-        # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF 
+        # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF
         # construction overhead.
         psf = galsim.OpticalPSF(
             lam=psf_lam, diam=psf_D, obscuration=psf_obsc,
@@ -278,7 +278,7 @@ def main(argv):
 
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
-            # in order to avoid placing galaxies too close to the halo center where the lensing 
+            # in order to avoid placing galaxies too close to the halo center where the lensing
             # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 12 arcsec,
             # which takes us essentially to the edge of the image.
             radius = 12
@@ -297,14 +297,14 @@ def main(argv):
             image_pos = wcs.toImage(pos)
 
             # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
-            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage 
+            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage
             # stamp, since the nominal center values have to be integers.  Thus, the nominal center
             # is 1/2 pixel up and to the right of the true center.
             # If we used odd-sized postage stamps, we wouldn't need to do this.
             x_nominal = image_pos.x + 0.5
             y_nominal = image_pos.y + 0.5
 
-            # Get the integer values of these which will be the actual nominal center of the 
+            # Get the integer values of these which will be the actual nominal center of the
             # postage stamp image.
             ix_nominal = int(math.floor(x_nominal+0.5))
             iy_nominal = int(math.floor(y_nominal+0.5))
@@ -317,7 +317,7 @@ def main(argv):
             # Draw the flux from a power law distribution: N(f) ~ f^-1.5
             # For this, we use the class DistDeviate which can draw deviates from an arbitrary
             # probability distribution.  This distribution can be defined either as a functional
-            # form as we do here, or as tabulated lists of x and p values, from which the 
+            # form as we do here, or as tabulated lists of x and p values, from which the
             # function is interpolated.
             flux_dist = galsim.DistDeviate(ud, function = lambda x:x**-1.5,
                                            x_min = gal_flux_min,
@@ -363,15 +363,15 @@ def main(argv):
                                              inclination=inclination, flux=flux)
             gal = gal.rotate(theta)
 
-            # Now apply the appropriate lensing effects for this position from 
+            # Now apply the appropriate lensing effects for this position from
             # the NFW halo mass.
             try:
                 g1,g2 = nfw.getShear( pos , nfw_z_source )
                 nfw_shear = galsim.Shear(g1=g1,g2=g2)
             except:
-                # This shouldn't happen, since we exclude the inner 10 arcsec, but it's a 
+                # This shouldn't happen, since we exclude the inner 10 arcsec, but it's a
                 # good idea to use the try/except block here anyway.
-                import warnings        
+                import warnings
                 warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                               "Using shear = 0.")
                 nfw_shear = galsim.Shear(g1=0,g2=0)
@@ -388,13 +388,13 @@ def main(argv):
 
             # Calculate the total shear to apply
             # Since shear addition is not commutative, it is worth pointing out that
-            # the order is in the sense that the second shear is applied first, and then 
+            # the order is in the sense that the second shear is applied first, and then
             # the first shear.  i.e. The field shear is taken to be behind the cluster.
             # Kind of a cosmic shear contribution between the source and the cluster.
             # However, this is not quite the same thing as doing:
             #     gal.shear(field_shear).shear(nfw_shear)
             # since the shear addition ignores the rotation that would occur when doing the
-            # above lines.  This is normally ok, because the rotation is not observable, but 
+            # above lines.  This is normally ok, because the rotation is not observable, but
             # it is worth keeping in mind.
             total_shear = nfw_shear + field_shear
 
@@ -426,7 +426,7 @@ def main(argv):
             psf_image[bounds] += psf_stamp[bounds]
 
             # Add the truth information for this object to the truth catalog
-            row = ( (first_obj_id + k), halo_id, 
+            row = ( (first_obj_id + k), halo_id,
                     flux, radius, h_over_r, inclination.rad(), theta.rad(),
                     nfw_mu, nfw_z_source, total_shear.g1, total_shear.g2,
                     pos.x, pos.y, image_pos.x, image_pos.y,
@@ -445,8 +445,8 @@ def main(argv):
         full_image += weight_image
 
         # Add Poisson noise, given the current full_image.
-        # The config parser uses a different random number generator for file-level and 
-        # image-level values than for the individual objects.  This makes it easier to 
+        # The config parser uses a different random number generator for file-level and
+        # image-level values than for the individual objects.  This makes it easier to
         # parallelize the calculation if desired.  In fact, this is why we've been adding 1
         # to each seed value all along.  The seeds for the objects take the values
         # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed,
@@ -457,12 +457,12 @@ def main(argv):
         # Subtract the sky back off.
         full_image -= weight_image
 
-        # The weight image is nominally the inverse variance of the pixel noise.  However, it is 
+        # The weight image is nominally the inverse variance of the pixel noise.  However, it is
         # common to exclude the Poisson noise from the objects themselves and only include the
-        # noise from the sky photons.  The variance of the noise is just the sky level, which is 
-        # what is currently in the weight_image.  (If we wanted to include the variance from the 
+        # noise from the sky photons.  The variance of the noise is just the sky level, which is
+        # what is currently in the weight_image.  (If we wanted to include the variance from the
         # objects too, then we could use the full_image before we added the PoissonNoise to it.)
-        # So all we need to do now is to invert the values in weight_image.  
+        # So all we need to do now is to invert the values in weight_image.
         weight_image.invertSelf()
 
         # Write the file to disk:
@@ -486,7 +486,7 @@ def main(argv):
         for (args, info) in iter(input.get, 'STOP'):
             result = build_file(*args)
             output.put( (result, info, current_process().name) )
-    
+
     t1 = time.time()
 
     ntot = nfiles * len(mass_list)
@@ -542,18 +542,18 @@ def main(argv):
             first_obj_id += nobj
 
     # Run the tasks
-    # Each Process command starts up a parallel process that will keep checking the queue 
-    # for a new task. If there is one there, it grabs it and does it. If not, it waits 
-    # until there is one to grab. When it finds a 'STOP', it shuts down. 
+    # Each Process command starts up a parallel process that will keep checking the queue
+    # for a new task. If there is one there, it grabs it and does it. If not, it waits
+    # until there is one to grab. When it finds a 'STOP', it shuts down.
     done_queue = Queue()
     for k in range(nproc):
         Process(target=worker, args=(task_queue, done_queue)).start()
 
-    # In the meanwhile, the main process keeps going.  We pull each image off of the 
-    # done_queue and put it in the appropriate place on the main image.  
+    # In the meanwhile, the main process keeps going.  We pull each image off of the
+    # done_queue and put it in the appropriate place on the main image.
     # This loop is happening while the other processes are still working on their tasks.
-    # You'll see that these logging statements get print out as the stamp images are still 
-    # being drawn.  
+    # You'll see that these logging statements get print out as the stamp images are still
+    # being drawn.
     for i in range(ntot):
         result, info, proc = done_queue.get()
         file_name = info
@@ -566,7 +566,7 @@ def main(argv):
     # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
     # Once you are done with the processes, putting nproc 'STOP's will stop them all.
     # This is important, because the program will keep running as long as there are running
-    # processes, even if the main process gets to the end.  So you do want to make sure to 
+    # processes, even if the main process gets to the end.  So you do want to make sure to
     # add those 'STOP's at some point!
     for k in range(nproc):
         task_queue.put('STOP')

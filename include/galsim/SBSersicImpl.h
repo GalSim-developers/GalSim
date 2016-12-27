@@ -23,6 +23,8 @@
 #include "SBProfileImpl.h"
 #include "SBSersic.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
+#include "Table.h"
 
 namespace galsim {
 
@@ -174,6 +176,7 @@ namespace galsim {
 
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
+        double maxSB() const { return _xnorm; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
@@ -188,16 +191,16 @@ namespace galsim {
         double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

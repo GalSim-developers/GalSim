@@ -29,9 +29,9 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBExponential 
+    struct PySBExponential
     {
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBExponential,bp::bases<SBProfile> >("SBExponential", bp::no_init)
                 .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
@@ -45,7 +45,7 @@ namespace galsim {
         }
     };
 
-    void pyExportSBExponential() 
+    void pyExportSBExponential()
     {
         PySBExponential::wrap();
     }

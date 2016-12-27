@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBExponential_H
 #define GalSim_SBExponential_H
-/** 
+/**
  * @file SBExponential.h @brief SBProfile that implements a 2-d exponential profile.
  */
 
@@ -34,18 +34,18 @@ namespace galsim {
 
     }
 
-    /** 
-     * @brief Exponential Surface Brightness Profile.  
+    /**
+     * @brief Exponential Surface Brightness Profile.
      *
      * Surface brightness profile with I(r) propto exp[-r/r_0] for some scale-length r_0.  This is a
      * special case of the Sersic profile, but is given a separate class since the Fourier transform
      * has closed form and can be generated without lookup tables.
      */
-    class SBExponential : public SBProfile 
+    class SBExponential : public SBProfile
     {
     public:
-        /** 
-         * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
+        /**
+         * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in
          * SBSersic.
          *
          * @param[in] r0       scale length for the profile that scales as `exp[-(r / r0)]`, NOT the

@@ -25,7 +25,7 @@
  * @brief Objects that make use of 2d FFT's in VERSION 3 of the FFTW package.
  *
  * Notes:
- * 
+ *
  * * Requires that the FFTW is set up to do double-precision.
  *
  * * All tables have even dimensions (enforced on construction).
@@ -34,7 +34,7 @@
  *
  * * All arrays are 0-indexed.
  *
- * * FFTW arrays are stored in ROW-MAJOR order, meaning that in matrix notation, the most 
+ * * FFTW arrays are stored in ROW-MAJOR order, meaning that in matrix notation, the most
  * rapidly varying index is the last one. However in an "image" view of the array, we would
  * label this as the x value that is increasing along rows.  When doing real-to-complex
  * transforms, the complex output contains (N/2+1) elements along this latter index, 0<=j<=N/2,
@@ -42,15 +42,15 @@
  *
  * * This interface will assume an "image" based convention in which all access to real
  * or complex elements is in (ix, iy) format, and ix will be the rapidly varying index, with
- * the k-space arrays being half-sized in the x direction.  
+ * the k-space arrays being half-sized in the x direction.
  *
  * * **SO**: when filling arrays, make ix your inner loop.  And provide only kx>=0 to fill KTable.
  *
  * * xTable arrays have indices -N/2 <= ix,iy < N/2.  To store in FFTW arrays, which assume
  * 0<=j < N, we add N/2 to indices before accessing FFTW arrays. This means that k
- * values need to be multiplied by -1^(ix+iy) before/after transforms. 
+ * values need to be multiplied by -1^(ix+iy) before/after transforms.
  *
- * * kTable arrays can be accessed by -N/2 <= jx, jy <= N/2.  FFTW puts DC at [0,0] element, 
+ * * kTable arrays can be accessed by -N/2 <= jx, jy <= N/2.  FFTW puts DC at [0,0] element,
  * so the code in this class changes negative input indices to wrap them properly, also
  * considering that jx<0 must be conjugated.
  *
@@ -80,21 +80,21 @@ namespace galsim {
     //! @cond
 
     /// @brief Basic exception class thrown by XTable and KTable
-    class FFTError : public std::runtime_error 
+    class FFTError : public std::runtime_error
     {
     public:
         FFTError(const std::string& m) : std::runtime_error("FFT error: " + m) {}
     };
 
     /// @brief Exception class for XTable and KTable access ouside the allowed range
-    class FFTOutofRange : public FFTError 
+    class FFTOutofRange : public FFTError
     {
     public:
         FFTOutofRange(const std::string& m="value out of range") : FFTError(m) {}
     };
 
     /// @brief Exception class thrown when fftw3 returns an invalid plan.
-    class FFTInvalid : public FFTError 
+    class FFTInvalid : public FFTError
     {
     public:
         FFTInvalid(const std::string& m="invalid plan or data") : FFTError(m) {}
@@ -104,20 +104,20 @@ namespace galsim {
     template <typename T>
     struct FFTW_Traits
     {
-        enum { isreal = true }; 
+        enum { isreal = true };
         typedef T fftw_type;
         size_t size_2d(size_t n) { return n*n; }
     };
     template <typename T>
     struct FFTW_Traits<std::complex<T> >
-    { 
-        enum { isreal = false }; 
+    {
+        enum { isreal = false };
         typedef fftw_complex fftw_type;
         size_t size_2d(size_t n) { return n*(n/2+1); }
     };
 
     // Handle the FFTW3 memory allocation, which assured 16-bit alignment for SSE usage.
-    // FFTW3 now states that C++ complex<double> will be bit-compatible with 
+    // FFTW3 now states that C++ complex<double> will be bit-compatible with
     // the fftw_complex type.  So all interfaces will be through std::complex<double>
     // And the fftw real type is now just double.
     template <typename T>
@@ -154,7 +154,7 @@ namespace galsim {
         ~FFTW_Array() {}
 
         void resize(size_t n)
-        { 
+        {
             if (_n != n) {
                 _n = n;
                 _array.resize(n);
@@ -162,9 +162,9 @@ namespace galsim {
             }
         }
 
-        void fill(T val) 
+        void fill(T val)
         {
-            for (size_t i=0; i<_n; ++i) _p[i] = val; 
+            for (size_t i=0; i<_n; ++i) _p[i] = val;
         }
 
         size_t size() { return _n; }
@@ -190,12 +190,6 @@ namespace galsim {
 
     //! @endcond
 
-    /**
-     * @brief A helper function that will return the smallest 2^n or 3x2^n value that is
-     * even and >= the input integer.
-     */
-    int goodFFTSize(int input);
-
     class XTable;
 
     /**
@@ -204,23 +198,23 @@ namespace galsim {
      * It will be based on an assumed Hermitian 2d square array.
      * The table will be forced to be of even size.
      */
-    class KTable 
+    class KTable
     {
         typedef std::complex<double> function1(double kx, double ky);
         typedef std::complex<double> function2(double kx, double ky, std::complex<double> val);
     public:
         /// dummy constructor
-        KTable() : _N(0), _No2(0), _Nd(0.), _halfNd(0.), _invNd(0.), _dk(0.), _invdk(0.) {} 
+        KTable() : _N(0), _No2(0), _Nd(0.), _halfNd(0.), _invNd(0.), _dk(0.), _invdk(0.) {}
 
         /// Construct with size and spacing.  Default is to zero out the table.
         KTable(int N, double dk, std::complex<double> value=0.);
 
-        KTable(const KTable& rhs) : 
+        KTable(const KTable& rhs) :
             _array(rhs._array),
             _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
             _dk(rhs._dk), _invdk(rhs._invdk) {}
 
-        KTable& operator=(const KTable& rhs) 
+        KTable& operator=(const KTable& rhs)
         {
             if (this != &rhs) {
                 clearCache();
@@ -230,12 +224,12 @@ namespace galsim {
                 _Nd=rhs._Nd;
                 _halfNd=rhs._halfNd;
                 _invNd=rhs._invNd;
-                _dk=rhs._dk; 
-                _invdk=rhs._invdk; 
+                _dk=rhs._dk;
+                _invdk=rhs._invdk;
             }
             return *this;
         }
-        
+
         ~KTable() {}
 
         /**
@@ -243,7 +237,7 @@ namespace galsim {
          *
          * This version returns a pointer to the result in real space.
          */
-        boost::shared_ptr<XTable> transform() const; 
+        boost::shared_ptr<XTable> transform() const;
 
         /**
          * @brief Fourier transform from (complex) k to x.
@@ -259,10 +253,10 @@ namespace galsim {
         double xval(double x, double y) const;
 
         /// Return value at grid point ix,iy (k = (ix*dk, iy*dk))
-        std::complex<double> kval(int ix, int iy) const; 
+        std::complex<double> kval(int ix, int iy) const;
 
         /// Same as kval, but assumes ix,iy are already known to be valid arguments of index2.
-        std::complex<double> kval2(int ix, int iy) const 
+        std::complex<double> kval2(int ix, int iy) const
         { return _array[index2(ix,iy)]; }
 
         /// interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
@@ -276,17 +270,17 @@ namespace galsim {
         { _array[index2(ix,iy)]=value; }
 
         /// Set all values to zero
-        void clear();  
+        void clear();
 
         /// Clear any cached values that had been set from previous passes.
-        void clearCache() const 
+        void clearCache() const
         {
-            _cache.clear(); 
+            _cache.clear();
             _xwt.clear();
         }
 
         /// this += scalar*rhs
-        void accumulate(const KTable& rhs, double scalar=1.); 
+        void accumulate(const KTable& rhs, double scalar=1.);
 
         /// Multiply each element by the corresponding element in rhs.
         void operator*=(const KTable& rhs);
@@ -349,13 +343,13 @@ namespace galsim {
             return iy*(_No2+1)+ix;
         }
 
-        // This skips all the adjustments to ix,iy, so both should be positive and 
+        // This skips all the adjustments to ix,iy, so both should be positive and
         // folded appropriately.
         size_t index2(int ix, int iy) const  //Return index into data array.
         { return iy*(_No2+1)+ix; }
 
 #ifdef FFT_DEBUG
-        void check_array() const 
+        void check_array() const
         { if (!_array.get()) throw FFTError("KTable operation on null array"); }
 #else
         void check_array() const {}
@@ -370,7 +364,7 @@ namespace galsim {
         mutable double _cacheX;
         mutable const InterpolantXY* _cacheInterp;
 
-        friend class XTable; 
+        friend class XTable;
     };
 
     /**
@@ -378,7 +372,7 @@ namespace galsim {
      *
      * N is forced to be even, and the origin is taken to be (N/2, N/2).
      */
-    class XTable 
+    class XTable
     {
         typedef double function1(double x, double y);
         typedef double function2(double x, double y, double val);
@@ -391,7 +385,7 @@ namespace galsim {
             _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
             _dx(rhs._dx), _invdx(rhs._invdx) {}
 
-        XTable& operator=(const XTable& rhs) 
+        XTable& operator=(const XTable& rhs)
         {
             if (this != &rhs) {
                 clearCache();
@@ -401,8 +395,8 @@ namespace galsim {
                 _Nd=rhs._Nd;
                 _halfNd=rhs._halfNd;
                 _invNd=rhs._invNd;
-                _dx=rhs._dx; 
-                _invdx=rhs._invdx; 
+                _dx=rhs._dx;
+                _invdx=rhs._invdx;
             }
             return *this;
         }
@@ -427,10 +421,10 @@ namespace galsim {
         void fftwMeasure() const;
 
         /// Do a "dumb" FT at a single frequency:
-        std::complex<double> kval(double kx, double ky) const; 
+        std::complex<double> kval(double kx, double ky) const;
 
         /// Get value at grid point (x,y) = (ix*dx, iy*dx)
-        double xval(int ix, int iy) const; 
+        double xval(int ix, int iy) const;
 
         /// interpolate to (x,y) - will NOT wrap the x data around +-N/2
         double interpolate(double x, double y, const Interpolant2d& interp) const;
@@ -439,23 +433,23 @@ namespace galsim {
         void xSet(int ix, int iy, double value);
 
         /// Set all values to zero
-        void clear();  
+        void clear();
 
         /// Clear any cached values that had been set from previous passes.
-        void clearCache() const 
+        void clearCache() const
         {
-            _cache.clear(); 
+            _cache.clear();
             _xwt.clear();
         }
 
         /// this += scalar*rhs
-        void accumulate(const XTable& rhs, double scalar=1.); 
+        void accumulate(const XTable& rhs, double scalar=1.);
 
         /// Multiply each element by a scalar.
         void operator*=(double scalar);
 
         /// Produce a new XTable which wraps this one onto range +-Nout/2.  Nout will
-        /// be raised to even value.  
+        /// be raised to even value.
         boost::shared_ptr<XTable> wrap(int Nout) const;
 
         /// Get the size of the table.
@@ -493,7 +487,7 @@ namespace galsim {
             ix += _No2;
             iy += _No2;
 #ifdef FFT_DEBUG
-            if (ix<0 || ix>=_N || iy<0 || iy>=_N) 
+            if (ix<0 || ix>=_N || iy<0 || iy>=_N)
                 FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
                     << ") out of range for N=" << _N;
 #endif
@@ -501,7 +495,7 @@ namespace galsim {
         }
 
 #ifdef FFT_DEBUG
-        void check_array() const 
+        void check_array() const
         { if (!_array.get()) throw FFTError("KTable operation on null array"); }
 #else
         void check_array() const {}
@@ -519,7 +513,7 @@ namespace galsim {
 
     /// Fill table from a function class:
     template <class T>
-    void KTable::fill(const T& f) 
+    void KTable::fill(const T& f)
     {
         clearCache(); // invalidate any stored interpolations
         std::complex<double>* zptr=_array.get();

@@ -30,8 +30,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-import galsim.utilities
-
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
 # ellipses using different conventions.  The underlying idea is that in test_SBProfile.py we already
 # have plenty of tests to ensure that a given Shear can be properly applied and gives the
@@ -47,18 +45,18 @@ import galsim.utilities
 # a few shear values over which we will loop so we can check them all
 # note: Rachel started with these q and beta, and then calculated all the other numbers in IDL using
 # the standard formulae
-q = [0.5, 0.3, 0.1, 0.7, 0.9, 0.99, 1.-8.75e-5]
+q = [1.0, 0.5, 0.3, 0.1, 0.7, 0.9, 0.99, 1.-8.75e-5]
 n_shear = len(q)
-beta = [0.5*np.pi, 0.25*np.pi, 0.0*np.pi, np.pi/3.0, np.pi, -0.25*np.pi, -0.5*np.pi]
-g = [0.333333, 0.538462, 0.818182, 0.176471, 0.05263157897, 0.005025125626, 4.375191415e-5 ]
-g1 = [-0.33333334, 0.0, 0.81818175, -0.088235296, 0.05263157897, 0.0, -4.375191415e-5 ]
-g2 = [0.0, 0.53846157, 0.0, 0.15282802, 0.0, -0.005025125626, 0.0 ]
-e = [0.600000, 0.834862, 0.980198, 0.342282, 0.1049723757, 0.01004999747, 8.750382812e-5 ]
-e1 = [-0.6000000, 0.0, 0.98019803, -0.17114094, 0.1049723757, 0.0, -8.750382812e-5 ]
-e2 = [0.0, 0.83486235, 0.0, 0.29642480, 0.0, -0.01004999747, 0.0 ]
-eta = [0.693147, 1.20397, 2.30259, 0.356675, 0.1053605157, 0.01005033585, 8.750382835e-5 ]
-eta1 = [-0.69314718, 0.0, 2.3025851, -0.17833748, 0.1053605157, 0.0, -8.750382835e-5 ]
-eta2 = [0.0, 1.2039728, 0.0, 0.30888958, 0.0, -0.01005033585, 0.0 ]
+beta = [0.0, 0.5*np.pi, 0.25*np.pi, 0.0*np.pi, np.pi/3.0, np.pi, -0.25*np.pi, -0.5*np.pi]
+g = [0.0, 0.333333, 0.538462, 0.818182, 0.176471, 0.05263157897, 0.005025125626, 4.375191415e-5 ]
+g1 = [0.0, -0.33333334, 0.0, 0.81818175, -0.088235296, 0.05263157897, 0.0, -4.375191415e-5 ]
+g2 = [0.0, 0.0, 0.53846157, 0.0, 0.15282802, 0.0, -0.005025125626, 0.0 ]
+e = [0.0, 0.600000, 0.834862, 0.980198, 0.342282, 0.1049723757, 0.01004999747, 8.750382812e-5 ]
+e1 = [0.0, -0.6000000, 0.0, 0.98019803, -0.17114094, 0.1049723757, 0.0, -8.750382812e-5 ]
+e2 = [0.0, 0.0, 0.83486235, 0.0, 0.29642480, 0.0, -0.01004999747, 0.0 ]
+eta = [0.0, 0.693147, 1.20397, 2.30259, 0.356675, 0.1053605157, 0.01005033585, 8.750382835e-5 ]
+eta1 = [0.0, -0.69314718, 0.0, 2.3025851, -0.17833748, 0.1053605157, 0.0, -8.750382835e-5 ]
+eta2 = [0.0, 0.0, 1.2039728, 0.0, 0.30888958, 0.0, -0.01005033585, 0.0 ]
 decimal = 5
 
 #### some helper functions
@@ -70,17 +68,21 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
     ### note: can only use mult_val = 1, 0, -1
     if mult_val != -1.0 and mult_val != 0.0 and mult_val != 1.0:
         raise ValueError("Cannot put multiplier that is not -1, 0, or 1!")
-    rad = test_shear.beta.rad()
-    while rad < 0.0:
-        rad += np.pi
-    vec = [test_shear.g, test_shear.g1, test_shear.g2, test_shear.e, test_shear.e1, test_shear.e2,
-           test_shear.eta, test_shear.esq, rad % np.pi]
+    beta_rad = test_shear.beta.rad()
+    while beta_rad < 0.0:
+        beta_rad += np.pi
 
     test_beta = beta[index]
     if mult_val < 0.0:
         test_beta -= 0.5*np.pi
     while test_beta < 0.0:
         test_beta += np.pi
+    # Special, if g == 0 exactly, beta is undefined, so just set it to zero.
+    if test_shear.g == 0.0:
+        test_beta = beta_rad = 0.
+
+    vec = [test_shear.g, test_shear.g1, test_shear.g2, test_shear.e, test_shear.e1, test_shear.e2,
+           test_shear.eta, test_shear.esq, beta_rad % np.pi]
     test_vec = [np.abs(mult_val)*g[index], mult_val*g1[index], mult_val*g2[index],
                 np.abs(mult_val)*e[index], mult_val*e1[index], mult_val*e2[index],
                 np.abs(mult_val)*eta[index], mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
@@ -92,14 +94,23 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
         test_vec = [1.e4 * v for v in test_vec[:-1]]
         np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                              err_msg = "Incorrectly initialized Shear")
+    # Test that the utiltiy function g1g2_to_e1e2 is equivalent to the Shear calculation.
+    test_e1, test_e2 = galsim.utilities.g1g2_to_e1e2(test_shear.g1, test_shear.g2)
+    np.testing.assert_almost_equal(test_e1, test_shear.e1, err_msg="Incorrect e1 calculation")
+    np.testing.assert_almost_equal(test_e2, test_shear.e2, err_msg="Incorrect e2 calculation")
+
 
 def add_distortions(d1, d2, d1app, d2app):
     # add the distortions
     denom = 1.0 + d1*d1app + d2*d2app
     dapp_sq = d1app**2 + d2app**2
-    d1tot = (d1 + d1app + d2app/dapp_sq*(1.0 - np.sqrt(1.0-dapp_sq))*(d2*d1app - d1*d2app))/denom
-    d2tot = (d2 + d2app + d1app/dapp_sq*(1.0 - np.sqrt(1.0-dapp_sq))*(d1*d2app - d2*d1app))/denom
-    return d1tot, d2tot
+    if dapp_sq == 0:
+        return d1, d2
+    else:
+        factor = (1.0 - np.sqrt(1.0-dapp_sq)) * (d2*d1app - d1*d2app) / dapp_sq
+        d1tot = (d1 + d1app + d2app * factor)/denom
+        d2tot = (d2 + d2app - d1app * factor)/denom
+        return d1tot, d2tot
 
 
 @timer

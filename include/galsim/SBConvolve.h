@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBConvolve_H
 #define GalSim_SBConvolve_H
-/** 
+/**
  * @file SBConvolve.h @brief SBProfile adapter which convolves 2 or more other SBProfiles.
  */
 
@@ -66,7 +66,7 @@ namespace galsim {
      * can be quicker to use real-space convolution instead.
      *
      */
-    class SBConvolve : public SBProfile 
+    class SBConvolve : public SBProfile
     {
     public:
         /**
@@ -101,7 +101,7 @@ namespace galsim {
         void operator=(const SBConvolve& rhs);
     };
 
-    // A special case of a convolution of a profile with itself, which allows for some 
+    // A special case of a convolution of a profile with itself, which allows for some
     // efficiency gains over SBConvolve(s,s)
     class SBAutoConvolve : public SBProfile
     {

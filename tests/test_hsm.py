@@ -207,9 +207,13 @@ def test_shearest_precomputed():
         psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
 
         # read in information for objects and expected results
-        img = galsim.fits.read(img_file)
+        imgR = galsim.fits.read(img_file)
+        # perform a cast to int as the images on file are unsigned,
+        # which leads to problems when we subtract 1000 below
+        img  = galsim.Image(imgR, dtype = int)
         img -= 1000
-        psf = galsim.fits.read(psf_file)
+        psfR = galsim.fits.read(psf_file)
+        psf = galsim.Image(psfR, dtype = np.int16)
         psf -= 1000
 
         # get PSF moments for later tests
@@ -526,10 +530,12 @@ def test_hsmparams():
     res = tot_gal_image.FindAdaptiveMom()
     res_def = tot_gal_image.FindAdaptiveMom(hsmparams = default_hsmparams)
     assert(equal_hsmshapedata(res, res_def)), 'Moment outputs differ when using default HSMParams'
+    assert res == res_def, 'Moment outputs differ when using default HSMParams'
 
     res2 = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image)
     res2_def = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, hsmparams = default_hsmparams)
     assert(equal_hsmshapedata(res, res_def)), 'Shear outputs differ when using default HSMParams'
+    assert res == res_def, 'Shear outputs differ when using default HSMParams'
 
     do_pickle(default_hsmparams)
     do_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
@@ -601,6 +607,7 @@ def test_hsmparams_nodefault():
     if test_timing:
         assert(dt2 > dt1),'Should take longer to estimate shear without truncation of galaxy'
     assert(not equal_hsmshapedata(g_res, g_res2)),'Results should differ with diff nsig_rg'
+    assert g_res != g_res2,'Results should differ with diff nsig_rg'
 
     # Check that results, timing change as expected with max_moment_nsig2
     test_t2 = time.time()
@@ -610,6 +617,7 @@ def test_hsmparams_nodefault():
     if test_timing:
         assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
     assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in max_moment_nsig2'
+    assert res != res2,'Outputs same despite change in max_moment_nsig2'
     assert(res.moments_sigma > res2.moments_sigma),'Sizes do not change as expected'
     assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
 
@@ -783,6 +791,43 @@ def test_ksb_sig():
     np.testing.assert_array_less(result_wide.corrected_g1, result_narrow.corrected_g1,
                                  "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
 
+@timer
+def test_noncontiguous():
+    """Test running HSM module with non-C-contiguous images.
+
+    This test was inspired by a bug report in issue #833.
+    """
+    gal = galsim.Gaussian(sigma=1.3).shear(g1=0.1, g2=0.2)
+
+    # First a normal C-contiguous image as build by drawImage.
+    img = gal.drawImage(nx=64, ny=64, scale=0.2)
+    meas_shape1 = galsim.hsm.FindAdaptiveMom(img).observed_shape
+    print(meas_shape1)
+    np.testing.assert_almost_equal(meas_shape1.g1, 0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
+    np.testing.assert_almost_equal(meas_shape1.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
+
+    # Transpose the image, which should just flip the sign of g1.
+    # Note, though, that this changes the ndarray from C-ordering to FORTRAN-ordering.
+    fimg = galsim.Image(img.array.T, scale=0.2)
+    meas_shape2 = galsim.hsm.FindAdaptiveMom(fimg).observed_shape
+    print(meas_shape2)
+    np.testing.assert_almost_equal(meas_shape2.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
+    np.testing.assert_almost_equal(meas_shape2.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
+
+    # Also test the real part of an ImageC, which not contiguous in either direction (step=2)
+    # This should have the negative shear from drawing in k space.
+    kimg = gal.drawKImage(nx=64, ny=64)
+    meas_shape3 = galsim.hsm.FindAdaptiveMom(kimg.real).observed_shape
+    print(meas_shape3)
+    np.testing.assert_almost_equal(meas_shape3.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
+    np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
+
 
 if __name__ == "__main__":
     test_moments_basic()
@@ -796,3 +841,4 @@ if __name__ == "__main__":
     test_strict()
     test_bounds_centroid()
     test_ksb_sig()
+    test_noncontiguous()

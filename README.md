@@ -81,19 +81,27 @@ You should receive notification that your unsubscription was successful.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
+Currently, the lead developers for GalSim are:
+
+  - Mike Jarvis (mikejarvis17 at gmail)
+  - Rachel Mandelbaum (rmandelb at andrew dot cmu dot edu)
+  - Josh Meyers (jmeyers314 at gmail)
+
+However, many others have contributed to GalSim over the years as well, for
+which we are very grateful.
+
 If you have a question about how to use GalSim, a good place to ask it is at
-StackOverflow:
+[StackOverflow](http://stackoverflow.com/).  Some of the GalSim developers
+have alerts set up to be automatically notified about questions with the
+'galsim' tag, so there is a good chance that your question will be answered.
 
-    http://stackoverflow.com/
+If you have any trouble installing or using the code, or find a bug, or have a
+suggestion for a new feature, please open up an Issue on our [GitHub
+repository](https://github.com/GalSim-developers/GalSim/issues).  We also accept
+pull requests if you have something you'd like to contribute to the code base.
 
-Some of the GalSim developers have alerts set up to be automatically notified
-about questions with the 'galsim' tag, so there is a good chance that your
-question will be answered.
-
-If you find something that you think is a bug, or if you have a suggestion
-for a new feature, please open up an Issue on our GitHub repository:
-
-    https://github.com/GalSim-developers/GalSim/issues?state=open
+If none of these communication avenues seem appropriate, you can also contact
+us directly at the above email addresses.
 
 
 Installation

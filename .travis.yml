@@ -4,19 +4,33 @@ branches:
 
 language: python
 python:
+    #- 2.6  # disabled until Travis fixes their issue #6732
+            # https://github.com/travis-ci/travis-ci/issues/6732
     - 2.7
+    - 3.4
+    - 3.5
 
 compiler:
     - g++
+
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
+    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
-    - ls -l $HOME/tmv-0.73
-    - ls -l $HOME/des_data
+    - if test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
+    - if test -d $HOME/boost_1_61_0; then ls -l $HOME/boost_1_61_0; fi
+    - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
+
+    # Add ~/bin and ~/lib, etc. to the appropriate paths where scons install will put things.
+    - export PYHOME=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}
+    - export PATH=$HOME/bin:$PATH
+    - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+
+    # Fix a directory name in 3.x installations so boost can find it.
+    - if test -d $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m; then ln -s $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m $PYHOME/include/python${TRAVIS_PYTHON_VERSION}; fi
 
     # To get coverage of the WcsToolsWCS class:
     #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
@@ -37,10 +51,11 @@ before_install:
     - cd tmv-0.73 && sudo scons install
     - popd
 
-    # Add ~/bin and ~/lib to the appropriate paths where scons install will put things.
-    - export PATH=$HOME/bin:$PATH
-    - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
-    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
+    # Only get Boost if not cached
+    - pushd $HOME
+    - if ! test -d boost_1_61_0 || ! test -f boost_1_61_0/bootstrap.sh; then wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2 --no-check-certificate && tar --bzip2 -xf boost_1_61_0.tar.bz2 && cd boost_1_61_0 && ./bootstrap.sh --with-python=python$TRAVIS_PYTHON_VERSION && ./b2 link=shared && cd ..; else echo Using cached Boost; fi
+    - cd boost_1_61_0 && sudo ./b2 -d0 link=shared install
+    - popd
 
     # Get the des data needed for the check_des test.
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
@@ -50,41 +65,44 @@ cache:
     pip: true
     directories:
     - $HOME/tmv-0.73
+    - $HOME/boost_1_61_0
     - $HOME/des_data
 
 install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install astropy==1.1.1 pyyaml future codecov coveralls starlink-pyast matplotlib scipy
-    - scons PREFIX=$HOME
-    - scons install
+    # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
+    # if it's not in the cache yet.
+    - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install simplejson ordereddict; fi
 
 script:
+    # This lets scons work even on Python 3 builds
+    # cf. https://github.com/travis-ci/travis-ci/issues/5961
+    - source $HOME/virtualenv/python2.7/bin/activate
+    # But now we need to manually set the python, since it's not the default in this virtualenv.
+    - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages BOOST_DIR=$PYHOME && scons install
+    - if test -f gs.error; then cat gs.error; fi
+    # Go back to the regular python environment for the tests
+    - source $PYHOME/bin/activate
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
     # Without cover-erase, this will append to the .coverage file
     - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
 
-    # Again list current contents of directories that should be being cached.
-    - ls -l $HOME
-    - ls -l $HOME/tmv-0.73
-    - ls -l $HOME/des_data
-
-
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
     # we do this command.  (Some of the .coverage.* files are in the ../examples directory.)
     - coverage combine . ../examples ../examples/great3 ../examples/des
     - coverage xml
-    - ls -la
 
     # If we start doing multiple python versions here, then only send the report for one of them.
     # Otherwise the reported results get weird.
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then codecov; fi
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+    # Codecov is better at combining the results from different python versions.
+    - codecov
 
-before_cache: 
+before_cache:
     - rm -rf $HOME/.cache/pip/log
     - rm -rf $HOME/.cache/pip/http
-

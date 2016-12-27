@@ -20,7 +20,6 @@ from builtins import range, zip
 
 import numpy as np
 import galsim
-from . import utilities
 
 class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
@@ -76,7 +75,7 @@ class AtmosphericScreen(object):
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
+        self.npix = galsim.Image.good_fft_size(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_scale * self.npix
         self.altitude = altitude
@@ -121,8 +120,8 @@ class AtmosphericScreen(object):
                 self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
                 self.tab2d)
         if self.alpha != 1.0:
-            s += ", _screen=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
-            s += ", _psi=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
+            s += ", _screen=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
+            s += ", _psi=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
         s += ")"
         return s
 
@@ -174,8 +173,8 @@ class AtmosphericScreen(object):
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self.psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
-        noise = utilities.rand_arr(self.psi.shape, gd)
-        return np.fft.ifft2(np.fft.fft2(noise)*self.psi).real
+        noise = galsim.utilities.rand_arr(self.psi.shape, gd)
+        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self.psi).real
 
     def advance(self):
         """Advance phase screen realization by self.time_step."""
@@ -350,17 +349,17 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
-    kwargs['screen_size'] = utilities.listify(screen_size)
+    kwargs['screen_size'] = galsim.utilities.listify(screen_size)
 
     # Set default r0_500 here, so that by default it gets broadcasted below such that the
     # _total_ r0_500 from _all_ screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
-    kwargs['r0_500'] = utilities.listify(kwargs['r0_500'])
+    kwargs['r0_500'] = galsim.utilities.listify(kwargs['r0_500'])
 
     # Turn speed, direction into vx, vy
     if 'speed' in kwargs:
-        kwargs['speed'] = utilities.listify(kwargs['speed'])
+        kwargs['speed'] = galsim.utilities.listify(kwargs['speed'])
         if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
@@ -380,7 +379,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
     return galsim.PhaseScreenList(AtmosphericScreen(**kw)
-                                  for kw in utilities.lod_to_dol(kwargs, nmax))
+                                  for kw in galsim.utilities.lod_to_dol(kwargs, nmax))
 
 
 # Some utilities for working with Zernike polynomials
@@ -400,7 +399,9 @@ def _nCr(n, r):
         return 0
 
 
-# This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+# Start off with the Zernikes up to j=15
+_noll_n = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,4,4]
+_noll_m = [0,0,1,-1,0,-2,2,-1,1,-3,3,0,2,-2,4,-4]
 def _noll_to_zern(j):
     """
     Convert linear Noll index to tuple of Zernike indices.
@@ -410,17 +411,22 @@ def _noll_to_zern(j):
     @return (n, m) tuple of Zernike indices
     @see <https://oeis.org/A176988>.
     """
-    if (j == 0):
-        raise ValueError("Noll indices start at 1. 0 is invalid.")
+    while len(_noll_n) <= j:
+        n = _noll_n[-1] + 1
+        _noll_n.extend( [n] * (n+1) )
+        if n % 2 == 0:
+            _noll_m.append(0)
+            m = 2
+        else:
+            m = 1
+        # pm = +1 if m values go + then - in pairs.
+        # pm = -1 if m values go - then + in pairs.
+        pm = +1 if (n//2) % 2 == 0 else -1
+        while m <= n:
+            _noll_m.extend([ pm * m , -pm * m ])
+            m += 2
 
-    n = 0
-    j1 = j-1
-    while (j1 > n):
-        n += 1
-        j1 -= n
-    m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
-    return (n, m)
-
+    return _noll_n[j], _noll_m[j]
 
 def _zern_norm(n, m):
     """Normalization coefficient for zernike (n, m).
@@ -439,32 +445,123 @@ def _zern_rho_coefs(n, m):
     kmax = (n-abs(m)) // 2
     A = [0]*(n+1)
     val = _nCr(n,kmax) # The value for k = 0 in the equation below.
-    norm = _zern_norm(n,m)
     for k in range(kmax):
         # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
         # The above formula is faster as a recurrence relation:
-        A[n-2*k] = val / norm
+        A[n-2*k] = val
         # Don't use *= since the factor is not an integer, but the result is.
         val = -val * (kmax-k)*(n-kmax-k) // ((n-k)*(k+1))
-    A[n-2*kmax] = val / norm
+    A[n-2*kmax] = val
     return A
 
-
-def _zern_coef_array(n, m, shape=None):
+def _zern_coef_array(n, m, obscuration, shape, annular):
     """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
+
+    @param n            Zernike radial coefficient
+    @param m            Zernike azimuthal coefficient
+    @param obscuration  Linear obscuration fraction.
+    @param shape        Output array shape
+    @param annular      Boolean indicating polynomials are orthogonal on a disk or an annulus.
+
+    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                disk coordinates.
     """
     if shape is None:
         shape = ((n//2)+1, abs(m)+1)
     out = np.zeros(shape, dtype=np.complex128)
-    coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
+    if annular:
+        coefs = np.array(_annular_zern_rho_coefs(n, m, obscuration), dtype=np.complex128)
+    else:
+        coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
+    coefs /= _zern_norm(n, m)
     if m < 0:
         coefs *= -1j
     for i, c in enumerate(coefs[abs(m)::2]):
         out[i, abs(m)] = c
     return out
 
+def __noll_coef_array(jmax, obscuration, annular):
+    """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
+    bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
+    a unit disc.
+
+    @param jmax         Maximum Noll coefficient
+    @param obscuration  Linear obscuration fraction.
+    @param annular      Boolean indicating polynomials are orthogonal on a disk or an annulus.
+
+    @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
+                disk coordinates.
+    """
+    maxn = _noll_to_zern(jmax)[0]
+    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
+    shape1 = (maxn//2+1, maxn+1)
+
+    out = np.zeros(shape, dtype=np.complex128)
+    for j in range(1,jmax+1):
+        n,m = _noll_to_zern(j)
+        coef = _zern_coef_array(n,m,obscuration,shape1,annular)
+        out[:,:,j-1] = coef
+    return out
+_noll_coef_array = galsim.utilities.LRU_Cache(__noll_coef_array)
+
+# Following 3 functions from
+#
+# "Zernike annular polynomials for imaging systems with annular pupils"
+# Mahajan (1981) JOSA Vol. 71, No. 1.
+
+# Mahajan's h-function normalization for annular Zernike coefficients.
+def __h(m, j, eps):
+    if m == 0:  # Equation (A5)
+        return (1-eps**2)/(2*(2*j+1))
+    else:  # Equation (A14)
+        num = -(2*(2*j+2*m-1)) * _Q(m-1, j+1, eps)[0]
+        den = (j+m)*(1-eps**2) * _Q(m-1, j, eps)[0]
+        return num/den * _h(m-1, j, eps)
+_h = galsim.utilities.LRU_Cache(__h)
+
+# Mahajan's Q-function for annular Zernikes.
+def __Q(m, j, eps):
+    if m == 0:  # Equation (A4)
+        return _annular_zern_rho_coefs(2*j, 0, eps)[::2]
+    else:  # Equation (A13)
+        num = 2*(2*j+2*m-1) * _h(m-1, j, eps)
+        den = (j+m)*(1-eps**2)*_Q(m-1, j, eps)[0]
+        summation = np.zeros((j+1,), dtype=float)
+        for i in range(j+1):
+            qq = _Q(m-1, i, eps)
+            qq = qq*qq[0]  # Don't use *= here since it modifies the cache!
+            summation[:i+1] += qq/_h(m-1, i, eps)
+        return summation * num / den
+_Q = galsim.utilities.LRU_Cache(__Q)
+
+def __annular_zern_rho_coefs(n, m, eps):
+    """Compute coefficients of radial part of annular Zernike (n, m), with fractional linear
+    obscuration eps.
+    """
+    out = np.zeros((n+1,), dtype=float)
+    m = abs(m)
+    if m == 0:  # Equation (18)
+        norm = 1./(1-eps**2)
+        # R[n, m=0, eps](r^2) = R[n, m=0, eps=0]((r^2 - eps^2)/(1 - eps^2))
+        # Implement this by retrieving R[n, 0] coefficients of (r^2)^k and
+        # multiplying in the binomial (in r^2) expansion of ((r^2 - eps^2)/(1 - eps^2))^k
+        coefs = _zern_rho_coefs(n, 0)
+        for i, coef in enumerate(coefs):
+            if i % 2 == 1: continue
+            j = i // 2
+            more_coefs = (norm**j) * galsim.utilities.binomial(-eps**2, 1, j)
+            out[0:i+1:2] += coef*more_coefs
+    elif m == n:  # Equation (25)
+        norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
+        out[n] = norm
+    else:  # Equation (A1)
+        j = (n-m)//2
+        norm = np.sqrt((1-eps**2)/(2*(2*j+m+1) * _h(m,j,eps)))
+        out[m::2] = norm * _Q(m, j, eps)
+    return out
+_annular_zern_rho_coefs = galsim.utilities.LRU_Cache(__annular_zern_rho_coefs)
 
 def horner(x, coef):
     """Evaluate univariate polynomial using Horner's method.
@@ -476,11 +573,15 @@ def horner(x, coef):
     @param coef  Polynomial coefficients of increasing powers of x.
     @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
     """
-    result = 0
-    for c in coef[::-1]:
-        result = result*x + c
+    coef = np.trim_zeros(coef, trim='b')
+    result = np.zeros_like(x, dtype=np.complex128)
+    if len(coef) == 0: return result
+    result += coef[-1]
+    for c in coef[-2::-1]:
+        result *= x
+        if c != 0: result += c
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
     return result
-
 
 def horner2d(x, y, coefs):
     """Evaluate bivariate polynomial using nested Horner's method.
@@ -492,9 +593,12 @@ def horner2d(x, y, coefs):
                   increasing the power of x.
     @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
     """
-    result = 0
-    for coef in coefs[::-1]:
-        result = result*x + horner(y, coef)
+    result = horner(y, coefs[-1])
+    for coef in coefs[-2::-1]:
+        result *= x
+        result += horner(y, coef)
+    # Useful when working on this... (Numpy method is much slower, btw.)
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
     return result
 
 
@@ -528,11 +632,19 @@ class OpticalScreen(object):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
+    @param annular_zernike  Boolean indicating that aberrations specify the amplitudes of annular
+                            Zernike polynomials instead of circular Zernike polynomials.
+                            [default: False]
+    @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
+                            dimension. [0., 1.).  Note it is the user's responsibility to ensure
+                            consistency of OpticalScreen obscuration and Aperture obscuration.
+                            [default: 0.0]
     @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
     """
     def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
-                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
+                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, annular_zernike=False,
+                 obscuration=0.0, lam_0=500.0):
         if aberrations is None:
             aberrations = np.zeros(12)
             aberrations[2] = tip
@@ -557,21 +669,25 @@ class OpticalScreen(object):
                 import warnings
                 warnings.warn(
                     "Detected non-zero value in aberrations[0] -- this value is ignored!")
+            aberrations = np.array(aberrations)
+        self.aberrations = aberrations
 
-        self.aberrations = np.array(aberrations)
         # strip any trailing zeros.
-        self.aberrations = np.trim_zeros(self.aberrations, trim='b')
+        if self.aberrations[-1] == 0:
+            self.aberrations = np.trim_zeros(self.aberrations, trim='b')
+            if len(self.aberrations) == 0:  # Don't let it be zero length.
+                self.aberrations = np.array([0])
+        self.annular_zernike = annular_zernike
+        self.obscuration = obscuration
         self.lam_0 = lam_0
-        try:
-            maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
-        except:
-            maxn = 0
+
+        jmax = len(self.aberrations)-1
+        maxn = _noll_to_zern(jmax)[0]
         shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
         self.coef_array = np.zeros(shape, dtype=np.complex128)
 
-        for j, ab in enumerate(self.aberrations):
-            if j == 0: continue
-            self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape) * ab
+        noll_coef = _noll_coef_array(jmax, self.obscuration, self.annular_zernike)
+        self.coef_array = np.dot(noll_coef, self.aberrations[1:])
 
     def __str__(self):
         return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
@@ -580,12 +696,16 @@ class OpticalScreen(object):
         s = "galsim.OpticalScreen(lam_0=%r" % self.lam_0
         if any(self.aberrations):
             s += ", aberrations=%r"%self.aberrations
+        if self.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
         s += ")"
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.OpticalScreen) and
-                np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0))
+        return (isinstance(other, galsim.OpticalScreen)
+                and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
+                and self.annular_zernike == other.annular_zernike)
 
     def __ne__(self, other): return not self == other
 

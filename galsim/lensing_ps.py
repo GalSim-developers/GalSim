@@ -122,7 +122,7 @@ class PowerSpectrum(object):
     user-defined functions that take a single argument `k` and return the power at that `k` value,
     or they can be instances of the LookupTable class for power spectra that are known at
     particular `k` values but for which there is not a simple analytic form.
-    
+
     Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
     (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
     P(k).  Thus, k and P(k) have dimensions of inverse angle and angle^2, respectively.  It is quite
@@ -168,7 +168,7 @@ class PowerSpectrum(object):
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of
                             angle^2?  [default: False]
-    @param units            The angular units used for the power spectrum (i.e. the units of 
+    @param units            The angular units used for the power spectrum (i.e. the units of
                             k^-1 and sqrt(P)). This should be either an AngleUnit instance
                             (e.g. galsim.radians) or a string (e.g. 'radians'). [default: arcsec]
     """
@@ -1021,7 +1021,7 @@ class PowerSpectrum(object):
                 >>> g1, g2 = my_ps.getShear(pos = (12, 412))
 
         3. Get the shears for a bunch of points at once:
-        
+
                 >>> xlist = [ 141, 313,  12, 241, 342 ]
                 >>> ylist = [  75, 199, 306, 225, 489 ]
                 >>> poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
@@ -1617,7 +1617,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            E_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            E_k = np.empty((self.ny,self.nx), dtype=complex)
             E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
             # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
             self._make_hermitian(E_k)
@@ -1627,7 +1627,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            B_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            B_k = np.empty((self.ny,self.nx), dtype=complex)
             B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
             # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
             # However, we later multiply this by i, so that means here B_k[-k] = conj(B_k[k])
@@ -1759,7 +1759,6 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    import galsim.utilities
     if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
         g1 = g1.array
         g2 = g2.array

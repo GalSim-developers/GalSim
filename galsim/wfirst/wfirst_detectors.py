@@ -143,7 +143,7 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
         exptime=galsim.wfirst.exptime
 
     # Add Poisson noise.
-    poisson_noise = galsim.PoissonNoise(rng) 
+    poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
     # Reciprocity failure (use WFIRST routine, with the supplied exposure time).

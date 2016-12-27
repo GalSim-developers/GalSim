@@ -3,7 +3,7 @@
 
 "#" : "The third JSON configuration file in our tutorial about using Galsim config files",
 "#" : "(This file is designed to be viewed in a window 100 characters wide.)",
-  
+
 "#" : "This script gets reasonably close to including all the principal features of an image",
 "#" : "from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,",
 "#" : "where each component is represented by a sheared Sersic profile (with different Sersic",
@@ -12,7 +12,7 @@
 "#" : "coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model",
 "#" : "includes both a gain and read noise.  And finally, we include the effect of a slight",
 "#" : "telescope distortion.",
-      
+
 "#" : "See demo3.yaml for more extensive commentary about the features here.",
 
 "gal" : {
@@ -23,8 +23,8 @@
             "type" : "Sersic",
             "n" : 3.5,
             "half_light_radius" : 2.3,
-            "flux" : 0.3 
-        }, 
+            "flux" : 0.3
+        },
         {
             "type" : "Sersic",
             "n" : 1.5,
@@ -41,7 +41,7 @@
 
     "flux" : 1e6
 },
- 
+
 "psf" : {
     "type" : "Convolution",
 
@@ -74,7 +74,7 @@
 "image" : {
     "pixel_scale" : 0.23,
     "size" : 64,
-   
+
     "wcs" : {
         "type" : "Shear",
         "shear" : {
@@ -97,7 +97,7 @@
 "output" : {
     "dir" : "output_json",
     "file_name" : "demo3.fits",
-    
+
     "psf" : {
         "file_name" : "demo3_epsf.fits"
     }

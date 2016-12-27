@@ -47,13 +47,13 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
                 "signal_to_noise option not implemented for draw_method = phot")
 
         if 'image' in base and 'noise' in base['image']:
-            noise_var = galsim.config.CalculateNoiseVar(base)
+            noise_var = galsim.config.CalculateNoiseVariance(base)
         else:
             raise AttributeError("Need to specify noise level when using psf.signal_to_noise")
 
         sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
 
-        sn_meas = math.sqrt( np.sum(im.array**2) / noise_var )
+        sn_meas = math.sqrt( np.sum(im.array**2, dtype=float) / noise_var )
         flux = sn_target / sn_meas
         im *= flux
 
@@ -87,8 +87,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                     shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
             else:
                 shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
-            if logger:
-                logger.debug('obj %d: psf shift: %s',base['obj_num'],str(shift))
+            logger.debug('obj %d: psf shift: %s',base.get('obj_num',0),str(shift))
             psf = psf.shift(shift)
 
         # Start with the offset required just due to the stamp size/shape.
@@ -101,11 +100,11 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                 offset += galsim.config.GetCurrentValue('stamp.offset',base, galsim.PositionD)
             else:
                 offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
-            if logger:
-                logger.debug('obj %d: psf offset: %s',base['obj_num'],str(offset))
+            logger.debug('obj %d: psf offset: %s',base.get('obj_num',0),str(offset))
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
+            base['current_noise_image'] = base['current_stamp']
             galsim.config.AddNoise(base,psf_im,current_var=0,logger=logger)
         self.scratch[obj_num] = psf_im
 
@@ -116,17 +115,11 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         for obj_num in obj_nums:
             stamp = self.scratch[obj_num]
             b = stamp.bounds & image.getBounds()
-            if logger:
-                logger.debug('image %d: psf image at b = %s = %s & %s',
-                             base['image_num'],b,stamp.bounds,image.getBounds())
+            logger.debug('image %d: psf image at b = %s = %s & %s',
+                         base['image_num'],b,stamp.bounds,image.getBounds())
             if b.isDefined():
-                # This next line is equivalent to:
-                #    image[b] += stamp[b]
-                # except that this doesn't work through the proxy.  We can only call methods
-                # that don't start with _.  Hence using the more verbose form here.
-                image.setSubImage(b, image.subImage(b) + stamp[b])
-                if logger:
-                    logger.debug('obj %d: added psf image to main image',base['obj_num'])
+                image[b] += stamp[b]
+                logger.debug('obj %d: added psf image to main image',base.get('obj_num',0))
         self.data[index] = image
 
 
