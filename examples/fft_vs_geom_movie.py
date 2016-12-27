@@ -95,7 +95,10 @@ def make_movie(args):
     aberrations *= args.sigma/measured_std
     aberrations -= np.mean(aberrations, axis=0)
 
-    # Generate an atmosphere.  Same procedure as in psf_wf_movie.py
+    # For the atmosphere screens, we first estimates weights, so that the turbulence is dominated by
+    # the lower layers consistent with direct measurements.  The specific values we use are from
+    # SCIDAR measurements on Cerro Pachon as part of the 1998 Gemini site selection process
+    # (Ellerbroek 2002, JOSA Vol 19 No 9).
     Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
     Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
     Ellerbroek_interp = galsim.LookupTable(Ellerbroek_alts, Ellerbroek_weights,
