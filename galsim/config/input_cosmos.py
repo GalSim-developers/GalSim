@@ -66,6 +66,11 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     ignore = ignore + ['num']
 
+    # Special: if galaxies are selected based on index, and index is Sequence or Random, and max
+    # isn't set, set it to nobjects-1.
+    if 'index' in config:
+        galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
+
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.COSMOSCatalog.makeGalaxy._req_params,
         opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
