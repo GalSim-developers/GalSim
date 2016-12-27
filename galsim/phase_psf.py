@@ -16,15 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 """@file phase_psf.py
-Utilities for creating PSFs from phase screens.  Essentially evaluates the Fourier optics
-diffraction equation:
+Utilities for creating PSFs from phase screens.
+
+For PSFs drawn using real-space or Fourier methods, these utilities essentially evaluate the Fourier
+optics diffraction equation:
 
 PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
 
 where x, y are focal plane coordinates and u, v are pupil plane coordinates.
 
-Alternatively, drawing using photon-shooting can use a fast geometric optics approximation to
-Fourier optics.
+For PSFs drawn with method='phot', an often significantly faster geometric approximation is used
+instead.  To use photon-shooting without this approximation, set `geometric_shooting=False` when
+creating the PSF.
 
 The main classes of note are:
 
@@ -168,9 +171,7 @@ class Aperture(object):
                                pupil sampling interval using this object.  [default: None]
     @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the pupil
                                plane image, to be used instead of generating one based on the
-                               obscuration and strut parameters.  Note that if the image is saved as
-                               unsigned integers, you will get a warning about conversion to floats,
-                               which is harmless. [default: None]
+                               obscuration and strut parameters.  [default: None]
     @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil plane
                                (positive in the counter-clockwise direction).  Must be an Angle
                                instance. [default: 0. * galsim.degrees]
@@ -697,7 +698,7 @@ class PhaseScreenList(object):
         self.reversible = all(l.reversible for l in self)
 
     def _seek(self, t):
-        """Seek all layers to time t."""
+        """Set all layers' internal clocks to time t."""
         for layer in self:
             try:
                 layer._seek(t)
@@ -814,7 +815,7 @@ class PhaseScreenList(object):
 
         @param lam                 Wavelength in nanometers at which to compute PSF.
         @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
-        @param exptime             Time in seconds overwhich to accumulate evolving instantaneous
+        @param exptime             Time in seconds over which to accumulate evolving instantaneous
                                    PSF.  [default: 0.0]
         @param time_step           Time interval in seconds with which to sample phase screens.
                                    [default: 0.025]
@@ -852,9 +853,7 @@ class PhaseScreenList(object):
                                    folding.  [default: 1.0]
         @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the
                                    pupil plane image, to be used instead of generating one based on
-                                   the obscuration and strut parameters.  Note that if the image is
-                                   saved as unsigned integers, you will get a warning about
-                                   conversion to floats, which is harmless. [default: None]
+                                   the obscuration and strut parameters.  [default: None]
         @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil
                                    plane (positive in the counter-clockwise direction).  Must be an
                                    Angle instance. [default: 0. * galsim.degrees]
@@ -929,7 +928,7 @@ class PhaseScreenPSF(GSObject):
     @param screen_list         PhaseScreenList object from which to create PSF.
     @param lam                 Wavelength in nanometers at which to compute PSF.
     @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
-    @param exptime             Time in seconds overwhich to accumulate evolving instantaneous PSF.
+    @param exptime             Time in seconds over which to accumulate evolving instantaneous PSF.
                                [default: 0.0]
     @param time_step           Time interval in seconds with which to sample phase screens.
                                [default: 0.025]
@@ -979,9 +978,7 @@ class PhaseScreenPSF(GSObject):
                                folding.  [default: 1.0]
     @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the pupil
                                plane image, to be used instead of generating one based on the
-                               obscuration and strut parameters.  Note that if the image is saved as
-                               unsigned integers, you will get a warning about conversion to floats,
-                               which is harmless. [default: None]
+                               obscuration and strut parameters.  [default: None]
     @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil plane
                                (positive in the counter-clockwise direction).  Must be an Angle
                                instance. [default: 0. * galsim.degrees]
@@ -1407,9 +1404,7 @@ class OpticalPSF(GSObject):
                             Angle instance. [default: 0. * galsim.degrees]
     @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
                             plane image, to be used instead of generating one based on the
-                            obscuration and strut parameters.  Note that if the image is saved as
-                            unsigned integers, you will get a warning about conversion to floats,
-                            which is harmless. [default: None]
+                            obscuration and strut parameters.  [default: None]
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]

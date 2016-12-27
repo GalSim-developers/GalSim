@@ -170,6 +170,7 @@ class AtmosphericScreen(object):
         return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
 
     def _seek(self, t):
+        """Set layer's internal clock to time t."""
         if t == self._time:
             return
         if not self.reversible:
