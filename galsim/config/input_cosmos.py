@@ -98,7 +98,8 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             kwargs['rng'] = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
 
     # NB. Even though index is officially optional, it will always be present, either because it was
-    #     set by a call to selectRandomIndices or because it was specified explicitly.
+    #     set by a call to selectRandomIndices, explicitly by the user, or due to the call to
+    #     SetDefaultIndex.
     index = kwargs['index']
     if index >= cosmos_cat.getNObjects():
         raise IndexError(
