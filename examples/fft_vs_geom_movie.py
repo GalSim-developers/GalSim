@@ -33,6 +33,9 @@ Optics only simulation:
 Atmosphere only simulation:
   $ python fft_vs_geom_movie.py --diam 8.36 --obscuration 0.61 --sigma 0.0 --nlayers 6 --size 3.0
 
+To see a larger list of available options and defaults, use
+  $ python fft_vs_geom_movie.py --help
+
 """
 
 import os
@@ -100,12 +103,11 @@ def make_movie(args):
     alts = np.max(Ellerbroek_alts)*np.arange(args.nlayers)/(args.nlayers-1)
     weights = Ellerbroek_interp(alts)  # interpolate the weights
     weights /= sum(weights)  # and renormalize
-    max_speed = 20  # Pick (an arbitrary) maximum wind speed in m/s.
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
     r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
     for i in range(args.nlayers):
-        spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
+        spd.append(u()*args.max_speed)  # Use a random speed between 0 and args.max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         r0_500.append(args.r0_500*weights[i]**(-3./5))
         print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
@@ -342,6 +344,8 @@ Atmosphere only simulation:
                              "with periodic boundary conditions.  Default: 102.4")
     parser.add_argument("--screen_scale", type=float, default=0.1,
                         help="Resolution of atmospheric screen in meters.  Default: 0.1")
+    parser.add_argument("--max_speed", type=float, default=20.0,
+                        help="Maximum wind speed in m/s.  Default: 20.0")
 
     parser.add_argument("--lam", type=float, default=700.0,
                         help="Wavelength in nanometers.  Default: 700.0")
