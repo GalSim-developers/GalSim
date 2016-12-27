@@ -78,6 +78,14 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
         ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
+    # Deal with defaults for gal_type, if it wasn't specified:
+    # If COSMOSCatalog was constructed with 'use_real'=True, then default is 'real'.  Otherwise, the
+    # default is 'parametric'.  This code is in makeGalaxy, but since config has to use
+    # _makeSingleGalaxy, we have to include this here too.
+    if 'gal_type' not in kwargs:
+        if cosmos_cat.use_real: kwargs['gal_type'] = 'real'
+        else: kwargs['gal_type'] = 'parametric'
+
     rng = None
     if 'index' not in kwargs:
         rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
@@ -90,7 +98,9 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             # discard the same number of random calls from the one in the config dict.
             rng.discard(int(n_rng_calls))
 
-    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
+    # Even though gal_type is optional, it will have been set in the code above.  So we can at this
+    # point assume that kwargs['gal_type'] exists.
+    if kwargs['gal_type'] == 'real':
         if rng is None:
             rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
         kwargs['rng'] = rng
