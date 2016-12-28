@@ -43,6 +43,8 @@ Bug Fixes
 Deprecated Features
 -------------------
 
+- Deprecated `simReal` method, a little-used way of simulating images
+  based on realistic galaxies. (#787)
 - Deprecated `Chromatic` class.  This functionality has been subsumed by
   `ChromaticTransformation`.  (#789)
 - Deprecated `.copy()` methods for immutable classes, including `GSObject`,

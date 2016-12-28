@@ -29,9 +29,6 @@ This module defines the RealGalaxyCatalog class, used to store all required info
 real galaxy simulation training sample and accompanying PSF model.  For information about
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
 page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
-
-The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
-some lower-resolution telescope.
 """
 
 
@@ -696,7 +693,7 @@ class RealGalaxyCatalog(object):
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
             rand_rotate=True, rng=None, target_flux=1000.0, image=None):
-    """Function to simulate images (no added noise) from real galaxy training data.
+    """Deprecated method to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
@@ -731,6 +728,11 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     @return a simulated galaxy image.
     """
+    # pragma: no cover
+    from .deprecated import depr
+    depr('simReal', 1.5, '',
+         'This method has been deprecated due to lack of widespread use.  If you '+
+         'have a need for it, please open an issue requesting that it be reinstated.')
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")

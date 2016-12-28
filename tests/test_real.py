@@ -137,10 +137,10 @@ def test_real_galaxy_ideal():
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
-                    sim_image = galsim.simReal(
-                            rg, targ_PSF, tps,
-                            g1 = targ_applied_shear1, g2 = targ_applied_shear2,
-                            rand_rotate = False, target_flux = fake_gal_flux)
+                    tmp_gal = rg.withFlux(fake_gal_flux).shear(g1=targ_applied_shear1,
+                                                               g2=targ_applied_shear2)
+                    final_tmp_gal = galsim.Convolve(targ_PSF, tmp_gal)
+                    sim_image = final_tmp_gal.drawImage(scale=tps, method='no_pixel')
                     # galaxy sigma, in units of pixels on the final image
                     sigma_ideal = (fake_gal_fwhm/tps)*fwhm_to_sigma
                     # compute analytically the expected galaxy moments:
@@ -171,7 +171,7 @@ def test_real_galaxy_ideal():
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
     # read in real RealGalaxy from file
-    #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    # rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     # This is an alternate way to give the directory -- as part of the catalog file name.
     full_catalog_file = os.path.join(image_dir,catalog_file)
     rgc = galsim.RealGalaxyCatalog(full_catalog_file)
@@ -180,11 +180,14 @@ def test_real_galaxy_saved():
     # read in expected result for some shear
     shera_image = galsim.fits.read(shera_file)
     shera_target_PSF_image = galsim.fits.read(shera_target_PSF_file)
+    shera_target_PSF_image.scale = shera_target_pixel_scale
 
     # simulate the same galaxy with GalSim
-    sim_image = galsim.simReal(rg, shera_target_PSF_image, shera_target_pixel_scale,
-                               g1 = targ_applied_shear1, g2 = targ_applied_shear2,
-                               rand_rotate = False, target_flux = shera_target_flux)
+    tmp_gal = rg.withFlux(shera_target_flux).shear(g1=targ_applied_shear1,
+                                                   g2=targ_applied_shear2)
+    tmp_psf = galsim.InterpolatedImage(shera_target_PSF_image)
+    tmp_gal = galsim.Convolve(tmp_gal, tmp_psf)
+    sim_image = tmp_gal.drawImage(scale=shera_target_pixel_scale, method='no_pixel')
 
     # there are centroid issues when comparing Shera vs. SBProfile outputs, so compare 2nd moments
     # instead of images
