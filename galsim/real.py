@@ -692,7 +692,7 @@ class RealGalaxyCatalog(object):
         pass
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
-            rand_rotate=True, rng=None, target_flux=1000.0, image=None):
+            rand_rotate=True, rng=None, target_flux=1000.0, image=None): # pragma: no cover
     """Deprecated method to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
@@ -728,7 +728,6 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     @return a simulated galaxy image.
     """
-    # pragma: no cover
     from .deprecated import depr
     depr('simReal', 1.5, '',
          'This method has been deprecated due to lack of widespread use.  If you '+
