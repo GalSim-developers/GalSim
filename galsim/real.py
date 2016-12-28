@@ -466,17 +466,14 @@ class RealGalaxyCatalog(object):
         self.variance = self.cat.field('noise_variance') # noise variance for image
         self.mag = self.cat.field('mag')   # apparent magnitude
         self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        # Add the weight factor to the catalog only if it behaves properly.  In particular, it
-        # should be a float between 0 and 1 (so that random selections of indices can use it to
-        # remove any selection effects in the catalog creation process).  If the weight does not
-        # behave like this, then the catalog simply won't have a weight column.
-        weight = self.cat.field('weight')
-        if np.min(weight) >= 0. and np.max(weight) <= 1. and \
-                not np.any(np.isnan(weight)) and not np.any(np.isinf(weight)):
-            # Note the renormalization by the maximum.  If the maximum is below 1, that just means
-            # that all galaxies were subsampled at some level, and here we only want to account for
-            # relative selection effects within the catalog, not absolute subsampling.
-            self.weight = weight/np.max(weight)
+        # The weight factor should be a float value >=0 (so that random selections of indices can
+        # use it to remove any selection effects in the catalog creation process).
+        # Here we renormalize by the maximum weight.  If the maximum is below 1, that just means
+        # that all galaxies were subsampled at some level, and here we only want to account for
+        # relative selection effects within the catalog, not absolute subsampling.  If the maximum
+        # is above 1, then our random number generation test used to draw a weighted sample will
+        # fail since we use uniform deviates in the range 0 to 1.
+        self.weight = weight/np.max(weight)
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
 
