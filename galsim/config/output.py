@@ -47,6 +47,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     import time
     t1 = time.time()
 
+    # The next line relies on getting errors when the rng is undefined.  However, the default
+    # rng is None, which is a valid thing to construct a Deviate object from.  So for now,
+    # set the rng to 'undefined' to make sure we get errors where we are expecting to.
+    config['rng'] = 'undefined'
+
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
