@@ -473,6 +473,7 @@ class RealGalaxyCatalog(object):
         # relative selection effects within the catalog, not absolute subsampling.  If the maximum
         # is above 1, then our random number generation test used to draw a weighted sample will
         # fail since we use uniform deviates in the range 0 to 1.
+        weight = self.cat.field('weight')
         self.weight = weight/np.max(weight)
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
