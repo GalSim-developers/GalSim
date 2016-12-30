@@ -1242,18 +1242,6 @@ class GSObject(object):
 
         @returns the drawn Image.
         """
-        # Check for obsolete parameters
-        if dx is not None and scale is None: # pragma: no cover
-            from .deprecated import depr
-            depr('dx', 1.1, 'scale')
-            scale = dx
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-
         # Check that image is sane
         if image is not None and not isinstance(image, galsim.Image):
             raise ValueError("image is not an Image instance")
@@ -1432,15 +1420,6 @@ class GSObject(object):
 
         @returns The total flux drawn inside the image bounds.
         """
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-            if type(wmult) != float:
-                wmult = float(wmult)
-
         # Start with what this profile thinks a good size would be given the image's pixel scale.
         N = self.getGoodImageSize(image.scale/wmult)
 
@@ -1771,43 +1750,6 @@ class GSObject(object):
 
         @returns an ImageC instance (created if necessary)
         """
-        if isinstance(image,galsim.Image) and isinstance(nx,galsim.Image):
-            # If the user calls drawK(re,im), then give the proper deprecation below.
-            re = image
-            im = nx
-            image = None
-            nx = None
-
-        # Check for obsolete parameters
-        if dk is not None and scale is None: # pragma: no cover
-            from .deprecated import depr
-            depr('dk', 1.1, 'scale')
-            scale = dk
-        if wmult != 1.: # pragma: no cover
-            from .deprecated import depr
-            depr('wmult', 1.5, 'GSParams(folding_threshold)',
-                 'The old wmult parameter should not generally be required to get accurate FFT-'
-                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
-                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-        if re is not None or im is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('re,im', 1.5, 'image as a single complex ImageC',
-                 'Warning: the input re, im images are being changed to have their arrays be '
-                 'the real and imag parts of the output ImageC object.')
-            if re is None or im is None:
-                raise ValueError("Only one of re or im was provided.")
-            if image is not None:
-                raise ValueError("re and im were provided along with image")
-            image = re + 1j * im
-        if dtype is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('dtype', 1.5, '', 'dtype of returned image will always be numpy.complex128')
-        if gain is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('gain', 1.5, ''
-                 "The gain parameter doesn't really make sense for drawKImage.  If you had been "
-                 "using it, you should now just divide the final image by gain instead.")
-
         # Make sure provided image is an ImageC
         if image is not None and image.array.dtype != np.complex128:
             raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
