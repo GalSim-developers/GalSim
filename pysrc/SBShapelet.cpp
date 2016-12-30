@@ -66,9 +66,6 @@ namespace galsim {
             std::complex<double> val = lvector(p,q);
             return bp::make_tuple(real(val),imag(val));
         }
-        static void SetPQ(LVector& lvector, int p, int q, double re, double im)
-        { lvector(p,q) = std::complex<double>(re,im); }
-
         static void wrap()
         {
             bp::class_< LVector > pyLVector("LVector", "", bp::no_init);
@@ -83,12 +80,10 @@ namespace galsim {
                 )
                 .def(bp::init<const LVector&>(bp::args("other")))
                 .def("copy", &LVector::copy)
-                .def("resize", &LVector::resize, bp::args("order"))
                 .add_property("array", &GetConstArray)
                 .add_property("order", &LVector::getOrder)
                 .def("size", &LVector::size)
                 .def("getPQ", &GetPQ, bp::args("p","q"))
-                .def("setPQ", &SetPQ, bp::args("p","q","re","im"))
                 .def(bp::self * bp::other<double>())
                 .def("__div__", &LVector::operator/)
                 .def("__truediv__", &LVector::operator/)

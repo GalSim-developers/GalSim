@@ -156,8 +156,6 @@ namespace galsim {
                 .def("__call__", &GaussianDeviate::operator())
                 .def("getMean", &GaussianDeviate::getMean)
                 .def("getSigma", &GaussianDeviate::getSigma)
-                .def("_setMean", &GaussianDeviate::setMean)
-                .def("_setSigma", &GaussianDeviate::setSigma)
                 .enable_pickling()
                 ;
         }
@@ -183,8 +181,6 @@ namespace galsim {
                 .def("__call__", &BinomialDeviate::operator())
                 .def("getN", &BinomialDeviate::getN)
                 .def("getP", &BinomialDeviate::getP)
-                .def("_setN", &BinomialDeviate::setN)
-                .def("_setP", &BinomialDeviate::setP)
                 .enable_pickling()
                 ;
         }
@@ -209,7 +205,6 @@ namespace galsim {
                 .def("duplicate", &PoissonDeviate::duplicate)
                 .def("__call__", &PoissonDeviate::operator())
                 .def("getMean", &PoissonDeviate::getMean)
-                .def("_setMean", &PoissonDeviate::setMean)
                 .enable_pickling()
                 ;
         }
@@ -236,8 +231,6 @@ namespace galsim {
                 .def("__call__", &WeibullDeviate::operator())
                 .def("getA", &WeibullDeviate::getA)
                 .def("getB", &WeibullDeviate::getB)
-                .def("_setA", &WeibullDeviate::setA)
-                .def("_setB", &WeibullDeviate::setB)
                 .enable_pickling()
                 ;
         }
@@ -263,8 +256,6 @@ namespace galsim {
                 .def("__call__", &GammaDeviate::operator())
                 .def("getK", &GammaDeviate::getK)
                 .def("getTheta", &GammaDeviate::getTheta)
-                .def("_setK", &GammaDeviate::setK)
-                .def("_setTheta", &GammaDeviate::setTheta)
                 .enable_pickling()
                 ;
         }
@@ -289,7 +280,6 @@ namespace galsim {
                 .def("duplicate", &Chi2Deviate::duplicate)
                 .def("__call__", &Chi2Deviate::operator())
                 .def("getN", &Chi2Deviate::getN)
-                .def("_setN", &Chi2Deviate::setN)
                 .enable_pickling()
                 ;
         }

@@ -26,6 +26,5 @@ HSM.cpp
 Integ.cpp
 Table.cpp
 Interpolant.cpp
-CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp

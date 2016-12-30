@@ -107,7 +107,6 @@ namespace galsim {
                 .def("getRNG", &BaseNoise::getRNG)
                 .add_property("rng", &BaseNoise::getRNG)
                 .def("getVariance", &BaseNoise::getVariance)
-                .def("_setRNG", &BaseNoise::setRNG)
                 .def("_setVariance", &BaseNoise::setVariance)
                 .def("_scaleVariance", &BaseNoise::scaleVariance)
                 ;
@@ -133,7 +132,6 @@ namespace galsim {
             pyGaussianNoise
                 .def("getSigma", &GaussianNoise::getSigma)
                 .add_property("sigma", &GaussianNoise::getSigma)
-                .def("_setSigma", &GaussianNoise::setSigma)
                 .enable_pickling()
                 ;
         }
@@ -152,7 +150,6 @@ namespace galsim {
             pyPoissonNoise
                 .def("getSkyLevel", &PoissonNoise::getSkyLevel)
                 .add_property("sky_level", &PoissonNoise::getSkyLevel)
-                .def("_setSkyLevel", &PoissonNoise::setSkyLevel)
                 .enable_pickling()
                 ;
         }
@@ -176,9 +173,6 @@ namespace galsim {
                 .add_property("sky_level", &CCDNoise::getSkyLevel)
                 .add_property("gain", &CCDNoise::getGain)
                 .add_property("read_noise", &CCDNoise::getReadNoise)
-                .def("_setSkyLevel", &CCDNoise::setSkyLevel)
-                .def("_setGain", &CCDNoise::setGain)
-                .def("_setReadNoise", &CCDNoise::setReadNoise)
                 .enable_pickling()
                 ;
         }
