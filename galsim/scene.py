@@ -160,10 +160,9 @@ class COSMOSCatalog(object):
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name=None, sample=None, image_dir=None, dir=None, preload=False,
-                 noise_dir=None, use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
-                 min_flux=0., max_flux=0., _nobjects_only=False, exclude_bad=None,
-                 exclude_fail=None):
+    def __init__(self, file_name=None, sample=None, dir=None, preload=False,
+                 use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
+                 min_flux=0., max_flux=0., _nobjects_only=False):
         if sample is not None and file_name is not None:
             raise ValueError("Cannot specify both the sample and file_name!")
 
@@ -173,17 +172,16 @@ class COSMOSCatalog(object):
         if exclusion_level not in ['none', 'bad_stamp', 'bad_fits', 'marginal']:
             raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
-        # Start by parsing the file names, since we'll need the image_dir below.
-        full_file_name, full_image_dir, _, self.use_sample = \
-            galsim.real._parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
+        # Start by parsing the file name
+        full_file_name, _, self.use_sample = \
+            galsim.real._parse_files_dirs(file_name, dir, sample)
 
         if self.use_real and not _nobjects_only:
             # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
             # constructor do most of the work.  But note that we don't actually need to
             # bother with this if all we care about is the nobjects attribute.
             self.real_cat = galsim.RealGalaxyCatalog(
-                file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
-                noise_dir=noise_dir)
+                file_name, sample=sample, dir=dir, preload=preload)
 
             # The fits name has _fits inserted before the .fits ending.
             # Note: don't just use k = -5 in case it actually ends with .fits.fz

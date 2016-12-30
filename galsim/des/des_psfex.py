@@ -248,7 +248,7 @@ class DES_PSFEx(object):
         else:
             return None
 
-    def getPSF(self, image_pos, pixel_scale=None, gsparams=None):
+    def getPSF(self, image_pos, gsparams=None):
         """Returns the PSF at position image_pos
 
         @param image_pos    The position in image coordinates at which to build the PSF.

@@ -412,14 +412,13 @@ class RealGalaxyCatalog(object):
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name=None, sample=None, image_dir=None, dir=None, preload=False,
-                 noise_dir=None, logger=None, _nobjects_only=False):
+    def __init__(self, file_name=None, sample=None, dir=None, preload=False,
+                 logger=None, _nobjects_only=False):
         if sample is not None and file_name is not None:
             raise ValueError("Cannot specify both the sample and file_name!")
 
         from galsim._pyfits import pyfits
-        self.file_name, self.image_dir, self.noise_dir, _ = \
-            _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
+        self.file_name, self.image_dir, _ = _parse_files_dirs(file_name, dir, sample)
 
         with pyfits.open(self.file_name) as fits:
             self.cat = fits[1].data
@@ -445,7 +444,7 @@ class RealGalaxyCatalog(object):
         # Uncorrelated noise based on the variance column.
         try:
             self.noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
-            self.noise_file_name = [ os.path.join(self.noise_dir,f) for f in self.noise_file_name ]
+            self.noise_file_name = [ os.path.join(self.image_dir,f) for f in self.noise_file_name ]
         except:
             self.noise_file_name = None
 
@@ -653,8 +652,7 @@ class RealGalaxyCatalog(object):
     def __eq__(self, other):
         return (isinstance(other, RealGalaxyCatalog) and
                 self.file_name == other.file_name and
-                self.image_dir == other.image_dir and
-                self.noise_dir == other.noise_dir)
+                self.image_dir == other.image_dir)
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))
@@ -765,7 +763,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # return simulated image
     return image
 
-def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
+def _parse_files_dirs(file_name, image_dir, sample):
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
@@ -783,42 +781,23 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     # catalogs) or it is still None, if a file_name was given.
 
     if file_name is None:
-        if image_dir is not None:
-            raise ValueError('Cannot specify image_dir when using default file_name.')
         file_name = 'real_galaxy_catalog_' + use_sample + '.fits'
-        if dir is None:
-            dir = os.path.join(galsim.meta_data.share_dir,
-                               'COSMOS_'+use_sample+'_training_sample')
-        full_file_name = os.path.join(dir,file_name)
-        full_image_dir = dir
+        if image_dir is None:
+            image_dir = os.path.join(galsim.meta_data.share_dir,
+                                     'COSMOS_'+use_sample+'_training_sample')
+        full_file_name = os.path.join(image_dir,file_name)
         if not os.path.isfile(full_file_name):
-            raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
+            raise RuntimeError('No RealGalaxy catalog found in %s.  '%image_dir +
                                'Run the program galsim_download_cosmos -s %s '%use_sample +
                                'to download catalog and accompanying image files.')
-    elif dir is None:
+    elif image_dir is None:
         full_file_name = file_name
-        if image_dir is None:
-            full_image_dir = os.path.dirname(file_name)
-        elif os.path.dirname(image_dir) == '':
-            full_image_dir = os.path.join(os.path.dirname(full_file_name),image_dir)
-        else:
-            full_image_dir = image_dir
+        image_dir = os.path.dirname(file_name)
     else:
-        full_file_name = os.path.join(dir,file_name)
-        if image_dir is None:
-            full_image_dir = dir
-        else:
-            full_image_dir = os.path.join(dir,image_dir)
+        full_file_name = os.path.join(image_dir,file_name)
     if not os.path.isfile(full_file_name):
         raise IOError(full_file_name+' not found.')
-    if not os.path.isdir(full_image_dir):
-        raise IOError(full_image_dir+' directory does not exist!')
+    if not os.path.isdir(image_dir):
+        raise IOError(image_dir+' directory does not exist!')
 
-    if noise_dir is None:
-        full_noise_dir = full_image_dir
-    else:
-        if not os.path.isdir(noise_dir):
-            raise IOError(noise_dir+' directory does not exist!')
-        full_noise_dir = noise_dir
-
-    return full_file_name, full_image_dir, full_noise_dir, use_sample
+    return full_file_name, image_dir, use_sample

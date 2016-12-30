@@ -614,8 +614,7 @@ class _BaseCorrelatedNoise(object):
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
-    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False,
-                  dx=None, wmult=1.0):
+    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -649,7 +648,7 @@ class _BaseCorrelatedNoise(object):
 
         return self._profile.drawImage(
             image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
-            add_to_image=add_to_image, use_true_center=False, wmult=wmult)
+            add_to_image=add_to_image, use_true_center=False)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
@@ -1100,7 +1099,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     not affected by these scaling operations.
     """
     def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
-        correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
+        correct_periodicity=True, subtract_mean=False, gsparams=None):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, galsim.Image):
@@ -1235,7 +1234,7 @@ def _cf_periodicity_dilution_correction(cf_shape):
 
 # Free function for returning a COSMOS noise field correlation function
 def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_interpolant=None,
-                   gsparams=None, dx_cosmos=None):
+                   gsparams=None):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
