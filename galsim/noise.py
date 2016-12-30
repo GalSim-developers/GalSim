@@ -522,12 +522,6 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         # scale the values in the image before constructing VariableGaussianNoise.
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
-    def setVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
-
-    def scaleVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
-
     def __repr__(self):
         return 'galsim.VariableGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)
 

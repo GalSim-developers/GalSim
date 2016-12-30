@@ -45,10 +45,6 @@ struct PyPosition {
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
-            .def(bp::self == bp::self)
-            .def(bp::self != bp::self)
-            .def(str(bp::self))
-            .def("assign", &Position<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
     }
@@ -80,11 +76,7 @@ struct PyBounds {
             .def("includes", (bool (Bounds<T>::*)(const Position<T>&) const)&Bounds<T>::includes)
             .def("includes", (bool (Bounds<T>::*)(const T, const T) const)&Bounds<T>::includes)
             .def("includes", (bool (Bounds<T>::*)(const Bounds<T>&) const)&Bounds<T>::includes)
-            .def(bp::self == bp::self)
-            .def(bp::self != bp::self)
             .def("area", &Bounds<T>::area)
-            .def(str(bp::self))
-            .def("assign", &Bounds<T>::operator=, bp::return_self<>())
             .def(bp::self + bp::self)
             .def(bp::self + bp::other< Position<T> >())
             .def(bp::self + bp::other<T>())
@@ -96,10 +88,6 @@ struct PyBounds {
             .add_property("xmax", &Bounds<T>::getXMax)
             .add_property("ymin", &Bounds<T>::getYMin)
             .add_property("ymax", &Bounds<T>::getYMax)
-            .def("_setXMin", &Bounds<T>::setXMin)
-            .def("_setXMax", &Bounds<T>::setXMax)
-            .def("_setYMin", &Bounds<T>::setYMin)
-            .def("_setYMax", &Bounds<T>::setYMax)
             .enable_pickling()
             ;
     }
