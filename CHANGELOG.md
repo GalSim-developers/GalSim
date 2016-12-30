@@ -5,6 +5,7 @@ The principal change in GalSim 2.0 is that it is now pip installable.
 See the updated INSTALL file for details on how to install GalSim using
 either pip or setup.py.
 
+
 API Changes
 -----------
 
@@ -17,7 +18,8 @@ API Changes
 Dependency Changes
 ------------------
 
-- GalSim no longer depends on boost.
+- Removed dependency on boost.
+- Added dependency on (pybind11 or cffi...)
 
 
 Bug Fixes
@@ -27,11 +29,12 @@ Bug Fixes
 Deprecated Features
 -------------------
 
-- All features that were deprecated in 1.x are now removed.
+- Removed all features deprecated in 1.x versions.
 
 
 New Features
 ------------
+
 
 
 New config features
