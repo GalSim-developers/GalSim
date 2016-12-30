@@ -248,7 +248,7 @@ class DistDeviate(_galsim.BaseDeviate):
     -0.00909781188974034
     """
     def __init__(self, seed=0, function=None, x_min=None,
-                 x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
+                 x_max=None, interpolant=None, npoints=256, _init=True):
         import galsim
 
         # Special internal "private" constructor option that doesn't do any initialization.

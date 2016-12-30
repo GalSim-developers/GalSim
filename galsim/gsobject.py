@@ -841,7 +841,7 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=1.):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -866,7 +866,7 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                N = self.getGoodImageSize(1.0/wmult)
+                N = self.getGoodImageSize(1.0)
                 if odd: N += 1
                 image = galsim.Image(N, N, dtype=dtype)
 
@@ -875,7 +875,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.getGoodImageSize(1.0/wmult)
+            N = self.getGoodImageSize(1.0)
             if odd: N += 1
             bounds = galsim._BoundsI(1,N,1,N)
             image.resize(bounds)
@@ -979,7 +979,7 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, surface_ops=(), setup_only=False, dx=None, wmult=1.):
+                  poisson_flux=None, surface_ops=(), setup_only=False):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1324,7 +1324,7 @@ class GSObject(object):
         prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult=wmult)
+        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
         image.wcs = wcs
 
         if setup_only:
@@ -1342,7 +1342,7 @@ class GSObject(object):
         elif prof.isAnalyticX():
             added_photons = prof.drawReal(imview)
         else:
-            added_photons = prof.drawFFT(imview, wmult)
+            added_photons = prof.drawFFT(imview)
 
         image.added_flux = added_photons / flux_scale
 
@@ -1393,7 +1393,7 @@ class GSObject(object):
         """
         return self.SBProfile.getGoodImageSize(pixel_scale)
 
-    def drawFFT(self, image, wmult=1.):
+    def drawFFT(self, image):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
@@ -1421,7 +1421,7 @@ class GSObject(object):
         @returns The total flux drawn inside the image bounds.
         """
         # Start with what this profile thinks a good size would be given the image's pixel scale.
-        N = self.getGoodImageSize(image.scale/wmult)
+        N = self.getGoodImageSize(image.scale)
 
         # We must make something big enough to cover the target image size:
         image_N = max(image.bounds.numpyShape())
@@ -1715,7 +1715,7 @@ class GSObject(object):
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
+                   add_to_image=False):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
 
@@ -1782,33 +1782,15 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        if image is None: dtype = np.complex128
-        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
-                                       odd=True, wmult=wmult)
+        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128, odd=True)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
-
-        if re is not None or im is not None: # pragma: no cover
-            # Make sure the input re and im images get all the right attributes to match
-            # the output image.
-            # This is a hack that won't get all use cases right, but probably most of them.
-            re._array = image._array.real
-            im._array = image._array.imag
-            re._bounds = image.bounds
-            im._bounds = image.bounds
-            re.scale = image.scale
-            im.scale = image.scale
-            re.setOrigin(image.origin())
-            im.setOrigin(image.origin())
 
         # Making views of the images lets us change the centers without messing up the originals.
         image.setCenter(0,0)
 
         self.SBProfile.drawK(image.image, dk)
-
-        if gain is not None:  # pragma: no cover
-            image /= gain
 
         return image
 

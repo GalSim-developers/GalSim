@@ -1353,7 +1353,6 @@ class OpticalPSF(GSObject):
         "oversampling": float,
         "pad_factor": float,
         "suppress_warning": bool,
-        "max_size": float,
         "interpolant": str,
         "flux": float,
         "nstruts": int,
@@ -1376,7 +1375,7 @@ class OpticalPSF(GSObject):
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  _force_maxk=None, _force_stepk=None,
-                 suppress_warning=False, max_size=None):
+                 suppress_warning=False):
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
