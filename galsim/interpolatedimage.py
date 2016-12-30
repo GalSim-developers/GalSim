@@ -259,12 +259,6 @@ class InterpolatedImage(GSObject):
                  _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
                  hdu=None):
 
-        # Check for obsolete dx parameter
-        if dx is not None and scale is None: # pragma: no cover
-            from galsim.deprecated import depr
-            depr('dx', 1.1, 'scale')
-            scale = dx
-
         # If the "image" is not actually an image, try to read the image as a file.
         if not isinstance(image, galsim.Image):
             image = galsim.fits.read(image, hdu=hdu)
@@ -674,18 +668,6 @@ class InterpolatedKImage(GSObject):
 
     def __init__(self, kimage=None, k_interpolant=None, stepk=None, gsparams=None,
                  real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):
-        if isinstance(kimage,galsim.Image) and isinstance(k_interpolant,galsim.Image):
-            from .deprecated import depr
-            depr('InterpolatedKImage(re,im,...)', 1.5,
-                 'either InterpolatedKImage(re + 1j * im, ...) or '
-                 'InterpolatedKImage(real_kimage=re, imag_kimage=im)')
-            # This won't work if they call InterpolatedKImage(re,im, k_interpolant=kinterp)
-            # But I don't see an easy way around that, so I guess that use case is not
-            # backwards compatible.  Sorry..
-            real_kimage = kimage
-            imag_kimage = k_interpolant
-            kimage = None
-            k_interpolant = None
 
         if kimage is None:
             if real_kimage is None or imag_kimage is None:

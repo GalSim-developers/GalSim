@@ -645,13 +645,6 @@ class _BaseCorrelatedNoise(object):
 
         @returns an Image of the correlation function.
         """
-        # Check for obsolete parameters
-        if dx is not None and scale is None: # pragma: no cover
-            from galsim.deprecated import depr
-            depr('dx', 1.1, 'scale')
-            scale = dx
-        # Let self._profile.drawImage raise the deprecation warning for wmult.
-
         wcs = self._profile._determine_wcs(scale, wcs, image, self.wcs)
 
         return self._profile.drawImage(
@@ -1108,11 +1101,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     """
     def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
         correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
-        # Check for obsolete dx parameter
-        if dx is not None and scale==0.: # pragma: no cover
-            from galsim.deprecated import depr
-            depr('dx', 1.1, 'scale')
-            scale = dx
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, galsim.Image):
@@ -1346,12 +1334,6 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
 
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
-    # Check for obsolete dx_cosmos parameter
-    if dx_cosmos is not None and cosmos_scale==0.03: # pragma: no cover
-        from galsim.deprecated import depr
-        depr('dx_cosmos', 1.1, 'cosmos_scale')
-        cosmos_scale = dx_cosmos
-
     # First try to read in the image of the COSMOS correlation function stored in the repository
     import os
     if file_name is None:

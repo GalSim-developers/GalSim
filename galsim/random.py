@@ -249,13 +249,6 @@ class DistDeviate(_galsim.BaseDeviate):
     """
     def __init__(self, seed=0, function=None, x_min=None,
                  x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
-        # lseed is an obsolete synonym for seed
-        # I think this was the only place that the name lseed was actually used in the docs.
-        # so we keep it for now for backwards compatibility.
-        if lseed is not None: # pragma: no cover
-            from galsim.deprecated import depr
-            depr('lseed', 1.1, 'seed')
-            seed = lseed
         import galsim
 
         # Special internal "private" constructor option that doesn't do any initialization.

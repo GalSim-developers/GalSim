@@ -167,23 +167,6 @@ class COSMOSCatalog(object):
         if sample is not None and file_name is not None:
             raise ValueError("Cannot specify both the sample and file_name!")
 
-        # Check for deprecated exclude_bad or exclude_fail args.
-        if exclude_bad is not None or exclude_fail is not None: # pragma: no cover
-            from .deprecated import depr
-            if exclude_bad is not None:
-                depr('exclude_bad', 1.4, 'exclusion_level')
-            if exclude_fail is not None:
-                depr('exclude_fail', 1.4, 'exclusion_level')
-
-            # These aren't equivalent, but probably what the user would want to choose.
-            if exclude_bad is False and exclude_fail is False:
-                exclusion_level = 'none'
-            elif exclude_fail is False:  # implying exclude_bad=True is intended
-                exclusion_level = 'bad_stamp'
-            elif exclude_bad is False:   # implying exclude_fail=True is intended
-                exclusion_level = 'bad_fits'
-            # else leave exclusion_level as 'marginal'
-
         from galsim._pyfits import pyfits
         self.use_real = use_real
 

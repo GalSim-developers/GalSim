@@ -1377,13 +1377,6 @@ class OpticalPSF(GSObject):
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  _force_maxk=None, _force_stepk=None,
                  suppress_warning=False, max_size=None):
-        if max_size is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('max_size', 1.4, '',
-                 "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
-                 "be used to adjust the size of the internal InterpolatedImage.")
-
-
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
