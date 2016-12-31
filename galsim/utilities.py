@@ -577,11 +577,11 @@ def _gammafn(x):  # pragma: no cover
         import math
         return math.gamma(x)
     except:
-        y  = float(x) - 1.0;
-        sm = _gammafn._a[-1];
+        y  = float(x) - 1.0
+        sm = _gammafn._a[-1]
         for an in _gammafn._a[-2::-1]:
-            sm = sm * y + an;
-        return 1.0 / sm;
+            sm = sm * y + an
+        return 1.0 / sm
 
 _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.65587807152025388108,
               -0.04200263503409523553, 0.16653861138229148950, -0.04219773455554433675,
@@ -691,7 +691,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             if img_wcs_decomp[1].g==0:
                 img.wcs = galsim.PixelScale(img_wcs_decomp[0])
             else:
-               img.wcs = img_wcs
+                img.wcs = img_wcs
             ## Preserve the origin so that the interleaved image has the same bounds as the image
             ## that is being deinterleaved.
             img.setOrigin(image.origin())
