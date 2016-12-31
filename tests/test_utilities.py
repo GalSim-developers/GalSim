@@ -461,6 +461,24 @@ def test_python_LRU_Cache():
         assert (newsize - (i - 1),) not in cache.cache
 
 
+@timer
+def test_position_type_promotion():
+    pd1 = galsim.PositionD(0.1, 0.2)
+    pd2 = galsim.PositionD(-0.3, 0.4)
+
+    pi1 = galsim.PositionI(3, 65)
+    pi2 = galsim.PositionI(-4, 4)
+
+    # First check combinations that should yield a PositionD
+    for lhs, rhs in zip([pd1, pd1, pi1], [pd2, pi1, pd2]):
+        assert lhs+rhs == galsim.PositionD(lhs.x+rhs.x, lhs.y+rhs.y)
+        assert lhs-rhs == galsim.PositionD(lhs.x-rhs.x, lhs.y-rhs.y)
+
+    # Also check PosI +/- PosI -> PosI
+    assert pi1+pi2 == galsim.PositionI(pi1.x+pi2.x, pi1.y+pi2.y)
+    assert pi1-pi2 == galsim.PositionI(pi1.x-pi2.x, pi1.y-pi2.y)
+
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -471,3 +489,4 @@ if __name__ == "__main__":
     test_deInterleaveImage()
     test_interleaveImages()
     test_python_LRU_Cache()
+    test_position_type_promotion()
