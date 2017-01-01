@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_shoot, do_pickle, all_obj_diff, getmoments
+from galsim_test_helpers import timer, do_shoot, do_pickle, all_obj_diff
 
 try:
     import galsim
@@ -541,24 +541,28 @@ def test_phase_gradient_shoot():
     # At the moment, Ixx and Iyy (but not Ixy) are systematically smaller in phase gradient shooting
     # mode than in FFT mode.  For now, I'm willing to accept this, but we should revisit it once we
     # get the "second kick" approximation implemented.
-    offset = [0.5, 0.5, 0.0]
+    offset = 0.5
 
     for psf in psfs:
         im_shoot = psf.drawImage(nx=48, ny=48, scale=0.05, method='phot', n_photons=100000, rng=rng)
         im_fft = psf.drawImage(nx=48, ny=48, scale=0.05)
 
-        shoot_moment = np.array(getmoments(im_shoot))
-        fft_moment = np.array(getmoments(im_fft))
+        shoot_moment = galsim.utilities.unweighted_moments(im_shoot)
+        fft_moment = galsim.utilities.unweighted_moments(im_fft)
 
-        # centroids
-        np.testing.assert_allclose(
-                shoot_moment[:2], fft_moment[:2], rtol=0, atol=centroid_tolerance,
-                err_msg='Phase gradient centroid not close to fft centroid')
+        for key in ['Mx', 'My']:
+            np.testing.assert_allclose(
+                    shoot_moment[key], fft_moment[key], rtol=0, atol=centroid_tolerance,
+                    err_msg='Phase gradient centroid {0} not close to fft centroid'.format(key))
 
-        # Second moments
+        for key in ['Mxx', 'Myy']:
+            np.testing.assert_allclose(
+                    shoot_moment[key]+offset, fft_moment[key], rtol=0, atol=second_moment_tolerance,
+                    err_msg='Phase gradient second moment {} not close to fft moment'.format(key))
+
         np.testing.assert_allclose(
-                shoot_moment[2:]+offset, fft_moment[2:], rtol=0, atol=second_moment_tolerance,
-                err_msg='Phase gradient second moments not close to fft moments')
+            shoot_moment['Mxy'], fft_moment['Mxy'], rtol=0, atol=second_moment_tolerance,
+            err_msg='Phase gradient second moment Mxy not close to fft moment')
 
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
@@ -567,16 +571,28 @@ def test_phase_gradient_shoot():
     psf.shoot(100, rng=None)
 
     # Constraints on the ensemble should be tighter than for individual PSFs.
-    mean_shoot_moment = np.mean(shoot_moments, axis=0)
-    mean_fft_moment = np.mean(fft_moments, axis=0)
+    mean_shoot_moment = {}
+    mean_fft_moment = {}
+    for k in shoot_moments[0]:
+        mean_shoot_moment[k] = np.mean([sm[k] for sm in shoot_moments])
+        mean_fft_moment[k] = np.mean([fm[k] for fm in fft_moments])
+
+    for key in ['Mx', 'My']:
+        np.testing.assert_allclose(
+                mean_shoot_moment[key], mean_fft_moment[key], rtol=0, atol=centroid_tolerance,
+                err_msg='Mean phase gradient centroid {0} not close to mean fft centroid'
+                        .format(key))
+
+    for key in ['Mxx', 'Myy']:
+        np.testing.assert_allclose(
+                mean_shoot_moment[key]+offset, mean_fft_moment[key], rtol=0,
+                atol=second_moment_tolerance,
+                err_msg='Mean phase gradient second moment {} not close to mean fft moment'
+                .format(key))
 
     np.testing.assert_allclose(
-            mean_shoot_moment[:2], mean_fft_moment[:2], rtol=0, atol=centroid_tolerance/3,
-            err_msg="Mean phase gradient centroid not close to fft centroid")
-    np.testing.assert_allclose(
-            mean_shoot_moment[2:]+offset, mean_fft_moment[2:], rtol=0,
-            atol=second_moment_tolerance/3,
-            err_msg="Mean phase gradient second moments not close to fft second moments")
+        mean_shoot_moment['Mxy'], mean_fft_moment['Mxy'], rtol=0, atol=second_moment_tolerance,
+        err_msg='Mean phase gradient second moment Mxy not close to mean fft moment')
 
 
 if __name__ == "__main__":

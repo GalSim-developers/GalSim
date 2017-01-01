@@ -57,29 +57,6 @@ try:
 except ImportError:
     raise ImportError("This demo requires astropy!")
 
-def simple_moments(img):
-    """Compute unweighted 0th, 1st, and 2nd moments of image.  Return result as a dictionary.
-    """
-    array = img.array
-    scale = img.scale
-    N = array.shape[0]
-    # x = y = np.arange(array.shape[0])*scale
-    x = y = np.arange(array.shape[0])-(N/2)
-    y, x = np.meshgrid(y, x)
-    I0 = np.sum(array)
-    Ix = np.sum(x*array)/I0
-    Iy = np.sum(y*array)/I0
-    Ixx = np.sum((x-Ix)**2*array)/I0
-    Iyy = np.sum((y-Iy)**2*array)/I0
-    Ixy = np.sum((x-Ix)*(y-Iy)*array)/I0
-    return dict(I0=I0, Ix=Ix, Iy=Iy, Ixx=Ixx, Iyy=Iyy, Ixy=Ixy)
-
-def ellip(mom):
-    """Convert moments dictionary into dictionary with ellipticity (e1, e2) and size (rsqr).
-    """
-    rsqr = mom['Ixx'] + mom['Iyy']
-    return dict(rsqr=rsqr, e1=(mom['Ixx']-mom['Iyy'])/rsqr, e2=2*mom['Ixy']/rsqr)
-
 def make_movie(args):
     rng = galsim.BaseDeviate(args.seed)
     u = galsim.UniformDeviate(rng)
@@ -172,15 +149,15 @@ def make_movie(args):
         ztext.append(fig.text(x, y, "Z{:d} = {:5.3f}".format(i, 0.0)))
         ztext[-1].set_color('w')
 
-    I_fft = fft_ax.text(0.05, 0.955, '', transform=fft_ax.transAxes)
-    I_fft.set_color('w')
-    I_phot = geom_ax.text(0.05, 0.955, '', transform=geom_ax.transAxes)
-    I_phot.set_color('w')
+    M_fft = fft_ax.text(0.02, 0.955, '', transform=fft_ax.transAxes)
+    M_fft.set_color('w')
+    M_geom = geom_ax.text(0.02, 0.955, '', transform=geom_ax.transAxes)
+    M_geom.set_color('w')
 
-    etext_fft = fft_ax.text(0.05, 0.91, '', transform=fft_ax.transAxes)
+    etext_fft = fft_ax.text(0.02, 0.91, '', transform=fft_ax.transAxes)
     etext_fft.set_color('w')
-    etext_phot = geom_ax.text(0.05, 0.91, '', transform=geom_ax.transAxes)
-    etext_phot.set_color('w')
+    etext_geom = geom_ax.text(0.02, 0.91, '', transform=geom_ax.transAxes)
+    etext_geom.set_color('w')
 
     # plt.show()
 
@@ -218,30 +195,39 @@ def make_movie(args):
                     ztext[j-1].set_text("Z{:d} = {:5.3f}".format(j+1, ab))
 
                 # Calculate simple estimate of ellipticity
-                mom_fft = simple_moments(fft_img)
-                mom_phot = simple_moments(geom_img)
-                e_fft = ellip(mom_fft)
-                e_phot = ellip(mom_phot)
+                mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.trueCenter())
+                mom_geom = galsim.utilities.unweighted_moments(geom_img,
+                                                               origin=geom_img.trueCenter())
+                e_fft = galsim.utilities.unweighted_shape(mom_fft)
+                e_geom = galsim.utilities.unweighted_shape(mom_geom)
 
-                Is = ("$I_x$={:6.3f}, $I_y$={:6.3f}, $I_{{xx}}$={:6.3f},"
-                      " $I_{{yy}}$={:6.3f}, $I_{{xy}}$={:6.3f}")
-                I_fft.set_text(Is.format(mom_fft['Ix'], mom_fft['Iy'],
-                                         mom_fft['Ixx'], mom_fft['Iyy'], mom_fft['Ixy']))
-                I_phot.set_text(Is.format(mom_phot['Ix'], mom_phot['Iy'],
-                                          mom_phot['Ixx'], mom_phot['Iyy'], mom_phot['Ixy']))
-                etext_fft.set_text("$e_1$={:6.3f}, $e_2$={:6.3f}, $r^2$={:6.3f}".format(
-                                   e_fft['e1'], e_fft['e2'], e_fft['rsqr']))
-                etext_phot.set_text("$e_1$={:6.3f}, $e_2$={:6.3f}, $r^2$={:6.3f}".format(
-                                    e_phot['e1'], e_phot['e2'], e_phot['rsqr']))
+                Is = ("$M_x$={: 6.4f}, $M_y$={: 6.4f}, $M_{{xx}}$={:6.4f},"
+                      " $M_{{yy}}$={:6.4f}, $M_{{xy}}$={: 6.4f}")
+                M_fft.set_text(Is.format(mom_fft['Mx']*fft_img.scale,
+                                         mom_fft['My']*fft_img.scale,
+                                         mom_fft['Mxx']*fft_img.scale**2,
+                                         mom_fft['Myy']*fft_img.scale**2,
+                                         mom_fft['Mxy']*fft_img.scale**2))
+                M_geom.set_text(Is.format(mom_geom['Mx']*geom_img.scale,
+                                          mom_geom['My']*geom_img.scale,
+                                          mom_geom['Mxx']*geom_img.scale**2,
+                                          mom_geom['Myy']*geom_img.scale**2,
+                                          mom_geom['Mxy']*geom_img.scale**2))
+                etext_fft.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
+                                   e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2))
+                etext_geom.set_text("$e_1$={: 6.4f}, $e_2$={: 6.4f}, $r^2$={:6.4f}".format(
+                                    e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2))
 
 
-                fft_mom[i] = (mom_fft['Ix'], mom_fft['Iy'],
-                              mom_fft['Ixx'], mom_fft['Iyy'], mom_fft['Ixy'],
-                              e_fft['e1'], e_fft['e2'], e_fft['rsqr'])
+                fft_mom[i] = (mom_fft['Mx']*fft_img.scale, mom_fft['My']*fft_img.scale,
+                              mom_fft['Mxx']*fft_img.scale**2, mom_fft['Myy']*fft_img.scale**2,
+                              mom_fft['Mxy']*fft_img.scale**2,
+                              e_fft['e1'], e_fft['e2'], e_fft['rsqr']*fft_img.scale**2)
 
-                geom_mom[i] = (mom_phot['Ix'], mom_phot['Iy'],
-                               mom_phot['Ixx'], mom_phot['Iyy'], mom_phot['Ixy'],
-                               e_phot['e1'], e_phot['e2'], e_phot['rsqr'])
+                geom_mom[i] = (mom_geom['Mx']*geom_img.scale, mom_geom['My']*geom_img.scale,
+                              mom_geom['Mxx']*geom_img.scale**2, mom_geom['Myy']*geom_img.scale**2,
+                              mom_geom['Mxy']*geom_img.scale**2,
+                              e_geom['e1'], e_geom['e2'], e_geom['rsqr']*geom_img.scale**2)
 
                 writer.grab_frame(facecolor=fig.get_facecolor())
 
@@ -259,8 +245,8 @@ def make_movie(args):
     fig, axes = plt.subplots(1, 2, figsize=(10, 6))
     axes[0].scatter(fft_mom[:, 0], geom_mom[:, 0])
     axes[1].scatter(fft_mom[:, 1], geom_mom[:, 1])
-    axes[0].set_title("Ix")
-    axes[1].set_title("Iy")
+    axes[0].set_title("Mx")
+    axes[1].set_title("My")
     for ax in axes:
         ax.set_xlabel("Fourier Optics")
         ax.set_ylabel("Geometric Optics")
@@ -273,9 +259,9 @@ def make_movie(args):
     axes[0].scatter(fft_mom[:, 2], geom_mom[:, 2])
     axes[1].scatter(fft_mom[:, 3], geom_mom[:, 3])
     axes[2].scatter(fft_mom[:, 4], geom_mom[:, 4])
-    axes[0].set_title("Ixx")
-    axes[1].set_title("Iyy")
-    axes[2].set_title("Ixy")
+    axes[0].set_title("Mxx")
+    axes[1].set_title("Myy")
+    axes[2].set_title("Mxy")
     for ax in axes:
         ax.set_xlabel("Fourier Optics")
         ax.set_ylabel("Geometric Optics")

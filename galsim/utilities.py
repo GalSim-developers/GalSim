@@ -1208,3 +1208,44 @@ def binomial(a, b, n):
             c *= b_over_a * (n-i)/(i+1)
             yield c
     return np.fromiter(generate(), float, n+1)
+
+def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
+    """Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
+    but ignores any scale or wcs.
+
+    @param image    Image from which to compute moments
+    @param origin   Optional origin in image coordinates used to compute Mx and My
+                    [default: galsim.PositionD(0, 0)].
+    @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
+    """
+    a = image.array.astype(float)
+    offset = image.origin() - origin
+    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
+                               np.arange(image.array.shape[0]) + offset.y)
+    M0 = np.sum(a)
+    Mx = np.sum(xgrid * a) / M0
+    My = np.sum(ygrid * a) / M0
+    Mxx = np.sum(((xgrid-Mx)**2) * a) / M0
+    Myy = np.sum(((ygrid-My)**2) * a) / M0
+    Mxy = np.sum((xgrid-Mx) * (ygrid-My) * a) / M0
+    return dict(M0=M0, Mx=Mx, My=My, Mxx=Mxx, Myy=Myy, Mxy=Mxy)
+
+def unweighted_shape(arg):
+    """Computes unweighted second moment size and ellipticity given either an image or a dict of
+    unweighted moments.
+
+    The size is:
+        rsqr = Mxx+Myy
+    The ellipticities are:
+        e1 = (Mxx-Myy) / rsqr
+        e2 = 2*Mxy / rsqr
+
+    @param arg   Either a galsim.Image or the output of unweighted_moments(image).
+    @returns  Dict with entries for [rsqr, e1, e2]
+    """
+    try:
+        arg = unweighted_moments(arg)
+    except:
+        pass
+    rsqr = arg['Mxx'] + arg['Myy']
+    return dict(rsqr=rsqr, e1=(arg['Mxx']-arg['Myy'])/rsqr, e2=2*arg['Mxy']/rsqr)

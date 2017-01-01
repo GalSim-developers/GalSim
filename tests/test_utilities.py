@@ -479,6 +479,69 @@ def test_position_type_promotion():
     assert pi1-pi2 == galsim.PositionI(pi1.x-pi2.x, pi1.y-pi2.y)
 
 
+@timer
+def test_unweighted_moments():
+    sigma = 0.8
+    gal = galsim.Gaussian(sigma=sigma)
+    scale = 0.02    # Use a small scale and a large image so we can neglect the impact of boundaries
+    nx = ny = 1024  # and pixelization in tests.
+    img1 = gal.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+
+    mom = galsim.utilities.unweighted_moments(img1)
+    shape = galsim.utilities.unweighted_shape(mom)
+
+    # Check that shape derived from moments is same as shape derived from image.
+    shape2 = galsim.utilities.unweighted_shape(img1)
+    assert shape == shape2
+
+    # Object should show up at the image true center.
+    np.testing.assert_almost_equal(mom['Mx'], img1.trueCenter().x)
+    np.testing.assert_almost_equal(mom['My'], img1.trueCenter().y)
+    # And have the right sigma = rsqr/2
+    np.testing.assert_almost_equal(mom['Mxx']*scale**2, sigma**2)
+    np.testing.assert_almost_equal(mom['Myy']*scale**2, sigma**2)
+    np.testing.assert_almost_equal(mom['Mxy'], 0.0)
+    np.testing.assert_almost_equal(shape['e1'], 0.0)
+    np.testing.assert_almost_equal(shape['e2'], 0.0)
+
+
+    # Add in some ellipticity and test that
+    e1 = 0.2
+    e2 = 0.3
+    gal = gal.shear(e1=e1, e2=e2)
+    img2 = gal.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+
+    mom2 = galsim.utilities.unweighted_moments(img2)
+    shape3 = galsim.utilities.unweighted_shape(mom2)
+
+    # Check that shape derived from moments is same as shape derived from image.
+    shape4 = galsim.utilities.unweighted_shape(img2)
+    assert shape3 == shape4
+
+    np.testing.assert_almost_equal(mom2['Mx'], img2.trueCenter().x)
+    np.testing.assert_almost_equal(mom2['My'], img2.trueCenter().y)
+    np.testing.assert_almost_equal(shape3['e1'], e1)
+    np.testing.assert_almost_equal(shape3['e2'], e2)
+
+    # Check subimage still works
+    bds = galsim.BoundsI(15, 1022, 11, 1002)
+    subimg = img2[bds]
+
+    mom3 = galsim.utilities.unweighted_moments(subimg)
+    shape5 = galsim.utilities.unweighted_shape(subimg)
+
+    for key in mom2:
+        np.testing.assert_almost_equal(mom2[key], mom3[key])
+    for key in shape3:
+        np.testing.assert_almost_equal(shape3[key], shape5[key])
+
+    # Test unweighted_moments origin keyword.  Using origin=trueCenter should make centroid result
+    # (0.0, 0.0)
+    mom4 = galsim.utilities.unweighted_moments(img2, origin=img2.trueCenter())
+    np.testing.assert_almost_equal(mom4['Mx'], 0.0)
+    np.testing.assert_almost_equal(mom4['My'], 0.0)
+
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -490,3 +553,4 @@ if __name__ == "__main__":
     test_interleaveImages()
     test_python_LRU_Cache()
     test_position_type_promotion()
+    test_unweighted_moments()

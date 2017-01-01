@@ -35,27 +35,6 @@ try:
 except ImportError:
     raise ImportError("This demo requires astropy!")
 
-def simple_moments(img):
-    """Compute unweighted 0th, 1st, and 2nd moments of image.  Return result as a dictionary.
-    """
-    array = img.array
-    scale = img.scale
-    x = y = np.arange(array.shape[0])*scale
-    y, x = np.meshgrid(y, x)
-    I0 = np.sum(array)
-    Ix = np.sum(x*array)/I0
-    Iy = np.sum(y*array)/I0
-    Ixx = np.sum((x-Ix)**2*array)/I0
-    Iyy = np.sum((y-Iy)**2*array)/I0
-    Ixy = np.sum((x-Ix)*(y-Iy)*array)/I0
-    return dict(I0=I0, Ix=Ix, Iy=Iy, Ixx=Ixx, Iyy=Iyy, Ixy=Ixy)
-
-def ellip(mom):
-    """Convert moments dictionary into dictionary with ellipticity (e1, e2) and size (rsqr).
-    """
-    rsqr = mom['Ixx'] + mom['Iyy']
-    return dict(rsqr=rsqr, e1=(mom['Ixx']-mom['Iyy'])/rsqr, e2=2*mom['Ixy']/rsqr)
-
 def make_movie(args):
     """Actually make the movie of the atmosphere given command line arguments stored in `args`.
     """
@@ -202,8 +181,8 @@ def make_movie(args):
                 else:
                     psf_img = psf_img0
 
-                # Calculate simple estimate of ellipticity
-                e = ellip(simple_moments(psf_img))
+                # Calculate simple estimate of size and ellipticity
+                e = galsim.utilities.unweighted_shape(psf_img)
 
                 # Update t0 for the next movie frame.
                 t0 += args.time_step
@@ -213,7 +192,7 @@ def make_movie(args):
                 wf_ax.set_title("t={:5.2f} s".format(i*args.time_step))
                 psf_im.set_array(psf_img.array)
                 etext.set_text("$e_1$={:6.3f}, $e_2$={:6.3f}, $r^2$={:6.3f}".format(
-                        e['e1'], e['e2'], e['rsqr']))
+                        e['e1'], e['e2'], e['rsqr']*args.psf_scale**2))
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     writer.grab_frame(facecolor=fig.get_facecolor())
