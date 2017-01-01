@@ -465,12 +465,14 @@ def test_python_LRU_Cache():
 def test_position_type_promotion():
     pd1 = galsim.PositionD(0.1, 0.2)
     pd2 = galsim.PositionD(-0.3, 0.4)
+    pd3 = galsim.PositionD()  # Also test 0-argument initializer here
 
     pi1 = galsim.PositionI(3, 65)
     pi2 = galsim.PositionI(-4, 4)
+    pi3 = galsim.PositionI()
 
     # First check combinations that should yield a PositionD
-    for lhs, rhs in zip([pd1, pd1, pi1], [pd2, pi1, pd2]):
+    for lhs, rhs in zip([pd1, pd1, pi1, pd1, pi2], [pd2, pi1, pd2, pi3, pd3]):
         assert lhs+rhs == galsim.PositionD(lhs.x+rhs.x, lhs.y+rhs.y)
         assert lhs-rhs == galsim.PositionD(lhs.x-rhs.x, lhs.y-rhs.y)
 
