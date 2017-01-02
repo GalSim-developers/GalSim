@@ -1104,25 +1104,25 @@ class PhaseScreenPSF(GSObject):
         """Returns value of k beyond which aliasing can be neglected.
         """
         self._prepareDraw()
-        return self.SBProfile.maxK()
+        return self.ii.maxK()
 
     def nyquistScale(self):
         """Returns Image pixel spacing that does not alias maxK.
         """
         self._prepareDraw()
-        return self.SBProfile.nyquistDx()
+        return self.ii.nyquistDx()
 
     def stepK(self):
         """Returns sampling in k space necessary to avoid folding of image in x space.
         """
         self._prepareDraw()
-        return self.SBProfile.stepK()
+        return self.ii.stepK()
 
     def centroid(self):
         """Returns the (x, y) centroid of an object as a Position.
         """
         self._prepareDraw()
-        return self.SBProfile.centroid()
+        return self.ii.centroid()
 
     def maxSB(self):
         """Returns an estimate of the maximum surface brightness of the object.
@@ -1141,7 +1141,7 @@ class PhaseScreenPSF(GSObject):
         rather than the maximum value.  For most profiles, these are the same thing.
         """
         self._prepareDraw()
-        return self.SBProfile.maxSB()
+        return self.ii.maxSB()
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
