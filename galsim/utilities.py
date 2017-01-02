@@ -1208,3 +1208,84 @@ def binomial(a, b, n):
             c *= b_over_a * (n-i)/(i+1)
             yield c
     return np.fromiter(generate(), float, n+1)
+
+def rand_with_replacement(n, rng, n_choices, weight=None, _n_rng_calls=False):
+    """Select some number of random choices from a list, with replacement, using a supplied RNG.
+
+    `n` random choices with replacement are made assuming that those choices should range from 0 to
+    `n_choices`-1, so they can be used as indices in a list/array.  If `weight` is supplied, then
+    it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
+    weighted choices from the list.
+
+    @param n           Number of random selections to make.
+    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
+    @param n_choices   Number of entries from which to choose.
+    @param weight      Optional list of weight factors to use for weighting the selection of
+                       random indices.
+    @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
+    """
+    # Make sure we got a proper RNG.
+    if not isinstance(rng, galsim.BaseDeviate):
+        raise TypeError("The rng provided to rand_with_replacement() is not a BaseDeviate")
+    ud = galsim.UniformDeviate(rng)
+
+    # Sanity check the requested number of random indices.
+    # Note: we do not require that the type be an int, as long as the value is consistent with
+    # an integer value (i.e., it could be a float 1.0 or 1).
+    if not n-int(n) == 0 or n < 1:
+        raise ValueError("n must be an integer >= 1.")
+    if not n_choices-int(n_choices) == 0 or n_choices < 1:
+        raise ValueError("n_choices must be an integer >= 1.")
+
+    # Sanity check the input weight.
+    if weight is not None:
+        # We need some sanity checks here in case people passed in weird values.
+        if len(weight) != n_choices:
+            raise ValueError("Array of weights has wrong length: %d instead of %d"%\
+                                 (len_weight,n_choices))
+        if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
+                np.any(np.isinf(weight)):
+            raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
+
+    # We first make a random list of integer indices.
+    index = np.zeros(n)
+    ud.generate(index)
+    if _n_rng_calls:
+        # Here we use the undocumented kwarg (for internal use by config) to track the number of
+        # RNG calls.
+        n_rng_calls = n
+    index = (n_choices*index).astype(int)
+
+    # Then we account for the weights, if possible.
+    if weight is not None:
+        # If weight factors are available, make sure the random selection uses the weights.
+        test_vals = np.zeros(n)
+        # Note that the weight values by definition have a maximum of 1, as enforced above.
+        ud.generate(test_vals)
+        if _n_rng_calls:
+            n_rng_calls += n
+        # The ones with mask==True are the ones we should replace.
+        mask = test_vals > weight[index]
+        while np.any(mask):
+            # Update the index and test values for those that failed. We have to do this by
+            # generating random numbers into new arrays, because ud.generate() does not enable
+            # us to directly populate a sub-array like index[mask] or test_vals[mask].
+            n_fail = mask.astype(int).sum()
+            # First update the indices that failed.
+            new_arr = np.zeros(n_fail)
+            ud.generate(new_arr)
+            index[mask] = (n_choices*new_arr).astype(int)
+            # Then update the test values that failed.
+            new_test_vals = np.zeros(n_fail)
+            ud.generate(new_test_vals)
+            test_vals[mask] = new_test_vals
+            if _n_rng_calls:
+                n_rng_calls += 2*n_fail
+            # Finally, update the test array used to determine whether any galaxies failed.
+            mask = test_vals > weight[index]
+
+    if _n_rng_calls:
+        return index, n_rng_calls
+    else:
+        return index
+

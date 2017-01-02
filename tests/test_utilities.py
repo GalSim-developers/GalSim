@@ -460,6 +460,36 @@ def test_python_LRU_Cache():
         cache.resize(i)
         assert (newsize - (i - 1),) not in cache.cache
 
+@timer
+def test_rand_with_replacement():
+    """Test routine to select random indices with replacement."""
+    # Most aspects of this routine get tested when it's used by COSMOSCatalog.  We just check some
+    # of the exception-handling here.
+    try:
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=1.5, rng=galsim.BaseDeviate(1234), n_choices=10)
+        np.testing.assert_raises(TypeError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng='foo', n_choices=10)
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10.5)
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=-11)
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=-2, rng=galsim.BaseDeviate(1234), n_choices=11)
+        tmp_weights = np.arange(10).astype(float)-3
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 weight=tmp_weights)
+        tmp_weights[0] = np.nan
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 weight=tmp_weights)
+        tmp_weights[0] = np.inf
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 weight=tmp_weights)
+    except ImportError:
+        print("The assert_raises tests require nose")
 
 if __name__ == "__main__":
     test_roll2d_circularity()
@@ -471,3 +501,4 @@ if __name__ == "__main__":
     test_deInterleaveImage()
     test_interleaveImages()
     test_python_LRU_Cache()
+    test_rand_with_replacement()

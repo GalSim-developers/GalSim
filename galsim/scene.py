@@ -597,59 +597,20 @@ class COSMOSCatalog(object):
         # Set up the random number generator.
         if rng is None:
             rng = galsim.BaseDeviate()
-        elif not isinstance(rng, galsim.BaseDeviate):
-            raise TypeError("The rng provided to selectRandomIndex() is not a BaseDeviate")
-        ud = galsim.UniformDeviate(rng)
-
-        # Sanity check the requested number of random indices.
-        # Note: we do not require that the type be an int, as long as the value is consistent with
-        # an integer value (i.e., it could be a float 1.0 or 1).
-        if not n_random-int(n_random) == 0 or n_random < 1:
-            raise ValueError("n_random must be an integer >= 1.")
-
-        # We first make a random list of integer indices.
-        index = np.zeros(n_random)
-        ud.generate(index)
-        if _n_rng_calls:
-            # Here we use the undocumented kwarg (for internal use by config) to track the number of
-            # RNG calls.
-            n_rng_calls = n_random
-        index = (self.nobjects*index).astype(int)
-
-        # Then we account for the weights, if possible.
+        
         if hasattr(self, 'real_cat') and hasattr(self.real_cat, 'weight'):
-            # If weight factors are available, make sure the random selection uses the weights
-            # to remove the catalog-level selection effects (flux_radius-dependent probability
-            # of making a postage stamp for a given object).
-            test_vals = np.zeros(n_random)
-            # Note that the weight values by definition have a maximum of 1, as enforced in real.py
-            ud.generate(test_vals)
-            if _n_rng_calls:
-                n_rng_calls += n_random
-            # The ones with mask==True are the ones we should replace.
-            mask = test_vals > self.real_cat.weight[self.orig_index[index]]
-            while np.any(mask):
-                # Update the index and test values for those that failed. We have to do this by
-                # generating random numbers into new arrays, because ud.generate() does not enable
-                # us to directly populate a sub-array like index[mask] or test_vals[mask].
-                n_fail = mask.astype(int).sum()
-                # First update the indices that failed.
-                new_arr = np.zeros(n_fail)
-                ud.generate(new_arr)
-                index[mask] = (self.nobjects*new_arr).astype(int)
-                # Then update the test values that failed.
-                new_test_vals = np.zeros(n_fail)
-                ud.generate(new_test_vals)
-                test_vals[mask] = new_test_vals
-                if _n_rng_calls:
-                    n_rng_calls += 2*n_fail
-                # Finally, update the test array used to determine whether any galaxies failed.
-                mask = test_vals > self.real_cat.weight[self.orig_index[index]]
+            use_weights = self.real_cat.weight[self.orig_index]
         else:
             import warnings
             warnings.warn('Selecting random object without correcting for catalog-level '
                           'selection effects.  This correction requires the existence of '
                           'real catalog with valid weights in addition to parametric one.')
+            use_weights = None
+
+        # By default, get the number of RNG calls.  We then decide whether or not to return them
+        # based on _n_rng_calls.
+        index, n_rng_calls = galsim.utilities.rand_with_replacement(
+                n_random, rng, self.nobjects, use_weights, _n_rng_calls=True)
 
         if n_random>1:
             if _n_rng_calls:
