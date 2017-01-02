@@ -496,13 +496,7 @@ class PowerSpectrum(object):
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
-        # Make a GaussianDeviate if necessary
-        if rng is None:
-            gd = galsim.GaussianDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(rng)
-        else:
-            raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
+        gd = galsim.GaussianDeviate(rng)
 
         # Check that the interpolant is valid.
         if interpolant is None:

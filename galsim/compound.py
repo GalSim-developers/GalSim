@@ -190,13 +190,7 @@ class Sum(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
         fluxPerPhoton = remainingAbsoluteFlux / n_photons
@@ -492,13 +486,7 @@ class Convolution(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         photon_array = self._obj_list[0].shoot(n_photons, ud)
         # It may be necessary to shuffle when convolving because we do not have a
@@ -759,13 +747,7 @@ class AutoConvolution(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         photon_array = self._orig_obj.shoot(n_photons, ud)
         photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
@@ -924,13 +906,7 @@ class AutoCorrelation(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         result = self._orig_obj.shoot(n_photons, ud)
         result2 = self._orig_obj.shoot(n_photons, ud)

@@ -203,10 +203,7 @@ class FRatioAngles(object):
             raise ValueError("The f-ratio must be positive.")
         if obscuration < 0 or obscuration >= 1:
             raise ValueError("The obscuration fraction must be between 0 and 1.")
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        else:
-            ud = galsim.UniformDeviate(rng)
+        ud = galsim.UniformDeviate(rng)
 
         self.fratio = fratio
         self.obscuration = obscuration
@@ -221,20 +218,20 @@ class FRatioAngles(object):
         n_photons = len(dxdz)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of
-        # the telescope.  The angular radius of the field of view is defined by the 
+        # the telescope.  The angular radius of the field of view is defined by the
         # ratio of the radius of the aperture to the focal length
         pupil_angle = np.arctan(0.5 / self.fratio)  # radians
         obscuration_angle = np.arctan(0.5 * self.obscuration / self.fratio)
 
         # Generate azimuthal angles for the photons
         phi = np.empty(n_photons)
-        self.ud.generate(phi) 
+        self.ud.generate(phi)
         phi *= (2 * np.pi)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
         # the sine of the obscuration angle and the sine of the pupil radius
         sintheta = np.empty(n_photons)
-        self.ud.generate(sintheta) 
+        self.ud.generate(sintheta)
         sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
             * sintheta
 
@@ -244,4 +241,3 @@ class FRatioAngles(object):
         tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
-

@@ -741,13 +741,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # rotate
     if rotation_angle is not None:
         real_galaxy = real_galaxy.rotate(rotation_angle)
-    elif rotation_angle is None and rand_rotate == True:
-        if rng is None:
-            uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            uniform_deviate = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+    elif rotation_angle is None and rand_rotate:
+        uniform_deviate = galsim.UniformDeviate(rng)
         rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 

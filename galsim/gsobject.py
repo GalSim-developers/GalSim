@@ -1686,13 +1686,7 @@ class GSObject(object):
                     "Warning: drawImage for object with flux == 1, area == 1, and "
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
         if image.wcs != galsim.PixelScale(1.0):
@@ -1749,13 +1743,7 @@ class GSObject(object):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
         return self.SBProfile.shoot(n_photons, ud)
 
 

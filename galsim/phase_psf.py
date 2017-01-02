@@ -1213,13 +1213,7 @@ class PhaseScreenPSF(GSObject):
             self._prepareDraw()
             return self.ii.shoot(n_photons, rng)
 
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         t = np.empty((n_photons,), dtype=float)
         ud.generate(t)

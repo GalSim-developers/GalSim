@@ -227,13 +227,7 @@ class Transformation(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
         photon_array = self.original.shoot(n_photons, ud)
         new = np.dot(self.jac, np.vstack([photon_array.x, photon_array.y]))
         photon_array.x = new[0, :] + self.offset.x
