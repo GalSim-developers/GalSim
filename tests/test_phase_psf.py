@@ -489,6 +489,9 @@ def test_phase_gradient_shoot():
 
     rng = galsim.BaseDeviate(seed)
     u = galsim.UniformDeviate(rng)
+
+    # Use atmospheric weights from 1998 Gemini site selection process as something reasonably
+    # realistic.  (Ellerbroek 2002, JOSA Vol 19 No 9).
     Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
     Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
     Ellerbroek_interp = galsim.LookupTable(
