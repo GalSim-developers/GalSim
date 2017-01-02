@@ -40,6 +40,8 @@ def test_Bandpass_basic():
     try:
         # Cannot initialize bandpass without wave_type:
         np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+        # eval-str must return a Real
+        np.testing.assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A')
     except ImportError:
         print('The assert_raises tests require nose')
 

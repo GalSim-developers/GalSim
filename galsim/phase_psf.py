@@ -52,6 +52,7 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
+from past.builtins import basestring
 from itertools import chain
 from builtins import range
 
@@ -1396,7 +1397,8 @@ class OpticalPSF(GSObject):
             # we just disallow this combination.  Please feel free to raise an issue at
             # https://github.com/GalSim-developers/GalSim/issues if you need this functionality.
             if pupil_plane_im is not None:
-                if isinstance(pupil_plane_im, str):  # Filename, therefore specific scale exists.
+                if isinstance(pupil_plane_im, basestring):
+                    # Filename, therefore specific scale exists.
                     raise TypeError("If specifying lam_over_diam, then do not "
                                     "specify pupil_plane_im as a filename.")
                 elif (isinstance(pupil_plane_im, galsim.Image)

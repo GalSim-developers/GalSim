@@ -31,6 +31,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+from galsim._pyfits import pyfits
 
 @timer
 def test_meds():
@@ -538,6 +539,9 @@ def test_psf():
     psfex = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
     psf = psfex.getPSF(image_pos)
 
+    # The getLocalWCS function should return a local WCS
+    assert psfex.getLocalWCS(image_pos).isLocal()
+
     # Draw the postage stamp image
     # Note: the PSF already includes the pixel response, so draw with method 'no_pixel'.
     stamp = psf.drawImage(wcs=wcs.local(image_pos), bounds=b, method='no_pixel')
@@ -557,8 +561,13 @@ def test_psf():
                                       err_msg="PSFEx shape.g2 doesn't match")
 
     # Repeat without the wcs_file argument, so the model is in chip coordinates.
-    psfex = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
+    # Also check the functionality where the file is already open.
+    hdu_list = pyfits.open(os.path.join(data_dir,psfex_file))
+    psfex = galsim.des.DES_PSFEx(hdu_list[1])
     psf = psfex.getPSF(image_pos)
+
+    # In this case, the getLocalWCS function won't return anything useful.
+    assert psfex.getLocalWCS(image_pos) is None
 
     # Draw the postage stamp image.  This time in image coords, so pixel_scale = 1.0.
     stamp = psf.drawImage(bounds=b, scale=1.0, method='no_pixel')
@@ -571,7 +580,7 @@ def test_psf():
                                       err_msg="no-wcs PSFEx shape.g2 doesn't match")
 
     # Now the shapelet PSF model.  This model is already in sky coordinates, so no wcs_file needed.
-    fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
+    fitpsf = galsim.des.DES_Shapelet(os.path.join(data_dir,fitpsf_file))
     psf = fitpsf.getPSF(image_pos)
 
     # Draw the postage stamp image
@@ -609,8 +618,10 @@ def test_psf_config():
         'psf1' : { 'type' : 'DES_Shapelet' },
         'psf2' : { 'type' : 'DES_PSFEx', 'num' : 0 },
         'psf3' : { 'type' : 'DES_PSFEx', 'num' : 1 },
-        'psf4' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(567,789), 'flux' : 179 },
-        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388 },
+        'psf4' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(567,789), 'flux' : 179,
+                   'gsparams' : { 'folding_threshold' : 1.e-4 } },
+        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388,
+                   'gsparams' : { 'folding_threshold' : 1.e-4 } },
 
         # This would normally be set by the config processing.  Set it manually here.
         'image_pos' : image_pos,
@@ -633,12 +644,18 @@ def test_psf_config():
     psf3b = psfex1.getPSF(image_pos)
     gsobject_compare(psf3a, psf3b)
 
+    gsparams = galsim.GSParams(folding_threshold=1.e-4)
     psf4a = galsim.config.BuildGSObject(config, 'psf4')[0]
-    psf4b = fitpsf.getPSF(galsim.PositionD(567,789)).withFlux(179)
+    psf4b = fitpsf.getPSF(galsim.PositionD(567,789),gsparams=gsparams).withFlux(179)
     gsobject_compare(psf4a, psf4b)
 
+    # Insert a wcs for thes last one.
+    config['wcs'] = galsim.FitsWCS(os.path.join(data_dir,wcs_file))
+    del config['input_objs']
+    galsim.config.ProcessInput(config)
+    psfex2 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir, wcs=config['wcs'])
     psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]
-    psf5b = psfex0.getPSF(galsim.PositionD(789,567)).withFlux(388)
+    psf5b = psfex2.getPSF(galsim.PositionD(789,567),gsparams=gsparams).withFlux(388)
     gsobject_compare(psf5a, psf5b)
 
 
