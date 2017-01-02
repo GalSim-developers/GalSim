@@ -177,7 +177,7 @@ class RealGalaxy(GSObject):
                 if random is True:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
-            elif random is True:
+            elif random:
                 ud = galsim.UniformDeviate(self.rng)
                 use_index = int(real_galaxy_catalog.nobjects * ud())
                 if hasattr(real_galaxy_catalog, 'weight'):
