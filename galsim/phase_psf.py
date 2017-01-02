@@ -1110,7 +1110,7 @@ class PhaseScreenPSF(GSObject):
         """Returns Image pixel spacing that does not alias maxK.
         """
         self._prepareDraw()
-        return self.ii.nyquistDx()
+        return self.ii.nyquistScale()
 
     def stepK(self):
         """Returns sampling in k space necessary to avoid folding of image in x space.
