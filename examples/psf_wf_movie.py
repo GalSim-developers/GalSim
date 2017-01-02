@@ -16,12 +16,18 @@
 #    and/or other materials provided with the distribution.
 #
 
+"""@file psf_wf_movie.py
+Script to visualize the build up of an atmospheric PSF due to a frozen-flow Kolmogorov atmospheric
+phase screens.  Note that the ffmpeg command line tool is required to run this script.
+"""
+
 import warnings
 import numpy as np
 import galsim
 
 try:
     import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
 except ImportError:
@@ -203,7 +209,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(description=(
 """
 Script to visualize the build up of an atmospheric PSF due to a frozen-flow Kolmogorov atmospheric
-phase screen.  Note that the ffmpeg command line tool is required to run this script.
+phase screens.  Note that the ffmpeg command line tool is required to run this script.
 """), formatter_class=RawDescriptionHelpFormatter)
 
     parser.add_argument("--seed", type=int, default=1,
