@@ -491,6 +491,13 @@ def test_rand_with_replacement():
     except ImportError:
         print("The assert_raises tests require nose")
 
+    # Make sure results come out the same whether we use _n_rng_calls or not.
+    result_1 = galsim.utilities.rand_with_replacement(n=10, rng=galsim.BaseDeviate(314159),
+                                                      n_choices=100)
+    result_2, _ = galsim.utilities.rand_with_replacement(n=10, rng=galsim.BaseDeviate(314159),
+                                                         n_choices=100, _n_rng_calls=True)
+    assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
