@@ -230,12 +230,6 @@ class AtmosphericScreen(object):
         if u.shape != v.shape:
             raise ValueError("u.shape not equal to v.shape")
 
-        # Special undocumented value for t: None means use self._time.
-        if t is None:
-            t = np.empty_like(u)
-            t.fill(self._time)
-            return self._wavefront(u, v, t, theta)
-
         from numbers import Real
         if isinstance(t, Real):
             tmp = np.empty_like(u)
@@ -824,7 +818,7 @@ class OpticalScreen(object):
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -834,12 +828,8 @@ class OpticalScreen(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
-        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                        permitted.
+        @param t        Ignored for OpticalScreen.
+        @param theta    Ignored for OpticalScreen.
         @returns        Array of wavefront lag or lead in nanometers.
         """
         u = np.array(u, dtype=float)
@@ -855,19 +845,15 @@ class OpticalScreen(object):
         rsqr = np.abs(r)**2
         return horner2d(rsqr, r, self.coef_array).real * self.lam_0
 
-    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront_gradient(self, u, v, t=None, theta=None):
         """ Compute gradient of wavefront due to atmospheric phase screen.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
-        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
-                        permitted.
+        @param t        Ignored for OpticalScreen.
+        @param theta    Ignored for OpticalScreen.
         @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
         """
         u = np.array(u, dtype=float)

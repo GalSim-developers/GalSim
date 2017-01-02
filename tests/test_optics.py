@@ -715,10 +715,10 @@ def test_Zernike_orthonormality():
     area = np.pi*(diam/2)**2
     for j1 in range(1, jmax+1):
         screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1])
-        wf1 = screen1.wavefront(u, v, None) / 500.0  # nm -> waves
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
             screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1])
-            wf2 = screen2.wavefront(u, v, None) / 500.0
+            wf2 = screen2.wavefront(u, v) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -732,7 +732,7 @@ def test_Zernike_orthonormality():
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
 
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v, None)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
 
     # Repeat for Annular Zernikes
     jmax = 14  # Going up to 14 annular Zernikes takes about ~1 sec on my laptop
@@ -744,11 +744,11 @@ def test_Zernike_orthonormality():
     for j1 in range(1, jmax+1):
         screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1],
                                        obscuration=obscuration, annular_zernike=True)
-        wf1 = screen1.wavefront(u, v, None) / 500.0  # nm -> waves
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
             screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1],
                                            obscuration=obscuration, annular_zernike=True)
-            wf2 = screen2.wavefront(u, v, None) / 500.0
+            wf2 = screen2.wavefront(u, v) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -761,7 +761,7 @@ def test_Zernike_orthonormality():
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v, None)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
 
 
 @timer
