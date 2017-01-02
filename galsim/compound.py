@@ -190,6 +190,8 @@ class Sum(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
+        if n_photons == 0:
+            return galsim._galsim.PhotonArray(0)
         ud = galsim.UniformDeviate(rng)
 
         remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()

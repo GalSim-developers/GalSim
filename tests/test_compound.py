@@ -132,6 +132,7 @@ def test_convolve():
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
+    do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
     gsobject_compare(single, psf)

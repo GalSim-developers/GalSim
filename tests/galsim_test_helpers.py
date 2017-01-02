@@ -188,6 +188,10 @@ def do_shoot(prof, img, name):
     print('Start do_shoot')
     # Verify that shoot with rng=None runs
     prof.shoot(100, rng=None)
+    # And also verify 0, 1, or 2 photons.
+    prof.shoot(0)
+    prof.shoot(1)
+    prof.shoot(2)
 
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
