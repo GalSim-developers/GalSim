@@ -27,8 +27,8 @@ import galsim
 
 try:
     import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
     import matplotlib.animation as anim
 except ImportError:
     raise ImportError("This demo requires matplotlib!")
@@ -119,7 +119,8 @@ def make_movie(args):
 
     # For the animation code, we essentially draw a single figure first, and then use various
     # `set_XYZ` methods to update each successive frame.
-    fig = plt.figure(facecolor='k', figsize=(11, 6))
+    fig = Figure(facecolor='k', figsize=(11, 6))
+    FigureCanvasAgg(fig)
 
     # Axis for the PSF image on the left.
     psf_ax = fig.add_axes([0.08, 0.15, 0.35, 0.7])
@@ -138,7 +139,7 @@ def make_movie(args):
                          extent=np.r_[-1, 1, -1, 1]*0.5*aper.pupil_plane_size)
     cbar_ax = fig.add_axes([0.88, 0.175, 0.03, 0.65])
     cbar_ax.set_ylabel("Radians")
-    plt.colorbar(wf_im, cax=cbar_ax)
+    fig.colorbar(wf_im, cax=cbar_ax)
 
     # Overlay an alpha-mask on the wavefront image showing which parts are actually illuminated.
     ilum = np.ma.masked_greater(aper.illuminated, 0.5)

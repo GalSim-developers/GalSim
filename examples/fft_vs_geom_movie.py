@@ -44,8 +44,8 @@ import galsim
 
 try:
     import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
     import matplotlib.animation as anim
 except ImportError:
     raise ImportError("This demo requires matplotlib!")
@@ -121,7 +121,8 @@ def make_movie(args):
     metadata = dict(title="FFT vs geom movie", artist='Matplotlib')
     writer = anim.FFMpegWriter(fps=15, bitrate=10000, metadata=metadata)
 
-    fig = plt.figure(facecolor='k', figsize=(16, 9))
+    fig = Figure(facecolor='k', figsize=(16, 9))
+    FigureCanvasAgg(fig)
 
     fft_ax = fig.add_axes([0.07, 0.08, 0.36, 0.9])
     fft_ax.set_xlabel("Arcsec")
@@ -255,7 +256,11 @@ def make_movie(args):
         ax.plot(lim, lim)
 
     # Centroid plot
-    fig, axes = plt.subplots(1, 2, figsize=(10, 6))
+    fig = Figure(figsize=(10, 6))
+    FigureCanvasAgg(fig)
+    axes = []
+    axes.append(fig.add_subplot(1, 2, 1))
+    axes.append(fig.add_subplot(1, 2, 2))
     axes[0].scatter(fft_mom[:, 0], geom_mom[:, 0])
     axes[1].scatter(fft_mom[:, 1], geom_mom[:, 1])
     axes[0].set_title("Mx")
@@ -268,7 +273,12 @@ def make_movie(args):
     fig.savefig(args.out+"centroid.png", dpi=300)
 
     # Second moment plot
-    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    fig = Figure(figsize=(16, 6))
+    FigureCanvasAgg(fig)
+    axes = []
+    axes.append(fig.add_subplot(1, 3, 1))
+    axes.append(fig.add_subplot(1, 3, 2))
+    axes.append(fig.add_subplot(1, 3, 3))
     axes[0].scatter(fft_mom[:, 2], geom_mom[:, 2])
     axes[1].scatter(fft_mom[:, 3], geom_mom[:, 3])
     axes[2].scatter(fft_mom[:, 4], geom_mom[:, 4])
@@ -283,7 +293,12 @@ def make_movie(args):
     fig.savefig(args.out+"2ndMoment.png", dpi=300)
 
     # Ellipticity plot
-    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    fig = Figure(figsize=(16, 6))
+    FigureCanvasAgg(fig)
+    axes = []
+    axes.append(fig.add_subplot(1, 3, 1))
+    axes.append(fig.add_subplot(1, 3, 2))
+    axes.append(fig.add_subplot(1, 3, 3))
     axes[0].scatter(fft_mom[:, 5], geom_mom[:, 5])
     axes[1].scatter(fft_mom[:, 6], geom_mom[:, 6])
     axes[2].scatter(fft_mom[:, 7], geom_mom[:, 7])
