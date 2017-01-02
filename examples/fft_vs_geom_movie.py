@@ -113,7 +113,11 @@ def make_movie(args):
     scale = args.size/args.nx
     extent = np.r_[-1,1,-1,1]*args.size/2
 
-    metadata = dict(title="Optical PSF movie", artist='Matplotlib')
+    fft_img_sum = galsim.ImageD(args.nx, args.nx, scale=scale)
+    geom_img_sum = galsim.ImageD(args.nx, args.nx, scale=scale)
+
+    # Code to setup the Matplotlib animation.
+    metadata = dict(title="FFT vs geom movie", artist='Matplotlib')
     writer = anim.FFMpegWriter(fps=15, bitrate=10000, metadata=metadata)
 
     fig = plt.figure(facecolor='k', figsize=(16, 9))
@@ -123,7 +127,7 @@ def make_movie(args):
     fft_ax.set_ylabel("Arcsec")
     fft_ax.set_title("Fourier Optics")
     fft_im = fft_ax.imshow(np.ones((args.nx, args.nx), dtype=float), animated=True, extent=extent,
-                           vmin=0.0, vmax=1e-3)
+                           vmin=0.0, vmax=args.vmax)
 
     # Axis for the wavefront image on the right.
     geom_ax = fig.add_axes([0.50, 0.08, 0.36, 0.9])
@@ -131,7 +135,7 @@ def make_movie(args):
     geom_ax.set_ylabel("Arcsec")
     geom_ax.set_title("Geometric Optics")
     geom_im = geom_ax.imshow(np.ones((args.nx, args.nx), dtype=float), animated=True, extent=extent,
-                             vmin=0.0, vmax=1e-3)
+                             vmin=0.0, vmax=args.vmax)
 
     # Color items white to show up on black background
     for ax in [fft_ax, geom_ax]:
@@ -159,8 +163,6 @@ def make_movie(args):
     etext_geom = geom_ax.text(0.02, 0.91, '', transform=geom_ax.transAxes)
     etext_geom.set_color('w')
 
-    # plt.show()
-
     fft_mom = np.empty((args.n, 8), dtype=float)
     geom_mom = np.empty((args.n, 8), dtype=float)
 
@@ -179,12 +181,22 @@ def make_movie(args):
                 fft_psf = psl.makePSF(lam=args.lam, aper=fft_aper, t0=t0, exptime=args.time_step)
                 geom_psf = psl.makePSF(lam=args.lam, aper=geom_aper, t0=t0, exptime=args.time_step)
 
-                fft_img = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
+                fft_img0 = fft_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale)
 
-                geom_img = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
-                                              method='phot', n_photons=100000)
+                geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
+                                               method='phot', n_photons=100000)
 
                 t0 += args.time_step
+
+                if args.accumulate:
+                    fft_img_sum += fft_img0
+                    geom_img_sum += geom_img0
+                    fft_img = fft_img_sum/(i+1)
+                    geom_img = geom_img_sum/(i+1)
+                else:
+                    fft_img = fft_img0
+                    geom_img = geom_img0
+
 
                 fft_im.set_array(fft_img.array)
                 geom_im.set_array(geom_img.array)
@@ -353,6 +365,9 @@ Atmosphere only simulation:
                         help="Output PSF image dimensions in pixels.  Default: 256")
     parser.add_argument("--size", type=float, default=0.6,
                         help="Size of PSF image in arcseconds.  Default: 0.6")
+    parser.add_argument("--accumulate", action='store_true',
+                        help="Set to accumulate flux over exposure, as opposed to displaying the "
+                             "instantaneous PSF.  Default: False")
 
     parser.add_argument("--pad_factor", type=float, default=1.0,
                         help="Factor by which to pad Fourier PSF InterpolatedImage to avoid "
@@ -362,6 +377,9 @@ Atmosphere only simulation:
                              "Default: 1.0")
     parser.add_argument("--geom_oversampling", type=float, default=1.0,
                         help="Factor by which to oversample geometric *pupil plane*.  Default: 1.0")
+
+    parser.add_argument("--vmax", type=float, default=1.e-3,
+                        help="Matplotlib imshow vmax kwarg to use  Default: 1e-3.")
 
     parser.add_argument("--out", type=str, default="output/fft_vs_geom_",
                         help="Prefix for output files.  Default['output/fft_vs_geom_']")

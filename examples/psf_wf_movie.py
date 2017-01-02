@@ -68,12 +68,11 @@ def make_movie(args):
     # galsim.Atmosphere helper function is useful for constructing this list, and requires lists of
     # parameters for the different layers.
 
-    max_speed = 20  # Pick (an arbitrary) maximum wind speed in m/s.
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
     r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
     for i in range(args.nlayers):
-        spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
+        spd.append(u()*args.max_speed)  # Use a random speed between 0 and max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         # The turbulence strength of each layer is specified by through its Fried parameter r0_500,
         # which can be thought of as the diameter of a telescope for which atmospheric turbulence
@@ -200,32 +199,38 @@ def make_movie(args):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    parser = ArgumentParser(description=(
+"""
+Script to visualize the build up of an atmospheric PSF due to a frozen-flow Kolmogorov atmospheric
+phase screen.  Note that the ffmpeg command line tool is required to run this script.
+"""), formatter_class=RawDescriptionHelpFormatter)
+
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed for generating turbulence.  Default: 1")
     parser.add_argument("--r0_500", type=float, default=0.2,
                         help="Fried parameter at wavelength 500 nm in meters.  Default: 0.2")
     parser.add_argument("--nlayers", type=int, default=6,
                         help="Number of atmospheric layers.  Default: 6")
-    parser.add_argument("--lam", type=float, default=700.0,
-                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--time_step", type=float, default=0.03,
                         help="Incremental time step for advancing phase screens and accumulating "
                              "instantaneous PSFs in seconds.  Default: 0.03")
     parser.add_argument("--exptime", type=float, default=3.0,
                         help="Total amount of time to integrate in seconds.  Default: 3.0")
+    parser.add_argument("--screen_size", type=float, default=102.4,
+                        help="Size of atmospheric screen in meters.  Note that the screen wraps "
+                             "with periodic boundary conditions.  Default: 102.4")
+    parser.add_argument("--screen_scale", type=float, default=0.1,
+                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
+    parser.add_argument("--max_speed", type=float, default=20.0,
+                        help="Maximum wind speed in m/s.  Default: 20.0")
     parser.add_argument("-x", "--x", type=float, default=0.0,
                         help="x-coordinate of PSF in arcmin.  Default: 0.0")
     parser.add_argument("-y", "--y", type=float, default=0.0,
                         help="y-coordinate of PSF in arcmin.  Default: 0.0")
-    parser.add_argument("--psf_nx", type=int, default=512,
-                        help="Output PSF image dimensions in pixels.  Default: 512")
-    parser.add_argument("--psf_scale", type=float, default=0.005,
-                        help="Scale of PSF output pixels in arcseconds.  Default: 0.005")
-    parser.add_argument("--accumulate", action='store_true',
-                        help="Set to accumulate flux over exposure, as opposed to displaying the "
-                             "instantaneous PSF.  Default: False")
+
+    parser.add_argument("--lam", type=float, default=700.0,
+                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--diam", type=float, default=4.0,
                         help="Size of circular telescope pupil in meters.  Default: 4.0")
     parser.add_argument("--obscuration", type=float, default=0.0,
@@ -236,23 +241,29 @@ if __name__ == '__main__':
                         help="Thickness of struts as fraction of aperture diameter.  Default: 0.05")
     parser.add_argument("--strut_angle", type=float, default=0.0,
                         help="Starting angle of first strut in degrees.  Default: 0.0")
-    parser.add_argument("--screen_size", type=float, default=102.4,
-                        help="Size of atmospheric screen in meters.  Note that the screen wraps "
-                             "with periodic boundary conditions.  Default: 102.4")
-    parser.add_argument("--screen_scale", type=float, default=0.1,
-                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
+
+    parser.add_argument("--psf_nx", type=int, default=512,
+                        help="Output PSF image dimensions in pixels.  Default: 512")
+    parser.add_argument("--psf_scale", type=float, default=0.005,
+                        help="Scale of PSF output pixels in arcseconds.  Default: 0.005")
+    parser.add_argument("--accumulate", action='store_true',
+                        help="Set to accumulate flux over exposure, as opposed to displaying the "
+                             "instantaneous PSF.  Default: False")
+
     parser.add_argument("--pad_factor", type=float, default=1.0,
                         help="Factor by which to pad PSF InterpolatedImage to avoid aliasing. "
                              "Default: 1.0")
     parser.add_argument("--oversampling", type=float, default=1.0,
                         help="Factor by which to oversample the PSF InterpolatedImage. "
                              "Default: 1.0")
+
     parser.add_argument("--psf_vmax", type=float, default=0.0003,
                         help="Matplotlib imshow vmax kwarg for PSF image.  Sets value that "
                              "maxes out the colorbar range.  Default: 0.0003")
     parser.add_argument("--wf_vmax", type=float, default=50.0,
                         help="Matplotlib imshow vmax kwarg for wavefront image.  Sets value "
                              "that maxes out the colorbar range.  Default: 50.0")
+
     parser.add_argument("--outfile", type=str, default="output/psf_wf_movie.mp4",
                         help="Output filename.  Default: output/psf_wf_movie.mp4")
 
