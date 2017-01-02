@@ -590,6 +590,7 @@ def test_add():
     gsobject_compare(single, gauss1)
     check_basic(single, "`sum' of 1 Gaussian")
     do_pickle(single)
+    do_shoot(single, myImg, "Single Sum")
 
     single = galsim.Add([gauss1])
     gsobject_compare(single, gauss1)
