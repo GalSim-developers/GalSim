@@ -467,35 +467,36 @@ def test_rand_with_replacement():
     # of the exception-handling here.
     try:
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=1.5, rng=galsim.BaseDeviate(1234), n_choices=10)
+                                 n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
         np.testing.assert_raises(TypeError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng='foo', n_choices=10)
+                                 n=2, n_choices=10, rng='foo')
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10.5)
+                                 n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=-11)
+                                 n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=-2, rng=galsim.BaseDeviate(1234), n_choices=11)
+                                 n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
         tmp_weights = np.arange(10).astype(float)-3
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
                                  weight=tmp_weights)
         tmp_weights[0] = np.nan
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
                                  weight=tmp_weights)
         tmp_weights[0] = np.inf
         np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, rng=galsim.BaseDeviate(1234), n_choices=10,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
                                  weight=tmp_weights)
     except ImportError:
         print("The assert_raises tests require nose")
 
     # Make sure results come out the same whether we use _n_rng_calls or not.
-    result_1 = galsim.utilities.rand_with_replacement(n=10, rng=galsim.BaseDeviate(314159),
-                                                      n_choices=100)
-    result_2, _ = galsim.utilities.rand_with_replacement(n=10, rng=galsim.BaseDeviate(314159),
-                                                         n_choices=100, _n_rng_calls=True)
+    result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
+                                                      rng=galsim.BaseDeviate(314159))
+    result_2, _ = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
+                                                         rng=galsim.BaseDeviate(314159),
+                                                         _n_rng_calls=True)
     assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
 
 if __name__ == "__main__":

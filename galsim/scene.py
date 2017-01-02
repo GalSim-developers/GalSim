@@ -610,7 +610,7 @@ class COSMOSCatalog(object):
         # By default, get the number of RNG calls.  We then decide whether or not to return them
         # based on _n_rng_calls.
         index, n_rng_calls = galsim.utilities.rand_with_replacement(
-                n_random, rng, self.nobjects, use_weights, _n_rng_calls=True)
+                n_random, self.nobjects, rng, use_weights, _n_rng_calls=True)
 
         if n_random>1:
             if _n_rng_calls:

@@ -1209,7 +1209,7 @@ def binomial(a, b, n):
             yield c
     return np.fromiter(generate(), float, n+1)
 
-def rand_with_replacement(n, rng, n_choices, weight=None, _n_rng_calls=False):
+def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     """Select some number of random choices from a list, with replacement, using a supplied RNG.
 
     `n` random choices with replacement are made assuming that those choices should range from 0 to
@@ -1218,8 +1218,8 @@ def rand_with_replacement(n, rng, n_choices, weight=None, _n_rng_calls=False):
     weighted choices from the list.
 
     @param n           Number of random selections to make.
-    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
     @param n_choices   Number of entries from which to choose.
+    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
     @param weight      Optional list of weight factors to use for weighting the selection of
                        random indices.
     @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
