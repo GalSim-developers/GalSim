@@ -19,6 +19,7 @@
 Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 """
 
+from past.builtins import basestring
 import numpy as np
 
 import galsim
@@ -195,7 +196,7 @@ class Bandpass(object):
 
         if self._tp is not None:
             pass
-        elif isinstance(self._orig_tp, str):
+        elif isinstance(self._orig_tp, basestring):
             import os
             if os.path.isfile(self._orig_tp):
                 self._tp = galsim.LookupTable(file=self._orig_tp, interpolant='linear')
@@ -211,12 +212,16 @@ class Bandpass(object):
                     test_wave = 700
                 try:
                     self._tp = galsim.utilities.math_eval('lambda wave : ' + self._orig_tp)
-                    self._tp(test_wave)
+                    from numbers import Real
+                    if not isinstance(self._tp(test_wave), Real):
+                        raise ValueError("The given throughput function, %r, did not return a valid"
+                                         " number at test wavelength %s"%(
+                                         self._orig_tp, test_wave))
                 except Exception as e:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0}\n".format(self._orig_tp) +
+                        "Input provided: {0!r}\n".format(self._orig_tp) +
                         "Caught error: {0}".format(e))
         else:
             self._tp = self._orig_tp

@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from past.builtins import basestring
 import galsim
 import galsim.wfirst
 import numpy as np
@@ -294,7 +295,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     if bandpass_list is None:
         bandpass_list = default_bandpass_list
     else:
-        if not isinstance(bandpass_list[0], str):
+        if not isinstance(bandpass_list[0], basestring):
             raise ValueError("Expected input list of bandpass names!")
         if not set(bandpass_list).issubset(default_bandpass_list):
             err_msg = ''
@@ -329,7 +330,6 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
             SCA_index_list.append(SCA)
 
     # Save images to file.
-    n_ims = len(im_list)
     galsim.fits.writeMulti(im_list, filename, clobber=clobber)
 
     # Add data to file, after constructing a FITS table.  Watch out for clobbering.
