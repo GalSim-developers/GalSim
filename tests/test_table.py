@@ -360,6 +360,7 @@ def test_table2d():
     except ImportError:
         print('The assert_raises tests require nose')
 
+
 @timer
 def test_table2d_gradient():
     """Check LookupTable2D gradient function
@@ -422,12 +423,12 @@ def test_table2d_gradient():
 
     # Should come out zero outside original boundary
     test_dfdx, test_dfdy = tab2d.gradient(newxx+2*np.max(newxx), newyy+2*np.max(newyy))
-    np.testing.assert_array_almost_equal(0.0, test_dfdx, decimal=9)
-    np.testing.assert_array_almost_equal(0.0, test_dfdy, decimal=9)
+    np.testing.assert_array_equal(0.0, test_dfdx)
+    np.testing.assert_array_equal(0.0, test_dfdy)
 
     # Test single value
     np.testing.assert_almost_equal(tab2d.gradient(x1, y1), (dfdx(x1,y1), dfdy(x1, y1)), decimal=2)
-    np.testing.assert_almost_equal(tab2d.gradient(x1+2*np.max(newxx), y1), (0.0, 0.0), decimal=9)
+    np.testing.assert_equal(tab2d.gradient(x1+2*np.max(newxx), y1), (0.0, 0.0))
 
 
     # Try a simpler interpolation function.  Derivatives should be exact.
@@ -456,8 +457,44 @@ def test_table2d_gradient():
     np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
     np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
 
+    # Test single value
+    np.testing.assert_almost_equal(tab2d.gradient(x1, y1), (2-4*y1, 3-4*x1))
+    np.testing.assert_almost_equal(tab2d.gradient(x1+2*tab2d.xperiod, y1), (2-4*y1, 3-4*x1))
+
+    # Test mix of inside and outside original boundary
+    test_dfdx, test_dfdy = tab2d.gradient(np.dstack([newxx, newxx+3*tab2d.xperiod]),
+                                          np.dstack([newyy, newyy]))
+
+    np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx[:,:,0])
+    np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy[:,:,0])
+    np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx[:,:,1])
+    np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy[:,:,1])
+
     # Check that edge_mode='constant' behaves as expected.
+
+    # Should work the same inside original boundary
     tab2d = galsim.LookupTable2D(x, y, z, edge_mode='constant')
+    test_dfdx, test_dfdy = tab2d.gradient(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx)
+    np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy)
+
+    # Should come out zero outside original boundary
+    test_dfdx, test_dfdy = tab2d.gradient(newxx+2*np.max(newxx), newyy)
+    np.testing.assert_array_equal(0.0, test_dfdx)
+    np.testing.assert_array_equal(0.0, test_dfdy)
+
+    # Test single value
+    np.testing.assert_almost_equal(tab2d.gradient(x1, y1), (2-4*y1, 3-4*x1))
+    np.testing.assert_equal(tab2d.gradient(x1+2*np.max(newxx), y1), (0.0, 0.0))
+
+    # Test mix of inside and outside original boundary
+    test_dfdx, test_dfdy = tab2d.gradient(np.dstack([newxx, newxx+2*np.max(newxx)]),
+                                          np.dstack([newyy, newyy]))
+
+    np.testing.assert_array_almost_equal(ref_dfdx, test_dfdx[:,:,0])
+    np.testing.assert_array_almost_equal(ref_dfdy, test_dfdy[:,:,0])
+    np.testing.assert_array_equal(0.0, test_dfdx[:,:,1])
+    np.testing.assert_array_equal(0.0, test_dfdy[:,:,1])
 
 
 @timer
