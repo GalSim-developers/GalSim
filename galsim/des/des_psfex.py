@@ -27,6 +27,8 @@ See documentation here:
     https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
+from past.builtins import basestring
+
 import galsim
 import galsim.config
 import numpy as np
@@ -104,7 +106,7 @@ class DES_PSFEx(object):
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
-            if not isinstance(file_name, str):
+            if not isinstance(file_name, basestring):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
@@ -123,7 +125,7 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim._pyfits import pyfits
-        if isinstance(self.file_name, str):
+        if isinstance(self.file_name, basestring):
             hdu_list = pyfits.open(self.file_name)
             hdu = hdu_list[1]
         else:
@@ -216,7 +218,7 @@ class DES_PSFEx(object):
         if pol_group2 != 1:
             raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
         if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
+            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
         if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
             raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
         if basis.shape[0] != psf_axis3:
@@ -306,17 +308,7 @@ class PSFExLoader(galsim.config.InputLoader):
 
         if 'image_file_name' not in kwargs:
             if 'wcs' in base:
-                wcs = base['wcs']
-                if wcs.isLocal():
-                    # Then the wcs is already fine.
-                    pass
-                elif 'image_pos' in base:
-                    image_pos = base['image_pos']
-                    wcs = wcs.local(image_pos)
-                    safe = False
-                else:
-                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
-                kwargs['wcs'] = wcs
+                kwargs['wcs'] = base['wcs']
             else:
                 # Then we aren't doing normal config processing, so just use pixel scale = 1.
                 kwargs['wcs'] = galsim.PixelScale(1.)
@@ -371,4 +363,3 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
 
 # Register this builder with the config framework:
 galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
-

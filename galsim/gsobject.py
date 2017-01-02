@@ -38,7 +38,6 @@ rescaling of flux or size, rotating, and shifting; and (c) actually make images 
 brightness profiles.
 """
 
-import os
 import numpy as np
 
 import galsim

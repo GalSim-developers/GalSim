@@ -20,6 +20,7 @@
 InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
+from past.builtins import basestring
 import galsim
 from galsim import GSObject
 from . import _galsim
@@ -314,7 +315,7 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
-            if isinstance(pad_image, str):
+            if isinstance(pad_image, basestring):
                 pad_image = galsim.fits.read(pad_image)
             if not isinstance(pad_image, galsim.Image):
                 raise ValueError("Supplied pad_image is not an Image!")
@@ -519,7 +520,7 @@ class InterpolatedImage(GSObject):
                 # Make sure that we are using a specified RNG by resetting that in this cached
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
                 noise = noise.copy(rng=rng)
-        elif isinstance(noise_pad, str):
+        elif isinstance(noise_pad, basestring):
             noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
             if self.use_cache:
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
