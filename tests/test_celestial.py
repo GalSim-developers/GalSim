@@ -42,39 +42,50 @@ def test_angle():
     """Test basic construction and use of Angle and AngleUnit classes
     """
     # First Angle:
-    theta1 = numpy.pi/4. * galsim.radians
+    theta1 = pi/4. * galsim.radians
     theta2 = 45 * galsim.degrees
     theta3 = 3 * galsim.hours
     theta4 = 45 * 60 * galsim.arcmin
     theta5 = galsim.Angle(45 * 3600 , galsim.arcsec) # Check explicit installation too.
 
-    assert theta1.rad() == numpy.pi/4.
-    numpy.testing.assert_almost_equal(theta2.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta3.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta4.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta5.rad(), numpy.pi/4., decimal=12)
+    assert theta1.rad() == pi/4.
+    numpy.testing.assert_almost_equal(theta2.rad(), pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta3.rad(), pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta4.rad(), pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta5.rad(), pi/4., decimal=12)
 
     # Check wrapping
     theta6 = (45 + 360) * galsim.degrees
     assert abs(theta6.rad() - theta1.rad()) > 6.
+    print('theta1 = ',theta1,' => ',theta1.wrap())
+    print('theta6 = ',theta6,' => ',theta6.wrap())
     numpy.testing.assert_almost_equal(theta6.wrap().rad(), theta1.rad(), decimal=12)
 
     theta7 = (45 - 360) * galsim.degrees
     assert abs(theta7.rad() - theta1.rad()) > 6.
     numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
 
+    # Check wrapping with non-default center
+    numpy.testing.assert_almost_equal(theta6.wrap(pi).rad(), theta1.rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(2*pi).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(3*pi).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-pi).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-2*pi).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.wrap(27).rad(), theta1.wrap(27).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.wrap(-127).rad(), theta1.wrap(-127).rad(), decimal=12)
+
     # Make a new AngleUnit as described in the AngleUnit docs
-    gradians = galsim.AngleUnit(2. * numpy.pi / 400.)
+    gradians = galsim.AngleUnit(2. * pi / 400.)
     theta8 = 50 * gradians
-    numpy.testing.assert_almost_equal(theta8.rad(), numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta8.rad(), pi/4., decimal=12)
 
     # Check simple math
-    numpy.testing.assert_almost_equal((theta1 + theta2).rad(), numpy.pi/2., decimal=12)
-    numpy.testing.assert_almost_equal((4*theta3).rad(), numpy.pi, decimal=12)
-    numpy.testing.assert_almost_equal((4*theta4 - theta2).rad(), 0.75 * numpy.pi, decimal=12)
-    numpy.testing.assert_almost_equal((theta5/2.).rad(), numpy.pi / 8., decimal=12)
+    numpy.testing.assert_almost_equal((theta1 + theta2).rad(), pi/2., decimal=12)
+    numpy.testing.assert_almost_equal((4*theta3).rad(), pi, decimal=12)
+    numpy.testing.assert_almost_equal((4*theta4 - theta2).rad(), 0.75 * pi, decimal=12)
+    numpy.testing.assert_almost_equal((theta5/2.).rad(), pi / 8., decimal=12)
 
-    numpy.testing.assert_almost_equal(theta3 / galsim.radians, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta3 / galsim.radians, pi/4., decimal=12)
     numpy.testing.assert_almost_equal(theta1 / galsim.hours, 3., decimal=12)
     numpy.testing.assert_almost_equal(galsim.hours / galsim.arcmin, 15*60, decimal=12)
 
@@ -86,6 +97,7 @@ def test_angle():
     do_pickle(galsim.arcsec)
     do_pickle(gradians)
     do_pickle(theta1)
+    do_pickle(theta1.angle)
     do_pickle(theta2)
     do_pickle(theta3)
     do_pickle(theta4)
@@ -559,7 +571,7 @@ def test_ecliptic():
     numpy.testing.assert_almost_equal(el.rad(), 0., decimal=6)
     autumnal_equinox = galsim.CelestialCoord(pi*galsim.radians, 0.*galsim.radians)
     el, b = autumnal_equinox.ecliptic()
-    numpy.testing.assert_almost_equal(el.rad(), pi, decimal=6)
+    numpy.testing.assert_almost_equal(el.wrap(pi).rad(), pi, decimal=6)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
 
     # Finally, test the results of using a date to get ecliptic coordinates with respect to the sun,
@@ -579,18 +591,18 @@ def test_ecliptic():
     # the time of the vernal equinox.
     el, b = autumnal_equinox.ecliptic(epoch=2014)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
+    numpy.testing.assert_almost_equal(el_rel.wrap(pi).rad(), el.wrap(pi).rad(), decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
     # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
     # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
     autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), -pi, decimal=3)
+    numpy.testing.assert_almost_equal(el_rel.wrap(-pi).rad(), -pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
     # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), pi, decimal=3)
+    numpy.testing.assert_almost_equal(el_rel.wrap(pi).rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
 
     # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
