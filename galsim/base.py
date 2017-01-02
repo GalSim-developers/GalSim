@@ -40,8 +40,6 @@ between the scale radii used to specify the size of the GSObject and between the
 Image is acceptable.
 """
 
-import numpy as np
-
 import galsim
 from . import _galsim
 from .gsobject import GSObject
@@ -1413,4 +1411,3 @@ _galsim.SBSpergel.__getinitargs__ = lambda self: (
 _galsim.SBSpergel.__getstate__ = lambda self: None
 _galsim.SBSpergel.__repr__ = lambda self: \
         'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%self.__getinitargs__()
-
