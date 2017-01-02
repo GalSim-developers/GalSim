@@ -23,7 +23,6 @@
 # coverage of the config files, which otherwise come out rather low.
 
 from __future__ import print_function
-import numpy as np
 import os
 import sys
 import logging
@@ -381,6 +380,73 @@ def test_great3():
     finally:
         os.chdir(original_dir)
 
+@timer
+@in_examples
+def test_psf_wf_movie():
+    # Mock a command-line arguments object so we can run in the current process
+    class Args(object):
+        seed = 1
+        r0_500 = 0.2
+        nlayers = 3
+        time_step = 0.03
+        exptime = 0.3
+        screen_size = 51.2
+        screen_scale = 0.1
+        max_speed = 20.0
+        x = 0.0
+        y = 0.0
+        lam = 700.0
+        diam = 4.0
+        obscuration = 0.0
+        nstruts = 0
+        strut_thick = 0.05
+        strut_angle = 0.0
+        psf_nx = 512
+        psf_scale = 0.005
+        accumulate = False
+        pad_factor = 1.0
+        oversampling = 1.0
+        psf_vmax = 0.0003
+        wf_vmax = 50.0
+        outfile = "output/test_psf_wf_movie.mp4"
+    import psf_wf_movie
+    psf_wf_movie.make_movie(Args)
+    # Just checks that this runs, not the value of the output.
+
+@timer
+@in_examples
+def test_fft_vs_geom_movie():
+    # Mock a command-line arguments object so we can run in the current process
+    class Args(object):
+        seed = 1
+        n = 10
+        jmax = 15
+        ell = 4.0
+        sigma = 0.05
+        r0_500 = 0.2
+        nlayers = 3
+        time_step = 0.025
+        screen_size = 51.2
+        screen_scale = 0.1
+        max_speed = 20.0
+        lam = 700.0
+        diam = 4.0
+        obscuration = 0.0
+        nstruts = 0
+        strut_thick = 0.05
+        strut_angle = 0.0
+        nx = 256
+        size = 3.0
+        accumulate = False
+        pad_factor = 1.0
+        oversampling = 1.0
+        geom_oversampling = 1.0
+        vmax = 1.e-3
+        out = "output/test_fft_vs_geom_"
+    import fft_vs_geom_movie
+    fft_vs_geom_movie.make_movie(Args)
+    # Just checks that this runs, not the value of the outputs.
+
 
 if __name__ == "__main__":
     remove_dir('output')
@@ -401,3 +467,5 @@ if __name__ == "__main__":
     test_demo13()
     test_des()
     test_great3()
+    test_psf_wf_movie()
+    test_fft_vs_geom_movie()
