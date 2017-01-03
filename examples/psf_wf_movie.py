@@ -92,10 +92,9 @@ def make_movie(args):
               "and r0_500 {:5.3f} m."
               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
 
-    # Additionally, we set the screen temporal evolution `time_step`, and the screen size and scale.
+    # Additionally, we set the screen size and scale.
     atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
-                            time_step=args.time_step, screen_size=args.screen_size,
-                            screen_scale=args.screen_scale)
+                            screen_size=args.screen_size, screen_scale=args.screen_scale)
     # `atm` is now an instance of a galsim.PhaseScreenList object.
 
     # Place to store the cumulative PSF image if args.accumulate is set.
