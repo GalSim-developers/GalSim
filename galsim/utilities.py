@@ -1016,7 +1016,7 @@ def dol_to_lod(dol, N=None):
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
             except Exception:
-                raise "Cannot broadcast kwarg {0}={1}".format(k, v)
+                raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
 def set_func_doc(func, doc):

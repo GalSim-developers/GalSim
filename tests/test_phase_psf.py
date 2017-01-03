@@ -612,6 +612,14 @@ def test_input():
     # But specifying both is alright.
     galsim.AtmosphericScreen(screen_size=10.0, alpha=0.997, time_step=0.01)
 
+    # Try some variations for Atmosphere
+    try:
+        np.testing.assert_raises(ValueError, galsim.Atmosphere,
+                                 screen_size=10.0, altitude=[0., 1.],
+                                 r0_500=[0.2, 0.3, 0.2])
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 if __name__ == "__main__":
     test_aperture()

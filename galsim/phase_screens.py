@@ -466,8 +466,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     if rng is None:
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
-    return galsim.PhaseScreenList(AtmosphericScreen(**kw)
-                                  for kw in galsim.utilities.dol_to_lod(kwargs, nmax))
+    return galsim.PhaseScreenList([AtmosphericScreen(**kw)
+                                   for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
 
 
 # Some utilities for working with Zernike polynomials

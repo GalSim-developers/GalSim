@@ -544,6 +544,43 @@ def test_unweighted_moments():
     np.testing.assert_almost_equal(mom4['My'], 0.0)
 
 
+def test_dol_to_lod():
+    """Check broadcasting behavior of dol_to_lod"""
+
+    i0 = 0
+    l1 = [1]
+    l2 = [1, 2]
+    l3 = [1, 2, 3]
+    d1 = {1:1}
+
+    # Should be able to broadcast scalar elements or lists of length 1.
+    dd = dict(i0=i0, l2=l2)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd)):
+        assert d == dict(i0=i0, l2=l2[i])
+
+    dd = dict(l1=l1, l2=l2)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd)):
+        assert d == dict(l1=l1[0], l2=l2[i])
+
+    dd = dict(l1=l1, l3=l3)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, 3)):
+        assert d == dict(l1=l1[0], l3=l3[i])
+
+    # Can't broadcast list of lengths 2 and 3 though.
+    try:
+        dd = dict(l2=l2, l3=l3)
+        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+    # Can't broadcast a dictionary
+    try:
+        dd = dict(l2=l2, d1=d1)
+        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -556,3 +593,4 @@ if __name__ == "__main__":
     test_python_LRU_Cache()
     test_position_type_promotion()
     test_unweighted_moments()
+    test_dol_to_lod()
