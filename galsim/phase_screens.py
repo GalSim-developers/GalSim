@@ -76,10 +76,8 @@ class AtmosphericScreen(object):
                  vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None):
 
         if (alpha != 1.0 and time_step is None):
-            raise "1"
             raise ValueError("No time_step provided when alpha != 1.0")
         if (alpha == 1.0 and time_step is not None):
-            raise "2"
             raise ValueError("Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
                              "Did you mean to set time_step in makePSF or PhaseScreenPSF?")
         if screen_scale is None:

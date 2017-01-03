@@ -372,6 +372,7 @@ def test_scale_unit():
     opt_psf2 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit='arcsec')
     assert opt_psf1 == opt_psf2, "scale unit did not parse as string"
 
+
 @timer
 def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
@@ -597,6 +598,21 @@ def test_phase_gradient_shoot():
         err_msg='Mean phase gradient second moment Mxy not close to mean fft moment')
 
 
+def test_input():
+    """Check that exceptions are raised for invalid input"""
+
+    # Specifying only one of alpha and time_step is an error.
+    try:
+        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
+                                 screen_size=10.0, time_step=0.01)
+        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
+                                 screen_size=10.0, alpha=0.997)
+    except ImportError:
+        print('The assert_raises tests require nose')
+    # But specifying both is alright.
+    galsim.AtmosphericScreen(screen_size=10.0, alpha=0.997, time_step=0.01)
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -610,3 +626,4 @@ if __name__ == "__main__":
     test_stepk_maxk()
     test_ne()
     test_phase_gradient_shoot()
+    test_input()
