@@ -630,7 +630,7 @@ class PhaseScreenList(object):
                 # Next, see if layers[0] is iterable.  E.g., to catch generator expressions.
                 try:
                     layers = list(layers[0])
-                except:
+                except TypeError:
                     # If that fails, check if layers[0] is a bare PhaseScreen.  Should probably
                     # make an ABC for this (use __subclasshook__?), but for now, just check
                     # AtmosphericScreen and OpticalScreen.
@@ -817,17 +817,37 @@ class PhaseScreenList(object):
         @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
         @param exptime             Time in seconds over which to accumulate evolving instantaneous
                                    PSF.  [default: 0.0]
-        @param time_step           Time interval in seconds with which to sample phase screens.
+        @param time_step           Time interval in seconds with which to sample phase screens when
+                                   drawing using real-space or Fourier methods, or when using
+                                   photon-shooting without the geometric optics approximation.  Note
+                                   that the default value of 0.025 is fairly arbitrary.  For careful
+                                   studies, we recommend checking that results are stable when
+                                   decreasing time_step.  Also note that when drawing using
+                                   photon-shooting with the geometric optics approximation this
+                                   keyword is ignored, as the phase screen can be sampled
+                                   continuously in this case instead of at discrete intervals.
                                    [default: 0.025]
         @param flux                Flux of output PSF.  [default: 1.0]
         @param theta               Field angle of PSF as a 2-tuple of Angles.
                                    [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param scale_unit          Units to use for the sky coordinates of the output profile.
-                                   [default: galsim.arcsec]
         @param interpolant         Either an Interpolant instance or a string indicating which
                                    interpolant should be used.  Options are 'nearest', 'sinc',
                                    'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                    integer order to use. [default: galsim.Quintic()]
+        @param scale_unit          Units to use for the sky coordinates of the output profile.
+                                   [default: galsim.arcsec]
+        @param ii_pad_factor       Zero-padding factor by which to extend the image of the PSF when
+                                   creating the `InterpolatedImage`.  See the `InterpolatedImage`
+                                   docstring for more details.  [default: 4.]
+        @param suppress_warning    If `pad_factor` is too small, the code will emit a warning telling
+                                   you its best guess about how high you might want to raise it.
+                                   However, you can suppress this warning by using
+                                   `suppress_warning=True`.  [default: False]
+        @param geometric_shooting  If True, then when drawing using photon shooting, use geometric
+                                   optics approximation where the photon angles are derived from the
+                                   phase screen gradient.  If False, then first draw using Fourier
+                                   optics and then shoot from the derived InterpolatedImage.
+                                   [default: True]
         @param aper                Aperture to use to compute PSF(s).  [default: None]
         @param gsparams            An optional GSParams argument.  See the docstring for GSParams
                                    for details.  [default: None]
@@ -930,10 +950,17 @@ class PhaseScreenPSF(GSObject):
     @param t0                  Time at which to start exposure in seconds.  [default: 0.0]
     @param exptime             Time in seconds over which to accumulate evolving instantaneous PSF.
                                [default: 0.0]
-    @param time_step           Time interval in seconds with which to sample phase screens.
+    @param time_step           Time interval in seconds with which to sample phase screens when
+                               drawing using real-space or Fourier methods, or when using
+                               photon-shooting without the geometric optics approximation.  Note
+                               that the default value of 0.025 is fairly arbitrary.  For careful
+                               studies, we recommend checking that results are stable when
+                               decreasing time_step.  Also note that when drawing using
+                               photon-shooting with the geometric optics approximation this
+                               keyword is ignored, as the phase screen can be sampled
+                               continuously in this case instead of at discrete intervals.
                                [default: 0.025]
     @param flux                Flux of output PSF [default: 1.0]
-    @param aper                Aperture to use to compute PSF(s).  [default: None]
     @param theta               Field angle of PSF as a 2-tuple of Angles.
                                [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
     @param interpolant         Either an Interpolant instance or a string indicating which
@@ -954,6 +981,7 @@ class PhaseScreenPSF(GSObject):
                                phase screen gradient.  If False, then first draw using Fourier
                                optics and then shoot from the derived InterpolatedImage.
                                [default: True]
+    @param aper                Aperture to use to compute PSF(s).  [default: None]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 

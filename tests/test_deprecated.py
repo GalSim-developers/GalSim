@@ -1099,7 +1099,7 @@ def test_dep_phase_psf():
     NPSFs = 10
     exptime = 0.3
     rng = galsim.BaseDeviate(1234)
-    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
     theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in range(NPSFs)]
 
     kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)

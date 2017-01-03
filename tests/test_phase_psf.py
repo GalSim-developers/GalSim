@@ -111,7 +111,7 @@ def test_phase_screen_list():
 
     aper = galsim.Aperture(diam=1.0)
 
-    ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
+    ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, time_step=0.01, rng=rng)
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
     do_pickle(ar1)
     do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
@@ -134,10 +134,10 @@ def test_phase_screen_list():
         pass
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
-    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
+    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, time_step=0.01, rng=rng)
     assert ar1 == ar2
     # Create a couple new screens with different types/parameters
-    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
+    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, time_step=0.015, rng=rng2)
     assert ar1 != ar2
     ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
     do_pickle(ar3)
@@ -246,13 +246,12 @@ def test_frozen_flow():
     """Test that frozen flow screen really is frozen, i.e., phase(x=0, t=0) == phase(x=v*t, t=t)."""
     rng = galsim.BaseDeviate(1234)
     vx = 1.0  # m/s
-    dt = 0.01  # s
     t = 0.05  # s
     x = vx*t  # 0.05 m
     dx = x
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
-    screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
+    screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, rng=rng)
     import warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -295,7 +294,7 @@ def test_phase_psf_reset():
     np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
     # Now check with boiling, but no wind.
-    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, rng=rng)
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
     wf1 = atm._wavefront(aper.u, aper.v, None, theta0)
     atm._seek(0.1)
     wf2 = atm._wavefront(aper.u, aper.v, None, theta0)
@@ -315,7 +314,7 @@ def test_phase_psf_batch():
     NPSFs = 10
     exptime = 0.3
     rng = galsim.BaseDeviate(1234)
-    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
     theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in range(NPSFs)]
 
     kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)
@@ -430,9 +429,10 @@ def test_ne():
     objs = [galsim.AtmosphericScreen(10.0, rng=rng),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vy=1.0),
-            galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999),
+            galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999, time_step=0.01),
             galsim.AtmosphericScreen(10.0, rng=rng, altitude=1.0),
-            galsim.AtmosphericScreen(10.0, rng=rng, time_step=0.1),
+            galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999, time_step=0.02),
+            galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.998, time_step=0.02),
             galsim.AtmosphericScreen(10.0, rng=rng, r0_500=0.1),
             galsim.AtmosphericScreen(10.0, rng=rng, L0=10.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=10.0),
@@ -483,7 +483,6 @@ def test_phase_gradient_shoot():
     seed = 12345
     r0_500 = 0.2  # m
     nlayers = 6
-    time_step = 0.025  # s
     screen_size = 102.4  # m
     screen_scale = 0.1  # m
     max_speed = 20  # m/s
@@ -511,8 +510,7 @@ def test_phase_gradient_shoot():
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
     atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
-                            time_step=time_step, screen_size=screen_size,
-                            screen_scale=screen_scale)
+                            screen_size=screen_size, screen_scale=screen_scale)
 
     lam = 500.0
     diam = 4.0

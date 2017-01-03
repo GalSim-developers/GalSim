@@ -32,7 +32,7 @@ class AtmosphericScreen(object):
                          the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so while the code will
                          still run with a small screen, this may introduce artifacts into PSFs or
-                         PSF correlations functions.  Also note that screen_size may be tweaked by
+                         PSF correlation functions.  Also note that screen_size may be tweaked by
                          the initializer to ensure `screen_size` is a multiple of `screen_scale`.
     @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
                          the Fried parameter is usually sufficiently small, but users should test
@@ -40,8 +40,6 @@ class AtmosphericScreen(object):
                          [default: r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.025]
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [default: 0.2]
@@ -55,7 +53,13 @@ class AtmosphericScreen(object):
                          is then the amount of turbulence freshly generated in each step.  Setting
                          alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
                          from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
+                         PSFs with non-frozen-flow atmospheres.  If `alpha` != 1.0, then it is
+                         required that a `time_step` is also specified.  [default: 1.0]
+    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
+                         from the time interval used to integrate the PSF over time, which is set
+                         by the `time_step` keyword argument to `PhaseScreenPSF` or
+                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
+                         that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
 
@@ -68,9 +72,16 @@ class AtmosphericScreen(object):
     Published in Proceedings Volume 9148: Adaptive Optics Systems IV
     September 2014
     """
-    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.025,
-                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
+    def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None):
 
+        if (alpha != 1.0 and time_step is None):
+            raise "1"
+            raise ValueError("No time_step provided when alpha != 1.0")
+        if (alpha == 1.0 and time_step is not None):
+            raise "2"
+            raise ValueError("Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
+                             "Did you mean to set time_step in makePSF or PhaseScreenPSF?")
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
@@ -105,10 +116,10 @@ class AtmosphericScreen(object):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, r0_500=%r, L0=%r, " +
-                "vx=%r, vy=%r, alpha=%r, rng=%r)") % (
-                        self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                        self.r0_500, self.L0, self.vx, self.vy, self.alpha, self._orig_rng)
+        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, r0_500=%r, L0=%r, " +
+                "vx=%r, vy=%r, alpha=%r, time_step=%r, rng=%r)") % (
+                        self.screen_size, self.screen_scale, self.altitude, self.r0_500, self.L0,
+                        self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
 
     # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
     # object as immutable under the python data model.  The requirements for hashability are that
@@ -143,7 +154,7 @@ class AtmosphericScreen(object):
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
-    # It nearly impossible to figure this out from a single source, but it can be derived from a
+    # It's nearly impossible to figure this out from a single source, but it can be derived from a
     # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
     # sure like to work alone... )
     _kolmogorov_constant = np.sqrt(0.00058)
@@ -164,7 +175,7 @@ class AtmosphericScreen(object):
         self._psi[0, 0] = 0.0
 
     def _random_screen(self):
-        """Generate a random phase screen with power spectrum given by self.psi**2"""
+        """Generate a random phase screen with power spectrum given by self._psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
         noise = galsim.utilities.rand_arr(self._psi.shape, gd)
         return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
@@ -190,6 +201,19 @@ class AtmosphericScreen(object):
                 self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen,
                                                    edge_mode='wrap')
         self._time = float(t)
+
+    def _reset(self):
+        """Reset phase screen back to time=0."""
+        self.rng = self._orig_rng.duplicate()
+        self._time = 0.0
+
+        # Only need to reset/create tab2d if not frozen or doesn't already exist
+        if not self.reversible or not hasattr(self, '_tab2d'):
+            self._screen = self._random_screen()
+            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
+                                   endpoint=False)
+            self._ys = self._xs
+            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -313,19 +337,6 @@ class AtmosphericScreen(object):
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d.gradient(u, v)
 
-    def _reset(self):
-        """Reset phase screen back to time=0."""
-        self.rng = self._orig_rng.duplicate()
-        self._time = 0.0
-
-        # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if not self.reversible or not hasattr(self, '_tab2d'):
-            self._screen = self._random_screen()
-            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
-                                   endpoint=False)
-            self._ys = self._xs
-            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
-
 
 def Atmosphere(screen_size, rng=None, **kwargs):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
@@ -338,8 +349,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     which can then be used to evaluate PSFs through various columns of atmosphere at different field
     angles.
 
-    The atmospheric screens currently available both produce turbulence that follows a von Karman
-    power spectrum.  Specifically, the phase power spectrum in each screen can be written
+    The atmospheric screens currently available represent turbulence following a von Karman power
+    spectrum.  Specifically, the phase power spectrum in each screen can be written
 
     psi(nu) = 0.023 r0^(-5/3) (nu^2 + 1/L0^2)^(11/6)
 
@@ -353,11 +364,11 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
-    (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
-    you want to use the same value for each layer, then you can just specify the argument as a
-    scalar and the function will automatically broadcast it into a list with length equal to the
-    longest found keyword argument list.  Note that it is an error to specify keywords with lists of
-    different lengths (unless only one of them has length > 1).
+    (works for all arguments except `rng`).  If, for any of these keyword arguments, you want to use
+    the same value for each layer, then you can just specify the argument as a scalar and the
+    function will automatically broadcast it into a list with length equal to the longest found
+    keyword argument list.  Note that it is an error to specify keywords with lists of different
+    lengths (unless only one of them has length > 1).
 
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
@@ -400,10 +411,12 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so the code will run
                          with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         or PSF correlation functions. Note that screen_size may be tweaked by the
                          initializer to ensure screen_size is a multiple of screen_scale.
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.025]
+    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
+                         parameter is usually sufficiently small, but users should test the effects
+                         of this parameter to ensure robust results.
+                         [default: same as each screen's r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
@@ -417,18 +430,19 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
                          from frozen-flow atmospheres may be significantly faster than computing
                          PSFs with non-frozen-flow atmospheres.  [default: 1.0]
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results.
-                         [default: same as each screen's r0_500]
+    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
+                         from the time interval used when integrating the PSF over time, which is
+                         set by the `time_step` keyword argument to `PhaseScreenPSF` or
+                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
+                         that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
     kwargs['screen_size'] = galsim.utilities.listify(screen_size)
 
-    # Set default r0_500 here, so that by default it gets broadcasted below such that the
-    # _total_ r0_500 from _all_ screens is 0.2 m.
+    # Set default r0_500 here; it will get broadcasted below such that the _total_ r0_500 from _all_
+    # screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
     kwargs['r0_500'] = galsim.utilities.listify(kwargs['r0_500'])
