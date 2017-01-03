@@ -371,30 +371,32 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
     Providing `r0_500` as a scalar or single-element list will result in broadcasting such that the
-    effective Fried parameter for the whole set of layers equals the input argument.
+    effective Fried parameter for the whole set of layers equals the input argument.  You can weight
+    the contribution of each layer with the `r0_weights` keyword.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
-    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3 minutes to run on
+    for their study of atmospheric PSFs for LSST.  Note this code takes about ~2 minutes to run on
     a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
         >>> altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-        >>> r0_500_effective = 0.16  # m
+        >>> r0_500 = 0.16  # m
         >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
-        >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
         >>> speed = np.random.uniform(0, 20, size=6)  # m/s
         >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
         >>> npix = 8192
-        >>> screen_scale = r0_500_effective
-        >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
+        >>> screen_scale = r0_500
+        >>> atm = galsim.Atmosphere(r0_500=r0_500, r0_weights=weights,
+                                    screen_size=screen_scale*npix,
                                     altitude=altitude, L0=25.0, speed=speed,
                                     direction=direction, screen_scale=screen_scale)
 
     Once the atmosphere is constructed, a 15-sec exposure length monochromatic PSF at 700nm (using
     an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default settings) takes about
-    7 minutes to generate on a fast laptop.
+    7 minutes to draw on a fast laptop.
 
-        >>> psf = atm.makePSF(lam=700.0, exptime=15.0, diam=8.4, obscuration=0.6)
+        >>> psf = atm.makePSF(lam=700.0, exptime=15.0, time_step=0.005, diam=8.4, obscuration=0.6)
+        >>> img = psf.drawImage()
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
@@ -404,6 +406,9 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [default: 0.2]
+    @param r0_weights    Weights for splitting up the contribution of r0_500 between different
+                         layers.  Note that this keyword is only allowed if r0_500 is either a
+                         scalar or a single-element list.  [default: None]
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
@@ -461,7 +466,13 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     # Broadcast r0_500 here, since logical combination of indiv layers' r0s is complex:
     if len(kwargs['r0_500']) == 1:
-        kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
+        r0_weights = np.array(kwargs.pop('r0_weights', [1.]*nmax), dtype=float)
+        r0_weights /= np.sum(r0_weights)
+        r0_500 = kwargs['r0_500'][0]
+        kwargs['r0_500'] = [r0_500 * w**(-3./5) for w in r0_weights]
+        # kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
+    elif 'r0_weights' in kwargs:
+        raise ValueError("Cannot use r0_weights if r0_500 is specified as a list.")
 
     if rng is None:
         rng = galsim.BaseDeviate()

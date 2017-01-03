@@ -598,6 +598,7 @@ def test_phase_gradient_shoot():
         err_msg='Mean phase gradient second moment Mxy not close to mean fft moment')
 
 
+@timer
 def test_input():
     """Check that exceptions are raised for invalid input"""
 
@@ -617,8 +618,31 @@ def test_input():
         np.testing.assert_raises(ValueError, galsim.Atmosphere,
                                  screen_size=10.0, altitude=[0., 1.],
                                  r0_500=[0.2, 0.3, 0.2])
+        np.testing.assert_raises(ValueError, galsim.Atmosphere,
+                                 screen_size=10.0, r0_500=[0.4, 0.4, 0.4],
+                                 r0_weights=[0.1, 0.3, 0.6])
     except ImportError:
         print('The assert_raises tests require nose')
+
+
+@timer
+def test_r0_weights():
+    """Check that r0_weights functions as expected."""
+    r0_500 = 0.2
+
+    # Check that reassembled net r0_500 matches input
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=r0_500)
+    r0s = [screen.r0_500 for screen in atm]
+    np.testing.assert_almost_equal(np.sum([r0**(-5./3) for r0 in r0s])**(-3./5), r0_500)
+
+    # Check that old manual calculation matches automatic calculation inside Atmosphere()
+    weights = [1, 2, 3, 4]
+    normalized_weights = np.array(weights, dtype=float)/np.sum(weights)
+    r0s_ref = [r0_500 * w**(-3./5) for w in normalized_weights]
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=r0_500, r0_weights=weights)
+    r0s_test = [screen.r0_500 for screen in atm]
+    np.testing.assert_almost_equal(r0s_test, r0s_ref)
+    np.testing.assert_almost_equal(np.sum([r0**(-5./3) for r0 in r0s_test])**(-3./5), r0_500)
 
 
 if __name__ == "__main__":
@@ -635,3 +659,4 @@ if __name__ == "__main__":
     test_ne()
     test_phase_gradient_shoot()
     test_input()
+    test_r0_weights()
