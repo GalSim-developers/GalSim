@@ -97,7 +97,6 @@ def test_angle():
     do_pickle(galsim.arcsec)
     do_pickle(gradians)
     do_pickle(theta1)
-    do_pickle(theta1.angle)
     do_pickle(theta2)
     do_pickle(theta3)
     do_pickle(theta4)

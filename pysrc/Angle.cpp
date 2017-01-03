@@ -21,36 +21,23 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "Angle.h"
-#include "NumpyHelper.h"
+#include "Std.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
 namespace {
-    bp::tuple sincos(const double theta) {
+    bp::tuple call_sincos(const double theta) {
         double sint, cost;
-        Angle(theta, radians).sincos(sint, cost);
+        sincos(theta, sint, cost);
         return bp::make_tuple(sint, cost);
     }
 }
 
 void pyExportAngle()
 {
-    bp::class_< AngleUnit >("AngleUnit", bp::no_init)
-        .def(bp::init<double>())
-        .def("getValue", &AngleUnit::getValue)
-        .enable_pickling()
-        ;
-
-    bp::class_< Angle >("Angle", bp::no_init)
-        .def(bp::init<double, AngleUnit>())
-        .def("rad", &Angle::rad)
-        .enable_pickling()
-        ;
-
-    bp::def("sincos", &sincos);
+    bp::def("sincos", &call_sincos);
 }
 
 } // namespace galsim

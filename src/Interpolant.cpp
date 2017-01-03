@@ -197,7 +197,7 @@ namespace galsim {
                                            y*(3.99653257887490811e13))))))))));
 
             double sinx,cosx;
-            (x * radians).sincos(sinx,cosx);
+            sincos(x, sinx, cosx);
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
@@ -703,7 +703,7 @@ namespace galsim {
                   // Then sin(pi x) = 2 * sn * cn
                   // xval = 4/pi^2 sn^2 cn / x^2
                   double sn, cn;
-                  (x * M_PI/2. * radians).sincos(sn,cn);
+                  sincos(x * M_PI/2., sn, cn);
                   s = 2.*sn*cn;
                   res = (2./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -720,7 +720,7 @@ namespace galsim {
               }
               case 4 : {
                   double sn, cn;
-                  (x * M_PI/4. * radians).sincos(sn,cn);
+                  sincos(x * M_PI/4., sn, cn);
                   s = sn*cn*(4.-8.*sn*sn);
                   res = (4./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -734,7 +734,7 @@ namespace galsim {
               }
               case 6 : {
                   double sn, cn;
-                  (x * M_PI/6. * radians).sincos(sn, cn);
+                  sincos(x * M_PI/6., sn, cn);
                   double snsq = sn*sn;
                   s = sn*cn*(6.-32.*snsq*(1.-snsq));
                   res = (6./(M_PI*M_PI)) * s*sn/(x*x);

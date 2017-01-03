@@ -350,7 +350,7 @@ namespace galsim {
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            sincos(theta, sint, cost);
             double rFactor = r * _r0;
             result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else

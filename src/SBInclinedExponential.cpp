@@ -34,7 +34,7 @@
 namespace galsim {
 
     SBInclinedExponential::SBInclinedExponential(
-            Angle inclination, double scale_radius, double scale_height,
+            double inclination, double scale_radius, double scale_height,
             double flux, const GSParamsPtr& gsparams) :
         SBProfile(new SBInclinedExponentialImpl(
                 inclination, scale_radius, scale_height, flux, gsparams))
@@ -46,7 +46,7 @@ namespace galsim {
 
     SBInclinedExponential::~SBInclinedExponential() {}
 
-    Angle SBInclinedExponential::getInclination() const
+    double SBInclinedExponential::getInclination() const
     {
         assert(dynamic_cast<const SBInclinedExponentialImpl*>(_pimpl.get()));
         return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getInclination();
@@ -88,7 +88,7 @@ namespace galsim {
     }
 
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(
-            Angle inclination, double scale_radius,
+            double inclination, double scale_radius,
             double scale_height, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _inclination(inclination),
@@ -96,8 +96,8 @@ namespace galsim {
         _h0(scale_height),
         _flux(flux),
         _inv_r0(1./scale_radius),
-        _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
-        _cosi(std::abs(inclination.cos())),
+        _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(std::sin(inclination))/scale_radius),
+        _cosi(std::abs(std::cos(inclination))),
         _ksq_max(integ::MOCK_INF) // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
     {

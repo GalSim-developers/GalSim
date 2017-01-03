@@ -291,7 +291,7 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
             result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);

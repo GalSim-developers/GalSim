@@ -21,7 +21,6 @@ A few adjustments to the Angle class at the Python layer.
 
 import galsim
 import math
-from . import _galsim
 from .utilities import set_func_doc
 
 class AngleUnit(object):
@@ -227,12 +226,6 @@ class Angle(object):
             raise TypeError("Invalid unit %s of type %s"%(unit,type(unit)))
         self._rad = float(theta) * unit.value
 
-    @property
-    def angle(self):
-        """Return a C++-layer Angle, appropriate for passing to C++ functions that take an Angle.
-        """
-        return _galsim.Angle(self._rad, _galsim.AngleUnit(1.))
-
     def rad(self):
         """Return the Angle in radians.
 
@@ -312,7 +305,7 @@ class Angle(object):
 
         (On some systems, this may be slightly faster than doing each separately.)
         """
-        return _galsim.sincos(self._rad)
+        return galsim._galsim.sincos(self._rad)
 
     def __str__(self):
         return str(self._rad) + ' radians'
@@ -470,15 +463,4 @@ def DMS_Angle(str):
     @returns the corresponding Angle instance
     """
     return Angle.parse_dms(str) * galsim.degrees
-
-_galsim.AngleUnit.__getinitargs__ = lambda self: (self.getValue(),)
-_galsim.AngleUnit.__eq__ = lambda self, other: self.getValue() == other.getValue()
-_galsim.AngleUnit.__hash__ = lambda self: hash(('galsim.AngleUnit',self.getValue()))
-_galsim.AngleUnit.__repr__ = lambda self: 'galsim._galsim.AngleUnit(%r)'%self.getValue()
-
-_galsim.Angle.__getinitargs__ = lambda self: (self.rad(), _galsim.AngleUnit(1.))
-_galsim.Angle.__eq__ = lambda self, other: self.rad() == other.rad()
-_galsim.Angle.__hash__ = lambda self: hash(('galsim.Angle',self.rad()))
-_galsim.Angle.__repr__ = lambda self: 'galsim._galsim.Angle(%r, %r)'%(
-        self.rad(), galsim._galsim.AngleUnit(1.))
 

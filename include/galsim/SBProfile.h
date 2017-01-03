@@ -41,7 +41,6 @@
 
 #include "Std.h"
 #include "Random.h"
-#include "Angle.h"
 #include "GSParams.h"
 #include "Image.h"
 #include "PhotonArray.h"
@@ -250,9 +249,9 @@ namespace galsim {
         SBTransform expand(double scale) const;
 
         /**
-         * @brief Apply a given rotation.
+         * @brief Apply a given rotation in radians
          */
-        SBTransform rotate(const Angle& theta) const;
+        SBTransform rotate(double theta) const;
 
         /**
          * @brief Apply a transformation given by an arbitrary Jacobian matrix
