@@ -24,7 +24,69 @@
 #include <vector>
 #include <sstream>
 
+#include "galsim/IgnoreWarnings.h"
+
+// Variable defined to use a private copy of Boost.Random, modified
+// to avoid any reference to Boost.Random elements that might be on
+// the local machine.
+// Undefine this to use Boost.Random from the local distribution.
+#define DIVERT_BOOST_RANDOM
+
+#ifdef DIVERT_BOOST_RANDOM
+#include "galsim/boost1_48_0/random/mersenne_twister.hpp"
+#include "galsim/boost1_48_0/random/normal_distribution.hpp"
+#include "galsim/boost1_48_0/random/binomial_distribution.hpp"
+#include "galsim/boost1_48_0/random/poisson_distribution.hpp"
+#include "galsim/boost1_48_0/random/uniform_real_distribution.hpp"
+#include "galsim/boost1_48_0/random/weibull_distribution.hpp"
+#include "galsim/boost1_48_0/random/gamma_distribution.hpp"
+#include "galsim/boost1_48_0/random/chi_squared_distribution.hpp"
+#else
+#include "boost/random/mersenne_twister.hpp"
+#include "boost/random/normal_distribution.hpp"
+#include "boost/random/binomial_distribution.hpp"
+#include "boost/random/poisson_distribution.hpp"
+#include "boost/random/uniform_real_distribution.hpp"
+#include "boost/random/weibull_distribution.hpp"
+#include "boost/random/gamma_distribution.hpp"
+#include "boost/random/chi_squared_distribution.hpp"
+#endif
+
 namespace galsim {
+
+    struct BaseDeviate::BaseDeviateImpl
+    {
+        // Note that this class could be templated with the type of Boost.Random generator that
+        // you want to use instead of mt19937
+        typedef boost::mt19937 rng_type;
+        BaseDeviateImpl() : _rng(new rng_type) {}
+        boost::shared_ptr<rng_type> _rng;
+    };
+
+    BaseDeviate::BaseDeviate(long lseed) :
+        _impl(new BaseDeviateImpl())
+    { seed(lseed); }
+
+    BaseDeviate::BaseDeviate(const BaseDeviate& rhs) :
+        _impl(rhs._impl)
+    {}
+
+    BaseDeviate::BaseDeviate(const std::string& str) :
+        _impl(new BaseDeviateImpl())
+    {
+        std::istringstream iss(str);
+        iss >> *_impl->_rng;
+    }
+
+    std::string BaseDeviate::serialize()
+    {
+        // When serializing, we need to make sure there is no cache being stored
+        // by the derived class.
+        clearCache();
+        std::ostringstream oss;
+        oss << *_impl->_rng;
+        return oss.str();
+    }
 
     void BaseDeviate::seedurandom()
     {
@@ -42,14 +104,14 @@ namespace galsim {
             randomDataLen += result;
         }
         close(randomData);
-        _rng->seed(myRandomInteger);
+        _impl->_rng->seed(myRandomInteger);
     }
 
     void BaseDeviate::seedtime()
     {
         struct timeval tp;
         gettimeofday(&tp,NULL);
-        _rng->seed(tp.tv_usec);
+        _impl->_rng->seed(tp.tv_usec);
     }
 
     void BaseDeviate::seed(long lseed)
@@ -83,10 +145,22 @@ namespace galsim {
 
             boost::random::mt11213b alt_rng(lseed);
             alt_rng.discard(2);
-            _rng->seed(alt_rng());
+            _impl->_rng->seed(alt_rng());
         }
         clearCache();
     }
+
+    void BaseDeviate::reset(long lseed)
+    { _impl.reset(new BaseDeviateImpl()); seed(lseed); }
+
+    void BaseDeviate::reset(const BaseDeviate& dev)
+    { _impl = dev._impl; clearCache(); }
+
+    void BaseDeviate::discard(int n)
+    { _impl->_rng->discard(n); }
+
+    long BaseDeviate::raw()
+    { return (*_impl->_rng)(); }
 
     void BaseDeviate::generate(int N, double* data)
     {
@@ -133,6 +207,29 @@ namespace galsim {
         return oss.str();
     }
 
+    struct UniformDeviate::UniformDeviateImpl
+    {
+        UniformDeviateImpl() : _urd(0., 1.) {}
+        boost::random::uniform_real_distribution<> _urd;
+    };
+
+    UniformDeviate::UniformDeviate(long lseed) :
+        BaseDeviate(lseed), _devimpl(new UniformDeviateImpl()) {}
+
+    UniformDeviate::UniformDeviate(const BaseDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(new UniformDeviateImpl()) {}
+
+    UniformDeviate::UniformDeviate(const UniformDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    UniformDeviate::UniformDeviate(const std::string& str) :
+        BaseDeviate(str), _devimpl(new UniformDeviateImpl()) {}
+
+    void UniformDeviate::clearCache() { _devimpl->_urd.reset(); }
+
+    double UniformDeviate::operator()()
+    { return _devimpl->_urd(*this->_impl->_rng); }
+
     std::string UniformDeviate::make_repr(bool incl_seed)
     {
         std::ostringstream oss(" ");
@@ -142,6 +239,42 @@ namespace galsim {
         return oss.str();
     }
 
+    struct GaussianDeviate::GaussianDeviateImpl
+    {
+        GaussianDeviateImpl(double mean, double sigma) : _normal(mean,sigma) {}
+        boost::random::normal_distribution<> _normal;
+    };
+
+    GaussianDeviate::GaussianDeviate(long lseed, double mean, double sigma) :
+        BaseDeviate(lseed), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
+
+    GaussianDeviate::GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma) :
+        BaseDeviate(rhs), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
+
+    GaussianDeviate::GaussianDeviate(const GaussianDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    GaussianDeviate::GaussianDeviate(const std::string& str, double mean, double sigma) :
+        BaseDeviate(str), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
+
+    double GaussianDeviate::getMean() { return _devimpl->_normal.mean(); }
+
+    double GaussianDeviate::getSigma() { return _devimpl->_normal.sigma(); }
+
+    void GaussianDeviate::setMean(double mean)
+    {
+        _devimpl->_normal.param(boost::random::normal_distribution<>::param_type(mean,getSigma()));
+    }
+
+    void GaussianDeviate::setSigma(double sigma)
+    {
+         _devimpl->_normal.param(boost::random::normal_distribution<>::param_type(getMean(),sigma));
+    }
+
+    void GaussianDeviate::clearCache() { _devimpl->_normal.reset(); }
+
+    double GaussianDeviate::operator()()
+    { return _devimpl->_normal(*this->_impl->_rng); }
 
     std::string GaussianDeviate::make_repr(bool incl_seed)
     {
@@ -153,6 +286,42 @@ namespace galsim {
         return oss.str();
     }
 
+    struct BinomialDeviate::BinomialDeviateImpl
+    {
+        BinomialDeviateImpl(int N, double p) : _bd(N,p) {}
+        boost::random::binomial_distribution<> _bd;
+    };
+
+    BinomialDeviate::BinomialDeviate(long lseed, int N, double p) :
+        BaseDeviate(lseed), _devimpl(new BinomialDeviateImpl(N,p)) {}
+
+    BinomialDeviate::BinomialDeviate(const BaseDeviate& rhs, int N, double p) :
+        BaseDeviate(rhs), _devimpl(new BinomialDeviateImpl(N,p)) {}
+
+    BinomialDeviate::BinomialDeviate(const BinomialDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    BinomialDeviate::BinomialDeviate(const std::string& str, int N, double p) :
+        BaseDeviate(str), _devimpl(new BinomialDeviateImpl(N,p)) {}
+
+    int BinomialDeviate::getN() { return _devimpl->_bd.t(); }
+
+    double BinomialDeviate::getP() { return _devimpl->_bd.p(); }
+
+    void BinomialDeviate::setN(int N)
+    {
+        _devimpl->_bd.param(boost::random::binomial_distribution<>::param_type(N,getP()));
+    }
+
+    void BinomialDeviate::setP(double p)
+    {
+        _devimpl->_bd.param(boost::random::binomial_distribution<>::param_type(getN(),p));
+    }
+
+    void BinomialDeviate::clearCache() { _devimpl->_bd.reset(); }
+
+    int BinomialDeviate::operator()()
+    { return _devimpl->_bd(*this->_impl->_rng); }
 
     std::string BinomialDeviate::make_repr(bool incl_seed)
     {
@@ -164,6 +333,35 @@ namespace galsim {
         return oss.str();
     }
 
+    struct PoissonDeviate::PoissonDeviateImpl
+    {
+        PoissonDeviateImpl(double mean) : _pd(mean) {}
+        boost::random::poisson_distribution<> _pd;
+    };
+
+    PoissonDeviate::PoissonDeviate(long lseed, double mean) :
+        BaseDeviate(lseed), _devimpl(new PoissonDeviateImpl(mean)) {}
+
+    PoissonDeviate::PoissonDeviate(const BaseDeviate& rhs, double mean) :
+        BaseDeviate(rhs), _devimpl(new PoissonDeviateImpl(mean)) {}
+
+    PoissonDeviate::PoissonDeviate(const PoissonDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    PoissonDeviate::PoissonDeviate(const std::string& str, double mean) :
+        BaseDeviate(str), _devimpl(new PoissonDeviateImpl(mean)) {}
+
+    double PoissonDeviate::getMean() { return _devimpl->_pd.mean(); }
+
+    void PoissonDeviate::setMean(double mean)
+    {
+        _devimpl->_pd.param(boost::random::poisson_distribution<>::param_type(mean));
+    }
+
+    void PoissonDeviate::clearCache() { _devimpl->_pd.reset(); }
+
+    int PoissonDeviate::operator()()
+    { return _devimpl->_pd(*this->_impl->_rng); }
 
     std::string PoissonDeviate::make_repr(bool incl_seed)
     {
@@ -174,6 +372,42 @@ namespace galsim {
         return oss.str();
     }
 
+    struct WeibullDeviate::WeibullDeviateImpl
+    {
+        WeibullDeviateImpl(double a, double b) : _weibull(a,b) {}
+        boost::random::weibull_distribution<> _weibull;
+    };
+
+    WeibullDeviate::WeibullDeviate(long lseed, double a, double b) :
+        BaseDeviate(lseed), _devimpl(new WeibullDeviateImpl(a,b)) {}
+
+    WeibullDeviate::WeibullDeviate(const BaseDeviate& rhs, double a, double b) :
+        BaseDeviate(rhs), _devimpl(new WeibullDeviateImpl(a,b)) {}
+
+    WeibullDeviate::WeibullDeviate(const WeibullDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    WeibullDeviate::WeibullDeviate(const std::string& str, double a, double b) :
+        BaseDeviate(str), _devimpl(new WeibullDeviateImpl(a,b)) {}
+
+    double WeibullDeviate::getA() { return _devimpl->_weibull.a(); }
+
+    double WeibullDeviate::getB() { return _devimpl->_weibull.b(); }
+
+    void WeibullDeviate::setA(double a)
+    {
+        _devimpl->_weibull.param(boost::random::weibull_distribution<>::param_type(a,getB()));
+    }
+
+    void WeibullDeviate::setB(double b)
+    {
+        _devimpl->_weibull.param(boost::random::weibull_distribution<>::param_type(getA(),b));
+    }
+
+    void WeibullDeviate::clearCache() { _devimpl->_weibull.reset(); }
+
+    double WeibullDeviate::operator()()
+    { return _devimpl->_weibull(*this->_impl->_rng); }
 
     std::string WeibullDeviate::make_repr(bool incl_seed)
     {
@@ -185,6 +419,42 @@ namespace galsim {
         return oss.str();
     }
 
+    struct GammaDeviate::GammaDeviateImpl
+    {
+        GammaDeviateImpl(double k, double theta) : _gamma(k,theta) {}
+        boost::random::gamma_distribution<> _gamma;
+    };
+
+    GammaDeviate::GammaDeviate(long lseed, double k, double theta) :
+        BaseDeviate(lseed), _devimpl(new GammaDeviateImpl(k,theta)) {}
+
+    GammaDeviate::GammaDeviate(const BaseDeviate& rhs, double k, double theta) :
+        BaseDeviate(rhs), _devimpl(new GammaDeviateImpl(k,theta)) {}
+
+    GammaDeviate::GammaDeviate(const GammaDeviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    GammaDeviate::GammaDeviate(const std::string& str, double k, double theta) :
+        BaseDeviate(str), _devimpl(new GammaDeviateImpl(k,theta)) {}
+
+    double GammaDeviate::getK() { return _devimpl->_gamma.alpha(); }
+
+    double GammaDeviate::getTheta() { return _devimpl->_gamma.beta(); }
+
+    void GammaDeviate::setK(double k)
+    {
+         _devimpl->_gamma.param(boost::random::gamma_distribution<>::param_type(k, getTheta()));
+    }
+
+    void GammaDeviate::setTheta(double theta)
+    {
+         _devimpl->_gamma.param(boost::random::gamma_distribution<>::param_type(getK(), theta));
+    }
+
+    void GammaDeviate::clearCache() { _devimpl->_gamma.reset(); }
+
+    double GammaDeviate::operator()()
+    { return _devimpl->_gamma(*this->_impl->_rng); }
 
     std::string GammaDeviate::make_repr(bool incl_seed)
     {
@@ -196,6 +466,35 @@ namespace galsim {
         return oss.str();
     }
 
+    struct Chi2Deviate::Chi2DeviateImpl
+    {
+        Chi2DeviateImpl(double n) : _chi_squared(n) {}
+        boost::random::chi_squared_distribution<> _chi_squared;
+    };
+
+    Chi2Deviate::Chi2Deviate(long lseed, double n) :
+        BaseDeviate(lseed), _devimpl(new Chi2DeviateImpl(n)) {}
+
+    Chi2Deviate::Chi2Deviate(const BaseDeviate& rhs, double n) :
+        BaseDeviate(rhs), _devimpl(new Chi2DeviateImpl(n)) {}
+
+    Chi2Deviate::Chi2Deviate(const Chi2Deviate& rhs) :
+        BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
+
+    Chi2Deviate::Chi2Deviate(const std::string& str, double n) :
+        BaseDeviate(str), _devimpl(new Chi2DeviateImpl(n)) {}
+
+    double Chi2Deviate::getN() { return _devimpl->_chi_squared.n(); }
+
+    void Chi2Deviate::setN(double n)
+    {
+        _devimpl->_chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
+    }
+
+    void Chi2Deviate::clearCache() { _devimpl->_chi_squared.reset(); }
+
+    double Chi2Deviate::operator()()
+    { return _devimpl->_chi_squared(*this->_impl->_rng); }
 
     std::string Chi2Deviate::make_repr(bool incl_seed)
     {
