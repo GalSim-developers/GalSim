@@ -498,6 +498,15 @@ def test_rand_with_replacement():
                                                          rng=galsim.BaseDeviate(314159),
                                                          _n_rng_calls=True)
     assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
+    weight = np.zeros(100)
+    galsim.UniformDeviate(1234).generate(weight)
+    result_1 = galsim.utilities.rand_with_replacement(
+        n=10, n_choices=100, rng=galsim.BaseDeviate(314159), weight=weight)
+    assert not np.all(result_1==result_2),"Weights did not have an effect"
+    result_2, _ = galsim.utilities.rand_with_replacement(
+        n=10, n_choices=100, rng=galsim.BaseDeviate(314159),
+        weight=weight, _n_rng_calls=True)
+    assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
 
 if __name__ == "__main__":
     test_roll2d_circularity()
