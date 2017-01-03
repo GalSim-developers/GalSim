@@ -20,17 +20,23 @@
 #include <iosfwd>
 #include <istream>
 #include <stdexcept>
+#ifdef USE_BOOST
 #include <boost/config.hpp>
 #include <boost/integer/integer_mask.hpp>
+#endif
 
-// New features to cstdint.hpp added sometime between 1.41 and 1.48, which are 
-// needed in this file.  So copy that here too.
-#include "galsim/boost1_48_0/random/cstdint.hpp"
-
-#include "galsim/boost1_48_0/random/detail/config.hpp"
+#ifdef USE_BOOST
+#include <boost/cstdint.hpp>
+#include <boost/random/detail/config.hpp>
+#endif
 #include "galsim/boost1_48_0/random/detail/ptr_helper.hpp"
 #include "galsim/boost1_48_0/random/detail/seed.hpp"
-#include "galsim/boost1_48_0/random/detail/seed_impl.hpp"
+#ifdef USE_BOOST
+// Note: seed_impl is only needed for features that we don't ever use.
+//       And since it has a huge dependency tree, it's easier to just not include it and
+//       disble the features here the depend on it (blocked out by #ifdef USE_BOOST guards).
+#include <boost/random/detail/seed_impl.hpp>
+#endif
 #include "galsim/boost1_48_0/random/detail/generator_seed_seq.hpp"
 
 namespace boost {
@@ -153,6 +159,7 @@ public:
         }
     }
     
+#ifdef USE_BOOST
     /**
      * Seeds a mersenne_twister_engine using values produced by seq.generate().
      */
@@ -169,7 +176,9 @@ public:
             x[0] = static_cast<UIntType>(1) << (w-1);
         }
     }
+#endif
 
+#ifdef USE_BOOST
     /** Sets the state of the generator using values from an iterator range. */
     template<class It>
     void seed(It& first, It last)
@@ -185,21 +194,30 @@ public:
             x[0] = static_cast<UIntType>(1) << (w-1);
         }
     }
+#endif
   
     /** Returns the smallest value that the generator can produce. */
     static result_type min BOOST_PREVENT_MACRO_SUBSTITUTION ()
     { return 0; }
     /** Returns the largest value that the generator can produce. */
     static result_type max BOOST_PREVENT_MACRO_SUBSTITUTION ()
-    { return boost::low_bits_mask_t<w>::sig_bits; }
+    {
+#ifdef USE_BOOST
+        return boost::low_bits_mask_t<w>::sig_bits;
+#else
+        return ~( ~( (unsigned long)( 0u )) << w);
+#endif
+    }
     
     /** Produces the next value of the generator. */
     result_type operator()();
 
+#ifdef USE_BOOST
     /** Fills a range with random values */
     template<class Iter>
     void generate(Iter first, Iter last)
     { detail::generate_from_int(*this, first, last); }
+#endif
 
     /**
      * Advances the state of the generator by @c z steps.  Equivalent to
