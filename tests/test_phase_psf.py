@@ -116,6 +116,7 @@ def test_phase_screen_list():
     do_pickle(ar1)
     do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
     do_pickle(ar1, func=lambda x: x._wavefront(aper.u, aper.v, None, theta0).sum())
+    do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, 0.0).sum())
     do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
     t = np.empty_like(aper.u)
     ud = galsim.UniformDeviate(rng.duplicate())
@@ -142,6 +143,9 @@ def test_phase_screen_list():
     ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
     do_pickle(ar3)
     do_pickle(ar3, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
+    do_pickle(ar3, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, None, theta0)))
+    do_pickle(ar3, func=lambda x:x.wavefront(aper.u, aper.v).sum())
+    do_pickle(ar3, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v)))
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
@@ -151,7 +155,9 @@ def test_phase_screen_list():
     atm.append(ar3)
     do_pickle(atm)
     do_pickle(atm, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
+    do_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, 0.0, theta0).sum())
     do_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
+    do_pickle(atm, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, 0.0, theta0)))
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
@@ -283,10 +289,16 @@ def test_phase_psf_reset():
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(diam=1.0, lam=500.0)
     wf1 = atm._wavefront(aper.u, aper.v, None, theta0)
+    wf2 = atm.wavefront(aper.u, aper.v, 0.0, theta0)
+    assert np.all(wf1 == wf2)
+
     atm._seek(1.0)
-    wf2 = atm._wavefront(aper.u, aper.v, None, theta0)
+    wf3 = atm._wavefront(aper.u, aper.v, None, theta0)
+    wf4 = atm.wavefront(aper.u, aper.v, 1.0, theta0)
+    assert np.all(wf3 == wf4)
+
     # Verify that atmosphere did advance
-    assert not np.all(wf1 == wf2)
+    assert not np.all(wf1 == wf3)
 
     # Now verify that reset brings back original atmosphere
     atm._reset()
