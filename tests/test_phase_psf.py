@@ -410,7 +410,7 @@ def test_stepk_maxk():
 
     # Try out non-geometric-shooting
     psf3 = atm.makePSF(lam=500.0, aper=aper, geometric_shooting=False)
-    img = galsim.Image(64, 64, scale=psf3.nyquistScale())
+    img = galsim.Image(32, 32, scale=0.2)
     do_shoot(psf3, img, "PhaseScreenPSF")
     # Also make sure a few other methods at least run
     psf3.centroid()
@@ -657,6 +657,21 @@ def test_r0_weights():
     np.testing.assert_almost_equal(np.sum([r0**(-5./3) for r0 in r0s_test])**(-3./5), r0_500)
 
 
+@timer
+def test_speedup():
+    """Make sure that photon-shooting a PhaseScreenPSF with geometric approximation yields
+    significant speedup.
+    """
+    import time
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2)
+    # Should be ~seconds if _prepareDraw() gets executed, ~0.01s otherwise.
+    psf = atm.makePSF(lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)
+    t0 = time.time()
+    psf.drawImage(method='phot', n_photons=1e3)
+    t1 = time.time()
+    assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -672,3 +687,4 @@ if __name__ == "__main__":
     test_phase_gradient_shoot()
     test_input()
     test_r0_weights()
+    test_speedup()

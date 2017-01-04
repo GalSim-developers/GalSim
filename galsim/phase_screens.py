@@ -391,12 +391,21 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                                     altitude=altitude, L0=25.0, speed=speed,
                                     direction=direction, screen_scale=screen_scale)
 
-    Once the atmosphere is constructed, a 15-sec exposure length monochromatic PSF at 700nm (using
-    an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default settings) takes about
-    7 minutes to draw on a fast laptop.
+    Once the atmosphere is constructed, a 15-sec exposure length, 5ms time step, monochromatic PSF
+    at 700nm (using an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default
+    settings) takes about 7 minutes to draw on a fast laptop.
 
         >>> psf = atm.makePSF(lam=700.0, exptime=15.0, time_step=0.005, diam=8.4, obscuration=0.6)
-        >>> img = psf.drawImage()
+        >>> img1 = psf.drawImage()  # ~7 min
+
+    The same psf, if drawn using photon-shooting on the same laptop, will generate photons at a rate
+    of about 1 million per second.
+
+        >>> img2 = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=1e6)  # ~1 sec.
+
+    Note that the Fourier-based calculation compute time will scale linearly with exposure time,
+    while the photon-shooting calculation compute time will scale linearly with the number of
+    photons being shot.
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
