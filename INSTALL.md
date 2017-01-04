@@ -41,7 +41,7 @@ recent versions will also work:
 A few optional dependencies provide additional functionality, but GalSim can
 otherwise be compiled and used without them.  Basic WCS functionality is native
 to GalSim, but for users with more complicated WCS needs, we recommend
-installing starlink-pyast. Astropy's WCS package is also supported, but note
+installing starlink-pyast. Thee Astropy WCS package is also supported, but note
 that it requires scipy as an additional dependency.  To use yaml for config
 parsing, the pyyaml module is needed.  Faster text file parsing for reading in
 bandpasses and SEDs can be enabled if you have the pandas module (but the code
@@ -132,7 +132,7 @@ The GalSim package also requires
   too, then you can use the galsim.AstropyWCS class.
 
 * Optional dependency: Astropy Units package.  This is now required for
-  GalSim chromatic functionality, but can be omitted if you're not using
+  GalSim chromatic functionality, but can be omitted if you are not using
   this part of GalSim.
 
 * Optional dependency: Pandas.  This has a very fast function for reading ASCII
