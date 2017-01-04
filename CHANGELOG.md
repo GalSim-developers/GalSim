@@ -46,6 +46,8 @@ Bug Fixes
 Deprecated Features
 -------------------
 
+- Deprecated `simReal` method, a little-used way of simulating images
+  based on realistic galaxies. (#787)
 - Deprecated `Chromatic` class.  This functionality has been subsumed by
   `ChromaticTransformation`.  (#789)
 - Deprecated `.copy()` methods for immutable classes, including `GSObject`,
@@ -81,6 +83,9 @@ New Features
       I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s),
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
+- Allow selection of random galaxies from a RealGalaxyCatalog or COSMOSCatalog
+  in a way that accounts for any selection effects in catalog creation, using
+  the 'weight' entries in the catalog. (#787)
 - Added possibility of using `dtype=complex` for Images, the shorthand alias
   for which is called ImageC. (#799)
 - Added `maxSB()` method to GSObjects to return an estimate of the maximum

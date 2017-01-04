@@ -580,7 +580,7 @@ def test_psf():
                                       err_msg="no-wcs PSFEx shape.g2 doesn't match")
 
     # Now the shapelet PSF model.  This model is already in sky coordinates, so no wcs_file needed.
-    fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
+    fitpsf = galsim.des.DES_Shapelet(os.path.join(data_dir,fitpsf_file))
     psf = fitpsf.getPSF(image_pos)
 
     # Draw the postage stamp image

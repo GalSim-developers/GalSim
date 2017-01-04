@@ -460,6 +460,53 @@ def test_python_LRU_Cache():
         cache.resize(i)
         assert (newsize - (i - 1),) not in cache.cache
 
+@timer
+def test_rand_with_replacement():
+    """Test routine to select random indices with replacement."""
+    # Most aspects of this routine get tested when it's used by COSMOSCatalog.  We just check some
+    # of the exception-handling here.
+    try:
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
+        np.testing.assert_raises(TypeError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=10, rng='foo')
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
+        tmp_weights = np.arange(10).astype(float)-3
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
+                                 weight=tmp_weights)
+        tmp_weights[0] = np.nan
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
+                                 weight=tmp_weights)
+        tmp_weights[0] = np.inf
+        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
+                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
+                                 weight=tmp_weights)
+    except ImportError:
+        print("The assert_raises tests require nose")
+
+    # Make sure results come out the same whether we use _n_rng_calls or not.
+    result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
+                                                      rng=galsim.BaseDeviate(314159))
+    result_2, _ = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
+                                                         rng=galsim.BaseDeviate(314159),
+                                                         _n_rng_calls=True)
+    assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
+    weight = np.zeros(100)
+    galsim.UniformDeviate(1234).generate(weight)
+    result_1 = galsim.utilities.rand_with_replacement(
+        n=10, n_choices=100, rng=galsim.BaseDeviate(314159), weight=weight)
+    assert not np.all(result_1==result_2),"Weights did not have an effect"
+    result_2, _ = galsim.utilities.rand_with_replacement(
+        n=10, n_choices=100, rng=galsim.BaseDeviate(314159),
+        weight=weight, _n_rng_calls=True)
+    assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
 
 @timer
 def test_position_type_promotion():
@@ -591,6 +638,7 @@ if __name__ == "__main__":
     test_deInterleaveImage()
     test_interleaveImages()
     test_python_LRU_Cache()
+    test_rand_with_replacement()
     test_position_type_promotion()
     test_unweighted_moments()
     test_dol_to_lod()

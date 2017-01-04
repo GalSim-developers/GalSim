@@ -219,7 +219,7 @@ class DES_Shapelet(object):
         x1 = (2.*x-min-max)/(max-min)
         temp = np.empty(self.fit_order+1)
         temp[0] = 1
-        if self.fit_order > 0:
+        if self.fit_order > 0:  # pragma: no branch (always true for file we have for testing.)
             temp[1] = x1
         for i in range(2,self.fit_order+1):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
