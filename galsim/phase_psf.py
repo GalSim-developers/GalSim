@@ -839,9 +839,9 @@ class PhaseScreenList(object):
         @param ii_pad_factor       Zero-padding factor by which to extend the image of the PSF when
                                    creating the `InterpolatedImage`.  See the `InterpolatedImage`
                                    docstring for more details.  [default: 4.]
-        @param suppress_warning    If `pad_factor` is too small, the code will emit a warning telling
-                                   you its best guess about how high you might want to raise it.
-                                   However, you can suppress this warning by using
+        @param suppress_warning    If `pad_factor` is too small, the code will emit a warning
+                                   telling you its best guess about how high you might want to raise
+                                   it.  However, you can suppress this warning by using
                                    `suppress_warning=True`.  [default: False]
         @param geometric_shooting  If True, then when drawing using photon shooting, use geometric
                                    optics approximation where the photon angles are derived from the
@@ -1098,8 +1098,8 @@ class PhaseScreenPSF(GSObject):
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, " +
                   "interpolant=%r, scale_unit=%r, gsparams=%r)")
-        return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper, self.theta,
-                         self.interpolant, self.scale_unit, self.gsparams)
+        return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper,
+                         self.theta, self.interpolant, self.scale_unit, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
