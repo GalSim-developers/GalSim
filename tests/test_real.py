@@ -96,6 +96,10 @@ def test_real_galaxy_ideal():
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
     except ImportError:
         print('The assert_raises tests require nose')
+    # Different RNGs give different random galaxies.
+    rg_3 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(12345))
+    rg_4 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890))
+    assert rg_3.index != rg_4.index, 'Different seeds did not give different random objects!'
 
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
@@ -133,10 +137,10 @@ def test_real_galaxy_ideal():
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
-                    sim_image = galsim.simReal(
-                            rg, targ_PSF, tps,
-                            g1 = targ_applied_shear1, g2 = targ_applied_shear2,
-                            rand_rotate = False, target_flux = fake_gal_flux)
+                    tmp_gal = rg.withFlux(fake_gal_flux).shear(g1=targ_applied_shear1,
+                                                               g2=targ_applied_shear2)
+                    final_tmp_gal = galsim.Convolve(targ_PSF, tmp_gal)
+                    sim_image = final_tmp_gal.drawImage(scale=tps, method='no_pixel')
                     # galaxy sigma, in units of pixels on the final image
                     sigma_ideal = (fake_gal_fwhm/tps)*fwhm_to_sigma
                     # compute analytically the expected galaxy moments:
@@ -167,7 +171,7 @@ def test_real_galaxy_ideal():
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
     # read in real RealGalaxy from file
-    #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    # rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     # This is an alternate way to give the directory -- as part of the catalog file name.
     full_catalog_file = os.path.join(image_dir,catalog_file)
     rgc = galsim.RealGalaxyCatalog(full_catalog_file)
@@ -176,11 +180,14 @@ def test_real_galaxy_saved():
     # read in expected result for some shear
     shera_image = galsim.fits.read(shera_file)
     shera_target_PSF_image = galsim.fits.read(shera_target_PSF_file)
+    shera_target_PSF_image.scale = shera_target_pixel_scale
 
     # simulate the same galaxy with GalSim
-    sim_image = galsim.simReal(rg, shera_target_PSF_image, shera_target_pixel_scale,
-                               g1 = targ_applied_shear1, g2 = targ_applied_shear2,
-                               rand_rotate = False, target_flux = shera_target_flux)
+    tmp_gal = rg.withFlux(shera_target_flux).shear(g1=targ_applied_shear1,
+                                                   g2=targ_applied_shear2)
+    tmp_psf = galsim.InterpolatedImage(shera_target_PSF_image)
+    tmp_gal = galsim.Convolve(tmp_gal, tmp_psf)
+    sim_image = tmp_gal.drawImage(scale=shera_target_pixel_scale, method='no_pixel')
 
     # there are centroid issues when comparing Shera vs. SBProfile outputs, so compare 2nd moments
     # instead of images
@@ -224,8 +231,34 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
     all_obj_diff(gals)
 
+@timer
+def test_noise():
+    """Check consistency of noise-related routines."""
+    # The RealGalaxyCatalog.getNoise() routine should be tested to ensure consistency of results
+    # with the getNoiseProperties() routine.  The former cannot be used across processes, but might
+    # be used when running on a single processor, so we should make sure it gives proper output.
+    # Need to use a real RealGalaxyCatalog with non-trivial noise correlation function.
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    real_cat = galsim.RealGalaxyCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
+
+    test_seed=987654
+    test_index = 17
+    cf_1 = real_cat.getNoise(test_index, rng=galsim.BaseDeviate(test_seed))
+    im_2, pix_scale_2, var_2 = real_cat.getNoiseProperties(test_index)
+    # Check the variance:
+    var_1 = cf_1.getVariance()
+    assert var_1==var_2,'Inconsistent noise variance from getNoise and getNoiseProperties'
+    # Check the image:
+    ii = galsim.InterpolatedImage(im_2, normalization='sb', calculate_stepk=False,
+                                  calculate_maxk=False, x_interpolant='linear')
+    cf_2 = galsim.correlatednoise._BaseCorrelatedNoise(galsim.BaseDeviate(test_seed), ii, im_2.wcs)
+    cf_2 = cf_2.withVariance(var_2)
+    assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
     test_ne()
+    test_noise()
