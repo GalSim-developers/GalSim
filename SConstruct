@@ -68,8 +68,6 @@ opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', False))
 opts.Add('PYTHON','Name of python executable','')
 
-opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
-
 opts.Add(PathVariable('PREFIX','prefix for installation',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
@@ -77,6 +75,7 @@ opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
 opts.Add(PathVariable('FINAL_PREFIX',
          'final installation prefix if different from PREFIX',
          '', PathVariable.PathAccept))
+opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
@@ -109,10 +108,7 @@ opts.Add(PathVariable('DYLD_LIBRARY_PATH',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('DYLD_FALLBACK_LIBRARY_PATH',
          'Set the DYLD_FALLBACK_LIBRARY_PATH inside of SCons.  '+
-         'Particularly useful on El Capitan (and later), since Apple strips out '+
-         'DYLD_FALLBACK_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
-         'this option enables SCons to set it back in for you by doing '+
-         '`scons DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH`.',
+         'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('LD_LIBRARY_PATH',
          'Set the LD_LIBRARY_PATH inside of SCons. '+
