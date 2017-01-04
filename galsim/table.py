@@ -497,7 +497,7 @@ class LookupTable2D(object):
             xx = float(x)
             yy = float(y)
             return self.table.gradient(xx, yy)
-        except:
+        except TypeError:
             dfdx = np.empty_like(x)
             dfdy = np.empty_like(x)
             self.table.gradientMany(x.ravel(), y.ravel(), dfdx.ravel(), dfdy.ravel())

@@ -1015,6 +1015,8 @@ def dol_to_lod(dol, N=None):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
@@ -1243,10 +1245,8 @@ def unweighted_shape(arg):
     @param arg   Either a galsim.Image or the output of unweighted_moments(image).
     @returns  Dict with entries for [rsqr, e1, e2]
     """
-    try:
+    if isinstance(arg, galsim.Image):
         arg = unweighted_moments(arg)
-    except:
-        pass
     rsqr = arg['Mxx'] + arg['Myy']
     return dict(rsqr=rsqr, e1=(arg['Mxx']-arg['Myy'])/rsqr, e2=2*arg['Mxy']/rsqr)
 
@@ -1329,4 +1329,3 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
         return index, n_rng_calls
     else:
         return index
-
