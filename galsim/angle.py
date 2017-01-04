@@ -221,10 +221,18 @@ class Angle(object):
     This could be appropriate before testing for the equality of two angles for example, or
     calculating the difference between them.
     """
-    def __init__(self, theta, unit):
-        if not isinstance(unit, AngleUnit):
+    def __init__(self, theta, unit=None):
+        if isinstance(theta,Angle):
+            if unit is not None:
+                raise TypeError("Cannot provide unit if theta is already an Angle instance")
+            self._rad = theta._rad
+        elif unit is None:
+            raise TypeError("Must provide unit for Angle.__init__")
+        elif not isinstance(unit, AngleUnit):
             raise TypeError("Invalid unit %s of type %s"%(unit,type(unit)))
-        self._rad = float(theta) * unit.value
+        else:
+            # Normal case
+            self._rad = float(theta) * unit.value
 
     def rad(self):
         """Return the Angle in radians.

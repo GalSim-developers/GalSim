@@ -89,6 +89,10 @@ def test_angle():
     numpy.testing.assert_almost_equal(theta1 / galsim.hours, 3., decimal=12)
     numpy.testing.assert_almost_equal(galsim.hours / galsim.arcmin, 15*60, decimal=12)
 
+    # Check copy constructor
+    theta9 = galsim.Angle(theta1)
+    numpy.testing.assert_equal(theta9.rad(), theta1.rad())
+
     # Check picklability
     do_pickle(galsim.radians)
     do_pickle(galsim.degrees)
@@ -104,6 +108,18 @@ def test_angle():
     do_pickle(theta6)
     do_pickle(theta7)
     do_pickle(theta8)
+
+    # Check invalid constructors
+    try:
+        np.testing.assert_raises(TypeError,galsim.AngleUnit, galsim.degrees)
+        np.testing.assert_raises(ValueError,galsim.AngleUnit, 'spam')
+        np.testing.assert_raises(TypeError,galsim.AngleUnit, 1, 3)
+        np.testing.assert_raises(TypeError,galsim.Angle, 3.4)
+        np.testing.assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
+        np.testing.assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
+        np.testing.assert_raises(TypeError,galsim.Angle, 1, 3)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
