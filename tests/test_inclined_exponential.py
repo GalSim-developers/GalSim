@@ -180,6 +180,16 @@ def test_sanity():
 
         check_basic(test_profile, "InclinedExponential")
 
+        # Check accessing construction args
+        np.testing.assert_equal(test_profile.inclination, inc_angle * galsim.radians)
+        np.testing.assert_equal(test_profile.getInclination(), inc_angle * galsim.radians)
+        np.testing.assert_equal(test_profile.scale_radius, scale_radius)
+        np.testing.assert_equal(test_profile.getScaleRadius(), scale_radius)
+        np.testing.assert_equal(test_profile.scale_height, scale_height)
+        np.testing.assert_equal(test_profile.getScaleHeight(), scale_height)
+        np.testing.assert_equal(test_profile.flux, flux)
+        np.testing.assert_equal(test_profile.getFlux(), flux)
+
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_almost_equal(test_profile.scale_height/test_profile.scale_radius,
                                        test_profile.scale_h_over_r)
