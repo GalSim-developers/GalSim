@@ -20,6 +20,7 @@ from __future__ import print_function
 import numpy
 import os
 import sys
+import math
 
 from galsim_test_helpers import *
 
@@ -61,6 +62,15 @@ def test_angle():
     print('theta6 = ',theta6,' => ',theta6.wrap())
     numpy.testing.assert_almost_equal(theta6.wrap().rad(), theta1.rad(), decimal=12)
 
+    # Check trig calls
+    numpy.testing.assert_almost_equal(theta6.sin(), theta1.sin(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.cos(), theta1.cos(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.tan(), theta1.tan(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.sin(), math.sqrt(0.5), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.cos(), math.sqrt(0.5), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.tan(), 1., decimal=12)
+    numpy.testing.assert_array_almost_equal(theta6.sincos(), math.sqrt(0.5), decimal=12)
+
     theta7 = (45 - 360) * galsim.degrees
     assert abs(theta7.rad() - theta1.rad()) > 6.
     numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
@@ -78,6 +88,10 @@ def test_angle():
     gradians = galsim.AngleUnit(2. * pi / 400.)
     theta8 = 50 * gradians
     numpy.testing.assert_almost_equal(theta8.rad(), pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta8 / gradians, 50., decimal=12)
+    numpy.testing.assert_almost_equal(gradians.getValue(), 2.*pi/400., decimal=12)
+    numpy.testing.assert_almost_equal(gradians.value, 2.*pi/400., decimal=12)
+    numpy.testing.assert_almost_equal(gradians / galsim.radians, 2.*pi/400., decimal=12)
 
     # Check simple math
     numpy.testing.assert_almost_equal((theta1 + theta2).rad(), pi/2., decimal=12)
