@@ -806,6 +806,15 @@ You can list these options from the command line with
 * `BOOST_DIR` ('') specifies the root location of BOOST The header files should
    be in `BOOST_DIR/include/boost` and the library files in `BOOST_DIR/lib`.
 
+* `USE_BOOST` (False) specifies whether to use a local boost installation for
+   some optional boost header files.  We bundle the boost.random implementation
+   from a specific boost version (1.48) to make sure "random" variable generation
+   is deterministic across machines and over time.  To make it fully self-
+   contained, we edited them slightly to not include many of the complicated
+   workarounds boost has for specific compilers and such.  However, those
+   workarounds can be reenabled by setting USE_BOOST=True if your system needs
+   them.
+
 * `EXTRA_INCLUDE_PATH` ('') specifies extra directories in which to search for
    header files in addition to the standard locations such as `/usr/include` and
    `/usr/local/include` and the ones derived from the above options.  Sometimes

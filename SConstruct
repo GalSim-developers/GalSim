@@ -23,6 +23,11 @@ import sys
 import SCons
 import platform
 import distutils.sysconfig
+import SCons.SConf
+import subprocess
+import shutil
+import platform
+import re
 
 from sys import stdout,stderr
 
@@ -81,6 +86,9 @@ opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
+opts.Add(BoolVariable('USE_BOOST',
+         'Use the local boost installation for optional boost header files',
+         False))
 
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
          'Extra paths for header files (separated by : if more than 1)',
@@ -157,7 +165,6 @@ def ClearCache():
     """
     if os.path.exists(".sconsign.dblite"):
         os.remove(".sconsign.dblite")
-    import shutil
     if os.path.exists(".sconf_temp"):
         shutil.rmtree(".sconf_temp")
 
@@ -179,9 +186,6 @@ def ErrorExit(*args, **kwargs):
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
-
-    import shutil
-
     out = open("gs_error.txt","wb")
 
     # Start with the error message to output both to the screen and to gs_error.txt:
@@ -217,7 +221,6 @@ def ErrorExit(*args, **kwargs):
     # It is sometimes helpful to see the output of the scons executables.
     # SCons just uses >, not >&, so we'll repeat those runs here and get both.
     try:
-        import subprocess
         cmd = ("ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
                "| grep -v '\.o' | grep -v '\_mod'")
         p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -267,7 +270,6 @@ def ErrorExit(*args, **kwargs):
 
     # Give a helpful message if running El Capitan.
     if sys.platform.find('darwin') != -1:
-        import platform
         major, minor = GetMacVersion()
         if int(major) > 10 or int(minor) >= 11:
             print
@@ -547,7 +549,6 @@ def GetCompilerVersion(env):
 
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
-        import subprocess
         p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
         lines = p.stdout.readlines()
 
@@ -575,7 +576,6 @@ def GetCompilerVersion(env):
     # redo this check in case was c++ -> unknown
     if compilertype != 'unknown':
         line = lines[linenum]
-        import re
         match = re.search(r'[0-9]+(\.[0-9]+)+', line)
 
         if match:
@@ -596,7 +596,6 @@ def GetCompilerVersion(env):
 def GetNosetestsVersion(env):
     """Determine the version of nosetests
     """
-    import subprocess
     cmd = env['NOSETESTS'] + ' --version 2>&1'
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
     line = p.stdout.readlines()[0]
@@ -1046,7 +1045,6 @@ def TryScript(config,text,pname):
     # is basically taken from parts of the code for TryBuild and TryRun.
 
     # First make the file name using the same counter as TryBuild uses:
-    from SCons.SConf import _ac_build_counter
     f = "conftest_" + str(SCons.SConf._ac_build_counter)
     SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
 
@@ -1798,8 +1796,6 @@ int main()
         # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
         # if we can tell that this is what the TMV library is using.
         # Update: Even after 5.1, it still seems to have problems for some systems.
-        import platform
-        import subprocess
         major, minor = GetMacVersion()
         try:
             p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
@@ -1872,7 +1868,6 @@ def GetNCPU():
             if isinstance(ncpus, int) and ncpus > 0:
                 return ncpus
         else: # OSX:
-            import subprocess
             p = subprocess.Popen(['sysctl -n hw.ncpu'],stdout=subprocess.PIPE,shell=True)
             return int(p.stdout.read().strip())
     # Windows:
@@ -1918,7 +1913,9 @@ def DoConfig(env):
             print 'TMV Extra Debugging turned on'
             env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
-    import SCons.SConf
+    if env['USE_BOOST']:
+        print 'Using local boost header files'
+        env.AppendUnique(CPPDEFINES=['USE_BOOST'])
 
     # Don't bother with checks if doing scons -c
     if not env.GetOption('clean'):
@@ -2041,7 +2038,6 @@ if not GetOption('help'):
 
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
-        import subprocess
         if sys.platform.startswith('linux') and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
