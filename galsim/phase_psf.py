@@ -25,9 +25,16 @@ PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
 
 where x, y are focal plane coordinates and u, v are pupil plane coordinates.
 
-For PSFs drawn with method='phot', an often significantly faster geometric approximation is used
-instead.  To use photon-shooting without this approximation, set `geometric_shooting=False` when
-creating the PSF.
+For method='phot', one of two possible strategies are available.  The first strategy is to draw the
+PSF using Fourier methods into an InterpolatedImage, and then shoot photons from that profile.  This
+strategy has good accuracy, but can be computationally expensive, particularly for atmospheric PSFs
+that need to be built up in small increments to simulate a finite exposure time. The second
+strategy, which can be significantly faster, especially for atmospheric PSFs, is to use the
+geometric optics approximation.  This approximation has good accuracy for atmospheric PSFs, so we
+make it the default for PhaseScreenPSF.  The accuracy is somewhat less good for purely optical PSFs
+though, so the default behavior for OpticalPSF is to use the first strategy.  The
+`geometric_shooting` keyword can be used in both cases to override the default.
+
 
 The main classes of note are:
 
@@ -70,7 +77,7 @@ from galsim import GSObject
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
-    with the PhaseScreenPSF class to create PSFs via Fourier optics.
+    with the PhaseScreenPSF class to create PSFs via Fourier or geometric optics.
 
     The pupil plane array is completely specified by its size, sampling interval, and pattern of
     illuminated pixels.  Pupil plane arrays can be specified either geometrically or using an image
@@ -1420,7 +1427,7 @@ class OpticalPSF(GSObject):
                             optics approximation where the photon angles are derived from the
                             phase screen gradient.  If False, then first draw using Fourier
                             optics and then shoot from the derived InterpolatedImage.
-                            [default: True]
+                            [default: False]
     @param flux             Total flux of the profile. [default: 1.]
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
@@ -1498,7 +1505,7 @@ class OpticalPSF(GSObject):
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  _force_maxk=None, _force_stepk=None,
-                 suppress_warning=False, geometric_shooting=True, max_size=None):
+                 suppress_warning=False, geometric_shooting=False, max_size=None):
         if max_size is not None: # pragma: no cover
             from .deprecated import depr
             depr('max_size', 1.4, '',

@@ -951,8 +951,8 @@ def test_noll():
 
 
 @timer
-def test_phase_gradient_shoot():
-    """Test that phase gradient photon shooting is reasonably consistent with Fourier optics."""
+def test_geometric_shoot():
+    """Test that geometric photon shooting is reasonably consistent with Fourier optics."""
     jmax = 20
     bd = galsim.BaseDeviate(11111111)
     u = galsim.UniformDeviate(bd)
@@ -962,7 +962,8 @@ def test_phase_gradient_shoot():
 
     for i in range(4):  # Do a few random tests.  Takes about 1 sec.
         aberrations = [0]+[u()*0.1 for i in range(jmax)]
-        opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations)
+        opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
+                                    geometric_shooting=True)
 
         # Use really good seeing, so that the optics contribution actually matters.
         psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
@@ -1011,4 +1012,4 @@ if __name__ == "__main__":
     test_stepk_maxk_iipad()
     test_ne()
     test_noll()
-    test_phase_gradient_shoot()
+    test_geometric_shoot()

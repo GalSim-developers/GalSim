@@ -24,7 +24,12 @@ API Changes
   warning. (#799)
 - Dynamic PhaseScreenPSFs now require an explicit start time and time step.
   Clock management of phase screens now handled implicitly. (#824)
+- The time_step for updating atmospheric screens and the time_step used for
+  integrating a PhaseScreenPSF over time are now independent (#824)
 - OpticalScreen now requires `diam` argument. (#824)
+- Some of the backend (but nonetheless public API) methods of PhaseScreen and
+  PhaseScreenList have changed.  See the docstrings of these classes for
+  the new API if you have been using these methods. (#824)
 
 
 Dependency Changes
@@ -112,8 +117,9 @@ New Features
   random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
   dx/dz and dy/dz slopes) to an existing photon array. (#823)
-- Added geometric approximation to Fourier optics for photon-shooting through
-  phase screens. (#824)
+- Added geometric optics approximation for photon-shooting through
+  PhaseScreenPSFs (includes atmospheric PSF and OpticalPSF).  This
+  approximation is now the default for non-optical PhaseScreenPSFs. (#824)
 - Added gradient method to LookupTable2D. (#824)
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.

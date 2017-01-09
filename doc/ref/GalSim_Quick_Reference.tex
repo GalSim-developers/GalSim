@@ -341,8 +341,9 @@ opposed to interleaving PSF creation and drawing to images.
 
 Also note that for phase screen objects, which include atmospheric PSFs and optical PSFs,
 drawing images using photon-shooting can be sped up considerably by using a geometric optics
-approximation, which is enabled by default.  To use a more precise but slower calculation, set
-the \texttt{geometric\_shooting} keyword argument to \texttt{False} when creating these objects.
+approximation, which is enabled for non-optical PSFs.  To use a more precise but slower
+calculation, set the \texttt{geometric\_shooting} keyword argument to \texttt{False} when 
+creating these objects.
 
 \subsection{Units}
 The choice of units for the \textit{size} parameters is up to the user,
