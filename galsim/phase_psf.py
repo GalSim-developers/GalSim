@@ -102,6 +102,10 @@ class Aperture(object):
     further increase the size of the pupil plane array, thereby increasing the sampling rate of the
     resulting PSF image.  This can be done by increasing the `oversampling` keyword.
 
+    A caveat to the above occurs when using `geometric_shooting=True` to draw using photon-shooting.
+    In this case, we only need an array just large enough to avoid clipping the pupil, which we can
+    get by setting `oversampling=0.5`.
+
     The pupil plane array physical sampling interval (which is directly related to the resulting PSF
     image physical size) is set by default to the same interval as would be used to avoid
     significant aliasing (image folding) for an obscured Airy profile with matching diameter and
