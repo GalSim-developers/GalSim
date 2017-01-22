@@ -46,6 +46,7 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return _flux; }
         
         /**
          * @brief Shoot photons through this SBDeltaFunction.
