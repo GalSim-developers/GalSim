@@ -70,13 +70,13 @@ namespace galsim {
      * 2-dimensional image plane, with real and/or Fourier-domain models of a wide variety of galaxy
      * shapes, point-spread functions (PSFs), and their convolutions.  There are several
      * realizations of the SBProfile classes: There are the "atomic" classes that represent specific
-     * analytic profiles: (SBGaussian, SBSersic, SBAiry, SBExponential, SBBox, SBDeVaucouleurs and
-     * SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of pixel values and a
-     * chosen interpolation scheme between pixel centers.  SBTransform represents any affine
-     * transformation (shear, magnification, rotation, translation, and/or flux rescaling) of any
-     * other SBProfile. SBAdd represents the sum of any number of SBProfiles.  SBConvolve represents
-     * the convolution of any number of SBProfiles, and SBDeconvolve is the deconvolution of one
-     * SBProfile with another.
+     * analytic profiles: (SBDeltaFunction, SBGaussian, SBSersic, SBAiry, SBExponential, SBBox,
+     * SBDeVaucouleurs and SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of
+     * pixel values and a chosen interpolation scheme between pixel centers.  SBTransform represents 
+     * any affine transformation (shear, magnification, rotation, translation, and/or flux rescaling)
+     * of any other SBProfile. SBAdd represents the sum of any number of SBProfiles.  SBConvolve 
+     * represents the convolution of any number of SBProfiles, and SBDeconvolve is the deconvolution 
+     * of one SBProfile with another.
      *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
      * knows what is needed to prevent aliasing or truncation of itself when drawn.  The classes

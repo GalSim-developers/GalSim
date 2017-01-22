@@ -290,8 +290,13 @@ v) Boost C++ (http://www.boost.org)
 
 GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed. Currently GalSim is regularly tested to ensure it works with
+<<<<<<< HEAD
 Boost version 1.61, but it is likely that most versions released within the
 last several years will also work. It is particularly important that your installed
+=======
+Boost version 1.61, but it is likely that most versions released within the 
+last several years will also work. It is particularly important that your installed 
+>>>>>>> merge from master #533
 Boost library links to the same version of Python with which you will be using
 GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
 Boost can be downloaded from the above website, and must be installed per the

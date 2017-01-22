@@ -69,6 +69,109 @@ default_params = galsim.GSParams(
 
 
 @timer
+def test_deltaFuntion():
+    """Test the generation of a specific Delta function profile against a know result
+    """
+    # Delta function should never be drawn by itself without convolution
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, delta, "drawImage")
+    except ImportError:
+        pass
+    
+    # Check with default_params
+    delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, delta, "drawImage")
+    except ImportError:
+        pass
+
+    """
+    # Use non-unity values.
+    delta = galsim.DeltaFunction(flux=1.7)
+
+    # Test photon shooting.
+    do_shoot(delta,myImg,"DeltaFunction")
+
+    # Test kvalues
+    do_kvalue(delta,myImg,"DeltaFunction")
+
+    # Check picklability
+    do_pickle(delta.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+    do_pickle(delta, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(delta)
+    do_pickle(delta.SBProfile)
+    """
+ 
+@timer
+def test_deltaFunction_properties():
+    """Test some basic properties of the Delta function profile
+    """
+    delta = galsim.DeltaFunction(flux=test_flux)
+    # Check that we are centered on (0, 0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(delta.centroid(), cen)
+    # Check Fourier properties
+    np.testing.assert_almost_equal(delta.maxK(), np.inf)
+    np.testing.assert_almost_equal(delta.stepK(), np.inf)
+    np.testing.assert_equal(delta.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        delta = galsim.DeltaFunction(flux=inFlux)
+        outFlux = delta.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+
+@timer
+def test_deltaFunction_flux_scaling():
+    """Test flux sxaling for Delta function.
+    """
+    # decimal point to go to for parameter value comparisons
+    param_decimal = 12
+
+    # init with sigma and flux only (should be ok given last tests)
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj *= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __imul__.")
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj /= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __idiv__.")
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj2 = obj * 2.
+    # First test that original obj is unharmed...
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (result).")
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj2 = 2. * obj
+    # First test that original obj is unharmed...
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (result).")
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj2 = obj / 2.
+    # First test that original obj is unharmed...
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (result).")
+@timer
 def test_gaussian():
     """Test the generation of a specific Gaussian profile against a known result.
     """
@@ -2565,6 +2668,9 @@ def test_ne():
 
 
 if __name__ == "__main__":
+    test_deltaFunction()
+    test_deltaFunction_properties()
+    test_deltaFunction_flux_scaling()
     test_gaussian()
     test_gaussian_properties()
     test_gaussian_radii()
