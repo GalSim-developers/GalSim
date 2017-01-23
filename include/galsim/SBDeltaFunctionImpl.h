@@ -61,26 +61,9 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Overrides for better efficiency
-        /*
-        void fillXImage(ImageView<double> im,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXImage(ImageView<double> im,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        void fillKImage(ImageView<std::complex<double> > im,
-                        double kx0, double dkx, int izero,
-                        double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
-                        double kx0, double dkx, double dkxy,
-                        double ky0, double dky, double dkyx) const;
-        */
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const;
-
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
         
         std::string serialize() const;
 

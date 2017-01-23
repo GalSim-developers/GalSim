@@ -28,9 +28,6 @@
 // The relative speed of the two methods was tested as part of issue #163, and the results
 // are collated in devutils/external/time_photon_shooting.
 // The conclusion was that using sin/cos was faster for icpc, but not g++ or clang++.
-#ifdef _INTEL_COMPILER
-#define USE_COS_SIN
-#endif
 
 namespace galsim {
 
@@ -103,45 +100,19 @@ namespace galsim {
         ymin = -std::numeric_limits<double>::epsilon(); 
         ymax = std::numeric_limits<double>::epsilon();
     }
-
-    void SBDeltaFunction::SBDeltaFunctionImpl::getYRangeX(double x, double& ymin, double& ymax,
-                                                          std::vector<double>& splits) const
-    {
-        ymin = -std::numeric_limits<double>::epsilon(); 
-        ymax = std::numeric_limits<double>::epsilon();
-    }
             
     boost::shared_ptr<PhotonArray> SBDeltaFunction::SBDeltaFunctionImpl::shoot(int N, UniformDeviate u) const
     {
-        dbg<<"Gaussian shoot: N = "<<N<<std::endl;
+        dbg<<"Delta Function shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        /*
+        
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
-            // First get a point uniformly distributed on unit circle
-#ifdef USE_COS_SIN
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
-            double sint,cost;
-            (theta * radians).sincos(sint,cost);
-            // Then map radius to the desired Gaussian with analytic transformation
-            double rFactor = _sigma * std::sqrt( -2. * std::log(rsq));
-            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
-#else
-            double xu, yu, rsq;
-            do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
-                rsq = xu*xu+yu*yu;
-            } while (rsq>=1. || rsq==0.);
-            // Then map radius to the desired Gaussian with analytic transformation
-            double rFactor = _sigma * std::sqrt( -2. * std::log(rsq) / rsq);
-            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
-#endif
+            result->setPhoton(i, 0.0, 0.0, fluxPerPhoton);
         }
-        dbg<<"Gaussian Realized flux = "<<result->getTotalFlux()<<std::endl;
-        */
+        dbg<<"Realized flux = "<<result->getTotalFlux()<<std::endl;
+        
         return result;
     }
 }

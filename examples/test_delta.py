@@ -82,8 +82,8 @@ def main(argv):
     logger.info('    - Gaussian noise (sigma = %.2f).',noise)
 
     # Define the galaxy profile
-    #gal = galsim.Gaussian(flux=gal_flux, sigma=gal_sigma)
-    gal = galsim.DeltaFunction(flux=1.)
+    gal = galsim.Gaussian(flux=gal_flux, sigma=gal_sigma)
+    #gal = galsim.DeltaFunction(flux=1.)
     logger.info('Made galaxy profile')
 
     # Define the PSF profile
