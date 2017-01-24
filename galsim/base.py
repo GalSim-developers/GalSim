@@ -1446,6 +1446,7 @@ class DeltaFunction(GSObject):
 
     def __init__(self, flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBDeltaFunction(flux, gsparams))
+        self._gsparams = gsparams        
 
     def __eq__(self, other):
         return (isinstance(other, galsim.DeltaFunction) and

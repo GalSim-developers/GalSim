@@ -32,6 +32,9 @@ namespace galsim {
      *
      * The Delta Function Surface Brightness Profile is characterized
      * by a single property, its 'flux'.
+     *
+     * Note that the DeltaFunction SBP cannot be drawn by itself. Instead,
+     * it should be applied as part of a convolution first.
      */
     class SBDeltaFunction : public SBProfile
     {

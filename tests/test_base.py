@@ -69,40 +69,85 @@ default_params = galsim.GSParams(
 
 
 @timer
-def test_deltaFuntion():
-    """Test the generation of a specific Delta function profile against a know result
-    """
+def test_deltaFunction():             
     # Delta function should never be drawn by itself without convolution
     delta = galsim.DeltaFunction(flux=1)
     try:
-        np.testing.assert_raises(AttributeError, getattr, delta, "drawImage")
+        np.testing.assert_raises(AttributeError, delta.drawImage)
     except ImportError:
         pass
-    
+        
     # Check with default_params
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
     try:
-        np.testing.assert_raises(AttributeError, getattr, delta, "drawImage")
+        np.testing.assert_raises(AttributeError, delta.drawImage)
     except ImportError:
         pass
+        
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.drawKImage)
+    except ImportError:
+        pass
+    
+    # Test illegal operations on DeltaFunction    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.expand, 2.0)
+    except ImportError:
+        pass
+    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.shear, g1=0.3, g2=0.1)
+    except ImportError:
+        pass
+    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.dilate, 2.)
+    except ImportError:
+        pass   
+    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.magnify, 2.)
+    except ImportError:
+        pass   
 
-    """
-    # Use non-unity values.
-    delta = galsim.DeltaFunction(flux=1.7)
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.transform, dudx=1.0,
+                                 dudy=0.0, dvdx=0.0, dvdy=1.0)
+    except ImportError:
+        pass 
+    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.lens, g1=0.3, g2=0.1, mu=2.)
+    except ImportError:
+        pass 
+    
+    delta = galsim.DeltaFunction(flux=1)
+    try:
+        np.testing.assert_raises(AttributeError, delta.rotate, 45 * galsim.radians)
+    except ImportError:
+        pass 
 
-    # Test photon shooting.
-    do_shoot(delta,myImg,"DeltaFunction")
-
-    # Test kvalues
-    do_kvalue(delta,myImg,"DeltaFunction")
-
+    # Test simple translation of DeltaFunction
+    delta = galsim.DeltaFunction(flux = test_flux)
+    delta2 = delta.shift(1.,2.)      # Shft the object in real space.
+    offcen = galsim.PositionD(1, 2)
+    np.testing.assert_equal(delta2.centroid(), offcen)
+    np.testing.assert_almost_equal(delta2.xValue(offcen), test_flux)
+    np.testing.assert_almost_equal(delta2.xValue(galsim.PositionD(0,0)), 0)
+    
     # Check picklability
-    do_pickle(delta.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
-    do_pickle(delta, lambda x: x.drawImage(method='no_pixel'))
+    delta = galsim.DeltaFunction(flux=test_flux)
+    do_pickle(delta.SBProfile, lambda x: (x.getFlux(), x.getGSParams()))
     do_pickle(delta)
     do_pickle(delta.SBProfile)
-    """
- 
+    
 @timer
 def test_deltaFunction_properties():
     """Test some basic properties of the Delta function profile
@@ -111,12 +156,15 @@ def test_deltaFunction_properties():
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(delta.centroid(), cen)
+    offcen = galsim.PositionD(1,1)
     # Check Fourier properties
-    np.testing.assert_almost_equal(delta.maxK(), np.inf)
-    np.testing.assert_almost_equal(delta.stepK(), np.inf)
     np.testing.assert_equal(delta.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_equal(delta.kValue(offcen), (1+0j) * test_flux)
     import math
-    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux)
+    np.testing.assert_almost_equal(delta.xValue(cen), test_flux)
+    np.testing.assert_almost_equal(delta.xValue(offcen), 0)
+    np.testing.assert_array_less(1e100,delta.maxK())
+    np.testing.assert_array_less(1e100,delta.stepK())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         delta = galsim.DeltaFunction(flux=inFlux)
@@ -125,12 +173,12 @@ def test_deltaFunction_properties():
 
 @timer
 def test_deltaFunction_flux_scaling():
-    """Test flux sxaling for Delta function.
+    """Test flux scaling for Delta function.
     """
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
-    # init with sigma and flux only (should be ok given last tests)
+    # init with flux only (should be ok given last tests)
     obj = galsim.DeltaFunction(flux=test_flux)
     obj *= 2.
     np.testing.assert_almost_equal(
@@ -171,6 +219,18 @@ def test_deltaFunction_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+        
+    obj = galsim.DeltaFunction(flux=test_flux)
+    obj2 = obj.withFlux(test_flux*2.)
+    # First test that original obj is unharmed...
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after obj.withFlux(flux).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after obj.withFlux(flux).")
+        
 @timer
 def test_gaussian():
     """Test the generation of a specific Gaussian profile against a known result.
@@ -188,7 +248,7 @@ def test_gaussian():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.sum(dtype=float) *dx**2, myImg.added_flux, 5,
+            myImg.array.sum() *dx**2, myImg.added_flux, 5,
             err_msg="Gaussian profile GSObject::draw returned wrong added_flux")
 
     # Check a non-square image
@@ -200,7 +260,7 @@ def test_gaussian():
             recImg[savedImg.bounds].array, savedImg.array, 5,
             err_msg="Drawing Gaussian on non-square image disagrees with expected result")
     np.testing.assert_almost_equal(
-            recImg.array.sum(dtype=float) *dx**2, recImg.added_flux, 5,
+            recImg.array.sum() *dx**2, recImg.added_flux, 5,
             err_msg="Gaussian profile GSObject::draw on non-square image returned wrong added_flux")
 
     # Check with default_params
@@ -217,7 +277,6 @@ def test_gaussian():
 
     # Use non-unity values.
     gauss = galsim.Gaussian(flux=1.7, sigma=2.3)
-    check_basic(gauss, "Gaussian")
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
@@ -243,16 +302,6 @@ def test_gaussian():
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
-    do_pickle(galsim.GSObject(gauss), irreprable=True)
-
-    # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
-    except ImportError:
-        pass
 
 
 @timer
@@ -266,12 +315,9 @@ def test_gaussian_properties():
     # Check Fourier properties
     np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
     np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
-    np.testing.assert_almost_equal(gauss.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(gauss.getFlux(), test_flux)
-    np.testing.assert_almost_equal(gauss.flux, test_flux)
+    np.testing.assert_equal(gauss.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
-    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.maxSB())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
@@ -300,9 +346,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Gaussian fwhm not equivalent to getFWHM()")
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
@@ -312,9 +355,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.sigma, got_sigma,
-            err_msg="Gaussian sigma not equivalent to getSigma()")
 
     # Test constructor using sigma:
     test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
@@ -332,9 +372,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with sigma.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Gaussian half_light_radius not equivalent to getHalfLightRadius()")
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
@@ -344,9 +381,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with sigma.")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Gaussian fwhm not equivalent to getFWHM()")
 
     # Test constructor using FWHM:
     test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
@@ -364,9 +398,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Gaussian half_light_radius not equivalent to getHalfLightRadius()")
 
     # test that getSigma() method provides correct sigma
     got_sigma = test_gal.getSigma()
@@ -510,7 +541,6 @@ def test_exponential():
 
     # Use non-unity values.
     expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
-    check_basic(expon, "Exponential")
 
     # Test photon shooting.
     do_shoot(expon,myImg,"Exponential")
@@ -524,12 +554,6 @@ def test_exponential():
     do_pickle(expon)
     do_pickle(expon.SBProfile)
 
-    # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Exponential, scale_radius=3, half_light_radius=1)
-    except ImportError:
-        pass
-
 
 @timer
 def test_exponential_properties():
@@ -542,12 +566,9 @@ def test_exponential_properties():
     # Check Fourier properties
     np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale[0])
     np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale[0])
-    np.testing.assert_almost_equal(expon.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(expon.getFlux(), test_flux)
-    np.testing.assert_almost_equal(expon.flux, test_flux)
+    np.testing.assert_equal(expon.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2)
-    np.testing.assert_almost_equal(expon.xValue(cen), expon.maxSB())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
@@ -570,15 +591,11 @@ def test_exponential_radii():
 
     # then test scale getter
     center = test_gal.xValue(galsim.PositionD(0,0))
-    got_sr = test_gal.getScaleRadius()
-    ratio = test_gal.xValue(galsim.PositionD(got_sr,0)) / center
+    ratio = test_gal.xValue(galsim.PositionD(test_gal.getScaleRadius(),0)) / center
     print('scale ratio = ',ratio)
     np.testing.assert_almost_equal(
             ratio, np.exp(-1.0), decimal=4,
             err_msg="Error in getScaleRadius for Exponential constructed with half light radius")
-    np.testing.assert_equal(
-            test_gal.scale_radius, got_sr,
-            err_msg="Exponential scale_radius not equivalent to getScaleRadius()")
 
     # Test constructor using scale radius:
     test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
@@ -596,9 +613,6 @@ def test_exponential_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Exponential half_light_radius not equivalent to getHalfLightRadius()")
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -689,7 +703,6 @@ def test_sersic():
 
     # Use non-unity values.
     sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3)
-    check_basic(sersic, "Sersic")
 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -701,7 +714,7 @@ def test_sersic():
 
     # Check picklability
     do_pickle(sersic.SBProfile,
-              lambda x: (x.getN(), x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
     do_pickle(sersic.SBProfile)
@@ -724,15 +737,7 @@ def test_sersic():
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
 
     # Use non-unity values.
-    sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=2.3, trunc=5.9)
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(sersic.centroid(), cen)
-    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
-    np.testing.assert_almost_equal(sersic.flux, test_flux)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
-
-    check_basic(sersic, "Truncated Sersic")
+    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3, trunc=5.9)
 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -772,15 +777,6 @@ def test_sersic():
     sersic = galsim.Sersic(n=4, flux=test_flux, half_light_radius=1, trunc=1.45)
     do_kvalue(sersic,myImg, "Severely truncated n=4 Sersic")
 
-    # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Sersic, n=1.2, scale_radius=3,
-                                 half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.DeVaucouleurs, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
-
 
 @timer
 def test_sersic_radii():
@@ -804,13 +800,6 @@ def test_sersic_radii():
             gal_labels = ["Sersic", "truncated Sersic", "flux_untruncated Sersic"]
         gal_list = [test_gal1, test_gal2, test_gal3]
 
-        do_pickle(test_gal1)
-        do_pickle(test_gal2)
-        do_pickle(test_gal3)
-        do_pickle(test_gal1.SBProfile)
-        do_pickle(test_gal2.SBProfile)
-        do_pickle(test_gal3.SBProfile)
-
         # Check that the returned half-light radius is correct
         print('test_hlr = ',test_hlr)
         print('test_gal1 hlr, sr = ',test_gal1.getHalfLightRadius(),test_gal1.getScaleRadius())
@@ -822,26 +811,9 @@ def test_sersic_radii():
         np.testing.assert_almost_equal(
             test_gal2.getHalfLightRadius(), test_hlr, decimal=5,
             err_msg = "Error in returned HLR for truncated Sersic HLR constructor, n=%.1f"%n)
-        np.testing.assert_equal(
-                test_gal1.half_light_radius, test_hlr,
-                err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
-        np.testing.assert_equal(
-                test_gal2.half_light_radius, test_hlr,
-                err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
-
-        # 1 and 3 should have the same scale radius, but different hlr.
         np.testing.assert_almost_equal(
             test_gal3.getScaleRadius(), test_gal1.getScaleRadius(), decimal=5,
             err_msg = "Error in returned SR for flux_untruncated Sersic HLR constructor, n=%.1f"%n)
-        np.testing.assert_equal(
-                test_gal1.scale_radius, test_gal1.getScaleRadius(),
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
-        np.testing.assert_equal(
-                test_gal2.scale_radius, test_gal2.getScaleRadius(),
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
-        np.testing.assert_equal(
-                test_gal3.scale_radius, test_gal3.getScaleRadius(),
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
 
         # Check that the returned flux is correct
         print('test_gal1.getFlux() = ',test_gal1.getFlux())
@@ -873,9 +845,6 @@ def test_sersic_radii():
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
                     err_msg = "Error in %s half-light radius constructor, n=%.1f"%(label,n))
-            np.testing.assert_equal(
-                    test_gal.half_light_radius, got_hlr,
-                    err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
 
         # (test scale radii)
         for test_gal, label in zip(gal_list, gal_labels):
@@ -886,9 +855,6 @@ def test_sersic_radii():
             np.testing.assert_almost_equal(
                     ratio, np.exp(-1.0), decimal=4,
                     err_msg="Error in getScaleRadius for HLR constructed %s"%label)
-            np.testing.assert_equal(
-                    test_gal.scale_radius, got_sr,
-                    err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
 
         # Test constructor using scale radius (test scale radius)
         if n == -4:
@@ -917,15 +883,6 @@ def test_sersic_radii():
         np.testing.assert_almost_equal(
             test_gal3.getScaleRadius(), scale, decimal=5,
             err_msg = "Error in returned SR for truncated Sersic SR constructor, n=%.1f"%n)
-        np.testing.assert_equal(
-                test_gal1.scale_radius, scale,
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
-        np.testing.assert_equal(
-                test_gal2.scale_radius, scale,
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
-        np.testing.assert_equal(
-                test_gal3.scale_radius, scale,
-                err_msg="Sersic scale_radius not equivalent to getScaleRadius()")
 
         # Returned HLR should match for gals 2,3
         got_hlr2 = test_gal2.getHalfLightRadius()
@@ -934,12 +891,6 @@ def test_sersic_radii():
         np.testing.assert_almost_equal(
                 got_hlr2, got_hlr3, decimal=4,
                 err_msg="Error in HLR for scale_radius constructed flux_untruncated Sersic (II).")
-        np.testing.assert_equal(
-                test_gal2.half_light_radius, got_hlr2,
-                err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
-        np.testing.assert_equal(
-                test_gal3.half_light_radius, got_hlr3,
-                err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
 
         # Check that the returned flux is correct
         print('test_gal1.getFlux() = ',test_gal1.getFlux())
@@ -976,9 +927,6 @@ def test_sersic_radii():
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
                     err_msg="Error in HLR for scale_radius constructed %s"%label)
-            np.testing.assert_equal(
-                    test_gal.half_light_radius, got_hlr,
-                    err_msg="Sersic half_light_radius not equivalent to getHalfLightRadius()")
 
         # Check that the getters don't work after modifying the original.
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -1058,21 +1006,16 @@ def test_sersic_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
 
-    check_basic(sersic, "n=0.5 Sersic")
-
     do_kvalue(sersic,myImg,"n=0.5 Sersic")
 
     # cf test_gaussian_properties()
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid(), cen)
-    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
-    np.testing.assert_almost_equal(sersic.flux, test_flux)
+    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
 
     # Also test some random values other than the center:
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
@@ -1100,21 +1043,16 @@ def test_sersic_1():
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
 
-    check_basic(sersic, "n=1 Sersic")
-
     do_kvalue(sersic,myImg,"n=1 Sersic")
 
     # cf test_exponential_properties()
     sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid(), cen)
-    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
-    np.testing.assert_almost_equal(sersic.flux, test_flux)
+    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
@@ -1139,18 +1077,6 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
-    np.testing.assert_array_almost_equal(
-            airy.getLamOverD(), 1./0.8, 5,
-            err_msg="Airy getLamOverD returned wrong value")
-    np.testing.assert_array_equal(
-            airy.lam_over_diam, airy.getLamOverD(),
-            err_msg="Airy lam_over_diam not equivalent to getLamOverD()")
-    np.testing.assert_array_equal(
-            airy.getObscuration(), 0.1,
-            err_msg="Airy getObscuration returned wrong value")
-    np.testing.assert_array_equal(
-            airy.obscuration, 0.1,
-            err_msg="Airy obscuration not equivalent to getObscuration")
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
@@ -1164,52 +1090,18 @@ def test_airy():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
 
-    # Check some properties
-    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(airy.centroid(), cen)
-    np.testing.assert_almost_equal(airy.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(airy.getFlux(), test_flux)
-    np.testing.assert_almost_equal(airy.flux, test_flux)
-    np.testing.assert_almost_equal(airy.xValue(cen), airy.maxSB())
-
-    check_basic(airy, "Airy obscuration=0.1")
-
-    # Check with obscuration == 0
-    airy0 = galsim.Airy(lam_over_diam=1./0.7, flux=test_flux)
-    np.testing.assert_equal(airy0.centroid(), cen)
-    np.testing.assert_almost_equal(airy0.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(airy0.getFlux(), test_flux)
-    np.testing.assert_almost_equal(airy0.flux, test_flux)
-    np.testing.assert_almost_equal(airy0.xValue(cen), airy0.maxSB())
-    np.testing.assert_array_almost_equal(
-            airy0.getLamOverD(), 1./0.7, 5,
-            err_msg="Airy getLamOverD returned wrong value")
-    np.testing.assert_array_equal(
-            airy0.lam_over_diam, airy0.getLamOverD(),
-            err_msg="Airy lam_over_diam not equivalent to getLamOverD()")
-    np.testing.assert_array_equal(
-            airy0.getObscuration(), 0.0,
-            err_msg="Airy getObscuration returned wrong value")
-    np.testing.assert_array_equal(
-            airy0.obscuration, 0.0,
-            err_msg="Airy obscuration not equivalent to getObscuration")
-    check_basic(airy0, "Airy obscuration=0.0")
-
     # Test photon shooting.
-    do_shoot(airy0,myImg,"Airy obscuration=0.0")
-    do_shoot(airy,myImg,"Airy obscuration=0.1")
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=test_flux)
+    do_shoot(airy,myImg,"Airy obscuration=0.0")
+    airy2 = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
+    do_shoot(airy2,myImg,"Airy obscuration=0.1")
 
     # Test kvalues
-    do_kvalue(airy0,myImg, "Airy obscuration=0.0")
-    do_kvalue(airy,myImg, "Airy obscuration=0.1")
+    do_kvalue(airy,myImg, "Airy obscuration=0.0")
+    do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
     # Check picklability
-    do_pickle(airy0.SBProfile, lambda x: (x.getLamOverD(), x.getObscuration, x.getFlux(), x.getGSParams()))
-    do_pickle(airy0, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(airy0)
-    do_pickle(airy0.SBProfile)
-    do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getObscuration, x.getFlux(), x.getGSParams()))
+    do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getFlux(), x.getGSParams()))
     do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(airy)
     do_pickle(airy.SBProfile)
@@ -1223,25 +1115,11 @@ def test_airy():
     # For lam/diam = 1.25 arcsec, and diam = 0.3 m, lam = (1.25/3600/180*pi) * 0.3 * 1.e9
     lam = 1.25 * 0.3 / 3600. / 180. * math.pi * 1.e9
     print('lam = ',lam)
-    airy3 = galsim.Airy(lam=lam, diam=0.3, scale_unit='arcsec', obscuration=0.1, flux=1.7)
+    airy3 = galsim.Airy(lam=lam, diam=0.3, scale_unit=galsim.arcsec, obscuration=0.1, flux=1.7)
     gsobject_compare(airy,airy3)
     # arcsec is the default scale_unit, so can leave this off.
     airy4 = galsim.Airy(lam=lam, diam=0.3, obscuration=0.1, flux=1.7)
     gsobject_compare(airy,airy4)
-    do_pickle(airy)
-    do_pickle(airy2)
-    do_pickle(airy3)
-    do_pickle(airy4)
-
-    # Should raise an exception if both lam, lam_over_diam are provided
-    try:
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, diam=1)
-    except ImportError:
-        pass
 
 
 @timer
@@ -1258,21 +1136,14 @@ def test_airy_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Airy half-light radius")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Airy half_light_radius not equivalent to getHalfLightRadius()")
 
     # test FWHM getter
     center = test_gal.xValue(galsim.PositionD(0,0))
-    got_fwhm = test_gal.getFWHM()
-    ratio = test_gal.xValue(galsim.PositionD(0.5 * got_fwhm,0)) / center
+    ratio = test_gal.xValue(galsim.PositionD(.5 * test_gal.getFWHM(),0)) / center
     print('fwhm ratio = ',ratio)
     np.testing.assert_almost_equal(
             ratio, 0.5, decimal=4,
             err_msg="Error in getFWHM() for Airy.")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Airy fwhm not equivalent to getFWHM()")
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -1349,12 +1220,6 @@ def test_box():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
-    np.testing.assert_array_equal(
-            pixel.getScale(), 1,
-            err_msg="Pixel getScale() returned wrong value")
-    np.testing.assert_array_equal(
-            pixel.scale, 1,
-            err_msg="Pixel scale not equivalent to  getScale()")
 
     # Check with default_params
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=default_params)
@@ -1380,7 +1245,6 @@ def test_box():
     do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(pixel)
     do_pickle(pixel.SBProfile)
-    do_pickle(galsim.Pixel(1))
 
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
@@ -1389,60 +1253,34 @@ def test_box():
     im = galsim.ImageF(16,16, scale=scale)
     gsp = galsim.GSParams(maximum_fft_size = 30000)
     for (width,height) in [ (3,2), (1.7, 2.7), (2.2222, 3.1415) ]:
+        print('width, height = ',width,height)
         box = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp)
-        check_basic(box, "Box with width,height = %f,%f"%(width,height))
+        print('im.bounds = ',im.bounds)
+        print('im.scale = ',im.scale)
         do_shoot(box,im,"Box with width,height = %f,%f"%(width,height))
         if __name__ == '__main__':
             # These are slow because they require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
-        cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(box.centroid(), cen)
-        np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
-        np.testing.assert_almost_equal(box.getFlux(), test_flux)
-        np.testing.assert_almost_equal(box.flux, test_flux)
-        np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
-        np.testing.assert_array_equal(
-                box.getWidth(), width,
-                err_msg="Box getWidth() returned wrong value")
-        np.testing.assert_array_equal(
-                box.width, width,
-                err_msg="Box width not equivalent to  getWidth()")
-        np.testing.assert_array_equal(
-                box.getHeight(), height,
-                err_msg="Box getHeight() returned wrong value")
-        np.testing.assert_array_equal(
-                box.height, height,
-                err_msg="Box height not equivalent to  getHeight()")
 
     # Check picklability
     do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(box)
     do_pickle(box.SBProfile)
-    do_pickle(galsim.Box(1,1))
 
     # Check sheared boxes the same way
     box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
     box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
-    check_basic(box, "Sheared Box", approx_maxsb=True)
     do_shoot(box,im, "Sheared Box")
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
         do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(box)
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(box.centroid(), cen)
-    np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(box.getFlux(), test_flux)
-    np.testing.assert_almost_equal(box.flux, test_flux)
-    np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
         conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
-        check_basic(conv, "Sheared Box convolved with pixel in real space",
-                    approx_maxsb=True, scale=0.2)
         do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
         do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
         do_pickle(conv)
@@ -1466,12 +1304,6 @@ def test_tophat():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat disagrees with expected result")
-    np.testing.assert_array_equal(
-            tophat.getRadius(), 1.01,
-            err_msg="TopHat getRadius() returned wrong value")
-    np.testing.assert_array_equal(
-            tophat.radius, 1.01,
-            err_msg="TopHat radius not equivalent to  getRadius()")
 
     # Check with default_params
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
@@ -1497,32 +1329,23 @@ def test_tophat():
     # The choices of radius here are fairly specific.  If the edge of the circle comes too close
     # to the center of one of the pixels, then the test will fail, since the Fourier draw method
     # will blur the edge a bit and give some flux to that pixel.
-    for radius in [ 1.2, 0.93, 2.11 ]:
+    for radius in [ 1.2, 0.83, 2.11 ]:
+        print('radius = ',radius)
         tophat = galsim.TopHat(radius=radius, flux=test_flux)
-        check_basic(tophat, "TopHat with radius = %f"%radius)
+        print('im.bounds = ',im.bounds)
+        print('im.scale = ',im.scale)
         do_shoot(tophat,im,"TopHat with radius = %f"%radius)
         do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
 
         # This is also a profile that may be convolved using real space convolution, so test that.
         conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
-        check_basic(conv, "TopHat convolved with pixel in real space",
-                    approx_maxsb=True, scale=0.2)
-        do_kvalue(conv,im, "TopHat convolved with pixel in real space")
-
-        cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(tophat.centroid(), cen)
-        np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
-        np.testing.assert_almost_equal(tophat.getFlux(), test_flux)
-        np.testing.assert_almost_equal(tophat.flux, test_flux)
-        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
-
+        do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
     # Check picklability
     do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(tophat)
     do_pickle(tophat.SBProfile)
-    do_pickle(galsim.TopHat(1))
 
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
@@ -1530,15 +1353,8 @@ def test_tophat():
     # some pixel center gets too close to the resulting ellipse for the fourier draw to match
     # the real-space draw at the required accuracy.
     tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
-    check_basic(tophat, "Sheared TopHat")
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(tophat.centroid(), cen)
-    np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(tophat.getFlux(), test_flux)
-    np.testing.assert_almost_equal(tophat.flux, test_flux)
-    np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
 
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
@@ -1546,8 +1362,6 @@ def test_tophat():
 
     # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
-    check_basic(conv, "Sheared TopHat convolved with pixel in real space",
-                approx_maxsb=True, scale=0.2)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
 
@@ -1590,7 +1404,6 @@ def test_moffat():
 
     # Use non-unity values.
     moffat = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2)
-    check_basic(moffat, "Moffat")
 
     # Test photon shooting.
     do_shoot(moffat,myImg,"Moffat")
@@ -1610,27 +1423,9 @@ def test_moffat():
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
-        check_basic(moffat, "Untruncated Moffat with beta=%f"%beta)
         do_kvalue(moffat,myImg,"Untruncated Moffat with beta=%f"%beta)
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
-        cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(moffat.centroid(), cen)
-        np.testing.assert_almost_equal(moffat.kValue(cen), (1+0j) * test_flux)
-        np.testing.assert_almost_equal(moffat.getFlux(), test_flux)
-        np.testing.assert_almost_equal(moffat.flux, test_flux)
-        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.maxSB())
-
-    # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
 
 
 @timer
@@ -1657,10 +1452,6 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
@@ -1672,10 +1463,6 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
@@ -1700,12 +1487,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    np.testing.assert_equal(
-            test_gal.getHalfLightRadius(), test_hlr,
-            err_msg="Moffat getHalfLightRadius() returned wrong value")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, test_hlr,
-            err_msg="Moffat hlr not equivalent to getHalfLightRadius()")
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
@@ -1715,9 +1496,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Moffat fwhm not equivalent to getFWHM()")
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
@@ -1727,9 +1505,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.scale_radius, got_scale,
-            err_msg="Moffat scale_radius not equivalent to getScaleRadius()")
 
     # Test constructor using scale radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale[0])
@@ -1739,18 +1514,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             ratio, pow(2,-test_beta), decimal=4,
             err_msg="Error in Moffat constructor with scale")
-    np.testing.assert_equal(
-            test_gal.scale_radius, test_scale[0],
-            err_msg="Moffat scale_radius not equivalent to getScaleRadius()")
-    np.testing.assert_equal(
-            test_gal.beta, test_beta,
-            err_msg="Moffat beta not equivalent to getBeta()")
-    np.testing.assert_equal(
-            test_gal.getTrunc(), 0,
-            err_msg="Moffat getTrunc returned wrong value")
-    np.testing.assert_equal(
-            test_gal.trunc, test_gal.getTrunc(),
-            err_msg="Moffat trunc not equivalent to getTrunc()")
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
@@ -1759,9 +1522,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with scale radius.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Moffat half_light_radius not equivalent to getHalfLightRadius()")
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
@@ -1771,9 +1531,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with scale radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Moffat fwhm not equivalent to getFWHM()")
 
     # Test constructor using FWHM:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, fwhm = test_fwhm)
@@ -1783,12 +1540,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             ratio, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with fwhm")
-    np.testing.assert_equal(
-            test_gal.getFWHM(), test_fwhm,
-            err_msg="Moffat getFWHM returned wrong value")
-    np.testing.assert_equal(
-            test_gal.fwhm, test_fwhm,
-            err_msg="Moffat fwhm not equivalent to getFWHM()")
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.getHalfLightRadius()
@@ -1797,9 +1548,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with FWHM.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Moffat half_light_radius not equivalent to getHalfLightRadius()")
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
@@ -1808,9 +1556,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with scale radius")
-    np.testing.assert_equal(
-            test_gal.scale_radius, got_scale,
-            err_msg="Moffat scale_radius not equivalent to getScaleRadius()")
 
     # Now repeat everything using a severe truncation.  (Above had no truncation.)
 
@@ -1822,9 +1567,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, test_hlr,
-            err_msg="Moffat hlr not equivalent to getHalfLightRadius()")
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
@@ -1834,9 +1576,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Moffat fwhm not equivalent to getFWHM()")
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
@@ -1846,21 +1585,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.getScaleRadius(), got_scale,
-            err_msg="Moffat getScaleRadius returned wrong value")
-    np.testing.assert_equal(
-            test_gal.scale_radius, got_scale,
-            err_msg="Moffat scale_radius not equivalent to getScaleRadius()")
-    np.testing.assert_equal(
-            test_gal.beta, test_beta,
-            err_msg="Moffat beta not equivalent to getBeta()")
-    np.testing.assert_equal(
-            test_gal.getTrunc(), 2*test_hlr,
-            err_msg="Moffat getTrunc returned wrong value")
-    np.testing.assert_equal(
-            test_gal.trunc, test_gal.getTrunc(),
-            err_msg="Moffat trunc not equivalent to getTrunc()")
 
     # Test constructor using scale radius:
     test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2*test_scale[0],
@@ -1880,9 +1604,6 @@ def test_moffat_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for truncated Moffat "+
                     "initialized with scale radius.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Moffat half_light_radius not equivalent to getHalfLightRadius()")
 
     # test that getFWHM() method provides correct FWHM
     got_fwhm = test_gal.getFWHM()
@@ -1892,9 +1613,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for truncated Moffat initialized with scale radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Moffat fwhm not equivalent to getFWHM()")
 
     # Test constructor using FWHM:
     test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
@@ -1913,9 +1631,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for truncated Moffat initialized with FWHM.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Moffat half_light_radius not equivalent to getHalfLightRadius()")
 
     # test that getScaleRadius() method provides correct scale
     got_scale = test_gal.getScaleRadius()
@@ -1925,9 +1640,6 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
-    np.testing.assert_equal(
-            test_gal.scale_radius, got_scale,
-            err_msg="Moffat scale_radius not equivalent to getScaleRadius()")
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -2033,8 +1745,6 @@ def test_kolmogorov():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
 
-    check_basic(kolm, "Kolmogorov")
-
     # Test photon shooting.
     do_shoot(kolm,myImg,"Kolmogorov")
 
@@ -2056,7 +1766,7 @@ def test_kolmogorov():
     # For lam/r0 = 1.5 arcsec, and r0 = 0.2, lam = (1.5/3600/180*pi) * 0.2 * 1.e9
     lam = 1.5 * 0.2 / 3600. / 180. * math.pi * 1.e9
     print('lam = ',lam)
-    kolm3 = galsim.Kolmogorov(lam=lam, r0=0.2, scale_unit='arcsec', flux=test_flux)
+    kolm3 = galsim.Kolmogorov(lam=lam, r0=0.2, scale_unit=galsim.arcsec, flux=test_flux)
     gsobject_compare(kolm,kolm3)
     # arcsec is the default scale_unit, so can leave this off.
     kolm4 = galsim.Kolmogorov(lam=lam, r0=0.2, flux=test_flux)
@@ -2066,34 +1776,6 @@ def test_kolmogorov():
     kolm5 = galsim.Kolmogorov(lam=lam, r0_500=r0_500, flux=test_flux)
     gsobject_compare(kolm,kolm5)
 
-    # Should raise an exception if >= 2 radius specifications are provided and/or lam and r0 are not
-    # paired together.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, r0=1)
-    except ImportError:
-        pass
 
 @timer
 def test_kolmogorov_properties():
@@ -2112,10 +1794,6 @@ def test_kolmogorov_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)
     np.testing.assert_almost_equal(psf.getFWHM(), lor * 0.975865)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
-    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
-    np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Check input flux vs output flux
     lors = [1, 0.5, 2, 5]
@@ -2129,7 +1807,7 @@ def test_kolmogorov_properties():
         dx = lor / 10.
         img = galsim.ImageF(256,256, scale=dx)
         psf.drawImage(image=img)
-        out_flux = img.array.sum(dtype=float)
+        out_flux = img.array.sum()
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
 
@@ -2158,9 +1836,6 @@ def test_kolmogorov_radii():
         np.testing.assert_almost_equal(
                 test_fwhm_ratio, 0.5, decimal=4,
                 err_msg="Error in FWHM for Kolmogorov initialized with half-light radius")
-        np.testing.assert_equal(
-                test_gal.fwhm, got_fwhm,
-                err_msg="Kolmogorov fwhm not equivalent to getFWHM()")
 
         # then test that image indeed has the correct HLR properties when radially integrated
         got_hlr = test_gal.getHalfLightRadius()
@@ -2170,9 +1845,6 @@ def test_kolmogorov_radii():
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=3,
                 err_msg="Error in half light radius for Kolmogorov initialized with lam_over_r0.")
-        np.testing.assert_equal(
-                test_gal.half_light_radius, got_hlr,
-                err_msg="Kolmogorov half_light_radius not equivalent to getHalfLightRadius()")
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Kolmogorov(flux=1., half_light_radius = test_hlr)
@@ -2191,9 +1863,6 @@ def test_kolmogorov_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Kolmogorov initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Kolmogorov fwhm not equivalent to getFWHM()")
 
     # Test constructor using FWHM:
     test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
@@ -2211,10 +1880,7 @@ def test_kolmogorov_radii():
     print('hlr_sum (profile initialized with fwhm) = ',hlr_sum)
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=3,
-            err_msg="Error in half light radius for Kolmogorov initialized with FWHM.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Kolmogorov half_light_radius not equivalent to getHalfLightRadius()")
+            err_msg="Error in half light radius for Gaussian initialized with FWHM.")
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -2297,14 +1963,16 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, half_light_radius=1.0)
         # Reference images were made with old centering,
         # which is equivalent to use_true_center=False.
-        myImg = spergel.drawImage(myImg, scale=dx, method="sb", use_true_center=False)
+        myImg = spergel.drawImage(myImg, scale=dx, method="sb",
+                             use_true_center=False)
 
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Spergel disagrees with expected result")
 
-        # nu < 0 has inf for xValue(0,0), so the x tests fail for them.
-        check_basic(spergel, "Spergel with nu=%f"%nu, do_x=(nu > 0))
+        np.testing.assert_almost_equal(
+            myImg.array.sum()*dx**2, myImg.added_flux, 5,
+            err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
         # Only nu >= -0.3 give reasonably sized FFTs,
         # and small nu method='phot' is super slow.
@@ -2326,25 +1994,15 @@ def test_spergel():
             spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
             err_msg="Calculated incorrect Spergel(nu={0}) enclosed flux.".format(nu))
 
-    # Use non-unity values.
-    spergel = galsim.Spergel(nu=0.37, flux=1.7, half_light_radius=2.3)
+        # Use non-unity values.
+        spergel = galsim.Spergel(nu=0.37, flux=1.7, half_light_radius=2.3)
 
-    check_basic(spergel, "Spergel")
-
-    # Check picklability
-    do_pickle(spergel.SBProfile,
-                lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
-    do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(spergel)
-    do_pickle(spergel.SBProfile)
-    do_pickle(galsim.Spergel(0,1))
-
-    # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Spergel, nu=0, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
+        # Check picklability
+        do_pickle(spergel.SBProfile,
+                  lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+        do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(spergel)
+        do_pickle(spergel.SBProfile)
 
 
 @timer
@@ -2356,18 +2014,12 @@ def test_spergel_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
     # # Check Fourier properties
-    np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    maxk = spergel.maxK()
-    np.testing.assert_array_less(spergel.kValue(maxk,0)/test_flux, galsim.GSParams().maxk_threshold)
-    np.testing.assert_almost_equal(spergel.getFlux(), test_flux)
-    np.testing.assert_almost_equal(spergel.flux, test_flux)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
         outFlux = spergel.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
 
 
 @timer
@@ -2385,12 +2037,6 @@ def test_spergel_radii():
         np.testing.assert_almost_equal(
             test_gal.getHalfLightRadius(), test_hlr, decimal=5,
             err_msg = "Error in returned HLR for Spergel HLR constructor, nu=%.1f"%nu)
-        np.testing.assert_equal(
-                test_gal.half_light_radius, test_hlr,
-                err_msg="Spergel half_light_radius not equivalent to getHalfLightRadius()")
-        np.testing.assert_equal(
-                test_gal.scale_radius, test_gal.getScaleRadius(),
-                err_msg="Spergel scale_radius not equivalent to getScaleRadius()")
 
         # Check that the returned flux is correct
         print('test_gal.getFlux() = ',test_gal.getFlux())
@@ -2411,9 +2057,6 @@ def test_spergel_radii():
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
                     err_msg = "Error in Spergel half-light radius constructor, nu=%.1f"%nu)
-        np.testing.assert_equal(
-                test_gal.half_light_radius, got_hlr,
-                err_msg="Spergel half_light_radius not equivalent to getHalfLightRadius()")
 
         # Test constructor using scale radius (test scale radius)
         test_gal = galsim.Spergel(nu=nu, scale_radius=scale, flux=1.)
@@ -2424,9 +2067,6 @@ def test_spergel_radii():
         np.testing.assert_almost_equal(
             test_gal.getScaleRadius(), scale, decimal=5,
             err_msg = "Error in returned SR for Sersic SR constructor, nu=%.1f"%nu)
-        np.testing.assert_equal(
-                test_gal.scale_radius, scale,
-                err_msg="Spergel scale_radius not equivalent to getScaleRadius()")
 
         # Check that the returned flux is correct
         print('test_gal.getFlux() = ',test_gal.getFlux())
@@ -2444,9 +2084,6 @@ def test_spergel_radii():
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5*got_flux, decimal=4,
                     err_msg="Error in HLR for scale_radius constructed Spergel")
-        np.testing.assert_equal(
-                test_gal.half_light_radius, got_hlr,
-                err_msg="Spergel half_light_radius not equivalent to getHalfLightRadius()")
 
         # Check that the getters don't work after modifying the original.
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
@@ -2513,20 +2150,16 @@ def test_spergel_05():
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
 
-    check_basic(spergel, "nu=0.5 Spergel")
     do_kvalue(spergel,myImg,"nu=0.5 Spergel")
 
     # cf test_exponential_properties()
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
-    np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(spergel.getFlux(), test_flux)
-    np.testing.assert_almost_equal(spergel.flux, test_flux)
+    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
@@ -2573,7 +2206,6 @@ def test_ne():
             galsim.Airy(lam_over_diam=1.1),
             galsim.Airy(lam=1.0, diam=1.2),
             galsim.Airy(lam=1.0, diam=1.2, scale_unit=galsim.arcmin),
-            galsim.Airy(lam=1.0, diam=1.2, scale_unit='degrees'),
             galsim.Airy(lam=1.0, diam=1.0, obscuration=0.1),
             galsim.Airy(lam_over_diam=1.0, flux=1.1),
             galsim.Airy(lam_over_diam=1.0, gsparams=gsp)]
@@ -2588,7 +2220,6 @@ def test_ne():
             galsim.Kolmogorov(half_light_radius=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.0, scale_unit=galsim.arcmin),
-            galsim.Kolmogorov(lam=1.0, r0=1.0, scale_unit='degrees'),
             galsim.Kolmogorov(lam=1.0, r0_500=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1, gsparams=gsp)]
@@ -2613,7 +2244,7 @@ def test_ne():
             galsim.Box(width=1.0, height=1.0, gsparams=gsp)]
     all_obj_diff(gals)
 
-    # TopHat.  Params include radius, flux, gsparams.
+    # Tophat.  Params include radius, flux, gsparams.
     # gsparams.
     # The following should all test unequal:
     gals = [galsim.TopHat(radius=1.0),
@@ -2671,10 +2302,11 @@ if __name__ == "__main__":
     test_deltaFunction()
     test_deltaFunction_properties()
     test_deltaFunction_flux_scaling()
-    test_gaussian()
-    test_gaussian_properties()
-    test_gaussian_radii()
-    test_gaussian_flux_scaling()
+    #test_gaussian()
+    #test_gaussian_properties()
+    #test_gaussian_radii()
+    #test_gaussian_flux_scaling()
+    """
     test_exponential()
     test_exponential_properties()
     test_exponential_radii()
@@ -2702,4 +2334,4 @@ if __name__ == "__main__":
     test_spergel_radii()
     test_spergel_flux_scaling()
     test_spergel_05()
-    test_ne()
+    test_ne()"""
