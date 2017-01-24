@@ -87,7 +87,7 @@ def main(argv):
     logger.info('Made galaxy profile')
 
     # Define the PSF profile
-    psf = galsim.DeltaFunction(flux=10.) # PSF flux should always = 1
+    psf = galsim.DeltaFunction(flux=1.) # PSF flux should always = 1
     logger.info('Made PSF profile')
 
     # Final profile is the convolution of these
@@ -110,7 +110,7 @@ def main(argv):
     # Write the image to a file
     if not os.path.isdir('output'):
         os.mkdir('output')
-    file_name = os.path.join('output','demo1.fits')
+    file_name = os.path.join('output','justGaussian.fits')
     # Note: if the file already exists, this will overwrite it.
     image.write(file_name)
     logger.info('Wrote image to %r' % file_name)  # using %r adds quotes around filename for us

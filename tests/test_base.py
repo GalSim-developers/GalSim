@@ -2302,11 +2302,10 @@ if __name__ == "__main__":
     test_deltaFunction()
     test_deltaFunction_properties()
     test_deltaFunction_flux_scaling()
-    #test_gaussian()
-    #test_gaussian_properties()
-    #test_gaussian_radii()
-    #test_gaussian_flux_scaling()
-    """
+    test_gaussian()
+    test_gaussian_properties()
+    test_gaussian_radii()
+    test_gaussian_flux_scaling()
     test_exponential()
     test_exponential_properties()
     test_exponential_radii()
@@ -2334,4 +2333,4 @@ if __name__ == "__main__":
     test_spergel_radii()
     test_spergel_flux_scaling()
     test_spergel_05()
-    test_ne()"""
+    test_ne()
