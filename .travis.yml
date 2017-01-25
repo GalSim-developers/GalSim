@@ -87,12 +87,13 @@ script:
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
+    # Before doing tests, try to download COSMOS data (if not cached).
+    - if ! test -d $HOME/COSMOS || ! test -d $HOME/COSMOS/COSMOS_23.5_training_sample; then galsim_download_cosmos -s 23.5 -d $HOME/COSMOS -v1; fi
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
     # Without cover-erase, this will append to the .coverage file
     - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
-    - if ! test -d $HOME/COSMOS || ! test -d $HOME/COSMOS/COSMOS_23.5_training_sample; then galsim_download_cosmos -s 23.5 -d $HOME/COSMOS; fi
 
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
