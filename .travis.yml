@@ -63,6 +63,7 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
 cache:
+    timeout: 3600
     pip: true
     directories:
     - $HOME/tmv-0.73
