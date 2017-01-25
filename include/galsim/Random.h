@@ -204,6 +204,15 @@ namespace galsim {
          */
         void generate(int N, double* data);
 
+        /**
+         * @brief Draw N new random numbers from the distribution and add them to the values in
+         * an array
+         *
+         * @param N     The number of values to draw
+         * @param data  The array into which to add the values
+         */
+        void addGenerate(int N, double* data);
+
    protected:
         struct BaseDeviateImpl;
         boost::shared_ptr<BaseDeviateImpl> _impl;
@@ -376,6 +385,14 @@ namespace galsim {
          * and stores one for later.  So this clears that out when necessary.
          */
         void clearCache();
+
+        /**
+         * @brief Replace data with Gaussian draws using the existing data as the variances.
+         *
+         * @param N     The number of values to draw
+         * @param data  The array with the given variances to replace with Gaussian draws.
+         */
+        void generateFromVariance(int N, double* data);
 
     protected:
         double _val() { return operator()(); }
@@ -557,6 +574,16 @@ namespace galsim {
          * @brief Clear the internal cache
          */
         void clearCache();
+
+        /**
+         * @brief Replace data with Poisson draws using the existing data as the expectation
+         * value.
+         *
+         * @param N     The number of values to draw
+         * @param data  The array with the given data to replace with Poisson draws.
+         */
+        void generateFromExpectation(int N, double* data);
+
 
     protected:
         double _val() { return double(operator()()); }

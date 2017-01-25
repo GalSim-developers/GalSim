@@ -67,6 +67,42 @@ namespace galsim {
         rng.generate(N, data);
     }
 
+    void AddGenerate(BaseDeviate& rng, const bp::object& array)
+    {
+        double* data;
+        boost::shared_ptr<double> owner;
+        int step, stride;
+        CheckNumpyArray(array, 1, false, data, owner, step, stride);
+        if (step != 1 || stride != 1)
+            throw std::runtime_error("add_generate requires a contiguous numpy array");
+        int N = GetNumpyArrayDim(array.ptr(), 0);
+        rng.addGenerate(N, data);
+    }
+
+    void GenerateFromVariance(GaussianDeviate& rng, const bp::object& array)
+    {
+        double* data;
+        boost::shared_ptr<double> owner;
+        int step, stride;
+        CheckNumpyArray(array, 1, false, data, owner, step, stride);
+        if (step != 1 || stride != 1)
+            throw std::runtime_error("generate_from_variance requires a contiguous numpy array");
+        int N = GetNumpyArrayDim(array.ptr(), 0);
+        rng.generateFromVariance(N, data);
+    }
+
+    void GenerateFromExpectation(PoissonDeviate& rng, const bp::object& array)
+    {
+        double* data;
+        boost::shared_ptr<double> owner;
+        int step, stride;
+        CheckNumpyArray(array, 1, false, data, owner, step, stride);
+        if (step != 1 || stride != 1)
+            throw std::runtime_error("generate_from_expectation requires a contiguous numpy array");
+        int N = GetNumpyArrayDim(array.ptr(), 0);
+        rng.generateFromExpectation(N, data);
+    }
+
     struct PyBaseDeviate {
 
         static void wrap() {
@@ -88,6 +124,7 @@ namespace galsim {
                 .def("discard", &BaseDeviate::discard)
                 .def("raw", &BaseDeviate::raw)
                 .def("generate", &Generate, bp::arg("array"))
+                .def("add_generate", &AddGenerate, bp::arg("array"))
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()
@@ -154,6 +191,7 @@ namespace galsim {
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
                 .def("__call__", &GaussianDeviate::operator())
+                .def("generate_from_variance", &GenerateFromVariance, bp::arg("array"))
                 .def("getMean", &GaussianDeviate::getMean)
                 .def("getSigma", &GaussianDeviate::getSigma)
                 .enable_pickling()
@@ -204,6 +242,7 @@ namespace galsim {
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
                 .def("__call__", &PoissonDeviate::operator())
+                .def("generate_from_expectation", &GenerateFromExpectation, bp::arg("array"))
                 .def("getMean", &PoissonDeviate::getMean)
                 .enable_pickling()
                 ;

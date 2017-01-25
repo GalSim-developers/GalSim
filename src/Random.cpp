@@ -167,6 +167,11 @@ namespace galsim {
         for (int i=0; i<N; ++i) data[i] = (*this)();
     }
 
+    void BaseDeviate::addGenerate(int N, double* data)
+    {
+        for (int i=0; i<N; ++i) data[i] += (*this)();
+    }
+
     // Next two functions shamelessly stolen from
     // http://stackoverflow.com/questions/236129/split-a-string-in-c
     std::vector<std::string>& split(const std::string& s, char delim,
@@ -286,6 +291,15 @@ namespace galsim {
         return oss.str();
     }
 
+    void GaussianDeviate::generateFromVariance(int N, double* data)
+    {
+        for (int i=0; i<N; ++i) {
+            double sigma = std::sqrt(data[i]);
+            setSigma(sigma);
+            data[i] = (*this)();
+        }
+    }
+
     struct BinomialDeviate::BinomialDeviateImpl
     {
         BinomialDeviateImpl(int N, double p) : _bd(N,p) {}
@@ -370,6 +384,17 @@ namespace galsim {
         if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "mean="<<getMean()<<")";
         return oss.str();
+    }
+
+    void PoissonDeviate::generateFromExpectation(int N, double* data)
+    {
+        for (int i=0; i<N; ++i) {
+            double mean = data[i];
+            if (mean > 0.) {
+                setMean(mean);
+                data[i] = (*this)();
+            }
+        }
     }
 
     struct WeibullDeviate::WeibullDeviateImpl
