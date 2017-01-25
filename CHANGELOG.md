@@ -62,6 +62,8 @@ Deprecated Features
 New Features
 ------------
 
+- Added new surface brightness profile, 'DeltaFunction'. This represents a 
+  point source with a a flux value.
 - Added support for reading in of unsigned int Images (#715)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
