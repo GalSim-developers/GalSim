@@ -1339,7 +1339,7 @@ def test_distfunction():
     # Test filling an image
     d.seed(testseed)
     print('d = ',d)
-    print('d._ud = ',d._ud)
+    print('d._rng = ',d._rng)
     testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
@@ -1434,11 +1434,11 @@ def test_distLookupTable():
     # If these were successfully created everything is probably fine, but check they create the same
     # internal LookupTable
     np.testing.assert_array_almost_equal(
-            d1._inverseprobabilitytable.getArgs(), d2._inverseprobabilitytable.getArgs(), precision,
+            d1._inverse_cdf.getArgs(), d2._inverse_cdf.getArgs(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
     np.testing.assert_array_almost_equal(
-            d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
+            d1._inverse_cdf.getVals(), d2._inverse_cdf.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
 

@@ -71,7 +71,7 @@ def test_photon_array():
     # Now create from shooting a profile
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.SBProfile.shoot(nphotons, rng._rng)
     orig_x = photon_array.x.copy()
     orig_y = photon_array.y.copy()
     orig_flux = photon_array.flux.copy()
@@ -104,7 +104,7 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
     # Start over to check that assigning to wavelength leaves dxdz, dydz alone.
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.SBProfile.shoot(nphotons, rng._rng)
     photon_array.wavelength = 500.
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
@@ -128,7 +128,7 @@ def test_wavelength_sampler():
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
 
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.SBProfile.shoot(nphotons, rng._rng)
 
     bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
     sedpath = os.path.abspath(os.path.join(path, "../share/"))
@@ -187,7 +187,7 @@ def test_photon_angles():
     seed = 12345
     ud = galsim.UniformDeviate(seed)
     gal = galsim.Sersic(n=4, half_light_radius=1)
-    photon_array = gal.SBProfile.shoot(100000, ud)
+    photon_array = gal.SBProfile.shoot(100000, ud._rng)
 
     # Add the directions (N.B. using the same seed as for generating the photon array
     # above.  The fact that it is the same does not matter here; the testing routine

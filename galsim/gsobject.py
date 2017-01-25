@@ -1689,7 +1689,7 @@ class GSObject(object):
             thisN = min(maxN, Nleft)
 
             try:
-                phot_array = self.SBProfile.shoot(thisN, ud)
+                phot_array = self.SBProfile.shoot(thisN, ud._rng)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
