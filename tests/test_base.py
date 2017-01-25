@@ -69,7 +69,7 @@ default_params = galsim.GSParams(
 
 
 @timer
-def test_deltaFunction():             
+def test_deltaFunction():            
     # Delta function should never be drawn by itself without convolution
     delta = galsim.DeltaFunction(flux=1)
     try:
@@ -133,7 +133,7 @@ def test_deltaFunction():
         np.testing.assert_raises(AttributeError, delta.rotate, 45 * galsim.radians)
     except ImportError:
         pass 
-
+    
     # Test simple translation of DeltaFunction
     delta = galsim.DeltaFunction(flux = test_flux)
     delta2 = delta.shift(1.,2.)      # Shft the object in real space.
