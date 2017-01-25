@@ -21,7 +21,6 @@ SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
 Random.cpp
-Noise.cpp
 HSM.cpp
 Integ.cpp
 Table.cpp
