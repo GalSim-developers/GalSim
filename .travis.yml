@@ -24,7 +24,6 @@ before_install:
     - if test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
     - if test -d $HOME/boost_1_61_0; then ls -l $HOME/boost_1_61_0; fi
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
-    - if test -d $HOME/COSMOS; then ls -l $HOME/COSMOS; fi
 
     # Add ~/bin and ~/lib, etc. to the appropriate paths where scons install will put things.
     - export PYHOME=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}
@@ -64,13 +63,11 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
 cache:
-    timeout: 3600
     pip: true
     directories:
     - $HOME/tmv-0.73
     - $HOME/boost_1_61_0
     - $HOME/des_data
-    - $HOME/COSMOS
 
 install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
@@ -89,8 +86,10 @@ script:
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
-    # Before doing tests, try to download COSMOS data (if not cached).
-    - if ! test -d $HOME/COSMOS || ! test -d $HOME/COSMOS/COSMOS_23.5_training_sample; then galsim_download_cosmos -s 23.5 -d $HOME/COSMOS -v1; fi
+    # If galsim_download_cosmos changed, then run that.
+    echo $TRAVIS_COMMIT_RANGE
+    echo git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only
+    if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos'; then galsim_download_cosmos -s 23.5 -v1; fi
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
