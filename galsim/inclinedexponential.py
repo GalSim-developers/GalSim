@@ -98,6 +98,7 @@ class InclinedExponential(GSObject):
                         "Only one of scale_radius and half_light_radius may be " +
                         "specified for InclinedExponential")
             else:
+                # Use the factor from the Exponential class
                 scale_radius = half_light_radius / galsim.Exponential._hlr_factor
         elif scale_radius is None:
                 raise TypeError(
@@ -129,8 +130,7 @@ class InclinedExponential(GSObject):
     def getHalfLightRadius(self):
         """Return the half light radius for this Exponential profile.
         """
-        # Factor not analytic, but can be calculated by iterative solution of equation:
-        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        # Use the factor from the Exponential class
         return self.SBProfile.getScaleRadius() * galsim.Exponential._hlr_factor
 
     def getScaleHeight(self):
