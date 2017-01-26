@@ -47,19 +47,21 @@ class InclinedExponential(GSObject):
     Initialization
     --------------
 
-    @param inclination      The inclination angle, which must be a galsim.Angle instance
-    @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
-                            This can be compared to the 'scale_radius' parameter of the
-                            galsim.Exponential class, and in the face-on case, the same same scale
-                            radius will result in the same 2D light distribution as with that
-                            class.
-    @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
-                            [default: None]
-    @param scale_h_over_r   In lieu of the scale height, you may also specify the ratio of the
-                            scale height to the scale radius. [default: 0.1]
-    @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    @param inclination          The inclination angle, which must be a galsim.Angle instance
+    @param scale_radius         The scale radius of the exponential disk.  Typically given in
+                                arcsec. This can be compared to the 'scale_radius' parameter of the
+                                galsim.Exponential class, and in the face-on case, the same scale
+                                radius will result in the same 2D light distribution as with that
+                                class.
+    @param half_light_radius    The half-light radius of the exponential disk, as an alternative to
+                                the scale radius.
+    @param scale_height         The scale height of the exponential disk.  Typically given in arcsec.
+                                [default: None]
+    @param scale_h_over_r       In lieu of the scale height, you may also specify the ratio of the
+                                scale height to the scale radius. [default: 0.1]
+    @param flux                 The flux (in photons) of the profile. [default: 1]
+    @param gsparams             An optional GSParams argument.  See the docstring for GSParams for
+                                details. [default: None]
 
     Methods
     -------
@@ -68,14 +70,39 @@ class InclinedExponential(GSObject):
 
         >>> inclination = inclined_exponential_obj.getInclination()
         >>> r0 = inclined_exponential_obj.getScaleRadius()
+        >>> rh = inclined_exponential_obj.getHalfLightRadius()
         >>> h0 = inclined_exponential_obj.getScaleHeight()
     """
-    _req_params = { "inclination" : galsim.Angle, "scale_radius" : float }
+    _req_params = { "inclination" : galsim.Angle }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
     _takes_rng = False
 
-    def __init__(self, inclination, scale_radius, scale_height=None, scale_h_over_r=0.1,
-                 flux=1., gsparams=None):
+    def __init__(self, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
+                 scale_h_over_r=0.1, flux=1.,  gsparams=None):
+
+        # Check that the scale/half-light radius is valid
+        if scale_radius is not None:
+            if not scale_radius > 0.:
+                raise Exception("scale_radius must be > zero.")
+        else:
+            if not half_light_radius > 0.:
+                raise Exception("half_light_radius must be > zero.")
+            
+        # Check that we have exactly one of scale_radius and half_light_radius,
+        # then get scale_radius
+        
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius and half_light_radius may be " +
+                        "specified for InclinedExponential")
+            else:
+                scale_radius = half_light_radius / galsim.Exponential._hlr_factor
+        elif scale_radius is None:
+                raise TypeError(
+                        "Either scale_radius or half_light_radius must be " +
+                        "specified for InclinedExponential")
 
         if scale_height is None:
             scale_height = scale_h_over_r * scale_radius
