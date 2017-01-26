@@ -66,6 +66,7 @@ inclined_sersic_test_parameters = (
     ( "2.3e4","0.5","0.5" ,"1.8","0.5","2.5", "0.3"),)
 
 # Parameter sets used for regression tests of Sersic profiles
+# TODO - generate these and add them in
 inclined_sersic_regression_test_parameters = ()
 
 image_nx = 64
