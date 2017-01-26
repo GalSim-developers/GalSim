@@ -64,7 +64,7 @@ before_install:
 
     - echo $TRAVIS_COMMIT_RANGE
     - git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only
-    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos'; then echo galsim_download_cosmos changed; else echo galsim_download_cosmos did not change; fi
+    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos.py'; then echo galsim_download_cosmos.py changed; else echo galsim_download_cosmos.py did not change; fi
 
 
 cache:
@@ -91,8 +91,8 @@ script:
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
-    # If galsim_download_cosmos changed, then run that.
-    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos'; then galsim_download_cosmos -s 23.5 -v1; fi
+    # If galsim_download_cosmos.py changed, then run it.
+    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
