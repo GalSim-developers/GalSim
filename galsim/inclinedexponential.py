@@ -126,6 +126,13 @@ class InclinedExponential(GSObject):
         """
         return self.SBProfile.getScaleRadius()
 
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Exponential profile.
+        """
+        # Factor not analytic, but can be calculated by iterative solution of equation:
+        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
+        return self.SBProfile.getScaleRadius() * galsim.Exponential._hlr_factor
+
     def getScaleHeight(self):
         """Return the scale height for this profile.
         """
