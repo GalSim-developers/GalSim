@@ -41,7 +41,7 @@ recent versions will also work:
 A few optional dependencies provide additional functionality, but GalSim can
 otherwise be compiled and used without them.  Basic WCS functionality is native
 to GalSim, but for users with more complicated WCS needs, we recommend
-installing starlink-pyast. Astropy's WCS package is also supported, but note
+installing starlink-pyast. Thee Astropy WCS package is also supported, but note
 that it requires scipy as an additional dependency.  To use yaml for config
 parsing, the pyyaml module is needed.  Faster text file parsing for reading in
 bandpasses and SEDs can be enabled if you have the pandas module (but the code
@@ -98,12 +98,12 @@ The GalSim package also requires
   or as part of the astropy library:
       http://www.astropy.org/
   The latter is preferred, since this is now where all future development of
-  this package is happening.  Currently GalSim is regularly tested to ensure 
-  it works with astropy version 1.1.1, but it is likely that most recent 
+  this package is happening.  Currently GalSim is regularly tested to ensure
+  it works with astropy version 1.1.1, but it is likely that most recent
   versions will also work.
 
 * the future module, which is used to ease compatibility between Python 2
-  and Python 3.  Currently GalSim is regularly tested to ensure 
+  and Python 3.  Currently GalSim is regularly tested to ensure
   it works with version 0.16.0 of this module, but other versions may work.
 
 * the PyYAML package for parsing YAML files (http://pyyaml.org/wiki/PyYAML)
@@ -132,7 +132,7 @@ The GalSim package also requires
   too, then you can use the galsim.AstropyWCS class.
 
 * Optional dependency: Astropy Units package.  This is now required for
-  GalSim chromatic functionality, but can be omitted if you're not using
+  GalSim chromatic functionality, but can be omitted if you are not using
   this part of GalSim.
 
 * Optional dependency: Pandas.  This has a very fast function for reading ASCII
@@ -290,8 +290,8 @@ v) Boost C++ (http://www.boost.org)
 
 GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed. Currently GalSim is regularly tested to ensure it works with
-Boost version 1.61, but it is likely that most versions released within the 
-last several years will also work. It is particularly important that your installed 
+Boost version 1.61, but it is likely that most versions released within the
+last several years will also work. It is particularly important that your installed
 Boost library links to the same version of Python with which you will be using
 GalSim and on which you have installed NumPy and PyFITS (see Section ii, above).
 Boost can be downloaded from the above website, and must be installed per the
@@ -584,7 +584,7 @@ can install everything with the following command:
 and it should just work.  However, there are some caveats that are worth knowing
 about (assuming your fink installation is in `/sw`):
 
-1. This will install GalSim as a module of the python2.7 installed by fink.  
+1. This will install GalSim as a module of the python2.7 installed by fink.
 This is not the default Python (usually `/usr/bin/python` or some other package,
 such as EPD, if installed).  Any Python scripts you write that use the galsim
 module should therefore have `#!/sw/bin/python2.7` as the  first line rather
@@ -603,7 +603,7 @@ to use these, since `/sw/bin` should already be in your path if using fink.
 same demos), you will still need to download the GalSim tarball.  But you can
 skip all the instructions above about installation and just use the fink
 version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one)
-and `galsim demo1.yaml` should run those scripts for you.   
+and `galsim demo1.yaml` should run those scripts for you.
 
 4.  If you want to work with GalSim as a developer, rather than just a user,
 then you cannot use the fink-installed GalSim.  However, the process above will
@@ -756,10 +756,18 @@ You can list these options from the command line with
    to the defaults that SCons determines on its own. Unlike the above option,
    this do not override the defaults, it just adds to them.
 
+* `LINK_FLAGS` ('') specifies some extra flags at the linking step to use in
+   addition to the defaults that SCons determines it needs on its own.
+
 * `DEBUG` (True) specifies whether to keep the debugging assert statements in
    the compiled library code. They are not much of a performance hit, so it is
    generally worth keeping them in, but if you need to squeeze out every last
    bit of performance, you can set this to False.
+
+* `EXTRA_DEBUG` (False) specifies whether to add a flag to keep the original
+   code information in the compiled library (-g3 for g++ compiler).  This
+   increases the size of the compiled library, but makes debugging with things
+   like gdb easier.  Probably end users will never need to use this.
 
 * `WARN` (False) specifies whether to add warning compiler flags such as
    `-Wall`.
@@ -779,6 +787,9 @@ You can list these options from the command line with
 * `FINAL_PREFIX` (`PREFIX`) specifies the final installation prefix if different
    from PREFIX.  (This is only needed for things like fink, where they install
    into a staging area first before copying over to the final location.)
+
+* `WITH_UPS` (False) specified whether to install the ups directory for use
+   with EUPS.
 
 ### Flags that specify where to look for external libraries ###
 
@@ -843,6 +854,18 @@ You can list these options from the command line with
    the default is True.  But occasionally, this might be inconvenient, so you
    can turn this feature off.
 
+* `DYLD_LIBRARY_PATH` ('') Set the DYLD_LIBRARY_PATH inside of SCons.
+   Particularly useful on El Capitan (and later), since Apple strips out
+   DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it,
+   this option enables SCons to set it back in for you by doing
+       `scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.
+
+* `DYLD_FALLBACK_LIBRARY_PATH` ('') Set the DYLD_FALLBACK_LIBRARY_PATH inside
+   of SCons.  cf. DYLD_LIBRARY_PATH for why this may be useful.
+
+* `LD_LIBRARY_PATH` ('') Set the LD_LIBRARY_PATH inside of SCons.
+   cf. DYLD_LIBRARY_PATH for why this may be useful.
+
 ### Miscellaneous flags ###
 
 * `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
@@ -864,10 +887,6 @@ You can list these options from the command line with
 
 * `TMV_DEBUG` (False) specifies whether to turn on extra (slower) debugging
    statements within the TMV library.
-
-* `WITH_OPENMP` (False) specifies whether to use OpenMP to parallelize some
-   parts of the code. (Note: We do not actually use OpenMP currently, so this
-   does not do anything.)
 
 * `USE_UNKNOWN_VARS` (False) specifies whether to accept scons parameters other
    than the ones listed here.  Normally, another name would indicate a typo, so
