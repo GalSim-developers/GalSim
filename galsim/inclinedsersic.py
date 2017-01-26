@@ -97,8 +97,9 @@ class InclinedSersic(GSObject):
         >>> hlr = inclined_sersic_obj.getHalfLightRadius()
     """
     _req_params = { "inclination" : galsim.Angle, "n" : float }
-    _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
-    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float,
+                    "trunc" : float, "flux_untruncated" : bool }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float }]
     _takes_rng = False
 
     def __init__(self, n, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
