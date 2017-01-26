@@ -62,6 +62,11 @@ before_install:
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
+    - echo $TRAVIS_COMMIT_RANGE
+    - git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only
+    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos'; then echo galsim_download_cosmos changed; else echo galsim_download_cosmos did not change; fi
+
+
 cache:
     pip: true
     directories:
@@ -87,8 +92,6 @@ script:
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
     # If galsim_download_cosmos changed, then run that.
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only
     - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos'; then galsim_download_cosmos -s 23.5 -v1; fi
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
