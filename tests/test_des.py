@@ -562,9 +562,8 @@ def test_psf():
 
     # Repeat without the wcs_file argument, so the model is in chip coordinates.
     # Also check the functionality where the file is already open.
-    hdu_list = pyfits.open(os.path.join(data_dir,psfex_file))
-    psfex = galsim.des.DES_PSFEx(hdu_list[1])
-    hdu_list.close()
+    with pyfits.open(os.path.join(data_dir, psfex_file)) as hdu_list:
+        psfex = galsim.des.DES_PSFEx(hdu_list[1])
     psf = psfex.getPSF(image_pos)
 
     # In this case, the getLocalWCS function won't return anything useful.
