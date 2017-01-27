@@ -564,6 +564,7 @@ def test_psf():
     # Also check the functionality where the file is already open.
     hdu_list = pyfits.open(os.path.join(data_dir,psfex_file))
     psfex = galsim.des.DES_PSFEx(hdu_list[1])
+    hdu_list.close()
     psf = psfex.getPSF(image_pos)
 
     # In this case, the getLocalWCS function won't return anything useful.
