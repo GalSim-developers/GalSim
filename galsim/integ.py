@@ -72,7 +72,7 @@ def midpt(fvals, x):
     weighted_fvals = [w*f for w,f in zip(dx, fvals)]
     return reduce(lambda y,z:y+z, weighted_fvals)
 
-def trapz(func, min, max, points=1e4):
+def trapz(func, min, max, points=10000):
     """Simple wrapper around 'numpy.trapz' to take function and limits as inputs.
 
     Example usage:
