@@ -20,13 +20,16 @@
 """
 
 from __future__ import print_function
-import numpy as np
+
+from copy import deepcopy
 import os
 import sys
+
 from scipy.special import gamma
-from copy import deepcopy
 
 from galsim_test_helpers import *
+import numpy as np
+
 
 try:
     import galsim
@@ -48,26 +51,30 @@ image_dir = './inclined_exponential_images'
 
 # Parameter sets valid for the inclined exponential case
 inclined_exponential_test_parameters = (
-    ( "1.0","1.0","0.0" ,"3.0","0.3","0.0", "0.0"),
-    ("10.0","1.0","1.3" ,"3.0","0.5","0.0", "0.0"),
-    ( "0.1","1.0","0.2" ,"3.0","0.5","0.0", "0.0"),
-    ( "1.0","1.0","0.01","3.0","0.5","0.0", "0.0"),
-    ( "1.0","1.0","0.1" ,"2.0","1.0","0.0","-0.2"),
-    ( "1.0","1.0","0.78","2.0","0.5","0.0","-0.2"),)
+    ("1.0", "1.0", "0.0" , "3.0", "0.3", "0.0", "0.0"),
+    ("10.0", "1.0", "1.3" , "3.0", "0.5", "0.0", "0.0"),
+    ("0.1", "1.0", "0.2" , "3.0", "0.5", "0.0", "0.0"),
+    ("1.0", "1.0", "0.01", "3.0", "0.5", "0.0", "0.0"),
+    ("1.0", "1.0", "0.1" , "2.0", "1.0", "0.0", "-0.2"),
+    ("1.0", "1.0", "0.78", "2.0", "0.5", "0.0", "-0.2"),)
 
 # Parameter sets valid only for the inclined Sersic case
 inclined_sersic_test_parameters = (
-    (   "2.0","1.5","0.0" ,"3.0","0.3","0.0", "0.0"),
-    (   "1.5","2.0","0.0" ,"3.0","0.3","0.0", "0.0"),
-    (   "1.1","0.5","0.0" ,"3.0","0.3","0.0", "0.0"),
-    (  "10.0","1.0","0.1" ,"1.9","0.3","4.5", "7.3"),
-    ( "1.0e6","1.5","0.2" ,"2.1","0.2","3.9","-0.9"),
-    ("1.0e-6","2.0","0.3" ,"3.4","0.1","5.0", "0.6"),
-    ( "2.3e4","0.5","0.5" ,"1.8","0.5","2.5", "0.3"),)
+    ("2.0", "1.5", "0.0" , "3.0", "0.3", "0.0", "0.0"),
+    ("1.5", "2.0", "0.0" , "3.0", "0.3", "0.0", "0.0"),
+    ("1.1", "0.5", "0.0" , "3.0", "0.3", "0.0", "0.0"),
+    ("10.0", "1.0", "0.1" , "1.9", "0.3", "4.5", "7.3"),
+    ("1.0e6", "1.5", "0.2" , "2.1", "0.2", "3.9", "-0.9"),
+    ("1.0e-6", "2.0", "0.3" , "3.4", "0.1", "5.0", "0.6"),
+    ("2.3e4", "0.5", "0.5" , "1.8", "0.5", "2.5", "0.3"),)
 
 # Parameter sets used for regression tests of Sersic profiles
 # TODO - generate these and add them in
-inclined_sersic_regression_test_parameters = ()
+inclined_sersic_regression_test_parameters = (
+    ("1.0", "0.5", "0.7", "4.0", "0.2", "0.0", "0.5"),
+    ("1.0", "0.8", "1.4", "2.5", "0.1", "4.0", "1.1"),
+    ("1.0", "1.2", "2.0", "1.5", "0.5", "6.5", "5.5"),
+    ("1.0", "1.5", "0.3", "3.0", "0.3", "0.0", "0.0"),)
 
 image_nx = 64
 image_ny = 64
@@ -76,14 +83,15 @@ def get_prof(mode, *args, **kwargs):
     """Function to get either InclinedExponential or InclinedSersic (with n=1, trunc=0)
        depending on mode
     """
+    new_kwargs = deepcopy(kwargs)
+    if len(args) > 0:
+        new_kwargs["inclination"] = args[0]
+    if len(args) > 1:
+        new_kwargs["scale_radius"] = args[1]
+    if len(args) > 2:
+        new_kwargs["scale_height"] = args[2]
+
     if mode == "InclinedSersic":
-        new_kwargs = deepcopy(kwargs)
-        if len(args) > 0:
-            new_kwargs["inclination"] = args[0]
-        if len(args) > 1:
-            new_kwargs["scale_radius"] = args[1]
-        if len(args) > 2:
-            new_kwargs["scale_height"] = args[2]
 
         if not "trunc" in new_kwargs:
             new_kwargs["trunc"] = 0.
@@ -92,12 +100,11 @@ def get_prof(mode, *args, **kwargs):
 
         prof = galsim.InclinedSersic(**new_kwargs)
     else:
-        new_kwargs = deepcopy(kwargs)
         if "trunc" in new_kwargs:
             del new_kwargs["trunc"]
         if "n" in new_kwargs:
             del new_kwargs["n"]
-        prof = galsim.InclinedExponential(*args, **new_kwargs)
+        prof = galsim.InclinedExponential(**new_kwargs)
 
     return prof
 
@@ -135,7 +142,7 @@ def test_regression():
 
             # Draw it onto an image
             test_image = galsim.Image(np.zeros_like(image.array), scale=1.0)
-            test_profile.drawImage(test_image, offset=(0.5, 0.5))  # Offset to match Lance's
+            test_profile.drawImage(test_image, offset=(0.5, 0.5)) # Offset to match Lance's
 
             # Save if desired
             if save_profiles:
@@ -145,7 +152,7 @@ def test_regression():
             # Compare to the example - Due to the different fourier transforms used, some offset is
             # expected, so we just compare in the core to two decimal places
 
-            image_core      =      image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
+            image_core = image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
             test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
             ratio_core = test_image_core / image_core
@@ -155,8 +162,8 @@ def test_regression():
                     rtol=2e-2,
                     err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                     verbose=True)
-            
-            np.testing.assert_allclose(ratio_core*image.array.sum(),flux,rtol=2e-2)
+
+            np.testing.assert_allclose(ratio_core * image.array.sum(), flux, rtol=2e-2)
 
     # Now do Sersic-only tests
     for (flux, sersic_n, inc_angle, scale_radius, scale_height,
@@ -179,8 +186,8 @@ def test_regression():
         pos_angle = float(pos_angle)
 
         # Now make a test image
-        test_profile = get_prof("InclinedSersic",n=sersic_n, scale_radius=scale_radius, scale_height=scale_height,
-                                inclination=inc_angle*galsim.radians, trunc=trunc_factor * scale_radius, flux=flux)
+        test_profile = get_prof("InclinedSersic", n=sersic_n, scale_radius=scale_radius, scale_height=scale_height,
+                                inclination=inc_angle * galsim.radians, trunc=trunc_factor * scale_radius, flux=flux)
         check_basic(test_profile, mode)
 
         # Rotate it by the position angle
@@ -188,7 +195,7 @@ def test_regression():
 
         # Draw it onto an image
         test_image = galsim.Image(nx, ny, scale=1.0)
-        test_profile.drawImage(test_image, offset=(0.5, 0.5))  # Offset to match Lance's
+        test_profile.drawImage(test_image, offset=(0.5, 0.5)) # Offset to match Lance's
 
         # Save if desired
         if save_profiles:
@@ -198,18 +205,18 @@ def test_regression():
         # Compare to the example - Due to the different fourier transforms used, some offset is
         # expected, so we just compare in the core to two decimal places
 
-        image_core      =      image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
+        image_core = image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
         test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
-        ratio_core = test_image_core / image_core  
+        ratio_core = test_image_core / image_core
 
         np.testing.assert_allclose(
                 ratio_core, np.mean(ratio_core) * np.ones_like(ratio_core),
                 rtol=5e-2,
                 err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                 verbose=True)
-        
-        np.testing.assert_allclose(ratio_core*image.array.sum(),flux,rtol=5e-2)
+
+        np.testing.assert_allclose(ratio_core * image.array.sum(), flux, rtol=5e-2)
 
 
 @timer
@@ -298,13 +305,13 @@ def test_edge_on():
     inclinations = (np.arccos(0.01), 2 * np.pi - np.arccos(0.01), np.pi / 2.)
 
     for mode in ("InclinedExponential", "InclinedSersic"):
-        
+
         if mode == "InclinedExponential":
             n = 1.0
             comp_prof = galsim.Exponential(scale_radius=scale_radius)
         else:
             n = sersic_n
-            comp_prof = galsim.Sersic(n=n,scale_radius=scale_radius)
+            comp_prof = galsim.Sersic(n=n, scale_radius=scale_radius)
 
         images = []
 
@@ -337,8 +344,8 @@ def test_edge_on():
 def test_sanity():
     """ Performs various sanity checks on a set of InclinedExponential and InclinedSersic profiles. """
 
-    def run_sanity_checks(mode, flux,inc_angle,scale_radius,scale_height,pos_angle,
-                          n=1.,trunc=0.):
+    def run_sanity_checks(mode, flux, inc_angle, scale_radius, scale_height, pos_angle,
+                          n=1., trunc=0.):
         # Get float values for the details
         flux = float(flux)
         inc_angle = float(inc_angle)
@@ -376,11 +383,11 @@ def test_sanity():
         np.testing.assert_allclose(test_profile.kValue(kx=0., ky=0.), flux, rtol=1e-4)
 
         # Check that the drawn flux for a large image is indeed the flux
-        test_image = galsim.Image(int(5*n**2) * image_nx, int(5*n**2) * image_ny, scale=1.0)
+        test_image = galsim.Image(int(5 * n ** 2) * image_nx, int(5 * n ** 2) * image_ny, scale=1.0)
         test_profile.drawImage(test_image)
         test_flux = test_image.array.sum()
         # Be a bit more lenient here for sersic profiles than exponentials
-        if n==1:
+        if n == 1:
             rtol = 1e-4
         else:
             rtol = 1e-2
@@ -396,15 +403,15 @@ def test_sanity():
         # and typically too large.
         test_profile.drawImage(test_image, method='sb', use_true_center=False)
         print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
-        
+
         # Be more tolerant if the inclination angle is far from zero or pi/2
-        if (np.abs(inc_angle)<0.1) or (np.abs(np.pi-inc_angle)<0.1):
+        if (np.abs(inc_angle) < 0.1) or (np.abs(np.pi - inc_angle) < 0.1):
             rtol = 0.3
             check_lessthan = True
         else:
             rtol = 1.0
             check_lessthan = False # We might overestimate in this case, due to approximation
-        
+
         np.testing.assert_allclose(test_image.array.max(), test_profile.maxSB(), rtol=rtol)
         if check_lessthan:
             np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
@@ -416,14 +423,14 @@ def test_sanity():
         for (flux, _sersic_n, inc_angle, scale_radius, scale_height,
              _trunc_factor, pos_angle) in inclined_exponential_test_parameters:
             run_sanity_checks(mode, flux, inc_angle, scale_radius, scale_height, pos_angle)
-            
+
     # Run tests for InclinedSersic only
     for (flux, sersic_n, inc_angle, scale_radius, scale_height,
          trunc_factor, pos_angle) in (inclined_sersic_test_parameters +
                                       inclined_sersic_regression_test_parameters):
         run_sanity_checks("InclinedSersic", flux, inc_angle, scale_radius, scale_height, pos_angle,
-                          n=float(sersic_n),trunc=float(trunc_factor)*float(scale_radius))
-            
+                          n=float(sersic_n), trunc=float(trunc_factor) * float(scale_radius))
+
 
 
 @timer
@@ -436,7 +443,7 @@ def test_k_limits():
              _trunc_factor, _pos_angle) in (inclined_exponential_test_parameters +
                                             inclined_sersic_test_parameters +
                                             inclined_sersic_regression_test_parameters):
-            
+
             # Get float values for the details
             inc_angle = float(inc_angle)
             scale_radius = float(scale_radius)
@@ -464,10 +471,10 @@ def test_k_limits():
 
             # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
             rmax = np.pi / test_profile.stepK()
-            
+
             pixel_scale = 0.1
 
-            test_image = galsim.Image(int(10 * rmax/pixel_scale), int(10 * rmax/pixel_scale), scale=pixel_scale)
+            test_image = galsim.Image(int(10 * rmax / pixel_scale), int(10 * rmax / pixel_scale), scale=pixel_scale)
             test_profile.drawImage(test_image)
 
             image_center = test_image.center()
@@ -479,15 +486,15 @@ def test_k_limits():
             x -= image_center.x
             y -= image_center.y
 
-            r = pixel_scale*np.sqrt(np.square(x) + np.square(y))
+            r = pixel_scale * np.sqrt(np.square(x) + np.square(y))
 
-            good = r+np.sqrt(2.)*pixel_scale < rmax
+            good = r + np.sqrt(2.) * pixel_scale < rmax
 
             # Get flux within the limits
             contained_flux = np.ravel(test_image.array)[np.ravel(good)].sum()
 
             # Check that we're not missing too much flux
-            
+
             total_flux = np.sum(test_image.array)
             np.testing.assert_((total_flux - contained_flux) / (total_flux) < gsparams.folding_threshold,
                                msg="Too much flux lost due to folding.\nFolding threshold = " +
@@ -498,21 +505,21 @@ def test_k_limits():
 @timer
 def test_eq_ne():
     """ Check that equality/inequality works as expected."""
-    
+
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
-    
+
     diff_gals = []
 
     for mode in ("InclinedExponential", "InclinedSersic"):
 
         # First test that some different initializations that should be equivalent:
         same_gals = [get_prof(mode, 0.1 * galsim.radians, 3.0),
-                get_prof(mode, 0.1 * galsim.radians, 3.0, 0.3),  # default h/r = 0.1
+                get_prof(mode, 0.1 * galsim.radians, 3.0, 0.3), # default h/r = 0.1
                 get_prof(mode, 0.1 * galsim.radians, 3.0, scale_height=0.3),
                 get_prof(mode, 0.1 * galsim.radians, 3.0, scale_h_over_r=0.1),
-                get_prof(mode, 0.1 * galsim.radians, 3.0, flux=1.0),  # default flux=1
-                get_prof(mode, -0.1 * galsim.radians, 3.0),  # negative i is equivalent
-                get_prof(mode, (np.pi - 0.1) * galsim.radians, 3.0),  # also pi-theta
+                get_prof(mode, 0.1 * galsim.radians, 3.0, flux=1.0), # default flux=1
+                get_prof(mode, -0.1 * galsim.radians, 3.0), # negative i is equivalent
+                get_prof(mode, (np.pi - 0.1) * galsim.radians, 3.0), # also pi-theta
                 get_prof(mode, 18. / np.pi * galsim.degrees, 3.0),
                 get_prof(mode, inclination=0.1 * galsim.radians, scale_radius=3.0,
                          scale_height=0.3, flux=1.0),
@@ -537,15 +544,15 @@ def test_eq_ne():
                 get_prof(mode, 0.1 * galsim.radians, 3.1),
                 get_prof(mode, 0.1 * galsim.radians, 3.0, 0.3, flux=0.5),
                 get_prof(mode, 0.1 * galsim.radians, 3.0, 0.3, gsparams=gsp)]
-        
+
     # Add some more Sersic profiles to the diff_gals list
     diff_gals += [get_prof("InclinedSersic", 0.1 * galsim.radians, 3.0, 0.3, n=1.1),
                   get_prof("InclinedSersic", 0.1 * galsim.radians, 3.0, 0.3, trunc=4.5),
-                  galsim.InclinedSersic(inclination=0.1 * galsim.radians, half_light_radius=3.0,
+                  galsim.InclinedSersic(n=1.0, inclination=0.1 * galsim.radians, half_light_radius=3.0,
                                         scale_height=0.3),
-                  galsim.InclinedSersic(inclination=0.1 * galsim.radians, scale_radius=3.0,
-                                        scale_h_over_r=0.3)] 
-    
+                  galsim.InclinedSersic(n=1.0, inclination=0.1 * galsim.radians, scale_radius=3.0,
+                                        scale_h_over_r=0.3)]
+
     all_obj_diff(diff_gals)
 
 @timer
@@ -558,7 +565,7 @@ def test_pickle():
                                          scale_height=0.3)
         do_pickle(prof)
         do_pickle(prof.SBProfile)
-        
+
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_h_over_r=0.2))
@@ -572,7 +579,7 @@ def test_pickle():
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
-    # test_regression()
+    test_regression()
     test_sanity()
     test_k_limits()
     test_eq_ne()
