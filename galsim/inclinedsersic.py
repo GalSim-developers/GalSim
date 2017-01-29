@@ -32,7 +32,7 @@ class InclinedSersic(GSObject):
     with no truncation, the InclinedExponential class will be much more efficient. For the case
     where the inclination angle is zero (face-on), the Sersic class will be slightly more efficient.
 
-    The Inclined Sersic surface brightness profile is characterized by four properties: its
+    The InclinedSersic surface brightness profile is characterized by four properties: its
     Sersic index `n', its inclination angle (where 0 degrees = face-on and 90 degrees = edge-on),
     its scale radius, and its scale height. The 3D light distribution function is:
 
@@ -57,7 +57,9 @@ class InclinedSersic(GSObject):
     A profile can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required. Similarly,
     at most one of `scale_height' and `scale_h_over_r' is required; if neither is given, the
-    default of scale_h_over_r = 0.1 will be used.
+    default of scale_h_over_r = 0.1 will be used. Note that if half_light_radius and
+    scale_h_over_r are supplied (or the default value of scale_h_over_r is used),
+    scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
 
     Initialization
     --------------
@@ -66,7 +68,7 @@ class InclinedSersic(GSObject):
     @param inclination        The inclination angle, which must be a galsim.Angle instance
     @param scale_radius       The scale radius of the disk.  Typically given in arcsec.
                               This can be compared to the 'scale_radius' parameter of the
-                              galsim.Sersic class, and in the face-on case, the same same scale
+                              galsim.Sersic class, and in the face-on case, the same scale
                               radius will result in the same 2D light distribution as with that
                               class. Exactly one of this and half_light_radius must be provided.
     @param half_light_radius  The half-light radius of disk when seen face-on. Exactly one of this
@@ -108,10 +110,10 @@ class InclinedSersic(GSObject):
         # Check that the scale/half-light radius is valid
         if scale_radius is not None:
             if not scale_radius > 0.:
-                raise Exception("scale_radius must be > zero.")
+                raise ValueError("scale_radius must be > zero.")
         else:
             if not half_light_radius > 0.:
-                raise Exception("half_light_radius must be > zero.")
+                raise ValueError("half_light_radius must be > zero.")
 
         # Check if we need to use default scale_h_over_r
         if scale_height is None:

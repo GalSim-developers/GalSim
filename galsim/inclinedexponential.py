@@ -20,8 +20,9 @@
 InclinedExponential is a class representing an exponential profile inclined to the LOS.
 """
 
-import galsim
 from galsim import GSObject
+import galsim
+
 from . import _galsim
 
 
@@ -79,19 +80,19 @@ class InclinedExponential(GSObject):
     _takes_rng = False
 
     def __init__(self, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
-                 scale_h_over_r=0.1, flux=1.,  gsparams=None):
+                 scale_h_over_r=0.1, flux=1., gsparams=None):
 
         # Check that the scale/half-light radius is valid
         if scale_radius is not None:
             if not scale_radius > 0.:
-                raise Exception("scale_radius must be > zero.")
+                raise ValueError("scale_radius must be > zero.")
         else:
             if not half_light_radius > 0.:
-                raise Exception("half_light_radius must be > zero.")
-            
+                raise ValueError("half_light_radius must be > zero.")
+
         # Check that we have exactly one of scale_radius and half_light_radius,
         # then get scale_radius
-        
+
         if half_light_radius is not None:
             if scale_radius is not None:
                 raise TypeError(
@@ -141,7 +142,7 @@ class InclinedExponential(GSObject):
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight()/self.SBProfile.getScaleRadius()
+        return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
 
     @property
     def inclination(self): return self.getInclination()
@@ -165,7 +166,7 @@ class InclinedExponential(GSObject):
                     self.scale_height, self.flux, self._gsparams))
 
     def __repr__(self):
-        return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, '+
+        return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, gsparams=%r)') % (
             self.inclination, self.scale_radius, self.scale_height, self.flux, self._gsparams)
 
