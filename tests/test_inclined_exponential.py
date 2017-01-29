@@ -38,7 +38,8 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-save_profiles = True
+# Save images used in regression testing for manual inspection?
+save_profiles = False
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
@@ -122,15 +123,16 @@ def test_regression():
             image_filename = "galaxy_" + inc_angle + "_" + scale_radius + "_" + scale_height + "_" + pos_angle + ".fits"
             print("Comparing " + mode + " against " + image_filename + "...")
 
-            image = galsim.fits.read(image_filename, image_dir)
-            nx, ny = np.shape(image.array)
-
             # Get float values for the details
             flux = float(flux)
             inc_angle = float(inc_angle)
             scale_radius = float(scale_radius)
             scale_height = float(scale_height)
             pos_angle = float(pos_angle)
+
+            image = galsim.fits.read(image_filename, image_dir)
+            image *= flux / image.array.sum()
+            nx, ny = np.shape(image.array)
 
             # Now make a test image
             test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
@@ -144,7 +146,7 @@ def test_regression():
             test_image = galsim.Image(np.zeros_like(image.array), scale=1.0)
             test_profile.drawImage(test_image, offset=(0.5, 0.5)) # Offset to match Lance's
 
-            # Save if desired
+            # Save for manual inspection if desired
             if save_profiles:
                 test_image_filename = image_filename.replace(".fits", "_" + mode + ".fits")
                 test_image.write(test_image_filename, image_dir, clobber=True)
@@ -155,15 +157,11 @@ def test_regression():
             image_core = image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
             test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
-            ratio_core = test_image_core / image_core
-
             np.testing.assert_allclose(
-                    ratio_core, np.mean(ratio_core) * np.ones_like(ratio_core),
-                    rtol=2e-2,
+                    test_image_core, image_core,
+                    rtol=1e-2, atol=1e-4 * flux,
                     err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                     verbose=True)
-
-            np.testing.assert_allclose(ratio_core * image.array.sum(), flux, rtol=2e-2)
 
     # Now do Sersic-only tests
     for (flux, sersic_n, inc_angle, scale_radius, scale_height,
@@ -173,9 +171,6 @@ def test_regression():
                           "_" + scale_height + "_" + trunc_factor + "_" + pos_angle + ".fits")
         print("Comparing " + mode + " against " + image_filename + "...")
 
-        image = galsim.fits.read(image_filename, image_dir)
-        nx, ny = np.shape(image.array)
-
         # Get float values for the details
         flux = float(flux)
         sersic_n = float(sersic_n)
@@ -184,6 +179,10 @@ def test_regression():
         scale_height = float(scale_height)
         trunc_factor = float(trunc_factor)
         pos_angle = float(pos_angle)
+
+        image = galsim.fits.read(image_filename, image_dir)
+        image *= flux / image.array.sum()
+        nx, ny = np.shape(image.array)
 
         # Now make a test image
         test_profile = get_prof("InclinedSersic", n=sersic_n, scale_radius=scale_radius, scale_height=scale_height,
@@ -208,15 +207,11 @@ def test_regression():
         image_core = image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
         test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
 
-        ratio_core = test_image_core / image_core
-
         np.testing.assert_allclose(
-                ratio_core, np.mean(ratio_core) * np.ones_like(ratio_core),
-                rtol=5e-2,
+                test_image_core, image_core,
+                rtol=1e-2, atol=1e-4 * flux,
                 err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                 verbose=True)
-
-        np.testing.assert_allclose(ratio_core * image.array.sum(), flux, rtol=5e-2)
 
 
 @timer
