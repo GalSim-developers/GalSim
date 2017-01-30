@@ -400,12 +400,6 @@ namespace galsim {
         return _maxk;
     }
 
-    double SersicInfo::getKDeriv6() const
-    {
-        if (_kderiv6 == 0.) buildFT();
-        return _kderiv6;
-    }
-
     double SersicInfo::getHLR() const
     {
         if (_re == 0.) calculateHLR();
@@ -494,8 +488,8 @@ namespace galsim {
 
         // When is it safe to use low-k approximation?
         // See when next term past quartic is at accuracy threshold
-        _kderiv6 = gamma8n / (2304.*_gamma2n) / getFluxFraction();
-        dbg<<"_kderiv6 = "<<_kderiv6<<std::endl;
+        double kderiv6 = gamma8n / (2304.*_gamma2n) / getFluxFraction();
+        dbg<<"kderiv6 = "<<kderiv6<<std::endl;
         double kmin = std::pow(_gsparams->kvalue_accuracy / _kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;

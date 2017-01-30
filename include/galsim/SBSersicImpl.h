@@ -58,9 +58,6 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        /// @brief Get the third term of the low-k Taylor expansion
-        double getKDeriv6() const;
-
         /// @brief The half-light radius in units of r0.
         double getHLR() const;
 
@@ -117,7 +114,6 @@ namespace galsim {
         mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
         mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
         mutable double _kderiv4; ///< Quartic dependence of F near k=0.
-        mutable double _kderiv6; ///< Degree 6 dependence of F near k=0.
         mutable double _ksq_min; ///< Minimum ksq to use lookup table.
         mutable double _ksq_max; ///< Maximum ksq to use lookup table.
         mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
