@@ -627,10 +627,6 @@ def test_inclined_sersic():
                    'half_light_radius' : 1, 'flux' : 50,
                    'gsparams' : { 'maximum_fft_size' : 64 }
                  },
-        'gal7' : { 'type' : 'InclinedSersic' , 'n' : 3.2, 'inclination' : 0.7 * galsim.radians,
-                   'half_light_radius' : 1.7, 'flux' : 50, 'trunc' : 4.3,
-                   'gsparams' : { 'realspace_relerr' : 1.e-2 , 'realspace_abserr' : 1.e-4 }
-                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -676,20 +672,6 @@ def test_inclined_sersic():
         np.testing.assert_raises(RuntimeError, gsobject_compare, gal6a, gal6b,
                                  conv=galsim.Gaussian(sigma=1))
 
-    except ImportError:
-        print('The assert_raises tests require nose')
-
-    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
-    gal7b = galsim.InclinedSersic(n=3.2, inclination=0.7 * galsim.radians, half_light_radius=1.7, flux=50, trunc=4.3, gsparams=gsparams)
-    # Convolution with a truncated Moffat will use realspace convolution
-    conv = galsim.Moffat(beta=2.8, fwhm=1.3, trunc=3.7)
-    gsobject_compare(gal7a, gal7b, conv=conv)
-
-    try:
-        # Make sure they don't match when using the default GSParams
-        gal7c = galsim.InclinedSersic(n=3.2, inclination=0.7 * galsim.radians, half_light_radius=1.7, flux=50, trunc=4.3)
-        np.testing.assert_raises(AssertionError, gsobject_compare, gal7a, gal7c, conv=conv)
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -1484,22 +1466,22 @@ def test_usertype():
 
 if __name__ == "__main__":
 
-    test_gaussian()
-    test_moffat()
-    test_airy()
-    test_kolmogorov()
-    test_opticalpsf()
-    test_exponential()
-    test_sersic()
-    test_devaucouleurs()
+#     test_gaussian()
+#     test_moffat()
+#     test_airy()
+#     test_kolmogorov()
+#     test_opticalpsf()
+#     test_exponential()
+#     test_sersic()
+#     test_devaucouleurs()
     test_inclined_exponential()
     test_inclined_sersic()
-    test_pixel()
-    test_realgalaxy()
-    test_cosmosgalaxy()
-    test_interpolated_image()
-    test_add()
-    test_convolve()
-    test_list()
-    test_repeat()
-    test_usertype()
+#     test_pixel()
+#     test_realgalaxy()
+#     test_cosmosgalaxy()
+#     test_interpolated_image()
+#     test_add()
+#     test_convolve()
+#     test_list()
+#     test_repeat()
+#     test_usertype()
