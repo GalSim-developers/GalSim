@@ -482,12 +482,8 @@ def test_k_limits():
             y -= image_center.y
 
             # Include all pixels that are at least partially within distance r of the centre
-            # Truncate x and y toward zero to do this
-            x = x.astype(int)
-            y = y.astype(int)
-            r = pixel_scale * np.sqrt((np.square(x) + np.square(y)).astype(float))
-
-            good = r < rmax
+            r = pixel_scale * np.sqrt(np.square(x) + np.square(y))
+            good = r < rmax + np.sqrt(2.)*pixel_scale
 
             # Get flux within the limits
             contained_flux = np.ravel(test_image.array)[np.ravel(good)].sum()
@@ -495,8 +491,13 @@ def test_k_limits():
             # Check that we're not missing too much flux
 
             total_flux = np.sum(test_image.array)
-            np.testing.assert_((total_flux - contained_flux) / (total_flux) < gsparams.folding_threshold,
-                               msg="Too much flux lost due to folding.\nFolding threshold = " +
+            np.testing.assert_((total_flux - contained_flux) / (total_flux) <= gsparams.folding_threshold,
+                               msg="Too much flux lost due to folding.\n" +
+                               "inc_angle = " + str(inc_angle) + "\n" +
+                               "scale_radius = " + str(scale_radius) + "\n" +
+                               "scale_height = " + str(scale_height) + "\n" +
+                               "mode = " + str(mode) + "\n" +
+                               "Folding threshold = " +
                                str(gsparams.folding_threshold) + "\nTotal flux = " +
                                str(total_flux) + "\nContained flux = " + str(contained_flux) +
                                "\nLost = " + str((total_flux - contained_flux) / (total_flux)))
