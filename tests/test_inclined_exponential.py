@@ -481,9 +481,13 @@ def test_k_limits():
             x -= image_center.x
             y -= image_center.y
 
-            r = pixel_scale * np.sqrt(np.square(x) + np.square(y))
+            # Include all pixels that are at least partially within distance r of the centre
+            # Truncate x and y toward zero to do this
+            x = x.astype(int)
+            y = y.astype(int)
+            r = pixel_scale * np.sqrt((np.square(x) + np.square(y)).astype(float))
 
-            good = r + np.sqrt(2.) * pixel_scale < rmax
+            good = r < rmax
 
             # Get flux within the limits
             contained_flux = np.ravel(test_image.array)[np.ravel(good)].sum()
