@@ -368,7 +368,7 @@ namespace galsim {
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
         _gamma2n(boost::math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _kderiv2(0.), _kderiv4(0.), _kderiv6(0.),
+        _kderiv2(0.), _kderiv4(0.)
         _ft(Table<double,double>::spline)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
@@ -490,7 +490,7 @@ namespace galsim {
         // See when next term past quartic is at accuracy threshold
         double kderiv6 = gamma8n / (2304.*_gamma2n) / getFluxFraction();
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
-        double kmin = std::pow(_gsparams->kvalue_accuracy / _kderiv6, 1./6.);
+        double kmin = std::pow(_gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
         dbg<<"ksq_min = "<<_ksq_min<<std::endl;
