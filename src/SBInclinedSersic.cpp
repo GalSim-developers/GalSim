@@ -216,8 +216,7 @@ namespace galsim {
         // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
         // This is a bit conservative, note, assuming kx = 0
         double kderiv6 = 31./15120.*_half_pi_h_sini_over_r;
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy /
-                            (_info->getKDeriv6() + kderiv6), 1./3.);
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / kderiv6, 1./3.);
 
         dbg << "ksq_min = " << _ksq_min << std::endl;
 
