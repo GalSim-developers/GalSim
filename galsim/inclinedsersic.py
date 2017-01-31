@@ -137,15 +137,12 @@ class InclinedSersic(GSObject):
             # Use the default scale_h_over_r
             scale_h_over_r = 0.1
 
-        # Check that we have exactly one of scale_height and scale_h_over_r,
-        # then get scale_height
+        # Check that we have exactly one of scale_height and scale_h_over_r
         if scale_h_over_r is not None:
             if scale_height is not None:
                 raise TypeError(
                         "Only one of scale_height and scale_h_over_r may be " +
                         "specified for InclinedExponential")
-            else:
-                scale_height = scale_radius * scale_h_over_r
 
         # Check that trunc is valid
         if trunc < 0.:

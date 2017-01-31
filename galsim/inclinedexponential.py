@@ -173,6 +173,8 @@ class InclinedExponential(GSObject):
     @property
     def scale_radius(self): return self.getScaleRadius()
     @property
+    def half_light_radius(self): return self.getHalfLightRadius()
+    @property
     def scale_height(self): return self.getScaleHeight()
     @property
     def scale_h_over_r(self): return self.getScaleHOverR()

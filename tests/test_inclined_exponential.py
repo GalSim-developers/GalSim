@@ -614,6 +614,24 @@ def test_exceptions():
     # Can't have negative truncation for InclinedSersic
     np.testing.assert_raises(ValueError, get_prof, "InclinedSersic", inclination = 0.*galsim.degrees,
                              scale_radius = 1., trunc = -4.5)
+    
+@timer
+def test_value_retrieval():
+    """ Tests to make sure that if a parameter is passed to a profile, we get back the same
+        value from it. Only parameters not tested by the pickling are tested here.
+    """
+    
+    for mode in ("InclinedExponential", "InclinedSersic"):
+    
+        half_light_radius = 1.6342
+        scale_h_over_r = 0.2435
+        
+        prof = get_prof(mode, inclination = 0.*galsim.degrees, half_light_radius = half_light_radius,
+                        scale_h_over_r = scale_h_over_r)
+        
+        np.testing.assert_almost_equal(half_light_radius, prof.half_light_radius, 9)
+        np.testing.assert_almost_equal(scale_h_over_r, prof.scale_h_over_r, 9)
+    
 
 if __name__ == "__main__":
     test_regression()
@@ -625,3 +643,4 @@ if __name__ == "__main__":
     test_eq_ne()
     test_pickle()
     test_exceptions()
+    test_value_retrieval()
