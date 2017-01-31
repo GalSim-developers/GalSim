@@ -334,7 +334,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             irreprable = True
     except:
         import pyfits
-    print('Try pickling ',obj1)
+    print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
     obj2 = pickle.loads(pickle.dumps(obj1))
