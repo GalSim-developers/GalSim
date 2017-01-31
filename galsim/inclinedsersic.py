@@ -111,28 +111,45 @@ class InclinedSersic(GSObject):
         if scale_radius is not None:
             if not scale_radius > 0.:
                 raise ValueError("scale_radius must be > zero.")
-        else:
+        elif half_light_radius is not None:
             if not half_light_radius > 0.:
                 raise ValueError("half_light_radius must be > zero.")
-
-        # Check if we need to use default scale_h_over_r
-        if scale_height is None:
-            if scale_h_over_r is None:
-                scale_h_over_r = 0.1
-
-            # Set the scale height here if we know the scale radius
-            if scale_radius is not None:
-                scale_height = scale_h_over_r * scale_radius
         else:
-            # Check that scale_h_over_r wasn't also passed
-            if scale_h_over_r is not None:
-                raise Exception("At most one of scale_height and scale_h_over_r may be specified.")
-            elif scale_radius is not None:
-                scale_h_over_r = scale_height / scale_radius
+            raise TypeError(
+                    "Either scale_radius or half_light_radius must be " +
+                    "specified for InclinedSersic")
+
+        # Check that we have exactly one of scale_radius and half_light_radius
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius and half_light_radius may be " +
+                        "specified for InclinedSersic")
+
+        # Check that the height specification is valid
+        if scale_height is not None:
+            if not scale_height > 0.:
+                raise ValueError("scale_height must be > zero.")
+        elif scale_h_over_r is not None:
+            if not scale_h_over_r > 0.:
+                raise ValueError("half_light_radius must be > zero.")
+        else:
+            # Use the default scale_h_over_r
+            scale_h_over_r = 0.1
+
+        # Check that we have exactly one of scale_height and scale_h_over_r,
+        # then get scale_height
+        if scale_h_over_r is not None:
+            if scale_height is not None:
+                raise TypeError(
+                        "Only one of scale_height and scale_h_over_r may be " +
+                        "specified for InclinedExponential")
+            else:
+                scale_height = scale_radius * scale_h_over_r
 
         # Check that trunc is valid
         if trunc < 0.:
-            raise Exception("trunc must be >= zero (zero implying no truncation).")
+            raise ValueError("trunc must be >= zero (zero implying no truncation).")
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed

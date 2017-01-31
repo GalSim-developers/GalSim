@@ -45,6 +45,13 @@ class InclinedExponential(GSObject):
 
     At present, this profile is not enabled for photon-shooting.
 
+    A profile can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required. Similarly,
+    at most one of `scale_height' and `scale_h_over_r' is required; if neither is given, the
+    default of scale_h_over_r = 0.1 will be used. Note that if half_light_radius and
+    scale_h_over_r are supplied (or the default value of scale_h_over_r is used),
+    scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
+
     Initialization
     --------------
 
@@ -80,19 +87,22 @@ class InclinedExponential(GSObject):
     _takes_rng = False
 
     def __init__(self, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
-                 scale_h_over_r=0.1, flux=1., gsparams=None):
+                 scale_h_over_r=None, flux=1., gsparams=None):
 
         # Check that the scale/half-light radius is valid
         if scale_radius is not None:
             if not scale_radius > 0.:
                 raise ValueError("scale_radius must be > zero.")
-        else:
+        elif half_light_radius is not None:
             if not half_light_radius > 0.:
                 raise ValueError("half_light_radius must be > zero.")
+        else:
+            raise TypeError(
+                    "Either scale_radius or half_light_radius must be " +
+                    "specified for InclinedExponential")
 
         # Check that we have exactly one of scale_radius and half_light_radius,
         # then get scale_radius
-
         if half_light_radius is not None:
             if scale_radius is not None:
                 raise TypeError(
@@ -101,13 +111,27 @@ class InclinedExponential(GSObject):
             else:
                 # Use the factor from the Exponential class
                 scale_radius = half_light_radius / galsim.Exponential._hlr_factor
-        elif scale_radius is None:
-                raise TypeError(
-                        "Either scale_radius or half_light_radius must be " +
-                        "specified for InclinedExponential")
 
-        if scale_height is None:
-            scale_height = scale_h_over_r * scale_radius
+        # Check that the height specification is valid
+        if scale_height is not None:
+            if not scale_height > 0.:
+                raise ValueError("scale_height must be > zero.")
+        elif scale_h_over_r is not None:
+            if not scale_h_over_r > 0.:
+                raise ValueError("half_light_radius must be > zero.")
+        else:
+            # Use the default scale_h_over_r
+            scale_h_over_r = 0.1
+
+        # Check that we have exactly one of scale_height and scale_h_over_r,
+        # then get scale_height
+        if scale_h_over_r is not None:
+            if scale_height is not None:
+                raise TypeError(
+                        "Only one of scale_height and scale_h_over_r may be " +
+                        "specified for InclinedExponential")
+            else:
+                scale_height = scale_radius * scale_h_over_r
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed
