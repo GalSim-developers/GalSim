@@ -383,7 +383,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
-        with galsim.utilities.printoptions(precision=18, threshold=1e6):
+        with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
         f5 = func(obj5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
@@ -435,7 +435,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: can't change size of LVector or PhotonArray without changing array
             if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
-            with galsim.utilities.printoptions(precision=18, threshold=1e6):
+            with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
                     if classname in galsim._galsim.__dict__:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
