@@ -438,11 +438,13 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
                     if classname in galsim._galsim.__dict__:
-                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim._galsim.' + classname + repr(tuple(newargs))
                     else:
-                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim.' + classname + repr(tuple(newargs))
+                    obj6 = eval(eval_str)
                 except Exception as e:
-                    print('e = ',e)
+                    print('caught exception: ',e)
+                    print('eval_str = ',eval_str)
                     raise TypeError("{0} not `eval`able!".format(
                             classname + repr(tuple(newargs))))
                 else:
