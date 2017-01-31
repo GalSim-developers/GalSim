@@ -105,6 +105,8 @@ def get_prof(mode, *args, **kwargs):
             del new_kwargs["trunc"]
         if "n" in new_kwargs:
             del new_kwargs["n"]
+        if "flux_untruncated" in new_kwargs:
+            del new_kwargs["flux_untruncated"]
         prof = galsim.InclinedExponential(**new_kwargs)
 
     return prof
@@ -342,11 +344,6 @@ def test_sanity():
     def run_sanity_checks(mode, flux, inc_angle, scale_radius, scale_height, pos_angle,
                           n=1., trunc=0.):
         # Get float values for the details
-        flux = float(flux)
-        inc_angle = float(inc_angle)
-        scale_radius = float(scale_radius)
-        scale_height = float(scale_height)
-        pos_angle = float(pos_angle)
         print(flux, inc_angle, scale_radius, scale_height, pos_angle, n, trunc)
 
         # Now make a test image
@@ -417,14 +414,44 @@ def test_sanity():
         print('flux, inc_angle, scale_radius, scale_height, pos_angle, n, trunc')
         for (flux, _sersic_n, inc_angle, scale_radius, scale_height,
              _trunc_factor, pos_angle) in inclined_exponential_test_parameters:
+            
+            flux = float(flux)
+            inc_angle = float(inc_angle)
+            scale_radius = float(scale_radius)
+            scale_height = float(scale_height)
+            pos_angle = float(pos_angle)
             run_sanity_checks(mode, flux, inc_angle, scale_radius, scale_height, pos_angle)
 
     # Run tests for InclinedSersic only
     for (flux, sersic_n, inc_angle, scale_radius, scale_height,
          trunc_factor, pos_angle) in (inclined_sersic_test_parameters +
                                       inclined_sersic_regression_test_parameters):
+        flux = float(flux)
+        inc_angle = float(inc_angle)
+        scale_radius = float(scale_radius)
+        scale_height = float(scale_height)
+        pos_angle = float(pos_angle)
+        n = float(sersic_n)
+        trunc = float(trunc_factor) * float(scale_radius)
+        
         run_sanity_checks("InclinedSersic", flux, inc_angle, scale_radius, scale_height, pos_angle,
-                          n=float(sersic_n), trunc=float(trunc_factor) * float(scale_radius))
+                          n=n, trunc=trunc)
+        
+        # Run specific tests for InclinedSersic
+        
+        # Check that flux_untruncated behaves as expected
+        prof1a = get_prof("InclinedSersic",n=n,flux=flux,inclination=inc_angle*galsim.radians,
+                         scale_radius=scale_radius,scale_height=scale_height,trunc=trunc)
+        prof1b = get_prof("InclinedSersic",n=n,flux=flux,inclination=inc_angle*galsim.radians,
+                         scale_radius=scale_radius,scale_height=scale_height,trunc=trunc,
+                         flux_untruncated=False)
+        prof2 = get_prof("InclinedSersic",n=n,flux=flux,inclination=inc_angle*galsim.radians,
+                         scale_radius=scale_radius,scale_height=scale_height,trunc=trunc,
+                         flux_untruncated=True)
+        
+        np.testing.assert_almost_equal(prof1a.flux, prof1b.flux, 9)
+        if trunc > 0:
+            assert(prof1a.flux > prof2.flux)
 
 
 
