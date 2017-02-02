@@ -70,7 +70,6 @@ inclined_sersic_test_parameters = (
     ("2.3e4", "0.5", "0.5" , "1.8", "0.5", "2.5", "0.3"),)
 
 # Parameter sets used for regression tests of Sersic profiles
-# TODO - generate these and add them in
 inclined_sersic_regression_test_parameters = (
     ("1.0", "0.5", "0.7", "4.0", "0.2", "0.0", "0.5"),
     ("1.0", "0.8", "1.4", "2.5", "0.1", "4.0", "1.1"),
