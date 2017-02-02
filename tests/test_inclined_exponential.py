@@ -39,7 +39,7 @@ except ImportError:
     import galsim
 
 # Save images used in regression testing for manual inspection?
-save_profiles = True
+save_profiles = False
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
