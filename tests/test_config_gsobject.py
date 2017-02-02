@@ -17,11 +17,13 @@
 #
 
 from __future__ import print_function
-import numpy as np
+
 import os
 import sys
 
 from galsim_test_helpers import *
+import numpy as np
+
 
 try:
     import galsim
@@ -516,8 +518,6 @@ def test_devaucouleurs():
         # Make sure they don't match when using the default GSParams
         gal5c = galsim.DeVaucouleurs(half_light_radius=1, flux=50)
 
-
-
 @timer
 def test_inclined_exponential():
     """Test various ways to build an InclinedExponential
@@ -541,10 +541,6 @@ def test_inclined_exponential():
         'gal5' : { 'type' : 'InclinedExponential' , 'inclination' : 0.7 * galsim.radians,
                    'half_light_radius' : 1, 'flux' : 50,
                    'gsparams' : { 'minimum_fft_size' : 256 }
-                 },
-        'gal6' : { 'type' : 'InclinedExponential' , 'inclination' : 0.7 * galsim.radians,
-                   'half_light_radius' : 1, 'flux' : 50,
-                   'gsparams' : { 'maximum_fft_size' : 64 }
                  },
     }
 
@@ -580,17 +576,6 @@ def test_inclined_exponential():
         np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
 
-        # For the maximum_fft_size test, we need to do things a little differently
-        # We lower maximum_fft_size below the size that SBProfile wants this to be,
-        # and we check to make sure an exception is thrown.  Of course, this isn't how you
-        # would normally use maximum_fft_size.  Normally, you would raise it when the default
-        # is too small.  But to construct the test that way would require a lot of memory
-        # and would be rather slow.
-        gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-        gal6b = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
-        np.testing.assert_raises(RuntimeError, gsobject_compare, gal6a, gal6b,
-                                 conv=galsim.Gaussian(sigma=1))
-
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -617,10 +602,6 @@ def test_inclined_sersic():
         'gal5' : { 'type' : 'InclinedSersic' , 'n' : 0.7, 'inclination' : 0.7 * galsim.radians,
                    'half_light_radius' : 1, 'flux' : 50,
                    'gsparams' : { 'minimum_fft_size' : 256 }
-                 },
-        'gal6' : { 'type' : 'InclinedSersic' , 'n' : 0.7, 'inclination' : 0.7 * galsim.radians,
-                   'half_light_radius' : 1, 'flux' : 50,
-                   'gsparams' : { 'maximum_fft_size' : 64 }
                  },
     }
 
@@ -654,17 +635,6 @@ def test_inclined_sersic():
         # Make sure they don't match when using the default GSParams
         gal5c = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
         np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
-                                 conv=galsim.Gaussian(sigma=1))
-
-        # For the maximum_fft_size test, we need to do things a little differently
-        # We lower maximum_fft_size below the size that SBProfile wants this to be,
-        # and we check to make sure an exception is thrown.  Of course, this isn't how you
-        # would normally use maximum_fft_size.  Normally, you would raise it when the default
-        # is too small.  But to construct the test that way would require a lot of memory
-        # and would be rather slow.
-        gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-        gal6b = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
-        np.testing.assert_raises(RuntimeError, gsobject_compare, gal6a, gal6b,
                                  conv=galsim.Gaussian(sigma=1))
 
     except ImportError:
