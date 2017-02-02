@@ -155,8 +155,8 @@ def test_regression():
             # Compare to the example - Due to the different fourier transforms used, some offset is
             # expected, so we just compare in the core to two decimal places
 
-            image_core = image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
-            test_image_core = test_image.array[nx // 2 - 2:nx // 2 + 3, ny // 2 - 2:ny // 2 + 3]
+            image_core = image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
+            test_image_core = test_image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
 
             np.testing.assert_allclose(
                     test_image_core, image_core,
