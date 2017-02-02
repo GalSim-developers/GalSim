@@ -299,7 +299,7 @@ def _convertPositions(pos, units, func):
     return pos
 
 def _lin_approx_err(x, f, i):
-    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    r"""Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
@@ -311,7 +311,7 @@ def _lin_approx_err(x, f, i):
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
 def _exact_lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    r"""Split a tabulated function into a two-part piecewise linear approximation by exactly
     minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
     errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
@@ -319,7 +319,7 @@ def _exact_lin_approx_split(x, f):
     return i+1, errs[i]
 
 def _lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    r"""Split a tabulated function into a two-part piecewise linear approximation by approximately
     minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
     \int (f(x) - approx(x))^2 dx in O(N) time.
     """
@@ -1288,4 +1288,3 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
         return index, n_rng_calls
     else:
         return index
-
