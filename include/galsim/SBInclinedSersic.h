@@ -71,7 +71,7 @@ namespace galsim {
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
          * @param[in] height            Height specification.
-         * @param[in] rType             Kind of height being specified (SCALE_H_OVER_R or
+         * @param[in] hType             Kind of height being specified (SCALE_H_OVER_R or
          *                              SCALE_HEIGHT).
          * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
