@@ -39,7 +39,7 @@ except ImportError:
     import galsim
 
 # Save images used in regression testing for manual inspection?
-save_profiles = False
+save_profiles = True
 
 # set up any necessary info for tests
 # Note that changes here should match changes to test image files
@@ -56,7 +56,7 @@ inclined_exponential_test_parameters = (
     ("10.0", "1.0", "1.3" , "3.0", "0.5", "0.0", "0.0"),
     ("0.1", "1.0", "0.2" , "3.0", "0.5", "0.0", "0.0"),
     ("1.0", "1.0", "0.01", "3.0", "0.5", "0.0", "0.0"),
-    ("2.1", "1.0", "1.507", "2.5", "0.2", "0.0", "7.4"),
+    ("2.1", "1.0", "1.57", "2.5", "0.2", "0.0", "7.4"),
     ("1.0", "1.0", "0.1" , "2.0", "1.0", "0.0", "-0.2"),
     ("1.0", "1.0", "0.78", "2.0", "0.5", "0.0", "-0.2"),)
 
@@ -68,7 +68,7 @@ inclined_sersic_test_parameters = (
     ("10.0", "1.0", "0.1" , "1.9", "0.3", "4.5", "7.3"),
     ("1.0e6", "1.5", "0.2" , "2.1", "0.2", "3.9", "-0.9"),
     ("1.0e-6", "2.0", "0.3" , "3.4", "0.1", "5.0", "0.6"),
-    ("2.3e4", "0.5", "1.507" , "1.8", "0.5", "2.5", "0.3"),)
+    ("2.3e4", "0.5", "1.57" , "1.8", "0.5", "2.5", "0.3"),)
 
 # Parameter sets used for regression tests of Sersic profiles
 inclined_sersic_regression_test_parameters = (
@@ -158,10 +158,18 @@ def test_regression():
 
             image_core = image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
             test_image_core = test_image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
+            
+            # Be a bit more lenient in the edge-on case, since it has greater errors in the FFT
+            if np.cos(inc_angle) < 0.01:
+                rtol = 5e-2
+                atol = 5e-4
+            else:
+                rtol = 1e-2
+                atol = 1e-4
 
             np.testing.assert_allclose(
                     test_image_core, image_core,
-                    rtol=1e-2, atol=1e-4 * flux,
+                    rtol=rtol, atol=atol * flux,
                     err_msg="Error in comparison of " + mode + " profile to " + image_filename,
                     verbose=True)
 
