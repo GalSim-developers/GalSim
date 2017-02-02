@@ -17,13 +17,11 @@
 #
 
 from __future__ import print_function
-
+import numpy as np
 import os
 import sys
 
 from galsim_test_helpers import *
-import numpy as np
-
 
 try:
     import galsim
@@ -517,6 +515,10 @@ def test_devaucouleurs():
     try:
         # Make sure they don't match when using the default GSParams
         gal5c = galsim.DeVaucouleurs(half_light_radius=1, flux=50)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
+                                 conv=galsim.Gaussian(sigma=1))
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 @timer
 def test_inclined_exponential():
