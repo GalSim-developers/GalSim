@@ -22,7 +22,6 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Random.h"
-#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -55,51 +54,27 @@ namespace galsim {
         }
     };
 
-    void Generate(BaseDeviate& rng, const bp::object& array)
+    void Generate(BaseDeviate& rng, size_t N, size_t idata)
     {
-        double* data;
-        boost::shared_ptr<double> owner;
-        int step, stride;
-        CheckNumpyArray(array, 1, false, data, owner, step, stride);
-        if (step != 1 || stride != 1)
-            throw std::runtime_error("generate requires a contiguous numpy array");
-        int N = GetNumpyArrayDim(array.ptr(), 0);
+        double* data = reinterpret_cast<double*>(idata);
         rng.generate(N, data);
     }
 
-    void AddGenerate(BaseDeviate& rng, const bp::object& array)
+    void AddGenerate(BaseDeviate& rng, size_t N, size_t idata)
     {
-        double* data;
-        boost::shared_ptr<double> owner;
-        int step, stride;
-        CheckNumpyArray(array, 1, false, data, owner, step, stride);
-        if (step != 1 || stride != 1)
-            throw std::runtime_error("add_generate requires a contiguous numpy array");
-        int N = GetNumpyArrayDim(array.ptr(), 0);
+        double* data = reinterpret_cast<double*>(idata);
         rng.addGenerate(N, data);
     }
 
-    void GenerateFromVariance(GaussianDeviate& rng, const bp::object& array)
+    void GenerateFromVariance(GaussianDeviate& rng, size_t N, size_t idata)
     {
-        double* data;
-        boost::shared_ptr<double> owner;
-        int step, stride;
-        CheckNumpyArray(array, 1, false, data, owner, step, stride);
-        if (step != 1 || stride != 1)
-            throw std::runtime_error("generate_from_variance requires a contiguous numpy array");
-        int N = GetNumpyArrayDim(array.ptr(), 0);
+        double* data = reinterpret_cast<double*>(idata);
         rng.generateFromVariance(N, data);
     }
 
-    void GenerateFromExpectation(PoissonDeviate& rng, const bp::object& array)
+    void GenerateFromExpectation(PoissonDeviate& rng, size_t N, size_t idata)
     {
-        double* data;
-        boost::shared_ptr<double> owner;
-        int step, stride;
-        CheckNumpyArray(array, 1, false, data, owner, step, stride);
-        if (step != 1 || stride != 1)
-            throw std::runtime_error("generate_from_expectation requires a contiguous numpy array");
-        int N = GetNumpyArrayDim(array.ptr(), 0);
+        double* data = reinterpret_cast<double*>(idata);
         rng.generateFromExpectation(N, data);
     }
 
@@ -123,8 +98,8 @@ namespace galsim {
                 .def("duplicate", &BaseDeviate::duplicate)
                 .def("discard", &BaseDeviate::discard)
                 .def("raw", &BaseDeviate::raw)
-                .def("generate", &Generate, bp::arg("array"))
-                .def("add_generate", &AddGenerate, bp::arg("array"))
+                .def("generate", &Generate, bp::arg("N"), bp::arg("idata"))
+                .def("add_generate", &AddGenerate, bp::arg("N"), bp::arg("idata"))
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()
@@ -191,7 +166,8 @@ namespace galsim {
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
                 .def("__call__", &GaussianDeviate::operator())
-                .def("generate_from_variance", &GenerateFromVariance, bp::arg("array"))
+                .def("generate_from_variance", &GenerateFromVariance,
+                     bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &GaussianDeviate::getMean)
                 .def("getSigma", &GaussianDeviate::getSigma)
                 .enable_pickling()
@@ -242,7 +218,8 @@ namespace galsim {
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
                 .def("__call__", &PoissonDeviate::operator())
-                .def("generate_from_expectation", &GenerateFromExpectation, bp::arg("array"))
+                .def("generate_from_expectation", &GenerateFromExpectation,
+                     bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &PoissonDeviate::getMean)
                 .enable_pickling()
                 ;
