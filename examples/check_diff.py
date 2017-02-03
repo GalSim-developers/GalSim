@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
