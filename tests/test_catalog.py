@@ -162,6 +162,8 @@ def test_output_catalog():
     np.testing.assert_almost_equal(cat.getFloat(0,16), 0.1)
 
     # Next the FITS version
+    if os.path.isfile('output/catalog.fits'):
+        os.remove('output/catalog.fits')
     out_cat.write(dir='output', file_name='catalog.fits')
     cat = galsim.Catalog(dir='output', file_name='catalog.fits')
     np.testing.assert_equal(cat.ncols, 17)
@@ -186,6 +188,17 @@ def test_output_catalog():
     np.testing.assert_almost_equal(cat.getFloat(0,'shear.g1'), 0.2)
     np.testing.assert_almost_equal(cat.getFloat(0,'shear.g2'), 0.1)
 
+    # Check that it properly overwrites an existing output file.
+    out_cat.addRow( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"',
+                     1.2 * galsim.degrees, galsim.PositionI(5,6),
+                     galsim.PositionD(0.3,-0.4), galsim.Shear(g1=0.2, g2=0.1) ])
+    assert out_cat.rows[3] == out_cat.rows[0]
+    out_cat.write(dir='output', file_name='catalog.fits')  # Same name as above.
+    cat2 = galsim.Catalog(dir='output', file_name='catalog.fits')
+    np.testing.assert_equal(cat2.ncols, 17)
+    np.testing.assert_equal(cat2.nobjects, 4)
+    for key in names[:10]:
+        assert cat2.data[key][3] == cat2.data[key][0]
 
     # Check pickling
     do_pickle(out_cat)
