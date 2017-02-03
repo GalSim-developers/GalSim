@@ -200,7 +200,7 @@ namespace galsim {
         SBSpergelImpl(const SBSpergelImpl& rhs);
         void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<boost::tuple< double, GSParamsPtr >, SpergelInfo> cache;
+        static LRUCache<Tuple< double, GSParamsPtr >, SpergelInfo> cache;
     };
 }
 

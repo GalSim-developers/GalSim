@@ -87,7 +87,7 @@ namespace galsim {
         return oss.str();
     }
 
-    LRUCache< boost::tuple<double, double, GSParamsPtr >, SersicInfo >
+    LRUCache< Tuple<double, double, GSParamsPtr >, SersicInfo >
         SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
@@ -96,7 +96,7 @@ namespace galsim {
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
+        _info(cache.get(MakeTuple(_n, 0., this->gsparams.duplicate())))
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -123,8 +123,7 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -142,8 +141,7 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
