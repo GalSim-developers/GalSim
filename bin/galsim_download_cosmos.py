@@ -176,7 +176,7 @@ def download(url, target, unpack_dir, args, logger):
     u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
-    file_size = int(meta.getheaders("Content-Length")[0])
+    file_size = int(meta.get("Content-Length"))
     file_name = os.path.basename(url)
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
