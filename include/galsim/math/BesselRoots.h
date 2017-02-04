@@ -19,22 +19,22 @@
 
 #ifndef GalSim_BesselRoots_H
 #define GalSim_BesselRoots_H
-/** 
- * @file bessel/Roots.h 
+/**
+ * @file math/BesselRoots.h
  * @brief Contains a list of the first several roots of J0(x)
  */
 
 #include <cmath>
 
 namespace galsim {
-namespace bessel {
+namespace math {
 
     const int n_roots_j0 = 40;
 
     // These values are from:
     //   http://keisan.casio.com/exec/system/1180573472
     // If we need zeros for other values of nu, it can calculate them too.
-    
+
     const double root_j0[n_roots_j0] = {
         2.404825557695772768622,
         5.520078110286310649597,
@@ -96,7 +96,7 @@ namespace bessel {
             double temp = 0.125/b;
             double inv8bsq = temp*temp;
 
-            // From here on, b will be the running total, not the original b, and temp will be 
+            // From here on, b will be the running total, not the original b, and temp will be
             // the part of each coefficient that is in common with the next term.
             b += temp;
 
@@ -113,7 +113,8 @@ namespace bessel {
         }
     }
 
-}}
+}
+}
 
 #endif
 

@@ -24,7 +24,6 @@
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
-#include "bessel/Roots.h"
 
 namespace galsim {
 

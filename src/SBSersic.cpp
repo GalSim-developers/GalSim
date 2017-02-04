@@ -29,7 +29,7 @@
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/BesselRoots.h"
 
 namespace galsim {
 
@@ -546,7 +546,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * integ_maxr) break;
                 reg.addSplit(root/k);
             }

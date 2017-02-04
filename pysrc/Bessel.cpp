@@ -21,13 +21,13 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "bessel/Roots.h"
+#include "math/BesselRoots.h"
 #include <boost/math/special_functions/bessel.hpp>
 
 namespace bp = boost::python;
 
 namespace galsim {
-namespace bessel {
+namespace math {
 
     // The boost versions are templated.  Make them concrete here so they are
     // easier to wrap.
@@ -62,6 +62,6 @@ namespace bessel {
 
     }
 
-} // namespace bessel
+} // namespace math
 } // namespace galsim
 
