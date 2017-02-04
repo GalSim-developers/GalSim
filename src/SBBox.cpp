@@ -21,7 +21,7 @@
 
 #include "SBBox.h"
 #include "SBBoxImpl.h"
-#include "Interpolant.h"  // For sinc(x)
+#include "math/Sinc.h"
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp
 #ifdef _INTEL_COMPILER
@@ -80,7 +80,7 @@ namespace galsim {
 
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(k.x*_wo2pi)*sinc(k.y*_ho2pi);
+        return _flux * math::sinc(k.x*_wo2pi)*math::sinc(k.y*_ho2pi);
     }
 
     void SBBox::SBBoxImpl::fillXImage(ImageView<double> im,
@@ -181,13 +181,13 @@ namespace galsim {
             std::vector<double> sinc_ky(n);
             typedef std::vector<double>::iterator It;
             It kxit = sinc_kx.begin();
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = sinc(kx0);
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = math::sinc(kx0);
 
             if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
                 sinc_ky = sinc_kx;
             } else {
                 It kyit = sinc_ky.begin();
-                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = sinc(ky0);
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = math::sinc(ky0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -221,7 +221,7 @@ namespace galsim {
             double kx = kx0;
             double ky = ky0;
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
-                *ptr++ = _flux * sinc(kx) * sinc(ky);
+                *ptr++ = _flux * math::sinc(kx) * math::sinc(ky);
             }
         }
     }

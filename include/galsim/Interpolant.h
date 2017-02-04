@@ -34,10 +34,6 @@
 
 namespace galsim {
 
-    // This is used both here and by SBBox.
-    // This particular definition is sinc(x) = sin(Pi x) / (Pi x)
-    double sinc(double x);
-
     class Interpolant;
 
     /**
