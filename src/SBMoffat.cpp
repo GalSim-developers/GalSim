@@ -23,7 +23,7 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
+#include <cmath>
 
 #include "SBMoffat.h"
 #include "SBMoffatImpl.h"
@@ -272,7 +272,7 @@ namespace galsim {
             _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
-            _knorm *= 4. / (boost::math::tgamma(beta-1.) * std::pow(2.,beta));
+            _knorm *= 4. / (std::tgamma(beta-1.) * std::pow(2.,beta));
         }
     }
 
@@ -504,7 +504,7 @@ namespace galsim {
                 // Solve for f(k) = maxk_threshold
                 //
                 double temp = (this->gsparams->maxk_threshold
-                               * boost::math::tgamma(_beta-1.)
+                               * std::tgamma(_beta-1.)
                                * std::pow(2.,_beta-0.5)
                                / (2. * sqrt(M_PI)));
                 // Solve k^(beta-1/2) exp(-k) = temp

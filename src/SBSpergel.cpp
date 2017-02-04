@@ -22,7 +22,6 @@
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
 #include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
 
 namespace galsim {
@@ -257,7 +256,7 @@ namespace galsim {
 
     SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
         _nu(nu), _gsparams(gsparams),
-        _gamma_nup1(boost::math::tgamma(_nu+1.0)),
+        _gamma_nup1(std::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),
         _xnorm0((_nu > 0.) ? _gamma_nup1 / (2. * _nu) * std::pow(2., _nu) : INFINITY),
         _maxk(0.), _stepk(0.), _re(0.)

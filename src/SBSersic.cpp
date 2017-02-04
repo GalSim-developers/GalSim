@@ -366,7 +366,7 @@ namespace galsim {
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
-        _gamma2n(boost::math::tgamma(2.*_n)),
+        _gamma2n(std::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
         _ft(Table<double,double>::spline)
     {
@@ -413,8 +413,7 @@ namespace galsim {
             if (_truncated) {
                 double z = std::pow(_trunc, 1./_n);
                 // integrate from 0. to _trunc
-                double gamma2nz = boost::math::tgamma_lower(2.*_n, z);
-                _flux = gamma2nz / _gamma2n;  // _flux < 1
+                _flux = boost::math::gamma_p(2.*_n, z);  // _flux < 1
                 dbg << "Flux fraction = " << _flux << std::endl;
             } else {
                 _flux = 1.;
@@ -470,14 +469,14 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma4n = boost::math::tgamma(4.*_n);
-            gamma6n = boost::math::tgamma(6.*_n);
-            gamma8n = boost::math::tgamma(8.*_n);
+            gamma4n = std::tgamma(4.*_n);
+            gamma6n = std::tgamma(6.*_n);
+            gamma8n = std::tgamma(8.*_n);
         } else {
             double z = std::pow(_trunc, 1./_n);
-            gamma4n = boost::math::tgamma_lower(4.*_n, z);
-            gamma6n = boost::math::tgamma_lower(6.*_n, z);
-            gamma8n = boost::math::tgamma_lower(8.*_n, z);
+            gamma4n = boost::math::gamma_p(4.*_n, z) * std::tgamma(4.*_n);
+            gamma6n = boost::math::gamma_p(6.*_n, z) * std::tgamma(6.*_n);
+            gamma8n = boost::math::gamma_p(8.*_n, z) * std::tgamma(8.*_n);
         }
         // The quadratic term of small-k expansion:
         _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
@@ -640,7 +639,7 @@ namespace galsim {
         // Provide z = r^1/n, rather than r.
         double operator()(double z) const
         {
-            double f = boost::math::tgamma(_2n, z);  // integrates the tail from z to inf
+            double f = (1.-boost::math::gamma_p(_2n, z)) * std::tgamma(_2n);
             xdbg<<"func("<<z<<") = "<<f<<"-"<<_target<<" = "<< f-_target<<std::endl;
             return f - _target;
         }
@@ -756,11 +755,11 @@ namespace galsim {
 
         double operator()(double b) const
         {
-            double f1 = boost::math::tgamma_lower(_2n, b);
-            double f2 = boost::math::tgamma_lower(_2n, _x*b);
+            double f1 = boost::math::gamma_p(_2n, b);
+            double f2 = boost::math::gamma_p(_2n, _x*b);
             // Solve for f1 = f2/2
             xdbg<<"func("<<b<<") = 2*"<<f1<<" - "<<f2<<" = "<< 2.*f1-f2<<std::endl;
-            return 2.*f1-f2;
+            return (2.*f1-f2) * std::tgamma(_2n);
         }
     private:
         double _2n;
