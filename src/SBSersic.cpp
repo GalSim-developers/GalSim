@@ -22,7 +22,6 @@
 #include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/bessel.hpp>
 
 #include "SBSersic.h"
@@ -30,6 +29,7 @@
 #include "integ/Int.h"
 #include "Solve.h"
 #include "math/BesselRoots.h"
+#include "math/IncompleteGamma.h"
 
 namespace galsim {
 
@@ -413,7 +413,7 @@ namespace galsim {
             if (_truncated) {
                 double z = std::pow(_trunc, 1./_n);
                 // integrate from 0. to _trunc
-                _flux = boost::math::gamma_p(2.*_n, z);  // _flux < 1
+                _flux = math::gamma_p(2.*_n, z);  // _flux < 1
                 dbg << "Flux fraction = " << _flux << std::endl;
             } else {
                 _flux = 1.;
@@ -474,9 +474,9 @@ namespace galsim {
             gamma8n = std::tgamma(8.*_n);
         } else {
             double z = std::pow(_trunc, 1./_n);
-            gamma4n = boost::math::gamma_p(4.*_n, z) * std::tgamma(4.*_n);
-            gamma6n = boost::math::gamma_p(6.*_n, z) * std::tgamma(6.*_n);
-            gamma8n = boost::math::gamma_p(8.*_n, z) * std::tgamma(8.*_n);
+            gamma4n = math::gamma_p(4.*_n, z) * std::tgamma(4.*_n);
+            gamma6n = math::gamma_p(6.*_n, z) * std::tgamma(6.*_n);
+            gamma8n = math::gamma_p(8.*_n, z) * std::tgamma(8.*_n);
         }
         // The quadratic term of small-k expansion:
         _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
@@ -639,7 +639,7 @@ namespace galsim {
         // Provide z = r^1/n, rather than r.
         double operator()(double z) const
         {
-            double f = (1.-boost::math::gamma_p(_2n, z)) * std::tgamma(_2n);
+            double f = (1.-math::gamma_p(_2n, z)) * std::tgamma(_2n);
             xdbg<<"func("<<z<<") = "<<f<<"-"<<_target<<" = "<< f-_target<<std::endl;
             return f - _target;
         }
@@ -755,8 +755,8 @@ namespace galsim {
 
         double operator()(double b) const
         {
-            double f1 = boost::math::gamma_p(_2n, b);
-            double f2 = boost::math::gamma_p(_2n, _x*b);
+            double f1 = math::gamma_p(_2n, b);
+            double f2 = math::gamma_p(_2n, _x*b);
             // Solve for f1 = f2/2
             xdbg<<"func("<<b<<") = 2*"<<f1<<" - "<<f2<<" = "<< 2.*f1-f2<<std::endl;
             return (2.*f1-f2) * std::tgamma(_2n);
