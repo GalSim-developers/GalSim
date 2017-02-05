@@ -19,11 +19,6 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/bessel.hpp>
-
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"

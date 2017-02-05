@@ -21,8 +21,8 @@
 
 #include "SBSpergel.h"
 #include "SBSpergelImpl.h"
-#include <boost/math/special_functions/bessel.hpp>
 #include "Solve.h"
+#include "math/Bessel.h"
 
 namespace galsim {
 
@@ -275,29 +275,27 @@ namespace galsim {
 
         double operator()(double u) const
         {
-        // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
-        // (i.e., make a residual so this can be used to search for a target flux.
-        // This result is derived in Spergel (2010) eqn. 8 by going to Fourier space
-        // and integrating by parts.
-        // The key Bessel identities:
-        // int(r J0(k r), r=0..R) = R J1(k R) / k
-        // d[-J0(k R)]/dk = R J1(k R)
-        // The definition of the radial surface brightness profile and Fourier transform:
-        // Sigma_nu(r) = (r/2)^nu K_nu(r)/Gamma(nu+1)
-        //             = int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf)
-        // and the main result:
-        // F(R) = int(2 pi r Sigma(r), r=0..R)
-        //      = int(r int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf), r=0..R) // Do the r-integral
-        //      = int(R J1(k R)/(1+k^2)^(1+nu), k=0..inf)
-        // Now integrate by parts with
-        //      u = 1/(1+k^2)^(1+nu)                 dv = R J1(k R) dk
-        // =>  du = -2 k (1+nu)/(1+k^2)^(2+nu) dk     v = -J0(k R)
-        // => F(R) = u v | k=0,inf - int(v du, k=0..inf)
-        //         = (0 + 1) - 2 (1+nu) int(k J0(k R) / (1+k^2)^2+nu, k=0..inf)
-        //         = 1 - 2 (1+nu) (R/2)^(nu+1) K_{nu+1}(R) / Gamma(nu+2)
-            double fnup1 = std::pow(u / 2., _nu+1.)
-                * boost::math::cyl_bessel_k(_nu+1., u)
-                / _gamma_nup2;
+            // Return flux integrated up to radius `u` in units of r0, minus `flux_frac`
+            // (i.e., make a residual so this can be used to search for a target flux.
+            // This result is derived in Spergel (2010) eqn. 8 by going to Fourier space
+            // and integrating by parts.
+            // The key Bessel identities:
+            // int(r J0(k r), r=0..R) = R J1(k R) / k
+            // d[-J0(k R)]/dk = R J1(k R)
+            // The definition of the radial surface brightness profile and Fourier transform:
+            // Sigma_nu(r) = (r/2)^nu K_nu(r)/Gamma(nu+1)
+            //             = int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf)
+            // and the main result:
+            // F(R) = int(2 pi r Sigma(r), r=0..R)
+            //      = int(r int(k J0(k r) / (1+k^2)^(1+nu), k=0..inf), r=0..R) // Do the r-integral
+            //      = int(R J1(k R)/(1+k^2)^(1+nu), k=0..inf)
+            // Now integrate by parts with
+            //      u = 1/(1+k^2)^(1+nu)                 dv = R J1(k R) dk
+            // =>  du = -2 k (1+nu)/(1+k^2)^(2+nu) dk     v = -J0(k R)
+            // => F(R) = u v | k=0,inf - int(v du, k=0..inf)
+            //         = (0 + 1) - 2 (1+nu) int(k J0(k R) / (1+k^2)^2+nu, k=0..inf)
+            //         = 1 - 2 (1+nu) (R/2)^(nu+1) K_{nu+1}(R) / Gamma(nu+2)
+            double fnup1 = std::pow(u/2., _nu+1.) * math::cyl_bessel_k(_nu+1., u) / _gamma_nup2;
             double f = 1.0 - 2.0 * (1.+_nu)*fnup1;
             return f - _target;
         }
@@ -371,7 +369,7 @@ namespace galsim {
     double SpergelInfo::xValue(double r) const
     {
         if (r == 0.) return _xnorm0;
-        else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
+        else return math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
@@ -386,7 +384,7 @@ namespace galsim {
             _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
             if (r == 0.) return _xnorm0;
-            else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+            else return math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
         }
     private:
         double _nu;
@@ -399,9 +397,8 @@ namespace galsim {
         SpergelNuNegativeRadialFunction(double nu, double rmin, double a, double b):
             _nu(nu), _rmin(rmin), _a(a), _b(b) {}
         double operator()(double r) const {
-            if (r <= _rmin) {
-                return _a + _b*r;
-            } else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+            if (r <= _rmin) return _a + _b*r;
+            else return math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
         }
     private:
         double _nu;
@@ -432,7 +429,7 @@ namespace galsim {
                 // a + b rmin = K_nu(rmin) * rmin^nu
                 double flux_target = _gsparams->shoot_accuracy;
                 double shoot_rmin = calculateFluxRadius(flux_target);
-                double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*std::pow(shoot_rmin, _nu);
+                double knur = math::cyl_bessel_k(_nu, shoot_rmin)*std::pow(shoot_rmin, _nu);
                 double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
                 double a = knur - shoot_rmin*b;
                 dbg<<"flux target: "<<flux_target<<std::endl;

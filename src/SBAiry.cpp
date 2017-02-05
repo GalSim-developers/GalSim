@@ -19,11 +19,6 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/bessel.hpp>
-
 // To enable some extra debugging statements
 //#define AIRY_DEBUG
 

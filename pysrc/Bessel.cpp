@@ -22,6 +22,7 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "math/BesselRoots.h"
+#include "math/Bessel.h"
 #include <boost/math/special_functions/bessel.hpp>
 
 namespace bp = boost::python;
@@ -38,10 +39,10 @@ namespace math {
     { return boost::math::cyl_bessel_j(n,x); }
 
     inline double BesselKv(double v, double x)
-    { return boost::math::cyl_bessel_k(v,x); }
+    { return math::cyl_bessel_k(v,x); }
 
     inline double BesselKn(int n, double x)
-    { return boost::math::cyl_bessel_k(n,x); }
+    { return math::cyl_bessel_k(n,x); }
 
     void pyExportBessel() {
 

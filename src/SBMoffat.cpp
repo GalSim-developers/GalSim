@@ -19,10 +19,6 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/bessel.hpp>
 #include <cmath>
 
 #include "SBMoffat.h"
@@ -30,6 +26,7 @@
 #include "integ/Int.h"
 #include "Solve.h"
 #include "math/BesselRoots.h"
+#include "math/Bessel.h"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -311,7 +308,7 @@ namespace galsim {
         if (ksq == 0.) return 1.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(1,k) * k;
+            return math::cyl_bessel_k(1,k) * k;
         }
     }
 
@@ -326,7 +323,7 @@ namespace galsim {
         if (ksq == 0.) return 2.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(2,k) * ksq;
+            return math::cyl_bessel_k(2,k) * ksq;
         }
     }
 
@@ -341,7 +338,7 @@ namespace galsim {
         if (ksq == 0.) return 8.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(3,k) * k*ksq;
+            return math::cyl_bessel_k(3,k) * k*ksq;
         }
     }
 
@@ -350,7 +347,7 @@ namespace galsim {
         if (ksq == 0.) return _flux/_knorm;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(_beta-1,k) * std::pow(k,_beta-1);
+            return math::cyl_bessel_k(_beta-1,k) * std::pow(k,_beta-1);
         }
     }
 
