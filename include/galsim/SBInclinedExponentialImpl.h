@@ -68,7 +68,7 @@ namespace galsim {
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
 
-        /// @brief Maximum surface brightness - not implemented, and will throw an exception
+        /// @brief Maximum surface brightness
         double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
