@@ -248,6 +248,9 @@ def test_exponential():
     # Check that they're the same
     np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
 
+    # The face-on version should get the maxSB value exactly right.
+    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
+
     check_basic(inc_profile, "Face-on " + mode)
 
 @timer
@@ -291,6 +294,9 @@ def test_sersic():
 
         np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
 
+        # The face-on version should get the maxSB value exactly right.
+        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB())
+
         check_basic(inc_profile, "Face-on " + mode)
 
 @timer
@@ -331,6 +337,12 @@ def test_edge_on():
         # Check they're all almost the same
         np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
+
+        # Also the edge-on version should get the maxSB value exactly right = comp_prof.maxSB * r/h * n/gamma(n).
+        np.testing.assert_array_almost_equal(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n))
+        prof.drawImage(image, method='sb', use_true_center=False)
+        print('max pixel: ', image.array.max(), ' cf.', prof.maxSB())
+        np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
 
 
 @timer
@@ -385,6 +397,24 @@ def test_sanity():
         centroid = test_profile.centroid()
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
+
+        # Check maxSB
+        # We don't do a great job at estimating this, but it should be in the right ball park,
+        # and typically too large.
+        test_profile.drawImage(test_image, method='sb', use_true_center=False)
+        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
+
+        # Be more tolerant if the inclination angle is far from zero or pi/2
+        if (np.abs(inc_angle) < 0.1) or (np.abs(np.pi - inc_angle) < 0.1):
+            rtol = 0.3
+            check_lessthan = True
+        else:
+            rtol = 1.0
+            check_lessthan = False # We might overestimate in this case, due to approximation
+
+        np.testing.assert_allclose(test_image.array.max(), test_profile.maxSB(), rtol=rtol)
+        if check_lessthan:
+            np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
 
     # Run tests applicable to both profiles
     for mode in ("InclinedExponential", "InclinedSersic"):
