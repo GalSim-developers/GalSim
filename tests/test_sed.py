@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -607,7 +607,7 @@ def test_SED_sampleWavelength():
                                    "to the nearest integer.")
 
     def create_cdfs(sed,out,nbins=100):
-        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,100000,retstep=True)
         centers = bins[:-1] + step/2.
         cdf = np.cumsum(sed(centers)*step)
         cdf /= cdf.max()

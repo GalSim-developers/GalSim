@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -429,7 +429,7 @@ def _noll_to_zern(j):
     return _noll_n[j], _noll_m[j]
 
 def _zern_norm(n, m):
-    """Normalization coefficient for zernike (n, m).
+    r"""Normalization coefficient for zernike (n, m).
 
     Defined such that \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi if n1==n2 and m1==m2 else 0.0
     """
