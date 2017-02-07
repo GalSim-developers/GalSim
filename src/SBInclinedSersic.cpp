@@ -296,16 +296,20 @@ namespace galsim {
 
     double SBInclinedSersic::SBInclinedSersicImpl::maxSB() const
     {
+        const double conservative_factor = 1.56;
+
         // When the disk is face on, the max SB is _xnorm
         // When the disk is edge on, the max SB is _xnorm * _h0/_r0 * gamma(_n)/_n
         double maxsb = _xnorm;
         // The relationship for inclinations in between these is not linear.
-        // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
-        // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
+        // Empirically, it is vaguely linearish in ln(maxsb) vs. sqrt(cosi), so we use that for
+        // the interpolation.
         double sc = sqrt(std::abs(_cosi));
-        double h0_gamma_n = _h0*boost::math::tgamma(_n);
-        maxsb *= (h0_gamma_n * sc + _r0 * _n * (1.-sc)) / h0_gamma_n;
-        return std::abs(maxsb);
+        maxsb *= std::exp((1.-sc)*std::log((_r0 * boost::math::tgamma(_n) ) / _h0*_n));
+
+        // Err on the side of overestimating by multiplying by conservative_factor,
+        // which was found to work for the worst-case scenario
+        return std::abs(maxsb)*conservative_factor;
     }
 
     double SBInclinedSersic::SBInclinedSersicImpl::xValue(const Position<double>& p) const
