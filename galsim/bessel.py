@@ -20,4 +20,4 @@ A Python layer version of the C++ Bessel functions, so we don't need
 scipy just to get bessel functions.
 """
 
-from ._galsim import j0, j1, jn, jv, kn, kv, j0_root
+from ._galsim import j0, j1, jn, jv, yn, yv, i_n, iv, kn, kv, j0_root
