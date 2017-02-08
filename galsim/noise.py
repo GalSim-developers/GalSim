@@ -16,13 +16,77 @@
 #    and/or other materials provided with the distribution.
 #
 """@file noise.py
-Module which adds the addNoise() and addNoiseSNR() methods to the Image classes at the Python
+Noise classes for adding various kinds of noise to an image.
+Also includes the addNoise() and addNoiseSNR() methods of the Image classes at the Python
 layer.
 """
 
 import galsim
 import numpy as np
 import math
+
+
+def addNoise(self, noise):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Add noise to the image according to a supplied noise model.
+
+    @param noise        The noise (BaseNoise) model to use.
+    """
+    noise.applyTo(self)
+
+def addNoiseSNR(self, noise, snr, preserve_flux=False):
+    # This will be inserted into the Image class as a method.  So self = image.
+    """Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
+
+    The given SNR (`snr`) can be achieved either by scaling the flux of the object while keeping the
+    noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
+    using the parameter `preserve_flux`.
+
+    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
+    of the flux:
+        S = sum W(x,y) I(x,y) / sum W(x,y)
+        N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+    and assuming that Var(I(x,y)) is constant
+        Var(I(x,y)) = noise_var
+    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
+    cancel and we find that
+        snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
+    and therefore, for a given I(x,y) and snr,
+        noise_var = sum I(x,y)^2/snr^2.
+
+    Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
+    is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
+    Thus, the real S/N on the final image will be slightly lower than the target `snr` value,
+    and this effect will be larger for brighter objects.
+
+    Also, this function relies on noise.getVariance() to determine how much variance the
+    noise model will add.  Thus, it will not work for noise models that do not have a well-
+    defined variance, such as VariableGaussianNoise.
+
+    @param noise        The noise (BaseNoise) model to use.
+    @param snr          The desired signal-to-noise after the noise is applied.
+    @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
+                        the noise model (False) to achieve the desired SNR. [default: False]
+
+    @returns the variance of the noise that was applied to the image.
+    """
+    noise_var = noise.getVariance()
+    sumsq = np.sum(self.array**2, dtype=float)
+    if preserve_flux:
+        new_noise_var = sumsq/snr/snr
+        noise = noise.withVariance(new_noise_var)
+        self.addNoise(noise)
+        return new_noise_var
+    else:
+        sn_meas = np.sqrt( sumsq/noise_var )
+        flux = snr/sn_meas
+        self *= flux
+        self.addNoise(noise)
+        return noise_var
+
+galsim.Image.addNoise = addNoise
+galsim.Image.addNoiseSNR = addNoiseSNR
+
 
 class BaseNoise(object):
     """Base class for all noise classes.
@@ -618,63 +682,4 @@ class VariableGaussianNoise(BaseNoise):
         return 'galsim.VariableGaussianNoise(var_image%s)'%(self.var_image)
 
 
-def addNoise(self, noise):
-    # This will be inserted into the Image class as a method.  So self = image.
-    """Add noise to the image according to a supplied noise model.
 
-    @param noise        The noise (BaseNoise) model to use.
-    """
-    noise.applyTo(self)
-
-def addNoiseSNR(self, noise, snr, preserve_flux=False):
-    # This will be inserted into the Image class as a method.  So self = image.
-    """Adds noise to the image in a way that achieves the specified signal-to-noise ratio.
-
-    The given SNR (`snr`) can be achieved either by scaling the flux of the object while keeping the
-    noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
-    using the parameter `preserve_flux`.
-
-    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
-    of the flux:
-        S = sum W(x,y) I(x,y) / sum W(x,y)
-        N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-    and assuming that Var(I(x,y)) is constant
-        Var(I(x,y)) = noise_var
-    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
-    cancel and we find that
-        snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
-    and therefore, for a given I(x,y) and snr,
-        noise_var = sum I(x,y)^2/snr^2.
-
-    Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
-    is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
-    Thus, the real S/N on the final image will be slightly lower than the target `snr` value,
-    and this effect will be larger for brighter objects.
-
-    Also, this function relies on noise.getVariance() to determine how much variance the
-    noise model will add.  Thus, it will not work for noise models that do not have a well-
-    defined variance, such as VariableGaussianNoise.
-
-    @param noise        The noise (BaseNoise) model to use.
-    @param snr          The desired signal-to-noise after the noise is applied.
-    @param preserve_flux  Whether to preserve the flux of the object (True) or the variance of
-                        the noise model (False) to achieve the desired SNR. [default: False]
-
-    @returns the variance of the noise that was applied to the image.
-    """
-    noise_var = noise.getVariance()
-    sumsq = np.sum(self.array**2, dtype=float)
-    if preserve_flux:
-        new_noise_var = sumsq/snr/snr
-        noise = noise.withVariance(new_noise_var)
-        self.addNoise(noise)
-        return new_noise_var
-    else:
-        sn_meas = np.sqrt( sumsq/noise_var )
-        flux = snr/sn_meas
-        self *= flux
-        self.addNoise(noise)
-        return noise_var
-
-galsim.Image.addNoise = addNoise
-galsim.Image.addNoiseSNR = addNoiseSNR
