@@ -77,9 +77,6 @@ inclined_sersic_regression_test_parameters = (
     ("1.0", "1.2", "2.0", "1.5", "0.5", "6.5", "5.5"),
     ("1.0", "1.5", "0.3", "3.0", "0.3", "0.0", "0.0"),)
 
-exp_conservative_factor = 1.33
-sersic_conservative_factor = 1.56
-
 image_nx = 64
 image_ny = 64
 
@@ -251,9 +248,8 @@ def test_exponential():
     # Check that they're the same
     np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
 
-    # The face-on version should get the maxSB value exactly right, modulo the factor to ensure
-    # a slight overestimation
-    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB()*(exp_conservative_factor))
+    # The face-on version should get the maxSB value exactly right
+    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
 
     check_basic(inc_profile, "Face-on " + mode)
 
@@ -298,9 +294,8 @@ def test_sersic():
 
         np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
 
-        # The face-on version should get the maxSB value exactly right, modulo the 1+r/h factor
-        # to ensure an overestimate
-        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB()*sersic_conservative_factor)
+        # The face-on version should get the maxSB value exactly right
+        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB())
 
         check_basic(inc_profile, "Face-on " + mode)
 
@@ -319,11 +314,9 @@ def test_edge_on():
         if mode == "InclinedExponential":
             n = 1.0
             comp_prof = galsim.Exponential(scale_radius=scale_radius)
-            conservative_factor = exp_conservative_factor
         else:
             n = sersic_n
             comp_prof = galsim.Sersic(n=n, scale_radius=scale_radius)
-            conservative_factor = sersic_conservative_factor
 
         images = []
 
@@ -345,12 +338,11 @@ def test_edge_on():
         np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
-        # Also the edge-on version should get the maxSB value exactly right, modulo the factor
-        # to ensure an overestimate
-        np.testing.assert_array_almost_equal(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n) * conservative_factor)
+        # Also the edge-on version should get the maxSB value exactly right
+        np.testing.assert_allclose(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n))
         prof.drawImage(image, method='sb', use_true_center=False)
         print('max pixel: ', image.array.max(), ' cf.', prof.maxSB())
-        np.testing.assert_allclose(image.array.max()*conservative_factor, prof.maxSB(), rtol=0.01)
+        np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
 
 
 @timer
@@ -406,12 +398,12 @@ def test_sanity():
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
 
-        # Check maxSB - just ensure it's an overestimate for all cases. Since this profile isn't
-        # real-space analytic, we can't use method='sb' to more accurately test it
+        # Check maxSB - just ensure it's not under by more than the empirical limit for this
+        # approximation
         test_profile.drawImage(test_image, use_true_center=False)
         print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
 
-        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB())
+        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB()*1.56)
 
     # Run tests applicable to both profiles
     for mode in ("InclinedExponential", "InclinedSersic"):

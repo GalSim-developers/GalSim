@@ -220,8 +220,6 @@ namespace galsim {
 
     double SBInclinedExponential::SBInclinedExponentialImpl::maxSB() const
     {
-        const double conservative_factor = 1.33;
-
         // When the disk is face on, the max SB is flux / 2 pi r0^2
         // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
         double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
@@ -233,7 +231,7 @@ namespace galsim {
 
         // Err on the side of overestimating by multiplying by conservative_factor,
         // which was found to work for the worst-case scenario
-        return std::abs(maxsb)*conservative_factor;
+        return std::abs(maxsb);
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
