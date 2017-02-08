@@ -40,8 +40,9 @@
 #include "galsim/boost1_48_0/random/detail/generator_seed_seq.hpp"
 
 namespace boost {
+
 #ifndef USE_BOOST
-    typedef unsigned long long uintmax_t;
+    namespace { typedef unsigned long long uintmax_t; }
 #endif
 
 namespace random {
