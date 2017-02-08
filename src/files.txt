@@ -29,4 +29,8 @@ Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
 Bessel.cpp
+BesselJ.cpp
+BesselY.cpp
+BesselI.cpp
+BesselK.cpp
 Version.cpp
