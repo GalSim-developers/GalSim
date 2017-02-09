@@ -29,7 +29,7 @@ installation of GalSim requires the following dependencies. This dependency list
 includes a canonical version number that is known to work. In most cases, other
 recent versions will also work:
 
-- Python (2.7, 3.4, 3.5)
+- Python (2.7, 3.4, 3.5, 3.6)
 - SCons (2.1.0)
 - NumPy (1.11)
 - Astropy (1.1.1)
@@ -59,13 +59,13 @@ dependencies can be installed via fink, for users with Macs.
 Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.
 
-i) Python (2.6, 2.7, 3.4, or 3.5 series), with some additional modules installed
+i) Python (2.7, 3.4, 3.5, or 3.6 series), with some additional modules installed
 --------------------------------------------------------------------------------
 
 The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
-Currently GalSim supports Python versions 2.6, 2.7, 3.4, and 3.5.  It is likely
+Currently GalSim supports Python versions 2.7, 3.4, 3.5, and 3.6.  It is likely
 that other Python 3.x versions are compatible, but these two are the only ones
 actively tested.
 
