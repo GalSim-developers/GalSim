@@ -247,7 +247,7 @@ class GaussianNoise(BaseNoise):
         self._gd.clearCache()
         noise_array = np.empty(np.prod(image.array.shape), dtype=float)
         self._gd.generate(noise_array)
-        np.copyto(image.array, noise_array.reshape(image.array.shape), casting='unsafe')
+        image.array[:,:] += noise_array.reshape(image.array.shape).astype(image.dtype)
 
     def _getVariance(self):
         return self.sigma**2
@@ -564,7 +564,7 @@ class DeviateNoise(BaseNoise):
     def _applyTo(self, image):
         noise_array = np.empty(np.prod(image.array.shape), dtype=float)
         self._rng.generate(noise_array)
-        np.copyto(image.array, noise_array.reshape(image.array.shape), casting='unsafe')
+        image.array[:,:] += noise_array.reshape(image.array.shape).astype(image.dtype)
 
     def _getVariance(self):
         raise RuntimeError("No single variance value for DeviateNoise")

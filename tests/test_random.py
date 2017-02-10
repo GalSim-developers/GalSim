@@ -402,6 +402,38 @@ def test_gaussian():
             var, gn.getVariance(), 1,
             err_msg='Realized variance for GaussianNoise did not match getVariance()')
 
+    # Check that GaussianNoise adds to the image, not overwrites the image.
+    gal = galsim.Exponential(half_light_radius=2.3, flux=1.e4)
+    gal.drawImage(image=big_im)
+    big_im.addNoise(gn)
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, gn.getVariance(), 1,
+            err_msg='GaussianNoise wrong when already an object drawn on the image')
+
+    # Check that DeviateNoise adds to the image, not overwrites the image.
+    gal.drawImage(image=big_im)
+    big_im.addNoise(galsim.DeviateNoise(g))
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, gn.getVariance(), 1,
+            err_msg='DeviateNoise wrong when already an object drawn on the image')
+
+    # Check that VariableGaussianNoise adds to the image, not overwrites the image.
+    gal.drawImage(image=big_im)
+    var_im = big_im.copy()
+    var_im.fill(gn.getVariance())
+    print('rng = ',rng)
+    print('var_im = ',var_im)
+    big_im.addNoise(galsim.VariableGaussianNoise(rng, var_im));
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, gn.getVariance(), 1,
+            err_msg='VariabeGaussianNoise wrong when already an object drawn on the image')
+
     # Check withVariance
     gn = gn.withVariance(9.)
     np.testing.assert_almost_equal(
@@ -750,6 +782,17 @@ def test_poisson():
     np.testing.assert_almost_equal(
             var, pn.getVariance(), 1,
             err_msg='Realized variance for PoissonNoise did not match getVariance()')
+
+    # Check that PoissonNoise adds to the image, not overwrites the image.
+    gal = galsim.Exponential(half_light_radius=2.3, flux=0.3)
+    # Note: in this case, flux/size^2 needs to be << sky_level or it will mess up the statistics.
+    gal.drawImage(image=big_im)
+    big_im.addNoise(pn)
+    gal.withFlux(-0.3).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, pn.getVariance(), 1,
+            err_msg='PoissonNoise wrong when already an object drawn on the image')
 
     # Check withVariance
     pn = pn.withVariance(9.)
@@ -1553,6 +1596,17 @@ def test_ccdnoise():
     np.testing.assert_almost_equal(
             var, ccdnoise.getVariance(), 1,
             err_msg='Realized variance for CCDNoise did not match getVariance()')
+
+    # Check that CCDNoise adds to the image, not overwrites the image.
+    gal = galsim.Exponential(half_light_radius=2.3, flux=0.3)
+    # Note: again, flux/size^2 needs to be << sky_level or it will mess up the statistics.
+    gal.drawImage(image=big_im)
+    big_im.addNoise(ccdnoise)
+    gal.withFlux(-0.3).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, ccdnoise.getVariance(), 1,
+            err_msg='CCDNoise wrong when already an object drawn on the image')
 
     # Check withVariance
     ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
