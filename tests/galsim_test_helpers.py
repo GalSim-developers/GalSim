@@ -334,7 +334,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             irreprable = True
     except:
         import pyfits
-    print('Try pickling ',obj1)
+    print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
     obj2 = pickle.loads(pickle.dumps(obj1))
@@ -383,7 +383,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
-        with galsim.utilities.printoptions(precision=18, threshold=1e6):
+        with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
         f5 = func(obj5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
@@ -435,14 +435,16 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: can't change size of LVector or PhotonArray without changing array
             if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
-            with galsim.utilities.printoptions(precision=18, threshold=1e6):
+            with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
                     if classname in galsim._galsim.__dict__:
-                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim._galsim.' + classname + repr(tuple(newargs))
                     else:
-                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim.' + classname + repr(tuple(newargs))
+                    obj6 = eval(eval_str)
                 except Exception as e:
-                    print('e = ',e)
+                    print('caught exception: ',e)
+                    print('eval_str = ',eval_str)
                     raise TypeError("{0} not `eval`able!".format(
                             classname + repr(tuple(newargs))))
                 else:

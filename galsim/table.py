@@ -524,7 +524,7 @@ def _LookupTable2D_str(self):
     y = self.getYArgs()
     f = self.getVals()
     return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
-            "f=[[%s,...,%s],...,[%s,...,%s]]), interpolant=%r"%(
+            "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r)"%(
             x[0], x[-1], y[0], y[-1], f[0,0], f[0,-1], f[-1,0], f[-1,-1], self.getInterp()))
 
 _galsim._LookupTable2D.__getinitargs__ = lambda self: \
@@ -535,5 +535,6 @@ _galsim._LookupTable2D.__hash__ = lambda self: \
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str
 _galsim._LookupTable2D.__repr__ = lambda self: \
-        'galsim._galsim._LookupTable2D(array(%r), array(%r), %r, %r)'%(
-        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals(), self.getInterp())
+        'galsim._galsim._LookupTable2D(array(%r), array(%r), array(%r), %r)'%(
+        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals().tolist(),
+        self.getInterp())

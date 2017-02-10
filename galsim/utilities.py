@@ -34,7 +34,9 @@ def roll2d(image, shape):
     @returns the rolled image.
     """
     (iroll, jroll) = shape
-    return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
+    # The ascontiguousarray bit didn't used to be necessary.  But starting with
+    # numpy v1.12, np.roll doesn't seem to always return a C-contiguous array.
+    return np.ascontiguousarray(np.roll(np.roll(image, jroll, axis=1), iroll, axis=0))
 
 def kxky(array_shape=(256, 256)):
     """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
