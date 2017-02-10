@@ -322,8 +322,9 @@ class Convolution(galsim.GSObject):
             else:
                 real_space = False
 
-        # Warn if doing DFT convolution for objects with hard edges.
+        # Warn if doing DFT convolution for objects with hard edges
         if not real_space and hard_edge:
+
             import warnings
             if len(args) == 2:
                 msg = """
