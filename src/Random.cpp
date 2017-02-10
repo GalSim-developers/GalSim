@@ -298,10 +298,11 @@ namespace galsim {
 
     void GaussianDeviate::generateFromVariance(int N, double* data)
     {
+        setMean(0.);
+        setSigma(1.);
         for (int i=0; i<N; ++i) {
             double sigma = std::sqrt(data[i]);
-            setSigma(sigma);
-            data[i] = (*this)();
+            data[i] = (*this)() * sigma;
         }
     }
 

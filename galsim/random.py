@@ -318,7 +318,7 @@ class GaussianDeviate(BaseDeviate):
         """Generate many Gaussian deviate values using the existing array values as the
         variance for each.
         """
-        array_1d = np.ascontiguousarray(array.ravel())
+        array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
         assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate_from_variance(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:
@@ -433,7 +433,7 @@ class PoissonDeviate(BaseDeviate):
         """Generate many Poisson deviate values using the existing array values as the
         expectation value (aka mean) for each.
         """
-        array_1d = np.ascontiguousarray(array.ravel())
+        array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
         assert(array_1d.strides[0] == array_1d.itemsize)
         self._rng.generate_from_expectation(len(array_1d), array_1d.ctypes.data)
         if array_1d.data != array.data:

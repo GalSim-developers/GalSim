@@ -229,6 +229,28 @@ def test_uniform():
             test_array, np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence from generate.')
 
+    # Test add_generate
+    u.seed(testseed)
+    u.add_generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, 2.*np.array(uResult), precision,
+            err_msg='Wrong uniform random number sequence from generate.')
+
+    # Test generate with a float32 array
+    u.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    u.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(uResult), precisionF,
+            err_msg='Wrong uniform random number sequence from generate.')
+
+    # Test add_generate
+    u.seed(testseed)
+    u.add_generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, 2.*np.array(uResult), precisionF,
+            err_msg='Wrong uniform random number sequence from generate.')
+
     # Test filling an image
     u.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -236,6 +258,14 @@ def test_uniform():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
+
+    # Test filling a single-precision image
+    u.seed(testseed)
+    testimage = galsim.ImageF(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(u))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(uResult), precisionF,
+            err_msg='Wrong uniform random number sequence generated when applied to ImageF.')
 
     # Test filling an image with Fortran ordering
     u.seed(testseed)
@@ -359,6 +389,30 @@ def test_gaussian():
             test_array, np.array(gResult), precision,
             err_msg='Wrong Gaussian random number sequence from generate.')
 
+    # Test generate_from_variance.
+    g2 = galsim.GaussianDeviate(testseed)
+    test_array.fill(gSigma**2)
+    g2.generate_from_variance(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gResult)-gMean, precision,
+            err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
+
+    # Test generate with a float32 array.
+    g.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gResult), precisionF,
+            err_msg='Wrong Gaussian random number sequence from generate.')
+
+    # Test generate_from_variance.
+    g2.seed(testseed)
+    test_array.fill(gSigma**2)
+    g2.generate_from_variance(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gResult)-gMean, precisionF,
+            err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
+
     # Test filling an image
     g.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -366,6 +420,14 @@ def test_gaussian():
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(gResult), precision,
             err_msg='Wrong Gaussian random number sequence generated when applied to image.')
+
+    # Test filling a single-precision image
+    g.seed(testseed)
+    testimage = galsim.ImageF(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(g))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(gResult), precisionF,
+            err_msg='Wrong Gaussian random number sequence generated when applied to ImageF.')
 
     # GaussianNoise is equivalent, but no mean allowed.
     rng.seed(testseed)
@@ -619,6 +681,14 @@ def test_binomial():
             test_array, np.array(bResult), precision,
             err_msg='Wrong binomial random number sequence from generate.')
 
+    # Test generate with an int array
+    b.seed(testseed)
+    test_array = np.empty(3, dtype=np.int)
+    b.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(bResult), precisionI,
+            err_msg='Wrong binomial random number sequence from generate.')
+
     # Test filling an image
     b.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -740,6 +810,30 @@ def test_poisson():
             test_array, np.array(pResult), precision,
             err_msg='Wrong poisson random number sequence from generate.')
 
+    # Test generate_from_expectation
+    p.seed(testseed)
+    test_array = np.array([pMean]*3)
+    p.generate_from_expectation(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(pResult), precision,
+            err_msg='Wrong poisson random number sequence from generate_from_expectation.')
+
+    # Test generate with an int array
+    p.seed(testseed)
+    test_array = np.empty(3, dtype=int)
+    p.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(pResult), precisionI,
+            err_msg='Wrong poisson random number sequence from generate.')
+
+    # Test generate_from_expectation
+    p.seed(testseed)
+    test_array = np.array([pMean]*3, dtype=int)
+    p.generate_from_expectation(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(pResult), precisionI,
+            err_msg='Wrong poisson random number sequence from generate_from_expectation.')
+
     # Test filling an image
     p.seed(testseed)
     testimage = galsim.ImageI(np.zeros((3, 1), dtype=np.int32))
@@ -756,6 +850,14 @@ def test_poisson():
     np.testing.assert_array_equal(
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg='Wrong poisson random number sequence generated using PoissonNoise')
+
+    # Test filling a single-precision image
+    rng.seed(testseed)
+    testimage = galsim.ImageF(np.zeros((3, 1)))
+    testimage.addNoise(pn)
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(pResult)-pMean, precisionF,
+            err_msg='Wrong Poisson random number sequence generated when applied to ImageF.')
 
     # Test filling an image with Fortran ordering
     rng.seed(testseed)
@@ -985,6 +1087,14 @@ def test_weibull():
             test_array, np.array(wResult), precision,
             err_msg='Wrong weibull random number sequence from generate.')
 
+    # Test generate with a float32 array
+    w.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    w.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(wResult), precisionF,
+            err_msg='Wrong weibull random number sequence from generate.')
+
     # Test filling an image
     w.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1104,6 +1214,14 @@ def test_gamma():
             test_array, np.array(gammaResult), precision,
             err_msg='Wrong gamma random number sequence from generate.')
 
+    # Test generate with a float32 array
+    g.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gammaResult), precisionF,
+            err_msg='Wrong gamma random number sequence from generate.')
+
     # Test filling an image
     g.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1221,6 +1339,14 @@ def test_chi2():
     c.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(chi2Result), precision,
+            err_msg='Wrong Chi^2 random number sequence from generate.')
+
+    # Test generate with a float32 array
+    c.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    c.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(chi2Result), precisionF,
             err_msg='Wrong Chi^2 random number sequence from generate.')
 
     # Test filling an image
@@ -1379,6 +1505,28 @@ def test_distfunction():
             test_array, np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence from generate.')
 
+    # Test add_generate
+    d.seed(testseed)
+    d.add_generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, 2*np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from add_generate.')
+
+    # Test generate with a float32 array
+    d.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dFunctionResult), precisionF,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test add_generate with a float32 array
+    d.seed(testseed)
+    d.add_generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, 2*np.array(dFunctionResult), precisionF,
+            err_msg='Wrong DistDeviate random number sequence from add_generate.')
+
     # Test filling an image
     d.seed(testseed)
     print('d = ',d)
@@ -1491,6 +1639,14 @@ def test_distLookupTable():
     d.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test generate with a float32 array
+    d.seed(testseed)
+    test_array = np.empty(3, dtype=np.float32)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precisionF,
             err_msg='Wrong DistDeviate random number sequence from generate.')
 
     # Test filling an image
