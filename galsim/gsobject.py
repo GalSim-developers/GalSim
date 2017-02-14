@@ -975,6 +975,10 @@ class GSObject(object):
 
         return wcs
 
+    def _prepareDraw(self):
+        # Do any work that was postponed until drawImage.
+        pass
+
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
@@ -1293,6 +1297,10 @@ class GSObject(object):
                 raise ValueError("poisson_flux is only relevant for method='phot'")
             if surface_ops != ():
                 raise ValueError("surface_ops are only relevant for method='phot'")
+
+        # Do any delayed computation needed by fft or real_space drawing.
+        if method != 'phot':
+            self._prepareDraw()
 
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
@@ -1678,13 +1686,7 @@ class GSObject(object):
                     "Warning: drawImage for object with flux == 1, area == 1, and "
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
-        # Setup the rng if not provided one.
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+        ud = galsim.UniformDeviate(rng)
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
         if image.wcs != galsim.PixelScale(1.0):
@@ -1710,7 +1712,7 @@ class GSObject(object):
             thisN = min(maxN, Nleft)
 
             try:
-                phot_array = self.SBProfile.shoot(thisN, ud)
+                phot_array = self.shoot(thisN, ud)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1729,6 +1731,20 @@ class GSObject(object):
             Nleft -= thisN
 
         return added_flux
+
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+        return self.SBProfile.shoot(n_photons, ud)
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,

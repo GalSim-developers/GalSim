@@ -154,9 +154,9 @@ def test_deInterleaveImage():
     img.setOrigin(galsim.PositionI(5,7)) ## for non-trivial bounds
     im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
     img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
-    np.testing.assert_array_equal(img1.array,img.array,\
-      err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "+\
-                "images")
+    np.testing.assert_array_equal(img1.array,img.array,
+            err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "
+                      "images")
 
     assert img.wcs == img1.wcs
     assert img.bounds == img1.bounds
@@ -165,9 +165,9 @@ def test_deInterleaveImage():
     img.setCenter(0,0) ## for non-trivial bounds
     im_list, offsets = galsim.utilities.deInterleaveImage(img,(2,5))
     img1 = galsim.utilities.interleaveImages(im_list,(2,5),offsets)
-    np.testing.assert_array_equal(img1.array,img.array,\
-      err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for rectangular"\
-                +" images")
+    np.testing.assert_array_equal(img1.array,img.array,
+            err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for "
+                      "rectangular images")
 
     assert img.wcs == img1.wcs
     assert img.bounds == img1.bounds
@@ -196,8 +196,8 @@ def test_deInterleaveImage():
     for n in range(len(im_list0)):
         im = galsim.Image(16,16)
         g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
-        np.testing.assert_array_equal(im.array,im_list0[n].array,\
-          err_msg="deInterleaveImage does not reduce the resolution of the input image correctly")
+        np.testing.assert_array_equal(im.array,im_list0[n].array,
+            err_msg="deInterleaveImage does not reduce the resolution of the input image correctly")
         assert im_list0[n].wcs == im.wcs
 
     # 3b) Increasing directional resolution
@@ -220,16 +220,16 @@ def test_deInterleaveImage():
     for n in range(n1**2):
         im, offset = im_list1[n], offsets1[n]
         img = g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
-        np.testing.assert_array_equal(im.array,img.array,\
-          err_msg='deInterleaveImage does not reduce the resolution correctly along the \
-                   vertical direction')
+        np.testing.assert_array_equal(im.array,img.array,
+            err_msg="deInterleaveImage does not reduce the resolution correctly along the "
+                    "vertical direction")
 
     for n in range(n2**2):
         im, offset = im_list2[n], offsets2[n]
         g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
-        np.testing.assert_array_equal(im.array*n2**2,img.array,\
-          err_msg='deInterleaveImage does not reduce the resolution correctly along the \
-                   horizontal direction')
+        np.testing.assert_array_equal(im.array*n2**2,img.array,
+            err_msg="deInterleaveImage does not reduce the resolution correctly along the "
+                     "horizontal direction")
         # im is scaled to account for flux not being conserved
 
 
@@ -257,7 +257,7 @@ def test_interleaveImages():
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.*scale/n)
-    np.testing.assert_array_equal(img.array,im.array,\
+    np.testing.assert_array_equal(img.array,im.array,
         err_msg="Interleaved Gaussian images do not match")
 
     assert im.wcs == img.wcs
@@ -280,7 +280,7 @@ def test_interleaveImages():
     # Input to N as a tuple
     img_randperm = galsim.utilities.interleaveImages(im_list_randperm,(n,n),offsets=offset_list_randperm)
 
-    np.testing.assert_array_equal(img_randperm.array,img.array,\
+    np.testing.assert_array_equal(img_randperm.array,img.array,
         err_msg="Interleaved images do not match when 'offsets' is supplied")
     assert img_randperm.scale == img.scale
 
@@ -293,11 +293,11 @@ def test_interleaveImages():
     DY = DX
     for dy in DY:
         for dx in DX:
-           offset = galsim.PositionD(dx,dy)
-           offset_list.append(offset)
-           im = galsim.Image(16,16)
-           gal.drawImage(image=im,offset=offset,method='no_pixel')
-           im_list.append(im)
+            offset = galsim.PositionD(dx,dy)
+            offset_list.append(offset)
+            im = galsim.Image(16,16)
+            gal.drawImage(image=im,offset=offset,method='no_pixel')
+            im_list.append(im)
 
     try:
         N = (n,n)
@@ -364,11 +364,11 @@ def test_interleaveImages():
     DX = np.arange(0.0,1.0,1.0/n**2)
     DX -= DX.mean()
     for dx in DX:
-         offset = galsim.PositionD(dx,0.0)
-         offset_list.append(offset)
-         im = galsim.Image(16,16*n*n)
-         gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
-         im_list.append(im)
+        offset = galsim.PositionD(dx,0.0)
+        offset_list.append(offset)
+        im = galsim.Image(16,16*n*n)
+        gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
+        im_list.append(im)
 
     img = galsim.utilities.interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
                                             suppress_warnings=True)
@@ -508,6 +508,126 @@ def test_rand_with_replacement():
         weight=weight, _n_rng_calls=True)
     assert np.all(result_1==result_2),"Using _n_rng_calls results in different random numbers"
 
+@timer
+def test_position_type_promotion():
+    pd1 = galsim.PositionD(0.1, 0.2)
+    pd2 = galsim.PositionD(-0.3, 0.4)
+    pd3 = galsim.PositionD()  # Also test 0-argument initializer here
+
+    pi1 = galsim.PositionI(3, 65)
+    pi2 = galsim.PositionI(-4, 4)
+    pi3 = galsim.PositionI()
+
+    # First check combinations that should yield a PositionD
+    for lhs, rhs in zip([pd1, pd1, pi1, pd1, pi2], [pd2, pi1, pd2, pi3, pd3]):
+        assert lhs+rhs == galsim.PositionD(lhs.x+rhs.x, lhs.y+rhs.y)
+        assert lhs-rhs == galsim.PositionD(lhs.x-rhs.x, lhs.y-rhs.y)
+
+    # Also check PosI +/- PosI -> PosI
+    assert pi1+pi2 == galsim.PositionI(pi1.x+pi2.x, pi1.y+pi2.y)
+    assert pi1-pi2 == galsim.PositionI(pi1.x-pi2.x, pi1.y-pi2.y)
+
+
+@timer
+def test_unweighted_moments():
+    sigma = 0.8
+    gal = galsim.Gaussian(sigma=sigma)
+    scale = 0.02    # Use a small scale and a large image so we can neglect the impact of boundaries
+    nx = ny = 1024  # and pixelization in tests.
+    img1 = gal.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+
+    mom = galsim.utilities.unweighted_moments(img1)
+    shape = galsim.utilities.unweighted_shape(mom)
+
+    # Check that shape derived from moments is same as shape derived from image.
+    shape2 = galsim.utilities.unweighted_shape(img1)
+    assert shape == shape2
+
+    # Object should show up at the image true center.
+    np.testing.assert_almost_equal(mom['Mx'], img1.trueCenter().x)
+    np.testing.assert_almost_equal(mom['My'], img1.trueCenter().y)
+    # And have the right sigma = rsqr/2
+    np.testing.assert_almost_equal(mom['Mxx']*scale**2, sigma**2)
+    np.testing.assert_almost_equal(mom['Myy']*scale**2, sigma**2)
+    np.testing.assert_almost_equal(mom['Mxy'], 0.0)
+    np.testing.assert_almost_equal(shape['e1'], 0.0)
+    np.testing.assert_almost_equal(shape['e2'], 0.0)
+
+
+    # Add in some ellipticity and test that
+    e1 = 0.2
+    e2 = 0.3
+    gal = gal.shear(e1=e1, e2=e2)
+    img2 = gal.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+
+    mom2 = galsim.utilities.unweighted_moments(img2)
+    shape3 = galsim.utilities.unweighted_shape(mom2)
+
+    # Check that shape derived from moments is same as shape derived from image.
+    shape4 = galsim.utilities.unweighted_shape(img2)
+    assert shape3 == shape4
+
+    np.testing.assert_almost_equal(mom2['Mx'], img2.trueCenter().x)
+    np.testing.assert_almost_equal(mom2['My'], img2.trueCenter().y)
+    np.testing.assert_almost_equal(shape3['e1'], e1)
+    np.testing.assert_almost_equal(shape3['e2'], e2)
+
+    # Check subimage still works
+    bds = galsim.BoundsI(15, 1022, 11, 1002)
+    subimg = img2[bds]
+
+    mom3 = galsim.utilities.unweighted_moments(subimg)
+    shape5 = galsim.utilities.unweighted_shape(subimg)
+
+    for key in mom2:
+        np.testing.assert_almost_equal(mom2[key], mom3[key])
+    for key in shape3:
+        np.testing.assert_almost_equal(shape3[key], shape5[key])
+
+    # Test unweighted_moments origin keyword.  Using origin=trueCenter should make centroid result
+    # (0.0, 0.0)
+    mom4 = galsim.utilities.unweighted_moments(img2, origin=img2.trueCenter())
+    np.testing.assert_almost_equal(mom4['Mx'], 0.0)
+    np.testing.assert_almost_equal(mom4['My'], 0.0)
+
+
+def test_dol_to_lod():
+    """Check broadcasting behavior of dol_to_lod"""
+
+    i0 = 0
+    l1 = [1]
+    l2 = [1, 2]
+    l3 = [1, 2, 3]
+    d1 = {1:1}
+
+    # Should be able to broadcast scalar elements or lists of length 1.
+    dd = dict(i0=i0, l2=l2)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd)):
+        assert d == dict(i0=i0, l2=l2[i])
+
+    dd = dict(l1=l1, l2=l2)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd)):
+        assert d == dict(l1=l1[0], l2=l2[i])
+
+    dd = dict(l1=l1, l3=l3)
+    for i, d in enumerate(galsim.utilities.dol_to_lod(dd, 3)):
+        assert d == dict(l1=l1[0], l3=l3[i])
+
+    # Can't broadcast list of lengths 2 and 3 though.
+    try:
+        dd = dict(l2=l2, l3=l3)
+        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+    # Can't broadcast a dictionary
+    try:
+        dd = dict(l2=l2, d1=d1)
+        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -519,3 +639,6 @@ if __name__ == "__main__":
     test_interleaveImages()
     test_python_LRU_Cache()
     test_rand_with_replacement()
+    test_position_type_promotion()
+    test_unweighted_moments()
+    test_dol_to_lod()

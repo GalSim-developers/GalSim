@@ -26,7 +26,6 @@ AutoCorrelation = convolution of a profile by its reflection
 FourierSqrt = Fourier-space square root of a profile
 """
 
-from past.builtins import xrange
 import numpy as np
 
 import galsim
@@ -174,6 +173,65 @@ class Sum(galsim.GSObject):
         str_list = [ str(obj) for obj in self.obj_list ]
         return '(' + ' + '.join(str_list) + ')'
         #return 'galsim.Sum([%s])'%', '.join(str_list)
+
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBAdd(SBList, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        if n_photons == 0:
+            return galsim._galsim.PhotonArray(0)
+        ud = galsim.UniformDeviate(rng)
+
+        remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
+        fluxPerPhoton = remainingAbsoluteFlux / n_photons
+
+        # Initialize the output array
+        result = galsim._galsim.PhotonArray(n_photons)
+
+        remainingN = n_photons
+        istart = 0  # The location in the result array where we assign the component arrays.
+
+        # Get photons from each summand, using BinomialDeviate to randomize
+        # the distribution of photons among summands
+        for i, obj in enumerate(self.obj_list):
+            thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
+
+            # How many photons to shoot from this summand?
+            thisN = remainingN  # All of what's left, if this is the last summand...
+            if i < len(self.obj_list)-1:
+                # otherwise, allocate a randomized fraction of the remaining photons to summand.
+                bd = galsim.BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                thisN = bd()
+            if thisN > 0:
+                thisPA = obj.shoot(thisN, ud)
+                # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+                # whereas the shoot() routine would have made them each nominally
+                # thisAbsoluteFlux/thisN
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
+                result.assignAt(istart, thisPA)
+                istart += thisN
+            remainingN -= thisN
+            remainingAbsoluteFlux -= thisAbsoluteFlux
+        assert remainingN == 0
+        assert np.isclose(remainingAbsoluteFlux, 0.0)
+
+        # This process produces correlated photons, so mark the resulting array as such.
+        if len(self.obj_list) > 1:
+            result.setCorrelated(True)
+
+        return result
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -415,6 +473,33 @@ class Convolution(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        photon_array = self._obj_list[0].shoot(n_photons, ud)
+        # It may be necessary to shuffle when convolving because we do not have a
+        # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
+        # both have their negative ones at the end.
+        # However, this decision is now made by the convolve method.
+        for obj in self._obj_list[1:]:
+            photon_array.convolve(obj.shoot(n_photons, ud), ud)
+        return photon_array
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -512,6 +597,10 @@ class Deconvolution(galsim.GSObject):
 
     def __str__(self):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self._gsparams)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -645,6 +734,27 @@ class AutoConvolution(galsim.GSObject):
             s += ', real_space=True'
         s += ')'
         return s
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoConvolve(self._orig_obj.SBProfile, self._real_space,
+                                                       self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        photon_array = self._orig_obj.shoot(n_photons, ud)
+        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
+        return photon_array
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -784,6 +894,33 @@ class AutoCorrelation(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoCorrelate(self._orig_obj.SBProfile,
+                                                        self._real_space, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        result = self._orig_obj.shoot(n_photons, ud)
+        result2 = self._orig_obj.shoot(n_photons, ud)
+
+        # Flip sign of (x, y) in one of the results
+        result2.x *= -1
+        result2.y *= -1
+
+        result.convolve(result2, ud)
+        return result
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -888,6 +1025,10 @@ class FourierSqrtProfile(galsim.GSObject):
 
     def __str__(self):
         return 'galsim.FourierSqrt(%s)'%self.orig_obj
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self._gsparams)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -1160,3 +1301,7 @@ class RandomWalk(Sum):
             gsparams=repr(self._input_gsparams),
         )
         return rep
+
+    def _prepareDraw(self):
+        # RandomWalk never wraps a PhaseScreenPSF, so no need to prepare anything.
+        pass

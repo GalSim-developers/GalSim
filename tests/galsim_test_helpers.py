@@ -21,7 +21,6 @@ import numpy as np
 import os
 import sys
 import logging
-import io
 
 path, filename = os.path.split(__file__)
 try:
@@ -58,14 +57,16 @@ def printval(image1, image2):
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
     print("Maximum image value: ", np.max(image1.array), np.max(image2.array))
     print("Peak location: ", image1.array.argmax(), image2.array.argmax())
+
+    fmt = "      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}"
+
+    mom1 = galsim.utilities.unweighted_moments(image1)
     print("Moments Mx, My, Mxx, Myy, Mxy for new array: ")
-    getmoments(image1)
+    print(fmt.format(mom1['Mx'], mom1['My'], mom1['Mxx'], mom1['Myy'], mom1['Mxy']))
+
+    mom2 = galsim.utilities.unweighted_moments(image2)
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
-    getmoments(image2)
-    #xcen = image2.array.shape[0]/2
-    #ycen = image2.array.shape[1]/2
-    #print("new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4])
-    #print("saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4])
+    print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
     if False:
         import matplotlib.pylab as plt
@@ -74,23 +75,6 @@ def printval(image1, image2):
         ax1.imshow(image1.array)
         ax2.imshow(image2.array)
         plt.show()
-
-def getmoments(image):
-    #print('shape = ',image.array.shape)
-    #print('bounds = ',image.bounds)
-    a = image.array.astype(float) # Use float for better accuracy calculations.
-                                  # This matters more for numpy version <= 1.7
-    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + image.getXMin(),
-                               np.arange(image.array.shape[0]) + image.getYMin())
-    mx = np.sum(xgrid * a) / np.sum(a)
-    my = np.sum(ygrid * a) / np.sum(a)
-    mxx = np.sum(((xgrid-mx)**2) * a) / np.sum(a)
-    myy = np.sum(((ygrid-my)**2) * a) / np.sum(a)
-    mxy = np.sum((xgrid-mx) * (ygrid-my) * a) / np.sum(a)
-
-    print('      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
-            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy))
-    return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
     # Convert a distortion (e1,e2) to a shear (g1,g2)
@@ -202,6 +186,13 @@ def do_shoot(prof, img, name):
     test_flux = 1.8
 
     print('Start do_shoot')
+    # Verify that shoot with rng=None runs
+    prof.shoot(100, rng=None)
+    # And also verify 0, 1, or 2 photons.
+    prof.shoot(0)
+    prof.shoot(1)
+    prof.shoot(2)
+
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
@@ -221,7 +212,7 @@ def do_shoot(prof, img, name):
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
     elif flux_max < 0.1:
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max;
+        scale = 0.1 / flux_max
         print('scale = ',scale)
         prof *= scale
         img *= scale
@@ -547,7 +538,6 @@ def timer(f):
     @functools.wraps(f)
     def f2(*args, **kwargs):
         import time
-        import inspect
         t0 = time.time()
         result = f(*args, **kwargs)
         t1 = time.time()
@@ -592,6 +582,3 @@ class CaptureLog(object):
         self.handler.flush()
         self.output = self.stream.getvalue().strip()
         self.handler.close()
-
-
-

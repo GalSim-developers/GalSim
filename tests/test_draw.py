@@ -245,11 +245,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in x correctly")
+        mom['Mx'], (nx+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in y correctly")
+        mom['My'], (ny+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in y correctly")
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1, scale=scale)
@@ -259,12 +259,12 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.+1.)/2., 4,
+        mom['Mx'], (nx+1.+1.)/2., 4,
         "obj.drawImage(nx,ny,scale) (odd) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.+1.)/2., 4,
+        mom['My'], (ny+1.+1.)/2., 4,
         "obj.drawImage(nx,ny,scale) (odd) did not center in y correctly")
 
     # Test if we provide nx, ny, and no scale.  It should:
@@ -277,11 +277,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in x correctly")
+        mom['Mx'], (nx+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in y correctly")
+        mom['My'], (ny+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in y correctly")
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1)
@@ -291,11 +291,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in x correctly")
+        mom['Mx'], (nx+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in y correctly")
+        mom['My'], (ny+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in y correctly")
 
     try:
         # Test if we provide nx, ny, scale, and an existing image.  It should:
@@ -317,10 +317,10 @@ def test_drawImage():
                                    "obj.drawImage(bounds,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(bounds,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
-    np.testing.assert_almost_equal(mx, (nx+1.)/2., 4,
+    mom = galsim.utilities.unweighted_moments(im10)
+    np.testing.assert_almost_equal(mom['Mx'], (nx+1.)/2., 4,
                                    "obj.drawImage(bounds,scale) did not center in x correctly")
-    np.testing.assert_almost_equal(my, (ny+1.+1.)/2., 4,
+    np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds,scale) did not center in y correctly")
 
     # Test if we provide bounds and no scale.  It should:
@@ -334,10 +334,10 @@ def test_drawImage():
                                    "obj.drawImage(bounds) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(bounds) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
-    np.testing.assert_almost_equal(mx, (nx+1.)/2., 4,
+    mom = galsim.utilities.unweighted_moments(im10)
+    np.testing.assert_almost_equal(mom['Mx'], (nx+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in x correctly")
-    np.testing.assert_almost_equal(my, (ny+1.+1.)/2., 4,
+    np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in y correctly")
 
     try:
@@ -829,12 +829,12 @@ def test_offset():
 
         # Check that the default draw command puts the centroid in the center of the image.
         obj.drawImage(im, method='sb')
-        moments = getmoments(im)
+        mom = galsim.utilities.unweighted_moments(im)
         np.testing.assert_almost_equal(
-                moments[0], cenx, 5,
+                mom['Mx'], cenx, 5,
                 "obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                moments[1], ceny, 5,
+                mom['My'], ceny, 5,
                 "obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
 
         # Test that a few pixel values match xValue.
@@ -870,12 +870,12 @@ def test_offset():
 
             offset = galsim.PositionD(offx,offy)
             obj.drawImage(im, method='sb', offset=offset)
-            moments = getmoments(im)
+            mom = galsim.utilities.unweighted_moments(im)
             np.testing.assert_almost_equal(
-                    moments[0], cenx+offx, decimal,
+                    mom['Mx'], cenx+offx, decimal,
                     "obj.drawImage(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             np.testing.assert_almost_equal(
-                    moments[1], ceny+offy, decimal,
+                    mom['My'], ceny+offy, decimal,
                     "obj.drawImage(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             # Test that a few pixel values match xValue
             gal.drawImage(im2, method='sb', offset=offset)
@@ -892,12 +892,12 @@ def test_offset():
             # Check that shift also moves the centroid by the right amount.
             shifted_obj = obj.shift(offset * scale)
             shifted_obj.drawImage(im, method='sb')
-            moments = getmoments(im)
+            mom = galsim.utilities.unweighted_moments(im)
             np.testing.assert_almost_equal(
-                    moments[0], cenx+offx, decimal,
+                    mom['Mx'], cenx+offx, decimal,
                     "shifted_obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             np.testing.assert_almost_equal(
-                    moments[1], ceny+offy, decimal,
+                    mom['My'], ceny+offy, decimal,
                     "shifted_obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             # Test that a few pixel values match xValue
             shifted_gal = gal.shift(offset * scale)
@@ -933,13 +933,13 @@ def test_offset():
 
         # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
         obj.drawImage(im, method='sb', use_true_center=False)
-        moments = getmoments(im)
+        mom = galsim.utilities.unweighted_moments(im)
         np.testing.assert_almost_equal(
-                moments[0], nom_cenx, 4,
+                mom['Mx'], nom_cenx, 4,
                 "obj.drawImage(im, use_true_center=False) not centered correctly for (nx,ny) = "+
                 "%d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                moments[1], nom_ceny, 4,
+                mom['My'], nom_ceny, 4,
                 "obj.drawImage(im, use_true_center=False) not centered correctly for (nx,ny) = "+
                 "%d,%d"%(nx,ny))
         cen_offset = galsim.PositionD(nom_cenx - cenx, nom_ceny - ceny)
