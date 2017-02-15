@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - releases/1.4
 language: python
 compiler:
   - g++
