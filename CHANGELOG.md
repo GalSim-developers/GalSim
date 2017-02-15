@@ -199,3 +199,12 @@ Bug fix
 
 - Fixed bug when whitening noise in images based on COSMOS training datasets using 
   the config functionality, and other minor config bug. (#792)
+
+Changes from v1.4.2 to v1.4.3
+=============================
+
+Bug fix
+-------
+
+- Fixed bug in the photon shooting code that could occasionally lead to an assert
+  failure due to rounding errors if the numbers came out just right. (#866)

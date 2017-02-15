@@ -951,7 +951,7 @@ namespace galsim {
             xdbg<<"N -> "<<N<<std::endl;
 
             // This is always a reason to break out.
-            if (N < 1.) break;
+            if (N < 0.5) break;
 
             if (max_extra_noise > 0.) {
                 xdbg<<"Check the noise level\n";
@@ -1000,9 +1000,8 @@ namespace galsim {
             if (arrays.size() > 0) {
                 // If using arrays, rescale the flux in each
                 for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
-            } else {
+            } else if (!add_to_image) {
                 // Otherwise, rescale the image itself
-                assert(!add_to_image);
                 img *= T(factor);
                 // Also fix the added_flux value
                 added_flux *= factor;
@@ -1012,6 +1011,10 @@ namespace galsim {
                 negative_flux *= factor;
 #endif
             }
+            // else don't do anything.
+            // Shouldn't be able to get here if add_to_image is False, but rounding errors might
+            // get you here, in which case everything should be fine, so don't do anything.
+            // cf. Issue #866
         }
 
         if (arrays.size() > 0) {

@@ -986,6 +986,32 @@ def test_offset():
                 im.array, im2.array, 6,
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
 
+def test_shoot():
+    """Test drawImage(..., method='phot')
+
+    Most tests of the photon shooting method are done using the `do_shoot` function calls
+    in various places.  Here we test other aspects of photon shooting that are not fully
+    covered by these other tests.
+    """
+    # This test comes from a bug report by Jim Chiang on issue #866.  There was a rounding
+    # problem when the number of photons to shoow came out to 100,000 + 1.  It did the first
+    # 100,000 and then was left with 1, but rounding errors (since it is a double, not an int)
+    # was 1 - epsilon, and it ended up in a place where it shouldn't have been able to get to
+    # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
+    obj =  galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
+    obj = obj.withFlux(100001)
+    image1 = galsim.ImageF(32,32, init_value=100)
+    rng = galsim.BaseDeviate(1234)
+    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng)
+
+    # The test here is really just that it doesn't crash.
+    # But let's do something to check correctness.
+    image2 = galsim.ImageF(32,32)
+    rng = galsim.BaseDeviate(1234)
+    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng)
+    image2 += 100
+    np.testing.assert_almost_equal(image1.array, image2.array, decimal=12)
+
 
 if __name__ == "__main__":
     test_drawImage()
@@ -994,3 +1020,4 @@ if __name__ == "__main__":
     test_drawKImage_Gaussian()
     test_drawKImage_Exponential_Moffat()
     test_offset()
+    test_shoot()
