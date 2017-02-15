@@ -994,7 +994,7 @@ def test_shoot():
     covered by these other tests.
     """
     # This test comes from a bug report by Jim Chiang on issue #866.  There was a rounding
-    # problem when the number of photons to shoow came out to 100,000 + 1.  It did the first
+    # problem when the number of photons to shoot came out to 100,000 + 1.  It did the first
     # 100,000 and then was left with 1, but rounding errors (since it is a double, not an int)
     # was 1 - epsilon, and it ended up in a place where it shouldn't have been able to get to
     # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
