@@ -213,7 +213,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                     if key1 in header and key2 in header:
                         header[key1], header[key2] = header[key2], header[key1]
 
-    def _radec(self, x, y):
+    def _radec(self, x, y, color=None):
         x1 = np.atleast_1d(x)
         y1 = np.atleast_1d(y)
 
@@ -243,7 +243,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             dec = dec[0]
         return ra, dec
 
-    def _xy(self, ra, dec):
+    def _xy(self, ra, dec, color=None):
         import astropy
         factor = galsim.radians / galsim.degrees
         rd = np.atleast_2d([ra, dec]) * factor
@@ -528,7 +528,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
-    def _radec(self, x, y):
+    def _radec(self, x, y, color=None):
         # Need this to look like
         #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ]
         # if input is either scalar x,y or two arrays.
@@ -547,7 +547,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             dec = dec[0]
         return ra, dec
 
-    def _xy(self, ra, dec):
+    def _xy(self, ra, dec, color=None):
         rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)])
 
         x, y = self._wcsinfo.tran( rd, False )
@@ -713,7 +713,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
     @property
     def origin(self): return self._origin
 
-    def _radec(self, x, y):
+    def _radec(self, x, y, color=None):
         # Need this to look like
         #    [ x1, y1, x2, y2, ... ]
         # if input is either scalar x,y or two arrays.
@@ -793,7 +793,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             assert len(dec) == 1
             return ra[0]*factor, dec[0]*factor
 
-    def _xy(self, ra, dec):
+    def _xy(self, ra, dec, color=None):
         import subprocess
         rd = np.array([ra, dec]).transpose().ravel()
         rd *= galsim.radians / galsim.degrees
@@ -1311,7 +1311,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             pv2 = np.dot(xm.T , np.dot(pv, ym))
             return pv2
 
-    def _radec(self, x, y):
+    def _radec(self, x, y, color=None):
 
         # Start with (x,y) = the image position
         p1 = np.array( [ np.atleast_1d(x), np.atleast_1d(y) ] )
@@ -1376,7 +1376,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             assert len(dec) == 1
             return ra[0], dec[0]
 
-    def _xy(self, ra, dec):
+    def _xy(self, ra, dec, color=None):
         import numpy.linalg
 
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
@@ -1499,11 +1499,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         return x, y
 
     # Override the version in CelestialWCS, since we can do this more efficiently.
-    def _local(self, image_pos, world_pos):
+    def _local(self, image_pos, world_pos, color=None):
         if image_pos is None:
             if world_pos is None:
                 raise TypeError("Either image_pos or world_pos must be provided")
-            image_pos = self._posToImage(world_pos)
+            image_pos = self._posToImage(world_pos, color=color)
 
         # The key lemma here is that chain rule for jacobians is just matrix multiplication.
         # i.e. if s = s(u,v), t = t(u,v) and u = u(x,y), v = v(x,y), then
