@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,6 +19,7 @@
 Spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
+from past.builtins import basestring
 import numpy as np
 
 import galsim
@@ -178,7 +179,7 @@ class SED(object):
                 raise ValueError("Attempt to set spectral SED using float or integer.")
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
-        elif isinstance(self._orig_spec, str):
+        elif isinstance(self._orig_spec, basestring):
             import os
             if os.path.isfile(self._orig_spec):
                 self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
@@ -191,14 +192,18 @@ class SED(object):
                 # Are there any other types of errors we should trap here?
                 try:
                     self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
-                    self._spec(700)
+                    from numbers import Real
+                    if not isinstance(self._spec(700.0), Real):
+                        raise ValueError("The given SED function, %r, did not return a valid"
+                                         " number at test wavelength %s"%(
+                                         self._spec, 700.0))
                 except ArithmeticError:
                     pass
                 except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0}\n".format(self._orig_spec) +
+                        "Input provided: {0!r}\n".format(self._orig_spec) +
                         "Caught error: {0}".format(e))
 
         else:

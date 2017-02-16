@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -367,10 +367,10 @@ def test_dcr_moments():
     image2 = final2.drawImage(bandpass, image=image2)
     # plotme(image1)
 
-    mom1 = getmoments(image1)
-    mom2 = getmoments(image2)
-    dR_image = (mom1[1] - mom2[1]) * pixel_scale
-    dV_image = (mom1[3] - mom2[3]) * (pixel_scale)**2
+    mom1 = galsim.utilities.unweighted_moments(image1)
+    mom2 = galsim.utilities.unweighted_moments(image2)
+    dR_image = (mom1['My'] - mom2['My']) * pixel_scale
+    dV_image = (mom1['Myy'] - mom2['Myy']) * (pixel_scale)**2
 
     # analytic moment differences
     R_bulge, V_bulge = bulge_SED.calculateDCRMomentShifts(bandpass, zenith_angle=zenith_angle)
@@ -423,9 +423,9 @@ def test_chromatic_seeing_moments():
         image1 = final1.drawImage(bandpass, image=image1)
         image2 = final2.drawImage(bandpass, image=image2)
 
-        mom1 = getmoments(image1)
-        mom2 = getmoments(image2)
-        dr2byr2_image = ((mom1[2]+mom1[3]) - (mom2[2]+mom2[3])) / (mom1[2]+mom1[3])
+        shape1 = galsim.utilities.unweighted_shape(image1)
+        shape2 = galsim.utilities.unweighted_shape(image2)
+        dr2byr2_image = (shape1['rsqr'] - shape2['rsqr']) / shape1['rsqr']
 
         # analytic moment differences
         r2_1 = bulge_SED.calculateSeeingMomentRatio(bandpass, alpha=index)
@@ -485,8 +485,6 @@ def test_monochromatic_filter():
         np.testing.assert_array_almost_equal(chromatic_image.array, GS_image.array, 5,
                 err_msg="ChromaticObject.drawImage() with monochromatic filter doesn't match"+
                         "GSObject.drawImage()")
-
-        getmoments(GS_image)
 
 
 @timer
@@ -761,10 +759,10 @@ def test_ChromaticObject_expand():
     cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial mxx,myy should be sigma**2 in units of arcsec^2, so (sigma/pixel_scale)**2 in pix.
-    mx, my, mxx, myy, mxy = getmoments(im0)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.0, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im0)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
@@ -772,21 +770,21 @@ def test_ChromaticObject_expand():
     # Use a simple bandpass so we can do the integral below analytically
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im1)
-    print('simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im1)
+    print('simple growth = ',mom['Mxx']/(sigma/pixel_scale)**2, 1.2**2)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Use an expansion that varies quadratically within the range 500-700
     expansion = lambda w: 1.2 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2
     gal2 = cgal.expand(expansion)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     # The test here relies on linearity to swap the order of the integrals.
-    # The getmoments test is essentially int(dxdy x^2 int(dlambda I(x,y,lam) F(lam)))
+    # The moments test is essentially int(dxdy x^2 int(dlambda I(x,y,lam) F(lam)))
     # But we can swap the order of the integrals to do int(dlambda int(dxdy x^2 I(x,y,lam) F(lam)))
     # and do the integral analytically.
-    mx, my, mxx, myy, mxy = getmoments(im2)
+    mom = galsim.utilities.unweighted_moments(im2)
     # Now the analytic integral:
     # mxx = int(dlam (sigma * expansion)**2 * expansion**2 * F(lam))
     #         / int(dlam expansion**2 * F(lam))
@@ -797,45 +795,45 @@ def test_ChromaticObject_expand():
     #     = sigma**2 * 1.243224162 (according to Maple)
     growth_factor = galsim.integ.int1d(lambda w: expansion(w)**4 * bp(w),500,700)
     growth_factor /= galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
-    print('growth factor = ',mxx/(sigma/pixel_scale)**2, growth_factor)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    print('growth factor = ',mom['Mxx']/(sigma/pixel_scale)**2, growth_factor)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using transform rather than expand
     gal3 = cgal.transform(expansion, 0.0, 0.0, expansion)
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im3)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im3)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using magnify
     gal4 = cgal.magnify(lambda w: expansion(w)**2)
     im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using lens
     gal5 = cgal.lens(0., 0., lambda w: expansion(w)**2)
     im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im5)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im5)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Dilate isn't quite the same, since it doesn't have the extra flux factor:
     gal5 = cgal.dilate(expansion)
     im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im5)
+    mom = galsim.utilities.unweighted_moments(im5)
     dilate_growth_factor = galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
     dilate_growth_factor /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    print('dilate_growth factor = ',mxx/(sigma/pixel_scale)**2, dilate_growth_factor)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    print('dilate_growth factor = ',mom['Mxx']/(sigma/pixel_scale)**2, dilate_growth_factor)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
 
 @timer
@@ -874,39 +872,39 @@ def test_ChromaticObject_rotate():
     cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (e1,0).
-    mx, my, mxx, myy, mxy = getmoments(im0)
-    print('e1 = ',(mxx-myy)/(mxx+myy))
-    print('e2 = ',(2*mxy)/(mxx+myy))
-    print('(mxx+myy)/sigma^2 = ',(mxx+myy)/(sigma/pixel_scale)**2)
-    print('2/(mxx+myy)/sigma^2 = ',2./((mxx+myy)/(sigma/pixel_scale)**2))
+    mom = galsim.utilities.unweighted_moments(im0)
+    print('e1 = ',(mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']))
+    print('e2 = ',(2*mom['Mxy'])/(mom['Mxx']+mom['Myy']))
+    print('(mxx+myy)/sigma^2 = ',(mom['Mxx']+mom['Myy'])/(sigma/pixel_scale)**2)
+    print('2/(mxx+myy)/sigma^2 = ',2./((mom['Mxx']+mom['Myy'])/(sigma/pixel_scale)**2))
     print('sqrt(1-0.3**2) = ',np.sqrt(1.-0.3**2))
     fact = np.sqrt(1.-0.3**2)
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3, decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+0.3)/fact, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.3)/fact, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), 0.3, decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), 0.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, (1+0.3)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, (1-0.3)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = cgal.rotate(lambda w: 0.4 * galsim.radians)
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im1)
-    print('simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4)
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3*np.cos(2.*0.4), decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.3*np.sin(2.*0.4), decimal=4)
+    mom = galsim.utilities.unweighted_moments(im1)
+    print('simple angle = ',(np.arctan2(2.*mom['Mxy'],mom['Mxx']-mom['Myy'])/2.), 0.4)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), 0.3*np.cos(2.*0.4), decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), 0.3*np.sin(2.*0.4), decimal=4)
     rot_e1 = 0.3*np.cos(2.*0.4)
     rot_e2 = 0.3*np.sin(2.*0.4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
     # Use a rotation that varies quadratically within the range 500-700
     rotation = lambda w: (0.4 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2) * galsim.radians
     gal2 = cgal.rotate(rotation)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im2)
+    mom = galsim.utilities.unweighted_moments(im2)
     # The analytic integrals:
     # mxx = int(dw (1 + 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # myy = int(dw (1 - 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
@@ -919,14 +917,14 @@ def test_ChromaticObject_rotate():
     rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
     rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
-    print('rot e1 = ',(mxx-myy)/(mxx+myy), rot_e1)
-    print('rot e2 = ',(2*mxy)/(mxx+myy), rot_e2)
+    print('rot e1 = ',(mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1)
+    print('rot e2 = ',(2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), rot_e2)
     print('rot e = ',np.sqrt(rot_e1**2+rot_e2**2))
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), rot_e2, decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1, decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), rot_e2, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
     # Repeat using transform rather than rotate
     gal3 = cgal.transform(
@@ -935,12 +933,12 @@ def test_ChromaticObject_rotate():
                 lambda w: np.sin(rotation(w).rad()),
                 lambda w: np.cos(rotation(w).rad()) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im3)
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), rot_e2, decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im3)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1, decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), rot_e2, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, (1-rot_e1)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
 
 @timer
@@ -976,38 +974,38 @@ def test_ChromaticObject_shear():
     cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (0,0).
-    mx, my, mxx, myy, mxy = getmoments(im0)
-    print('mxx+myy = ',mxx+myy)
-    print('e1 = ',(mxx-myy)/(mxx+myy))
-    print('e2 = ',(2*mxy)/(mxx+myy))
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.0, decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.0, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.0, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.0, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im0)
+    print('mxx+myy = ',mom['Mxx']+mom['Myy'])
+    print('e1 = ',(mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']))
+    print('e2 = ',(2*mom['Mxy'])/(mom['Mxx']+mom['Myy']))
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), 0.0, decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), 0.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, 1.0, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0.0, decimal=4)
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = cgal.shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im1)
-    print('mxx+myy = ',mxx+myy)
-    print('simple e1 = ',(mxx-myy)/(mxx+myy))
-    print('simple e2 = ',(2.*mxy)/(mxx+myy))
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.23, decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.13, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im1)
+    print('mxx+myy = ',mom['Mxx']+mom['Myy'])
+    print('simple e1 = ',(mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']))
+    print('simple e2 = ',(2.*mom['Mxy'])/(mom['Mxx']+mom['Myy']))
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), 0.23, decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), 0.13, decimal=4)
     fact = np.sqrt(1. - 0.23**2 - 0.13**2)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+0.23)/fact, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, (1-0.23)/fact, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0.13/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, (1+0.23)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, (1-0.23)/fact, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, 0.13/fact, decimal=4)
 
     # Use a shear that varies quadratically within the range 500-700
     shear = lambda w: galsim.Shear(e1=0.23 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2,
                                    e2=0.13 + 0.19*(w-600)/100 - 0.09*(w-600)**2/100**2)
     gal2 = cgal.shear(shear)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im2)
+    mom = galsim.utilities.unweighted_moments(im2)
     # The analytic integrals:
     # mxx = int(dw (1 + e1(w))/sqrt(1-e(w)^2) * F(w))  / int(dw F(w))
     # myy = int(dw (1 - e1(w))/sqrt(1-e(w)^2) * F(w))  / int(dw F(w))
@@ -1018,14 +1016,14 @@ def test_ChromaticObject_shear():
     sh_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     sh_mxy = galsim.integ.int1d(lambda w: shear(w).e2/np.sqrt(1.-shear(w).e**2)*bp(w),500,700)
     sh_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    print('mxx+myy = ',mxx+myy)
-    print('shear e1 = ',(mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy))
-    print('shear e2 = ',(2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy))
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
+    print('mxx+myy = ',mom['Mxx']+mom['Myy'])
+    print('shear e1 = ',(mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), (sh_mxx-sh_myy)/(sh_mxx+sh_myy))
+    print('shear e2 = ',(2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), (2*sh_mxy)/(sh_mxx+sh_myy))
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
     # Repeat using transform rather than shear
     gal3 = cgal.transform(
@@ -1034,22 +1032,22 @@ def test_ChromaticObject_shear():
                 lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
                 lambda w: (1.-shear(w).g1)/np.sqrt(1.-shear(w).g**2) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im3)
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im3)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
     # Repeat using lens
     gal4 = cgal.lens(lambda w: shear(w).g1, lambda w: shear(w).g2, 1.)
     im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
-    mx, my, mxx, myy, mxy = getmoments(im4)
-    np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
-    np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
-    np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, sh_myy, decimal=4)
-    np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
+    mom = galsim.utilities.unweighted_moments(im4)
+    np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal((2*mom['Mxy'])/(mom['Mxx']+mom['Myy']), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
+    np.testing.assert_almost_equal(mom['Mxx'] / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
+    np.testing.assert_almost_equal(mom['Myy'] / (sigma/pixel_scale)**2, sh_myy, decimal=4)
+    np.testing.assert_almost_equal(mom['Mxy'] / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
 
 @timer

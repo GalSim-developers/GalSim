@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -42,6 +42,14 @@ def test_SED_basic():
     h = 6.62606957e-27 # Planck's constant in erg seconds
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
+
+    try:
+        # Eval-str must return a Real
+        np.testing.assert_raises(ValueError, galsim.SED,
+                                 spec="'eggs'", wave_type='A', flux_type='flambda')
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
     # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
     s_list = [
@@ -561,7 +569,7 @@ def test_SED_sampleWavelength():
 
     sed  = galsim.SED(galsim.LookupTable([1,2,3,4,5], [0.,1.,0.5,1.,0.]),
                       wave_type='nm', flux_type='fphotons')
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'), 
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'),
                                'nm')
     sedbp = sed*bandpass
 
@@ -599,7 +607,7 @@ def test_SED_sampleWavelength():
                                    "to the nearest integer.")
 
     def create_cdfs(sed,out,nbins=100):
-        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,100000,retstep=True)
         centers = bins[:-1] + step/2.
         cdf = np.cumsum(sed(centers)*step)
         cdf /= cdf.max()
@@ -611,9 +619,9 @@ def test_SED_sampleWavelength():
 
     def create_counts(sed,out,nbins=100):
         bins,step = np.linspace(sed.blue_limit,sed.red_limit,nbins+1,retstep=True)
-        centers = bins[:-1] + step/2.        
+        centers = bins[:-1] + step/2.
         cts1,_ = np.histogram(out,nbins)
-        
+
         #cts2 = np.array([galsim.integ.int1d(sed,low,low+step,1e-3,1e-6) for low in bins[:-1]])
         cts2 = np.array([galsim.integ.trapz(sed,low,low+step) for low in bins[:-1]])
         cts2 *= (float(len(out))/cts2.sum())
@@ -621,7 +629,7 @@ def test_SED_sampleWavelength():
 
     # Test the output distribution
     out = sed.sampleWavelength(1e5,None,rng=seed)
-        
+
     _,(cts1,cts2) = create_counts(sed,out)
     chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
     np.testing.assert_almost_equal(chisq,1.0,1,"Sampled counts do not match input SED.")
@@ -644,7 +652,7 @@ def test_SED_sampleWavelength():
     _,(cdf1,cdf2) = create_cdfs(sedz,outz)
     np.testing.assert_almost_equal(cdf1, cdf2, 2,
                                    "Sampled CDF does not match input redshifted SED.")
-    
+
 
 @timer
 def test_fnu_vs_flambda():

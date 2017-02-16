@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,7 +72,7 @@ def midpt(fvals, x):
     weighted_fvals = [w*f for w,f in zip(dx, fvals)]
     return reduce(lambda y,z:y+z, weighted_fvals)
 
-def trapz(func, min, max, points=1e4):
+def trapz(func, min, max, points=10000):
     """Simple wrapper around 'numpy.trapz' to take function and limits as inputs.
 
     Example usage:

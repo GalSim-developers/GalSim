@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -46,6 +46,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     logger = galsim.config.LoggerWrapper(logger)
     import time
     t1 = time.time()
+
+    # The next line relies on getting errors when the rng is undefined.  However, the default
+    # rng is None, which is a valid thing to construct a Deviate object from.  So for now,
+    # set the rng to object() to make sure we get errors where we are expecting to.
+    config['rng'] = object()
 
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them

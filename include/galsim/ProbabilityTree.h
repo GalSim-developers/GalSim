@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -103,15 +103,17 @@ namespace galsim {
             assert(!_root);
             // Sort the list so the largest flux regions are first.
             std::sort(begin(), end(), FluxCompare());
+            VecIter start = begin();
             VecIter last =
                 threshold == 0. ? end() :
                 std::upper_bound(begin(), end(), threshold, FluxCompare());
-            const int nelem = last-begin();
+            const int nelem = last-start;
             dbg<<"N elements to build tree with = "<<nelem<<std::endl;
             // Figure out what the total absolute flux is
+            // NB. Accumulate from end for better numerical accuracy adding up small values.
             _totalAbsFlux = 0.;
-            for (VecIter it=begin(); it!=last; ++it)
-                _totalAbsFlux += std::abs(it->getFlux());
+            for (VecIter it=last; it!=start;)
+                _totalAbsFlux += std::abs((--it)->getFlux());
             dbg<<"totalAbsFlux = "<<_totalAbsFlux<<std::endl;
             // leftAbsFlux will be updated for each element to be the total flux up the that one.
             double leftAbsFlux = 0.;
@@ -128,8 +130,10 @@ namespace galsim {
             // We build this as we build the tree in the Element constructors.
             _shortcut.resize(nelem,0);
             buildShortcut(_root, 0, nelem);
+#ifdef DEBUGLOGGING
             // Make sure all the shortcut entries were set.
             for(int i=0;i<nelem;++i) xassert(_shortcut[i]);
+#endif
         }
 
     private:
@@ -143,6 +147,7 @@ namespace galsim {
                 _leftAbsFlux(leftAbsFlux), _absFlux(absFlux), _invAbsFlux(1./absFlux)
             {
                 xassert(start != end);
+                xassert(absFlux > 0.);
                 if (start + 1 == end) {
                     // Only one element.
                     _dataPtr = &(*start);
@@ -150,28 +155,56 @@ namespace galsim {
                     xassert(std::abs(std::abs(_dataPtr->getFlux()) - absFlux) <
                             1.e-8 * (leftAbsFlux+absFlux));
                     // Update the running total of leftAbsFlux.
-                    leftAbsFlux += _absFlux;
+                    leftAbsFlux += std::abs(_dataPtr->getFlux());
+                } else if (start + 2 == end) {
+                    // Two elements, so just split
+                    VecIter mid = start+1;
+                    _left = new Element(start, mid, leftAbsFlux, std::abs(start->getFlux()));
+                    _right = new Element(mid, end, leftAbsFlux, std::abs(mid->getFlux()));
                 } else {
-                    xassert(end >= start+2);
+                    xassert(end > start+2);
                     VecIter mid = start;
                     // Divide the range by probability, not by number.
                     // The tree is intentionally unbalanced, so most of the time, the search
                     // stops quickly with the large flux Elements on the left.
                     double half_tot = absFlux/2.;
                     double leftSum=0.;
-                    for (; leftSum <= half_tot; ++mid) leftSum += std::abs(mid->getFlux());
+                    for (; leftSum < half_tot; ++mid) leftSum += std::abs(mid->getFlux());
+
                     if (mid == end) {
+                        dbg<<"mid passed the end.  Backtracking...\n";
+                        dbg<<"leftSum = "<<leftSum<<std::endl;
                         // Shouldn't happen in exact arithmetic, but just in case...
                         --mid;
                         leftSum -= std::abs(mid->getFlux());
+                        dbg<<"leftSum => "<<leftSum<<std::endl;
                     }
-                    xassert(mid != start);
-                    xassert(mid != end);
+
+                    double rightSum;
+                    if (leftSum > 0.9 * absFlux) {
+                        // Then we're likely to start accumulating inaccuracies in absFlux
+                        // if we just subtract, so recalculate.  Indeed, numerical inaccuracies
+                        // can make leftSum come out > absFlux, in which case the recalculation
+                        // is definitely necessary.
+                        dbg<<"leftSum = "<<leftSum<<std::endl;
+                        dbg<<"absFlux = "<<absFlux<<std::endl;
+                        dbg<<"leftAbsFlux = "<<leftAbsFlux<<std::endl;
+                        dbg<<"absFlux - leftSum = "<<absFlux - leftSum<<std::endl;
+                        rightSum = 0.;
+                        for (VecIter it=end; it!=mid;) rightSum += std::abs((--it)->getFlux());
+                        dbg<<"rightSum = "<<rightSum<<std::endl;
+                        _absFlux = leftSum + rightSum;
+                        dbg<<"leftSum + rightSum = "<<_absFlux<<std::endl;
+                    } else {
+                        // Otherwise, probably ok to just subtract
+                        rightSum = absFlux - leftSum;
+                    }
+
                     _left = new Element(start, mid, leftAbsFlux, leftSum);
-                    _right = new Element(mid, end, leftAbsFlux, absFlux - leftSum);
-                    // absFlux on input should equal the sum of the two children's fluxes.
-                    xassert(std::abs((_left->_absFlux + _right->_absFlux) - absFlux) <
-                            1.e-8 * (leftAbsFlux+absFlux));
+                    _right = new Element(mid, end, leftAbsFlux, rightSum);
+                    // this element's absFlux should equal the sum of the two children's fluxes.
+                    xassert(std::abs((_left->_absFlux + _right->_absFlux) - _absFlux) <
+                            1.e-8 * (leftAbsFlux+_absFlux));
                 }
             }
 

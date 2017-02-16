@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -150,7 +150,12 @@ gal :
     #     noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec
     noise_pad_size : 11.3
 
-    index : { type : Random }
+    # We will select a galaxy at random from the catalog. One could easily do this by setting 
+    # index : { type : Random }
+    # but we will instead allow the catalog to choose a random galaxy for us.  It will remove any
+    # selection effects involved in postage stamp creation using weights that are stored in the
+    # catalog.  We employ this random selection by simply failing to specify an index or identifier
+    # for a galaxy, in which case it chooses a random one.
 
     shear :
         # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.

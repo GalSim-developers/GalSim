@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,6 +20,7 @@
 InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
+from past.builtins import basestring
 import galsim
 from galsim import GSObject
 from . import _galsim
@@ -320,7 +321,7 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
-            if isinstance(pad_image, str):
+            if isinstance(pad_image, basestring):
                 pad_image = galsim.fits.read(pad_image)
             if not isinstance(pad_image, galsim.Image):
                 raise ValueError("Supplied pad_image is not an Image!")
@@ -525,7 +526,7 @@ class InterpolatedImage(GSObject):
                 # Make sure that we are using a specified RNG by resetting that in this cached
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
                 noise = noise.copy(rng=rng)
-        elif isinstance(noise_pad, str):
+        elif isinstance(noise_pad, basestring):
             noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
             if self.use_cache:
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
@@ -817,8 +818,8 @@ _galsim.SBInterpolatedKImage.__getinitargs__ = lambda self: (
         self._getKData(), self.stepK(), self.maxK(), self.getKInterp(), self.getGSParams())
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r)'
-    %self.__getinitargs__())
+        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
+        %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,9 +32,16 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    # But not if they specify 'id' which overrides that.
+    # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        if 'random' not in config:
+            galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        else:
+            if not config['random']:
+                galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+                # Need to do this to avoid being caught by the GetAllParams() call, which will flag
+                # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
+                del config['random']
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,

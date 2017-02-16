@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,9 +29,6 @@ This module defines the RealGalaxyCatalog class, used to store all required info
 real galaxy simulation training sample and accompanying PSF model.  For information about
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
 page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
-
-The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
-some lower-resolution telescope.
 """
 
 
@@ -67,9 +64,7 @@ class RealGalaxy(GSObject):
 
     This initializes `real_galaxy` with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
-    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
-    options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).
+    keywords for choosing a galaxy; exactly one must be set.
 
     Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
@@ -94,7 +89,11 @@ class RealGalaxy(GSObject):
                             `random` is required.]
     @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
                             or `random` is required.]
-    @param random           If True, then just select a completely random galaxy from the catalog.
+    @param random           If True, then select a random galaxy from the catalog.  If the catalog
+                            has a 'weight' associated with it to allow for correction of selection
+                            effects in which galaxies were included, the 'weight' factor is used to
+                            remove those selection effects rather than selecting a completely random
+                            object.
                             [One of `index`, `id`, or `random` is required.]
     @param rng              A random number generator to use for selecting a random galaxy
                             (may be any kind of BaseDeviate or None) and to use in generating
@@ -140,9 +139,9 @@ class RealGalaxy(GSObject):
                     "flux" : float ,
                     "flux_rescale" : float ,
                     "pad_factor" : float,
-                    "noise_pad_size" : float,
+                    "noise_pad_size" : float
                   }
-    _single_params = [ { "index" : int , "id" : str } ]
+    _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
@@ -180,9 +179,16 @@ class RealGalaxy(GSObject):
                 if random is True:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
-            elif random is True:
-                uniform_deviate = galsim.UniformDeviate(self.rng)
-                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate())
+            elif random:
+                ud = galsim.UniformDeviate(self.rng)
+                use_index = int(real_galaxy_catalog.nobjects * ud())
+                if hasattr(real_galaxy_catalog, 'weight'):
+                    # If weight factors are available, make sure the random selection uses the
+                    # weights to remove the catalog-level selection effects (flux_radius-dependent
+                    # probability of making a postage stamp for a given object).
+                    while ud() > real_galaxy_catalog.weight[use_index]:
+                        # Pick another one to try.
+                        use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
                 raise AttributeError('No method specified for selecting a galaxy!')
             if logger:
@@ -459,8 +465,15 @@ class RealGalaxyCatalog(object):
         self.variance = self.cat.field('noise_variance') # noise variance for image
         self.mag = self.cat.field('mag')   # apparent magnitude
         self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        self.weight = self.cat.field('weight') # weight factor to account for size-dependent
-                                               # probability
+        # The weight factor should be a float value >=0 (so that random selections of indices can
+        # use it to remove any selection effects in the catalog creation process).
+        # Here we renormalize by the maximum weight.  If the maximum is below 1, that just means
+        # that all galaxies were subsampled at some level, and here we only want to account for
+        # relative selection effects within the catalog, not absolute subsampling.  If the maximum
+        # is above 1, then our random number generation test used to draw a weighted sample will
+        # fail since we use uniform deviates in the range 0 to 1.
+        weight = self.cat.field('weight')
+        self.weight = weight/np.max(weight)
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
 
@@ -715,11 +728,9 @@ class RealGalaxyCatalog(object):
         self.noise_lock = Lock()
         pass
 
-
-
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
-            rand_rotate=True, rng=None, target_flux=1000.0, image=None):
-    """Function to simulate images (no added noise) from real galaxy training data.
+            rand_rotate=True, rng=None, target_flux=1000.0, image=None): # pragma: no cover
+    """Deprecated method to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
@@ -754,6 +765,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     @return a simulated galaxy image.
     """
+    from .deprecated import depr
+    depr('simReal', 1.5, '',
+         'This method has been deprecated due to lack of widespread use.  If you '+
+         'have a need for it, please open an issue requesting that it be reinstated.')
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
@@ -778,14 +793,9 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # rotate
     if rotation_angle is not None:
         real_galaxy = real_galaxy.rotate(rotation_angle)
-    elif rotation_angle is None and rand_rotate == True:
-        if rng is None:
-            uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            uniform_deviate = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
-        rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
+    elif rotation_angle is None and rand_rotate:
+        ud = galsim.UniformDeviate(rng)
+        rand_angle = galsim.Angle(math.pi*ud(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 
     # set fluxes

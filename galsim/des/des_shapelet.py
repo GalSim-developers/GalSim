@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -79,10 +79,10 @@ class DES_Shapelet(object):
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
 
-        if not file_type:
+        if not file_type:  # pragma: no branch
             if self.file_name.lower().endswith('.fits'):
                 file_type = 'FITS'
-            else:
+            else:  # pragma: no cover
                 file_type = 'ASCII'
         file_type = file_type.upper()
         if file_type not in ['FITS', 'ASCII']:
@@ -219,7 +219,7 @@ class DES_Shapelet(object):
         x1 = (2.*x-min-max)/(max-min)
         temp = np.empty(self.fit_order+1)
         temp[0] = 1
-        if self.fit_order > 0:
+        if self.fit_order > 0:  # pragma: no branch (always true for file we have for testing.)
             temp[1] = x1
         for i in range(2,self.fit_order+1):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,8 +39,6 @@ For a description of units conventions for scale radii for our base classes see
 between the scale radii used to specify the size of the GSObject and between the pixel scale of the
 Image is acceptable.
 """
-
-import numpy as np
 
 import galsim
 

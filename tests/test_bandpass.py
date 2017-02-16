@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,6 +39,8 @@ def test_Bandpass_basic():
     try:
         # Cannot initialize bandpass without wave_type:
         np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+        # eval-str must return a Real
+        np.testing.assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A')
     except ImportError:
         print('The assert_raises tests require nose')
 

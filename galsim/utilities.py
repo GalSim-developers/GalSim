@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,7 +34,9 @@ def roll2d(image, shape):
     @returns the rolled image.
     """
     (iroll, jroll) = shape
-    return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
+    # The ascontiguousarray bit didn't used to be necessary.  But starting with
+    # numpy v1.12, np.roll doesn't seem to always return a C-contiguous array.
+    return np.ascontiguousarray(np.roll(np.roll(image, jroll, axis=1), iroll, axis=0))
 
 def kxky(array_shape=(256, 256)):
     """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
@@ -299,7 +301,7 @@ def _convertPositions(pos, units, func):
     return pos
 
 def _lin_approx_err(x, f, i):
-    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    r"""Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
@@ -311,7 +313,7 @@ def _lin_approx_err(x, f, i):
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
 def _exact_lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    r"""Split a tabulated function into a two-part piecewise linear approximation by exactly
     minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
     errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
@@ -319,7 +321,7 @@ def _exact_lin_approx_split(x, f):
     return i+1, errs[i]
 
 def _lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    r"""Split a tabulated function into a two-part piecewise linear approximation by approximately
     minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
     \int (f(x) - approx(x))^2 dx in O(N) time.
     """
@@ -577,11 +579,11 @@ def _gammafn(x):  # pragma: no cover
         import math
         return math.gamma(x)
     except:
-        y  = float(x) - 1.0;
-        sm = _gammafn._a[-1];
+        y  = float(x) - 1.0
+        sm = _gammafn._a[-1]
         for an in _gammafn._a[-2::-1]:
-            sm = sm * y + an;
-        return 1.0 / sm;
+            sm = sm * y + an
+        return 1.0 / sm
 
 _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.65587807152025388108,
               -0.04200263503409523553, 0.16653861138229148950, -0.04219773455554433675,
@@ -691,7 +693,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             if img_wcs_decomp[1].g==0:
                 img.wcs = galsim.PixelScale(img_wcs_decomp[0])
             else:
-               img.wcs = img_wcs
+                img.wcs = img_wcs
             ## Preserve the origin so that the interleaved image has the same bounds as the image
             ## that is being deinterleaved.
             img.setOrigin(image.origin())
@@ -995,18 +997,18 @@ def listify(arg):
     return [arg] if not hasattr(arg, '__iter__') else arg
 
 
-def lod_to_dol(lod, N=None):
-    """Generate dicts from dict of lists (with broadcasting).
+def dol_to_lod(dol, N=None):
+    """Generate list of dicts from dict of lists (with broadcasting).
     Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
     that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
     length-N lists.
     """
     if N is None:
-        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
+        N = max(len(v) for v in dol.values() if hasattr(v, '__len__'))
     # Loop through broadcast range
     for i in range(N):
         out = {}
-        for k, v in iteritems(lod):
+        for k, v in iteritems(dol):
             try:
                 out[k] = v[i]
             except IndexError:  # It's list-like, but too short.
@@ -1015,8 +1017,10 @@ def lod_to_dol(lod, N=None):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
+            except KeyboardInterrupt:
+                raise
             except Exception:
-                raise "Cannot broadcast kwarg {0}={1}".format(k, v)
+                raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
 def set_func_doc(func, doc):
@@ -1208,3 +1212,122 @@ def binomial(a, b, n):
             c *= b_over_a * (n-i)/(i+1)
             yield c
     return np.fromiter(generate(), float, n+1)
+
+def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
+    """Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
+    but ignores any scale or wcs.
+
+    @param image    Image from which to compute moments
+    @param origin   Optional origin in image coordinates used to compute Mx and My
+                    [default: galsim.PositionD(0, 0)].
+    @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
+    """
+    a = image.array.astype(float)
+    offset = image.origin() - origin
+    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
+                               np.arange(image.array.shape[0]) + offset.y)
+    M0 = np.sum(a)
+    Mx = np.sum(xgrid * a) / M0
+    My = np.sum(ygrid * a) / M0
+    Mxx = np.sum(((xgrid-Mx)**2) * a) / M0
+    Myy = np.sum(((ygrid-My)**2) * a) / M0
+    Mxy = np.sum((xgrid-Mx) * (ygrid-My) * a) / M0
+    return dict(M0=M0, Mx=Mx, My=My, Mxx=Mxx, Myy=Myy, Mxy=Mxy)
+
+def unweighted_shape(arg):
+    """Computes unweighted second moment size and ellipticity given either an image or a dict of
+    unweighted moments.
+
+    The size is:
+        rsqr = Mxx+Myy
+    The ellipticities are:
+        e1 = (Mxx-Myy) / rsqr
+        e2 = 2*Mxy / rsqr
+
+    @param arg   Either a galsim.Image or the output of unweighted_moments(image).
+    @returns  Dict with entries for [rsqr, e1, e2]
+    """
+    if isinstance(arg, galsim.Image):
+        arg = unweighted_moments(arg)
+    rsqr = arg['Mxx'] + arg['Myy']
+    return dict(rsqr=rsqr, e1=(arg['Mxx']-arg['Myy'])/rsqr, e2=2*arg['Mxy']/rsqr)
+
+def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
+    """Select some number of random choices from a list, with replacement, using a supplied RNG.
+
+    `n` random choices with replacement are made assuming that those choices should range from 0 to
+    `n_choices`-1, so they can be used as indices in a list/array.  If `weight` is supplied, then
+    it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
+    weighted choices from the list.
+
+    @param n           Number of random selections to make.
+    @param n_choices   Number of entries from which to choose.
+    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
+    @param weight      Optional list of weight factors to use for weighting the selection of
+                       random indices.
+    @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
+    """
+    # Make sure we got a proper RNG.
+    if not isinstance(rng, galsim.BaseDeviate):
+        raise TypeError("The rng provided to rand_with_replacement() is not a BaseDeviate")
+    ud = galsim.UniformDeviate(rng)
+
+    # Sanity check the requested number of random indices.
+    # Note: we do not require that the type be an int, as long as the value is consistent with
+    # an integer value (i.e., it could be a float 1.0 or 1).
+    if not n-int(n) == 0 or n < 1:
+        raise ValueError("n must be an integer >= 1.")
+    if not n_choices-int(n_choices) == 0 or n_choices < 1:
+        raise ValueError("n_choices must be an integer >= 1.")
+
+    # Sanity check the input weight.
+    if weight is not None:
+        # We need some sanity checks here in case people passed in weird values.
+        if len(weight) != n_choices:
+            raise ValueError("Array of weights has wrong length: %d instead of %d"%\
+                                 (len_weight,n_choices))
+        if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
+                np.any(np.isinf(weight)):
+            raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
+
+    # We first make a random list of integer indices.
+    index = np.zeros(n)
+    ud.generate(index)
+    if _n_rng_calls:
+        # Here we use the undocumented kwarg (for internal use by config) to track the number of
+        # RNG calls.
+        n_rng_calls = n
+    index = (n_choices*index).astype(int)
+
+    # Then we account for the weights, if possible.
+    if weight is not None:
+        # If weight factors are available, make sure the random selection uses the weights.
+        test_vals = np.zeros(n)
+        # Note that the weight values by definition have a maximum of 1, as enforced above.
+        ud.generate(test_vals)
+        if _n_rng_calls:
+            n_rng_calls += n
+        # The ones with mask==True are the ones we should replace.
+        mask = test_vals > weight[index]
+        while np.any(mask):
+            # Update the index and test values for those that failed. We have to do this by
+            # generating random numbers into new arrays, because ud.generate() does not enable
+            # us to directly populate a sub-array like index[mask] or test_vals[mask].
+            n_fail = mask.astype(int).sum()
+            # First update the indices that failed.
+            new_arr = np.zeros(n_fail)
+            ud.generate(new_arr)
+            index[mask] = (n_choices*new_arr).astype(int)
+            # Then update the test values that failed.
+            new_test_vals = np.zeros(n_fail)
+            ud.generate(new_test_vals)
+            test_vals[mask] = new_test_vals
+            if _n_rng_calls:
+                n_rng_calls += 2*n_fail
+            # Finally, update the test array used to determine whether any galaxies failed.
+            mask = test_vals > weight[index]
+
+    if _n_rng_calls:
+        return index, n_rng_calls
+    else:
+        return index

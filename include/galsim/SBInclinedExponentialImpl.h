@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -67,6 +67,8 @@ namespace galsim {
 
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
+
+        /// @brief Maximum surface brightness
         double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
@@ -114,15 +116,15 @@ namespace galsim {
 
         // Helper functor to solve for the proper _maxk
         class SBInclinedExponentialKValueFunctor
-    {
-    public:
-        SBInclinedExponentialKValueFunctor(const SBInclinedExponential::SBInclinedExponentialImpl * p_owner,
-    double target_k_value);
-    double operator() (double k) const;
-    private:
-    const SBInclinedExponential::SBInclinedExponentialImpl * _p_owner;
-    double _target_k_value;
-    };
+        {
+            public:
+                SBInclinedExponentialKValueFunctor(const SBInclinedExponential::SBInclinedExponentialImpl * p_owner,
+            double target_k_value);
+            double operator() (double k) const;
+            private:
+            const SBInclinedExponential::SBInclinedExponentialImpl * _p_owner;
+            double _target_k_value;
+        };
 
         friend class SBInclinedExponentialKValueFunctor;
     };

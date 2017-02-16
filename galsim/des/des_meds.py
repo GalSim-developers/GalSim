@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,6 +29,7 @@ import numpy as np
 import galsim
 import galsim.config
 import sys
+import os
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -409,7 +410,12 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         seg_cutouts,
         psf_cutouts
     ])
-    hdu_list.writeto(file_name,clobber=clobber)
+    # Don't use astropy's clobber feature, since it's now (as of astropy version 1.3) called
+    # overwrite and dealing with two incompatible APIs is more than I want to deal with.
+    # Just do it ourselves.
+    if clobber and os.path.isfile(file_name):
+        os.remove(file_name)
+    hdu_list.writeto(file_name)
 
 
 # Make the class that will
