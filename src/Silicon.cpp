@@ -166,6 +166,7 @@ namespace galsim {
 	  }
 	polylist[p]->Sort(); // Sort the vertices in CCW order
       }
+    //printf("Generated %d pixels\n",nx*ny);
     return;
   }
 
