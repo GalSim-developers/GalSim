@@ -86,7 +86,7 @@ class MultiExposureObject(object):
                 raise ValueError('Array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('Array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != images[0].array.shape:
                 raise ValueError('Images must all be the same shape')
 
@@ -113,7 +113,7 @@ class MultiExposureObject(object):
                 raise ValueError('PSF array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('PSF array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != psf[0].array.shape:
                 raise ValueError('PSF images must all be the same shape')
 
