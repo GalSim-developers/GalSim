@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,6 +25,7 @@ stored in *_fitpsf.fits files.
 
 import galsim
 import galsim.config
+import numpy as np
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -32,7 +33,7 @@ class DES_Shapelet(object):
     version stored as *_fitpsf.dat.
 
     The shapelet PSFs are built as part of the WL portion of the DES pipeline.  They measure
-    a shapelet decomposition of each star and interpolate the shapelet coefficients over the 
+    a shapelet decomposition of each star and interpolate the shapelet coefficients over the
     image positions.
 
     Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know
@@ -40,7 +41,7 @@ class DES_Shapelet(object):
     Thus, the getPSF function always returns a profile in world coordinates.
 
     Typical usage:
-        
+
         >>> des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
         >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
         >>>                                                   # NOT in arcsec on the sky!
@@ -62,9 +63,9 @@ class DES_Shapelet(object):
 
 
     @param file_name        The name of the file to be read in.
-    @param dir              Optionally a directory name can be provided if the file names do not 
+    @param dir              Optionally a directory name can be provided if the file names do not
                             already include it. [default: None]
-    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name 
+    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name
                             ending. [default: None]
     """
     _req_params = { 'file_name' : str }
@@ -78,10 +79,10 @@ class DES_Shapelet(object):
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
 
-        if not file_type:
+        if not file_type:  # pragma: no branch
             if self.file_name.lower().endswith('.fits'):
                 file_type = 'FITS'
-            else:
+            else:  # pragma: no cover
                 file_type = 'ASCII'
         file_type = file_type.upper()
         if file_type not in ['FITS', 'ASCII']:
@@ -89,21 +90,21 @@ class DES_Shapelet(object):
 
         if file_type == 'FITS':
             self.read_fits()
-        else:
+        else:  # pragma: no cover
             self.read_ascii()
 
-    def read_ascii(self):
+    # We haven't used these for a long time, so this is at best of historical interest...
+    def read_ascii(self):  # pragma: no cover
         """Read in a DES_Shapelet stored using the the ASCII-file version.
         """
-        import numpy
         fin = open(self.file_name, 'r')
         lines = fin.readlines()
         temp = lines[0].split()
         self.psf_order = int(temp[0])
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = float(temp[1])
         self.fit_order = int(temp[2])
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = int(temp[3])
 
         temp = lines[1].split()
@@ -113,13 +114,13 @@ class DES_Shapelet(object):
 
         temp = lines[2].split()
         assert int(temp[0]) == self.psf_size
-        self.ave_psf = numpy.array(temp[2:self.psf_size+2]).astype(float)
+        self.ave_psf = np.array(temp[2:self.psf_size+2]).astype(float)
         assert self.ave_psf.shape == (self.psf_size,)
 
         temp = lines[3].split()
         assert int(temp[0]) == self.npca
         assert int(temp[1]) == self.psf_size
-        self.rot_matrix = numpy.array(
+        self.rot_matrix = np.array(
             [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ]
             ).astype(float)
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
@@ -127,7 +128,7 @@ class DES_Shapelet(object):
         temp = lines[5+self.npca].split()
         assert int(temp[0]) == self.fit_size
         assert int(temp[1]) == self.npca
-        self.interp_matrix = numpy.array(
+        self.interp_matrix = np.array(
             [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ]
             ).astype(float)
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
@@ -136,13 +137,14 @@ class DES_Shapelet(object):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
         from galsim._pyfits import pyfits
-        cat = pyfits.getdata(self.file_name,1)
+        with pyfits.open(self.file_name) as fits:
+            cat = fits[1].data
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = cat.field('sigma')[0]
         self.fit_order = cat.field('fit_order')[0]
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = cat.field('npca')[0]
 
         self.bounds = galsim.BoundsD(
@@ -192,11 +194,10 @@ class DES_Shapelet(object):
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
 
-        import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
         order = self.fit_order
-        P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
+        P = np.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
         assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
@@ -208,18 +209,17 @@ class DES_Shapelet(object):
         #             P[k] = Px[n-q] * Py[q]
         #             k = k+1
 
-        b1 = numpy.dot(P,self.interp_matrix)
-        b = numpy.dot(b1,self.rot_matrix)
+        b1 = np.dot(P,self.interp_matrix)
+        b = np.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
         return b
 
     def _definePxy(self, x, min, max):
-        import numpy
         x1 = (2.*x-min-max)/(max-min)
-        temp = numpy.empty(self.fit_order+1)
+        temp = np.empty(self.fit_order+1)
         temp[0] = 1
-        if self.fit_order > 0:
+        if self.fit_order > 0:  # pragma: no branch (always true for file we have for testing.)
             temp[1] = x1
         for i in range(2,self.fit_order+1):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
@@ -254,7 +254,7 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
 
     if des_shapelet.getBounds().includes(image_pos):
         #psf = des_shapelet.getPSF(image_pos, gsparams)
-        # Because of serialization issues, the above call doesn't work.  So we need to 
+        # Because of serialization issues, the above call doesn't work.  So we need to
         # repeat the internals of getPSF here.
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()
@@ -268,8 +268,8 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     if 'flux' in params:
         psf = psf.withFlux(params['flux'])
 
-    # The second item here is "safe", a boolean that declares whether the returned value is 
-    # safe to save and use again for later objects.  In this case, we wouldn't want to do 
+    # The second item here is "safe", a boolean that declares whether the returned value is
+    # safe to save and use again for later objects.  In this case, we wouldn't want to do
     # that, since they will be at different positions, so the interpolated PSF will be different.
     return psf, False
 

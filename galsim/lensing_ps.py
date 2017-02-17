@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -122,7 +122,7 @@ class PowerSpectrum(object):
     user-defined functions that take a single argument `k` and return the power at that `k` value,
     or they can be instances of the LookupTable class for power spectra that are known at
     particular `k` values but for which there is not a simple analytic form.
-    
+
     Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
     (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
     P(k).  Thus, k and P(k) have dimensions of inverse angle and angle^2, respectively.  It is quite
@@ -168,7 +168,7 @@ class PowerSpectrum(object):
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of
                             angle^2?  [default: False]
-    @param units            The angular units used for the power spectrum (i.e. the units of 
+    @param units            The angular units used for the power spectrum (i.e. the units of
                             k^-1 and sqrt(P)). This should be either an AngleUnit instance
                             (e.g. galsim.radians) or a string (e.g. 'radians'). [default: arcsec]
     """
@@ -199,7 +199,7 @@ class PowerSpectrum(object):
         self._convert_power_function(self.b_power_function,'b_power_function')
 
         # Check validity of units
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
@@ -459,7 +459,7 @@ class PowerSpectrum(object):
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
@@ -470,7 +470,7 @@ class PowerSpectrum(object):
             grid_spacing *= scale_fac
 
         # The final grid spacing that will be in the computed images is grid_spacing/kmax_factor.
-        self.grid_spacing = grid_spacing/kmax_factor
+        self.grid_spacing = grid_spacing // kmax_factor
         self.center = center
 
         # We have to make an adjustment to the center value to account for how the xValue function
@@ -496,13 +496,7 @@ class PowerSpectrum(object):
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
-        # Make a GaussianDeviate if necessary
-        if rng is None:
-            gd = galsim.GaussianDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(rng)
-        else:
-            raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
+        gd = galsim.GaussianDeviate(rng)
 
         # Check that the interpolant is valid.
         if interpolant is None:
@@ -602,7 +596,7 @@ class PowerSpectrum(object):
             raise RuntimeError("BuildGrid has not been called yet.")
         ntot = 0
         # cf. PowerSpectrumRealizer._generate_power_array
-        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot/2 +1 ) )
+        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot//2 +1 ) )
         if self.e_power_function is not None:
             ntot += temp
         if self.b_power_function is not None:
@@ -664,13 +658,14 @@ class PowerSpectrum(object):
                 # Detect at least _some_ forms of malformed string input.  Note that this
                 # test assumes that the eval string completion is defined for k=1.0.
                 try:
-                    origpf = pf
-                    pf = eval('lambda k : ' + pf)
+                    pf = galsim.utilities.math_eval('lambda k : ' + pf)
                     pf(1.0)
-                except:
+                except Exception as e:
                     raise ValueError(
                         "String power_spectrum must either be a valid filename or something that "+
-                        "can eval to a function of k. Input provided: {0}".format(origpf))
+                        "can eval to a function of k.\n"+
+                        "Input provided: {0}\n".format(origpf)+
+                        "Caught error: {0}".format(e))
 
 
         # Check that the function is sane.
@@ -762,7 +757,7 @@ class PowerSpectrum(object):
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
@@ -1020,7 +1015,7 @@ class PowerSpectrum(object):
                 >>> g1, g2 = my_ps.getShear(pos = (12, 412))
 
         3. Get the shears for a bunch of points at once:
-        
+
                 >>> xlist = [ 141, 313,  12, 241, 342 ]
                 >>> ylist = [  75, 199, 306, 225, 489 ]
                 >>> poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
@@ -1569,15 +1564,15 @@ class PowerSpectrumRealizer(object):
         self.pixel_size = float(pixel_size)
 
         # Setup some handy slices for indexing different parts of k space
-        self.ikx = slice(0,self.nx/2+1)       # positive kx values, including 0, nx/2
-        self.ikxp = slice(1,(self.nx+1)/2)    # limit to only values with a negative value
-        self.ikxn = slice(-1,self.nx/2,-1)    # negative kx values
+        self.ikx = slice(0,self.nx//2+1)       # positive kx values, including 0, nx/2
+        self.ikxp = slice(1,(self.nx+1)//2)    # limit to only values with a negative value
+        self.ikxn = slice(-1,self.nx//2,-1)    # negative kx values
 
         # We always call this with nx=ny, so behavior with nx != ny is not tested.
         # However, we make a basic attempt to enable such behavior in the future if needed.
-        self.iky = slice(0,self.ny/2+1)
-        self.ikyp = slice(1,(self.ny+1)/2)
-        self.ikyn = slice(-1,self.ny/2,-1)
+        self.iky = slice(0,self.ny//2+1)
+        self.ikyp = slice(1,(self.ny+1)//2)
+        self.ikyn = slice(-1,self.ny//2,-1)
 
         # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L
@@ -1616,7 +1611,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            E_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            E_k = np.empty((self.ny,self.nx), dtype=complex)
             E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
             # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
             self._make_hermitian(E_k)
@@ -1626,7 +1621,7 @@ class PowerSpectrumRealizer(object):
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            B_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+            B_k = np.empty((self.ny,self.nx), dtype=complex)
             B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
             # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
             # However, we later multiply this by i, so that means here B_k[-k] = conj(B_k[k])
@@ -1683,16 +1678,16 @@ class PowerSpectrumRealizer(object):
         if self.ny % 2 == 0:
             # Note: this is a bit more complicated if you have to separately check whether
             # nx and/or ny are even.  I ignore this subtlety until we decide it is needed.
-            P_k[self.ikyn,self.nx/2] = np.conj(P_k[self.ikyp,self.nx/2])
-            P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
-            P_k[self.ny/2,0] = np.real(P_k[self.ny/2,0])
-            P_k[0,self.nx/2] = np.real(P_k[0,self.nx/2])
-            P_k[self.ny/2,self.nx/2] = np.real(P_k[self.ny/2,self.nx/2])
+            P_k[self.ikyn,self.nx//2] = np.conj(P_k[self.ikyp,self.nx//2])
+            P_k[self.ny//2,self.ikxn] = np.conj(P_k[self.ny//2,self.ikxp])
+            P_k[self.ny//2,0] = np.real(P_k[self.ny//2,0])
+            P_k[0,self.nx//2] = np.real(P_k[0,self.nx//2])
+            P_k[self.ny//2,self.nx//2] = np.real(P_k[self.ny//2,self.nx//2])
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
         # taking into account the symmetries.
-        power_array = np.empty((self.ny, self.nx/2+1))
+        power_array = np.empty((self.ny, self.nx//2+1))
 
         # Set up the scalar |k| grid using just the positive kx,ky
         k = np.sqrt(self.kx[self.iky,self.ikx]**2 + self.ky[self.iky,self.ikx]**2)
@@ -1758,7 +1753,6 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    import galsim.utilities
     if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
         g1 = g1.array
         g2 = g2.array

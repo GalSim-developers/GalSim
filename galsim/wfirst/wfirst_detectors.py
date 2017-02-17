@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -143,7 +143,7 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
         exptime=galsim.wfirst.exptime
 
     # Add Poisson noise.
-    poisson_noise = galsim.PoissonNoise(rng) 
+    poisson_noise = galsim.PoissonNoise(rng)
     img.addNoise(poisson_noise)
 
     # Reciprocity failure (use WFIRST routine, with the supplied exposure time).

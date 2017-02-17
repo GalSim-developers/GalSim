@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@ A few adjustments to the Angle class at the Python layer.
 
 import galsim
 from ._galsim import Angle, AngleUnit, radians, degrees, hours, arcmin, arcsec
+from .utilities import set_func_doc
 
 AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
 
@@ -153,7 +154,7 @@ of the allowed operations on Angles listed above (e.g., addition/subtraction of 
 multiplication of an Angle by a float, but not multiplication of Angles together).
 
 There are convenience function for getting the sin, cos, and tan of an angle, along with
-one for getting sin and cos together, which should be more efficient than doing sin and 
+one for getting sin and cos together, which should be more efficient than doing sin and
 cos separately:
 
     >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
@@ -203,7 +204,7 @@ def hms(self, sep=":"):
 
     The returned representation will have 0 <= hh < 24.
 
-    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
     Note: the reverse process is effected by HMS_Angle:
@@ -231,7 +232,7 @@ def hms(self, sep=":"):
 
 def dms(self, sep=":"):
     """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal
-    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
     Note: the reverse process is effected by DMS_Angle:
@@ -322,7 +323,7 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
-Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
+set_func_doc(Angle.wrap, """Wrap Angle to lie in the range [-pi, pi) radians.
 
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling
@@ -331,4 +332,4 @@ If you want your angles to be wrapped to [-pi, pi) radians, you can do this by c
 
 This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.
-"""
+""")

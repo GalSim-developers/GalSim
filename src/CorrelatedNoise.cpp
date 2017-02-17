@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -36,7 +36,7 @@ namespace galsim {
             tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
         ImageAlloc<double> cov = ImageAlloc<double>(covdim, covdim, 0.);
 
-        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
+        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and
                                        // start from 1!!
             for (int j=i; j<=covdim; j++){
                 cov.setValue(i, j, symcov(i, j)); // fill in the upper triangle with the
@@ -54,14 +54,14 @@ namespace galsim {
         int jdim = 1 + bounds.getYMax() - bounds.getYMin();
         int covdim = idim * jdim;
 
-        int k, ell; // k and l are indices that refer to image pixel separation vectors in the 
+        int k, ell; // k and l are indices that refer to image pixel separation vectors in the
                     // correlation func.
         double x_k, y_ell; // physical vector separations in the correlation func, dx * k etc.
 
         tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> cov = tmv::SymMatrix<
             double, tmv::FortranStyle|tmv::Upper>(covdim);
 
-        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
+        for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and
                                        // start from 1!!
             for (int j=i; j<=covdim; j++){
 

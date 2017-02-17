@@ -1,9 +1,9 @@
 {
 "#" : "Demo #6",
-  
+
 "#" : "The sixth JSON configuration file in our tutorial about using Galsim config files",
 "#" : "(This file is designed to be viewed in a window 100 characters wide.)",
-  
+
 "#" : "This script uses real galaxy images from COSMOS observations.  The catalog of real galaxy",
 "#" : "images distributed with GalSim only includes 100 galaxies, but you can download a much",
 "#" : "larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link",
@@ -16,7 +16,7 @@
 "#" : "The final image can of course have any pixel scale, not just that of the original images.",
 "#" : "The output for this script is to a FITS data cube.  With DS9, this can be viewed with a",
 "#" : "slider to quickly move through the different images.",
-       
+
 "#" : "For this example, we actually have two config files, since we have two different kinds",
 "#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",

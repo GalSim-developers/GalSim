@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 
-# An alterate version of the Great3 control-ground-constant branch configuration file, 
+# An alterate version of the Great3 control-ground-constant branch configuration file,
 # using an I<25.2 sample (instead of faking a deeper sample using I<23.5 images).
 
 # Start with the cgc.yaml file, which we'll modify below.
@@ -26,10 +26,10 @@ template: cgc.yaml
 # Here, we could also have just given the value 1.0, which is equivalent.
 gal.dilate: ""
 
-# Note that in cgc.yaml, this equation had an 0.004 out in front, and was set up such that if 
-# you had a particular flux value in the catalog, you would get the right range of S/N for 
-# the galaxies while using this variance.  When using the I<25.2 catalog, we are not trying 
-# to mimic a deeper sample (we HAVE a deeper sample) and so we reduce the noise variance 
+# Note that in cgc.yaml, this equation had an 0.004 out in front, and was set up such that if
+# you had a particular flux value in the catalog, you would get the right range of S/N for
+# the galaxies while using this variance.  When using the I<25.2 catalog, we are not trying
+# to mimic a deeper sample (we HAVE a deeper sample) and so we reduce the noise variance
 # by a factor corresponding to the square of the flux ratio at the limiting magnitude.
 eval_variables.fmax_var: '$0.000175 * math.exp(2.9 * (1.1-psf_fwhm) * (0.95-psf_fwhm))'
 

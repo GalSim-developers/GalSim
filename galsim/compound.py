@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,7 +23,10 @@ Convolution = convolution of multiple profiles
 Deconvolution = deconvolution by a given profile
 AutoConvolution = convolution of a profile by itself
 AutoCorrelation = convolution of a profile by its reflection
+FourierSqrt = Fourier-space square root of a profile
 """
+
+import numpy as np
 
 import galsim
 from . import _galsim
@@ -54,7 +57,7 @@ def Add(*args, **kwargs):
     @returns a Sum or ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
@@ -122,7 +125,7 @@ class Sum(galsim.GSObject):
                 "Sum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], galsim.GSObject):
@@ -136,25 +139,21 @@ class Sum(galsim.GSObject):
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBAdd in this case.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-        else:
-            # If any of the objects have a noise attribute, then we propagate the sum of the
-            # noises (they add like variances) to the final sum.
-            noise = None
-            for obj in args:
-                if hasattr(obj,'noise'):
-                    if noise is None:
-                        noise = obj.noise
-                    else:
-                        noise += obj.noise
-            SBList = [obj.SBProfile for obj in args]
-            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
-            if noise is not None:
-                self.noise = noise
+        # If any of the objects have a noise attribute, then we propagate the sum of the
+        # noises (they add like variances) to the final sum.
+        noise = None
+        for obj in args:
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
+            if hasattr(obj,'noise') and obj.noise is not None:
+                if noise is None:
+                    noise = obj.noise
+                else:
+                    noise += obj.noise
+        SBList = [obj.SBProfile for obj in args]
+        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
+        if noise is not None:
+            self.noise = noise
 
     @property
     def obj_list(self): return self._obj_list
@@ -175,6 +174,65 @@ class Sum(galsim.GSObject):
         return '(' + ' + '.join(str_list) + ')'
         #return 'galsim.Sum([%s])'%', '.join(str_list)
 
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBAdd(SBList, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        if n_photons == 0:
+            return galsim._galsim.PhotonArray(0)
+        ud = galsim.UniformDeviate(rng)
+
+        remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
+        fluxPerPhoton = remainingAbsoluteFlux / n_photons
+
+        # Initialize the output array
+        result = galsim._galsim.PhotonArray(n_photons)
+
+        remainingN = n_photons
+        istart = 0  # The location in the result array where we assign the component arrays.
+
+        # Get photons from each summand, using BinomialDeviate to randomize
+        # the distribution of photons among summands
+        for i, obj in enumerate(self.obj_list):
+            thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
+
+            # How many photons to shoot from this summand?
+            thisN = remainingN  # All of what's left, if this is the last summand...
+            if i < len(self.obj_list)-1:
+                # otherwise, allocate a randomized fraction of the remaining photons to summand.
+                bd = galsim.BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                thisN = bd()
+            if thisN > 0:
+                thisPA = obj.shoot(thisN, ud)
+                # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
+                # whereas the shoot() routine would have made them each nominally
+                # thisAbsoluteFlux/thisN
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
+                result.assignAt(istart, thisPA)
+                istart += thisN
+            remainingN -= thisN
+            remainingAbsoluteFlux -= thisAbsoluteFlux
+        assert remainingN == 0
+        assert np.isclose(remainingAbsoluteFlux, 0.0)
+
+        # This process produces correlated photons, so mark the resulting array as such.
+        if len(self.obj_list) > 1:
+            result.setCorrelated(True)
+
+        return result
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -187,7 +245,6 @@ class Sum(galsim.GSObject):
 
 _galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
 _galsim.SBAdd.__getstate__ = lambda self: None
-_galsim.SBAdd.__setstate__ = lambda self, state: 1
 _galsim.SBAdd.__repr__ = lambda self: \
         'galsim._galsim.SBAdd(%r, %r)'%self.__getinitargs__()
 
@@ -210,7 +267,7 @@ def Convolve(*args, **kwargs):
     """
     # First check for number of arguments != 0
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
@@ -282,7 +339,7 @@ class Convolution(galsim.GSObject):
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
@@ -307,31 +364,25 @@ class Convolution(galsim.GSObject):
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBConvolve in this case.  Can early exit.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-            self._real_space = real_space
-            self._obj_list = args
-            return
-
         # Check whether to perform real space convolution...
         # Start by checking if all objects have a hard edge.
         hard_edge = True
         for obj in args:
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Convolution must be GSObjects, not %s"%obj)
             if not obj.hasHardEdges():
                 hard_edge = False
 
         if real_space is None:
             # The automatic determination is to use real_space if 2 items, both with hard edges.
-            if len(args) == 2:
+            if len(args) <= 2:
                 real_space = hard_edge
             else:
                 real_space = False
 
-        # Warn if doing DFT convolution for objects with hard edges.
+        # Warn if doing DFT convolution for objects with hard edges
         if not real_space and hard_edge:
+
             import warnings
             if len(args) == 2:
                 msg = """
@@ -370,12 +421,11 @@ class Convolution(galsim.GSObject):
         # More than one is not allowed.
         noise = None
         for obj in args:
-            if hasattr(obj,'noise'):
+            if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is not None:
                     import warnings
                     warnings.warn("Unable to propagate noise in galsim.Convolution when multiple "+
                                   "objects have noise attribute")
-                    noise = None
                     break
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
@@ -423,6 +473,33 @@ class Convolution(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        for obj in self._obj_list:
+            obj._prepareDraw()
+        SBList = [obj.SBProfile for obj in self._obj_list]
+        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        photon_array = self._obj_list[0].shoot(n_photons, ud)
+        # It may be necessary to shuffle when convolving because we do not have a
+        # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
+        # both have their negative ones at the end.
+        # However, this decision is now made by the convolve method.
+        for obj in self._obj_list[1:]:
+            photon_array.convolve(obj.shoot(n_photons, ud), ud)
+        return photon_array
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -436,7 +513,6 @@ class Convolution(galsim.GSObject):
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
         self.getObjs(), self.isRealSpace(), self.getGSParams())
 _galsim.SBConvolve.__getstate__ = lambda self: None
-_galsim.SBConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -501,7 +577,7 @@ class Deconvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
 
@@ -522,6 +598,10 @@ class Deconvolution(galsim.GSObject):
     def __str__(self):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
 
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self._gsparams)
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -535,9 +615,8 @@ class Deconvolution(galsim.GSObject):
 
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
-_galsim.SBDeconvolve.__setstate__ = lambda self, state: 1
 _galsim.SBDeconvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
+        'galsim._galsim.SBDeconvolve(%r, %r)'%self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -627,7 +706,7 @@ class AutoConvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
@@ -656,6 +735,27 @@ class AutoConvolution(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoConvolve(self._orig_obj.SBProfile, self._real_space,
+                                                       self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        photon_array = self._orig_obj.shoot(n_photons, ud)
+        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
+        return photon_array
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -670,7 +770,6 @@ class AutoConvolution(galsim.GSObject):
 _galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoConvolve.__getstate__ = lambda self: None
-_galsim.SBAutoConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBAutoConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBAutoConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -766,8 +865,7 @@ class AutoCorrelation(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
 
@@ -796,6 +894,33 @@ class AutoCorrelation(galsim.GSObject):
         s += ')'
         return s
 
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBAutoCorrelate(self._orig_obj.SBProfile,
+                                                        self._real_space, self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+
+        result = self._orig_obj.shoot(n_photons, ud)
+        result2 = self._orig_obj.shoot(n_photons, ud)
+
+        # Flip sign of (x, y) in one of the results
+        result2.x *= -1
+        result2.y *= -1
+
+        result.convolve(result2, ud)
+        return result
+
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['SBProfile']
@@ -810,6 +935,373 @@ class AutoCorrelation(galsim.GSObject):
 _galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
-_galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
+
+
+def FourierSqrt(obj, gsparams=None):
+    """A function for computing the Fourier-space square root of either a GSObject or
+    ChromaticObject.
+
+    The FourierSqrt function is principally used for doing an optimal coaddition algorithm
+    originally developed by Nick Kaiser (but unpublished) and also described by Zackay & Ofek 2015
+    (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).  See the script make_coadd.py in the
+    GalSim/examples directory for an example of how it works.
+
+    This function will inspect its input argument to decide if a FourierSqrtProfile object or a
+    ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
+    brightness profile.
+
+    @param obj              The object to compute the Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
+    """
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return FourierSqrtProfile(obj, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
+
+
+class FourierSqrtProfile(galsim.GSObject):
+    """A class for computing the Fourier-space sqrt of a GSObject.
+
+    The FourierSqrtProfile class represents the Fourier-space square root of another profile.
+    Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a
+    FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
+    drawImage() method.
+
+    You may also specify a `gsparams` argument.  See the docstring for GSParams using
+    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the
+    object being operated on.
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the FourierSqrt() factory function:
+
+        >>> fourier_sqrt = galsim.FourierSqrt(obj)
+
+    @param obj              The object to compute Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for FourierSqrtProfile beyond the usual GSObject methods.
+    """
+    def __init__(self, obj, gsparams=None):
+        if not isinstance(obj, galsim.GSObject):
+            raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
+
+        # Save the original object as an attribute, so it can be inspected later if necessary.
+        self._orig_obj = obj
+        self._gsparams = gsparams
+
+        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
+        galsim.GSObject.__init__(self, sbp)
+        if hasattr(obj,'noise') and obj.noise is not None:
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.FourierSqrtProfile) and
+                self._orig_obj == other._orig_obj and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.FourierSqrtProfile", self._orig_obj, self._gsparams))
+
+    def __repr__(self):
+        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.FourierSqrt(%s)'%self.orig_obj
+
+    def _prepareDraw(self):
+        self._orig_obj._prepareDraw()
+        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self._gsparams)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._gsparams)
+
+_galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
+_galsim.SBFourierSqrt.__getstate__ = lambda self: None
+_galsim.SBFourierSqrt.__repr__ = lambda self: \
+        'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()
+
+
+class RandomWalk(Sum):
+    """
+
+    A class for generating a set of point sources distributed using a random
+    walk.  Uses of this profile include representing an "irregular" galaxy, or
+    adding this profile to an Exponential to represent knots of star formation.
+
+    Random walk profiles have "shape noise" that depends on the number of point
+    sources used.  For example, with 100 points the shape noise is g~0.05, and
+    this will decrease as more points are added.  The profile can be sheared to
+    give additional ellipticity, for example to follow that of an associated
+    disk.
+
+    We use the analytic approximation of an infinite number of steps, which is
+    a good approximation even if the desired number of steps were less than 10.
+
+    The requested half light radius (hlr) should be thought of as a rough
+    value.  With a finite number point sources the actual realized hlr will be
+    noisy.
+
+    Initialization
+    --------------
+    @param  npoints                 Number of point sources to generate.
+    @param  half_light_radius       Half light radius of the distribution of
+                                    points.  This is the mean half light
+                                    radius produced by an infinite number of
+                                    points.  A single instance will be noisy.
+    @param  flux                    Optional total flux in all point sources.
+                                    [default: 1]
+    @param  rng                     Optional random number generator. Can be
+                                    any galsim.BaseDeviate.  If None, the rng
+                                    is created internally.
+                                    [default: None]
+    @param  gsparams                Optional GSParams for the gaussians
+                                    representing each point source.
+                                    [default: None]
+
+    Methods
+    -------
+
+    This class inherits from galsim.Sum. Additional methods are
+
+        calculateHLR:
+            Calculate the actual half light radius of the generated points
+
+    There are also "getters",  implemented as read-only properties
+
+        .npoints
+        .input_half_light_radius
+        .flux
+        .gaussians
+            The list of galsim.Gaussian objects representing the points
+        .points
+            The array of x,y offsets used to create the point sources
+
+    Notes
+    -----
+
+    - The algorithm is a modified version of that presented in
+
+          https://arxiv.org/abs/1312.5514v3
+
+      Modifications are
+        1) there is no outer cutoff to how far a point can wander
+        2) We use the approximation of an infinite number of steps.
+    """
+
+    # these allow use in a galsim configuration context
+
+    _req_params = { "npoints" : int, "half_light_radius" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = True
+
+    def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
+
+        self._half_light_radius = float(half_light_radius)
+
+        self._flux    = float(flux)
+        self._npoints = int(npoints)
+
+        # size of the galsim.Gaussian objects to use as delta functions
+        self._gaussian_sigma = 1.0e-8
+
+        self._input_gsparams=gsparams
+
+        # we will verify this in the _verify() method
+        if rng is None:
+            rng = galsim.BaseDeviate()
+
+        self._rng=rng
+
+        self._verify()
+
+        self._set_gaussian_rng()
+
+        self._points = self._get_points()
+        self._gaussians = self._get_gaussians(self._points)
+
+        gsobj = galsim._galsim.SBAdd(self._gaussians, gsparams)
+        galsim.GSObject.__init__(self, gsobj)
+
+    def calculateHLR(self):
+        """
+        calculate the half light radius of the generated points
+        """
+        pts = self._points
+        my,mx=pts.mean(axis=0)
+
+        r=np.sqrt( (pts[:,0]-my)**2 + (pts[:,1]-mx)**2)
+
+        hlr=np.median(r)
+
+        return hlr
+
+
+    @property
+    def input_half_light_radius(self):
+        """
+        getter for the input half light radius
+        """
+        return self._half_light_radius
+
+    @property
+    def flux(self):
+        """
+        getter for the total flux
+        """
+        return self._flux
+
+    @property
+    def npoints(self):
+        """
+        getter for the number of points
+        """
+        return self._npoints
+
+    @property
+    def gaussians(self):
+        """
+        getter for the list of gaussians
+        """
+        return self._gaussians
+
+    @property
+    def points(self):
+        """
+        getter for the array of points, shape [npoints, 2]
+        """
+        return self._points.copy()
+
+    def _get_gaussians(self, points):
+        """
+        Create galsim.Gaussian objects for each point.
+
+        Highly optimized
+        """
+
+        gaussians = []
+        sigma=self._gaussian_sigma
+        gsparams=self._input_gsparams
+        fluxper=self._flux/self._npoints
+
+        for p in points:
+            g = galsim._galsim.SBGaussian(
+                sigma=sigma,
+                flux=fluxper,
+                gsparams=gsparams,
+            )
+
+            pos = galsim.PositionD(p[0],p[1])
+
+            g = galsim._galsim.SBTransform(
+                g,
+                1.0,
+                0.0,
+                0.0,
+                1.0,
+                pos,
+                1.0,
+                gsparams,
+            )
+
+            gaussians.append(g)
+
+        return gaussians
+
+    def _set_gaussian_rng(self):
+        """
+        Set the random number generator used to create the points
+
+        We are approximating the random walk to have infinite number
+        of steps, which is just a gaussian
+        """
+
+        # gaussian step size in each dimension for a random walk with infinite
+        # number steps
+        self._sigma_step = self._half_light_radius/2.3548200450309493*2
+
+        self._gauss_rng = galsim.GaussianNoise(
+            self._rng,
+            sigma=self._sigma_step,
+        )
+
+
+    def _get_points(self):
+        """
+        We must use a galsim random number generator, in order for
+        this profile to be used in the configuration file context.
+
+        The most efficient way is to write into an image
+        """
+        ny=self._npoints
+        nx=2
+        im=galsim.ImageD(nx, ny)
+
+        im.addNoise(self._gauss_rng)
+
+        return im.array
+
+    def _verify(self):
+        """
+        type and range checking on the inputs
+        """
+        if not isinstance(self._rng, galsim.BaseDeviate):
+            raise TypeError("rng must be an instance of galsim.BaseDeviate, "
+                            "got %s" % str(self._rng))
+
+        if self._npoints <= 0:
+            raise ValueError("npoints must be > 0, got %s" % str(self._npoints))
+
+        if self._half_light_radius <= 0.0:
+            raise ValueError("half light radius must be > 0"
+                             ", got %s" % str(self._half_light_radius))
+        if self._flux < 0.0:
+            raise ValueError("flux must be >= 0, got %s" % str(self._flux))
+
+    def __str__(self):
+        rep='galsim.RandomWalk(%(npoints)d, %(hlr)g, flux=%(flux)g, gsparams=%(gsparams)s)'
+        rep = rep % dict(
+            npoints=self._npoints,
+            hlr=self._half_light_radius,
+            flux=self._flux,
+            gsparams=str(self._input_gsparams),
+        )
+        return rep
+
+    def __repr__(self):
+        rep='galsim.RandomWalk(%(npoints)d, %(hlr).16g, flux=%(flux).16g, gsparams=%(gsparams)s)'
+        rep = rep % dict(
+            npoints=self._npoints,
+            hlr=self._half_light_radius,
+            flux=self._flux,
+            gsparams=repr(self._input_gsparams),
+        )
+        return rep
+
+    def _prepareDraw(self):
+        # RandomWalk never wraps a PhaseScreenPSF, so no need to prepare anything.
+        pass

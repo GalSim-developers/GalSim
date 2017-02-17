@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -61,7 +61,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
     self.main_gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams,
                                                 logger=logger)[0]
 
-    profiles = [ self.main_gal ] 
+    profiles = [ self.main_gal ]
     profiles += [ gal.shift(pos) for gal, pos in zip(self.neighbor_gals, self.neighbor_pos) ]
     if psf:
         profiles = [ galsim.Convolve(gal, psf) for gal in profiles ]
@@ -133,7 +133,7 @@ galsim.config.RegisterStampType('Blend', BlendBuilder())
 class BlendSetBuilder(galsim.config.StampBuilder):
 
     # This is the same as the setup function for Blend, so there is a bit of duplicated code
-    # here, but it was simpler to have BlendSetBuilder derive directly from StampBuilder 
+    # here, but it was simpler to have BlendSetBuilder derive directly from StampBuilder
     # so the super calls go directly to that.
     def setup(self, config, base, xsize, ysize, ignore, logger):
         """Do the appropriate setup for a Blend stamp.

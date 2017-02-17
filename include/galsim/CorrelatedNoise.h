@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,7 +43,7 @@ namespace galsim {
      * For an example of this function in use, see `galsim/correlatednoise.py`.
      *
      * Currently, this actually copies elements from an internal calculation of the covariance
-     * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
+     * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more
      * efficiently by direct assignment.  However, as this public member function is foreseen as
      * being mainly for visualization/checking purposes, we go via the TMV intermediary to avoid
      * code duplication.  If, in future, it becomes critical to speed up this function this can be

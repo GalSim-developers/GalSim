@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -49,7 +46,7 @@ namespace {
     // Integrate a python function using int1d.
     bp::tuple PyInt1d(const bp::object& func, double min, double max,
                       double rel_err=DEFRELERR, double abs_err=DEFABSERR)
-    { 
+    {
         PyFunc pyfunc(func);
         try {
             double res = int1d(pyfunc, min, max, rel_err, abs_err);

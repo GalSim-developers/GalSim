@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,13 +21,13 @@ Demo #7
 The seventh script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script introduces drawing profiles with photon shooting rather than doing the 
+This script introduces drawing profiles with photon shooting rather than doing the
 convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
-kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
+kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so
 each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
 The profiles are drawn twice: once with the FFT method, and once with photon shooting.
-The two images are drawn side by side into the same larger image so it is easy to 
-visually compare the results. The 100 total profiles are written to a FITS data cube, 
+The two images are drawn side by side into the same larger image so it is easy to
+visually compare the results. The 100 total profiles are written to a FITS data cube,
 which makes it easy to scroll through the images comparing the two drawing methods.
 
 
@@ -58,7 +58,7 @@ import galsim
 
 def main(argv):
     """
-    Make a fits image cube where each frame has two images of the same galaxy drawn 
+    Make a fits image cube where each frame has two images of the same galaxy drawn
     with regular FFT convolution and with photon shooting.
 
     We do this for 5 different PSFs and 5 different galaxies, each with 4 different (random)
@@ -88,7 +88,7 @@ def main(argv):
     ny = 64
 
     gal_flux_min = 1.e4     # Range for galaxy flux
-    gal_flux_max = 1.e5  
+    gal_flux_max = 1.e5
     gal_hlr_min = 0.3       # arcsec
     gal_hlr_max = 1.3       # arcsec
     gal_e_min = 0.          # Range for ellipticity
@@ -99,20 +99,20 @@ def main(argv):
     # This script is set up as a comparison between using FFTs for doing the convolutions and
     # shooting photons.  The two methods have trade-offs in speed and accuracy which vary
     # with the kind of profile being drawn and the S/N of the object, among other factors.
-    # In addition, for each method, there are a number of parameters GalSim uses that control 
-    # aspects of the calculation that further affect the speed and accuracy.  
+    # In addition, for each method, there are a number of parameters GalSim uses that control
+    # aspects of the calculation that further affect the speed and accuracy.
     #
     # We encapsulate these parameters with an object called GSParams.  The default values
     # are intended to be accurate enough for normal precision shear tests, without sacrificing
-    # too much speed.  
+    # too much speed.
     #
-    # Any PSF or galaxy object can be given a gsparams argument on construction that can 
+    # Any PSF or galaxy object can be given a gsparams argument on construction that can
     # have different values to make the calculation more or less accurate (typically trading
-    # off for speed or memory).  
+    # off for speed or memory).
     #
     # In this script, we adjust some of the values slightly, just to show you how it works.
     # You could play around with these values and see what effect they have on the drawn images.
-    # Usually, it requires a pretty drastic change in these parameters for you to be able to 
+    # Usually, it requires a pretty drastic change in these parameters for you to be able to
     # notice the difference by eye.  But subtle effects that may impact the shapes of galaxies
     # can happen well before then.
 
@@ -137,7 +137,7 @@ def main(argv):
     atmos = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
     # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably well aligned,
     # smallish ~0.3m / 12 inch diameter telescope with a central obscuration of ~0.12m or 5 inches
-    # diameter, being used in optical wavebands.  
+    # diameter, being used in optical wavebands.
     # In the Noll convention, the value of the Zernike coefficient also gives the RMS optical path
     # difference across a circular pupil.  An RMS difference of ~0.5 or larger indicates that parts
     # of the wavefront are in fully destructive interference, and so we might expect aberrations to
@@ -147,7 +147,7 @@ def main(argv):
     # in using the 'aberrations' kwarg.  The order of aberrations starting from index 4 is defocus,
     # astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher as in the Noll convention.
     # We ignore the first 4 values so that the index number corresponds to the Zernike index
-    # in the Noll convention. This will be particularly convenient once we start allowing 
+    # in the Noll convention. This will be particularly convenient once we start allowing
     # coefficients beyond spherical (index 11).  c.f. The Wikipedia page about the Noll indices:
     #
     #     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials
@@ -163,7 +163,7 @@ def main(argv):
     optics = galsim.OpticalPSF(
         lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4, aberrations = aberrations,
         gsparams=gsparams)
-    psf4 = galsim.Convolve([atmos, optics]) # Convolve inherits the gsparams from the first 
+    psf4 = galsim.Convolve([atmos, optics]) # Convolve inherits the gsparams from the first
                                             # item in the list.  (Or you can supply a gsparams
                                             # argument explicitly if you want to override this.)
     atmos = galsim.Kolmogorov(fwhm = psf_fwhm, gsparams=gsparams)
@@ -209,7 +209,7 @@ def main(argv):
         # objects an informative but relatively succinct str representation.  Some details may
         # be missing, but it should look essentially like how you would create the object.
         logger.debug('repr = %r',psf)
-        # The repr() version are a bit more pedantic in form and should be completely informative, 
+        # The repr() version are a bit more pedantic in form and should be completely informative,
         # to the point where two objects that are not identical should never have equal repr
         # strings. As such the repr strings may in some cases be somewhat unwieldy.  For instance,
         # since we set non-default gsparams in these, the repr includes that information, but
@@ -250,8 +250,8 @@ def main(argv):
                 image = galsim.ImageF(2*nx+2, ny, scale=pixel_scale)
 
                 # Assign the following two Image "views", fft_image and phot_image.
-                # Using the syntax below, these are views into the larger image.  
-                # Changes/additions to the sub-images referenced by the views are automatically 
+                # Using the syntax below, these are views into the larger image.
+                # Changes/additions to the sub-images referenced by the views are automatically
                 # reflected in the original image.
                 fft_image = image[galsim.BoundsI(1, nx, 1, ny)]
                 phot_image = image[galsim.BoundsI(nx+3, 2*nx+2, 1, ny)]
@@ -291,8 +291,8 @@ def main(argv):
                                 rng=rng)
                 t5 = time.time()
 
-                # For photon shooting, galaxy already has Poisson noise, so we want to make 
-                # sure not to add that noise again!  Thus, we just add sky noise, which 
+                # For photon shooting, galaxy already has Poisson noise, so we want to make
+                # sure not to add that noise again!  Thus, we just add sky noise, which
                 # is Poisson with the mean = sky_level_pixel
                 pd = galsim.PoissonDeviate(rng, mean=sky_level_pixel)
                 # DeviateNoise just adds the action of the given deviate to every pixel.
@@ -350,7 +350,7 @@ def main(argv):
     #   'bzip2' uses bzip2 on the full output file.
     #   'rice' uses rice compression on the image, leaving the fits headers readable.
     #   'gzip_tile' uses gzip in tiles on the output image, leaving the fits headers readable.
-    #   'hcompress' uses hcompress on the image, but it is only valid for 2-d data, so it 
+    #   'hcompress' uses hcompress on the image, but it is only valid for 2-d data, so it
     #               doesn't work for writeCube.
     #   'plio' uses plio on the image, but it is only valid for positive integer data.
     # Furthermore, the first three have standard filename extensions associated with them,

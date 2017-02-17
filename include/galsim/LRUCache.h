@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -71,13 +71,13 @@ namespace galsim {
     struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4> >
     {
         static Value* NewValue(const boost::tuple<Key1,Key2,Key3,Key4>& key)
-        { 
+        {
             return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key),
-                             boost::get<3>(key)); 
+                             boost::get<3>(key));
         }
     };
 
-    /** 
+    /**
      * @brief Least Recently Used Cache
      *
      * Saves the N most recently used Values indexed by the Keys.  i.e. when it needs to remove
@@ -94,8 +94,8 @@ namespace galsim {
      *    std::pair<Key1,Key2> key = std::make_pair(key1,key2);
      *    Value* value = new Value(key1,key2);
      *
-     * This structure will first look to see if we have already build such a Value given a 
-     * provided Key, and return it if it is in the cache.  Otherwise, it builds a new Value, 
+     * This structure will first look to see if we have already build such a Value given a
+     * provided Key, and return it if it is in the cache.  Otherwise, it builds a new Value,
      * saves it in the cache, and returns it.
      *
      * At most nmax items will be saved in the cache.
@@ -126,7 +126,7 @@ namespace galsim {
             if (iter != _cache.end()) {
                 // Item is cached.
                 // Move it to the front of the list.
-                if (iter != _cache.begin()) 
+                if (iter != _cache.begin())
                     _entries.splice(_entries.begin(), _entries, iter->second);
                 // Return the item's value
                 assert(_entries.size() == _cache.size());

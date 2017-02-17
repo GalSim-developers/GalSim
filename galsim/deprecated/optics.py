@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -45,58 +45,7 @@ import numpy as np
 import galsim
 from galsim import GSObject
 from galsim.deprecated import depr
-
-
-def roll2d(image, (iroll, jroll)):
-    """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
-
-    @param image            The NumPy array to be circular shifted.
-    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
-
-    @returns the rolled image.
-    """
-    return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
-
-
-def kxky(array_shape=(256, 256)):
-    """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
-    shape.
-
-    Uses the SBProfile conventions for Fourier space, so `k` varies in approximate range (-pi, pi].
-    Uses the most common DFT element ordering conventions (and those of FFTW), so that `(0, 0)`
-    array element corresponds to `(kx, ky) = (0, 0)`.
-
-    See also the docstring for np.fftfreq, which uses the same DFT convention, and is called here,
-    but misses a factor of pi.
-
-    Adopts NumPy array index ordering so that the trailing axis corresponds to `kx`, rather than the
-    leading axis as would be expected in IDL/Fortran.  See docstring for numpy.meshgrid which also
-    uses this convention.
-
-    @param array_shape   The NumPy array shape desired for `kx, ky`.
-    """
-    # Note: numpy shape is y,x
-    k_xaxis = np.fft.fftfreq(array_shape[1]) * 2. * np.pi
-    k_yaxis = np.fft.fftfreq(array_shape[0]) * 2. * np.pi
-    return np.meshgrid(k_xaxis, k_yaxis)
-
-
-def rotate_xy(x, y, theta):
-    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
-    origin of the Cartesian coordinate system.
-
-    @param x        NumPy array of input `x` coordinates
-    @param y        NumPy array of input `y` coordinates
-    @param theta    Rotation angle (+ve counter clockwise) as an Angle instance
-
-    @return the rotated coordinates `(x_rot,y_rot)`.
-    """
-    if not isinstance(theta, galsim.Angle):
-        raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
-    sint, cost = theta.sincos()
-    x_rot = x * cost - y * sint
-    y_rot = x * sint + y * cost
-    return x_rot, y_rot
+from galsim.utilities import roll2d, kxky, rotate_xy
 
 
 class OpticalPSF(GSObject):
@@ -302,7 +251,7 @@ class OpticalPSF(GSObject):
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
 
-        depr("galsim.optics.OpticalPSF", 1.3, "galsim.OpticalPSF",
+        depr("galsim.optics.OpticalPSF", 1.4, "galsim.OpticalPSF",
              "We have reimplemented OpticalPSF under the more general PhaseScreenPSF framework.  "
              "The new version can be accessed either from galsim.OpticalPSF or "
              "galsim.phase_psf.OpticalPSF")
@@ -587,7 +536,7 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     kx = (kx) * pupil_plane_im.array.shape[0]/(2.*np.pi)
     ky = (ky) * pupil_plane_im.array.shape[1]/(2.*np.pi)
     tot_k = np.sqrt(kx**2 + ky**2)
-    tot_k = roll2d(tot_k, (tot_k.shape[0] / 2, tot_k.shape[1] / 2))
+    tot_k = roll2d(tot_k, (tot_k.shape[0] // 2, tot_k.shape[1] // 2))
     max_in_pupil = max(tot_k[pupil_plane_im.array>0])
 
     # Next, deal with any requested rotations.
@@ -614,7 +563,7 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     pp_arr = pp_arr.astype(bool)
     # Roll the pupil plane image so the center is in the corner, just like the outputs of
     # `generate_pupil_plane`.
-    pp_arr = roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    pp_arr = roll2d(pp_arr, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
 
     # Then set up the rho array appropriately. Given our estimate above for `max_in_pupil`, we can
     # get delta rho:
@@ -627,8 +576,8 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     assert rho_x.shape == pp_arr.shape
     assert rho_y.shape == pp_arr.shape
     # Then roll it, consistent with the convention in `generate_pupil_plane`.
-    rho_x = roll2d(rho_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
-    rho_y = roll2d(rho_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    rho_x = roll2d(rho_x, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
+    rho_y = roll2d(rho_y, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
     rho = rho_x + 1j * rho_y
 
     if obscuration is not None and lam_over_diam is not None:
@@ -774,7 +723,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @returns the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
 
-    depr("wavefront", 1.3, '',
+    depr("wavefront", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     # Define the pupil coordinates and non-zero regions based on input kwargs.  These are either
@@ -891,7 +840,7 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("wavefront_image", 1.3, '',
+    depr("wavefront_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array, effective_oversampling = wavefront(
@@ -951,7 +900,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: 0. * galsim.degrees]
     """
-    depr("psf", 1.3, '',
+    depr("psf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     wf, effective_oversampling = wavefront(
@@ -974,7 +923,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     im = np.abs(ftwf)**2
 
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
+    im = roll2d(im, (im.shape[0] // 2, im.shape[1] // 2))
     im *= (flux / (im.sum() * scale**2))
 
     return im, effective_oversampling
@@ -1025,7 +974,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            instance. [default: 0. * galsim.degrees]
     @param oversampling    Effective level of oversampling requested.
     """
-    depr("psf_image", 1.3, '',
+    depr("psf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array, effective_oversampling = psf(
@@ -1084,7 +1033,7 @@ def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("otf", 1.3, '',
+    depr("otf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     wf, _ = wavefront(
@@ -1132,7 +1081,7 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("otf_image", 1.3, '',
+    depr("otf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = otf(
@@ -1183,7 +1132,7 @@ def mtf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("mtf", 1.3, '',
+    depr("mtf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     return np.abs(otf(
@@ -1227,7 +1176,7 @@ def mtf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("mtf_image", 1.3, '',
+    depr("mtf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = mtf(
@@ -1276,7 +1225,7 @@ def ptf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("ptf", 1.3, '',
+    depr("ptf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     kx, ky = kxky(array_shape)
@@ -1329,7 +1278,7 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("ptf_image", 1.3, '',
+    depr("ptf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = ptf(

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBAdd_H
 #define GalSim_SBAdd_H
-/** 
+/**
  * @file SBAdd.h @brief SBProfile adapter that is the sum of 2 or more other SBProfiles.
  */
 
@@ -27,16 +27,16 @@
 
 namespace galsim {
 
-    /** 
-     * @brief Sums SBProfiles. 
+    /**
+     * @brief Sums SBProfiles.
      *
      * The SBAdd class can be used to add arbitrary numbers of SBProfiles together.
      */
-    class SBAdd : public SBProfile 
+    class SBAdd : public SBProfile
     {
     public:
 
-        /** 
+        /**
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist    List of SBProfiles.

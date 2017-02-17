@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,6 +18,7 @@
 """Unit tests for integration routines at the Python layer.
 """
 
+from __future__ import print_function
 import numpy as np
 
 from galsim_test_helpers import *
@@ -197,7 +198,7 @@ def test_invroot_infinite_limits():
             RuntimeError,
             galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -213,6 +214,25 @@ def test_midpoint_basic():
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
 
+@timer
+def test_trapz_basic():
+    """Test the basic functionality of the trapz() method.
+    """
+    # This shouldn't be super accurate, but just make sure it's not really broken.
+    func = lambda x: x**2
+    result = galsim.integ.trapz(func, 0, 1)
+    expected_val = 1.**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Simple test of trapz() method failed for f(x)=x^2 from 0 to 1')
+
+    result = galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 100000))
+    expected_val = 1.**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
+
+
 if __name__ == "__main__":
     test_gaussian_finite_limits()
     test_gaussian_infinite_limits()
@@ -221,3 +241,4 @@ if __name__ == "__main__":
     test_invroot_finite_limits()
     test_invroot_infinite_limits()
     test_midpoint_basic()
+    test_trapz_basic()

@@ -1,4 +1,4 @@
-; Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+; Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 ; https://github.com/GalSim-developers
 ;
 ; This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,7 +20,7 @@ PRO make_test_catalog
 ;; Script used by Rachel to make fake catalogs for unit tests (tests/test_real.py) of the
 ;; RealGalaxy base class and associated functions in real.py
 
-infile = '../data/real_galaxy_catalog_example.fits'
+infile = '../data/real_galaxy_catalog_23.5_example.fits'
 outfile = 'test_catalog.fits'
 induse = 2 ; the index of the one to use
 imgfile = 'test_images.fits'

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,9 @@
 # produce an _equivalent_ simulation as the one produced for Great3.
 modules:
     - great3_reject
+
+    # Custom module (cf. noise_free.py in this directory) that enables the output.noise_free item.
+    - noise_free
 
 psf:
     type: Convolve
@@ -81,12 +84,18 @@ psf:
         trefoil2: { type: RandomGaussian, sigma: 0.07 }
         spher: { type: RandomGaussian, sigma: 0.07 }
 
-        # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
-        # PSF image is larger than the postage stamp onto which we will draw the object,
-        # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
-        # we will eventually draw onto helps avoid wasted calculations.
-        # This is in arcsec, so max_size = stamp_size * pixel_scale
-        max_size: "$@image.stamp_size * @image.pixel_scale"
+        # The original GREAT3 runs used a keyword max_size to improve the efficiency of OpticalPSF.
+        # However, we now believe that this keyword introduces additional aliasing and have
+        # deprecated its use in GalSim v1.4.  We have retained the original description in the
+        # doubly commented block below.
+
+        # # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # # PSF image is larger than the postage stamp onto which we will draw the object,
+        # # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # # we will eventually draw onto helps avoid wasted calculations.
+        # # This is in arcsec, so max_size = stamp_size * pixel_scale
+        # max_size: "$@image.stamp_size * @image.pixel_scale"
+
         suppress_warning: true
 
 gal:
@@ -263,6 +272,13 @@ output:
     # This lets you rerun the code if there were I/O issues and it will just write the
     # missing files.  (Potentially ones that have been deleted because they were corrupted.)
     noclobber: true
+
+    # This wasn't part of the Great3 processing, but it can be useful for developing shear
+    # algorithms to have access to a noise-free version of the image.  This uses a custom
+    # "extra output" item, which we name "noise_free".  The output image will be written to
+    # a separate hdu in the output file with a noise-free version of the main image.
+    noise_free:
+        hdu: 1  # hdu 0 is the main image.
 
     # Output truth catalogs with some of the generated values
     truth:

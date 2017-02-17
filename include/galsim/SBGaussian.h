@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBGaussian_H
 #define GalSim_SBGaussian_H
-/** 
+/**
  * @file SBGaussian.h @brief SBProfile that implements a 2-d Gaussian profile.
  */
 
@@ -33,16 +33,16 @@ namespace galsim {
      * The Gaussian Surface Brightness Profile is characterized by two properties, its `flux`
      * and the characteristic size `sigma` where the radial profile of the circular Gaussian
      * drops off as `exp[-r^2 / (2. * sigma^2)]`.
-     * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both 
+     * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both
      * real and k domains, or more if needed to reach the `folding_threshold` spec.
      */
-    class SBGaussian : public SBProfile 
+    class SBGaussian : public SBProfile
     {
     public:
-        /** 
+        /**
          * @brief Constructor.
          *
-         * @param[in] sigma    characteristic size, surface brightness scales as 
+         * @param[in] sigma    characteristic size, surface brightness scales as
          *                     `exp[-r^2 / (2. * sigma^2)]`.
          * @param[in] flux     flux of the Surface Brightness Profile.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image

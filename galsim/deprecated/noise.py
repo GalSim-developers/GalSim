@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,7 +20,7 @@ import galsim
 from galsim.deprecated import depr
 
 def Noise_setRNG(self, rng):
-    """Deprecated method to set the BaseDeviate used to generate random numbers for 
+    """Deprecated method to set the BaseDeviate used to generate random numbers for
     the current noise model.
     """
     depr('setRNG', 1.1, 'noise = noise.copy(rng=rng)')

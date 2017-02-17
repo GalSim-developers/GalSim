@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,10 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
+
+#include "Python.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -30,15 +29,21 @@
 // This is the only one that doesn't have NO_IMPORT_ARRAY.
 #include "numpy/arrayobject.h"
 
-namespace galsim {
+static int doImportNumpy() {
+    import_array1(0);
+    return 0;
+}
 
+namespace galsim {
     void pyExportAngle();
     void pyExportBounds();
+    void pyExportPhotonArray();
     void pyExportImage();
     void pyExportSBProfile();
     void pyExportSBAdd();
     void pyExportSBConvolve();
     void pyExportSBDeconvolve();
+    void pyExportSBFourierSqrt();
     void pyExportSBTransform();
     void pyExportSBBox();
     void pyExportSBGaussian();
@@ -51,6 +56,8 @@ namespace galsim {
     void pyExportSBInterpolatedImage();
     void pyExportSBInterpolatedKImage();
     void pyExportSBKolmogorov();
+    void pyExportSBInclinedExponential();
+    void pyExportSBInclinedSersic();
     void pyExportRandom();
     void pyExportNoise();
     void pyExportTable();
@@ -74,14 +81,16 @@ namespace galsim {
 } // namespace galsim
 
 BOOST_PYTHON_MODULE(_galsim) {
-    import_array(); // for numpy
+    doImportNumpy();
     galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportImage();
+    galsim::pyExportPhotonArray();
     galsim::pyExportSBProfile();
     galsim::pyExportSBAdd();
     galsim::pyExportSBConvolve();
     galsim::pyExportSBDeconvolve();
+    galsim::pyExportSBFourierSqrt();
     galsim::pyExportSBTransform();
     galsim::pyExportSBBox();
     galsim::pyExportSBGaussian();
@@ -94,6 +103,8 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportSBInterpolatedKImage();
     galsim::pyExportSBKolmogorov();
+    galsim::pyExportSBInclinedExponential();
+    galsim::pyExportSBInclinedSersic();
     galsim::pyExportRandom();
     galsim::pyExportNoise();
     galsim::pyExportInterpolant();

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,15 +21,15 @@
 #define GalSim_Angle_H
 
 /**
- *  @file Angle.h 
+ *  @file Angle.h
  *
  *  @brief Defines Angle class for dealing cleanly with angle values and a unit.
  *
- *  Based on the LSST Angle class from 
+ *  Based on the LSST Angle class from
  *  http://dev.lsstcorp.org/cgit/LSST/DMS/afw.git/tree/include/lsst/afw/geom/Angle.h
  *
  *  Modified significantly by MJ:
- *  - Remove implicit conversion to/from double (which seems to me to negate much 
+ *  - Remove implicit conversion to/from double (which seems to me to negate much
  *    of the point of having an Angle class).
  *  - Include scalar = Angle / AngleUnit
  *  - Removed non-sensical Angle = Angle * Angle
@@ -55,7 +55,7 @@ namespace galsim {
     /**
      *  @brief A class defining angle units
      *
-     *  You probably won't ever have to use this directly. 
+     *  You probably won't ever have to use this directly.
      *  Instead you will you the pre-defined constants that are AngleUnits:
      *    radians
      *    degrees
@@ -63,7 +63,7 @@ namespace galsim {
      *    arcmin
      *    arcsec
      */
-    class AngleUnit 
+    class AngleUnit
     {
         friend class Angle;
     public:
@@ -79,7 +79,7 @@ namespace galsim {
         bool operator==(AngleUnit rhs) const { return (_val == rhs._val); }
         bool operator!=(AngleUnit rhs) const { return (_val != rhs._val); }
         //@}
-        
+
         double getValue() const { return _val; }
 
     private:
@@ -165,7 +165,7 @@ namespace galsim {
         friend Angle operator*(double scale, Angle theta) { return theta * scale; }
         Angle operator/(double scale) const { Angle theta = *this; theta /= scale; return theta; }
         //@}
-        
+
         //@{
         /// Define arithmetic for adding/subtracting two Angles
         Angle& operator+=(Angle rhs) { _val += rhs._val; return *this; }
@@ -173,7 +173,7 @@ namespace galsim {
         Angle operator+(Angle rhs) const { Angle theta = *this; theta += rhs; return theta; }
         Angle operator-(Angle rhs) const { Angle theta = *this; theta -= rhs; return theta; }
         //@}
- 
+
         //@{
         /// Define comparisons of two Angles
         bool operator==(Angle rhs) const { return _val == rhs._val; }
@@ -183,7 +183,7 @@ namespace galsim {
         bool operator>=(Angle rhs) const { return _val >= rhs._val; }
         bool operator>(Angle rhs) const { return _val > rhs._val; }
         //@}
-        
+
         /// Output operator for an Angle
         friend std::ostream& operator<<(std::ostream& os, Angle theta)
         { os << theta._val; return os; }
@@ -218,7 +218,7 @@ namespace galsim {
     inline Angle operator*(double val, AngleUnit unit) { return Angle(val,unit); }
 
     /// A convenience function.  unit1/unit2 is equivalent to (1 * unit1) / unit2.
-    inline double operator/(AngleUnit unit1, AngleUnit unit2) 
+    inline double operator/(AngleUnit unit1, AngleUnit unit2)
     { return unit1.getValue() / unit2.getValue(); }
 
 }

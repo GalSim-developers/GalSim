@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -93,7 +93,7 @@ namespace galsim {
         const A& back() const {return vec.back();}
         const A& operator[](int i) const {return vec[i];}
         typename std::vector<A>::iterator insert(typename std::vector<A>::iterator it, const A a);
-        int size() const {return vec.size();}
+        size_t size() const {return vec.size();}
 
         const std::vector<A>& getArgs() const { return vec; }
 
@@ -230,6 +230,12 @@ namespace galsim {
         /// interp many values at once
         void interpMany(const A* xvec, const A* yvec, V* valvec, int N) const;
         void interpManyMesh(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
+
+        /// Estimate df/dx, df/dy at a single location
+        void gradient(const A x, const A y, V& dfdxvec, V& dfdyvec) const;
+
+        /// Estimate many df/dx and df/dy values
+        void gradientMany(const A* xvec, const A* yvec, V* dfdxvec, V* dfdyvec, int N) const;
 
         const std::vector<A>& getXArgs() const { return xargs.getArgs(); }
         const std::vector<A>& getYArgs() const { return yargs.getArgs(); }

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,7 +29,7 @@ def InterpolantXY(arg):
 
 galsim.InterpolantXY = InterpolantXY
 
-# Also make Interpolant2d an alias for Interpolant in case anyone does 
+# Also make Interpolant2d an alias for Interpolant in case anyone does
 # isinstance(interp, galsim.Interpolant2d)
 
 galsim.Interpolant2d = galsim.Interpolant

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from past.builtins import basestring
 import galsim
 import galsim.wfirst
 import numpy as np
@@ -35,7 +36,8 @@ zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           wavelength_limits=None, logger=None, wavelength=None, high_accuracy=False):
+           wavelength_limits=None, logger=None, wavelength=None, high_accuracy=False,
+           gsparams=None):
     """
     Get the PSF for WFIRST observations.
 
@@ -143,6 +145,8 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                    details).  This setting is more expensive in terms of time and
                                    RAM, and may not be necessary for many applications.
                                    [default: False]
+    @param gsparams                An optional GSParams argument.  See the docstring for GSParams
+                                   for details. [default: None]
     @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
     """
     # Check which SCAs are to be done using a helper routine in this module.
@@ -162,12 +166,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             new_bounds = old_bounds.withBorder((old_bounds.xmax+1-old_bounds.xmin)/2)
             pupil_plane_im = galsim.Image(bounds=new_bounds)
             pupil_plane_im[old_bounds] = tmp_pupil_plane_im
+            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
     else:
         if approximate_struts:
             oversampling = 1.5
         else:
             oversampling = 1.2
             pupil_plane_im = galsim.wfirst.pupil_plane_file
+            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
 
     if wavelength is None:
         if n_waves is not None:
@@ -217,14 +223,15 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                     lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration, nstruts=6,
-                    oversampling=oversampling)
+                    oversampling=oversampling, gsparams=gsparams)
             else:
                 PSF = galsim.ChromaticOpticalPSF(
                     lam=zemax_wavelength,
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration,
                     pupil_plane_im=pupil_plane_im,
-                    oversampling=oversampling, pad_factor=2.)
+                    pupil_plane_scale=pupil_plane_scale,
+                    oversampling=oversampling, pad_factor=2., gsparams=gsparams)
             if n_waves is not None:
                 PSF = PSF.interpolate(waves=np.linspace(blue_limit, red_limit, n_waves),
                                       oversample_fac=1.5)
@@ -234,13 +241,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                 PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration, nstruts=6,
-                                        oversampling=oversampling)
+                                        oversampling=oversampling, gsparams=gsparams)
             else:
                 PSF = galsim.OpticalPSF(lam=wavelength_nm, diam=galsim.wfirst.diameter,
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=pupil_plane_im,
-                                        oversampling=oversampling, pad_factor=2.)
+                                        pupil_plane_scale=pupil_plane_scale,
+                                        oversampling=oversampling, pad_factor=2., gsparams=gsparams)
 
         PSF_dict[SCA]=PSF
 
@@ -287,7 +295,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     if bandpass_list is None:
         bandpass_list = default_bandpass_list
     else:
-        if not isinstance(bandpass_list[0], str):
+        if not isinstance(bandpass_list[0], basestring):
             raise ValueError("Expected input list of bandpass names!")
         if not set(bandpass_list).issubset(default_bandpass_list):
             err_msg = ''
@@ -303,7 +311,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     im_list = []
     bp_name_list = []
     SCA_index_list = []
-    for SCA in PSF_dict.keys():
+    for SCA in PSF_dict:
         PSF = PSF_dict[SCA]
         if not isinstance(PSF, galsim.ChromaticOpticalPSF) and \
                 not isinstance(PSF, galsim.InterpolatedChromaticObject):
@@ -322,7 +330,6 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
             SCA_index_list.append(SCA)
 
     # Save images to file.
-    n_ims = len(im_list)
     galsim.fits.writeMulti(im_list, filename, clobber=clobber)
 
     # Add data to file, after constructing a FITS table.  Watch out for clobbering.
@@ -358,6 +365,8 @@ def loadPSFImages(filename):
     metadata_hdu = hdu_list.pop()
     im_list = galsim.fits.readMulti(hdu_list=hdu_list)
     bp_list = list(metadata_hdu.data.bandpass)
+    # In python3, convert from bytes to str
+    bp_list = [ str(bp.decode()) for bp in bp_list ]
     SCA_list = list(metadata_hdu.data.SCA)
     galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -439,4 +448,3 @@ def _find_limits(bandpasses, bandpass_dict):
         if bp.blue_limit < min_wave: min_wave = bp.blue_limit
         if bp.red_limit > max_wave: max_wave = bp.red_limit
     return min_wave, max_wave
-

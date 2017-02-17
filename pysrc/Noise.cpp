@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -84,6 +81,10 @@ namespace galsim {
         { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data)
         { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data)
+        { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data)
+        { applyToView(data); }
     };
 
     struct PyBaseNoise {
@@ -92,7 +93,7 @@ namespace galsim {
         static void wrapTemplates(W& wrapper) {
             typedef void (BaseNoise::* applyTo_func_type)(ImageView<U>);
             wrapper
-                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView), 
+                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView),
                      (bp::arg("image")))
                 ;
         }
@@ -114,6 +115,8 @@ namespace galsim {
             wrapTemplates<float>(pyBaseNoise);
             wrapTemplates<int32_t>(pyBaseNoise);
             wrapTemplates<int16_t>(pyBaseNoise);
+            wrapTemplates<uint32_t>(pyBaseNoise);
+            wrapTemplates<uint16_t>(pyBaseNoise);
         }
 
     };
@@ -203,7 +206,7 @@ namespace galsim {
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<VarGaussianNoise, bp::bases<BaseNoise> > pyVarGaussianNoise(
-                "VarGaussianNoise",  
+                "VarGaussianNoise",
                 bp::init<boost::shared_ptr<BaseDeviate>, const BaseImage<float>& >(
                     (bp::arg("rng")=bp::object(), bp::arg("var_image")))
             );

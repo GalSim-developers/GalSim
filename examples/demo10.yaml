@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,18 +26,18 @@
 # (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 # is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 # as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-# RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from 
-# the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
+# RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from
+# the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring
 # test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
 # correct applied shear for each object (among other information).
 #
 # New features introduced in this demo:
 #
-# - obj type : Ring (..., full_rotation)
+# - stamp type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using world_pos variable, user-defined variables and math functions
 # - type : Current
-# - shear_value : PowerSpectrumShear 
+# - shear_value : PowerSpectrumShear
 # - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - input : power_spectrum (e_power_function, b_power_function)
@@ -47,23 +47,23 @@
 # - Evaluated values in output.truth.columns
 
 # Define the PSF profile
-psf : 
+psf :
     type : Gaussian
-    fwhm : 
+    fwhm :
         # We saw the Eval type before (in demo3.yaml) as a way to do simple arithmetic.
         # It becomes much more powerful when you include variables in your equation.
-        # One variable that is usable is `world_pos`, which is the position of the current 
-        # object "on the sky" relative to the center of the image in arcsec. 
+        # One variable that is usable is `world_pos`, which is the position of the current
+        # object "on the sky" relative to the center of the image in arcsec.
         # This lets you define any arbitrary function for a particular variable in terms of (x,y).
-        # For a list of the other GalSim-privided variables, see 
+        # For a list of the other GalSim-privided variables, see
         # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
         type : Eval
         # 0.9 + 0.5 * (r/100 arcsec)^2
-        str : '0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2'  
+        str : '0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2'
 
     ellip:
         type : EBeta
-        e : 
+        e :
             type : Eval
             # We also allow any number of user-defined variables.
             # The first letter of the variable name indicates what type it is expected to be:
@@ -77,14 +77,14 @@ psf :
             #     x = GSObject
             # Thus, fr here is a float variable named r.
             # (Examples of i, p, g, and x codes can be seen below in the output.truth field.)
-            fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' } 
+            fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' }
             # Now we can use this variable (as r, not fr) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
         beta:
             type : Eval
             # And you can also use anything in the Python math module:
             # This makes the PSF shapes have a tangential pattern
-            str : '(math.atan2(world_pos.y,world_pos.x) + math.pi/2.) * galsim.radians' 
+            str : '(math.atan2(world_pos.y,world_pos.x) + math.pi/2.) * galsim.radians'
 
 
 # Make the galaxies in a Ring test.
@@ -147,7 +147,7 @@ gal :
     signal_to_noise : 100
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     # Note: The corresponding python script, demo10.py, is only done using a single process
     # to make it a little easier to follow the GalSim code.  See demo9.py for an example of
@@ -161,10 +161,10 @@ image :
     stamp_size : 48  # pixels
 
     # image type = Tiled has an optional field called "order".
-    # The default order in which to place the tiles is row-based: order = 'row'. 
-    # i.e. First the bottom row, then the next one up, and so on until the top row. 
+    # The default order in which to place the tiles is row-based: order = 'row'.
+    # i.e. First the bottom row, then the next one up, and so on until the top row.
     # Other options for the order parameters are 'column' and 'random'.
-    # order = 'column' specifies to start with the left column and proceeding to the right 
+    # order = 'column' specifies to start with the left column and proceeding to the right
     # order = 'random' specifies to place the postage stamps in a random order.
     # We use 'random' here so the ring test galaxies don't appear in order along the rows.
     order : 'random'
@@ -176,14 +176,14 @@ image :
         # of the image.  So we again use the origin item in the wcs field.  This will
         # use the default wcs type 'PixelScale', but with the origin in the image coordinate
         # system offset from the normal (0,0).
-        # The origin keyword is always available for any WCS type and always has the 
+        # The origin keyword is always available for any WCS type and always has the
         # effect of defining where in the image coordinate system the origin should be.
         origin : center
 
     noise :
         sky_level : 1.e6  # ADU / arcsec^2
 
-    # The random seed is used for both the power spectrum realization and the random 
+    # The random seed is used for both the power spectrum realization and the random
     # properties of the galaxies.
     random_seed : 3339201
 
@@ -193,10 +193,10 @@ input :
     # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
         dir : data
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
     # We also initialize the power spectrum here.
-    # There are two possible attributes for a power_spectrum: e_power_function and 
+    # There are two possible attributes for a power_spectrum: e_power_function and
     # b_power_function.  You must specify at least one of them.
     # They are each strings that define a function of k.
     power_spectrum :
@@ -211,9 +211,9 @@ output :
     file_name : power_spectrum.fits
 
     # Put the PSF image in hdu=1 (the first extension after the primary HDU)
-    psf : 
+    psf :
         hdu : 1
-        # We use real space convolution to avoid some of the 
+        # We use real space convolution to avoid some of the
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
         # no noise, they are apparent with ds9's zscale viewing.
@@ -222,7 +222,7 @@ output :
         # For cases where there is only a PSF, it too may have a signal_to_noise item.
         # This can be here (output.psf) or in the main psf field if there is no gal field.
         # If there is no signal_to_noise set here, then the default is to have no noise.
-        # If there is a signal_to_noise value, then it uses the same kind of noise as in the 
+        # If there is a signal_to_noise value, then it uses the same kind of noise as in the
         # main image.
         signal_to_noise : 1000
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,6 +20,7 @@ The CelestialCoord class describing coordinates on the celestial sphere.
 """
 
 import galsim
+import numpy as np
 
 class CelestialCoord(object):
     """This class defines a position on the celestial sphere, normally given by
@@ -160,7 +161,7 @@ class CelestialCoord(object):
         # E = A + B + C - pi
         # tan(E/4) = sqrt(tan(s/2) tan((s-a)/2) tan((s-b)/2) tan((s-c)/2)
         # tan(E/2) = tan(a/2) tan(b/2) sin(C) / (1 + tan(a/2) tan(b/2) cos(C))
-        # 
+        #
         # We use the last formula, which is stable both for small triangles and ones that are
         # nearly degenerate (which the middle formula may have trouble with).
         #
@@ -174,7 +175,7 @@ class CelestialCoord(object):
         #         G = sina sinb cosC
         #         da = 2 sin(a/2)
         #         db = 2 sin(b/2)
-        # 
+        #
         # tan(E/2) = sin(a/2) sin(b/2) sin(C) / (cos(a/2) cos(b/2) + sin(a/2) sin(b/2) cos(C))
         #          = sin(a) sin(b) sin(C) / (4 cos(a/2)^2 cos(b/2)^2 + sin(a) sin(b) cos(C))
         #          = F / (4 (1-sin(a/2)^2) (1-sin(b/2)^2) + G)
@@ -218,7 +219,7 @@ class CelestialCoord(object):
                     not area.  For more information, see
                     http://mathworld.wolfram.com/StereographicProjection.html
             'gnomonic' uses a gnomonic projection (i.e. a projection from the center of the
-                    sphere, which has the property that all great circles become straight 
+                    sphere, which has the property that all great circles become straight
                     lines.  For more information, see
                     http://mathworld.wolfram.com/GnomonicProjection.html
             'postel' uses a Postel equidistant proejection, which preserves distances from
@@ -271,16 +272,14 @@ class CelestialCoord(object):
         # Calculate k according to which projection we are using
         cosc = self._sindec * sindec + self._cosdec * cosdec * cosdra
         if projection[0] == 'l':
-            import numpy
-            k = numpy.sqrt( 2. / (1.+cosc) )
+            k = np.sqrt( 2. / (1.+cosc) )
         elif projection[0] == 's':
             k = 2. / (1. + cosc)
         elif projection[0] == 'g':
             k = 1. / cosc
         else:
-            import numpy
-            c = numpy.arccos(cosc)
-            k = c / numpy.sin(c)
+            c = np.arccos(cosc)
+            k = c / np.sin(c)
 
         u = k * cosdec * sindra
         v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
@@ -306,11 +305,10 @@ class CelestialCoord(object):
 
         self._set_aux()
 
-        import numpy
-        cosra = numpy.cos(ra)
-        sinra = numpy.sin(ra)
-        cosdec = numpy.cos(dec)
-        sindec = numpy.sin(dec)
+        cosra = np.cos(ra)
+        sinra = np.sin(ra)
+        cosdec = np.cos(dec)
+        sindec = np.sin(dec)
 
         return self._project_core(cosra, sinra, cosdec, sindec, projection)
 
@@ -353,10 +351,9 @@ class CelestialCoord(object):
         # sin(dec) = cos(c) sin(dec0) + v (sin(c)/r) cos(dec0)
         # tan(ra-ra0) = u (sin(c)/r) / (cos(dec0) cos(c) - v sin(dec0) (sin(c)/r))
         #
-        # which means we only need cos(c) and sin(c)/r.  For most of the projections, 
+        # which means we only need cos(c) and sin(c)/r.  For most of the projections,
         # this saves us from having to take sqrt(rsq).
 
-        import numpy
         rsq = u*u + v*v
         if projection[0] == 'l':
             # c = 2 * arcsin(r/2)
@@ -364,7 +361,7 @@ class CelestialCoord(object):
             # cos(c) = 1 - r^2/2
             # sin(c) = r sqrt(4-r^2) / 2
             cosc = 1. - rsq/2.
-            sinc_over_r = numpy.sqrt(4.-rsq) / 2.
+            sinc_over_r = np.sqrt(4.-rsq) / 2.
         elif projection[0] == 's':
             # c = 2 * arctan(r/2)
             # Some trig manipulations reveal:
@@ -376,11 +373,11 @@ class CelestialCoord(object):
             # c = arctan(r)
             # cos(c) = 1 / sqrt(1+r^2)
             # sin(c) = r / sqrt(1+r^2)
-            cosc = sinc_over_r = 1./numpy.sqrt(1.+rsq)
+            cosc = sinc_over_r = 1./np.sqrt(1.+rsq)
         else:
-            r = numpy.sqrt(rsq)
-            cosc = numpy.cos(r)
-            sinc_over_r = numpy.sinc(r/numpy.pi)
+            r = np.sqrt(rsq)
+            cosc = np.cos(r)
+            sinc_over_r = np.sinc(r/np.pi)
 
         # Compute sindec, tandra
         self._set_aux()
@@ -389,8 +386,8 @@ class CelestialCoord(object):
         tandra_num = -u * sinc_over_r
         tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
 
-        dec = numpy.arcsin(sindec)
-        ra = self.ra.rad() + numpy.arctan2(tandra_num, tandra_denom)
+        dec = np.arcsin(sindec)
+        ra = self.ra.rad() + np.arctan2(tandra_num, tandra_denom)
 
         return ra, dec
 
@@ -401,7 +398,7 @@ class CelestialCoord(object):
 
         Also, the input is taken as a tuple (u,v), rather than packaged as a PositionD object.
 
-        The main advantage to this is that it will work if `u` and `v` are NumPy arrays, in which 
+        The main advantage to this is that it will work if `u` and `v` are NumPy arrays, in which
         case the output `ra`, `dec` will also be NumPy arrays.
         """
         if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
@@ -430,21 +427,20 @@ class CelestialCoord(object):
         # tan(ra-ra0) = u sin(c)/r / (cos(dec0) cos(c) - v sin(dec0) sin(c)/r)
         #
         # d(sin(dec)) = cos(dec) ddec = s0 dc + (v ds + s dv) c0
-        # dtan(ra-ra0) = sec^2(ra-ra0) dra 
-        #              = ( (u ds + s du) A - u s (dc c0 - (v ds + s dv) s0 ) )/A^2 
+        # dtan(ra-ra0) = sec^2(ra-ra0) dra
+        #              = ( (u ds + s du) A - u s (dc c0 - (v ds + s dv) s0 ) )/A^2
         # where s = sin(c) / r
         #       c = cos(c)
         #       s0 = sin(dec0)
-        #       c0 = cos(dec0) 
+        #       c0 = cos(dec0)
         #       A = c c0 - v s s0
 
-        import numpy
         rsq = u*u + v*v
         rsq1 = (u+1.e-4)**2 + v**2
         rsq2 = u**2 + (v+1.e-4)**2
         if projection[0] == 'l':
             c = 1. - rsq/2.
-            s = numpy.sqrt(4.-rsq) / 2.
+            s = np.sqrt(4.-rsq) / 2.
             dcdu = -u
             dcdv = -v
             dsdu = -u/(4.*s)
@@ -458,17 +454,17 @@ class CelestialCoord(object):
             dsdu = 0.5*dcdu
             dsdv = 0.5*dcdv
         elif projection[0] == 'g':
-            c = s = 1./numpy.sqrt(1.+rsq)
+            c = s = 1./np.sqrt(1.+rsq)
             s3 = s*s*s
             dcdu = dsdu = -u*s3
             dcdv = dsdv = -v*s3
         else:
-            r = numpy.sqrt(rsq)
+            r = np.sqrt(rsq)
             if r == 0.:
                 c = s = 1
             else:
-                c = numpy.cos(r)
-                s = numpy.sin(r)/r
+                c = np.cos(r)
+                s = np.sin(r)/r
             dcdu = -s*u
             dcdv = -s*v
             dsdu = (c-s)*u/rsq
@@ -478,7 +474,7 @@ class CelestialCoord(object):
         s0 = self._sindec
         c0 = self._cosdec
         sindec = c * s0 + v * s * c0
-        cosdec = numpy.sqrt(1.-sindec*sindec)
+        cosdec = np.sqrt(1.-sindec*sindec)
         dddu = ( s0 * dcdu + v * dsdu * c0 ) / cosdec
         dddv = ( s0 * dcdv + (v * dsdv + s) * c0 ) / cosdec
 
@@ -628,8 +624,8 @@ class CelestialCoord(object):
     def __str__(self): return 'galsim.CelestialCoord(%s, %s)'%(self._ra,self._dec)
     def __hash__(self): return hash(repr(self))
 
-    def __eq__(self, other): 
-        return (isinstance(other, CelestialCoord) and 
+    def __eq__(self, other):
+        return (isinstance(other, CelestialCoord) and
                 self.ra == other.ra and self.dec == other.dec)
     def __ne__(self, other): return not self.__eq__(other)
 

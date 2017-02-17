@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,9 +21,9 @@ Demo #1
 This is the first script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-Each of these demo*.py files are designed to be equivalent to the corresponding demo*.yaml file 
-(or demo*.json -- found in the json directory).  If you are new to python, you should probably 
-look at those files first as they will probably have a quicker learning curve for you.  Then you 
+Each of these demo*.py files are designed to be equivalent to the corresponding demo*.yaml file
+(or demo*.json -- found in the json directory).  If you are new to python, you should probably
+look at those files first as they will probably have a quicker learning curve for you.  Then you
 can look through these python scripts, which show how to do the same thing.  Of course, experienced
 pythonistas may prefer to start with these scripts and then look at the corresponding YAML files.
 
@@ -32,12 +32,12 @@ To run this script, simply write:
     python demo1.py
 
 
-This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 
-with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 
+This first script is about as simple as it gets.  We draw an image of a single galaxy convolved
+with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the
 galaxy, and add a constant level of Gaussian noise to the image.
 
 In each demo, we list the new features introduced in that demo file.  These will differ somewhat
-between the .py and .yaml (or .json) versions, since the two methods implement things in different 
+between the .py and .yaml (or .json) versions, since the two methods implement things in different
 ways.  (demo*.py are python scripts, while demo*.yaml and demo*.json are configuration files.)
 
 New features introduced in this demo:
@@ -67,7 +67,7 @@ def main(argv):
     """
     # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger("demo1") 
+    logger = logging.getLogger("demo1")
 
     gal_flux = 1.e5    # total counts on the image
     gal_sigma = 2.     # arcsec
@@ -90,13 +90,13 @@ def main(argv):
     logger.debug('Made PSF profile')
 
     # Final profile is the convolution of these
-    # Can include any number of things in the list, all of which are convolved 
+    # Can include any number of things in the list, all of which are convolved
     # together to make the final flux profile.
     final = galsim.Convolve([gal, psf])
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale, given in arcsec/pixel.
-    # The returned image has a member, added_flux, which is gives the total flux actually added to 
+    # The returned image has a member, added_flux, which is gives the total flux actually added to
     # the image.  One could use this value to check if the image is large enough for some desired
     # accuracy level.  Here, we just ignore it.
     image = final.drawImage(scale=pixel_scale)
@@ -120,8 +120,8 @@ def main(argv):
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
                 results.observed_shape.e2, results.moments_sigma)
     logger.info('Expected values in the limit that pixel response and noise are negligible:')
-    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0, 
-                math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale) 
+    logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f', 0.0, 0.0,
+                math.sqrt(gal_sigma**2 + psf_sigma**2)/pixel_scale)
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,11 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
+
+#include "galsim/IgnoreWarnings.h"
+
 #define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -30,7 +28,6 @@
 
 #include "SBProfile.h"
 #include "SBTransform.h"
-#include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
 
@@ -81,6 +78,12 @@ namespace galsim {
                 .def(bp::self == bp::other<GSParams>())
                 .enable_pickling()
                 ;
+// Work around for "no to_python (by-value) converter found for C++ type: boost::shared_ptr<>"
+// boost::python bug that seems to only exist for boost version 1.60.
+// (GalSim Issue #764, https://github.com/GalSim-developers/GalSim/pull/767).
+#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
+            bp::register_ptr_to_python< boost::shared_ptr<GSParams> >();
+#endif
         }
     };
 
@@ -95,29 +98,10 @@ namespace galsim {
             // We also don't need to make 'W' a template parameter in this case,
             // but it's easier to do that than write out the full class_ type.
             wrapper
-                .def("drawShoot",
-                     (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
-                                            double, double, bool, bool)
-                      const)&SBProfile::drawShoot,
-                     (bp::arg("image"), bp::arg("N")=0., bp::arg("ud"),
-                      bp::arg("gain")=1., bp::arg("max_extra_noise")=0.,
-                      bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
-                     "Draw object into existing image using photon shooting.\n"
-                     "\n"
-                     "Setting optional integer arg poissonFlux != 0 allows profile flux to vary\n"
-                     "according to Poisson statistics for N samples.\n"
-                     "\n"
-                     "Returns total flux of photons that landed inside image bounds.")
                 .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
-                     "Draw in-place and return the summed flux.")
-                .def("drawK",
-                     (void (SBProfile::*)(ImageView<U>, ImageView<U>,
-                                          double, double) const)&SBProfile::drawK,
-                     (bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.),
-                     "Draw k-space image (real and imaginary components).")
-                ;
+                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("dx")),
+                     "Draw in-place and return the summed flux.");
         }
 
         static void wrap() {
@@ -151,9 +135,6 @@ namespace galsim {
                 "\n"
                 "Note that in an FFT the image may be calculated internally on a\n"
                 "larger grid than the provided image to avoid folding.\n"
-                "Specifying wmult > 1 will draw an image that is wmult times larger than the\n"
-                "default choice, i.e. it will have finer sampling in k space and have less\n"
-                "folding.\n"
                 ;
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
@@ -184,6 +165,9 @@ namespace galsim {
                      "without DFT.")
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
+                .def("getPositiveFlux", &SBProfile::getPositiveFlux)
+                .def("getNegativeFlux", &SBProfile::getNegativeFlux)
+                .def("maxSB", &SBProfile::maxSB)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
                 .def("rotate", &SBProfile::rotate, bp::args("theta"))
                 .def("shift", &SBProfile::shift, bp::args("delta"))
@@ -196,6 +180,10 @@ namespace galsim {
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);
+            pySBProfile.def(
+                "drawK",
+                (void (SBProfile::*)(ImageView<std::complex<double> >, double) const)&SBProfile::drawK,
+                (bp::arg("image"), bp::arg("dk")), "Draw k-space image.");
         }
 
     };
@@ -205,9 +193,6 @@ namespace galsim {
     {
         PySBProfile::wrap();
         PyGSParams::wrap();
-
-        bp::def("goodFFTSize", &goodFFTSize, (bp::arg("input_size")),
-                "Round up to the next larger 2^n or 3x2^n.");
     }
 
 } // namespace galsim

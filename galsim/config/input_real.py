@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,9 +32,16 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    # But not if they specify 'id' which overrides that.
+    # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        if 'random' not in config:
+            galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        else:
+            if not config['random']:
+                galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+                # Need to do this to avoid being caught by the GetAllParams() call, which will flag
+                # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
+                del config['random']
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,
@@ -43,9 +50,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
         ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = %s"%param_name)
-    kwargs['rng'] = base['rng']
+    kwargs['rng'] = galsim.config.check_for_rng(base, logger, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']
@@ -54,8 +59,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if logger:
-        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,kwargs)
+    logger.debug('obj %d: %s kwargs = %s',base.get('obj_num',0),param_name,kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
 
@@ -65,9 +69,9 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
+    gal, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
                                    param_name='RealGalaxyOriginal')
-    return image.original_image, safe
+    return gal.original_gal, safe
 
 
 # Register these as valid gsobject types

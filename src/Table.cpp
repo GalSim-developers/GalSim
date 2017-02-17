@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,20 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
-// icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
-// It doesn't understand "pragma GCC"
-#ifndef __INTEL_COMPILER
+//#define DEBUGLOGGING
 
-// For 32-bit machines, g++ -O2 optimization in the TMV stuff below uses an optimization
-// that is technically isn't known to not overflow 32 bit integers.  In fact, it is totally
-// fine to use, but we need to remove a warning about it in this file for gcc >= 4.5
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 5)
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
-#endif
-
-#endif
-
-
+#include "galsim/IgnoreWarnings.h"
 
 #include "TMV.h"
 #include "TMV_SymBand.h"
@@ -76,7 +65,7 @@ namespace galsim {
 
         if (equalSpaced) {
             int i = int( std::ceil( (a-vec.front()) / da) );
-            if (i >= vec.size()) --i; // in case of rounding error
+            if (i >= int(vec.size())) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
             while (a > vec[i]) ++i;
@@ -357,10 +346,10 @@ namespace galsim {
     void Table2D<V,A>::interpMany(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
-        for (int k=0; k<N; k++, valvec++) {
+        for (int k=0; k<N; k++) {
             i = xargs.upperIndex(xvec[k]);
             j = yargs.upperIndex(yvec[k]);
-            *valvec = (this->*interpolate)(xvec[k], yvec[k], i, j);
+            *valvec++ = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
 
@@ -373,10 +362,45 @@ namespace galsim {
         int i, j;
         for (int outi=0; outi<outNx; outi++) {
             i = xargs.upperIndex(xvec[outi]);
-            for (int outj=0; outj<outNy; outj++, valvec++) {
+            for (int outj=0; outj<outNy; outj++) {
                 j = yargs.upperIndex(yvec[outj]);
-                *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
+                *valvec++ = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
+        }
+    }
+
+    /// Estimate many df/dx and df/dy values
+    template <class V, class A>
+    void Table2D<V,A>::gradient(const A x, const A y, V& dfdx, V& dfdy) const
+    {
+        // Note: This is really only accurate for linear interpolation.
+        // The derivative for floor, ceil, nearest interpolation doesn't really make
+        // much sense, so this is probably what the user would want.  However, if we
+        // eventually implement spline interpolation for Table2D, then this function will
+        // need to be revisited.
+        int i = xargs.upperIndex(x);
+        int j = yargs.upperIndex(y);
+        A dx = xargs[i] - xargs[i-1];
+        A dy = yargs[j] - yargs[j-1];
+        V f00 = vals[(i-1)*Ny+j-1];
+        V f01 = vals[(i-1)*Ny+j];
+        V f10 = vals[i*Ny+j-1];
+        V f11 = vals[i*Ny+j];
+        A ax = (xargs[i] - x) / (xargs[i] - xargs[i-1]);
+        A bx = 1.0 - ax;
+        A ay = (yargs[j] - y) / (yargs[j] - yargs[j-1]);
+        A by = 1.0 - ay;
+        dfdx = ( (f10-f00)*ay + (f11-f01)*by ) / dx;
+        dfdy = ( (f01-f00)*ax + (f11-f10)*bx ) / dy;
+    }
+
+    /// Estimate many df/dx and df/dy values
+    template <class V, class A>
+    void Table2D<V,A>::gradientMany(const A* xvec, const A* yvec, V* dfdxvec, V* dfdyvec,
+                                    int N) const
+    {
+        for (int k=0; k<N; ++k) {
+            gradient(xvec[k], yvec[k], dfdxvec[k], dfdyvec[k]);
         }
     }
 

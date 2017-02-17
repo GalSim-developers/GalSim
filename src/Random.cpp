@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -86,6 +86,11 @@ namespace galsim {
             _rng->seed(alt_rng());
         }
         clearCache();
+    }
+
+    void BaseDeviate::generate(int N, double* data)
+    {
+        for (int i=0; i<N; ++i) data[i] = (*this)();
     }
 
     // Next two functions shamelessly stolen from

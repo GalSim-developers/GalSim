@@ -1,4 +1,8 @@
-@mainpage
+[//]: # ( @mainpage )
+[![Build Status](https://travis-ci.org/GalSim-developers/GalSim.svg?branch=master)](https://travis-ci.org/GalSim-developers/GalSim)
+[![Coverage Status](https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=master)](https://coveralls.io/github/GalSim-developers/GalSim?branch=master)
+[![Paper](https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg)](https://arxiv.org/abs/1407.7676)
+[![Paper](https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-blue.svg)](http://adsabs.harvard.edu/abs/2015A%26C....10..121R)
 
 GalSim: The modular galaxy image simulation toolkit
 ===================================================
@@ -24,10 +28,10 @@ development.  For details of algorithms and code validation, please see
 Distribution
 ------------
 
-The current released version of GalSim is version 1.3.  To get the code, you
+The current released version of GalSim is version 1.4.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.3.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.4.0
 
 Also, feel free to fork the repository:
 
@@ -41,7 +45,7 @@ Or clone the repository with either of the following:
 although after doing so, if you are not a developer, you should probably
 checkout the latest release tag, rather than use the master branch:
 
-    git checkout v1.3.0
+    git checkout v1.4.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
@@ -77,19 +81,27 @@ You should receive notification that your unsubscription was successful.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
+Currently, the lead developers for GalSim are:
+
+  - Mike Jarvis (mikejarvis17 at gmail)
+  - Rachel Mandelbaum (rmandelb at andrew dot cmu dot edu)
+  - Josh Meyers (jmeyers314 at gmail)
+
+However, many others have contributed to GalSim over the years as well, for
+which we are very grateful.
+
 If you have a question about how to use GalSim, a good place to ask it is at
-StackOverflow:
+[StackOverflow](http://stackoverflow.com/).  Some of the GalSim developers
+have alerts set up to be automatically notified about questions with the
+'galsim' tag, so there is a good chance that your question will be answered.
 
-    http://stackoverflow.com/
+If you have any trouble installing or using the code, or find a bug, or have a
+suggestion for a new feature, please open up an Issue on our [GitHub
+repository](https://github.com/GalSim-developers/GalSim/issues).  We also accept
+pull requests if you have something you'd like to contribute to the code base.
 
-Some of the GalSim developers have alerts set up to be automatically notified
-about questions with the 'galsim' tag, so there is a good chance that your
-question will be answered.
-
-If you find something that you think is a bug, or if you have a suggestion
-for a new feature, please open up an Issue on our GitHub repository:
-
-    https://github.com/GalSim-developers/GalSim/issues?state=open
+If none of these communication avenues seem appropriate, you can also contact
+us directly at the above email addresses.
 
 
 Installation
@@ -173,10 +185,15 @@ config files that are parsed by the executable `bin/galsim`.  (There are no
 corresponding .yaml files for demo12 and demo13 yet, because some of the
 functionality cannot yet be carried out using config files.)
 
+Two other scripts in the `examples/` directory that may be of interest, but
+are not part of the GalSim tutorial series, are `make_coadd.py`, which
+demonstrates the use of the FourierSqrt transformation to optimally coadd
+images, and `psf_wf_movie.py`, which demonstrates the realistic atmospheric
+PSF code by making a movie of a time-variable PSF and wavefront.
+
 As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
-
 
 Tagged versions
 ---------------
@@ -193,7 +210,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.3.0
+    git checkout v1.4.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"
@@ -212,7 +229,7 @@ Currently, GalSim has the following capabilities:
 
 * Can generate PSFs from a variety of simple parametric models such as Moffat,
   Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
-  aberrations up to spherical, and an optional central obscuration and
+  aberrations to arbitrary order, and an optional central obscuration and
   struts.
 
 * Can simulate galaxies from a variety of simple parametric models as well as
@@ -220,6 +237,8 @@ Currently, GalSim has the following capabilities:
   images, see
 
       https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
+
+* Can simulate atmospheric PSFs from realistic turbulent phase screens.
 
 * Can make the images either via i) Fourier transform, ii) real-space
   convolution (real-space being occasionally faster than Fourier), or
@@ -237,7 +256,7 @@ Currently, GalSim has the following capabilities:
 
 * Can add noise using a variety of noise models, including correlated noise.
 
-* Can whiten or apply N-fold symmetry to existing correlated noise that is 
+* Can whiten or apply N-fold symmetry to existing correlated noise that is
   already in an image.
 
 * Can read in input values from a catalog, a dictionary file (such as a JSON
@@ -268,9 +287,6 @@ Summary of planned future development
 
 We plan to add the following additional capabilities in future versions of
 GalSim:
-
-* PSFs from stochastic atmosphere models.
-  (cf. `devel/modules/atmos_factfinding.pdf`)
 
 * Simulating more sophisticated detector defects and image artifacts.
 

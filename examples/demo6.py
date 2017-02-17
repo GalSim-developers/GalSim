@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,14 +26,13 @@ images distributed with GalSim only includes 100 galaxies, but you can download 
 larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 to the download page.
 
-The galaxy images are already convolved with the effective PSF for the original 
-observations, so GalSim considers the galaxy profile to be the observed image deconvolved 
-by that PSF (also distributed with the galaxy data).
-In this case, we then randomly rotate the galaxies, apply a given gravitational shear as
-well as gravitational magnification, and then finally convolve by a double Gaussian PSF.
-The final image can of course have any pixel scale, not just that of the original images.
-The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
-slider to quickly move through the different images.
+The galaxy images are already convolved with the effective PSF for the original observations,
+so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF
+(also distributed with the galaxy data).  In this case, we then randomly rotate the galaxies,
+apply a given gravitational shear as well as gravitational magnification, and then finally
+convolve by a double Gaussian PSF.  The final image can of course have any pixel scale, not
+just that of the original images.  The output for this script is to a FITS "data cube".
+With DS9, this can be viewed with a slider to quickly move through the different images.
 
 
 New features introduced in this demo:
@@ -77,7 +76,7 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    cat_file_name = 'real_galaxy_catalog_example.fits'
+    cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
     dir = 'data'
     # Make output directory if not already present.
     if not os.path.isdir('output'):
@@ -96,7 +95,7 @@ def main(argv):
     psf_outer_fwhm = 2.3    # arcsec
     psf_inner_fraction = 0.8  # fraction of total PSF flux in the inner Gaussian
     psf_outer_fraction = 0.2  # fraction of total PSF flux in the inner Gaussian
-    ngal = 100  
+    ngal = 100
 
     logger.info('Starting demo script 6 using:')
     logger.info('    - real galaxies from catalog %r',cat_file_name)
@@ -104,7 +103,7 @@ def main(argv):
     logger.info('    - pixel scale = %.2f',pixel_scale)
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
-    
+
     # Read in galaxy catalog
     # Note: dir is the directory both for the catalog itself and also the directory prefix
     # for the image files listed in the catalog.
@@ -149,15 +148,15 @@ def main(argv):
         # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
         # This conserves surface brightness, so it scales both the area and flux.
         gal = gal.magnify(gal_mu)
-        
+
         # Make the combined profile
         final = galsim.Convolve([psf, gal])
 
         # Offset by up to 1/2 pixel in each direction
-        # We had previously (in demo4 and demo5) used shift(dx,dy) as a way to shift the center of 
-        # the image.  Since that is applied to the galaxy, the units are arcsec (since the galaxy 
-        # profile itself doesn't know about the pixel scale).  Here, the offset applies to the 
-        # drawn image, which does know about the pixel scale, so the units of offset are pixels, 
+        # We had previously (in demo4 and demo5) used shift(dx,dy) as a way to shift the center of
+        # the image.  Since that is applied to the galaxy, the units are arcsec (since the galaxy
+        # profile itself doesn't know about the pixel scale).  Here, the offset applies to the
+        # drawn image, which does know about the pixel scale, so the units of offset are pixels,
         # not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
         dx = rng() - 0.5
         dy = rng() - 0.5
@@ -181,7 +180,7 @@ def main(argv):
         # Add Poisson noise.  This time, we don't give a sky_level, since we have already
         # added it to the image, so we don't want any more added.  The sky_level parameter
         # really defines how much _extra_ sky should be added above what is already in the image.
-        im.addNoise(galsim.PoissonNoise(rng)) 
+        im.addNoise(galsim.PoissonNoise(rng))
 
         logger.debug('   Added Poisson noise')
         t4 = time.time()

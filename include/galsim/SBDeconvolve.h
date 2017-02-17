@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBDeconvolve_H
 #define GalSim_SBDeconvolve_H
-/** 
+/**
  * @file SBDeconvolve.h @brief SBProfile adapter which inverts its subject in k space to effect a
  * deconvolution.
  */
@@ -36,7 +36,7 @@ namespace galsim {
      * @param[in] gsparams  GSParams object storing constants that control the accuracy of
      *                      image operations and rendering, if different from the default.
      */
-    class SBDeconvolve : public SBProfile 
+    class SBDeconvolve : public SBProfile
     {
     public:
         /// @brief Constructor.
@@ -47,6 +47,9 @@ namespace galsim {
 
         /// @brief Destructor.
         ~SBDeconvolve();
+
+        /// @brief Get the SBProfile being deconvolved
+        SBProfile getObj() const;
 
     protected:
 

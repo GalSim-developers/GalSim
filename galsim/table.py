@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -115,8 +115,8 @@ class LookupTable(object):
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
-        x = np.asarray(x).astype(float)
-        f = np.asarray(f).astype(float)
+        x = np.array(x, dtype=float)
+        f = np.array(f, dtype=float)
         self.x = x
         self.f = f
 
@@ -130,11 +130,11 @@ class LookupTable(object):
 
         # make and store table
         if x_log:
-            if np.any(np.array(x) <= 0.):
+            if np.any(x <= 0.):
                 raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
             x = np.log(x)
         if f_log:
-            if np.any(np.array(f) <= 0.):
+            if np.any(f <= 0.):
                 raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
             f = np.log(f)
 
@@ -196,11 +196,11 @@ class LookupTable(object):
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
                 f = np.empty_like(x.ravel(), dtype=float)
-                self.table.interpMany(x.astype(float).ravel(),f)
+                self.table.interpMany(x.astype(float,copy=False).ravel(),f)
                 f = f.reshape(x.shape)
             else:
                 f = np.empty_like(x, dtype=float)
-                self.table.interpMany(x.astype(float),f)
+                self.table.interpMany(x.astype(float,copy=False),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
             f = np.empty_like(x, dtype=float)
@@ -285,7 +285,8 @@ def _LookupTable_eq(self, other):
             self.getInterp() == other.getInterp())
 
 def _LookupTable_hash(self):
-    return hash(("_galsim._LookupTable", self.getArgs(), self.getVals(), self.getInterp()))
+    return hash(("_galsim._LookupTable", tuple(self.getArgs()), tuple(self.getVals()),
+                 self.getInterp()))
 
 _galsim._LookupTable.__eq__ = _LookupTable_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
@@ -338,9 +339,14 @@ class LookupTable2D(object):
     The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
     Possibilities include:
       - 'raise': raise an exception.  (This is the default.)
+      - 'constant': Return a constant specified by the `constant` keyword.
       - 'wrap': infinitely wrap the initial range in both directions.
-    In order to use edge_mode='wrap', the first and last column of f, as well as the first and last
-    row of f must match.  (This way we know what the period is in each dimension.)
+    In order for LookupTable2D to determine the wrapping period when edge_mode='wrap', either the
+    x and y grid points need to be equally spaced (in which case the x-period is inferred as
+    len(x)*(x[1]-x[0]) and similarly for y), or the first/last row/column of f must be identical,
+    in which case the x-period is inferred as x[-1] - x[0].  (If both conditions are satisfied
+    (equally-spaced x and y and identical first/last row/column of f, then the x-period is inferred
+    as len(x)*(x[1]-x[0])).
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
@@ -348,6 +354,9 @@ class LookupTable2D(object):
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='raise')
         >>> tab2d(7, 7)
         ValueError: Extrapolating beyond input range.
+
+        >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='constant', constant=1.0)
+        1.0
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
         ValueError: Cannot wrap `f` array with unequal first/last column/row.
@@ -374,14 +383,23 @@ class LookupTable2D(object):
                           [Default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
                           See above for details.  [Default: 'raise']
+    @param constant       A constant to return when extrapolating beyond the input range and
+                          `edge_mode='constant'`.  [Default: 0]
     """
-    def __init__(self, x, y, f, interpolant='linear', edge_mode='raise'):
-        if edge_mode not in ['raise', 'wrap']:
+    def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
+        if edge_mode not in ['raise', 'wrap', 'constant']:
             raise ValueError("Unknown edge_mode: {:0}".format(edge_mode))
+        self.edge_mode = edge_mode
 
         self.x = np.ascontiguousarray(x, dtype=float)
         self.y = np.ascontiguousarray(y, dtype=float)
         self.f = np.ascontiguousarray(f, dtype=float)
+
+        dx = np.diff(self.x)
+        dy = np.diff(self.y)
+
+        if not (all(dx > 0) and all(dy > 0)):
+            raise ValueError("x and y input grids are not strictly increasing.")
 
         fshape = self.f.shape
         if fshape != (len(x), len(y)):
@@ -389,14 +407,21 @@ class LookupTable2D(object):
 
         self.interpolant = interpolant
         self.edge_mode = edge_mode
+        self.constant = float(constant)
 
         if self.edge_mode == 'wrap':
-            # Can only wrap if the first column/row is the same as the last column/row.
-            if (not all(self.f[0] == self.f[-1]) or
-                not all(self.f[:, 0] == self.f[:, -1])):
-                raise ValueError("Cannot wrap `f` array with unequal first/last column/row.")
-            self.xperiod = self.x[-1] - self.x[0]
-            self.yperiod = self.y[-1] - self.y[0]
+            # Can wrap if x and y arrays are equally spaced ...
+            if np.allclose(dx, dx[0]) and np.allclose(dy, dy[0]):
+                # Underlying Table2D requires us to extend x, y, and f.
+                self.x = np.append(self.x, self.x[-1]+dx[0])
+                self.y = np.append(self.y, self.y[-1]+dy[0])
+                self.f = np.pad(self.f, [(0,1), (0,1)], mode='wrap')
+            if (all(self.f[0] == self.f[-1]) and all(self.f[:,0] == self.f[:,-1])):
+                self.xperiod = self.x[-1] - self.x[0]
+                self.yperiod = self.y[-1] - self.y[0]
+            else:
+                raise ValueError("Cannot use edge_mode='wrap' unless either x and y are equally "
+                                 "spaced or first/last row/column of f are identical.")
 
         self.table = _galsim._LookupTable2D(self.x, self.y, self.f, self.interpolant)
 
@@ -411,28 +436,115 @@ class LookupTable2D(object):
         return ((x-self.x[0]) % self.xperiod + self.x[0],
                 (y-self.y[0]) % self.yperiod + self.y[0])
 
-    def __call__(self, x, y):
-        if self.edge_mode == 'raise':
-            if not self._inbounds(x, y):
-                raise ValueError("Extrapolating beyond input range.")
+    def _call_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise ValueError("Extrapolating beyond input range.")
 
         from numbers import Real
         if isinstance(x, Real):
-            if self.edge_mode == 'wrap':
-                x, y = self._wrap_args(x, y)
             return self.table(x, y)
         else:
             x = np.array(x, dtype=float)
             y = np.array(y, dtype=float)
             shape = x.shape
-            f = np.empty_like(x.ravel(), dtype=float)
             x = x.ravel()
             y = y.ravel()
-            if self.edge_mode == 'wrap':
-                x, y = self._wrap_args(x, y)
+            f = np.empty_like(x, dtype=float)
             self.table.interpMany(x, y, f)
             f = f.reshape(shape)
             return f
+
+    def _call_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._call_raise(x, y)
+
+    def _call_constant(self, x, y):
+        from numbers import Real
+        if isinstance(x, Real):
+            if self._inbounds(x, y):
+                return self.table(x, y)
+            else:
+                return self.constant
+        else:
+            x = np.array(x, dtype=float)
+            y = np.array(y, dtype=float)
+            shape = x.shape
+            x = x.ravel()
+            y = y.ravel()
+            f = np.empty_like(x)
+            f.fill(self.constant)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            tmp = np.empty((sum(good),), dtype=float)
+            self.table.interpMany(x[good], y[good], tmp)
+            f[good] = tmp
+            f = f.reshape(shape)
+            return f
+
+    def __call__(self, x, y):
+        if self.edge_mode == 'raise':
+            return self._call_raise(x, y)
+        elif self.edge_mode == 'wrap':
+            return self._call_wrap(x, y)
+        else: # constant
+            return self._call_constant(x, y)
+
+    def _gradient_raise(self, x, y):
+        if not self._inbounds(x, y):
+            raise ValueError("Extrapolating beyond input range.")
+
+        try:
+            xx = float(x)
+            yy = float(y)
+            return self.table.gradient(xx, yy)
+        except TypeError:
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(x)
+            self.table.gradientMany(x.ravel(), y.ravel(), dfdx.ravel(), dfdy.ravel())
+            return dfdx, dfdy
+
+    def _gradient_wrap(self, x, y):
+        x, y = self._wrap_args(x, y)
+        return self._gradient_raise(x, y)
+
+    def _gradient_constant(self, x, y):
+        from numbers import Real
+        if isinstance(x, Real):
+            if self._inbounds(x, y):
+                return self.table.gradient(x, y)
+            else:
+                return 0.0, 0.0
+        else:
+            dfdx = np.empty_like(x)
+            dfdy = np.empty_like(y)
+            dfdx.fill(0.0)
+            dfdy.fill(0.0)
+            good = ((x >= self.x[0]) & (x <= self.x[-1]) &
+                    (y >= self.y[0]) & (y <= self.y[-1]))
+            tmp1 = np.empty((np.sum(good),), dtype=x.dtype)
+            tmp2 = np.empty((np.sum(good),), dtype=x.dtype)
+            self.table.gradientMany(x[good], y[good], tmp1, tmp2)
+            dfdx[good] = tmp1
+            dfdy[good] = tmp2
+            return dfdx, dfdy
+
+    def gradient(self, x, y):
+        """Calculate the gradient of the function at an arbitrary point or points.
+
+        @param x        Either a single x value or an array of x values at which to compute
+                        the gradient.
+        @param y        Either a single y value or an array of y values at which to compute
+                        the gradient.
+
+        @returns A tuple of (dfdx, dfdy) where dfdx, dfdy are single values (if x,y were single
+        values) or numpy arrays.
+        """
+        if self.edge_mode == 'raise':
+            return self._gradient_raise(x, y)
+        elif self.edge_mode == 'wrap':
+            return self._gradient_wrap(x, y)
+        else: # constant
+            return self._gradient_constant(x, y)
 
     def __str__(self):
         return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
@@ -469,9 +581,8 @@ def _LookupTable2D_str(self):
     y = self.getYArgs()
     f = self.getVals()
     return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
-            "f=[[%s,...,%s],...,[%s,...,%s]]), interpolant=%r"%(
+            "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r)"%(
             x[0], x[-1], y[0], y[-1], f[0,0], f[0,-1], f[-1,0], f[-1,-1], self.getInterp()))
-
 
 _galsim._LookupTable2D.__getinitargs__ = lambda self: \
         (self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
@@ -479,7 +590,8 @@ _galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
 _galsim._LookupTable2D.__hash__ = lambda self: \
         hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
-_galsim._LookupTable2D.__repr__ = lambda self: \
-        "galsim._galsim._LookupTable2D(%r, %r, %r, %r)"%(
-        self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str
+_galsim._LookupTable2D.__repr__ = lambda self: \
+        'galsim._galsim._LookupTable2D(array(%r), array(%r), array(%r), %r)'%(
+        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals().tolist(),
+        self.getInterp())

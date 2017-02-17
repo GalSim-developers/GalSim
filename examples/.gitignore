@@ -4,3 +4,4 @@ output
 output_yaml
 output_json
 lsst_images
+.coverage*

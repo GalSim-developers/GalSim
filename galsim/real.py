@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,15 +29,13 @@ This module defines the RealGalaxyCatalog class, used to store all required info
 real galaxy simulation training sample and accompanying PSF model.  For information about
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
 page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
-
-The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
-some lower-resolution telescope.
 """
 
 
 import galsim
 from galsim import GSObject
 import os
+import numpy as np
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -64,9 +62,7 @@ class RealGalaxy(GSObject):
 
     This initializes `real_galaxy` with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
-    keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
-    options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).
+    keywords for choosing a galaxy; exactly one must be set.
 
     Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
@@ -91,7 +87,11 @@ class RealGalaxy(GSObject):
                             `random` is required.]
     @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
                             or `random` is required.]
-    @param random           If True, then just select a completely random galaxy from the catalog.
+    @param random           If True, then select a random galaxy from the catalog.  If the catalog
+                            has a 'weight' associated with it to allow for correction of selection
+                            effects in which galaxies were included, the 'weight' factor is used to
+                            remove those selection effects rather than selecting a completely random
+                            object.
                             [One of `index`, `id`, or `random` is required.]
     @param rng              A random number generator to use for selecting a random galaxy
                             (may be any kind of BaseDeviate or None) and to use in generating
@@ -137,16 +137,15 @@ class RealGalaxy(GSObject):
                     "flux" : float ,
                     "flux_rescale" : float ,
                     "pad_factor" : float,
-                    "noise_pad_size" : float,
+                    "noise_pad_size" : float
                   }
-    _single_params = [ { "index" : int , "id" : str } ]
+    _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
 
-        import numpy as np
 
         if rng is None:
             self.rng = galsim.BaseDeviate()
@@ -178,9 +177,16 @@ class RealGalaxy(GSObject):
                 if random is True:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
-            elif random is True:
-                uniform_deviate = galsim.UniformDeviate(self.rng)
-                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate())
+            elif random:
+                ud = galsim.UniformDeviate(self.rng)
+                use_index = int(real_galaxy_catalog.nobjects * ud())
+                if hasattr(real_galaxy_catalog, 'weight'):
+                    # If weight factors are available, make sure the random selection uses the
+                    # weights to remove the catalog-level selection effects (flux_radius-dependent
+                    # probability of making a postage stamp for a given object).
+                    while ud() > real_galaxy_catalog.weight[use_index]:
+                        # Pick another one to try.
+                        use_index = int(real_galaxy_catalog.nobjects * ud())
             else:
                 raise AttributeError('No method specified for selecting a galaxy!')
             if logger:
@@ -353,7 +359,7 @@ class RealGalaxyCatalog(object):
        in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
        initialize with
 
-           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5_example.fits',
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
@@ -404,8 +410,8 @@ class RealGalaxyCatalog(object):
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
-                    'preload' : bool, 'noise_dir' : str }
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool }
     _single_params = []
     _takes_rng = False
 
@@ -421,7 +427,8 @@ class RealGalaxyCatalog(object):
         self.file_name, self.image_dir, self.noise_dir, _ = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
-        self.cat = pyfits.getdata(self.file_name)
+        with pyfits.open(self.file_name) as fits:
+            self.cat = fits[1].data
         self.nobjects = len(self.cat) # number of objects in the catalog
         if _nobjects_only: return  # Exit early if that's all we needed.
         ident = self.cat.field('ident') # ID for object in the training sample
@@ -456,8 +463,15 @@ class RealGalaxyCatalog(object):
         self.variance = self.cat.field('noise_variance') # noise variance for image
         self.mag = self.cat.field('mag')   # apparent magnitude
         self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        self.weight = self.cat.field('weight') # weight factor to account for size-dependent
-                                               # probability
+        # The weight factor should be a float value >=0 (so that random selections of indices can
+        # use it to remove any selection effects in the catalog creation process).
+        # Here we renormalize by the maximum weight.  If the maximum is below 1, that just means
+        # that all galaxies were subsampled at some level, and here we only want to account for
+        # relative selection effects within the catalog, not absolute subsampling.  If the maximum
+        # is above 1, then our random number generation test used to draw a weighted sample will
+        # fail since we use uniform deviates in the range 0 to 1.
+        weight = self.cat.field('weight')
+        self.weight = weight/np.max(weight)
         if 'stamp_flux' in self.cat.names:
             self.stamp_flux = self.cat.field('stamp_flux')
 
@@ -516,12 +530,11 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
         stored in the same file as different HDUs.
         """
-        import numpy
         from multiprocessing import Lock
         from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
-        for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
+        for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
@@ -546,7 +559,7 @@ class RealGalaxyCatalog(object):
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
-            if file_name in self.loaded_files:
+            if file_name in self.loaded_files: # pragma: no cover
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
@@ -561,7 +574,6 @@ class RealGalaxyCatalog(object):
     def getGal(self, i):
         """Returns the galaxy at index `i` as an Image object.
         """
-        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getGal',i)
         if i >= len(self.gal_file_name):
@@ -573,7 +585,7 @@ class RealGalaxyCatalog(object):
         self.gal_lock.acquire()
         array = f[self.gal_hdu[i]].data
         self.gal_lock.release()
-        im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+        im = galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                           scale=self.pixel_scale[i])
         return im
 
@@ -581,7 +593,6 @@ class RealGalaxyCatalog(object):
     def getPSF(self, i):
         """Returns the PSF at index `i` as an Image object.
         """
-        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getPSF',i)
         if i >= len(self.psf_file_name):
@@ -591,7 +602,7 @@ class RealGalaxyCatalog(object):
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
         self.psf_lock.release()
-        return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+        return galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                             scale=self.pixel_scale[i])
 
     def getNoiseProperties(self, i):
@@ -621,10 +632,10 @@ class RealGalaxyCatalog(object):
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
-                    import numpy
                     from galsim._pyfits import pyfits
-                    array = pyfits.getdata(self.noise_file_name[i])
-                    im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+                    with pyfits.open(self.noise_file_name[i]) as fits:
+                        array = fits[0].data
+                    im = galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                                       scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im
                     if self.logger:
@@ -680,11 +691,9 @@ class RealGalaxyCatalog(object):
         self.noise_lock = Lock()
         pass
 
-
-
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
-            rand_rotate=True, rng=None, target_flux=1000.0, image=None):
-    """Function to simulate images (no added noise) from real galaxy training data.
+            rand_rotate=True, rng=None, target_flux=1000.0, image=None): # pragma: no cover
+    """Deprecated method to simulate images (no added noise) from real galaxy training data.
 
     This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
@@ -719,6 +728,10 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     @return a simulated galaxy image.
     """
+    from .deprecated import depr
+    depr('simReal', 1.5, '',
+         'This method has been deprecated due to lack of widespread use.  If you '+
+         'have a need for it, please open an issue requesting that it be reinstated.')
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
@@ -743,14 +756,9 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # rotate
     if rotation_angle is not None:
         real_galaxy = real_galaxy.rotate(rotation_angle)
-    elif rotation_angle is None and rand_rotate == True:
-        if rng is None:
-            uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            uniform_deviate = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
-        rand_angle = galsim.Angle(math.pi*uniform_deviate(), galsim.radians)
+    elif rotation_angle is None and rand_rotate:
+        ud = galsim.UniformDeviate(rng)
+        rand_angle = galsim.Angle(math.pi*ud(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 
     # set fluxes
@@ -768,7 +776,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
-    if image_dir is not None or noise_dir is not None:
+    if image_dir is not None or noise_dir is not None:  # pragma: no cover
         from .deprecated import depr
         if image_dir is not None:
             depr('image_dir', 1.4, 'dir')
@@ -778,6 +786,10 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
+        elif '25.2' in file_name:
+            use_sample = '25.2'
+        elif '23.5' in file_name:
+            use_sample = '23.5'
         else:
             use_sample = None
     else:

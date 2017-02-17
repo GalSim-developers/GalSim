@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -36,7 +36,7 @@
 # - obj type : InterpolatedImage(image, scale)
 # - obj type : COSMOSGalaxy
 # - obj : scale_flus
-# - image : draw_method (no_pixel)
+# - stamp : draw_method (no_pixel)
 # - input : power_spectrum (e_power_file, delta2, units)
 # - input : cosmos_catalog (file_name, dir, use_real)
 # - image : index_convention
@@ -53,9 +53,9 @@
 # Sometimes there are variables that you want to use in multiple Eval commands.
 # Rather than defining the variable multiple times, once for each time you use it,
 # GalSim allows you to put such variables in a special top-level field called eval_variables.
-# Anything defined in eval_variables will be available for all Eval commands, so you don't 
+# Anything defined in eval_variables will be available for all Eval commands, so you don't
 # have to repeat them for each one.  In this case, pixel_scale and theta are used below in the
-# Eval strings of dudx, dudy, dvdx, and dvdy for the field image.wcs.  
+# Eval strings of dudx, dudy, dvdx, and dvdy for the field image.wcs.
 #
 # We've also seen (in demo4.yaml) that YAML lets you tag values with an & in one place and
 # use them later with *.  It can be convenient to combine this notation with eval_variables
@@ -80,30 +80,30 @@ eval_variables :
     fexp_time : &exp_time 300
 
     # image_size = size in pixels
-    # 0.1 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
-    fimage_size : &image_size 1800 
+    # size in degrees = 2048 pixels * 0.2 arcsec/pixel / 3600 arcsec/deg = 0.114 deg
+    fimage_size : &image_size 2048
 
     # nobjects = number of objects per image
     # corresponds to 8 gal / arcmin^2
-    inobjects : &nobjects 288 
+    inobjects : &nobjects 288
 
 
 # Define the PSF profile
-psf : 
+psf :
     # We introduce here a new way to describe a profile.  We can use an image from a fits
     # file and interpolate between the pixels with type = InterpolatedImage.
     type : InterpolatedImage
-    
-    # The only required parameter is the name of the file with the image.  Note: the file is 
-    # bzipped, to demonstrate the new capability of reading in a file that has been compressed 
+
+    # The only required parameter is the name of the file with the image.  Note: the file is
+    # bzipped, to demonstrate the new capability of reading in a file that has been compressed
     # in various ways (which GalSim can infer from the filename).
     image : "data/example_sdss_psf_sky0.fits.bz2"
 
-    # If the fits file has a scale given in the header information, we can use that for 
-    # the pixel scale.  If it is not given it will assume 1. 
+    # If the fits file has a scale given in the header information, we can use that for
+    # the pixel scale.  If it is not given it will assume 1.
     # Or we can also override that by providing an explicit pixel scale here.
-    # This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the 
-    # typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just 
+    # This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the
+    # typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just
     # tell GalSim that the pixel scale is 0.2 arcsec to match the pixel scale we use below.
     scale : *pixel_scale
 
@@ -150,14 +150,19 @@ gal :
     #     noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec
     noise_pad_size : 11.3
 
-    index : { type : Random }
+    # We will select a galaxy at random from the catalog. One could easily do this by setting 
+    # index : { type : Random }
+    # but we will instead allow the catalog to choose a random galaxy for us.  It will remove any
+    # selection effects involved in postage stamp creation using weights that are stored in the
+    # catalog.  We employ this random selection by simply failing to specify an index or identifier
+    # for a galaxy, in which case it chooses a random one.
 
-    shear : 
+    shear :
         # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
         type : PowerSpectrumShear
 
     magnification :
-        # We use PowerSpectrumMagnification for this, which is set up below using input : 
+        # We use PowerSpectrumMagnification for this, which is set up below using input :
         # power_spectrum.
         type : PowerSpectrumMagnification
 
@@ -173,75 +178,75 @@ gal :
         str : "(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     type : Scattered
 
-    size : *image_size 
+    size : *image_size
 
     nobjects : *nobjects
 
     # The default convention on positions is to follow the FITS standard where the lower left
     # pixel is called (1,1).  However, this can be counter-intuitive to people more used
     # to C or python indexing, where indices start at 0.  So we offer the option of switching
-    # the indexing convention.  This is probably only  useful if you are going to do something 
+    # the indexing convention.  This is probably only  useful if you are going to do something
     # non-trivial with the image_pos values.
-    # 
+    #
     # If index_convention is 0 or 'C' or 'python', then the lower-left pixel is (0,0).
     # If index_convention is 1 or 'Fortran' or 'FITS', then the lower-left pixel is (1,1).
     # The default is 1.
     index_convention : 0
 
     # In demo9, we said that you can specify either image_pos or world_pos to place
-    # each postage stamp on the full image.  If you don't specify either one, then the 
+    # each postage stamp on the full image.  If you don't specify either one, then the
     # default is random x and y within the full image.
     #
-    # image_pos : 
-    #     type : XY 
+    # image_pos :
+    #     type : XY
     #     x : { type : Random , min : 0 , max : xsize-1 }
     #     y : { type : Random , min : 0 , max : ysize-1 }
     #
-    # Note: if image_convention were 1 as is the default, then these would instead be 
-    #     min : 1 , max : {x,y}size 
+    # Note: if image_convention were 1 as is the default, then these would instead be
+    #     min : 1 , max : {x,y}size
 
 
     # Add Gaussian noise.  When using the whitening feature, the whitening process will end
     # up with white Gaussian noise.  So adding more Gaussian noise can be done coherently.
-    # Adding any other kind of noise (Poisson for instance) will actually result in some 
+    # Adding any other kind of noise (Poisson for instance) will actually result in some
     # Gaussian noise as well, with the total variance preserved.
     noise :
         type : Gaussian
         variance : 5.0e4   # Total variance including whatever the whitening process needs.
 
-        # RealGalaxy objects have some noise already included in the original HST images.  
+        # RealGalaxy objects have some noise already included in the original HST images.
         # This noise is stored with each object, and the propagated through all changes
         # (transformations, convolutions, etc.), which will correlate the noise.
         #
         # Once the process gets to the point of adding additional noise to the image, you
         # have a few options for what to do with this propagated noise.  The first option
-        # is to do nothing, in which case GalSim will just ignore it and add the full 
+        # is to do nothing, in which case GalSim will just ignore it and add the full
         # amount specified above as additional noise.  This is equivalent to treating the
         # noise that was in the original image as part of the true surface brightness
         # profile of the galaxy.
         #
         # Another option is to whiten the noise to get rid of the correlations.  This is
         # specified as whiten : True.  GalSim will add enough correlated noise to make the
-        # resulting noise be white, then add more white noise to make the total variance 
+        # resulting noise be white, then add more white noise to make the total variance
         # equal to the above specified value.
-        # 
-        # However, this is often overkill for many applications.  If it is acceptable to 
+        #
+        # However, this is often overkill for many applications.  If it is acceptable to
         # merely end up with noise with some degree of symmetry (say 4-fold or 8-fold
         # symmetry), then you can instead have GalSim just add enough noise to make the
-        # resulting noise have this kind of symmetry.  Usually this requires adding 
-        # significantly less additional noise, which means you can have the resulting 
-        # total variance be somewhat smaller.  The above specified variance will then 
-        # correspond to the zero-lag value, since the noise will still have some 
+        # resulting noise have this kind of symmetry.  Usually this requires adding
+        # significantly less additional noise, which means you can have the resulting
+        # total variance be somewhat smaller.  The above specified variance will then
+        # correspond to the zero-lag value, since the noise will still have some
         # covariances.  This option is specified using symmetrize : N, where N is the
         # order of the symmetry that is desired.  We use 8-fold symmetry here.
-        
+
         #whiten : True
         symmetrize : 8
- 
+
     # For the WCS, we use one that has the world coordinates on the celestial sphere, using
     # a TAN projection.  This WCS uses an affine transform first to get to a (u,v) coordinate
     # system.  Then this plane is projected onto the sky using a given point as the tangent
@@ -274,10 +279,10 @@ image :
 # Define some image properties that are specific to the stamp generation phase.
 stamp :
 
-    # Normally, the draw routine accounts for a convolution by the pixel.  In this case we 
-    # we don't want it to do that, since the psf here is what is sometimes called an 
+    # Normally, the draw routine accounts for a convolution by the pixel.  In this case we
+    # we don't want it to do that, since the psf here is what is sometimes called an
     # "effective PSF".  It is already the convolution of the real PSF with a square pixel.
-    # We can indicate that we don't want the draw routine to convolve by a pixel by using 
+    # We can indicate that we don't want the draw routine to convolve by a pixel by using
     # draw_method = no_pixel.
     draw_method : no_pixel
 
@@ -285,7 +290,7 @@ stamp :
 # Define the input files
 input :
     # The COSMOS catalog uses the same input file as we have been using for the real galaxy
-    # catalogs plus another file called real_galaxy_catalog_example_fits.fits, which stores
+    # catalogs plus another file called real_galaxy_catalog_23.5_example_fits.fits, which stores
     # the information about the parametric fits.  There is no need to specify the second file
     # name, since the name is derivable from the name of the main catalog.
     cosmos_catalog :
@@ -294,7 +299,7 @@ input :
         # However, if you've run galsim_download_cosmos, then you can leave these two items
         # out and it will automatically use the full COSMOS catalog with 56,000 galaxies in it.
         dir : "data"
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
         # If you only want to use the parametric fits, and not the real galaxy profiles,
         # then you may set use_real to False.  In this case the "real" parameter for the COSMOS
@@ -304,7 +309,7 @@ input :
 
     # We also initialize the power spectrum here.
     power_spectrum :
-        # In this case, we read the e_power_function from a file.  This is done simply by 
+        # In this case, we read the e_power_function from a file.  This is done simply by
         # providing the file name for the e_power_function parameter.  The input file is
         # expected to have two columns of numbers:  k and P(k).  GalSim is not capable of computing
         # shear power spectra as a function of cosmology and redshift; users are expected to provide
@@ -319,7 +324,7 @@ input :
 
         # Since we are not providing galaxy positions on a grid (e.g. in demo10, where we
         # used a TiledImage), we need to define what grid spacing we want to use for
-        # the power spectrum realization.  GalSim will then interpolate between these 
+        # the power spectrum realization.  GalSim will then interpolate between these
         # locations to the actual position of each galaxy.
         grid_spacing : 90 # arcsec
 

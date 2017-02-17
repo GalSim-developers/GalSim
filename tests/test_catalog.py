@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -83,16 +85,24 @@ def test_basic_dict():
     do_pickle(d)
 
     # YAML
-    d = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    np.testing.assert_equal(len(d), 5)
-    np.testing.assert_equal(d.file_type, 'YAML')
-    np.testing.assert_equal(d['i'], 1)
-    np.testing.assert_equal(d.get('s'), 'Brian')
-    np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
-    np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
-    d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
-    assert d == d2
-    do_pickle(d)
+    try:
+        import yaml
+    except ImportError as e:
+        # Raise a warning so this message shows up when doing nosetests (or scons tests).
+        import warnings
+        warnings.warn("Unable to import yaml.  Skipping yaml tests")
+        print("Caught ",e)
+    else:
+        d = galsim.Dict(dir='config_input', file_name='dict.yaml')
+        np.testing.assert_equal(len(d), 5)
+        np.testing.assert_equal(d.file_type, 'YAML')
+        np.testing.assert_equal(d['i'], 1)
+        np.testing.assert_equal(d.get('s'), 'Brian')
+        np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
+        np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
+        d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
+        assert d == d2
+        do_pickle(d)
 
 
 @timer
@@ -152,6 +162,8 @@ def test_output_catalog():
     np.testing.assert_almost_equal(cat.getFloat(0,16), 0.1)
 
     # Next the FITS version
+    if os.path.isfile('output/catalog.fits'):
+        os.remove('output/catalog.fits')
     out_cat.write(dir='output', file_name='catalog.fits')
     cat = galsim.Catalog(dir='output', file_name='catalog.fits')
     np.testing.assert_equal(cat.ncols, 17)
@@ -176,6 +188,17 @@ def test_output_catalog():
     np.testing.assert_almost_equal(cat.getFloat(0,'shear.g1'), 0.2)
     np.testing.assert_almost_equal(cat.getFloat(0,'shear.g2'), 0.1)
 
+    # Check that it properly overwrites an existing output file.
+    out_cat.addRow( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"',
+                     1.2 * galsim.degrees, galsim.PositionI(5,6),
+                     galsim.PositionD(0.3,-0.4), galsim.Shear(g1=0.2, g2=0.1) ])
+    assert out_cat.rows[3] == out_cat.rows[0]
+    out_cat.write(dir='output', file_name='catalog.fits')  # Same name as above.
+    cat2 = galsim.Catalog(dir='output', file_name='catalog.fits')
+    np.testing.assert_equal(cat2.ncols, 17)
+    np.testing.assert_equal(cat2.nobjects, 4)
+    for key in names[:10]:
+        assert cat2.data[key][3] == cat2.data[key][0]
 
     # Check pickling
     do_pickle(out_cat)

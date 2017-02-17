@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,9 +25,11 @@ Importing this module also adds these data structures to the config framework, s
 output can subsequently be simulated directly using a config file.
 """
 
-import numpy
+import numpy as np
 import galsim
 import galsim.config
+import sys
+import os
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -84,7 +86,7 @@ class MultiExposureObject(object):
                 raise ValueError('Array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('Array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != images[0].array.shape:
                 raise ValueError('Images must all be the same shape')
 
@@ -111,7 +113,7 @@ class MultiExposureObject(object):
                 raise ValueError('PSF array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('PSF array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != psf[0].array.shape:
                 raise ValueError('PSF images must all be the same shape')
 
@@ -176,8 +178,6 @@ def WriteMEDS(obj_list, file_name, clobber=True):
                          existing files. (Default `clobber = True`.)
     """
 
-    import numpy
-    import sys
     from galsim._pyfits import pyfits
 
     # initialise the catalog
@@ -215,14 +215,14 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     for obj in obj_list:
 
         # initialise the start indices for each image
-        start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        psf_start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        dudrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        row0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-        col0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
+        psf_start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
+        dudrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
+        dudcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
+        row0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        col0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
 
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
@@ -282,10 +282,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         cat['col0'].append(col0)
 
     # concatenate list to one big vector
-    vec['image'] = numpy.concatenate(vec['image'])
-    vec['seg'] = numpy.concatenate(vec['seg'])
-    vec['weight'] = numpy.concatenate(vec['weight'])
-    vec['psf'] = numpy.concatenate(vec['psf'])
+    vec['image'] = np.concatenate(vec['image'])
+    vec['seg'] = np.concatenate(vec['seg'])
+    vec['weight'] = np.concatenate(vec['weight'])
+    vec['psf'] = np.concatenate(vec['psf'])
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -302,7 +302,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS,
                                array=[1]*n_obj) )
     cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['start_row'])) )
+                               array=np.array(cat['start_row'])) )
     cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS,
                                array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS,
@@ -312,27 +312,27 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
                                array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['row0'])     ) )
+                               array=np.array(cat['row0'])     ) )
     cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['col0'])     ) )
+                               array=np.array(cat['col0'])     ) )
     cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudrow'])   ) )
+                               array=np.array(cat['dudrow'])   ) )
     cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudcol'])   ) )
+                               array=np.array(cat['dudcol'])   ) )
     cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdrow'])   ) )
+                               array=np.array(cat['dvdrow'])   ) )
     cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdcol'])   ) )
+                               array=np.array(cat['dvdcol'])   ) )
     cols.append( pyfits.Column(name='psf_box_size',   format='K', array=cat['psf_box_size'] ) )
     cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['psf_start_row'])) )
+                               array=np.array(cat['psf_start_row'])) )
 
 
     # Depending on the version of pyfits, one of these should work:
     try:
         object_data = pyfits.BinTableHDU.from_columns(cols)
         object_data.name = 'object_data'
-    except:
+    except:  # pragma: no cover
         object_data = pyfits.new_table(pyfits.ColDefs(cols))
         object_data.update_ext_name('object_data')
 
@@ -357,7 +357,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
         image_info.name = 'image_info'
-    except:
+    except:  # pragma: no cover
         image_info = pyfits.new_table(pyfits.ColDefs(cols))
         image_info.update_ext_name('image_info')
 
@@ -389,7 +389,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         metadata = pyfits.BinTableHDU.from_columns(cols)
         metadata.name = 'metadata'
-    except:
+    except:  # pragma: no cover
         metadata = pyfits.new_table(pyfits.ColDefs(cols))
         metadata.update_ext_name('metadata')
 
@@ -410,10 +410,15 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         seg_cutouts,
         psf_cutouts
     ])
-    hdu_list.writeto(file_name,clobber=clobber)
+    # Don't use astropy's clobber feature, since it's now (as of astropy version 1.3) called
+    # overwrite and dealing with two incompatible APIs is more than I want to deal with.
+    # Just do it ourselves.
+    if clobber and os.path.isfile(file_name):
+        os.remove(file_name)
+    hdu_list.writeto(file_name)
 
 
-# Make the class that will 
+# Make the class that will
 class MEDSBuilder(galsim.config.OutputBuilder):
 
     def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):

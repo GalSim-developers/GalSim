@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -58,7 +58,8 @@ with default values, using help(galsim.hsm.HSMParams).
 
 from . import _galsim
 import galsim
-from _galsim import HSMParams
+from ._galsim import HSMParams
+import numpy as np
 
 
 class ShapeData(object):
@@ -293,13 +294,11 @@ def _convertMask(image, weight=None, badpix=None):
             raise ValueError("Weight image does not have same bounds as the input Image!")
 
         # also make sure there are no negative values
-        import numpy as np
         if np.any(weight.array < 0) == True:
             raise ValueError("Weight image cannot contain negative values!")
 
         # if weight is an ImageI, then we can use it as the mask image:
-        import numpy
-        if weight.dtype == numpy.int32:
+        if weight.dtype == np.int32:
             if not badpix:
                 mask = weight
             else:
@@ -316,7 +315,6 @@ def _convertMask(image, weight=None, badpix=None):
     if badpix is not None:
         if badpix.bounds != image.bounds:
             raise ValueError("Badpix image does not have the same bounds as the input Image!")
-        import numpy as np
         mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception
@@ -327,16 +325,18 @@ def _convertMask(image, weight=None, badpix=None):
     return mask.image.view()
 
 
-# A simpler helper function to make sure the images are not ImageS.  Convert to ImageI if they are.
+# A simpler helper function to force images to be of type ImageF or ImageD
 def _convertImage(image):
     """Convert the given image to the correct format needed to pass to the C++ layer.
 
     This is used by EstimateShear() and FindAdaptiveMom().
     """
-    # if weight is an ImageS, then convert to ImageI.
-    import numpy
-    if image.dtype == numpy.int16:
-        image = galsim.ImageI(image)
+    # if weight is not of type float/double, convert to float/double
+    if (image.dtype == np.int16 or image.dtype == np.uint16):
+        image = galsim.ImageF(image)
+
+    if (image.dtype == np.int32 or image.dtype == np.uint32):
+        image = galsim.ImageD(image)
 
     # Return this as an ImageView
     return image.image.view()

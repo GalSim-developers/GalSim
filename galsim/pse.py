@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,6 @@ code was moved into the GalSim repository, but there are some demonstrations of 
 this code in devel/modules/lensing_engine.pdf
 """
 import numpy as np
-from numpy import pi
 import os
 import sys
 
@@ -119,8 +118,8 @@ class PowerSpectrumEstimator(object):
 
         # Define the possible ell range, the bin edges and effective ell values.
         # This is necessary for binning the power spectrum in ell.
-        lmin = 2*pi / self.sky_size
-        lmax = np.sqrt(2.)*pi / self.dx # in 2 dimensions
+        lmin = 2*np.pi / self.sky_size
+        lmax = np.sqrt(2.)*np.pi / self.dx # in 2 dimensions
         self.bin_edges = np.logspace(np.log10(lmin), np.log10(lmax), nbin+1)
         # By default, report an area-averaged value of ell, which should be fine if there is
         # no weighting (in which case it's recomputed) and if there are many ell modes in
@@ -145,7 +144,7 @@ class PowerSpectrumEstimator(object):
 
     def _generate_eb_rotation(self):
         # Set up the Fourier space grid lx, ly.
-        ell = 2*pi*np.fft.fftfreq(self.N, self.dx)
+        ell = 2*np.pi*np.fft.fftfreq(self.N, self.dx)
         lx, ly = np.meshgrid(ell,ell)
 
         # Now compute the lengths and angles of the ell vectors.

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 
 import galsim
 import math
@@ -90,15 +92,16 @@ class PowerSpectrumLoader(InputLoader):
             world_center = galsim.PositionD(0,0)
         else:
             world_center = base['wcs'].toWorld(base['image_center'])
+        rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
         input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
-                    rng=base['rng'], interpolant=interpolant)
+                            rng=rng, interpolant=interpolant)
 
         # Make sure this process gives consistent results regardless of the number of processes
         # being used.
-        if not isinstance(input_obj, galsim.PowerSpectrum):
+        if not isinstance(input_obj, galsim.PowerSpectrum) and rng is not None:
             # Then input_obj is really a proxy, which means the rng was pickled, so we need to
             # discard the same number of random calls from the one in the config dict.
-            base['rng'].discard(input_obj.nRandCallsForBuildGrid())
+            rng.discard(input_obj.nRandCallsForBuildGrid())
 
 # Register this as a valid input type
 from .input import RegisterInputType
@@ -132,7 +135,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
 
-    #print base['obj_num'],'PS shear = ',shear
+    #print(base['obj_num'],'PS shear = ',shear)
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
@@ -161,7 +164,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             mu,max_mu))
         mu = max_mu
 
-    #print base['obj_num'],'PS mu = ',mu
+    #print(base['obj_num'],'PS mu = ',mu)
     return mu, False
 
 # Register these as valid value types

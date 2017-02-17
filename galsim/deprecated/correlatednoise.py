@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -151,9 +151,9 @@ def CN_draw(self, *args, **kwargs):
 def CN_calculateCovarianceMatrix(self, bounds, scale):
     """This function is deprecated and will be removed in a future version.  If you have a
     use for this function and would like to keep it, please open an issue at:
-    
+
     https://github.com/GalSim-developers/GalSim/issues
-    
+
     Old documentation:
     ------------------
     Calculate the covariance matrix for an image with specified properties.

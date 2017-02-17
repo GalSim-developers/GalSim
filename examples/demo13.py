@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -74,33 +74,6 @@ def main(argv):
     datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
 
-    # In non-script code, use getLogger(__name__) at module scope instead.
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger("demo13")
-
-    # Initialize (pseudo-)random number generator.
-    random_seed = 123456
-    rng = galsim.BaseDeviate(random_seed)
-
-    # Generate a Poisson noise model.
-    poisson_noise = galsim.PoissonNoise(rng) 
-    logger.info('Poisson noise model created.')
-
-    # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
-    # diameter and (since we didn't use any keyword arguments to modify this) using the typical
-    # exposure time for WFIRST images.  We also truncate the parts of the bandpasses that are near 0
-    # at the edges, and thin them by the default amount.
-    filters = wfirst.getBandpasses(AB_zeropoint=True, default_thin_trunc=True)
-    logger.debug('Read in WFIRST imaging filters.')
-
-    logger.info('Reading from a parametric COSMOS catalog.')
-    # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<23.5 from COSMOS.
-    cat_file_name = 'real_galaxy_catalog_example_fits.fits'
-    dir = 'data'
-    # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
-    # want parametric galaxies that represent an I<23.5 sample.
-    cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False)
-    logger.info('Read in %d galaxies from catalog'%cat.nobjects)
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
     # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
     # more interesting image with greater variation in the galaxy population can change `n_use` to
@@ -112,6 +85,49 @@ def main(argv):
     # sample that is much deeper have the same S/N as that for an I<23.5 sample in a single image.
     n_use = 10
     n_tot = 4000
+
+    # Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
+    use_filters = None
+
+    # quick and dirty command line parsing.
+    for var in argv:
+        if var.startswith('data='): datapath = var[5:]
+        if var.startswith('out='): outpath = var[4:]
+        if var.startswith('nuse='): n_use = int(var[5:])
+        if var.startswith('ntot='): n_tot = int(var[5:])
+        if var.startswith('filters='): use_filters = var[8:].upper()
+
+    # Make output directory if not already present.
+    if not os.path.isdir(outpath):
+        os.mkdir(outpath)
+
+    # In non-script code, use getLogger(__name__) at module scope instead.
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger("demo13")
+
+    # Initialize (pseudo-)random number generator.
+    random_seed = 123456
+    rng = galsim.BaseDeviate(random_seed)
+
+    # Generate a Poisson noise model.
+    poisson_noise = galsim.PoissonNoise(rng)
+    logger.info('Poisson noise model created.')
+
+    # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
+    # diameter and (since we didn't use any keyword arguments to modify this) using the typical
+    # exposure time for WFIRST images.  By default, this routine truncates the parts of the
+    # bandpasses that are near 0 at the edges, and thins them by the default amount.
+    filters = wfirst.getBandpasses(AB_zeropoint=True)
+    logger.debug('Read in WFIRST imaging filters.')
+
+    logger.info('Reading from a parametric COSMOS catalog.')
+    # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<23.5 from COSMOS.
+    cat_file_name = 'real_galaxy_catalog_23.5_example_fits.fits'
+    dir = 'data'
+    # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
+    # want parametric galaxies that represent an I<23.5 sample.
+    cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False)
+    logger.info('Read in %d galaxies from catalog'%cat.nobjects)
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters
@@ -169,13 +185,13 @@ def main(argv):
     mag_stamp = []
     n_rot_stamp = []
     flip_stamp = []
-    for i_gal in xrange(n_tot):
+    for i_gal in range(n_tot):
         x_stamp.append(pos_rng()*wfirst.n_pix)
         y_stamp.append(pos_rng()*wfirst.n_pix)
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
         # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
         # CCD coordinates for those positions.
-        mag_stamp.append(cat.param_cat.mag_auto[pos_rng()*cat.nobjects])
+        mag_stamp.append(cat.param_cat['mag_auto'][int(pos_rng()*cat.nobjects)])
         n_rot_stamp.append(int(4*pos_rng()))
         flip_stamp.append(pos_rng())
 
@@ -194,7 +210,7 @@ def main(argv):
         tmp_ind = int(pos_rng()*cat.nobjects)
         if tmp_ind not in rand_indices:
             rand_indices.append(tmp_ind)
-    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric', deep=True)
+    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric')
     gal_list = []
     hst_eff_area = 2.4**2 * (1.-0.33**2)
     wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
@@ -207,7 +223,7 @@ def main(argv):
         # distribution.  So we need to save the original magnitude in F814W, to compare with a
         # randomly drawn one from the catalog.  This is not something that most users would need to
         # do.
-        mag_list.append(cat.param_cat.mag_auto[cat.orig_index[rand_indices[ind]]])
+        mag_list.append(cat.param_cat['mag_auto'][cat.orig_index[rand_indices[ind]]])
 
         # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
         final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
@@ -216,7 +232,11 @@ def main(argv):
 
     # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
     # filters.
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
+        if use_filters is not None and filter_name[0] not in use_filters:
+            logger.info('Skipping filter {0}.'.format(filter_name))
+            continue
+
         logger.info('Beginning work for {0}.'.format(filter_name))
 
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
@@ -230,9 +250,9 @@ def main(argv):
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         # Approximate a point source.
         point = galsim.Gaussian(sigma=1.e-8, flux=1.)
-        # Use a flat SED here, but could use something else.  A stellar SED for instance.  
+        # Use a flat SED here, but could use something else.  A stellar SED for instance.
         # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
-        star_sed = galsim.SED(lambda x:1).withFlux(1.,filter_)  # Give it unit flux in this filter.
+        star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,filter_)  # Give it unit flux in this filter.
         star = galsim.Convolve(point*star_sed, PSF)
         img_psf = galsim.ImageF(64,64)
         star.drawImage(bandpass=filter_, image=img_psf, scale=wfirst.pixel_scale)
@@ -244,7 +264,7 @@ def main(argv):
         final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
 
         # Draw the galaxies into the image.
-        for i_gal in xrange(n_use):
+        for i_gal in range(n_use):
             logger.info('Drawing image for the object at row %d in the input catalog'%i_gal)
 
             # We want to only draw the galaxy once (for speed), not over and over with different
@@ -260,7 +280,7 @@ def main(argv):
             gal_list[i_gal].drawImage(filter_, image=stamp)
 
             # Have to find where to place it:
-            for i_gal_use in range(i_gal*n_tot/n_use, (i_gal+1)*n_tot/n_use):
+            for i_gal_use in range(i_gal*n_tot//n_use, (i_gal+1)*n_tot//n_use):
                 # Account for the fractional part of the position:
                 ix = int(math.floor(x_stamp[i_gal_use]+0.5))
                 iy = int(math.floor(y_stamp[i_gal_use]+0.5))
@@ -269,7 +289,7 @@ def main(argv):
 
                 # Create a nominal bound for the postage stamp given the integer part of the
                 # position.
-                stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
+                stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1,
                                               iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
                 # Find the overlapping bounds between the large image and the individual postage
@@ -319,7 +339,7 @@ def main(argv):
         # This image is in units of e-/pix.  Finally we add the expected thermal backgrounds in this
         # band.  These are provided in e-/pix/s, so we have to multiply by the exposure time.
         sky_image += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
-        # Adding sky level to the image.  
+        # Adding sky level to the image.
         final_image += sky_image
 
         # Now that all sources of signal (from astronomical objects and background) have been added
@@ -378,10 +398,10 @@ def main(argv):
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
-        # non-linear effects that follow. Hence, these must be included at this stage of the 
+        # non-linear effects that follow. Hence, these must be included at this stage of the
         # image generation process. We subtract these backgrounds in the end.
 
-        # 3) Applying a quadratic non-linearity: 
+        # 3) Applying a quadratic non-linearity:
         # In order to convert the units from electrons to ADU, we must use the gain factor. The gain
         # has a weak dependency on the charge present in each pixel. This dependency is accounted
         # for by changing the pixel values (in electrons) and applying a constant nominal gain
@@ -452,7 +472,8 @@ def main(argv):
 
         # Since many people are used to viewing background-subtracted images, we provide a
         # version with the background subtracted (also rounding that to an int).
-        tot_sky_image = (sky_image + dark_current)/wfirst.gain
+        sky_image.quantize()
+        tot_sky_image = (sky_image + round(dark_current))/wfirst.gain
         tot_sky_image.quantize()
         final_image -= tot_sky_image
 

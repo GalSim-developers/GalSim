@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,7 @@
 
 Part of the DES module.  This file implements one way that DES measures the PSF.
 
-The DES_PSFEx class handles interpolated PCA images, which are generally stored in *_psfcat.psf 
+The DES_PSFEx class handles interpolated PCA images, which are generally stored in *_psfcat.psf
 files.
 
 See documentation here:
@@ -27,8 +27,11 @@ See documentation here:
     https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
+from past.builtins import basestring
+
 import galsim
 import galsim.config
+import numpy as np
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -44,8 +47,8 @@ class DES_PSFEx(object):
     of the (x,y) position on the image.
 
     Note that while the interpolation is done in image coordinates, GalSim usually deals with
-    object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
-    image when building its bases.  The bases are built in image coordinates.  So there are 
+    object profiles in world coordinates.  However, PSFEx does not consider the WCS of the
+    image when building its bases.  The bases are built in image coordinates.  So there are
     two options to get GalSim to handle this difference.
 
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
@@ -56,15 +59,15 @@ class DES_PSFEx(object):
            >>>                                                   # NOT in arcsec on the sky!
            >>> psf = des_psfex.getPSF(image_pos)      # profile is in image coordinates
 
-       The psf profile that is returned will be in image coordinates.  Therefore, it should be 
-       drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want 
+       The psf profile that is returned will be in image coordinates.  Therefore, it should be
+       drawn onto an image with no wcs.  (Or equivalently, one with `scale = 1`.)  If you want
        to use this to convolve a galaxy profile, you would want to either project the galaxy
        (typically constructed in world coordinates) to the correct image coordinates or project
        the PSF up into world coordinates.
 
-    2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an 
-       extra argument, either `image_file_name` or `wcs`, to tell GalSim what WCS to use for 
-       the coversion between image and world coordinates.  The former option is the name of 
+    2. Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an
+       extra argument, either `image_file_name` or `wcs`, to tell GalSim what WCS to use for
+       the coversion between image and world coordinates.  The former option is the name of
        the file from which to read the WCS, which will often be more convenient, but you can
        also just pass in a WCS object directly.
 
@@ -73,7 +76,7 @@ class DES_PSFEx(object):
            >>>                                                   # NOT in arcsec on the sky!
            >>> psf = des_psfex.getPSF(image_pos)      # profile is in world coordinates
 
-       This time the psf profile that is returned will already be in world coordinates as 
+       This time the psf profile that is returned will already be in world coordinates as
        GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
        (or a convolved object) onto an image with the original WCS at that location, you can use
        `des_psfex.getLocalWCS(image_pos)` for the local wcs at the location of the PSF.
@@ -90,7 +93,7 @@ class DES_PSFEx(object):
                            coordinates, not world coordinates.  (Default `image_file_name = None`)
     @param wcs             Optional way to provide the WCS if you already have it loaded from the
                            image file. (Default `wcs = None`)
-    @param dir             Optionally a directory name can be provided if the file_name does not 
+    @param dir             Optionally a directory name can be provided if the file_name does not
                            already include it.  (The image file is assumed to be in the same
                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
@@ -123,24 +126,20 @@ class DES_PSFEx(object):
     def read(self):
         from galsim._pyfits import pyfits
         if isinstance(self.file_name, basestring):
-            hdu = pyfits.open(self.file_name)[1]
+            hdu_list = pyfits.open(self.file_name)
+            hdu = hdu_list[1]
         else:
             hdu = self.file_name
+            hdu_list = None
         # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
-        if pol_naxis != 2:
-            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
 
         # These are the names of the two axes.  Should be X_IMAGE, Y_IMAGE.
         # If they aren't, then the way we use the interpolation will be wrong.
-        # Well, really they can also be XWIN_IMAGE, etc.  So just check that it 
+        # Well, really they can also be XWIN_IMAGE, etc.  So just check that it
         # starts with X and ends with IMAGE.
         pol_name1 = hdu.header['POLNAME1']
-        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
         pol_name2 = hdu.header['POLNAME2']
-        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
 
         # Zero points and scale.  Interpolation is in terms of (x-x0)/xscale, (y-y0)/yscale
         pol_zero1 = hdu.header['POLZERO1']
@@ -151,29 +150,23 @@ class DES_PSFEx(object):
         # This defines the number of "context groups".
         # Here is Emmanuel's explanation:
         #
-        #     POLNGRP is the number of "context groups". A group represents a set of variables 
-        #     (SExtractor measurements or FITS header parameters if preceded with ":") which share 
-        #     the same maximum polynomial degree. For instance if x and y are in group 1, and the 
-        #     degree of that group is 2, and z is in group 2 with degree 1, the polynomial will 
+        #     POLNGRP is the number of "context groups". A group represents a set of variables
+        #     (SExtractor measurements or FITS header parameters if preceded with ":") which share
+        #     the same maximum polynomial degree. For instance if x and y are in group 1, and the
+        #     degree of that group is 2, and z is in group 2 with degree 1, the polynomial will
         #     consist of:
         #         1, x, x^2, y, y.x, y^2, z, z.x^2, z.y, z.y.x, z.y^2
         #     (see eq 14 in https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf )
-        #     By default, POLNGRP is 1 and the group contains X_IMAGE and Y_IMAGE measurements 
+        #     By default, POLNGRP is 1 and the group contains X_IMAGE and Y_IMAGE measurements
         #     from SExtractor.
         #
-        # For now, we require this to be 1, since I didn't have any files with POLNGRP != 1 to 
+        # For now, we require this to be 1, since I didn't have any files with POLNGRP != 1 to
         # test on.
         pol_ngrp = hdu.header['POLNGRP']
-        if pol_ngrp != 1:
-            raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
 
         # Which group each item is in.  We require group 1.
         pol_group1 = hdu.header['POLGRP1']
-        if pol_group1 != 1:
-            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
         pol_group2 = hdu.header['POLGRP2']
-        if pol_group2 != 1:
-            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
 
         # The degree of the polynomial.  E.g. POLDEG1 = 2 means the values will be:
         #     1, x, x^2, y, xy, y^2
@@ -182,8 +175,6 @@ class DES_PSFEx(object):
 
         # The number of axes in the basis object.  We require this to be 3.
         psf_naxis = hdu.header['PSFNAXIS']
-        if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
 
         # The first two axes are the image size of the PSF postage stamp.
         psf_axis1 = hdu.header['PSFAXIS1']
@@ -192,13 +183,11 @@ class DES_PSFEx(object):
         # The third axis is the direction of the polynomial interpolation.  So it should
         # be equal to (d+1)(d+2)/2.
         psf_axis3 = hdu.header['PSFAXIS3']
-        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))/2:
-            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
 
         # This is the PSF "sample size".  Again, from Emmanuel:
         #
-        #     PSF_SAMP is the sampling step of the PSF. PSF_SAMP=0.5 means that the PSF model has 
-        #     two samples per original image pixel (superresolution, so in automatic mode it is a 
+        #     PSF_SAMP is the sampling step of the PSF. PSF_SAMP=0.5 means that the PSF model has
+        #     two samples per original image pixel (superresolution, so in automatic mode it is a
         #     sign that the original images were undersampled)
         #
         # In other words, it can be thought of as a unit conversion:
@@ -210,7 +199,28 @@ class DES_PSFEx(object):
         # Note: older pyfits versions don't get the shape right.
         # For newer pyfits versions the reshape command should be a no op.
         basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
-        # Make sure this turned out right.
+
+        # Make sure to close the hdu before we might raise exceptions.
+        if hdu_list:
+            hdu_list.close()
+
+        # Check for valid values of all these things.
+        if pol_naxis != 2:
+            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
+        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
+        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
+        if pol_ngrp != 1:
+            raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
+        if pol_group1 != 1:
+            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
+        if pol_group2 != 1:
+            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
+        if psf_naxis != 3:
+            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psf_naxis)
+        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
+            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
         if basis.shape[0] != psf_axis3:
             raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:
@@ -228,7 +238,7 @@ class DES_PSFEx(object):
         self.y_scale = pol_scal2
         self.sample_scale = psf_samp
 
-    def getSampleScale(self): 
+    def getSampleScale(self):
         return self.sample_scale
 
     def getLocalWCS(self, image_pos):
@@ -246,7 +256,7 @@ class DES_PSFEx(object):
         @param image_pos    The position in image coordinates at which to build the PSF.
         @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
         @param pixel_scale  A deprecated parameter that is only present for backwards compatibility.
-                            If the constructor did not provide an image file or wcs, then 
+                            If the constructor did not provide an image file or wcs, then
                             this will use the pixel scale for an approximate wcs.
 
         @returns the PSF as a GSObject
@@ -255,13 +265,14 @@ class DES_PSFEx(object):
         im = galsim.Image(self.getPSFArray(image_pos))
 
         # Build the PSF profile in the image coordinate system.
-        psf = galsim.InterpolatedImage(im, scale=self.sample_scale, flux=1, 
+        psf = galsim.InterpolatedImage(im, scale=self.sample_scale, flux=1,
                                        x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
 
         # This brings if from image coordinates to world coordinates.
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
-        elif pixel_scale:
+        elif pixel_scale:  # pragma: no cover
+            from ..deprecated import depr
             depr('pixel_scale',1.1,'wcs=PixelScale(pixel_scale) in the constructor for DES_PSFEx')
             psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
@@ -270,13 +281,12 @@ class DES_PSFEx(object):
     def getPSFArray(self, image_pos):
         """Returns the PSF image as a numpy array at position image_pos in image coordinates.
         """
-        import numpy
         xto = self._define_xto( (image_pos.x - self.x_zero) / self.x_scale )
         yto = self._define_xto( (image_pos.y - self.y_zero) / self.y_scale )
         order = self.fit_order
-        P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
+        P = np.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
-        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
+        ar = np.tensordot(P,self.basis,(0,0)).astype(np.float32)
         # Note: This is equivalent to:
         #   ar = self.basis[0].astype(numpy.float32)
         #   for n in range(1,self.fit_order+1):
@@ -288,8 +298,7 @@ class DES_PSFEx(object):
         return ar
 
     def _define_xto(self, x):
-        import numpy
-        xto = numpy.empty(self.fit_order+1)
+        xto = np.empty(self.fit_order+1)
         xto[0] = 1
         for i in range(1,self.fit_order+1):
             xto[i] = x*xto[i-1]
@@ -306,17 +315,7 @@ class PSFExLoader(galsim.config.InputLoader):
 
         if 'image_file_name' not in kwargs:
             if 'wcs' in base:
-                wcs = base['wcs']
-                if wcs.isLocal():
-                    # Then the wcs is already fine.
-                    pass
-                elif 'image_pos' in base:
-                    image_pos = base['image_pos']
-                    wcs = wcs.local(image_pos)
-                    safe = False
-                else:
-                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
-                kwargs['wcs'] = wcs
+                kwargs['wcs'] = base['wcs']
             else:
                 # Then we aren't doing normal config processing, so just use pixel scale = 1.
                 kwargs['wcs'] = galsim.PixelScale(1.)
@@ -351,24 +350,23 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     else: gsparams = None
 
     #psf = des_psfex.getPSF(image_pos, gsparams=gsparams)
-    # Because of serialization issues, the above call doesn't work.  So we need to 
+    # Because of serialization issues, the above call doesn't work.  So we need to
     # repeat the internals of getPSF here.
     # Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers
     # stuff only makes available methods of classes that are proxied, not all the attributes.
     # So this is the only way to access these attributes.
     im = galsim.Image(des_psfex.getPSFArray(image_pos))
-    psf = galsim.InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1, 
+    psf = galsim.InterpolatedImage(im, scale=des_psfex.getSampleScale(), flux=1,
                                    x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
     if 'flux' in params:
         psf = psf.withFlux(params['flux'])
 
-    # The second item here is "safe", a boolean that declares whether the returned value is 
-    # safe to save and use again for later objects.  In this case, we wouldn't want to do 
+    # The second item here is "safe", a boolean that declares whether the returned value is
+    # safe to save and use again for later objects.  In this case, we wouldn't want to do
     # that, since they will be at different positions, so the interpolated PSF will be different.
     return psf, False
 
 # Register this builder with the config framework:
 galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
-

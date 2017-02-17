@@ -57,6 +57,7 @@ def run_tests(target, source, env):
             print '    scons tests -j1'
         else:
             print 'nosetests is version %s'%env['NOSETESTSVERSION']
+        cmd += ' test*.py'
         print '\nStarting python tests...'
         log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
         log.write('Nosetests command is:\n' + cmd + '\n')
@@ -106,6 +107,8 @@ def run_tests(target, source, env):
                 print '         e.g. To use 4 jobs, write "scons -j4 tests".'
         else:
             print 'Nosetests finished successfully.'
+        if ret != 0:
+            env.Exit(ret)
     else:
         print
         print 'WARNING: Could not find nosetests in path.'
@@ -115,7 +118,7 @@ def run_tests(target, source, env):
         print '             cd tests '
         print '             run_all_tests '
         print '         If this doesn\'t end with an error, then the tests all passed.'
-        
+
     # Always run cpp tests
     if True:
         print '\nStarting cpp tests...'
@@ -144,6 +147,8 @@ def run_tests(target, source, env):
             print 'test_main returned error code ',ret
         else:
             print 'test_main finished successfully.'
+        if ret != 0:
+            env.Exit(ret)
     print
 
 test_builder = Builder( action = run_tests )

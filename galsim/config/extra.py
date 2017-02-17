@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -42,60 +42,58 @@ def SetupExtraOutput(config, file_num=0, logger=None):
     @param file_num     The file number being worked on currently. [default: 0]
     @param logger       If given, a logger object to log progress. [default: None]
     """
-    if 'output' in config:
-        output = config['output']
+    logger = galsim.config.LoggerWrapper(logger)
+    output = config['output']
 
-        # We'll iterate through this list of keys a few times
-        all_keys = [ k for k in valid_extra_outputs.keys() if k in output ]
+    # We'll iterate through this list of keys a few times
+    all_keys = [ k for k in valid_extra_outputs.keys() if k in output ]
 
-        # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
-        # (b) config.image.nproc == 1.
-        use_manager = (
-                'current_nproc' not in config and
-                'image' in config and 'nproc' in config['image'] and
-                galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
+    # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
+    # (b) config.image.nproc == 1.
+    use_manager = (
+            'current_nproc' not in config and
+            'image' in config and 'nproc' in config['image'] and
+            galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
 
-        if use_manager and 'output_manager' not in config:
-            from multiprocessing.managers import BaseManager, ListProxy, DictProxy
-            class OutputManager(BaseManager): pass
+    if use_manager and 'output_manager' not in config:
+        from multiprocessing.managers import BaseManager, ListProxy, DictProxy
+        class OutputManager(BaseManager): pass
 
-            # We'll use a list and a dict as work space to do the extra output processing.
-            OutputManager.register('dict', dict, DictProxy)
-            OutputManager.register('list', list, ListProxy)
-            # Start up the output_manager
-            config['output_manager'] = OutputManager()
-            config['output_manager'].start()
+        # We'll use a list and a dict as work space to do the extra output processing.
+        OutputManager.register('dict', dict, DictProxy)
+        OutputManager.register('list', list, ListProxy)
+        # Start up the output_manager
+        config['output_manager'] = OutputManager()
+        config['output_manager'].start()
 
-        if 'extra_builder' not in config:
-            config['extra_builder'] = {}
+    if 'extra_builder' not in config:
+        config['extra_builder'] = {}
 
-        for key in all_keys:
-            if logger:
-                logger.debug('file %d: Setup output item %s',file_num,key)
+    for key in all_keys:
+        logger.debug('file %d: Setup output item %s',file_num,key)
 
-            # Make the work space structures
-            if use_manager:
-                data = config['output_manager'].list()
-                scratch = config['output_manager'].dict()
-            else:
-                data = list()
-                scratch = dict()
+        # Make the work space structures
+        if use_manager:
+            data = config['output_manager'].list()
+            scratch = config['output_manager'].dict()
+        else:
+            data = list()
+            scratch = dict()
 
-            # Make the data list the right length now to avoid issues with multiple
-            # processes trying to append at the same time.
-            nimages = config['nimages']
-            for k in range(nimages):
-                data.append(None)
+        # Make the data list the right length now to avoid issues with multiple
+        # processes trying to append at the same time.
+        nimages = config['nimages']
+        for k in range(nimages):
+            data.append(None)
 
-            # Create the builder, giving it the data and scratch objects as work space.
-            field = config['output'][key]
-            builder = valid_extra_outputs[key]
-            builder.initialize(data, scratch, field, config, logger)
-            # And store it in the config dict
-            config['extra_builder'][key] = builder
+        # Create the builder, giving it the data and scratch objects as work space.
+        field = config['output'][key]
+        builder = valid_extra_outputs[key]
+        builder.initialize(data, scratch, field, config, logger)
+        # And store it in the config dict
+        config['extra_builder'][key] = builder
 
-            if logger:
-                logger.debug('file %d: Setup output %s object',file_num,key)
+        logger.debug('file %d: Setup output %s object',file_num,key)
 
 
 def SetupExtraOutputsForImage(config, logger=None):
@@ -164,71 +162,70 @@ def WriteExtraOutputs(config, main_data, logger=None):
     @param main_data    The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['index_key'] = 'file_num'
-    if 'output' in config:
-        output = config['output']
-        if 'retry_io' in output:
-            ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
-            # This is how many retries.  Do at least 1, so ntries is 1 more than this.
-            ntries = ntries + 1
+    output = config['output']
+    if 'retry_io' in output:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many retries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    if 'dir' in output:
+        default_dir = galsim.config.ParseValue(output,'dir',config,str)[0]
+    else:
+        default_dir = None
+
+    if 'noclobber' in output:
+        noclobber = galsim.config.ParseValue(output,'noclobber',config,bool)[0]
+    else:
+        noclobber = False
+
+    if 'extra_last_file' not in config:
+        config['extra_last_file'] = {}
+
+    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+        field = output[key]
+        if 'file_name' in field:
+            galsim.config.SetDefaultExt(field, '.fits')
+            file_name = galsim.config.ParseValue(field,'file_name',config,str)[0]
+        else: # pragma: no cover
+            # If no file_name, then probably writing to hdu
+            continue
+        if 'dir' in field:
+            dir = galsim.config.ParseValue(field,'dir',config,str)[0]
         else:
-            ntries = 1
+            dir = default_dir
 
-        if 'dir' in output:
-            default_dir = galsim.config.ParseValue(output,'dir',config,str)[0]
-        else:
-            default_dir = None
+        if dir is not None:
+            file_name = os.path.join(dir,file_name)
 
-        if 'noclobber' in output:
-            noclobber = galsim.config.ParseValue(output,'noclobber',config,bool)[0]
-        else:
-            noclobber = False
+        galsim.config.EnsureDir(file_name)
 
-        if 'extra_last_file' not in config:
-            config['extra_last_file'] = {}
+        if noclobber and os.path.isfile(file_name):  # pragma: no cover
+            logger.warning('Not writing %s file %d = %s because output.noclobber = True' +
+                           ' and file exists',key,config['file_num'],file_name)
+            continue
 
-        for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            field = output[key]
-            if 'file_name' in field:
-                galsim.config.SetDefaultExt(field, '.fits')
-                file_name = galsim.config.ParseValue(field,'file_name',config,str)[0]
-            else:
-                # If no file_name, then probably writing to hdu
-                continue
-            if 'dir' in field:
-                dir = galsim.config.ParseValue(field,'dir',config,str)[0]
-            else:
-                dir = default_dir
+        if config['extra_last_file'].get(key, None) == file_name:
+            # If we already wrote this file, skip it this time around.
+            # (Typically this is applicable for psf, where we may only want 1 psf file.)
+            logger.info('Not writing %s file %d = %s because already written',
+                        key,config['file_num'],file_name)
+            continue
 
-            if dir is not None:
-                file_name = os.path.join(dir,file_name)
+        builder = config['extra_builder'][key]
 
-            if noclobber and os.path.isfile(file_name):
-                if logger:
-                    logger.warn('Not writing %s file %d = %s because output.noclobber = True' +
-                                ' and file exists',key,config['file_num'],file_name)
-                continue
+        # Do any final processing that needs to happen.
+        builder.ensureFinalized(field, config, main_data, logger)
 
-            if config['extra_last_file'].get(key, None) == file_name:
-                # If we already wrote this file, skip it this time around.
-                # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                if logger:
-                    logger.info('Not writing %s file %d = %s because already written',
-                                key,config['file_num'],file_name)
-                continue
-
-            builder = config['extra_builder'][key]
-
-            # Do any final processing that needs to happen.
-            builder.ensureFinalized(field, config, main_data, logger)
-
-            # Call the write function, possible multiple times to account for IO failures.
-            write_func = builder.writeFile
-            args = (file_name,field,config,logger)
-            galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
-            config['extra_last_file'][key] = file_name
-            if logger:
-                logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
+        # Call the write function, possibly multiple times to account for IO failures.
+        write_func = builder.writeFile
+        args = (file_name,field,config,logger)
+        galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
+        config['extra_last_file'][key] = file_name
+        logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
 def AddExtraOutputHDUs(config, main_data, logger=None):
@@ -248,36 +245,34 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     @returns data with additional hdus added
     """
     config['index_key'] = 'file_num'
-    if 'output' in config:
-        output = config['output']
-        hdus = {}
-        for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            field = output[key]
-            if 'hdu' in field:
-                hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
-            else:
-                # If no hdu, then probably writing to file
-                continue
-            if hdu <= 0 or hdu in hdus.keys():
-                raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
+    output = config['output']
+    hdus = {}
+    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+        field = output[key]
+        if 'hdu' in field:
+            hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
+        else: # pragma: no cover
+            # If no hdu, then probably writing to file
+            continue
+        if hdu <= 0 or hdu in hdus:
+            raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
-            builder = config['extra_builder'][key]
+        builder = config['extra_builder'][key]
 
-            # Do any final processing that needs to happen.
-            builder.ensureFinalized(field, config, main_data, logger)
+        # Do any final processing that needs to happen.
+        builder.ensureFinalized(field, config, main_data, logger)
 
-            # Build the HDU for this output object.
-            hdus[hdu] = builder.writeHdu(field,config,logger)
+        # Build the HDU for this output object.
+        hdus[hdu] = builder.writeHdu(field,config,logger)
 
-        first = len(main_data)
-        for h in range(first,len(hdus)+first):
-            if h not in hdus.keys():
-                raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
-        # Turn hdus into a list (in order)
-        hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
-        return main_data + hdulist
-    else:
-        return main_data
+    first = len(main_data)
+    for h in range(first,len(hdus)+first):
+        if h not in hdus:
+            raise ValueError("Cannot skip hdus.  No output found for hdu %d"%h)
+    # Turn hdus into a list (in order)
+    hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
+    return main_data + hdulist
+
 
 def GetFinalExtraOutput(key, config, main_data, logger=None):
     """Get the finalized output object for the given extra output key
@@ -356,7 +351,7 @@ class ExtraOutputBuilder(object):
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
-        pass
+        pass  # pragma: no cover  (all our ExtraBuilders override this function.)
 
     def processImage(self, index, obj_nums, config, base, logger):
         """Perform any necessary processing at the end of each image construction.
@@ -390,7 +385,7 @@ class ExtraOutputBuilder(object):
 
         @returns the final version of the object.
         """
-        if self.final_data is None:
+        if self.final_data is None: # pragma: no branch
             self.final_data = self.finalize(config, base, main_data, logger)
         return self.final_data
 

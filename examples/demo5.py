@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,11 +22,11 @@ The fifth script in our tutorial about using GalSim in python scripts: examples/
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This script is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
-We produce a single image made up of tiles of postage stamps for each individual object.  
-(We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)  
+We produce a single image made up of tiles of postage stamps for each individual object.
+(We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)
 Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
 The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
-(Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to 
+(Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to
 make things simpler. However see demo3 for an example of using bulge+disk galaxies.)
 The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of
 shape noise.  The applied shear is the same for each galaxy.
@@ -100,13 +100,13 @@ def main(argv):
     gal_file_name = os.path.join('output','g08_gal.fits')
     gal_signal_to_noise = 200       # Great08 "LowNoise" run
     gal_resolution = 0.98           # r_gal / r_psf (use r = half_light_radius)
-    # Note: Great08 defined their resolution as r_obs / r_psf, using the convolved 
-    #       size rather than the pre-convolved size.  
-    #       Therefore, our r_gal/r_psf = 0.98 approximately corresponds to 
+    # Note: Great08 defined their resolution as r_obs / r_psf, using the convolved
+    #       size rather than the pre-convolved size.
+    #       Therefore, our r_gal/r_psf = 0.98 approximately corresponds to
     #       their r_obs / r_psf = 1.4.
 
     gal_ellip_rms = 0.2             # using "distortion" definition of ellipticity:
-                                    #   e = (a^2-b^2)/(a^2+b^2), where a and b are the 
+                                    #   e = (a^2-b^2)/(a^2+b^2), where a and b are the
                                     #   semi-major and semi-minor axes, respectively.
     gal_ellip_max = 0.6             # Maximum value of e, to avoid getting near e=1.
     gal_g1 = 0.013                  # Applied shear, using normal shear definition:
@@ -166,27 +166,27 @@ def main(argv):
         for ix in range(nx_tiles):
             # The normal procedure for setting random numbers in GalSim is to start a new
             # random number generator for each object using sequential seed values.
-            # This sounds weird at first (especially if you were indoctrinated by Numerical 
-            # Recipes), but for the boost random number generator we use, the "random" 
+            # This sounds weird at first (especially if you were indoctrinated by Numerical
+            # Recipes), but for the boost random number generator we use, the "random"
             # number sequences produced from sequential initial seeds are highly uncorrelated.
-            # 
+            #
             # The reason for this procedure is that when we use multiple processes to build
             # our images, we want to make sure that the results are deterministic regardless
-            # of the way the objects get parcelled out to the different processes. 
+            # of the way the objects get parcelled out to the different processes.
             #
             # Of course, this script isn't using multiple processes, so it isn't required here.
             # However, we do it nonetheless in order to get the same results as the config
             # version of this demo script (demo5.yaml).
             ud = galsim.UniformDeviate(random_seed+k+1)
 
-            # Any kind of random number generator can take another RNG as its first 
+            # Any kind of random number generator can take another RNG as its first
             # argument rather than a seed value.  This makes both objects use the same
             # underlying generator for their pseudo-random values.
             gd = galsim.GaussianDeviate(ud, sigma=gal_ellip_rms)
 
             # The -1's in the next line are to provide a border of
             # 1 pixel between postage stamps
-            b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize-1, 
+            b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize-1,
                                iy*stamp_ysize+1 , (iy+1)*stamp_ysize-1)
             sub_gal_image = gal_image[b]
             sub_psf_image = psf_image[b]
@@ -211,7 +211,7 @@ def main(argv):
                 beta += 90 * galsim.degrees
                 first_in_pair = True
 
-            # Make a new copy of the galaxy with an applied e1/e2-type distortion 
+            # Make a new copy of the galaxy with an applied e1/e2-type distortion
             # by specifying the ellipticity and a real-space position angle
             this_gal = gal.shear(e=ellip, beta=beta)
 

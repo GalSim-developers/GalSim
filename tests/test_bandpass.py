@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -38,8 +40,10 @@ def test_Bandpass_basic():
     try:
         # Cannot initialize bandpass without wave_type:
         np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+        # eval-str must return a Real
+        np.testing.assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # All of these should be equivalent
     b_list = [
@@ -47,6 +51,9 @@ def test_Bandpass_basic():
         galsim.Bandpass(throughput='wave/1000', wave_type='nm', blue_limit=400, red_limit=550),
         galsim.Bandpass(throughput='wave/10000', wave_type='A', blue_limit=4000, red_limit=5500),
         galsim.Bandpass('wave/1000', 'nanometers', 400, 550, 30.),
+        galsim.Bandpass('wave/np.sqrt(1.e6)', 'nm', 400, 550, 30.),
+        galsim.Bandpass('wave/numpy.sqrt(1.e6)', 'nm', 400, 550, 30.),
+        galsim.Bandpass('wave/math.sqrt(1.e6)', 'nm', 400, 550, 30.),
         galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear'),
                         wave_type='nm'),
         galsim.Bandpass(galsim.LookupTable([4000,5500], [0.4, 0.55], interpolant='linear'),
@@ -83,7 +90,7 @@ def test_Bandpass_basic():
     ]
 
     for k,b in enumerate(b_list):
-        print k,' b = ',b
+        print(k,' b = ',b)
         if k not in [k1-1, len(b_list)-2, len(b_list)-1]:
             np.testing.assert_almost_equal(b.blue_limit, 400, decimal=12)
             np.testing.assert_almost_equal(b.red_limit, 550, decimal=12)
@@ -102,13 +109,13 @@ def test_Bandpass_basic():
         # Default calculation isn't very accurate for widely spaced wavelengths like this
         # example.  Only accurate to 1 digit!
         lam_eff = b.effective_wavelength
-        print 'lam_eff = ',lam_eff
+        print('lam_eff = ',lam_eff)
         true_lam_eff = (9100./19)  # analytic answer
         np.testing.assert_almost_equal(lam_eff / true_lam_eff, 1.0, 1)
 
         # Can get a more precise calculation with the following: (much more precise in this case)
         lam_eff = b.calculateEffectiveWavelength(precise=True)
-        print 'precise lam_eff = ',lam_eff
+        print('precise lam_eff = ',lam_eff)
         np.testing.assert_almost_equal(lam_eff, true_lam_eff, 12)
 
         # After which, the simple attribute syntax keeps the improved precision
@@ -256,48 +263,85 @@ def test_ne():
            galsim.Bandpass(throughput=lt, wave_type='nm'),
            galsim.Bandpass(throughput=lt, wave_type='A'),
            galsim.Bandpass(throughput=lt, wave_type='nm', zeropoint=10.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=2.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=2.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('ST', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('Vega', effective_diameter=1.0,
-                                                        exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint(sed, effective_diameter=1.0, exptime=1.0)]
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('AB'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('ST'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('Vega'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(100.0),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(sed)]
     all_obj_diff(bps)
 
 
 @timer
 def test_thin():
+    """Test that bandpass thinning works with the requested accuracy."""
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     flux = s.calculateFlux(bp)
-    print "Original number of bandpass samples = ",len(bp.wave_list)
+    print("Original number of bandpass samples = ",len(bp.wave_list))
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print "Test err = ",err
+        print("Test err = ",err)
         thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         thin_bp = bp.thin(rel_err=err, preserve_range=True)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
         thin_bp = bp.thin(rel_err=err, preserve_range=False)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = False: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
+@timer
+def test_zp():
+    """Check that the zero points are maintained in an appropriate way when thinning, truncating."""
+    # Make a bandpass and set an AB zeropoint.
+    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    bp = bp.withZeropoint(zeropoint='AB')
+    # Confirm that if we use the default thinning kwargs, then the zeropoint for the thinned
+    # bandpass is the same (exactly) as the original.
+    bp_th = bp.thin()
+    np.testing.assert_equal(bp.zeropoint, bp_th.zeropoint,
+                            "Zeropoint not preserved after thinning with defaults")
+    bp_tr = bp.truncate(relative_throughput=1.e-4)
+    np.testing.assert_equal(bp.zeropoint, bp_tr.zeropoint,
+                            "Zeropoint not preserved after truncating with defaults")
+
+    # Confirm that if we explicit set the kwarg to clear the zeropoint when thinning or truncating,
+    # or if we truncate using blue_limit or red_limit, then the new bandpass has no zeropoint
+    bp_th = bp.thin(preserve_zp = False)
+    assert bp_th.zeropoint is None, \
+        "Zeropoint erroneously preserved after thinning with preserve_zp=False"
+    bp_tr = bp.truncate(preserve_zp = False)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with preserve_zp=False"
+    bp_tr = bp.truncate(red_limit = 600.)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with explicit red_limit"
+    bp_tr = bp.truncate(blue_limit = 500.)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with explicit blue_limit"
+
+@timer
+def test_truncate_inputs():
+    """Test that bandpass truncation respects certain sanity constraints on the inputs."""
+    try:
+        # Don't allow truncation via two different methods.
+        bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+        np.testing.assert_raises(ValueError, bp.truncate, relative_throughput=1.e-4, blue_limit=500.)
+
+        # If blue_limit or red_limit is supplied, don't allow values that are outside the original
+        # wavelength range.
+        np.testing.assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
+        np.testing.assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 if __name__ == "__main__":
     test_Bandpass_basic()
@@ -306,3 +350,5 @@ if __name__ == "__main__":
     test_Bandpass_wave_type()
     test_ne()
     test_thin()
+    test_zp()
+    test_truncate_inputs()

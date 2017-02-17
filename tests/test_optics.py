@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -46,7 +48,14 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # images.  The best tests involve very high resolution images, but these are slow.  So, when running
 # test_optics.py directly, you will get the slow tests (~25 minutes for all of them).  When running
 # `scons tests`, you will get faster, less stringent tests.
-if __name__ == "__main__":
+
+do_slow_tests = False
+#do_slow_tests = True   # uncomment out for more rigorous testing
+                        # Warning: some of them require a LOT of memory.
+#if __name__ == "__main__":
+    #do_slow_tests = True
+
+if do_slow_tests:
     pp_decimal = 5
     pp_file = 'sample_pupil_rolled_oversample.fits.gz'
     pp_oversampling = 4.
@@ -81,6 +90,8 @@ def test_OpticalPSF_flux():
                 err_msg="Unaberrated Optical flux not quite unity.")
     do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics_test)
+    do_pickle(optics_test._psf)
+    do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
 
 
 @timer
@@ -109,9 +120,9 @@ def test_OpticalPSF_vs_Airy_with_obs():
     nlook = 100          # size of array region at the centre of each image to compare
     image = galsim.ImageF(nlook,nlook)
     for obs in obses:
-        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=2.)
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs,
-                                        suppress_warning=True)
+                                        suppress_warning=True, flux=2.)
         airy_array = airy_test.drawImage(scale=1.,image=image, method='no_pixel').array
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
@@ -132,7 +143,7 @@ def test_OpticalPSF_aberrations_struts():
     # We don't bother running all of these for the regular unit tests, since it adds
     # ~5s to the test run time on a fast-ish laptop.  So only run these when individually
     # running python test_optics.py.
-    if __name__ == "__main__":
+    if do_slow_tests:
         # test defocus
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_defocus.fits"))
         optics = galsim.OpticalPSF(lod, defocus=.5, obscuration=obscuration, oversampling=1)
@@ -221,7 +232,7 @@ def test_OpticalPSF_aberrations_struts():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
                                  strut_angle=8.) # wrong units
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics)
 
@@ -292,7 +303,7 @@ def test_OpticalPSF_aberrations_kwargs():
         np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
                                  defocus=-0.12)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -331,7 +342,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -343,7 +354,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -355,7 +366,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -363,6 +374,7 @@ def test_OpticalPSF_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+
 
 @timer
 def test_OpticalPSF_pupil_plane():
@@ -393,16 +405,25 @@ def test_OpticalPSF_pupil_plane():
         im = galsim.fits.read(os.path.join(imgdir, pp_file))
     else:
         import warnings
-        warnings.warn("Could not find file {}, so generating it from scratch.  This should only "
+        warnings.warn("Could not find file {0}, so generating it from scratch.  This should only "
                       "happen if you intentionally deleted the file in order to regenerate it!"
                       .format(pp_file))
         im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))
+        im.scale = ref_psf._psf.aper.pupil_plane_scale
+        print('pupil_plane image has scale = ',pp_scale)
         im.write(os.path.join(imgdir, pp_file))
-    ref_im_scale = ref_psf._psf.aper.pupil_plane_scale
+    pp_scale = im.scale
+    print('pupil_plane image has scale = ',pp_scale)
+
+    # For most of the tests, we remove this scale, since for achromatic tests, you don't really
+    # need it, and it is invalid to give lam_over_diam (rather than lam, diam separately) when
+    # there is a specific scale for the pupil plane image.  But see the last test below where
+    # we do use lam, diam separately with the input image.
+    im.scale = None
+    # This implies that the lam_over_diam value
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
-                                 pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 pad_factor=pp_pad_factor)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -418,15 +439,14 @@ def test_OpticalPSF_pupil_plane():
             test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
-    if __name__ == '__main__':
+    if do_slow_tests:
         do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
         do_pickle(test_psf)
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
-                                 oversampling=pp_oversampling,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 oversampling=pp_oversampling)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
 
@@ -452,8 +472,7 @@ def test_OpticalPSF_pupil_plane():
                                 pad_factor=pp_pad_factor)
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  pupil_angle=rot_angle, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 pad_factor=pp_pad_factor)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -479,8 +498,7 @@ def test_OpticalPSF_pupil_plane():
                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  defocus=defocus, coma1=coma1, spher=spher,
-                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -505,8 +523,7 @@ def test_OpticalPSF_pupil_plane():
         rot_angle = ind*2.*np.pi/nstruts
         test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                      pupil_angle=rot_angle*galsim.radians,
-                                     oversampling=pp_oversampling, pad_factor=pp_pad_factor,
-                                     _pupil_plane_scale=ref_im_scale)
+                                     oversampling=pp_oversampling, pad_factor=pp_pad_factor)
         im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
         im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
         if pp_test_type == 'image':
@@ -548,19 +565,21 @@ def test_OpticalPSF_pupil_plane():
 
     # Supply the pupil plane at higher resolution, and make sure that the routine figures out the
     # sampling and gets the right image scale etc.
+    gsp = galsim.GSParams(maximum_fft_size=8192)
     rescale_fac = 0.77
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
                                 strut_angle=strut_angle, oversampling=pp_oversampling,
-                                pad_factor=pp_pad_factor/rescale_fac)
+                                pad_factor=pp_pad_factor/rescale_fac,
+                                gsparams=gsp)
     # Make higher resolution pupil plane image via interpolation
-    im.scale = 1. # this doesn't matter, just put something so the next line works
-    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=im.scale, dtype=np.float32),
+    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=1.0, dtype=np.float32),
                                       calculate_maxk=False, calculate_stepk=False,
                                       x_interpolant='linear')
-    new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='no_pixel')
+    new_im = int_im.drawImage(scale=rescale_fac, method='no_pixel')
+    new_im.scale = None  # Let OpticalPSF figure out the scale automatically.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=new_im, oversampling=pp_oversampling,
-                                 _pupil_plane_scale=ref_im_scale*rescale_fac)
+                                 gsparams=gsp)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -581,8 +600,7 @@ def test_OpticalPSF_pupil_plane():
     sub_im = im[im.bounds.withBorder(remove_pad)]
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=sub_im, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 pad_factor=pp_pad_factor)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     test_moments = im_test_psf.FindAdaptiveMom()
@@ -597,8 +615,7 @@ def test_OpticalPSF_pupil_plane():
     big_im[im.bounds] = im
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=big_im, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 pad_factor=pp_pad_factor, gsparams=gsp)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     test_moments = im_test_psf.FindAdaptiveMom()
@@ -610,22 +627,24 @@ def test_OpticalPSF_pupil_plane():
 
     # Check for same answer if we use image, array, or filename for reading in array.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
-                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor,
-                                 _pupil_plane_scale=ref_im_scale)
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     im_test_psf = test_psf.drawImage(scale=scale)
     test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array,
-                                   oversampling=pp_oversampling, pad_factor=pp_pad_factor,
-                                   _pupil_plane_scale=ref_im_scale)
+                                   oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     im_test_psf_2 = test_psf_2.drawImage(scale=scale)
-    test_psf_3 = galsim.OpticalPSF(
-        lam_over_diam, obscuration=obscuration, oversampling=pp_oversampling,
-        pupil_plane_im=os.path.join(imgdir, pp_file),
-        pad_factor=pp_pad_factor,
-        _pupil_plane_scale=ref_im_scale)
-    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
     np.testing.assert_almost_equal(
         im_test_psf.array, im_test_psf_2.array, decimal=pp_decimal,
         err_msg="Inconsistent OpticalPSF image from Image vs. array.")
+
+    # The following had used lam_over_diam, but that is now invalid because the fits file
+    # has a specific pixel scale.  So we need to provide lam and diam separately so that the
+    # units are consistent.
+    diam = 500.e-9 / lam_over_diam * galsim.radians / galsim.arcsec
+    test_psf_3 = galsim.OpticalPSF(
+        lam=500, diam=diam, obscuration=obscuration, oversampling=pp_oversampling,
+        pupil_plane_im=os.path.join(imgdir, pp_file),
+        pad_factor=pp_pad_factor)
+    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
     np.testing.assert_almost_equal(
         im_test_psf.array, im_test_psf_3.array, decimal=pp_decimal,
         err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")
@@ -665,7 +684,177 @@ def test_OpticalPSF_lamdiam():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
+
+
+@timer
+def test_OpticalPSF_pupil_plane_size():
+    """Reproduce Chris Davis's test failure in (#752), but using a smaller, faster array."""
+    im = galsim.Image(512, 512)
+    x = y = np.arange(512) - 256
+    y, x = np.meshgrid(y, x)
+    im.array[x**2+y**2 < 230**2] = 1.0
+    # The following still fails (uses deprecated optics framework):
+    # galsim.optics.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+    # But using the new framework, should work.
+    galsim.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+
+
+@timer
+def test_Zernike_orthonormality():
+    """ Zernike optical screens *should* be normalized such that
+    \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi in unit disc coordinates, or alternatively
+    = aperture area if radial coordinate is not normalized (i.e., diam != 2).
+    """
+    jmax = 20  # Going up to 20 filled Zernikes takes about ~1 sec on my laptop
+    diam = 4.0
+    pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
+    aper = galsim.Aperture(diam=diam, pad_factor=pad_factor)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
+    area = np.pi*(diam/2)**2
+    for j1 in range(1, jmax+1):
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1])
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
+        for j2 in range(j1, jmax+1):
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1])
+            wf2 = screen2.wavefront(u, v) / 500.0
+            integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
+            if j1 == j2:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, area, rtol=1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+            else:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, 0.0, atol=area*1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+
+    do_pickle(screen1)
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
+
+    # Repeat for Annular Zernikes
+    jmax = 14  # Going up to 14 annular Zernikes takes about ~1 sec on my laptop
+    obscuration = 0.3
+    aper = galsim.Aperture(diam=diam, pad_factor=pad_factor, obscuration=obscuration)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
+    area = np.pi*(diam/2)**2*(1 - obscuration**2)
+    for j1 in range(1, jmax+1):
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1],
+                                       obscuration=obscuration, annular_zernike=True)
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
+        for j2 in range(j1, jmax+1):
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1],
+                                           obscuration=obscuration, annular_zernike=True)
+            wf2 = screen2.wavefront(u, v) / 500.0
+            integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
+            if j1 == j2:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, area, rtol=1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+            else:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, 0.0, atol=area*1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+    do_pickle(screen1)
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
+
+
+@timer
+def test_annular_Zernike_limit():
+    """Check that annular Zernike matches circular Zernike in the limit of 0.0 obscuration.
+    """
+    jmax = 20
+    bd = galsim.BaseDeviate(1029384756)
+    u = galsim.UniformDeviate(bd)
+
+    diam = 4.0
+
+    for i in range(4):  # Do a few random tests.  Takes about 1 sec.
+        aberrations = [0]+[u() for i in range(jmax)]
+        psf1 = galsim.OpticalPSF(diam=diam, lam=500, obscuration=1e-5,
+                                 aberrations=aberrations, annular_zernike=True)
+        psf2 = galsim.OpticalPSF(diam=diam, lam=500, obscuration=1e-5,
+                                 aberrations=aberrations)
+        im1 = psf1.drawImage()
+        im2 = psf2.drawImage(image=im1.copy())
+        # We want the images to be close, since the obscuration is near 0, but not identical.
+        # That way we know that the `annular_zernike` keyword is doing something.
+        assert im1 != im2, "annular Zernike identical to circular Zernike"
+        np.testing.assert_allclose(
+                im1.array, im2.array, atol=1e-10,
+                err_msg="annular Zernike with 1e-5 obscuration not close to circular Zernike")
+
+    do_pickle(psf1._aper)
+    do_pickle(psf1)
+    do_pickle(psf1, lambda x: x.drawImage())
+    do_pickle(psf2)
+    do_pickle(psf2, lambda x: x.drawImage())
+
+
+@timer
+def test_OpticalPSF_aper():
+    # Test setting up an OpticalPSF using an Aperture object instead of relying on the constructor
+    # to initialize the aperture.
+    lam = 500
+    diam = 4.0
+
+    aper = galsim.Aperture(lam=lam, diam=diam)
+    psf1 = galsim.OpticalPSF(lam=lam, diam=diam, aper=aper)
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, oversampling=1.0, pad_factor=1.0)
+    assert psf1 == psf2
+
+    im = galsim.Image((psf1._aper.illuminated).astype(int))
+
+    aper = galsim.Aperture(lam=lam, diam=diam, pupil_plane_im=im)
+    psf1 = galsim.OpticalPSF(lam=lam, diam=diam, aper=aper)
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, pupil_plane_im=im,
+                             oversampling=1.0, pad_factor=1.0)
+
+    assert psf1 == psf2
+
+
+@timer
+def test_stepk_maxk_iipad():
+    """Test options to specify (or not) stepk, maxk, and ii_pad_factor.
+    """
+    import time
+    lam = 500
+    diam = 4.0
+
+    t0 = time.time()
+    psf = galsim.OpticalPSF(lam=lam, diam=diam)
+    print("Time for OpticalPSF with default ii_pad_factor=4 {0:6.4f}".format(time.time()-t0))
+    stepk = psf.stepK()
+    maxk = psf.maxK()
+
+    psf2 = galsim.OpticalPSF(lam=lam, diam=diam, _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
+    np.testing.assert_almost_equal(
+            psf2.stepK(), stepk/1.5, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for stepK")
+    np.testing.assert_almost_equal(
+            psf2.maxK(), maxk*2.0, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for maxK")
+
+    do_pickle(psf2)
+
+    t0 = time.time()
+    psf3 = galsim.OpticalPSF(lam=lam, diam=diam, ii_pad_factor=1.)
+    print("Time for OpticalPSF with ii_pad_factor=1 {0:6.4f}".format(time.time()-t0))
+    do_pickle(psf3)
+
+    # The two images should be close, but not equivalent.
+    im = psf.drawImage(nx=16, ny=16, scale=0.2)
+    im3 = psf3.drawImage(nx=16, ny=16, scale=0.2)
+    assert im != im3, (
+            "Images drawn from InterpolatedImages with different pad_factor unexpectedly equal.")
+
+    # Peak is ~0.2, to 1e-5 is pretty good.
+    np.testing.assert_allclose(im.array, im3.array, rtol=0, atol=1e-5)
 
 
 @timer
@@ -692,17 +881,119 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_angle=10.*galsim.degrees,
                               gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, coma1=1.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, coma1=1.0, annular_zernike=True,
+                              gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, oversampling=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, pad_factor=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
-            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
-    if __name__ == "__main__":
+            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, ii_pad_factor=2.)]
+    stepk = objs[0].stepK()
+    maxk = objs[0].maxK()
+    objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
+             galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_maxk=maxk*2)]
+
+    if __name__ == do_slow_tests:
         objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    suppress_warning=True),
-                 galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
+                 galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    pupil_angle=10*galsim.degrees, suppress_warning=True)]
     all_obj_diff(objs)
+
+@timer
+def test_noll():
+
+    # This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+    # It used to be in phase_screen.py, but now we use a faster lookup-table implementation.
+    # This reference version is still useful as a test.
+    def noll_to_zern(j):
+        if (j == 0):
+            raise ValueError("Noll indices start at 1. 0 is invalid.")
+        n = 0
+        j1 = j-1
+        while (j1 > n):
+            n += 1
+            j1 -= n
+        m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
+        return (n, m)
+
+    # Test that the version of _noll_to_zern in phase_screens.py is accurate.
+    for j in range(1,30):
+        true_n,true_m = noll_to_zern(j)
+        n,m = galsim.phase_screens._noll_to_zern(j)
+        #print('j=%d, noll = %d,%d, true_noll = %d,%d'%(j,n,m,true_n,true_m))
+        assert n == true_n
+        assert m == true_m
+        # These didn't turn out to be all that useful for fast conversions, but they're cute.
+        assert n == int(np.sqrt(8*j-7)-1)//2
+        mm = -m if (n//2)%2 == 0 else m
+        assert j == n*(n+1)/2 + (abs(2*mm+1)+1)//2
+
+    # Again, the reference version of this function used to be in phase_screens.py
+    def zern_rho_coefs(n, m):
+        """Compute coefficients of radial part of Zernike (n, m).
+        """
+        from galsim.phase_screens import _nCr
+        kmax = (n-abs(m)) // 2
+        A = np.zeros(n+1)
+        for k in range(kmax+1):
+            A[n-2*k] = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k)
+        return A
+
+    for j in range(1,30):
+        n,m = galsim.phase_screens._noll_to_zern(j)
+        true_coefs = zern_rho_coefs(n,m)
+        coefs = galsim.phase_screens._zern_rho_coefs(n,m)
+        #print('j=%d, coefs = %s'%(j,coefs))
+        np.testing.assert_array_equal(coefs,true_coefs)
+
+
+@timer
+def test_geometric_shoot():
+    """Test that geometric photon shooting is reasonably consistent with Fourier optics."""
+    jmax = 20
+    bd = galsim.BaseDeviate(11111111)
+    u = galsim.UniformDeviate(bd)
+
+    lam = 500.0
+    diam = 4.0
+
+    for i in range(4):  # Do a few random tests.  Takes about 1 sec.
+        aberrations = [0]+[u()*0.1 for i in range(jmax)]
+        opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
+                                    geometric_shooting=True)
+
+        # Use really good seeing, so that the optics contribution actually matters.
+        psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
+        im_shoot = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=100000, rng=u)
+        im_fft = psf.drawImage(nx=32, ny=32, scale=0.2)
+
+        printval(im_fft, im_shoot)
+        shoot_moments = galsim.hsm.FindAdaptiveMom(im_shoot)
+        fft_moments = galsim.hsm.FindAdaptiveMom(im_fft)
+
+        # 40th of a pixel centroid tolerance.
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.x, fft_moments.moments_centroid.x, rtol=0, atol=0.025,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.y, fft_moments.moments_centroid.y, rtol=0, atol=0.025,
+            err_msg="")
+        # 1% size tolerance
+        np.testing.assert_allclose(
+            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.01, atol=0,
+            err_msg="")
+        # Not amazing ellipticity consistency at the moment.  0.01 tolerance.
+        print(fft_moments.observed_shape)
+        print(shoot_moments.observed_shape)
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g1, fft_moments.observed_shape.g1, rtol=0, atol=0.01,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g2, fft_moments.observed_shape.g2, rtol=0, atol=0.01,
+            err_msg="")
 
 
 if __name__ == "__main__":
@@ -714,4 +1005,11 @@ if __name__ == "__main__":
     test_OpticalPSF_flux_scaling()
     test_OpticalPSF_pupil_plane()
     test_OpticalPSF_lamdiam()
+    test_OpticalPSF_pupil_plane_size()
+    test_Zernike_orthonormality()
+    test_annular_Zernike_limit()
+    test_OpticalPSF_aper()
+    test_stepk_maxk_iipad()
     test_ne()
+    test_noll()
+    test_geometric_shoot()

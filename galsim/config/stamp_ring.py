@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@ from .stamp import StampBuilder
 class RingBuilder(StampBuilder):
     """This performs the tasks necessary for building a Ring stamp type.
 
-    It uses the regular Basic functions for most things. 
+    It uses the regular Basic functions for most things.
     It specializes the setup, buildProfile, reject, and makeTasks functions.
     """
 
@@ -66,7 +66,7 @@ class RingBuilder(StampBuilder):
             config['full_rotation'] = math.pi * galsim.radians
 
         # Now go on and do the base class setup.
-        ignore = ignore + req.keys() + opt.keys()
+        ignore = ignore + list(req) + list(opt)
         return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
 
     def buildProfile(self, config, base, psf, gsparams, logger):

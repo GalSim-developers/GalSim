@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,12 +23,12 @@
 #
 # Each of these demo*.yaml files are designed to be equivalent to the corresponding
 # demo*.py file.  We expect that the config file usage will be easier for many people
-# to get going with GalSim, especially those who aren't very comfortable with writing 
+# to get going with GalSim, especially those who aren't very comfortable with writing
 # python code.  And even advanced pythonistas may find it more useful for many tasks than
 # writing the corresponding python code.
 #
 # The executable that reads these YAML files is called galsim, which should be installed
-# in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either 
+# in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either
 # /usr/local or whatever other PREFIX you set when running scons).  So to run this config
 # file, you should be able to type simply:
 #
@@ -38,7 +38,7 @@
 #
 #     ../bin/galsim demo1.yaml
 #
-# If you don't have PyYAML installed, you can use JSON files instead.  The directory json has 
+# If you don't have PyYAML installed, you can use JSON files instead.  The directory json has
 # JSON configuration files that are exactly equivalent to these YAML files.  The YAML format
 # is a superset of the JSON format, so they are quite similar, but the YAML format is easier
 # to read and has a few extra nice features.  But if you don't want to install PyYAML for some
@@ -46,12 +46,12 @@
 #
 #     galsim json/demo1.json
 #
-# See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for 
+# See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for
 # more complete documentation about how to use the GalSim configuration machinery.
 #
 #
-# This first config file is about as simple as it gets.  We draw an image of a single galaxy 
-# convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the 
+# This first config file is about as simple as it gets.  We draw an image of a single galaxy
+# convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the
 # PSF and the galaxy, and add a constant level of Gaussian noise to the image.
 #
 # In each demo, we list the new features introduced in that demo file.  These will differ somewhat
@@ -74,20 +74,20 @@ gal :
     type : Gaussian
 
     # Gaussian profiles have a number of possible size parameters, but
-    # sigma is the most basic one.  
+    # sigma is the most basic one.
     # The others are fwhm and half_light_radius.  At least one of these must be specified.
     sigma : 2  # arcsec
 
-    # The default flux would be 1, but you would typically want to define the flux 
+    # The default flux would be 1, but you would typically want to define the flux
     # to be something other than that.
     flux : 1.e5
- 
+
 
 # Technically, the psf field isn't required, but for astronomical images we always have a PSF
-# so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved 
+# so you'll usually want to define one.  (If it's omitted, the galaxy isn't convolved
 # by anything, so effectively a delta function PSF.)
 # We use a Gaussian again for simplicity, but one somewhat smaller than the galaxy.
-psf : 
+psf :
     type : Gaussian
     sigma : 1  # arcsec
     # No need to specify a flux, since flux=1 is the right thing for a PSF.
@@ -100,7 +100,7 @@ image :
 
     # If you want noise in the image (which is typical) you specify that here.
     # In this case we use gaussian noise.
-    noise : 
+    noise :
         type : Gaussian
         sigma : 30  # standard deviation of the counts in each pixel
 
@@ -109,10 +109,10 @@ image :
 
 
 # Typically, you will want to specify the output format and file name.
-# If this is omitted, the output will be to a fits file with the same root name as the 
+# If this is omitted, the output will be to a fits file with the same root name as the
 # config file (so demo1.fits in this case), but that's usually not a great choice.
 # So at the very least, you would typically want to specify at least the file_name.
 output :
     dir : output_yaml
     file_name : demo1.fits
-    
+

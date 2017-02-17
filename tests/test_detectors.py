@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,6 +18,7 @@
 """Unit tests for inclusion of detector effects (nonlinearity, etc.).
 """
 
+from __future__ import print_function
 import numpy as np
 import warnings
 from galsim_test_helpers import *
@@ -45,7 +46,7 @@ def test_nonlinearity_basic():
     try:
         np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Check for constant function as NLfunc
     im_new = im.copy()
@@ -157,8 +158,8 @@ def test_nonlinearity_basic():
         assert im2.bounds == im.bounds
 
         # Let the user know that this test happened
-        print "SciPy was found installed. Using SciPy modules in the unit test for",\
-        "'applyNonlinearity'"
+        print("SciPy was found installed. Using SciPy modules in the unit test for "
+              "'applyNonlinearity'")
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
         np.testing.assert_array_almost_equal(
@@ -183,7 +184,7 @@ def test_recipfail_basic():
     try:
         np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200, 1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
@@ -414,7 +415,7 @@ def test_IPC_basic():
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             from scipy import signal
-        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+        print("SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`")
         # SciPy is going to emit a warning that we don't want to worry about, so let's deliberately
         # ignore it by going into a `catch_warnings` context.
         with warnings.catch_warnings():
@@ -470,7 +471,7 @@ def test_Persistence_basic():
     dx = [0.0, 1.0, -4.0]
     dy = [-1.0, 0.0, 2.0]
     im_prev = []
-    for i in xrange(3):
+    for i in range(3):
         g = galsim.Gaussian(sigma=3.7,flux=1000.)
         im_prev += [g.drawImage(scale=0.25)]
         im_prev[i].shift(dx=dx[i],dy=dy[i])
@@ -502,20 +503,20 @@ def test_Persistence_basic():
     try:
         np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev, [0.2, 0.3])
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Test for a single image and coeffs as a float
     im_new = im.copy()
     try:
         np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev[0], 1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Testing the multiple images and varying coeffs
     im1 = im.copy()
     im2 = im.copy()
     im1.applyPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
-    for i in xrange(len(im_prev)):
+    for i in range(len(im_prev)):
         im2 += (i+1)*im_prev[i]
     np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="'applyPersistence' routine fails for multiple images with varying coefficients.")

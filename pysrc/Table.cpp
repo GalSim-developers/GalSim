@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,11 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/python.hpp> // header that includes Python.h always needs to come first
@@ -158,8 +154,10 @@ namespace {
         {
             const int Nx = GetNumpyArrayDim(f.ptr(), 0);
             const int Ny = GetNumpyArrayDim(f.ptr(), 1);
-            assert(Nx == GetNumpyArrayDim(x.ptr(), 0));
-            assert(Ny == GetNumpyArrayDim(y.ptr(), 0));
+            const int Nx2 = GetNumpyArrayDim(x.ptr(), 0);
+            const int Ny2 = GetNumpyArrayDim(y.ptr(), 0);
+            assert(Nx == Nx2);
+            assert(Ny == Ny2);
             const double* xargs = GetNumpyArrayData<double>(x.ptr());
             const double* yargs = GetNumpyArrayData<double>(y.ptr());
             const double* vals = GetNumpyArrayData<double>(f.ptr());
@@ -200,6 +198,27 @@ namespace {
             table2d.interpManyMesh(xvec, yvec, valvec, Nx, Ny);
         }
 
+        static bp::tuple Gradient(const Table2D<double,double>& table2d,
+                                   double x, double y)
+        {
+            double dfdx;
+            double dfdy;
+            table2d.gradient(x, y, dfdx, dfdy);
+            return bp::make_tuple(dfdx, dfdy);
+        }
+
+        static void GradientMany(const Table2D<double,double>& table2d,
+                                 const bp::object& x, const bp::object& y,
+                                 const bp::object& dfdx, const bp::object& dfdy)
+        {
+            const double* xvec = GetNumpyArrayData<double>(x.ptr());
+            const double* yvec = GetNumpyArrayData<double>(y.ptr());
+            double* dfdxvec = GetNumpyArrayData<double>(dfdx.ptr());
+            double* dfdyvec = GetNumpyArrayData<double>(dfdy.ptr());
+            int N = GetNumpyArrayDim(x.ptr(), 0);
+            table2d.gradientMany(xvec, yvec, dfdxvec, dfdyvec, N);
+        }
+
         static bp::object convertGetXArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& x = table2d.getXArgs();
@@ -215,7 +234,8 @@ namespace {
         static bp::object convertGetVals(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& v = table2d.getVals();
-            return MakeNumpyArray(&v[0], table2d.getNx(), table2d.getNy(), table2d.getNy(), true);
+            return MakeNumpyArray(&v[0], table2d.getNx(), table2d.getNy(), 1, table2d.getNy(),
+                                  true);
         }
 
         static std::string convertGetInterp(const Table2D<double,double>& table2d)
@@ -251,6 +271,8 @@ namespace {
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpMany", &interpMany)
                 .def("interpManyMesh", &interpManyMesh)
+                .def("gradient", &Gradient)
+                .def("gradientMany", &GradientMany)
                 .def("xmin", &Table2D<double,double>::xmin)
                 .def("xmax", &Table2D<double,double>::xmax)
                 .def("ymin", &Table2D<double,double>::ymin)

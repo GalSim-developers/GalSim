@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,26 +26,25 @@
 # larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 # to the download page.
 #
-# The galaxy images are already convolved with the effective PSF for the original 
-# observations, so GalSim considers the galaxy profile to be the observed image deconvolved 
-# by that PSF (also distributed with the galaxy data).
-# In this case, we then randomly rotate the galaxies, apply a given gravitational shear as 
-# well as gravitational magnification, and then finally convolve by a double Gaussian PSF.
-# The final image can of course have any pixel scale, not just that of the original images.
-# The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
-# slider to quickly move through the different images.
+# The galaxy images are already convolved with the effective PSF for the original observations,
+# so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF
+# (also distributed with the galaxy data).  In this case, we then randomly rotate the galaxies,
+# apply a given gravitational shear as well as gravitational magnification, and then finally
+# convolve by a double Gaussian PSF.  The final image can of course have any pixel scale, not
+# just that of the original images.  The output for this script is to a FITS "data cube".
+# With DS9, this can be viewed with a slider to quickly move through the different images.
 #
 # New features introduced in this demo:
 #
 # - input : real_catalog (file_name, dir, image_dir)
 # - obj type : RealGalaxy (index)
-# - obj : rotate 
+# - obj : rotate
 # - obj : magnify
 # - image : sky_level
 # - image : offset
 # - value type : Sequence (first, last, step)
 # - output type : DataCube (file_name, dir, nimages)
-# 
+#
 # - Using YAML's multiple document feature to do more than one thing
 
 
@@ -68,23 +67,23 @@
 # So start with the common information:
 
 # Define the PSF profile
-psf : 
+psf :
     type : Sum
     items :
-        # Note: in this case, each item is small enough that we can put the whole dict on a 
+        # Note: in this case, each item is small enough that we can put the whole dict on a
         # single line with the -.  No need for further indentation.
         - { type : Gaussian, fwhm : 0.6, flux : 0.8 }
         - { type : Gaussian, fwhm : 2.3, flux : 0.2 }
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     # The pixel size applies to both outputs, so put that here in the first document.
     pixel_scale : 0.16  # arcsec / pixel
 
-    # This time, we'll leave the size unspecified to let GalSim automatically choose 
+    # This time, we'll leave the size unspecified to let GalSim automatically choose
     # an appropriate size.  So no image : size item.
-    
+
 
 ---
 
@@ -94,7 +93,7 @@ image :
 output :
     dir : output_yaml
     file_name : psf_real.fits
- 
+
 ---
 
 # The next document is for the galaxy output.
@@ -104,22 +103,22 @@ gal :
     type : RealGalaxy
     flux : 1.e5
 
-    index : 
-        type : Sequence 
-        # Sequence can optionally take first, last, and step, however, the defaults 
-        # are fine here: 
+    index :
+        type : Sequence
+        # Sequence can optionally take first, last, and step, however, the defaults
+        # are fine here:
         #   first = 0
         #   last = <num entries in catalog> - 1
         #   step = 1
         # If the sequential values exceed last, they will repeat back starting at first, so it's
         # ok to have nobjects greater than the number of real galaxies in the catalog.
-    
+
     rotate :
         # An angle of type Random means uniform within 0 .. 2pi radians
         type : Random
 
-    shear : 
-        type : G1G2 
+    shear :
+        type : G1G2
         g1 : -0.027
         g2 : 0.031
 
@@ -127,11 +126,11 @@ gal :
     # This conserves surface brightness, so it scales both the area and flux.
     magnify : 1.082
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
-    
+
     # If we specify the sky_level as an image attribute, it will be used
-    # as a background level for the image.  (The background level per pixel is 
+    # as a background level for the image.  (The background level per pixel is
     # 1.e6 * (0.15)^2 = 2250.)
     sky_level : 1.e6  # ADU / arcsec^2
 
@@ -141,7 +140,7 @@ image :
     # (If we omit it entirely, that would mean no noise, which isn't what we want.)
     #
     # Also, if we include a sky_level in noise in addition to the above image sky_level,
-    # then both of them (added together) will be used for the noise, but only the 
+    # then both of them (added together) will be used for the noise, but only the
     # image.sky_level will remain as the background level in the final image.
     noise : {}
 
@@ -149,9 +148,9 @@ image :
     # (in demo4 and demo5) used galaxy.shift as a way to shift the center of the image.
     # Since that is applied to the galaxy, the units are arcsec (since the galaxy profile
     # itself doesn't know about the pixel scale).  Here, the offset applies to the drawn
-    # image, which does know about the pixel scale, so the units of offset are pixels, 
+    # image, which does know about the pixel scale, so the units of offset are pixels,
     # not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
-    offset : 
+    offset :
         type : XY
         x : { type : Random, min : -0.5, max : 0.5 }
         y : { type : Random, min : -0.5, max : 0.5 }
@@ -160,7 +159,7 @@ image :
 
     # Note: since the output includes a data_cube output, which requires all the
     # images to be the same size, GalSim will choose the size of the first image
-    # automatically from the profile (since we aren't setting any image : size here), 
+    # automatically from the profile (since we aren't setting any image : size here),
     # but then subsequent images will be forced to be the same size as the first one.
 
 
@@ -173,7 +172,7 @@ input :
     # the relative path from dir to wherever the images are located.
     real_catalog :
         dir : data
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
 
 # Define the name and format of the output file
@@ -182,4 +181,4 @@ output :
     dir : output_yaml
     file_name : cube_real.fits
     nimages : 100
- 
+

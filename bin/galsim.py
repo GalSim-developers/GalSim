@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,10 +20,11 @@ The main driver program for making images of galaxies whose parameters are speci
 in a configuration file.
 """
 
+from __future__ import print_function
+
 import sys
 import os
 import logging
-import copy
 import pprint
 
 # The only wrinkle about letting this executable be called galsim is that we want to
@@ -35,29 +36,6 @@ sys.path = sys.path[1:]
 import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
-
-def MergeConfig(config1, config2, logger=None):
-    """
-    Merge config2 into config1 such that it has all the information from either config1 or 
-    config2 including places where both input dicts have some of a field defined.
-    e.g. config1 has image.pixel_scale, and config2 has image.noise.
-            Then the returned dict will have both.
-    For real conflicts (the same value in both cases), config1's value takes precedence
-    """
-    for (key, value) in config2.items():
-        if not key in config1:
-            # If this key isn't in config1 yet, just add it
-            config1[key] = copy.deepcopy(value)
-        elif isinstance(value,dict) and isinstance(config1[key],dict):
-            # If they both have a key, first check if the values are dicts
-            # If they are, just recurse this process and merge those dicts.
-            MergeConfig(config1[key],value)
-        else:
-            # Otherwise config1 takes precedence
-            if logger:
-                logger.info("Not merging key %s from the base config, since the later "
-                            "one takes precedence",key)
-            pass
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
@@ -106,18 +84,22 @@ def parse_args():
             help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_argument(
+            '-x', '--except_abort', action='store_const', default=False, const=True,
+            help='abort the whole job whenever any file raises an exception rather than ' +
+            'continuing on')
+        parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         args = parser.parse_args()
 
         if args.config_file == None:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
         elif args.version:
-            print version_str
+            print(version_str)
 
     except ImportError:
         # Use optparse instead
@@ -144,6 +126,9 @@ def parse_args():
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_option(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
+        parser.add_option(
             '-n', '--njobs', type=int, action='store', default=1, 
             help='set the total number of jobs that this run is a part of. ' + 
             'Used in conjunction with -j (--job)')
@@ -152,8 +137,9 @@ def parse_args():
             help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_option(
-            '-p', '--profile', action='store_const', default=False, const=True,
-            help='output profiling information at the end of the run')
+            '-x', '--except_abort', action='store_const', default=False, const=True,
+            help='abort the whole job whenever any file raises an exception rather than ' +
+            'just reporting the exception and continuing on')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -165,7 +151,7 @@ def parse_args():
         # Store the positional arguments in the args object as well:
         if len(posargs) == 0:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
@@ -173,7 +159,7 @@ def parse_args():
             args.config_file = posargs[0]
             args.variables = posargs[1:]
             if args.version:
-                print version_str
+                print(version_str)
 
     # Return the args
     return args
@@ -229,7 +215,7 @@ def main():
 
     # If requested, load the profiler
     if args.profile:
-        import cProfile, pstats, StringIO
+        import cProfile, pstats, io
         pr = cProfile.Profile()
         pr.enable()
 
@@ -241,18 +227,14 @@ def main():
     logger = logging.getLogger('galsim')
 
     logger.warn('Using config file %s', args.config_file)
-    base_config, all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
+    all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
-
-    # Set the root value in base_config
-    if 'root' not in base_config:
-        base_config['root'] = os.path.splitext(args.config_file)[0]
 
     # Process each config document
     for config in all_config:
 
-        # Merge the base_config information into this config file.
-        MergeConfig(config,base_config)
+        if 'root' not in config:
+            config['root'] = os.path.splitext(args.config_file)[0]
 
         # Parse the command-line variables:
         new_params = ParseVariables(args.variables, logger)
@@ -269,13 +251,20 @@ def main():
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params)
+        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
+                              except_abort=args.except_abort)
 
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        s = StringIO.StringIO()
-        sortby = 'tottime'
+        try:
+            from StringIO import StringIO
+        except ImportError:
+            from io import StringIO
+        s = StringIO()
+        sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
+                         # alias for this that is backwards compatible to older versions
+                         # of pstats.
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
         logger.error(s.getvalue())

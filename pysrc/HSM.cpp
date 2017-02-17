@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,11 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
+
+#include "galsim/IgnoreWarnings.h"
+
 #define BOOST_PYTHON_MAX_ARITY 22  // We have a function with 21 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -280,7 +278,6 @@ struct PyShapeData {
         wrapTemplates<double, double>();
         wrapTemplates<double, float>();
         wrapTemplates<float, double>();
-        wrapTemplates<int, int>();
     }
 };
 

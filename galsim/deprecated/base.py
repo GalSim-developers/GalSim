@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -184,6 +184,20 @@ def GSObject_drawK(self, *args, **kwargs):
     depr('drawK', 1.1, "drawKImage")
     return self.drawKImage(*args, **kwargs)
 
+def GSObject_copy(self):
+    """Returns a copy of an object.
+
+    NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
+    attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
+    from the two copies would produce different realizations of the noise.  If you want
+    these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
+    will have identical noise realizations for that kind of application.
+    """
+    depr('copy', 1.5, "", "GSObjects are immutable, so there's no need for copy.")
+    import copy
+    return copy.copy(self)
+
+
 galsim.GSObject.nyquistDx = GSObject_nyquistDx
 galsim.GSObject.setFlux = GSObject_setFlux
 galsim.GSObject.scaleFlux = GSObject_scaleFlux
@@ -206,6 +220,7 @@ galsim.GSObject.applyShift = GSObject_applyShift
 galsim.GSObject.draw = GSObject_draw
 galsim.GSObject.drawShoot = GSObject_drawShoot
 galsim.GSObject.drawK = GSObject_drawK
+galsim.GSObject.copy = GSObject_copy
 
 
 # GSParams is defined in C++ and wrapped.  But we want to modify it here slightly to add
@@ -226,4 +241,3 @@ def _new_GSP_init(self, *args, **kwargs):
 
 galsim.GSParams.alias_threshold = property(_get_alias_threshold)
 galsim.GSParams.__init__ = _new_GSP_init
-

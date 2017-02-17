@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -54,28 +54,6 @@ damages of any kind.
 #include "FFT.h"
 #include <boost/math/special_functions/fpclassify.hpp> // for isnan()
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cerr;
-int verbose_level = 1;
-// There are three levels of verbosity which can be helpful when debugging,
-// which are written as dbg, xdbg, xxdbg (all defined in Std.h).
-// It's Mike's way to have debug statements in the code that are really easy to turn
-// on and off.
-//
-// If DEBUGLOGGING is #defined, then these write out to *dbgout, according to the value
-// of verbose_level.
-// dbg requires verbose_level >= 1
-// xdbg requires verbose_level >= 2
-// xxdbg requires verbose_level >= 3
-//
-// If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
-// so the compiler parses the statement fine, but trivially optimizes the code away,
-// so there is no efficiency hit from leaving them in the code.
-#endif
-
-
 namespace galsim {
 namespace hsm {
 
@@ -98,40 +76,19 @@ namespace hsm {
                                       const BaseImage<T>& image,
                                       const BaseImage<int>& mask)
     {
-        Bounds<int> b = image.getBounds();
-        dbg<<"b = "<<b<<std::endl;
-        masked_image.resize(b);
-        dbg<<"resized masked_image: b -> "<<masked_image.getBounds()<<std::endl;
-        const int rowlen = b.getXMax() - b.getXMin() + 1;
-        const T* pI = image.getData();
-        const int sI = image.getStride() - rowlen;
-        const int* pM = mask.getData();
-        const int sM = mask.getStride() - rowlen;
-        double* pF = masked_image.getData();
-        const int sF = masked_image.getStride() - rowlen;
+        Bounds<int> b1 = image.nonZeroBounds();
+        Bounds<int> b2 = mask.nonZeroBounds();
+        Bounds<int> b = b1 & b2;
 
-        Bounds<int> b2;
-        for(int y=b.getYMin();y<=b.getYMax();y++) {
-            for(int x=b.getXMin();x<=b.getXMax();x++) {
-                if (*pM++) {
-                    *pF = *pI++;
-                    if (*pF != 0.) b2 += Position<int>(x,y);
-                    ++pF;
-                } else {
-                    *pF++ = 0.;
-                    ++pI;
-                }
-            }
-            pM += sM;
-            pI += sI;
-            pF += sF;
-        }
-        dbg<<"Done MakeMaskedImage"<<std::endl;
-        dbg<<"Final b2 bounds = "<<b2<<std::endl;
         // Make sure we have at least 1 pixel in the final mask.  Throw an exception if not.
-        if (!b2.isDefined())
+        if (!b.isDefined())
             throw HSMError("Masked image is all 0's.");
-        return masked_image[b2];
+
+        masked_image.resize(b);
+        masked_image = image[b];
+        masked_image *= mask[b];
+
+        return masked_image.view();
     }
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
@@ -553,11 +510,11 @@ namespace hsm {
 
         /* Setup */
         int xmin = data.getXMin();
-        int xmax = data.getXMax();
         int ymin = data.getYMin();
-        int ymax = data.getYMax();
-        int nx = xmax-xmin+1;
-        int ny = ymax-ymin+1;
+        int nx = data.getNCol();
+        int ny = data.getNRow();
+        int sx = data.getStep();
+        int sy = data.getStride();
         tmv::Matrix<double> psi_x(nx, max_order+1);
         tmv::Matrix<double> psi_y(ny, max_order+1);
 
@@ -565,7 +522,7 @@ namespace hsm {
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
         qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
 
-        tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,1,data.getStride(),tmv::NonConj);
+        tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,sx,sy,tmv::NonConj);
 
         moments = psi_x.transpose() * mdata * psi_y;
     }
@@ -728,7 +685,9 @@ namespace hsm {
         if (iy2 > ymax) iy2 = ymax;
         dbg<<"y1,y2 = "<<y1<<','<<y2<<std::endl;
         dbg<<"iy1,iy2 = "<<iy1<<','<<iy2<<std::endl;
-        assert(iy1 <= iy2);
+        if (iy1 > iy2) {
+             throw HSMError("Bounds don't make sense");
+        }
 
         //
         /* Use these pointers to speed up referencing arrays */
@@ -758,10 +717,11 @@ namespace hsm {
             if (ix2 > xmax) ix2 = xmax;
             if (ix1 > ix2) continue;  // rare, but it can happen after the ceil and floor.
 
-            const double* imageptr = data.getIter(ix1,y);
+            const double* imageptr = data.getPtr(ix1,y);
+            const int step = data.getStep();
             double x_x0 = ix1 - x0;
             const double* mxxptr = Minv_xx__x_x0__x_x0.cptr() + ix1-xmin;
-            for(int x=ix1;x<=ix2;++x,x_x0+=1.) {
+            for(int x=ix1;x<=ix2;++x,x_x0+=1.,imageptr+=step) {
                 /* Compute displacement from weight centroid, then
                  * get elliptical radius and weight.
                  */
@@ -769,7 +729,7 @@ namespace hsm {
                 xdbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
                 xassert(rho2 < hsmparams->max_moment_nsig2 + 1.e-8); // allow some numerical error.
 
-                double intensity = std::exp(-0.5 * rho2) * (*imageptr++);
+                double intensity = std::exp(-0.5 * rho2) * (*imageptr);
 
                 /* Now do the addition */
                 double intensity__x_x0 = intensity * x_x0;
@@ -936,23 +896,26 @@ namespace hsm {
         dbg<<"image1.bounds = "<<image1.getBounds()<<std::endl;
         dbg<<"image2.bounds = "<<image2.getBounds()<<std::endl;
         dbg<<"image_out.bounds = "<<image_out.getBounds()<<std::endl;
-        int nx1 = image1.getXMax() - image1.getXMin() + 1;
-        int ny1 = image1.getYMax() - image1.getYMin() + 1;
-        int s1 = image1.getStride();
-        int nx2 = image2.getXMax() - image2.getXMin() + 1;
-        int ny2 = image2.getYMax() - image2.getYMin() + 1;
-        int s2 = image2.getStride();
-        int nx3 = image_out.getXMax() - image_out.getXMin() + 1;
-        int ny3 = image_out.getYMax() - image_out.getYMin() + 1;
-        int s3 = image_out.getStride();
-        dbg<<"image1: "<<nx1<<','<<ny1<<','<<s1<<std::endl;
-        dbg<<"image2: "<<nx2<<','<<ny2<<','<<s2<<std::endl;
-        dbg<<"image3: "<<nx3<<','<<ny3<<','<<s3<<std::endl;
+        int nx1 = image1.getNCol();
+        int ny1 = image1.getNRow();
+        int sx1 = image1.getStep();
+        int sy1 = image1.getStride();
+        int nx2 = image2.getNCol();
+        int ny2 = image2.getNRow();
+        int sx2 = image2.getStep();
+        int sy2 = image2.getStride();
+        int nx3 = image_out.getNCol();
+        int ny3 = image_out.getNRow();
+        int sx3 = image_out.getStep();
+        int sy3 = image_out.getStride();
+        dbg<<"image1: "<<nx1<<','<<ny1<<','<<sx1<<','<<sy1<<std::endl;
+        dbg<<"image2: "<<nx2<<','<<ny2<<','<<sx2<<','<<sy2<<std::endl;
+        dbg<<"image3: "<<nx3<<','<<ny3<<','<<sx3<<','<<sy3<<std::endl;
 
         // Convenient matrix views into the images:
-        tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,1,s1,tmv::NonConj);
-        tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,1,s2,tmv::NonConj);
-        tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,1,s3,tmv::NonConj);
+        tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,sx1,sy1,tmv::NonConj);
+        tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,sx2,sy2,tmv::NonConj);
+        tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,sx3,sy3,tmv::NonConj);
         dbg<<"mIm1 = "<<mIm1<<std::endl;
         dbg<<"mIm2 = "<<mIm2<<std::endl;
         dbg<<"mIm3 = "<<mIm3<<std::endl;
@@ -1873,12 +1836,6 @@ namespace hsm {
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
-    template CppShapeData EstimateShearView(
-        const BaseImage<int>& gal_image, const BaseImage<int>& PSF_image,
-        const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
-        double guess_sig_gal, double guess_sig_PSF, double precision,
-        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
 
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<float>& object_image, const BaseImage<int> &object_mask_image,
@@ -1892,6 +1849,6 @@ namespace hsm {
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
-
+        
 }
 }

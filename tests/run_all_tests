@@ -1,5 +1,5 @@
 #!/bin/bash
-python=python
+python=../bin/installed_python
 for test in `ls test*.py`
 do
     echo $test

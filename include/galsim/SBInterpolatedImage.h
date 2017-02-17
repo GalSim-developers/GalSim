@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -104,6 +104,7 @@ namespace galsim {
 
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
+        double getPadFactor() const;
 
         /**
          * @brief Refine the value of stepK if the input image was larger than necessary.
@@ -140,8 +141,7 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D
          * image.
          *
-         * @param[in] realKImage  Real part of input Fourier-space Image (ImageF or ImageD).
-         * @param[in] imagKImage  Imaginary part of input Fourier-space Image (ImageF or ImageD).
+         * @param[in] kimage      Input Fourier-space Image (ImageC).
          * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
@@ -150,20 +150,14 @@ namespace galsim {
          */
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& realKImage,
-            const BaseImage<T>& imagKImage,
-            double dk, double stepk,
-            boost::shared_ptr<Interpolant> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<T>& kimage, double dk, double stepk,
+            boost::shared_ptr<Interpolant> kInterp, const GSParamsPtr& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& realKImage,
-            const BaseImage<T>& imagKImage,
-            double dk, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<T>& kimage, double dk, double stepk,
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // @brief Serialization constructor.
         // Note this is *not* a template since getKData only returns doubles.

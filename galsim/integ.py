@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,6 +22,7 @@ and python image integrators for use in galsim.chromatic
 
 from . import _galsim
 import numpy as np
+from functools import reduce
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.
@@ -70,6 +71,36 @@ def midpt(fvals, x):
     dx.append(x[-1]-x[-2])
     weighted_fvals = [w*f for w,f in zip(dx, fvals)]
     return reduce(lambda y,z:y+z, weighted_fvals)
+
+def trapz(func, min, max, points=10000):
+    """Simple wrapper around 'numpy.trapz' to take function and limits as inputs.
+
+    Example usage:
+
+        >>> def func(x): return x**2
+        >>> galsim.integ.trapz(func, 0, 1)
+        0.33333333500033341
+        >>> galsim.integ.trapz(func, 0, 1, 1e6)
+        0.33333333333349996
+        >>> galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 1e3))
+        0.33333350033383402
+
+    @param func     The function to be integrated.  y = func(x) should be valid.
+    @param min      The lower end of the integration bounds.
+    @param max      The upper end of the integration bounds.
+    @param points   If integer, the number of points to sample the integrand. If array-like, then
+                    the points to sample the integrand at. [default: 1000].
+    """
+    if not np.isscalar(points):
+        if (np.max(points) > max) or (np.min(points) < min):
+            raise ValueError("Points outside of range: %s -- %s"%(min,max))
+    elif int(points) != points:
+        raise TypeError("'npoints' must be integer type or array")
+    else:
+        points = np.linspace(min, max, points)
+
+    return np.trapz(func(points),points)
+
 
 class ImageIntegrator(object):
     def __init__(self):

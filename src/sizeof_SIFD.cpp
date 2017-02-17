@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,7 +16,7 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-/// @file sizeof_SIFD.cpp @brief Prints short, int, float and double sizes to stdout. 
+/// @file sizeof_SIFD.cpp @brief Prints short, int, float and double sizes to stdout.
 #include <cstdio>
 
 int main(){

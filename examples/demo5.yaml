@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,11 +22,11 @@
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
-# We produce a single image made up of tiles of postage stamps for each individual object.  
-# (We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)  
+# We produce a single image made up of tiles of postage stamps for each individual object.
+# (We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)
 # Each postage stamp is 40 x 40 pixels.  One image is all stars.  A second image is all galaxies.
 # The stars are truncated Moffat profiles.  The galaxies are Exponential profiles.
-# (Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to 
+# (Great08 mixed pure bulge and pure disk for its LowNoise run.  We're just doing disks to
 # make things simpler. However, see demo3 for an example of using bulge+disk galaxies.)
 # The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of
 # shape noise.  The applied shear is the same for each galaxy.
@@ -45,7 +45,7 @@
 
 
 # Define the PSF profile
-psf : 
+psf :
     type : Moffat
     beta : 3
     fwhm : 2.85
@@ -54,7 +54,7 @@ psf :
     trunc : 5.70  # = 2 * FWHM
 
     ellip :
-        type : E1E2 
+        type : E1E2
         e1 : -0.019
         e2 : -0.007
 
@@ -126,7 +126,7 @@ gal :
     # Where W(x,y) is taken to be a matched filter, so W(x,y) = I(x,y).
     signal_to_noise : 200
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
 
     # The type field defines what kind of image to build.
@@ -142,12 +142,12 @@ image :
     stamp_ysize : 39
 
     # Put a 1 pixel border between tiles
-    border : 1  
+    border : 1
 
     pixel_scale : 1.0  # arcsec / pixel
 
     # Define what kind of noise to use
-    noise : 
+    noise :
         sky_level : 1.e6  # ADU / arcsec^2
 
     # Define the initial random number seed
@@ -162,7 +162,7 @@ output :
 
     dir : output_yaml
     file_name : g08_gal.fits
-    
+
     psf :
         file_name : g08_psf.fits
 

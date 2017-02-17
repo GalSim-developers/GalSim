@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -32,11 +29,11 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAdd 
+    struct PySBAdd
     {
 
         // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams) 
+        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams)
         {
             bp::stl_input_iterator<SBProfile> begin(iterable), end;
             std::list<SBProfile> plist(begin, end);
@@ -52,7 +49,7 @@ namespace galsim {
             return l;
         }
 
-        static void wrap() 
+        static void wrap()
         {
             static char const* doc = "Sum of SBProfiles.";
 
@@ -72,7 +69,7 @@ namespace galsim {
 
     };
 
-    void pyExportSBAdd() 
+    void pyExportSBAdd()
     {
         PySBAdd::wrap();
     }

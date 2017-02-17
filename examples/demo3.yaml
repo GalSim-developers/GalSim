@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,11 +23,11 @@
 #
 # This script gets reasonably close to including all the principal features of an image
 # from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
-# where each component is represented by a sheared Sersic profile (with different Sersic 
-# indices).  The PSF has both atmospheric and optical components.  The atmospheric 
-# component is a Kolmogorov turbulent spectrum. The optical component includes defocus, 
-# coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model 
-# includes both a gain and read noise.  And finally, we include the effect of a slight 
+# where each component is represented by a sheared Sersic profile (with different Sersic
+# indices).  The PSF has both atmospheric and optical components.  The atmospheric
+# component is a Kolmogorov turbulent spectrum. The optical component includes defocus,
+# coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model
+# includes both a gain and read noise.  And finally, we include the effect of a slight
 # telescope distortion.
 #
 # New features introduced in this demo:
@@ -40,13 +40,13 @@
 # - obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
 # - obj : ellip
 # - shear type : QBeta (q, beta) -- including how to specify an angle
-# - shear type : EBeta (e, beta) 
+# - shear type : EBeta (e, beta)
 # - noise type : CCD (sky_level, gain, read_noise)
 # - image : size
 # - image : wcs
 # - wcs type : Shear
 # - output : psf
- 
+
 # Define the galaxy profile
 gal :
     # This galaxy will be the sum of a bulge component and a disk component
@@ -57,7 +57,7 @@ gal :
     # Note: Each item in the Sum can have its own separate shear.  See demo4 for an example.
     items :
         # Note the notation here for a list of items rather than a dict of key:value pairs.
-        # Each item is specified by an indented -.  Then another layer of indentation is 
+        # Each item is specified by an indented -.  Then another layer of indentation is
         # required for the key:value pairs for each item.
         -   # First the bulge:
             type : Sersic
@@ -68,15 +68,15 @@ gal :
         -   # Now the disk:
             type : Sersic
             n : 1.5
-            # Normally Sersic profiles are specified by half-light radius, the radius that 
-            # encloses half of the total flux.  However, for some purposes, it can be 
-            # preferable to instead specify the scale radius, where the surface brightness 
+            # Normally Sersic profiles are specified by half-light radius, the radius that
+            # encloses half of the total flux.  However, for some purposes, it can be
+            # preferable to instead specify the scale radius, where the surface brightness
             # drops to 1/e of the central peak value.
             scale_radius : 0.85  # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
             flux : 0.7
 
     # A shear at this level applies to the summed profile
-    shear : 
+    shear :
         # QBeta means to use the axis ratio (q = b/a) and a position angle.
         type : QBeta
         q : 0.73
@@ -85,13 +85,13 @@ gal :
         # (or arcminutes or arcseconds if you prefer).
         # These may be abbreviated to deg and rad (and arcmin, arcsec).
         beta : 23 degrees
- 
+
     # The flux here also applies to the full galaxy object.
     flux : 1.e6  # ADU ("Analog-to-digital units", the units of the numbers on a CCD)
 
 
 # Define the PSF profile
-psf : 
+psf :
     # This PSF will be the convolution of an atmospheric component and an optical component.
     type : Convolution
 
@@ -110,7 +110,7 @@ psf :
                 beta : 0.81 radians
 
         -
-            # For the optical component, GalSim provides an OpticalPSF class that 
+            # For the optical component, GalSim provides an OpticalPSF class that
             # implements the PSF pattern from various telescope aberrations.
             type : OpticalPSF
 
@@ -119,7 +119,7 @@ psf :
             #               = 0.041253 arcsec
             # You can have python do the arithmetic for you using the Eval type.
             # The string given by str will be evaluated using the Python eval(str) function.
-            lam_over_diam : 
+            lam_over_diam :
                 type : Eval
                 str : '800 * 1.e-9 / 4 * 206265'
             #lam_over_diam : 0.041253  # arcsec
@@ -136,25 +136,25 @@ psf :
             obscuration : 0.3
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     pixel_scale : 0.23   # arcsec / pixel
     size : 64  # pixels in each direction
     # (You can also specify xsize and ysize separately for non-square images.)
-   
-    # You may provide a World Coordinate System (WCS) transformation to be applied 
-    # to the image.  In this case, we simply have a constant telescope distortion 
+
+    # You may provide a World Coordinate System (WCS) transformation to be applied
+    # to the image.  In this case, we simply have a constant telescope distortion
     # over the image.  See the config wiki page for a list of all the allowed WCS
     # types and their parameters.  (We'll use two others in demo9 and demo11.)
-    wcs : 
+    wcs :
         type : Shear
-        shear : 
+        shear :
             type : G1G2
             g1 : -0.02
             g2 : 0.01
 
-    noise : 
-        # The CCD noise type has the potential to be more sophisticated than just a 
+    noise :
+        # The CCD noise type has the potential to be more sophisticated than just a
         # simple Poisson noise according to the flux of sky + object.
         # You can also specify a gain and a read_noise for the CCD.
         # The gain indicates how many photons (or electrons, technically) correspond
@@ -175,13 +175,13 @@ image :
 output :
     dir : output_yaml
     file_name : demo3.fits
-    
+
     # Sometimes it is useful to have the PSF image also written to a file.
-    # The PSF image will always have the same pixel centering as the galaxy, and if there 
+    # The PSF image will always have the same pixel centering as the galaxy, and if there
     # was any random component to the PSF generation, then this will be the exact same PSF
     # that was used for the galaxy.  Plus, there is no noise in the PSF image.
     psf :
         # You may either specify a new file_name as we do here, or you can specify
         # 'hdu' to put the PSF image in the same fits file, but in another HDU.
         file_name : demo3_epsf.fits
-    
+

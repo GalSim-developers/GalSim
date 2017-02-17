@@ -1,4 +1,4 @@
-; Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+; Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 ; https://github.com/GalSim-developers
 ;
 ; This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,10 +16,9 @@
 ;    and/or other materials provided with the distribution.
 ;
 
-PRO make_test_ims
 ; IDL script used to generate external test images for GalSim.
 ; Used by tests/test_Image.py, see Issue #144.
-;
+; Call from command line via "idl make_test_ims.pro"
 
 ; Single images
 test_array = [[11, 21, 31, 41, 51, 61, 71], $
@@ -31,63 +30,72 @@ writefits, 'testS.fits', test_array
 writefits, 'testI.fits', long(test_array)
 writefits, 'testF.fits', float(test_array)
 writefits, 'testD.fits', double(test_array)
+writefits, 'testUS.fits', uint(test_array)
+writefits, 'testUI.fits', ulong(test_array)
+
 
 ; Then do cubes with NIMAGES = 12 and multi-extension FITS images with
 ; each extension
 ; having ext_no added to it
 nimages = 12
 test_cube = intarr([size(test_array, /DIM), 12])
-for k=0, nimages-1 do begin
 
-   test_cube[*, *, k] = test_array + k
-  
-endfor
+for k=0, nimages-1 do $
+    test_cube[*, *, k] = test_array + k
 
 ; First write these cubes out
 writefits, 'test_cubeS.fits', test_cube
 writefits, 'test_cubeI.fits', long(test_cube)
 writefits, 'test_cubeF.fits', float(test_cube)
 writefits, 'test_cubeD.fits', double(test_cube)
+writefits, 'test_cubeUS.fits', uint(test_cube)
+writefits, 'test_cubeUI.fits', ulong(test_cube)
 
 ; Multi-ext: start with 16 bit ints
 filename = 'test_multiS.fits'
 spawn, "rm "+filename
 mkhdr, header, test_array, /EXTEND
 writefits, filename, test_array, header
-for k=1, nimages-1 do begin
+for k=1, nimages-1 do $
+    writefits, filename, test_cube[*, *, k], /APPEND
 
-   writefits, filename, test_cube[*, *, k], /APPEND
-  
-endfor
 ; then proceed to other types
 filename = 'test_multiI.fits'
 spawn, "rm "+filename
 mkhdr, header, long(test_array), /EXTEND
 writefits, filename, long(test_array), header
-for k=1, nimages-1 do begin
+for k=1, nimages-1 do $
+    writefits, filename, long(test_cube[*, *, k]), /APPEND
 
-   writefits, filename, long(test_cube[*, *, k]), /APPEND
-  
-endfor
 ;
 filename = 'test_multiF.fits'
 spawn, "rm "+filename
 mkhdr, header, float(test_array), /EXTEND
 writefits, filename, float(test_array), header
-for k=1, nimages-1 do begin
-
+for k=1, nimages-1 do $
    writefits, filename, float(test_cube[*, *, k]), /APPEND
-  
-endfor
+ 
 ;
 filename = 'test_multiD.fits'
 spawn, "rm "+filename
 mkhdr, header, double(test_array), /EXTEND
 writefits, filename, double(test_array), header
-for k=1, nimages-1 do begin
-
+for k=1, nimages-1 do $
    writefits, filename, double(test_cube[*, *, k]), /APPEND
   
-endfor
-END
+;
+filename = 'test_multiUS.fits'
+spawn, "rm "+filename
+mkhdr, header, uint(test_array), /EXTEND
+writefits, filename, uint(test_array), header
+for k=1, nimages-1 do $
+   writefits, filename, uint(test_cube[*, *, k]), /APPEND
+  
+;
+filename = 'test_multiUI.fits'
+spawn, "rm "+filename
+mkhdr, header, ulong(test_array), /EXTEND
+writefits, filename, ulong(test_array), header
+for k=1, nimages-1 do $
+   writefits, filename, ulong(test_cube[*, *, k]), /APPEND
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -110,7 +110,7 @@ class NFWHalo(object):
     Based on Matthias Bartelmann's libastro.
 
     The cosmology to use can be set either by providing a Cosmology instance as cosmo,
-    or by providing omega_m and/or omega_lam.  
+    or by providing omega_m and/or omega_lam.
     If only one of the latter is provided, the other is taken to be one minus that.
     If no cosmology parameters are set, a default Cosmology is constructed.
 
@@ -128,7 +128,7 @@ class NFWHalo(object):
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
+    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0),
                  omega_m=None, omega_lam=None, cosmo=None):
         if omega_m is not None or omega_lam is not None:
             if cosmo is not None:
@@ -478,8 +478,8 @@ class NFWHalo(object):
         g = self.__gamma(r, ks)
         kappa = self.__kappa(r, ks)
 
-        g /= 1 - kappa
         mu = 1. / ( (1.-kappa)**2 - g**2 )
+        g /= 1 - kappa
         # Get the tangential shear (no x component)
         dx = pos_x - self.halo_pos.x
         dy = pos_y - self.halo_pos.y

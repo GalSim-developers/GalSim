@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,12 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import os
-import sys
-import numpy as np
-import math
-
-from galsim_test_helpers import *
 
 """Unit tests for the PSF correction and shear estimation routines.
 
@@ -29,6 +23,14 @@ known; and tests that use real galaxies in SDSS for which results were tabulated
 before it was integrated into GalSim (so we can make sure we are not breaking anything as we modify
 the code).
 """
+
+from __future__ import print_function
+import os
+import sys
+import numpy as np
+import math
+
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -205,9 +207,13 @@ def test_shearest_precomputed():
         psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
 
         # read in information for objects and expected results
-        img = galsim.fits.read(img_file)
+        imgR = galsim.fits.read(img_file)
+        # perform a cast to int as the images on file are unsigned,
+        # which leads to problems when we subtract 1000 below
+        img  = galsim.Image(imgR, dtype = int)
         img -= 1000
-        psf = galsim.fits.read(psf_file)
+        psfR = galsim.fits.read(psf_file)
+        psf = galsim.Image(psfR, dtype = np.int16)
         psf -= 1000
 
         # get PSF moments for later tests
@@ -221,7 +227,7 @@ def test_shearest_precomputed():
                 guess_centroid = galsim.PositionD(x_centroid[index], y_centroid[index]))
 
             # compare results with precomputed
-            print result.meas_type, correction_methods[method_index]
+            print(result.meas_type, correction_methods[method_index])
             if result.meas_type == 'e':
                 np.testing.assert_almost_equal(
                     result.corrected_e1, e1_expected[index][method_index], decimal = decimal_shape)
@@ -463,7 +469,7 @@ def test_shearest_shape():
 
     imsize = [128, 256]
     for method_index in range(len(correction_methods)):
-        print correction_methods[method_index]
+        print(correction_methods[method_index])
 
         save_e1 = -100.
         save_e2 = -100.
@@ -471,7 +477,6 @@ def test_shearest_shape():
             for gal_y_imsize in imsize:
                 for psf_x_imsize in imsize:
                     for psf_y_imsize in imsize:
-                        #print gal_x_imsize, gal_y_imsize, psf_x_imsize, psf_y_imsize
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
@@ -485,14 +490,12 @@ def test_shearest_shape():
 
                         tot_e = np.sqrt(save_e1**2 + save_e2**2)
                         if tot_e < 99.:
-                            #print "Testing!"
                             np.testing.assert_almost_equal(e1, save_e1,
                                 err_msg = "- incorrect e1",
                                 decimal = decimal_shape)
                             np.testing.assert_almost_equal(e2, save_e2,
                                 err_msg = "- incorrect e2",
                                 decimal = decimal_shape)
-                        #print save_e1, save_e2, e1, e2
                         save_e1 = e1
                         save_e2 = e2
 
@@ -527,10 +530,12 @@ def test_hsmparams():
     res = tot_gal_image.FindAdaptiveMom()
     res_def = tot_gal_image.FindAdaptiveMom(hsmparams = default_hsmparams)
     assert(equal_hsmshapedata(res, res_def)), 'Moment outputs differ when using default HSMParams'
+    assert res == res_def, 'Moment outputs differ when using default HSMParams'
 
     res2 = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image)
     res2_def = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, hsmparams = default_hsmparams)
     assert(equal_hsmshapedata(res, res_def)), 'Shear outputs differ when using default HSMParams'
+    assert res == res_def, 'Shear outputs differ when using default HSMParams'
 
     do_pickle(default_hsmparams)
     do_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
@@ -559,7 +564,7 @@ def test_hsmparams():
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
                                  tot_psf_image, hsmparams=new_params_size)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -602,6 +607,7 @@ def test_hsmparams_nodefault():
     if test_timing:
         assert(dt2 > dt1),'Should take longer to estimate shear without truncation of galaxy'
     assert(not equal_hsmshapedata(g_res, g_res2)),'Results should differ with diff nsig_rg'
+    assert g_res != g_res2,'Results should differ with diff nsig_rg'
 
     # Check that results, timing change as expected with max_moment_nsig2
     test_t2 = time.time()
@@ -611,6 +617,7 @@ def test_hsmparams_nodefault():
     if test_timing:
         assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
     assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in max_moment_nsig2'
+    assert res != res2,'Outputs same despite change in max_moment_nsig2'
     assert(res.moments_sigma > res2.moments_sigma),'Sizes do not change as expected'
     assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
 
@@ -623,7 +630,7 @@ def test_hsmparams_nodefault():
             guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
             hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -635,7 +642,7 @@ def test_shapedata():
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Check that if initialized when empty, the resulting object has certain properties.
     foo = galsim.hsm.ShapeData()
@@ -663,7 +670,7 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = im.FindAdaptiveMom()
     except RuntimeError as err:
@@ -677,7 +684,7 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = galsim.hsm.EstimateShear(im, im)
     except RuntimeError as err:
@@ -733,7 +740,7 @@ def test_bounds_centroid():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, sub_im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # ... and that it passes if we hand in a good centroid guess.  Note that this test is a bit less
     # stringent than some of the previous ones, because our subimage cut off a decent part of the
@@ -784,6 +791,43 @@ def test_ksb_sig():
     np.testing.assert_array_less(result_wide.corrected_g1, result_narrow.corrected_g1,
                                  "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
 
+@timer
+def test_noncontiguous():
+    """Test running HSM module with non-C-contiguous images.
+
+    This test was inspired by a bug report in issue #833.
+    """
+    gal = galsim.Gaussian(sigma=1.3).shear(g1=0.1, g2=0.2)
+
+    # First a normal C-contiguous image as build by drawImage.
+    img = gal.drawImage(nx=64, ny=64, scale=0.2)
+    meas_shape1 = galsim.hsm.FindAdaptiveMom(img).observed_shape
+    print(meas_shape1)
+    np.testing.assert_almost_equal(meas_shape1.g1, 0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
+    np.testing.assert_almost_equal(meas_shape1.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on normal image")
+
+    # Transpose the image, which should just flip the sign of g1.
+    # Note, though, that this changes the ndarray from C-ordering to FORTRAN-ordering.
+    fimg = galsim.Image(img.array.T, scale=0.2)
+    meas_shape2 = galsim.hsm.FindAdaptiveMom(fimg).observed_shape
+    print(meas_shape2)
+    np.testing.assert_almost_equal(meas_shape2.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
+    np.testing.assert_almost_equal(meas_shape2.g2, 0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on transposed image")
+
+    # Also test the real part of an ImageC, which not contiguous in either direction (step=2)
+    # This should have the negative shear from drawing in k space.
+    kimg = gal.drawKImage(nx=64, ny=64)
+    meas_shape3 = galsim.hsm.FindAdaptiveMom(kimg.real).observed_shape
+    print(meas_shape3)
+    np.testing.assert_almost_equal(meas_shape3.g1, -0.1, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
+    np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
+                                   err_msg="HSM measured wrong shear on image with step=2")
+
 
 if __name__ == "__main__":
     test_moments_basic()
@@ -797,3 +841,4 @@ if __name__ == "__main__":
     test_strict()
     test_bounds_centroid()
     test_ksb_sig()
+    test_noncontiguous()

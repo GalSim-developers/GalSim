@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -74,10 +74,9 @@ namespace galsim {
      * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
      * radius will remain at the same value, if this quantity was used to specify the profile.
      *
-     * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
-     * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
-     * simplifications in all calculations, whereas for general n, the Fourier transform must be
-     * treated numerically.
+     * There are two special cases of the Sersic profile that have their own SBProfiles: n=1
+     * (SBExponential), n=0.5 (SBGaussian).  These special cases use several simplifications in
+     * all calculations, whereas for general n, the Fourier transform must be treated numerically.
      */
     class SBSersic : public SBProfile
     {
@@ -134,36 +133,9 @@ namespace galsim {
 
         // op= is undefined
         void operator=(const SBSersic& rhs);
-    };
 
-    /**
-     * @brief Surface Brightness for the de Vaucouleurs Profile, a special case of the Sersic with
-     * `n = 4`.
-     */
-    class SBDeVaucouleurs : public SBSersic
-    {
-    public:
-        /**
-         * @brief Constructor.
-         *
-         * @param[in] size              Size specification.
-         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
-         *                              SCALE_RADIUS).
-         * @param[in] flux              Flux.
-         * @param[in] trunc             Outer truncation radius in same physical units as size;
-         *                              `trunc = 0.` for no truncation.
-         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n`.  Ignored if
-         *                              `trunc = 0.`.
-         * @param[in] gsparams          GSParams object storing constants that control the accuracy
-         *                              of image operations and rendering, if different from the
-         *                              default.
-         */
-        SBDeVaucouleurs(double size, RadiusType rType, double flux,
-                        double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
-            SBSersic(4., size, rType, flux, trunc, flux_untruncated, gsparams) {}
+        friend class SBInclinedSersic;
     };
-
 }
 
 #endif

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -58,31 +58,31 @@ namespace galsim {
         // for a real-valued image.  The storage order here is:
         //  pq:        Re(00); Re(10), Im(10); Re(20), Im(20), Re(11); ...
         //  rIndex:     0        1       2       3       4       5     ...
-        // 
-        // Methods include increments for p, q, N, and m.  This object can 
+        //
+        // Methods include increments for p, q, N, and m.  This object can
         // be used as an index into any of our Laguerre arrays.
     public:
-        PQIndex() : p(0), q(0) {} 
+        PQIndex() : p(0), q(0) {}
         PQIndex(const int p_, const int q_) { setPQ(p_,q_); }
 
         bool pqValid() const { return p>=0 && q>=0; }
 
         int getP() const { return p; }
         int getQ() const { return q; }
-        PQIndex& setPQ(const int p_, const int q_) 
-        { 
+        PQIndex& setPQ(const int p_, const int q_)
+        {
             p=p_;
             q=q_;
-            return *this; 
+            return *this;
         }
 
         int N() const { return p+q; }
         int m() const { return p-q; }
-        PQIndex& setNm(const int N, const int m) 
+        PQIndex& setNm(const int N, const int m)
         {
             assert(std::abs(m)<=N && (N-m)%2==0);
             p=(N+m)/2;
-            q=(N-m)/2; 
+            q=(N-m)/2;
             return *this;
         }
 
@@ -104,16 +104,16 @@ namespace galsim {
         void decm() { p--; q++; } // lower m by 2, same N (could be invalid)
 
         // get next one in complex sequence
-        PQIndex& operator++()  
-        { 
+        PQIndex& operator++()
+        {
             if (p==0) { p=q+1; q=0; }
             else { --p; ++q; }
             return *this;
         }
 
         // get next pq index that has m>=0
-        PQIndex& nextDistinct()  
-        { 
+        PQIndex& nextDistinct()
+        {
             if (p-q<2) { p=p+q+1; q=0; }
             else { --p; ++q; }
             return *this;
@@ -122,17 +122,17 @@ namespace galsim {
 
         // Functions to report incremented/decremented indices without
         // updating this index:
-        PQIndex swapPQ() const { return PQIndex(q,p); } 
+        PQIndex swapPQ() const { return PQIndex(q,p); }
         PQIndex pp1() const { return PQIndex(p+1,q); }
         PQIndex qp1() const { return PQIndex(p,q+1); }
         PQIndex pm1() const { return PQIndex(p-1,q); }
         PQIndex qm1() const { return PQIndex(p,q-1); }
 
-        bool operator==(const PQIndex rhs) const 
+        bool operator==(const PQIndex rhs) const
         { return p==rhs.p && q==rhs.q; }
 
         // Other useful things:
-        static int size(int order) 
+        static int size(int order)
         {
             // Size of a CVector to this order N, same as number of real DOF:
             assert(order>=0);
@@ -160,13 +160,13 @@ namespace galsim {
 
     };
 
-    inline std::ostream& operator<<(std::ostream& os, const PQIndex& pq) 
+    inline std::ostream& operator<<(std::ostream& os, const PQIndex& pq)
     { pq.write(os); return os; }
 
     //--------------------------------------------------------------
     // Next object is a vector of Laguerre coefficients.  Note this is
     // a HANDLE to the coefficient vector, so it can be passed into
-    // subroutines without referencing.  Copy/assignment create a new link; 
+    // subroutines without referencing.  Copy/assignment create a new link;
     // for fresh copy, use copy() method.
     //
     // LVectors are assumed to be Hermitian complex (b_qp=b_pq*), and the
@@ -175,29 +175,29 @@ namespace galsim {
     // So when you change b_qp, you are also changing b_pq.
 
     // Reference to a pq-indexed complex element of an LVector:
-    class LVectorReference 
+    class LVectorReference
     {
     public:
-        operator std::complex<double>() const 
+        operator std::complex<double>() const
         {
             if (_isign==0) return std::complex<double>(*_re,0.);
             else return std::complex<double>(*_re, *(_re+1)*_isign);
         }
-        LVectorReference& operator=(std::complex<double> z) 
+        LVectorReference& operator=(std::complex<double> z)
         {
             *_re = z.real();
             if (_isign!=0) *(_re+1)=z.imag()*_isign;
             // Choosing *not* to check for zero imaginary part here
             return *this;
         }
-        LVectorReference& operator=(double d) 
+        LVectorReference& operator=(double d)
         {
             *_re = d;
             if (_isign!=0) *(_re+1)=0.;
             return *this;
         }
         // ??? +=, -=, etc.
-        
+
     private:
         LVectorReference(tmv::Vector<double>& v, PQIndex pq) :
             _re(&v[pq.rIndex()]), _isign(pq.iSign()) {}
@@ -220,13 +220,13 @@ namespace galsim {
         boost::shared_ptr<tmv::Vector<double> > _v;
     };
 
-    class LVector 
+    class LVector
     {
     public:
         // Construct/destruct:
-        LVector(int order) : _order(order) 
-        { 
-            allocateMem(); 
+        LVector(int order) : _order(order)
+        {
+            allocateMem();
             _v->setZero();
         }
 
@@ -235,7 +235,7 @@ namespace galsim {
         {
             allocateMem();
             *_v = v;
-            assert(v.size() == PQIndex::size(order)); 
+            assert(v.size() == PQIndex::size(order));
         }
 
         LVector(int order, boost::shared_ptr<tmv::Vector<double> > v) :
@@ -245,7 +245,7 @@ namespace galsim {
 
         LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v), _owner(rhs._owner) {}
 
-        LVector& operator=(const LVector& rhs) 
+        LVector& operator=(const LVector& rhs)
         {
             if (_v.get()==rhs._v.get()) return *this;
             _order=rhs._order;
@@ -256,17 +256,17 @@ namespace galsim {
 
         ~LVector() {}
 
-        LVector copy() const 
+        LVector copy() const
         { return LVector(_order,*_v); }
 
-        void resize(int order) 
+        void resize(int order)
         {
             if (_order != order) {
                 _order = order;
                 allocateMem();
                 _v->setZero();
             } else {
-                // The caller may be relying on resize to get a unique vector, so if 
+                // The caller may be relying on resize to get a unique vector, so if
                 // we don't make a new one, at least take ownership of the current one.
                 take_ownership();
             }
@@ -278,7 +278,7 @@ namespace galsim {
         // So for all non-const methods, we first take ownership of the internal vector
         // by making a new copy of the vector first.  If it is already the sole owner,
         // then nothing is done.  (FYI: The term for this is "Copy on Write" semantics.)
-        void take_ownership() 
+        void take_ownership()
         { if (!_v.unique()) { _v.reset(new tmv::Vector<double>(*_v)); } }
 
         void clear() { take_ownership(); _v->setZero(); }
@@ -300,54 +300,54 @@ namespace galsim {
 
         // Access as complex elements
         // op[] with PQIndex returns complex
-        std::complex<double> operator[](PQIndex pq) const 
+        std::complex<double> operator[](PQIndex pq) const
         {
             int isign=pq.iSign();
             if (isign==0) return std::complex<double>( (*_v)[pq.rIndex()], 0.);
             else return std::complex<double>( (*_v)[pq.rIndex()], isign*(*_v)[pq.rIndex()+1]);
         }
-        LVectorReference operator[](PQIndex pq) 
+        LVectorReference operator[](PQIndex pq)
         { take_ownership(); return LVectorReference(*_v, pq); }
 
         // op() with p,q values returns complex
-        std::complex<double> operator()(int p, int q) const 
+        std::complex<double> operator()(int p, int q) const
         { return (*this)[PQIndex(p,q)]; }
-        LVectorReference operator()(int p, int q) 
+        LVectorReference operator()(int p, int q)
         { take_ownership(); return (*this)[PQIndex(p,q)]; }
 
         // scalar arithmetic:
-        LVector& operator*=(double s) 
+        LVector& operator*=(double s)
         { take_ownership(); *_v *= s; return *this; }
-        LVector& operator/=(double s) 
+        LVector& operator/=(double s)
         { take_ownership(); *_v /= s; return *this; }
 
-        LVector operator*(double s) const 
+        LVector operator*(double s) const
         {
             LVector fresh = *this;
             fresh *= s;
             return fresh;
         }
 
-        LVector operator/(double s) const 
+        LVector operator/(double s) const
         {
             LVector fresh = *this;
             fresh /= s;
             return fresh;
         }
 
-        LVector& operator+=(const LVector& rhs) 
+        LVector& operator+=(const LVector& rhs)
         {
             take_ownership();
             assert(_order==rhs._order);
-            *_v += *(rhs._v); 
+            *_v += *(rhs._v);
             return *this;
         }
 
-        LVector& operator-=(const LVector& rhs) 
+        LVector& operator-=(const LVector& rhs)
         {
             take_ownership();
             assert(_order==rhs._order);
-            *_v -= *(rhs._v); 
+            *_v -= *(rhs._v);
             return *this;
         }
 
@@ -483,21 +483,21 @@ namespace galsim {
     // NB. The LTransform class is not currently used by anything in GalSim.
     //     Plus, there are not even any implemenations of the MakeLTransform functions below.
 #if 0
- 
+
     //--------------------------------------------------------------
     //
-    // Next class is a transformation matrix for Laguerre vector.  Internal 
+    // Next class is a transformation matrix for Laguerre vector.  Internal
     // storage is as a matrix over the real degrees of freedom.
     // Interface gives you the (complex) matrix elements of  pqIndex pairs.
 
     // Again this is a HANDLE, so it can be passed into
-    // subroutines without referencing.  Copy/assignment create a new link; 
+    // subroutines without referencing.  Copy/assignment create a new link;
     // for fresh copy, use copy() method.
-    class LTransform 
+    class LTransform
     {
     public:
-        LTransform(int orderOut, int orderIn) : 
-            _orderIn(orderIn), _orderOut(orderOut), 
+        LTransform(int orderOut, int orderIn) :
+            _orderIn(orderIn), _orderOut(orderOut),
             _m(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.))
         {}
 
@@ -518,21 +518,21 @@ namespace galsim {
             assert(m->nrows() == PQIndex::size(orderOut));
         }
 
-        LTransform(const LTransform& rhs) : 
+        LTransform(const LTransform& rhs) :
             _orderIn(rhs._orderIn), _orderOut(rhs._orderOut), _m(rhs._m) {}
 
-        LTransform& operator=(const LTransform& rhs) 
+        LTransform& operator=(const LTransform& rhs)
         {
             if (_m.get()==rhs._m.get()) return *this;
-            _orderIn=rhs._orderIn; _orderOut=rhs._orderOut; _m = rhs._m; 
+            _orderIn=rhs._orderIn; _orderOut=rhs._orderOut; _m = rhs._m;
             return *this;
         }
 
         ~LTransform() {}
 
-        LTransform copy() const 
+        LTransform copy() const
         {
-            LTransform fresh(_orderOut, _orderIn); 
+            LTransform fresh(_orderOut, _orderIn);
             *(fresh._m) = *_m;
             return fresh;
         }
@@ -542,7 +542,7 @@ namespace galsim {
         int sizeIn() const { return _m->ncols(); }
         int sizeOut() const { return _m->nrows(); }
 
-        void resize(int orderOut, int orderIn) 
+        void resize(int orderOut, int orderIn)
         {
             if (_orderIn != orderIn || _orderOut != orderOut) {
                 _orderIn = orderIn;
@@ -555,7 +555,7 @@ namespace galsim {
         }
 
         // As above, we use take_ownership() to implement Copy on Write semantics.
-        void take_ownership() 
+        void take_ownership()
         { if (!_m.unique()) { _m.reset(new tmv::Matrix<double>(*_m)); } }
 
         void clear() { take_ownership(); _m->setZero(); }
@@ -567,7 +567,7 @@ namespace galsim {
 
         // Element read
         std::complex<double> operator()(PQIndex pq1, PQIndex pq2) const;
-        std::complex<double> operator()(int p1, int q1, int p2, int q2) const 
+        std::complex<double> operator()(int p1, int q1, int p2, int q2) const
         { return operator()(PQIndex(p1,q1),PQIndex(p2,q2)); }
 
         // Element write.  Note that it is necessary to give two complex

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,14 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile, subprocess, shutil, json
+from __future__ import print_function
+from builtins import input
+
+import os, sys, tarfile, subprocess, shutil, json
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -124,7 +131,7 @@ def parse_args():
 
 # Based on recipe 577058: http://code.activestate.com/recipes/577058/
 def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """Ask a yes/no question via input() and return their answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
@@ -146,7 +153,7 @@ def query_yes_no(question, default="yes"):
 
     while 1:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return default
         elif choice in valid.keys():
@@ -161,14 +168,15 @@ def ensure_dir(target):
         os.makedirs(d)
 
 def download(url, target, unpack_dir, args, logger):
-    logger.info('Downloading from url:\n  %s',url)
-    logger.info('Target location is:\n  %s\n',target)
+    logger.warning('Downloading from url:\n  %s',url)
+    logger.warning('Target location is:\n  %s',target)
+    logger.info('')
 
     # See how large the file to be downloaded is.
-    u = urllib2.urlopen(url)
+    u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
-    file_size = int(meta.getheaders("Content-Length")[0])
+    file_size = int(meta.get("Content-Length"))
     file_name = os.path.basename(url)
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
@@ -193,9 +201,10 @@ def download(url, target, unpack_dir, args, logger):
                 if yn == 'no':
                     do_download = False
         else:
-            logger.warn("Target file already exists, but it seems to be incomplete or corrupt.")
+            logger.warning("Target file already exists, but it seems to be either incomplete, "
+                           "corrupt, or obsolete")
             if args.quiet:
-                logger.warn("Size of existing file = %d MBytes.  Re-downloading.",
+                logger.info("Size of existing file = %d MBytes.  Re-downloading.",
                             existing_file_size/1024**2)
             else:
                 q = "Size of existing file = %d MBytes.  Re-download?"%(existing_file_size/1024**2)
@@ -232,8 +241,8 @@ def download(url, target, unpack_dir, args, logger):
 
         if obsolete:
             if args.quiet or args.force:
-                logger.info("The version currently on disk is obsolete.  "+
-                            "Downloading new version.")
+                logger.warning("The version currently on disk is obsolete.  "+
+                               "Downloading new version.")
             else:
                 q = "The version currently on disk is obsolete.  Download new version?"
                 yn = query_yes_no(q, default='yes')
@@ -264,6 +273,7 @@ def download(url, target, unpack_dir, args, logger):
             with open(target, 'wb') as f:
                 file_size_dl = 0
                 block_sz = 32 * 1024
+                next_dot = file_size/100.  # For verbosity==1, the next size for writing a dot.
                 while True:
                     buffer = u.read(block_sz)
                     if not buffer:
@@ -277,8 +287,12 @@ def download(url, target, unpack_dir, args, logger):
                         status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
                             file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
                         status = status + chr(8)*(len(status)+1)
-                        print status,
+                        sys.stdout.write(status)
                         sys.stdout.flush()
+                    elif args.verbosity >= 1 and file_size_dl > next_dot:
+                        sys.stdout.write('.')
+                        sys.stdout.flush()
+                        next_dot += file_size/100.
             logger.info("Download complete.")
         except IOError as e:
             # Try to give a reasonable suggestion for some common IOErrors.
@@ -331,11 +345,11 @@ def link_target(unpack_dir, link_dir, args, logger):
             # If it is not a link, we need to figure out what to do with it.
             if os.path.isdir(link_dir):
                 # If it's a directory, probably want to keep it.
-                logger.warn("%s already exists and is a directory.",link_dir)
+                logger.warning("%s already exists and is a directory.",link_dir)
                 if args.force:
-                    logger.warn("Removing the existing files to make the link.")
+                    logger.warning("Removing the existing files to make the link.")
                 elif args.quiet:
-                    logger.warn("Link cannot be made.  (Use -f to force removal of existing dir.)")
+                    logger.warning("Link cannot be made.  (Use -f to force removal of existing dir.)")
                     return
                 else:
                     q = "Remove the existing files to make the link?"
@@ -345,9 +359,9 @@ def link_target(unpack_dir, link_dir, args, logger):
                 shutil.rmtree(link_dir)
             else:
                 # If it's not a directory, it's probably corrupt, so the default is to remove it.
-                logger.warn("%s already exists, but strangely isn't a directory.",link_dir)
+                logger.warning("%s already exists, but strangely isn't a directory.",link_dir)
                 if args.force or args.quiet:
-                    logger.warn("Removing the existing file.")
+                    logger.warning("Removing the existing file.")
                 else:
                     q = "Remove the existing file?"
                     yn = query_yes_no(q, default='yes')

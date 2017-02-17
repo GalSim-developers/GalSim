@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 path, filename = os.path.split(__file__)
@@ -85,31 +87,31 @@ def compare_image_integrators():
     x = np.union1d(disk_SED.wave_list, bandpass.wave_list)
     x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
     target = np.trapz(disk_SED(x) * bandpass(x), x)
-    print 'target'
-    print '        {:14.11f}'.format(target)
+    print('target')
+    print('        {:14.11f}'.format(target))
 
     t1 = time.time()
-    print 'midpoint'
+    print('midpoint')
     for N in [10, 30, 100, 300, 1000, 3000]:
         image = final.drawImage(
             bandpass, image=image,
             integrator=galsim.integ.ContinuousIntegrator(rule=galsim.integ.midpt, N=N))
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
-        print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
+        print(outstring.format(N, image.array.sum(), image.array.sum()-target, *mom))
     t2 = time.time()
-    print 'time for midpoint = %.2f'%(t2-t1)
+    print('time for midpoint = %.2f'%(t2-t1))
 
-    print 'trapezoidal'
+    print('trapezoidal')
     for N in [10, 30, 100, 300, 1000, 3000]:
         image = final.drawImage(
             bandpass, image=image,
             integrator=galsim.integ.ContinuousIntegrator(rule=np.trapz, N=N))
         mom = silentgetmoments(image)
         outstring = '   {:4d} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f} {:14.11f}'
-        print outstring.format(N, image.array.sum(), image.array.sum()-target, *mom)
+        print(outstring.format(N, image.array.sum(), image.array.sum()-target, *mom))
     t3 = time.time()
-    print 'time for trapezoidal = %.2f'%(t3-t2)
+    print('time for trapezoidal = %.2f'%(t3-t2))
 
 if __name__ == '__main__':
     compare_image_integrators()

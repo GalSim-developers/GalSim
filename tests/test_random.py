@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -42,7 +44,7 @@ precisionS = 1  # "precision" also a silly concept for ints, but allows all 4 te
 precisionI = 1
 
 # The number of values to generate when checking the mean and variance calculations.
-# This is currenly low enough to not dominate the time of the unit tests, but when changing
+# This is currently low enough to not dominate the time of the unit tests, but when changing
 # something, it may be useful to add a couple zeros while testing.
 nvals = 100000
 
@@ -148,8 +150,8 @@ def test_uniform():
     var = np.var(vals)
     mu = 1./2.
     v = 1./12.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from UniformDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -219,6 +221,14 @@ def test_uniform():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    u.seed(testseed)
+    test_array = np.empty(3)
+    u.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(uResult), precision,
+            err_msg='Wrong uniform random number sequence from generate.')
+
     # Test filling an image
     u.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -227,12 +237,33 @@ def test_uniform():
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
 
+    # Test filling an image with Fortran ordering
+    u.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(galsim.DeviateNoise(u))
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(uResult), precision,
+            err_msg="Wrong uniform randoms generated for Fortran-ordered Image")
+
     # Check picklability
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(u), drawNoise)
     do_pickle(u)
     do_pickle(galsim.DeviateNoise(u))
+
+    # Check that we can construct a UniformDeviate from None, and that it depends on dev/random.
+    u1 = galsim.UniformDeviate(None)
+    u2 = galsim.UniformDeviate(None)
+    assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
+    # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -261,8 +292,8 @@ def test_gaussian():
     var = np.var(vals)
     mu = gMean
     v = gSigma**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GaussianDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -333,6 +364,14 @@ def test_gaussian():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    g.seed(testseed)
+    test_array = np.empty(3)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gResult), precision,
+            err_msg='Wrong Gaussian random number sequence from generate.')
+
     # Test filling an image
     g.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -350,6 +389,14 @@ def test_gaussian():
             testimage.array.flatten(), np.array(gResult)-gMean, precision,
             err_msg="GaussianNoise applied to Images does not reproduce expected sequence")
 
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(gn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(gResult)-gMean, precision,
+            err_msg="Wrong Gaussian noise generated for Fortran-ordered Image")
+
     # Check GaussianNoise variance:
     np.testing.assert_almost_equal(
             gn.getVariance(), gSigma**2, precision,
@@ -362,8 +409,8 @@ def test_gaussian():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(gn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',gn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',gn.getVariance())
     np.testing.assert_almost_equal(
             var, gn.getVariance(), 1,
             err_msg='Realized variance for GaussianNoise did not match getVariance()')
@@ -447,6 +494,19 @@ def test_gaussian():
     do_pickle(gn)
     do_pickle(galsim.DeviateNoise(g))
 
+    # Check that we can construct a GaussianDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GaussianDeviate(None)
+    g2 = galsim.GaussianDeviate(None)
+    assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_binomial():
@@ -474,8 +534,8 @@ def test_binomial():
     var = np.var(vals)
     mu = bN*bp
     v = bN*bp*(1.-bp)
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from BinomialDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -545,6 +605,14 @@ def test_binomial():
     #assert testResult5 != testResult3
     #assert testResult5 != testResult4
 
+    # Test generate
+    b.seed(testseed)
+    test_array = np.empty(3)
+    b.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(bResult), precision,
+            err_msg='Wrong binomial random number sequence from generate.')
+
     # Test filling an image
     b.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -559,6 +627,19 @@ def test_binomial():
     do_pickle(galsim.DeviateNoise(b), drawNoise)
     do_pickle(b)
     do_pickle(galsim.DeviateNoise(b))
+
+    # Check that we can construct a BinomialDeviate from None, and that it depends on dev/random.
+    b1 = galsim.BinomialDeviate(None)
+    b2 = galsim.BinomialDeviate(None)
+    assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
+    # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -587,8 +668,8 @@ def test_poisson():
     var = np.var(vals)
     mu = pMean
     v = pMean
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from PoissonDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -658,6 +739,14 @@ def test_poisson():
     #assert testResult5 != testResult3
     #assert testResult5 != testResult4
 
+    # Test generate
+    p.seed(testseed)
+    test_array = np.empty(3)
+    p.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(pResult), precision,
+            err_msg='Wrong poisson random number sequence from generate.')
+
     # Test filling an image
     p.seed(testseed)
     testimage = galsim.ImageI(np.zeros((3, 1), dtype=np.int32))
@@ -675,6 +764,14 @@ def test_poisson():
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg='Wrong poisson random number sequence generated using PoissonNoise')
 
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(pn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(pResult)-pMean,
+            err_msg="Wrong Poisson noise generated for Fortran-ordered Image")
+
     # Check PoissonNoise variance:
     np.testing.assert_almost_equal(
             pn.getVariance(), pMean, precision,
@@ -687,8 +784,8 @@ def test_poisson():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(pn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',pn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',pn.getVariance())
     np.testing.assert_almost_equal(
             var, pn.getVariance(), 1,
             err_msg='Realized variance for PoissonNoise did not match getVariance()')
@@ -770,6 +867,19 @@ def test_poisson():
     do_pickle(pn)
     do_pickle(galsim.DeviateNoise(p))
 
+    # Check that we can construct a PoissonDeviate from None, and that it depends on dev/random.
+    p1 = galsim.PoissonDeviate(None)
+    p2 = galsim.PoissonDeviate(None)
+    assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
+    # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_weibull():
@@ -807,8 +917,8 @@ def test_weibull():
         gammaFactor2 = 0.886226925452758
     mu = wB * gammaFactor1
     v = wB**2 * gammaFactor2 - mu**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from WeibullDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -876,6 +986,14 @@ def test_weibull():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    w.seed(testseed)
+    test_array = np.empty(3)
+    w.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(wResult), precision,
+            err_msg='Wrong weibull random number sequence from generate.')
+
     # Test filling an image
     w.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -890,6 +1008,19 @@ def test_weibull():
     do_pickle(galsim.DeviateNoise(w), drawNoise)
     do_pickle(w)
     do_pickle(galsim.DeviateNoise(w))
+
+    # Check that we can construct a WeibullDeviate from None, and that it depends on dev/random.
+    w1 = galsim.WeibullDeviate(None)
+    w2 = galsim.WeibullDeviate(None)
+    assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
+    # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -918,8 +1049,8 @@ def test_gamma():
     var = np.var(vals)
     mu = gammaK*gammaTheta
     v = gammaK*gammaTheta**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GammaDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -987,6 +1118,14 @@ def test_gamma():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    g.seed(testseed)
+    test_array = np.empty(3)
+    g.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(gammaResult), precision,
+            err_msg='Wrong gamma random number sequence from generate.')
+
     # Test filling an image
     g.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1001,6 +1140,19 @@ def test_gamma():
     do_pickle(galsim.DeviateNoise(g), drawNoise)
     do_pickle(g)
     do_pickle(galsim.DeviateNoise(g))
+
+    # Check that we can construct a GammaDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GammaDeviate(None)
+    g2 = galsim.GammaDeviate(None)
+    assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1029,8 +1181,8 @@ def test_chi2():
     var = np.var(vals)
     mu = chi2N
     v = 2.*chi2N
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from Chi2Deviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -1098,6 +1250,14 @@ def test_chi2():
     assert testResult5 != testResult3
     assert testResult5 != testResult4
 
+    # Test generate
+    c.seed(testseed)
+    test_array = np.empty(3)
+    c.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(chi2Result), precision,
+            err_msg='Wrong Chi^2 random number sequence from generate.')
+
     # Test filling an image
     c.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1112,6 +1272,19 @@ def test_chi2():
     do_pickle(galsim.DeviateNoise(c), drawNoise)
     do_pickle(c)
     do_pickle(galsim.DeviateNoise(c))
+
+    # Check that we can construct a Chi2Deviate from None, and that it depends on dev/random.
+    c1 = galsim.Chi2Deviate(None)
+    c2 = galsim.Chi2Deviate(None)
+    assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
+    # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1139,7 +1312,7 @@ def test_distfunction():
         foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
         np.testing.assert_raises(ValueError, foo.val, -1.)
     except ImportError:
-        print 'The assert_raises test requires nose'
+        print('The assert_raises test requires nose')
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1163,8 +1336,8 @@ def test_distfunction():
     var = np.var(vals)
     mu = 3./2.
     v = 3./20.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using function')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1246,10 +1419,18 @@ def test_distfunction():
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated with auto-lambda function')
 
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
     # Test filling an image
     d.seed(testseed)
-    print 'd = ',d
-    print 'd._ud = ',d._ud
+    print('d = ',d)
+    print('d._ud = ',d._ud)
     testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
@@ -1261,6 +1442,19 @@ def test_distfunction():
     do_pickle(galsim.DeviateNoise(d), drawNoise)
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
+
+    # Check that we can construct a DistDeviate from None, and that it depends on dev/random.
+    c1 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    c2 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    assert c1 != c2, "Consecutive DistDeviate(None) compared equal!"
+    # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1278,7 +1472,7 @@ def test_distLookupTable():
             err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
 
     testResult = (d(), d(), d())
-    print 'testResult = ',testResult
+    print('testResult = ',testResult)
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence using LookupTable')
@@ -1297,8 +1491,8 @@ def test_distLookupTable():
     var = np.var(vals)
     mu = 2.
     v = 7./3.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using LookupTable')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1351,7 +1545,14 @@ def test_distLookupTable():
             d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
-            
+
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
 
     # Test filling an image
     d.seed(testseed)
@@ -1372,7 +1573,7 @@ def test_distLookupTable():
 def test_ccdnoise():
     """Test CCD Noise generator
     """
-    for i in xrange(4):
+    for i in range(4):
         prec = eval("precision"+typestrings[i])
         cResult = eval("cResult"+typestrings[i])
 
@@ -1401,6 +1602,15 @@ def test_ccdnoise():
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
                 " using addNoise")
+
+        # Test filling an image with Fortran ordering
+        rng.seed(testseed)
+        testImageF = galsim.Image(np.zeros((2, 2)).T, dtype=types[i])
+        testImageF.fill(sky)
+        testImageF.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(
+                testImageF.array, cResult, prec,
+                err_msg="Wrong CCD noise generated for Fortran-ordered Image"+typestrings[i])
 
         # Now include sky_level in ccdnoise
         rng.seed(testseed)
@@ -1442,8 +1652,8 @@ def test_ccdnoise():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(ccdnoise)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',ccdnoise.getVariance()
+    print('variance = ',var)
+    print('getVar = ',ccdnoise.getVariance())
     np.testing.assert_almost_equal(
             var, ccdnoise.getVariance(), 1,
             err_msg='Realized variance for CCDNoise did not match getVariance()')
@@ -1551,13 +1761,13 @@ def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import Process, Queue, current_process
-    # Workaround for a bug in python 2.6.  We apply it always, just in case, but I think this
-    # bit is unnecessary in python 2.7.  The bug is that sys.stdin can be double closed if
+    # Workaround for a bug in python 2.6. The bug is that sys.stdin can be double closed if
     # multiprocessing is used within something that already uses multiprocessing.
     # Specifically, if we are using nosetests with multiple processes.
     # See http://bugs.python.org/issue5313 for more info.
-    sys.stdin.close()
-    sys.stdin = open(os.devnull)
+    if sys.version_info < (2,7):
+        sys.stdin.close()
+        sys.stdin = open(os.devnull)
 
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.
@@ -1591,7 +1801,6 @@ def test_multiprocess():
     for seed in seeds:
         list = generate_list(seed)
         ref_lists[seed] = list
-        #print 'list for %d was calculated to be %s'%(seed, list)
 
     # Now do this with multiprocessing
     # Put the seeds in a queue
@@ -1608,7 +1817,6 @@ def test_multiprocess():
     for i in range(len(seeds)):
         list, proc, args = done_queue.get()
         seed = args[0]
-        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
         np.testing.assert_array_equal(
                 list, ref_lists[seed],
                 err_msg="Random numbers are different when using multiprocessing")
@@ -1674,6 +1882,18 @@ def test_permute():
     # Make sure that everything is sensible
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    # Repeat with same seed, should do same permutation.
+    my_list = copy.deepcopy(my_list_copy)
+    galsim.random.permute(312, my_list)
+    for ind in range(n_list):
+        assert my_list_copy[ind_list[ind]] == my_list[ind]
+
+    try:
+        # permute with no lists should raise TypeError
+        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
+    except ImportError:
+        pass
 
 
 @timer

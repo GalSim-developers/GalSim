@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,19 +19,24 @@
 Module containing general utilities for the GalSim software.
 """
 from contextlib import contextmanager
+from future.utils import iteritems
+from builtins import range, object
 
 import numpy as np
 import galsim
 
-def roll2d(image, (iroll, jroll)):
+def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image            The NumPy array to be circular shifted.
-    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
+    @param image        The NumPy array to be circular shifted.
+    @param shape        (iroll, jroll) The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
     """
-    return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
+    (iroll, jroll) = shape
+    # The ascontiguousarray bit didn't used to be necessary.  But starting with
+    # numpy v1.12, np.roll doesn't seem to always return a C-contiguous array.
+    return np.ascontiguousarray(np.roll(np.roll(image, jroll, axis=1), iroll, axis=0))
 
 def kxky(array_shape=(256, 256)):
     """Return the tuple `(kx, ky)` corresponding to the DFT of a unit integer-sampled array of input
@@ -73,17 +78,15 @@ def g1g2_to_e1e2(g1, g2):
     # b/a = (1-g)/(1+g)
     # e = (1-(b/a)^2) / (1+(b/a)^2)
     gsq = g1*g1 + g2*g2
-    if gsq > 0.:
+    if gsq == 0.:
+        return 0., 0.
+    else:
         g = np.sqrt(gsq)
         boa = (1-g) / (1+g)
         e = (1 - boa*boa) / (1 + boa*boa)
         e1 = g1 * (e/g)
         e2 = g2 * (e/g)
         return e1, e2
-    elif gsq == 0.:
-        return 0., 0.
-    else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
 
 def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
@@ -141,8 +144,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif len(args) == 1:
-        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
+    elif len(args) == 1:  # pragma: no cover
+        if integer:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionI")
+        else:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionD")
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]
@@ -176,7 +182,7 @@ class SimpleGenerator:
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
 
-class AttributeDict(object):
+class AttributeDict(object): # pragma: no cover
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
@@ -199,13 +205,13 @@ class AttributeDict(object):
         self.__dict__.update(other.__dict__)
 
     def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if isinstance(v, AttributeDict):
                 v._write(output, prefix="{0}{1}.".format(prefix, k))
             else:
                 output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
 
-    def __nonzero__(self):
+    def __bool__(self):
         return not not self.__dict__
 
     def __repr__(self):
@@ -238,9 +244,7 @@ def rand_arr(shape, deviate):
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
     """
-    if interpolant is None:
-        return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant):
+    if isinstance(interpolant, galsim.Interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
@@ -280,7 +284,7 @@ def _convertPositions(pos, units, func):
                     np.array(pos[1], dtype='float') ]
 
     # Check validity of units
-    if isinstance(units, basestring):
+    if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
         units = galsim.angle.get_angle_unit(units)
     if not isinstance(units, galsim.AngleUnit):
@@ -297,7 +301,7 @@ def _convertPositions(pos, units, func):
     return pos
 
 def _lin_approx_err(x, f, i):
-    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    r"""Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
@@ -309,15 +313,15 @@ def _lin_approx_err(x, f, i):
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
 def _exact_lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    r"""Split a tabulated function into a two-part piecewise linear approximation by exactly
     minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
-    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
 def _lin_approx_split(x, f):
-    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    r"""Split a tabulated function into a two-part piecewise linear approximation by approximately
     minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
     \int (f(x) - approx(x))^2 dx in O(N) time.
     """
@@ -457,7 +461,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 # algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
 # On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
 # we retain the old algorithm here in case we want to re-enable it for certain applications.
-def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma: no cover
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -562,7 +566,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     return newx, newf
 
 
-def _gammafn(x):
+def _gammafn(x):  # pragma: no cover
     """
     This code is not currently used, but in case we need a gamma function at some point, it will be
     here in the utilities module.
@@ -575,11 +579,11 @@ def _gammafn(x):
         import math
         return math.gamma(x)
     except:
-        y  = float(x) - 1.0;
-        sm = _gammafn._a[-1];
+        y  = float(x) - 1.0
+        sm = _gammafn._a[-1]
         for an in _gammafn._a[-2::-1]:
-            sm = sm * y + an;
-        return 1.0 / sm;
+            sm = sm * y + an
+        return 1.0 / sm
 
 _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.65587807152025388108,
               -0.04200263503409523553, 0.16653861138229148950, -0.04219773455554433675,
@@ -641,7 +645,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -649,8 +652,10 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -663,8 +668,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                          +"be 'deinterleaved'")
 
     im_list, offsets = [], []
-    for i in xrange(n1):
-        for j in xrange(n2):
+    for i in range(n1):
+        for j in range(n2):
             # The tricky part - going from array indices to Image coordinates (x,y)
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
@@ -688,7 +693,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             if img_wcs_decomp[1].g==0:
                 img.wcs = galsim.PixelScale(img_wcs_decomp[0])
             else:
-               img.wcs = img_wcs
+                img.wcs = img_wcs
             ## Preserve the origin so that the interleaved image has the same bounds as the image
             ## that is being deinterleaved.
             img.setOrigin(image.origin())
@@ -774,7 +779,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     @returns the interleaved image
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -782,8 +786,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -822,7 +828,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     # The tricky part - going from (x,y) Image coordinates to array indices
     # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
     #    i  = -n DX[i'] + 0.5*(n-1)
-    for k in xrange(len(offsets)):
+    for k in range(len(offsets)):
         dx, dy = offsets[k].x, offsets[k].y
 
         i = int(round((n1-1)*0.5-n1*dx))
@@ -867,7 +873,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     orig = im_list[0].origin()
     img.setOrigin(orig)
     for im in im_list[1:]:
-        if not im.origin()==orig:
+        if not im.origin()==orig:  # pragma: no cover
             import warnings
             warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
             origin of the first Image instance in 'im_list' to the interleaved image.")
@@ -930,6 +936,7 @@ class LRU_Cache:
         # Cache miss: evaluate and insert new key/value at root, then increment root
         #             so that just-evaluated value is in last position.
         result = self.user_function(*key)
+        root = self.root  # re-establish root in case user_function modified it due to recursion
         root[2] = key
         root[3] = result
         oldroot = root
@@ -983,3 +990,344 @@ def printoptions(*args, **kwargs):
         yield
     finally:
         np.set_printoptions(**original)
+
+
+def listify(arg):
+    """Turn argument into a list if not already iterable."""
+    return [arg] if not hasattr(arg, '__iter__') else arg
+
+
+def dol_to_lod(dol, N=None):
+    """Generate list of dicts from dict of lists (with broadcasting).
+    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
+    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
+    length-N lists.
+    """
+    if N is None:
+        N = max(len(v) for v in dol.values() if hasattr(v, '__len__'))
+    # Loop through broadcast range
+    for i in range(N):
+        out = {}
+        for k, v in iteritems(dol):
+            try:
+                out[k] = v[i]
+            except IndexError:  # It's list-like, but too short.
+                if len(v) != 1:
+                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
+                out[k] = v[0]
+            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
+                out[k] = v
+            except KeyboardInterrupt:
+                raise
+            except Exception:
+                raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
+        yield out
+
+def set_func_doc(func, doc):
+    """Dynamically set a docstring for a given function.
+
+    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
+    It turns out this tends to be easier than writing the doc strings in the C++ layer.
+
+    @param func     The function to which a docstring is to be added.
+    @param doc      The doc string to add.
+    """
+    try:
+        # Python3
+        func.__doc__ = doc
+    except:
+        func.__func__.__doc__ = doc
+
+
+def structure_function(image):
+    """Estimate the angularly-averaged structure function of a 2D random field.
+
+    The angularly-averaged structure function D(r) of the 2D field phi is defined as:
+
+    D(|r|) = <|phi(x) - phi(x+r)|^2>
+
+    where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
+
+    @param image  Image containing random field realization.  The `.scale` attribute here *is* used
+                  in the calculation.  If it's `None`, then the code will use 1.0 for the scale.
+    @returns      A python callable mapping a separation length r to the estimate of the structure
+                  function D(r).
+    """
+    array = image.array
+    nx, ny = array.shape
+    scale = image.scale
+    if scale is None:
+        scale = 1.0
+
+    # The structure function can be derived from the correlation function B(r) as:
+    # D(r) = 2 * [B(0) - B(r)]
+
+    corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
+    # Check that the zero-lag correlation function is equal to the variance before doing the
+    # ifftshift.
+    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    corr = np.fft.ifftshift(corr)
+
+    x = scale * (np.arange(nx) - nx//2)
+    y = scale * (np.arange(ny) - ny//2)
+    tab = galsim.LookupTable2D(x, y, corr)
+    thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
+
+    return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
+
+def combine_wave_list(*args):
+    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+
+    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @returns        wave_list, blue_limit, red_limit
+    """
+    if len(args) == 1:
+        if isinstance(args[0],
+                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+            args = [args[0]]
+        elif isinstance(args[0], (list, tuple)):
+            args = args[0]
+        else:
+            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
+                            " ChromaticObject or a (possibly mixed) list of them.")
+
+    blue_limit = 0.0
+    red_limit = np.inf
+    wave_list = np.array([], dtype=float)
+    for obj in args:
+        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+            blue_limit = max(blue_limit, obj.blue_limit)
+        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+            red_limit = min(red_limit, obj.red_limit)
+        wave_list = np.union1d(wave_list, obj.wave_list)
+    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    return wave_list, blue_limit, red_limit
+
+def functionize(f):
+    """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
+    arguments that can be either scalars or _functions_.  If the arguments include univariate
+    (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
+    okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
+    M-variate function arguments.
+
+    As an example:
+
+    >>> def f(x, y):      # Function of two scalars.
+    ...     return x + y
+    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
+    >>> result = f(2, 3)  # 5
+    >>> result = f(2, lambda u: u)  # Generates a TypeError
+    >>> result = decorated(2, 3)  # Scalar args returns a scalar
+    >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
+    >>> print(result(5))  # 7
+    >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
+    >>> print(result(5, 7))  # 2 + (5*7) = 37
+
+    We can use arguments that accept keyword arguments too:
+
+    >>> def f2(u, v=None):
+    ...    if v is None:
+    ...        v = 6.0
+    ...    return u / v
+    >>> result = decorated(2, f2)
+    >>> print(result(12))  # 2 + (12./6) = 4.0
+    >>> print(result(12, v=4))  # 2 + (12/4) = 5
+
+    Note that you can also use python's decorator syntax:
+
+    >>> @functionize
+    >>> def f(x, y):
+    ...     return x + y
+
+    @param f  The function to be decorated.
+    @returns  The decorated function.
+
+    """
+    import functools
+
+    @functools.wraps(f)
+    def ff(*args, **kwargs):
+        # First check if any of the arguments are callable...
+        if not any(hasattr(arg, '__call__') for arg in args+tuple(kwargs.values())):
+            return f(*args, **kwargs)  # ... if not, then keep output type a scalar ...
+        else:
+            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: `fff`.
+                new_args = [arg
+                            if not hasattr(arg, '__call__')
+                            else arg(*inner_args, **inner_kwargs)
+                            for arg in args]
+                new_kwargs = dict([(k, v)
+                                   if not hasattr(v, '__call__')
+                                   else (k, v(*inner_args, **inner_kwargs))
+                                   for k, v in iteritems(kwargs)])
+                return f(*new_args, **new_kwargs)
+            return fff
+    return ff
+
+def math_eval(str, other_modules=()):
+    """Evaluate a string that may include numpy, np, or math commands.
+
+    @param str              The string to evaluate
+    @param other_modules    Other modules in addition to numpy, np, math to import as well.
+                            Should be given as a list of strings.  [default: None]
+
+    @returns Whatever the string evaluates to.
+    """
+    # Python 2 and 3 have a different syntax for exec with globals() dict.
+    # The exec_ function lets us use the Python 3 syntax even in Python 2.
+    from future.utils import exec_
+    gdict = globals().copy()
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import math', gdict)
+    for m in other_modules:
+        exec_('import ' + m, gdict)
+    return eval(str, gdict)
+
+def binomial(a, b, n):
+    """Return xy coefficients of (ax + by)^n ordered by descending powers of a.
+
+    For example:
+
+    # (x + y)^3 = 1 x^3 + 3 x^2 y + 3 x y^2 + 1 y^3
+    >>>  print(binomial(1, 1, 3))
+    array([ 1.,  3.,  3.,  1.])
+
+
+    # (2 x + y)^3 = 8 x^3 + 12 x^2 y + 6 x y^2 + 1 y^3
+    >>>  print(binomial(2, 1, 3))
+    array([ 8.,  12.,  6.,  1.])
+
+    @param a    First scalar in binomial to be expanded.
+    @param b    Second scalar in binomial to be expanded.
+    @param n    Exponent of expansion.
+    @returns    Array of coefficients in expansion.
+    """
+    b_over_a = float(b)/float(a)
+    def generate():
+        c = a**n
+        yield c
+        for i in range(n):
+            c *= b_over_a * (n-i)/(i+1)
+            yield c
+    return np.fromiter(generate(), float, n+1)
+
+def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
+    """Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
+    but ignores any scale or wcs.
+
+    @param image    Image from which to compute moments
+    @param origin   Optional origin in image coordinates used to compute Mx and My
+                    [default: galsim.PositionD(0, 0)].
+    @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
+    """
+    a = image.array.astype(float)
+    offset = image.origin() - origin
+    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
+                               np.arange(image.array.shape[0]) + offset.y)
+    M0 = np.sum(a)
+    Mx = np.sum(xgrid * a) / M0
+    My = np.sum(ygrid * a) / M0
+    Mxx = np.sum(((xgrid-Mx)**2) * a) / M0
+    Myy = np.sum(((ygrid-My)**2) * a) / M0
+    Mxy = np.sum((xgrid-Mx) * (ygrid-My) * a) / M0
+    return dict(M0=M0, Mx=Mx, My=My, Mxx=Mxx, Myy=Myy, Mxy=Mxy)
+
+def unweighted_shape(arg):
+    """Computes unweighted second moment size and ellipticity given either an image or a dict of
+    unweighted moments.
+
+    The size is:
+        rsqr = Mxx+Myy
+    The ellipticities are:
+        e1 = (Mxx-Myy) / rsqr
+        e2 = 2*Mxy / rsqr
+
+    @param arg   Either a galsim.Image or the output of unweighted_moments(image).
+    @returns  Dict with entries for [rsqr, e1, e2]
+    """
+    if isinstance(arg, galsim.Image):
+        arg = unweighted_moments(arg)
+    rsqr = arg['Mxx'] + arg['Myy']
+    return dict(rsqr=rsqr, e1=(arg['Mxx']-arg['Myy'])/rsqr, e2=2*arg['Mxy']/rsqr)
+
+def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
+    """Select some number of random choices from a list, with replacement, using a supplied RNG.
+
+    `n` random choices with replacement are made assuming that those choices should range from 0 to
+    `n_choices`-1, so they can be used as indices in a list/array.  If `weight` is supplied, then
+    it should be an array of length `n_choices` that ranges from 0-1, and can be used to make
+    weighted choices from the list.
+
+    @param n           Number of random selections to make.
+    @param n_choices   Number of entries from which to choose.
+    @param rng         RNG to use.  Should be a galsim.BaseDeviate.
+    @param weight      Optional list of weight factors to use for weighting the selection of
+                       random indices.
+    @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
+    """
+    # Make sure we got a proper RNG.
+    if not isinstance(rng, galsim.BaseDeviate):
+        raise TypeError("The rng provided to rand_with_replacement() is not a BaseDeviate")
+    ud = galsim.UniformDeviate(rng)
+
+    # Sanity check the requested number of random indices.
+    # Note: we do not require that the type be an int, as long as the value is consistent with
+    # an integer value (i.e., it could be a float 1.0 or 1).
+    if not n-int(n) == 0 or n < 1:
+        raise ValueError("n must be an integer >= 1.")
+    if not n_choices-int(n_choices) == 0 or n_choices < 1:
+        raise ValueError("n_choices must be an integer >= 1.")
+
+    # Sanity check the input weight.
+    if weight is not None:
+        # We need some sanity checks here in case people passed in weird values.
+        if len(weight) != n_choices:
+            raise ValueError("Array of weights has wrong length: %d instead of %d"%\
+                                 (len_weight,n_choices))
+        if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
+                np.any(np.isinf(weight)):
+            raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
+
+    # We first make a random list of integer indices.
+    index = np.zeros(n)
+    ud.generate(index)
+    if _n_rng_calls:
+        # Here we use the undocumented kwarg (for internal use by config) to track the number of
+        # RNG calls.
+        n_rng_calls = n
+    index = (n_choices*index).astype(int)
+
+    # Then we account for the weights, if possible.
+    if weight is not None:
+        # If weight factors are available, make sure the random selection uses the weights.
+        test_vals = np.zeros(n)
+        # Note that the weight values by definition have a maximum of 1, as enforced above.
+        ud.generate(test_vals)
+        if _n_rng_calls:
+            n_rng_calls += n
+        # The ones with mask==True are the ones we should replace.
+        mask = test_vals > weight[index]
+        while np.any(mask):
+            # Update the index and test values for those that failed. We have to do this by
+            # generating random numbers into new arrays, because ud.generate() does not enable
+            # us to directly populate a sub-array like index[mask] or test_vals[mask].
+            n_fail = mask.astype(int).sum()
+            # First update the indices that failed.
+            new_arr = np.zeros(n_fail)
+            ud.generate(new_arr)
+            index[mask] = (n_choices*new_arr).astype(int)
+            # Then update the test values that failed.
+            new_test_vals = np.zeros(n_fail)
+            ud.generate(new_test_vals)
+            test_vals[mask] = new_test_vals
+            if _n_rng_calls:
+                n_rng_calls += 2*n_fail
+            # Finally, update the test array used to determine whether any galaxies failed.
+            mask = test_vals > weight[index]
+
+    if _n_rng_calls:
+        return index, n_rng_calls
+    else:
+        return index

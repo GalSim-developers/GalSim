@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -53,7 +50,7 @@ namespace galsim {
                     --end;
                     conserve = false;
                 }
-                int n = strtol(str.substr(7,end).c_str(),0,0);
+                int n = strtol(str.c_str()+7,0,0);
                 if (n <= 0) {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();
@@ -122,7 +119,7 @@ namespace galsim {
             "interpolant (see its documentation for details).\n\n"
             "Tolerance `tol` determines how far onto sinc wiggles the xval will go.  Very far, by\n"
             "default! (default `tol=1e-4`)\n";
-            bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc, 
+            bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc,
                                                                 bp::no_init)
                 .def(bp::init<double>(bp::arg("tol")=1e-4))
                 .enable_pickling()
@@ -184,7 +181,7 @@ namespace galsim {
         }
 
     };
- 
+
     void pyExportInterpolant()
     { PyInterpolant::wrap(); }
 

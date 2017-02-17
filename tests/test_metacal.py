@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import time
 import numpy as np
 import galsim
@@ -37,8 +39,8 @@ def test_metacal_tracking():
         # A helper function to check that the current noise in the image is properly described
         # by the given CorrelatedNoise object
         noise2 = galsim.CorrelatedNoise(noise_image)
-        print 'noise = ',noise
-        print 'noise2 = ',noise2
+        print('noise = ',noise)
+        print('noise2 = ',noise2)
         np.testing.assert_almost_equal(noise.getVariance(), noise2.getVariance(),
                                        decimal=CHECKNOISE_NDECIMAL,
                                        err_msg=msg + ': variance does not match.')
@@ -46,8 +48,6 @@ def test_metacal_tracking():
         cf_im2 = cf_im1.copy()
         noise.drawImage(image=cf_im1)
         noise2.drawImage(image=cf_im2)
-        #print 'cf_im1 = ',cf_im1.array
-        #print 'cf_im2 = ',cf_im2.array
         np.testing.assert_almost_equal(cf_im1.array, cf_im2.array,
                                        decimal=CHECKNOISE_NDECIMAL,
                                        err_msg=msg + ': image of cf does not match.')
@@ -55,35 +55,32 @@ def test_metacal_tracking():
     def check_symm_noise(noise_image, msg):
         # A helper funciton to see if a noise image has 4-fold symmetric noise.
         im2 = noise_image.copy()
-        #print 'im2 = ',im2.array
         # Clear out any wcs to make the test simpler
         im2.wcs = galsim.PixelScale(1.)
         noise = galsim.CorrelatedNoise(im2)
-        #print 'noise = ',noise
         cf = noise.drawImage(galsim.Image(bounds=galsim.BoundsI(-1,1,-1,1), scale=1))
-        #print 'noise cf = ',cf
         # First check the variance
-        print 'variance: ',cf(0,0), noise.getVariance()
+        print('variance: ',cf(0,0), noise.getVariance())
         np.testing.assert_almost_equal(cf(0,0)/noise.getVariance(), 1.0, decimal=VAR_NDECIMAL,
                                        err_msg=msg + ':: noise variance is wrong.')
         cf_plus = np.array([ cf(1,0), cf(-1,0), cf(0,1), cf(0,-1) ])
         cf_cross = np.array([ cf(1,1), cf(-1,-1), cf(-1,1), cf(1,-1) ])
-        print 'plus pattern: ',cf_plus
-        print 'diff relative to dc: ',(cf_plus-np.mean(cf_plus))/cf(0,0)
-        print 'cross pattern: ',cf_cross
-        print 'diff relative to dc: ',(cf_cross-np.mean(cf_cross))/cf(0,0)
+        print('plus pattern: ',cf_plus)
+        print('diff relative to dc: ',(cf_plus-np.mean(cf_plus))/cf(0,0))
+        print('cross pattern: ',cf_cross)
+        print('diff relative to dc: ',(cf_cross-np.mean(cf_cross))/cf(0,0))
         # For now, don't make these asserts.  Just print whether they will pass or fail.
         if True:
             if np.all(np.abs((cf_plus-np.mean(cf_plus))/cf(0,0)) < 0.01):
-                print 'plus test passes'
+                print('plus test passes')
             else:
-                print '*** FAIL ***'
-                print msg + ': plus pattern is not constant'
+                print('*** FAIL ***')
+                print(msg + ': plus pattern is not constant')
             if np.all(np.abs((cf_cross-np.mean(cf_cross))/cf(0,0)) < 0.01):
-                print 'cross test passes'
+                print('cross test passes')
             else:
-                print '*** FAIL ***'
-                print msg + ': cross pattern is not constant'
+                print('*** FAIL ***')
+                print(msg + ': cross pattern is not constant')
         else:
             np.testing.assert_almost_equal((cf_plus-np.mean(cf_plus))/cf(0,0), 0.0, decimal=2,
                                            err_msg=msg + ': plus pattern is not constant')
@@ -131,8 +128,8 @@ def test_metacal_tracking():
         small_kval = 1.e-2    # Find the k where the given psf hits this kvalue
         smaller_kval = 3.e-3  # Target PSF will have this kvalue at the same k
 
-        kim_r, kim_i = psf.drawKImage(scale=dk)
-        karr_r = kim_r.array
+        kim = psf.drawKImage(scale=dk)
+        karr_r = kim.real.array
         # Find the smallest r where the kval < small_kval
         nk = karr_r.shape[0]
         kx, ky = np.meshgrid(np.arange(-nk/2,nk/2), np.arange(-nk/2,nk/2))
@@ -148,8 +145,8 @@ def test_metacal_tracking():
     #psf_target_nopix = psf_nopix.dilate(1. + 2.*dg)
     #psf_target_nopix = orig_psf.dilate(1. + 4.*dg)
     psf_target_nopix = get_target_psf(psf_nopix.shear(g1=dg))
-    print 'PSF target HLR = ',psf_target_nopix.calculateHLR()
-    print 'PSF target FWHM = ',psf_target_nopix.calculateFWHM()
+    print('PSF target HLR = ',psf_target_nopix.calculateHLR())
+    print('PSF target FWHM = ',psf_target_nopix.calculateFWHM())
     psf_target = galsim.Convolve([psf_target_nopix, pixel])
 
     # Make an image of pure (white) Gaussian noise
@@ -183,17 +180,17 @@ def test_metacal_tracking():
         #didnt_fail = True
         # This bit doesn't work while we are not actually raising exceptions in check_symm_noise
         # So we expect to see **FAIL** text at this point.
-        print 'The above tests are expected to **FAIL**.  This is not a problem.'
+        print('The above tests are expected to **FAIL**.  This is not a problem.')
         didnt_fail = False
     except AssertionError as e:
-        print 'As expected initial image fails symmetric noise test:'
-        print e
+        print('As expected initial image fails symmetric noise test:')
+        print(e)
         didnt_fail = False
     if didnt_fail:
         assert False, 'Initial image was expected to fail symmetric noise test, but passed.'
 
     if True:
-        print '\n\nStrategy 1:'
+        print('\n\nStrategy 1:')
         # Strategy 1: Use the noise attribute attached to ii and use it to either whiten or
         #             symmetrize the noise in the final image.
         # Note: The check_noise tests fail.  I think because the convolve and deconvolve impose
@@ -227,24 +224,24 @@ def test_metacal_tracking():
         final_image2 = final_image.copy()  # Don't clobber the original
         final_var = final_image2.whitenNoise(final_obj.noise)
         t4 = time.time()
-        print 'Noise tracking method with whiten: final_var = ',final_var
-        print 'Check: direct variance = ',np.var(final_image2.array)
+        print('Noise tracking method with whiten: final_var = ',final_var)
+        print('Check: direct variance = ',np.var(final_image2.array))
         check_symm_noise(final_image2, 'noise whitening does not work')
-        print 'Time for noise tracking with whiten = ',t4-t3
+        print('Time for noise tracking with whiten = ',t4-t3)
 
         # Using symmetrizeNoise should add less noise, but also work.
         t3 = time.time()
         final_image2 = final_image.copy()
         final_var = final_image2.symmetrizeNoise(final_obj.noise)
         t4 = time.time()
-        print 'Noise tracking method with symmetrize: final_var = ',final_var
-        print 'Check: direct variance = ',np.var(final_image2.array)
+        print('Noise tracking method with symmetrize: final_var = ',final_var)
+        print('Check: direct variance = ',np.var(final_image2.array))
         check_symm_noise(final_image2, 'noise symmetrizing does not work')
-        print 'Time for noise tracking with symmetrize = ',t4-t3
+        print('Time for noise tracking with symmetrize = ',t4-t3)
 
 
     if True:
-        print '\n\nStrategy 2:'
+        print('\n\nStrategy 2:')
         # Strategy 2: Don't trust the noise tracking. Track a noise image through the same process
         #             and then measure the noise from that image.  Use it to either whiten or
         #             symmetrize the noise in the final image.
@@ -272,23 +269,23 @@ def test_metacal_tracking():
         check_noise(final_noise_image, noise,
                     'noise model is wrong when direct measuring the final noise image')
 
-        print 'Direct noise method with whiten: final_var = ',final_var
+        print('Direct noise method with whiten: final_var = ',final_var)
         # Neither of these work currently, so maybe a bug in the whitening code?
         # Or possibly in my logic here.
         check_symm_noise(final_image2, 'whitening the noise using direct noise model failed')
-        print 'Time for direct noise with whitening = ',t5-t3
+        print('Time for direct noise with whitening = ',t5-t3)
 
         t6 = time.time()
         final_image2 = final_image.copy()
         final_var = final_image2.symmetrizeNoise(noise)
         t7 = time.time()
 
-        print 'Direct noise method with symmetrize: final_var = ',final_var
+        print('Direct noise method with symmetrize: final_var = ',final_var)
         check_symm_noise(final_image2, 'symmetrizing the noise using direct noise model failed')
-        print 'Time for direct noise with symmetrizing = ',t7-t6 + t4-t3
+        print('Time for direct noise with symmetrizing = ',t7-t6 + t4-t3)
 
     if False:
-        print '\n\nStrategy 3:'
+        print('\n\nStrategy 3:')
         # Strategy 3: Make a noise field and do the same operations as we do to the main image
         #             except use the opposite shear value.  Add this noise field to the final
         #             image to get a symmetric noise field.
@@ -313,12 +310,12 @@ def test_metacal_tracking():
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
-        print 'Reverse shear method: final_var = ',final_var
+        print('Reverse shear method: final_var = ',final_var)
         check_symm_noise(final_image2, 'using reverse shear does not work')
-        print 'Time for reverse shear method = ',t4-t3
+        print('Time for reverse shear method = ',t4-t3)
 
     if True:
-        print '\n\nStrategy 4:'
+        print('\n\nStrategy 4:')
         # Strategy 4: Make a noise field and do the same operations as we do to the main image,
         #             then rotate it by 90 degress and add it to the final image.
         # This method works!  Even for an arbitrarily sheared wcs.
@@ -342,12 +339,12 @@ def test_metacal_tracking():
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
-        print 'Rotate image method: final_var = ',final_var
+        print('Rotate image method: final_var = ',final_var)
         check_symm_noise(final_image2, 'using rotated noise image does not work')
-        print 'Time for rotate image method = ',t4-t3
+        print('Time for rotate image method = ',t4-t3)
 
     if False:
-        print '\n\nStrategy 5:'
+        print('\n\nStrategy 5:')
         # Strategy 5: The same as strategy 3, except we target the effective net transformation
         #             done by strategy 4.
         # I think this strategy probably can't work for non-square pixels, because the shear
@@ -388,11 +385,39 @@ def test_metacal_tracking():
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
-        print 'Alternate reverse shear method: final_var = ',final_var
-        #print 'Correlated noise on final_image2:'
+        print('Alternate reverse shear method: final_var = ',final_var)
         check_symm_noise(final_image2, 'using alternate reverse shear does not work')
-        print 'Time for alternate reverse shear method = ',t4-t3
+        print('Time for alternate reverse shear method = ',t4-t3)
 
+@timer
+def test_wcs():
+    """Reproduce an error Erin found and reported in #834.  This was never an error in a released
+    version, just temporarily on master, but the mistake hadn't been caught by any of our unit
+    tests, so this test catches the error.
+    """
+    wcs = galsim.JacobianWCS(0.01, -0.26, -0.28, -0.03)
+    gal = galsim.Exponential(half_light_radius=1.1, flux=237)
+    psf = galsim.Moffat(beta=3.5, half_light_radius=0.9)
+    obs = galsim.Convolve(gal,psf)
+
+    obs_im = obs.drawImage(nx=32, ny=32, offset=(0.3,-0.2), wcs=wcs)
+    psf_im = psf.drawImage(nx=32, ny=32, wcs=wcs)
+
+    ii = galsim.InterpolatedImage(obs_im)
+    psf_ii = galsim.InterpolatedImage(psf_im)
+    psf_inv = galsim.Deconvolve(psf_ii)
+
+    ii_nopsf = galsim.Convolve(ii, psf_inv)
+
+    newpsf=galsim.Moffat(beta=3.5, half_light_radius=0.95)
+    newpsf=newpsf.dilate(1.02)
+
+    new_ii = ii_nopsf.shear(g1=0.01,g2=0.0)
+    new_ii = galsim.Convolve(new_ii, newpsf)
+
+    new_im = new_ii.drawImage(image=obs_im.copy(), method='no_pixel')
+    np.testing.assert_almost_equal(new_im.array.sum()/237, obs_im.array.sum()/237, decimal=1)
 
 if __name__ == "__main__":
     test_metacal_tracking()
+    test_wcs()

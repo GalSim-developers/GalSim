@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,7 +55,7 @@ def _BuildRing(config, base, ignore, gsparams, logger):
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
     if index % num == 0:
-        # Then this is the first in the Ring.  
+        # Then this is the first in the Ring.
         gsobject = galsim.config.BuildGSObject(config, 'first', base, gsparams, logger)[0]
     else:
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:

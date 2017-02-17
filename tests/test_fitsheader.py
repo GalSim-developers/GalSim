@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -73,30 +75,46 @@ def test_read():
     header = galsim.FitsHeader(file_name, dir=dir)
     check_tpv(header)
     # If you pass in a pyfits hdulist, that should also work
-    hdu_list = pyfits.open(os.path.join(dir,file_name))
-    header = galsim.FitsHeader(hdu_list=hdu_list)
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(hdu_list=hdu_list)
     check_tpv(header)
     do_pickle(header)
     # Can explicitly give an hdu number to use.  In this case, there is only 1, so need to use 0.
-    header = galsim.FitsHeader(hdu_list=hdu_list, hdu=0)
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(hdu_list=hdu_list, hdu=0)
+    check_tpv(header)
+    do_pickle(header)
+    # Can explicitly give an hdu number to use.  In this case, there is only 1, so need to use 0.
+    header = galsim.FitsHeader(file_name=file_name, dir=dir, hdu=0)
     check_tpv(header)
     do_pickle(header)
     # If you pass in a pyfits Header object, that should also work
-    header = galsim.FitsHeader(header=hdu_list[0].header)
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(header=hdu_list[0].header)
     check_tpv(header)
     do_pickle(header)
     # The header is the first parameter, so don't need to name it.
-    header = galsim.FitsHeader(hdu_list[0].header)
+    with pyfits.open(os.path.join(dir,file_name)) as hdu_list:
+        header = galsim.FitsHeader(hdu_list[0].header)
     check_tpv(header)
-
+    # FitsHeader can read from a compressed file too
+    header = galsim.FitsHeader(file_name=file_name + '.gz', dir=dir, compression='auto')
+    check_tpv(header)
+    do_pickle(header)
+    header = galsim.FitsHeader(file_name=file_name + '.gz', dir=dir, compression='gzip')
+    check_tpv(header)
+    do_pickle(header)
 
     # Remove an item from the header
     # Start with file_name constructor, to test that the repr is changed by the edit.
+    orig_header = header
     header = galsim.FitsHeader(file_name=os.path.join(dir,file_name))
+    assert header == orig_header
     del header['AIRMASS']
     assert 'AIRMASS' not in header
     if pyfits_version >= '3.1':
         assert len(header) == tpv_len-1
+    assert header != orig_header
     do_pickle(header)
 
     # Should be able to get with a default value if the key is not present
@@ -105,18 +123,22 @@ def test_read():
     assert 'AIRMASS' not in header
     if pyfits_version >= '3.1':
         assert len(header) == tpv_len-1
+    assert header != orig_header
 
     # Add items to a header
     header['AIRMASS'] = 2
     assert header.get('AIRMASS') == 2
+    assert header != orig_header
 
     # Overwrite an existing value
     header['AIRMASS'] = 1.7
     assert header.get('AIRMASS') == 1.7
+    assert header != orig_header
 
     # Set with a comment field
     header['AIRMASS'] = (1.9, 'The airmass of the observation')
     assert header.get('AIRMASS') == 1.9
+    assert header != orig_header
 
     # Update with a dict
     d = { 'AIRMASS' : 1.185 }
@@ -128,6 +150,8 @@ def test_read():
     header.append('','', useblanks=False)
     check_tpv(header)
     do_pickle(header)
+    assert header != orig_header  # It's still not equal, because the AIRMASS item is in a
+                                  # different location in the list, which is relevant for equality.
 
     # Clear all values
     header.clear()
@@ -135,6 +159,7 @@ def test_read():
     assert 'FILTER' not in header
     assert len(header) == 0
     do_pickle(header)
+    assert header != orig_header
 
 
 @timer

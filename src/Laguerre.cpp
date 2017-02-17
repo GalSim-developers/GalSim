@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -46,7 +46,7 @@ namespace galsim {
                 if (pq.isReal()) {
                     oss << ", " << (*this)[pq].real() << std::endl;
                 } else {
-                    oss << ", " << (*this)[pq].real() 
+                    oss << ", " << (*this)[pq].real()
                         << ", " << (*this)[pq].imag() << std::endl;
                 }
             }
@@ -55,7 +55,7 @@ namespace galsim {
         return oss.str();
     }
 
-    void LVector::rotate(const Angle& theta) 
+    void LVector::rotate(const Angle& theta)
     {
         take_ownership();
         double s, c;
@@ -76,7 +76,7 @@ namespace galsim {
 #if 0
     // routines to retrieve and save complex elements of LTransform:
     // ???? Check these ???
-    std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const 
+    std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const
     {
         assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
         assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
@@ -95,7 +95,7 @@ namespace galsim {
     }
 
     void LTransform::set(
-        PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2) 
+        PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2)
     {
         assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
         assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
@@ -124,15 +124,15 @@ namespace galsim {
 
         if (pq1.isReal()) {
             if (Cpq1pq2!=Cqp1pq2) {
-                FormatAndThrow<>() 
+                FormatAndThrow<>()
                     << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
                     << " != " << Cqp1pq2;
             }
             (*_m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
             if (pq2.isReal()) {
                 if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
-                    FormatAndThrow<>() 
-                        << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
+                    FormatAndThrow<>()
+                        << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: "
                         << Cpq1pq2;
                 }
             } else {
@@ -142,7 +142,7 @@ namespace galsim {
         } else if (pq2.isReal()) {
             // Here we know p1!=q1:
             if (norm(Cpq1pq2-conj(Cqp1pq2))>RoundoffTolerance) {
-                FormatAndThrow<>() 
+                FormatAndThrow<>()
                     << "Inputs to LTransform.set are not conjugate for p2=q2: "
                     << Cpq1pq2 << " vs " << Cqp1pq2 ;
             }
@@ -159,10 +159,10 @@ namespace galsim {
         }
     }
 
-    LVector LTransform::operator*(const LVector rhs) const 
+    LVector LTransform::operator*(const LVector rhs) const
     {
-        if (_orderIn != rhs.getOrder()) 
-            FormatAndThrow<>() 
+        if (_orderIn != rhs.getOrder())
+            FormatAndThrow<>()
                 << "Order mismatch between LTransform [" << _orderIn
                 << "] and LVector [" << rhs.getOrder()
                 << "]";
@@ -171,10 +171,10 @@ namespace galsim {
         return LVector(_orderOut, out);
     }
 
-    LTransform LTransform::operator*(const LTransform rhs) const 
+    LTransform LTransform::operator*(const LTransform rhs) const
     {
-        if (_orderIn != rhs.getOrderOut()) 
-            FormatAndThrow<>()  
+        if (_orderIn != rhs.getOrderOut())
+            FormatAndThrow<>()
                 << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
@@ -184,7 +184,7 @@ namespace galsim {
         return LTransform(_orderOut, rhs._orderIn, out);
     }
 
-    LTransform& LTransform::operator*=(const LTransform rhs) 
+    LTransform& LTransform::operator*=(const LTransform rhs)
     {
         take_ownership();
         if (_orderIn != rhs.getOrderOut())
@@ -203,7 +203,7 @@ namespace galsim {
     // Calculate Laguerre polynomials and wavefunctions:
 
     // Fill LVector with the basis functions corresponding to each real DOF
-    void LVector::fillBasis(double x, double y, double sigma) 
+    void LVector::fillBasis(double x, double y, double sigma)
     {
         take_ownership();
         // fill with psi_pq(z), where psi now defined to have 1/sigma^2 in
@@ -246,7 +246,7 @@ namespace galsim {
             for (pq.incN(); !pq.pastOrder(_order); pq.incN()) {
                 tqm2 = tqm1;
                 tqm1 = tq;
-                int p=pq.getP(); int q=pq.getQ(); 
+                int p=pq.getP(); int q=pq.getQ();
                 tq = ( (rsq-(p+q-1.))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
                 double *r = &(*_v)[pq.rIndex()];
                 *r = tq*zm.real();
@@ -313,10 +313,10 @@ namespace galsim {
     void LVector::kBasis(
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         tmv::MatrixView<std::complex<double> > psi_k, int order, double sigma)
-    { 
+    {
         assert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
         assert(psi_k.ncols()==PQIndex::size(order));
-        mBasis(kx, ky, 0, psi_k, order, sigma); 
+        mBasis(kx, ky, 0, psi_k, order, sigma);
     }
 
     // This helper class deals with the differences between the real and fourier calculations
@@ -324,9 +324,9 @@ namespace galsim {
     template <typename T>
     struct mBasisHelper
     {
-        static double Asign(int ) { return 1.; } 
+        static double Asign(int ) { return 1.; }
 
-        static double Lsign(double x) { return x; } 
+        static double Lsign(double x) { return x; }
 
         template <class V>
         static void applyPrefactor(V v, double sigma) { v *= 1./(2.*M_PI*sigma*sigma); }
@@ -344,12 +344,12 @@ namespace galsim {
                 std::complex<double>(1.,0.),
                 std::complex<double>(0.,-1.),
                 std::complex<double>(-1.,0.),
-                std::complex<double>(0.,1.) 
+                std::complex<double>(0.,1.)
             };
             return vals[m4];
         }
 
-        static double Lsign(double x) { return -x; } 
+        static double Lsign(double x) { return -x; }
 
         template <class V>
         static void applyPrefactor(V , double ) {}
@@ -367,9 +367,9 @@ namespace galsim {
         const int N=order;
         const int npts_full = x.size();
 
-        // It's faster to build the psi matrix in blocks so that more of the matrix stays in 
-        // L1 cache.  For a (typical) 256 KB L2 cache size, this corresponds to 8 columns in the 
-        // cache, which is pretty good, since we are usually working on 4 columns at a time, 
+        // It's faster to build the psi matrix in blocks so that more of the matrix stays in
+        // L1 cache.  For a (typical) 256 KB L2 cache size, this corresponds to 8 columns in the
+        // cache, which is pretty good, since we are usually working on 4 columns at a time,
         // plus either X and Y or 3 Lq vectors.
         const int BLOCKING_FACTOR=4096;
 
@@ -440,7 +440,7 @@ namespace galsim {
                 // Go to q=1:
                 pq.incN();
                 if (pq.pastOrder(N)) continue;
-               
+
                 { // q == 1
                     const int p = pq.getP();
                     const int q = pq.getQ();
@@ -489,7 +489,7 @@ namespace galsim {
     //---------------------------------------------------------------------------
     //---------------------------------------------------------------------------
     // Flux determinations
-    double LVector::flux(int maxP) const 
+    double LVector::flux(int maxP) const
     {
         if (maxP<0) maxP = getOrder()/2;
         if (maxP > getOrder()/2) maxP=getOrder()/2;
@@ -499,7 +499,7 @@ namespace galsim {
         return retval;
     }
 
-    double LVector::apertureFlux(double R_, int maxP) const 
+    double LVector::apertureFlux(double R_, int maxP) const
     {
         static boost::shared_ptr<tmv::Vector<double> > fp;
         static double R=-1.;
@@ -522,7 +522,7 @@ namespace galsim {
             if (maxP>0) {
                 Lp[1] = 1. - x;
                 Qp[1] = -1. - x;
-            } 
+            }
             for (int p=1; p<maxP; p++) {
                 Lp[p+1] = ((2*p+1-x)*Lp[p]-p*Lp[p-1])/(p+1);
                 Qp[p+1] = (-x*Lp[p]-Qp[p]+p*Qp[p-1])/(p+1);
@@ -541,7 +541,7 @@ namespace galsim {
     //---------------------------------------------------------------------------
     // I/O Routines
 
-    std::ostream& operator<<(std::ostream& os, const LVector& lv) 
+    std::ostream& operator<<(std::ostream& os, const LVector& lv)
     { lv.write(os); return os; }
 
     void LVector::write(std::ostream& os, int maxorder) const
@@ -553,12 +553,12 @@ namespace galsim {
         os << _order << std::endl;
         for (int n=0; n<=maxorder; n++) {
             for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
-                os << " " << std::setw(2) << pq.getP() 
+                os << " " << std::setw(2) << pq.getP()
                     << " " << std::setw(2) << pq.getQ() ;
                 if (pq.isReal()) {
                     os << " " << std::setw(15) << (*this)[pq].real() << std::endl;
                 } else {
-                    os << " " << std::setw(15) << (*this)[pq].real() 
+                    os << " " << std::setw(15) << (*this)[pq].real()
                         << " " << std::setw(15) << (*this)[pq].imag() << std::endl;
                 }
             }
@@ -567,7 +567,7 @@ namespace galsim {
         os.flags(oldf);
     }
 
-    std::istream& operator>>(std::istream& is, LVector& lv) 
+    std::istream& operator>>(std::istream& is, LVector& lv)
     { lv.read(is); return is; }
 
     void LVector::read(std::istream& is)
@@ -577,7 +577,7 @@ namespace galsim {
         is >> order;
         resize(order);
         // discard p,q info, read into rVector
-        int p, q; 
+        int p, q;
         double re, im;
         for (int n=0; n<=order; n++) {
             for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
@@ -595,7 +595,7 @@ namespace galsim {
 
     void PQIndex::write(std::ostream& os) const
     {
-        os << std::setw(2) << getP() 
+        os << std::setw(2) << getP()
             << "," << std::setw(2) << getQ() ;
     }
 
@@ -659,7 +659,7 @@ namespace galsim {
                             lt.set(pq,pqprime,zz, zz);
                         }
                     } else {
-                        if (!pqprime.pastOrder(order)) {  
+                        if (!pqprime.pastOrder(order)) {
                             lt.set(pq,pqprime,zz, 0.);
                             pqprime.setPQ(p, q+1);
                             zz = std::complex<double>(-0.5*sqrtn(q+1),0.);
@@ -849,28 +849,28 @@ namespace galsim {
 
     // Function to solve for radius enclosing a specified flux.
     // Return negative radius if no root is apparent.
-    class FRSolve 
+    class FRSolve
     {
     public:
-        FRSolve(const LVector& lv_, double thresh_, int maxP_): 
-            lv(lv_), maxP(maxP_), thresh(thresh_) 
+        FRSolve(const LVector& lv_, double thresh_, int maxP_):
+            lv(lv_), maxP(maxP_), thresh(thresh_)
         { assert(lv.getOrder() >= 2*maxP); }
 
         double operator()(double u) const { return lv.apertureFlux(u,maxP)-thresh; }
-        
+
     private:
         const LVector& lv;
         int maxP;
         double thresh;
     };
 
-    double fluxRadius(const LVector& lv, double threshold, int maxP) 
+    double fluxRadius(const LVector& lv, double threshold, int maxP)
     {
         if (maxP<0) maxP= lv.getOrder()/2;
         if (maxP > lv.getOrder()/2) maxP=lv.getOrder()/2;
         FRSolve func(lv, threshold, maxP);
 
-        // First we step through manually at intervals roughly the smallest that 
+        // First we step through manually at intervals roughly the smallest that
         // a function of this order can oscillate, in order to bracket the root
         // closest to the origin.
 

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBAiry_H
 #define GalSim_SBAiry_H
-/** 
+/**
  * @file SBAiry.h @brief SBProfile of an Airy function with an optional obscuration.
  */
 
@@ -34,24 +34,24 @@ namespace galsim {
 
     }
 
-    /** 
-     * @brief Surface Brightness Profile for the Airy disk (perfect diffraction-limited PSF for a 
+    /**
+     * @brief Surface Brightness Profile for the Airy disk (perfect diffraction-limited PSF for a
      * circular aperture), with central obscuration.
      *
-     * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least 
+     * maxK() is set at the hard limit for Airy disks, stepK() makes transforms go to at least
      * 5 lam/D or EE>(1-folding_threshold).  Schroeder (10.1.18) gives limit of EE at large radius.
      * This stepK could probably be relaxed, it makes overly accurate FFTs.
-     * Note x & y are in units of lambda/D here.  Integral over area will give unity in this 
+     * Note x & y are in units of lambda/D here.  Integral over area will give unity in this
      * normalization.
      */
-    class SBAiry : public SBProfile 
+    class SBAiry : public SBProfile
     {
     public:
         /**
          * @brief Constructor.
          *
-         * @param[in] lam_over_D   `lam_over_D` = (lambda * focal length) / (telescope diam) if 
-         *                         arg is focal plane position, else `lam_over_D` = 
+         * @param[in] lam_over_D   `lam_over_D` = (lambda * focal length) / (telescope diam) if
+         *                         arg is focal plane position, else `lam_over_D` =
          *                         lambda / (telescope diam) if arg is in radians of field angle.
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
          *                         dimension.

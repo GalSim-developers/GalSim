@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,13 +21,32 @@ A few adjustments to the Bounds class at the Python layer.
 
 from . import _galsim
 from ._galsim import BoundsI, BoundsD
+from .utilities import set_func_doc
+
+def Bounds_repr(self):
+    if self.isDefined():
+        return "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_str(self):
+    if self.isDefined():
+        return "galsim.%s(%s,%s,%s,%s)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_initargs(self):
+    if self.isDefined():
+        return (self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return ()
 
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__repr__ = Bounds_repr
+    Class.__str__ = Bounds_str
+    Class.__getinitargs__ = Bounds_initargs
     # Quick and dirty.  Just check reprs are equal.
     Class.__eq__ = lambda self, other: repr(self) == repr(other)
     Class.__ne__ = lambda self, other: not self.__eq__(other)
@@ -100,21 +119,21 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     information.
     """
 
-    Class.area.__func__.__doc__ = """Return the area of the enclosed region.
+    set_func_doc(Class.area, """Return the area of the enclosed region.
 
     The area is a bit different for integer-type BoundsI and float-type BoundsD instances.
     For floating point types, it is simply `(xmax-xmin)*(ymax-ymin)`.  However, for integer types,
     we add 1 to each size to correctly count the number of pixels being described by the bounding
     box.
-    """
+    """)
 
-    Class.withBorder.__func__.__doc__ = """Return a new Bounds object that expands the current
+    set_func_doc(Class.withBorder, """Return a new Bounds object that expands the current
     bounds by the specified width.
-    """
+    """)
 
-    Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
+    set_func_doc(Class.center, "Return the central point of the Bounds as a Position.")
 
-    Class.includes.__func__.__doc__ = """Test whether a supplied `(x,y)` pair, Position, or Bounds
+    set_func_doc(Class.includes, """Test whether a supplied `(x,y)` pair, Position, or Bounds
     lie within a defined Bounds rectangle of this instance.
 
     Calling Examples
@@ -130,26 +149,26 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     The type of the PositionI/D and BoundsI/D instances (i.e. integer or float type) should match
     that of the bounds instance.
-    """
+    """)
 
-    Class.expand.__func__.__doc__ = "Grow the Bounds by the supplied factor about the center."
-    Class.isDefined.__func__.__doc__ = "Test whether Bounds rectangle is defined."
-    Class.getXMin.__func__.__doc__ = "Get the value of xmin."
-    Class.getXMax.__func__.__doc__ = "Get the value of xmax."
-    Class.getYMin.__func__.__doc__ = "Get the value of ymin."
-    Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-    Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied position
+    set_func_doc(Class.expand, "Grow the Bounds by the supplied factor about the center.")
+    set_func_doc(Class.isDefined, "Test whether Bounds rectangle is defined.")
+    set_func_doc(Class.getXMin, "Get the value of xmin.")
+    set_func_doc(Class.getXMax, "Get the value of xmax.")
+    set_func_doc(Class.getYMin, "Get the value of ymin.")
+    set_func_doc(Class.getYMax, "Get the value of ymax.")
+    set_func_doc(Class.shift, """Shift the Bounds instance by a supplied position
 
     Calling Examples
     ----------------
-    The input shift takes either a PositionI or PositionD instance, which must match 
+    The input shift takes either a PositionI or PositionD instance, which must match
     the type of the Bounds instance:
 
         >>> bounds = BoundsI(1,32,1,32)
         >>> bounds = bounds.shift(galsim.PositionI(3, 2))
         >>> bounds = BoundsD(0, 37.4, 0, 49.9)
         >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
-    """ 
+    """)
 
 del Class    # cleanup public namespace
 
@@ -172,9 +191,20 @@ def _new_BoundsI_init(self, *args, **kwargs):
         _orig_BoundsI_init(self, *args, **kwargs)
 BoundsI.__init__ = _new_BoundsI_init
 
+def _BoundsI(xmin, xmax, ymin, ymax):
+    """Equivalent to BoundsI constructor, but skips some sanity checks and argument parsing.
+    This requires that the four values already be int types.
+    """
+    ret = BoundsI.__new__(BoundsI)
+    _orig_BoundsI_init(ret, xmin, xmax, ymin, ymax)
+    return ret
+
 def BoundsI_numpyShape(self):
     """A simple utility function to get the numpy shape that corresponds to this Bounds object.
     """
-    return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    if self.isDefined():
+        return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    else:
+        return 0,0
 
 BoundsI.numpyShape = BoundsI_numpyShape

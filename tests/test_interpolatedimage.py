@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,14 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+"""Unit tests for the InterpolatedImage class.
+"""
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
 
 from galsim_test_helpers import *
-
-"""Unit tests for the InterpolatedImage class.
-"""
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
@@ -30,6 +32,8 @@ try:
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+from galsim._pyfits import pyfits
 
 # for flux normalization tests
 test_flux = 0.7
@@ -89,6 +93,9 @@ def test_roundtrip():
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
         # And this is now the default, so no need to do anything special here.
+
+        check_basic(interp, "InterpolatedImage", approx_maxsb=True)
+
         do_shoot(interp,image_out,"InterpolatedImage")
 
         # Test kvalues
@@ -96,12 +103,22 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()),
-                  irreprable=True)
+        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
         do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
         do_pickle(interp.SBProfile)
+
+    # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
+    image_T = galsim.Image(ref_array.astype(array_type).T)
+    interp = galsim.InterpolatedImage(image_T, scale=test_scale)
+    test_array = np.zeros(ref_array.T.shape, dtype=array_type)
+    image_out = galsim.Image(test_array, scale=test_scale)
+    interp.drawImage(image_out, method='no_pixel')
+    np.testing.assert_array_equal(
+            ref_array.T.astype(array_type),image_out.array,
+            err_msg="Transposed array failed InterpolatedImage roundtrip.")
+    check_basic(interp, "InterpolatedImage (Fortran ordering)", approx_maxsb=True)
 
     # Also check picklability of the Interpolants
     im = galsim.Gaussian(sigma=4).drawImage()
@@ -154,7 +171,7 @@ def test_fluxnorm():
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
     np.testing.assert_almost_equal(total_flux, interp.getFlux(), decimal=9,
-                            err_msg='Did not keep flux normalization')
+                                   err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
     im2 = interp.drawImage(scale = im_scale, method='no_pixel')
     np.testing.assert_almost_equal(total_flux, im2.array.sum(), decimal=9,
@@ -173,6 +190,10 @@ def test_fluxnorm():
     im4 = interp_sb.drawImage(scale = im_scale, method='sb')
     np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
+    np.testing.assert_almost_equal(
+            im4.array.max(), interp_sb.maxSB(), 5,
+            err_msg="InterpolatedImage maxSB did not match maximum pixel value")
+
     do_pickle(interp_sb, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(interp_sb)
 
@@ -196,7 +217,7 @@ def test_exceptions():
     try:
         # What if it receives as input something that is not an Image? Give it a GSObject to check.
         g = galsim.Gaussian(sigma=1.)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
+        np.testing.assert_raises((ValueError, AttributeError), galsim.InterpolatedImage, g)
         # What if Image does not have a scale set, but scale keyword is not specified?
         im = galsim.ImageF(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
@@ -219,7 +240,7 @@ def test_exceptions():
         im = galsim.ImageI(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -283,9 +304,13 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Sheared InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+
+    # The do_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
+    # really long time, so we only do that if __name__ == "__main__".
+    irreprable = not __name__ == "__main__"
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Magnify it, and compare with expectations from GSObjects directly
     test_mag = 1.08
@@ -308,9 +333,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Magnified InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Lens it (shear and magnify), and compare with expectations from GSObjects directly
     test_g1 = -0.03
@@ -335,9 +360,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Lensed InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Rotate it, and compare with expectations from GSObjects directly
     test_rot_angle = 32.*galsim.degrees
@@ -360,9 +385,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Rotated InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
     # Shift it, and compare with expectations from GSObjects directly
     x_shift = -0.31
@@ -386,9 +411,9 @@ def test_operations_simple():
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Shifted InterpolatedImage disagrees with reference')
-    if __name__ == "__main__":
-        do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
-        do_pickle(test_int_im)
+    do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'),
+              irreprable=irreprable)
+    do_pickle(test_int_im, irreprable=irreprable)
 
 
 @timer
@@ -519,7 +544,7 @@ def test_uncorr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -549,7 +574,6 @@ def test_pad_image():
 
     # Use a few different kinds of shapes for that padding.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        #print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -669,7 +693,7 @@ def test_corr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
@@ -734,7 +758,7 @@ def test_realspace_conv():
         # time to run (before failing), so it's probably not a good idea to use it for
         # real-space convolution anyway.
 
-        print 'interp = ',interp
+        print('interp = ',interp)
 
         gal = galsim.InterpolatedImage(gal_im, x_interpolant=interp)
 
@@ -753,8 +777,7 @@ def test_realspace_conv():
         c4 = galsim.Convolve([gal,psf], real_space=False)
 
         im3 = c3.drawImage(scale=target_scale, nx=target_size, ny=target_size, method='no_pixel')
-        im4 = c4.drawImage(scale=target_scale, nx=target_size, ny=target_size, wmult=5,
-                           method='no_pixel')
+        im4 = c4.drawImage(scale=target_scale, nx=target_size, ny=target_size, method='no_pixel')
         np.testing.assert_array_almost_equal(im1.array, im3.array, 2)
         # Note: only 2 d.p. since the interpolated image version of the psf is really a different
         # profile from the original.  Especially for the lower order interpolants.  So we don't
@@ -776,14 +799,14 @@ def test_Cubic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
-    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
+    print('kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.)))
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Cubic interpolant.")
@@ -801,13 +824,13 @@ def test_Quintic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Quintic interpolant.")
@@ -825,13 +848,13 @@ def test_Lanczos5_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
@@ -849,13 +872,13 @@ def test_Lanczos7_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
@@ -887,10 +910,10 @@ def test_conserve_dc():
     im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
     for interp in ['linear', 'cubic', 'quintic']:
-        print 'Testing interpolant ',interp
+        print('Testing interpolant ',interp)
         obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using xvals.'%interp)
@@ -899,7 +922,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
@@ -911,11 +934,11 @@ def test_conserve_dc():
 
 
     for n in [3,4,5,6,7,8]:  # n=8 tests the generic formulae, since not specialized.
-        print 'Testing Lanczos interpolant with n = ',n
+        print('Testing Lanczos interpolant with n = ',n)
         lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using xvals.'%n)
@@ -924,7 +947,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using uvals.'%n)
@@ -970,9 +993,11 @@ def test_stepk_maxk():
 
 @timer
 def test_kroundtrip():
+    import warnings
+
     a = final
-    real_a, imag_a = a.drawKImage()
-    b = galsim.InterpolatedKImage(real_a, imag_a)
+    kim_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(kim_a)
 
     # Check picklability
     do_pickle(b)
@@ -987,12 +1012,9 @@ def test_kroundtrip():
 
     np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
 
-    real_b, imag_b = b.drawKImage(real_a.copy(), imag_a.copy())
+    kim_b = b.drawKImage(kim_a.copy())
     # Fails at 4th decimal
-    np.testing.assert_array_almost_equal(real_a.array, real_b.array, 3,
-                                         "InterpolatedKImage kimage drawn incorrectly.")
-    # Fails at 4th decimal
-    np.testing.assert_array_almost_equal(imag_a.array, imag_b.array, 3,
+    np.testing.assert_array_almost_equal(kim_a.array, kim_b.array, 3,
                                          "InterpolatedKImage kimage drawn incorrectly.")
 
     img_a = a.drawImage()
@@ -1003,9 +1025,9 @@ def test_kroundtrip():
 
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
-        shape = real_a.array.shape
-        real_a, imag_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=real_a.scale)
-        b = galsim.InterpolatedKImage(real_a, imag_a)
+        shape = kim_a.array.shape
+        kim_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=kim_a.scale)
+        b = galsim.InterpolatedKImage(kim_a)
 
         np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
@@ -1023,21 +1045,33 @@ def test_kroundtrip():
 
     # Does the stepk parameter do anything?
     a = final
-    b = galsim.InterpolatedKImage(*a.drawKImage())
-    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=2*b.stepK())
+    kim_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(kim_a)
+    c = galsim.InterpolatedKImage(kim_a, stepk=2*b.stepK())
+    np.testing.assert_almost_equal(b.stepK(), kim_a.scale)
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
+
+    # Smaller stepk is overridden.
+    try:
+        d = np.testing.assert_warns(UserWarning,
+                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepK())
+    except ImportError:
+        with warnings.catch_warnings(UserWarning):
+            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepK())
+    np.testing.assert_almost_equal(b.stepK(), d.stepK())
+    np.testing.assert_almost_equal(b.maxK(), d.maxK())
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
-        b = galsim.InterpolatedKImage(*a.drawKImage())
+        b = galsim.InterpolatedKImage(a.drawKImage())
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
         np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
 
     # Test convolution with another object.
     a = final
-    b = galsim.InterpolatedKImage(*a.drawKImage())
+    b = galsim.InterpolatedKImage(a.drawKImage())
     c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
     a_conv_c = galsim.Convolve(a, c)
     b_conv_c = galsim.Convolve(b, c)
@@ -1067,11 +1101,26 @@ def test_multihdu_readin():
             test_g2, g2, decimal=3,
             err_msg='Did not get right shape image after reading from HDU')
 
+    # Repeat for InterpolatedKImage, drawing in k space for the check.
+    kfile = os.path.join(path, "fits_files", 'interpkim_hdu_test.fits')
+    for ind,g2 in enumerate(g2_vals):
+        obj2 = galsim.InterpolatedKImage(real_kimage=kfile, real_hdu=2*ind,
+                                         imag_kimage=kfile, imag_hdu=2*ind+1)
+        im = obj2.drawKImage(scale=scale)
+        test_g2 = im.real.FindAdaptiveMom().observed_shape.g2
+        np.testing.assert_almost_equal(
+            test_g2, -g2, decimal=3,
+            err_msg='Did not get right shape image after reading real_kimage from HDU')
+
     # Check for exception with invalid HDU.
     try:
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                                 real_kimage=infile, imag_kimage=infile, real_hdu=37, imag_hdu=1)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                                 real_kimage=infile, imag_kimage=infile, real_hdu=1, imag_hdu=37)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1105,19 +1154,17 @@ def test_ne():
     assert obj1 != obj2
 
     # Now repeat for InterpolatedKImage
-    re, im = obj1.drawKImage(nx=128, ny=128, scale=1)
-    obj3 = galsim.InterpolatedKImage(re, im)
-    perturb_re = re.copy()
-    perturb_im = im.copy()
+    kim = obj1.drawKImage(nx=128, ny=128, scale=1)
+    obj3 = galsim.InterpolatedKImage(kim)
+    perturb = kim.copy()
     x = np.arange(128)
     x, y = np.meshgrid(x, x)
-    w = ((perturb_re.array**2 - perturb_im.array**2 > 1e-10) &
+    w = ((perturb.real.array**2 - perturb.imag.array**2 > 1e-10) &
          (50 < x) & (x < (128-50)) &
          (50 < y) & (y < (128-50)))
-    perturb_re.array[w] *= 2
-    perturb_im.array[w] *= 2
+    perturb.array[w] *= 2
 
-    obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
+    obj4 = galsim.InterpolatedKImage(perturb)
 
     with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj3) != repr(obj4)
@@ -1150,10 +1197,10 @@ def test_ne():
     all_obj_diff(gals)
 
     # And repeat for InterpolatedKImage
-    gals = [galsim.InterpolatedKImage(re, im),
-            galsim.InterpolatedKImage(re, im, k_interpolant='Linear'),
-            galsim.InterpolatedKImage(re, im, stepk=1.1),
-            galsim.InterpolatedKImage(re, im, gsparams=gsp)]
+    gals = [galsim.InterpolatedKImage(kim),
+            galsim.InterpolatedKImage(kim, k_interpolant='Linear'),
+            galsim.InterpolatedKImage(kim, stepk=1.1),
+            galsim.InterpolatedKImage(kim, gsparams=gsp)]
     all_obj_diff(gals)
 
 

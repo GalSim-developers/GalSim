@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,12 +40,6 @@
 // However, we leave this option here in case someone has an idea for massively speeding up
 // the solution that might be faster than the table lookup.
 //#define USE_NEWTON_RAPHSON
-
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 2;
-#endif
 
 namespace galsim {
 
@@ -128,91 +122,50 @@ namespace galsim {
         }
     }
 
-    void SBExponential::SBExponentialImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBExponential::SBExponentialImpl::fillXImage(ImageView<double> im,
                                                       double x0, double dx, int izero,
                                                       double y0, double dy, int jzero) const
     {
-        dbg<<"SBExponential fillXValue\n";
+        dbg<<"SBExponential fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
 
             x0 *= _inv_r0;
             dx *= _inv_r0;
             y0 *= _inv_r0;
             dy *= _inv_r0;
 
-            for (int j=0;j<n;++j,y0+=dy) {
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
                 double ysq = y0*y0;
-                It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx)
-                    *valit++ = _norm * std::exp(-sqrt(x*x + ysq));
+                    *ptr++ = _norm * std::exp(-sqrt(x*x + ysq));
             }
         }
     }
 
-    void SBExponential::SBExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                      double kx0, double dkx, int izero,
-                                                      double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBExponential fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-            kx0 *= _r0;
-            dkx *= _r0;
-            ky0 *= _r0;
-            dky *= _r0;
-
-            for (int j=0;j<n;++j,ky0+=dky) {
-                double kx = kx0;
-                double kysq = ky0*ky0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,kx+=dkx) {
-                    double ksq = kx*kx + kysq;
-                    if (ksq > _ksq_max) {
-                        *valit++ = 0.;
-                    } else if (ksq < _ksq_min) {
-                        *valit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
-                    } else {
-                        double temp = 1. + ksq;
-                        *valit++ =  _flux/(temp*sqrt(temp));
-                    }
-                }
-            }
-        }
-    }
-
-    void SBExponential::SBExponentialImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBExponential::SBExponentialImpl::fillXImage(ImageView<double> im,
                                                       double x0, double dx, double dxy,
                                                       double y0, double dy, double dyx) const
     {
-        dbg<<"SBExponential fillXValue\n";
+        dbg<<"SBExponential fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 *= _inv_r0;
         dx *= _inv_r0;
@@ -221,26 +174,67 @@ namespace galsim {
         dy *= _inv_r0;
         dyx *= _inv_r0;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _norm * std::exp(-sqrt(x*x + y*y));
+            for (int i=0;i<m;++i,x+=dx,y+=dyx)
+                *ptr++ = _norm * std::exp(-sqrt(x*x + y*y));
         }
     }
 
-    void SBExponential::SBExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBExponential::SBExponentialImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBExponential fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0; i<m; ++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
+                    if (ksq > _ksq_max) {
+                        *ptr++ = 0.;
+                    } else if (ksq < _ksq_min) {
+                        *ptr++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+                    } else {
+                        double temp = 1. + ksq;
+                        *ptr++ =  _flux/(temp*sqrt(temp));
+                    }
+                }
+            }
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::fillKImage(ImageView<std::complex<double> > im,
                                                       double kx0, double dkx, double dkxy,
                                                       double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBExponential fillKValue\n";
+        dbg<<"SBExponential fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         kx0 *= _r0;
         dkx *= _r0;
@@ -249,19 +243,18 @@ namespace galsim {
         dky *= _r0;
         dkyx *= _r0;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
                 if (ksq > _ksq_max) {
-                    *valit++ = 0.;
+                    *ptr++ = 0.;
                 } else if (ksq < _ksq_min) {
-                    *valit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+                    *ptr++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
                 } else {
                     double temp = 1. + ksq;
-                    *valit++ =  _flux/(temp*sqrt(temp));
+                    *ptr++ =  _flux/(temp*sqrt(temp));
                 }
             }
         }

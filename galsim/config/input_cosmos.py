@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,18 +16,44 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import logging
 
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
 # The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
 # However, we do make a custom Loader so that we can add a logger line with some information about
-# the number of objects in the catalog that passed the initial cuts.
+# the number of objects in the catalog that passed the initial cuts and other basic catalog info.
 from .input import RegisterInputType, InputLoader
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
-        if logger:
+        if logger: # pragma: no cover
+            # Only report as a warning the first time.  After that, use info.
+            first = not base.get('_COSMOSLoader_reported_as_warning',False)
+            base['_COSMOSLoader_reported_as_warning'] = True
+            if first:
+                log_level = logging.WARNING
+            else:
+                log_level = logging.INFO
+            if 'input' in base:
+                if 'cosmos_catalog' in base['input']:
+                    cc = base['input']['cosmos_catalog']
+                    if isinstance(cc,list): cc = cc[0]
+                    out_str = ''
+                    if 'sample' in cc:
+                        out_str += '\n  sample = %s'%cc['sample']
+                    if 'dir' in cc:
+                        out_str += '\n  dir = %s'%cc['dir']
+                    if 'file_name' in cc:
+                        out_str += '\n  file_name = %s'%cc['file_name']
+                    if out_str != '':
+                        logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
                         base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+            if 'gal' in base and 'gal_type' in base['gal']:
+                if base['gal']['gal_type']=='parametric':
+                    logger.log(log_level,"Using parametric galaxies.")
+                else:
+                    logger.log(log_level,"Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 
@@ -40,8 +66,10 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     ignore = ignore + ['num']
 
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
+    # Special: if galaxies are selected based on index, and index is Sequence or Random, and max
+    # isn't set, set it to nobjects-1.
+    if 'index' in config:
+        galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.COSMOSCatalog.makeGalaxy._req_params,
@@ -50,19 +78,42 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
         ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for type = COSMOSGalaxy")
-        kwargs['rng'] = base['rng']
+    # Deal with defaults for gal_type, if it wasn't specified:
+    # If COSMOSCatalog was constructed with 'use_real'=True, then default is 'real'.  Otherwise, the
+    # default is 'parametric'.  This code is in makeGalaxy, but since config has to use
+    # _makeSingleGalaxy, we have to include this here too.
+    if 'gal_type' not in kwargs:
+        if cosmos_cat.use_real: kwargs['gal_type'] = 'real'
+        else: kwargs['gal_type'] = 'parametric'
 
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= cosmos_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
+    rng = None
+    if 'index' not in kwargs:
+        rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+        kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
 
-    if logger:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
+        # Make sure this process gives consistent results regardless of the number of processes
+        # being used.
+        if not isinstance(cosmos_cat, galsim.COSMOSCatalog) and rng is not None:
+            # Then cosmos_cat is really a proxy, which means the rng was pickled, so we need to
+            # discard the same number of random calls from the one in the config dict.
+            rng.discard(int(n_rng_calls))
+
+    # Even though gal_type is optional, it will have been set in the code above.  So we can at this
+    # point assume that kwargs['gal_type'] exists.
+    if kwargs['gal_type'] == 'real':
+        if rng is None:
+            rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+        kwargs['rng'] = rng
+
+    # NB. Even though index is officially optional, it will always be present, either because it was
+    #     set by a call to selectRandomIndex, explicitly by the user, or due to the call to
+    #     SetDefaultIndex.
+    index = kwargs['index']
+    if index >= cosmos_cat.getNObjects():
+        raise IndexError(
+            "%s index has gone past the number of entries in the catalog"%index)
+
+    logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base.get('obj_num',0),kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,7 +25,7 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **kwargs):
+def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kwargs):
     """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
@@ -40,7 +40,9 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
     The bandpasses can be either truncated or thinned before setting the zero points, by passing in
     the keyword arguments that need to get propagated through to the Bandpass.thin() and/or
     Bandpass.truncate() routines.  Or, if the user wishes to thin and truncate using the defaults
-    for those two routines, they can use `default_thin_trunc=True`.
+    for those two routines, they can use `default_thin_trunc=True`.  This option is the default,
+    because the stored 'official' versions of the bandpasses cover a wide wavelength range.  So even
+    if thinning is not desired, truncation is recommended.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
@@ -70,8 +72,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
     @param default_thin_trunc Use the default thinning and truncation options?  Users who wish to
                               use no thinning and truncation of bandpasses, or who want control over
                               the level of thinning and truncation, should have this be False.
-                              [default: False]
-    @params **kwargs          Other kwargs are passed to either `bandpass.thin()` or 
+                              [default: True]
+    @param **kwargs           Other kwargs are passed to either `bandpass.thin()` or
                               `bandpass.truncate()` as appropriate.
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.
@@ -81,12 +83,6 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
-
-    if AB_zeropoint:
-        # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
-        # diameter has to take into account the central obscuration, so d_eff = d sqrt(1 -
-        # obs^2).
-        d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
 
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(galsim.meta_data.share_dir, "wfirst_sky_backgrounds.txt")
@@ -107,14 +103,11 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
                           ' default_thin_trunc.')
             default_thin_trunc = False
     if len(kwargs) > 0:
-        if any(x in kwargs.keys() for x in truncate_kwargs):
-            for key in kwargs.keys():
-                if key in truncate_kwargs:
-                    tmp_truncate_dict[key] = kwargs.pop(key)
-        if any(x in kwargs.keys() for x in thin_kwargs):
-            for key in kwargs.keys():
-                if key in thin_kwargs:
-                    tmp_thin_dict[key] = kwargs.pop(key)
+        for key in kwargs:
+            if key in truncate_kwargs:
+                tmp_truncate_dict[key] = kwargs.pop(key)
+            if key in thin_kwargs:
+                tmp_thin_dict[key] = kwargs.pop(key)
         if len(kwargs) != 0:
             raise ValueError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
 
@@ -137,9 +130,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
 
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
-            if exptime is None:
-                exptime = galsim.wfirst.exptime
-            bp = bp.withZeropoint('AB', effective_diameter=d_eff, exptime=exptime)
+            bp = bp.withZeropoint('AB')
 
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
@@ -150,4 +141,3 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
         bandpass_dict[bp_name] = bp
 
     return bandpass_dict
-

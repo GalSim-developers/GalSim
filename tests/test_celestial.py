@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy
 import os
 import sys
@@ -180,12 +182,12 @@ def test_celestialcoord_distance():
 
     # Note that the standard formula gets these wrong.  d comes back as 0.
     d = arccos(sin(0.342) * sin(0.342) + cos(0.342) * cos(0.342) * cos(1.7e-9))
-    print 'd(c6) = ',1.7e-9 * cos(0.342), c1.distanceTo(c6), d
+    print('d(c6) = ',1.7e-9 * cos(0.342), c1.distanceTo(c6), d)
     d = arccos(sin(0.342) * sin(0.342+1.9e-9) + cos(0.342) * cos(0.342+1.9e-9) * cos(0.))
-    print 'd(c7) = ',1.9e-9, c1.distanceTo(c7), d
+    print('d(c7) = ',1.9e-9, c1.distanceTo(c7), d)
     d = arccos(sin(0.342) * sin(0.342) + cos(0.342) * cos(0.342) * cos(1.2e-9))
     true_d = sqrt( (2.3e-9 * cos(0.342))**2 + 1.2e-9**2)
-    print 'd(c7) = ',true_d, c1.distanceTo(c8), d
+    print('d(c7) = ',true_d, c1.distanceTo(c8), d)
     numpy.testing.assert_almost_equal(c1.distanceTo(c6).rad()/(1.7e-9 * cos(0.342)), 1.0)
     numpy.testing.assert_almost_equal(c1.distanceTo(c7).rad()/1.9e-9, 1.0)
     numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad()/true_d, 1.0)
@@ -291,7 +293,7 @@ def test_projection():
     # A = 1/2 abs( (x2-x1)*(y3-y1) - (x3-x1)*(y2-y1) )
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
-    print 'lambert area = ',area,E
+    print('lambert area = ',area,E)
     numpy.testing.assert_almost_equal(area / E, 1, decimal=5)
 
     # Check that project_rad does the same thing
@@ -314,9 +316,9 @@ def test_projection():
     cosB = ((pC.x-pB.x)*(pA.x-pB.x) + (pC.y-pB.y)*(pA.y-pB.y)) / (c*a)
     cosC = ((pA.x-pC.x)*(pB.x-pC.x) + (pA.y-pC.y)*(pB.y-pC.y)) / (a*b)
 
-    print 'lambert cosA = ',cosA,cos(A)
-    print 'lambert cosB = ',cosB,cos(B)
-    print 'lambert cosC = ',cosC,cos(C)
+    print('lambert cosA = ',cosA,cos(A))
+    print('lambert cosB = ',cosB,cos(B))
+    print('lambert cosC = ',cosC,cos(C))
 
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='lambert')
@@ -341,9 +343,9 @@ def test_projection():
     cosB = ((pC.x-pB.x)*(pA.x-pB.x) + (pC.y-pB.y)*(pA.y-pB.y)) / (c*a)
     cosC = ((pA.x-pC.x)*(pB.x-pC.x) + (pA.y-pC.y)*(pB.y-pC.y)) / (a*b)
 
-    print 'stereographic cosA = ',cosA,cos(A)
-    print 'stereographic cosB = ',cosB,cos(B)
-    print 'stereographic cosC = ',cosC,cos(C)
+    print('stereographic cosA = ',cosA,cos(A))
+    print('stereographic cosB = ',cosB,cos(B))
+    print('stereographic cosC = ',cosC,cos(C))
     numpy.testing.assert_almost_equal(cosA,cos(A), decimal=5)
     numpy.testing.assert_almost_equal(cosB,cos(B), decimal=5)
     numpy.testing.assert_almost_equal(cosC,cos(C), decimal=5)
@@ -363,7 +365,7 @@ def test_projection():
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
-    print 'stereographic area = ',area,E
+    print('stereographic area = ',area,E)
 
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='stereographic')
@@ -400,14 +402,14 @@ def test_projection():
     cosB = ((pC.x-pB.x)*(pA.x-pB.x) + (pC.y-pB.y)*(pA.y-pB.y)) / (c*a)
     cosC = ((pA.x-pC.x)*(pB.x-pC.x) + (pA.y-pC.y)*(pB.y-pC.y)) / (a*b)
 
-    print 'gnomonic cosA = ',cosA,cos(A)
-    print 'gnomonic cosB = ',cosB,cos(B)
-    print 'gnomonic cosC = ',cosC,cos(C)
+    print('gnomonic cosA = ',cosA,cos(A))
+    print('gnomonic cosB = ',cosB,cos(B))
+    print('gnomonic cosC = ',cosC,cos(C))
 
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
-    print 'gnomonic area = ',area,E
+    print('gnomonic area = ',area,E)
 
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='gnomonic')
@@ -426,9 +428,9 @@ def test_projection():
     dA = sqrt( pA.x**2 + pA.y**2 )
     dB = sqrt( pB.x**2 + pB.y**2 )
     dC = sqrt( pC.x**2 + pC.y**2 )
-    print 'postel dA = ',dA,center.distanceTo(cA)
-    print 'postel dB = ',dB,center.distanceTo(cB)
-    print 'postel dC = ',dC,center.distanceTo(cC)
+    print('postel dA = ',dA,center.distanceTo(cA))
+    print('postel dB = ',dB,center.distanceTo(cB))
+    print('postel dC = ',dC,center.distanceTo(cC))
     numpy.testing.assert_almost_equal( dA, center.distanceTo(cA) / galsim.arcsec )
     numpy.testing.assert_almost_equal( dB, center.distanceTo(cB) / galsim.arcsec )
     numpy.testing.assert_almost_equal( dC, center.distanceTo(cC) / galsim.arcsec )
@@ -453,14 +455,14 @@ def test_projection():
     cosB = ((pC.x-pB.x)*(pA.x-pB.x) + (pC.y-pB.y)*(pA.y-pB.y)) / (c*a)
     cosC = ((pA.x-pC.x)*(pB.x-pC.x) + (pA.y-pC.y)*(pB.y-pC.y)) / (a*b)
 
-    print 'postel cosA = ',cosA,cos(A)
-    print 'postel cosB = ',cosB,cos(B)
-    print 'postel cosC = ',cosC,cos(C)
+    print('postel cosA = ',cosA,cos(A))
+    print('postel cosB = ',cosB,cos(B))
+    print('postel cosC = ',cosC,cos(C))
 
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
-    print 'postel area = ',area,E
+    print('postel area = ',area,E)
 
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='postel')
@@ -487,15 +489,15 @@ def test_precess():
     # http://www.bbastrodesigns.com/coordErrors.html
     dra_1950 = -(2. + 39.07/60.)/60. * galsim.hours / galsim.radians
     ddec_1950 = -(16. + 16.3/60.)/60. * galsim.degrees / galsim.radians
-    print 'delta from website: ',dra_1950,ddec_1950
-    print 'delta from precess: ',(c1.ra-orig.ra),(c1.dec-orig.dec)
+    print('delta from website: ',dra_1950,ddec_1950)
+    print('delta from precess: ',(c1.ra-orig.ra),(c1.dec-orig.dec))
     numpy.testing.assert_almost_equal(dra_1950, c1.ra.rad()-orig.ra.rad(), decimal=5)
     numpy.testing.assert_almost_equal(ddec_1950, c1.dec.rad()-orig.dec.rad(), decimal=5)
 
     dra_1900 = -(5. + 17.74/60.)/60. * galsim.hours / galsim.radians
     ddec_1900 = -(32. + 35.4/60.)/60. * galsim.degrees / galsim.radians
-    print 'delta from website: ',dra_1900,ddec_1900
-    print 'delta from precess: ',(c2.ra-orig.ra),(c2.dec-orig.dec)
+    print('delta from website: ',dra_1900,ddec_1900)
+    print('delta from precess: ',(c2.ra-orig.ra),(c2.dec-orig.dec))
     numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad()-orig.ra.rad(), decimal=5)
     numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad()-orig.dec.rad(), decimal=5)
 
@@ -506,26 +508,26 @@ def test_galactic():
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
     center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
-    print 'center.galactic = ',center.galactic()
+    print('center.galactic = ',center.galactic())
     el,b = center.galactic()
     numpy.testing.assert_almost_equal(el.rad(), 0., decimal=3)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
 
     # The north pole is at 12h:51.4m, 27.13d
     north = galsim.CelestialCoord( (12.+51.4/60.) * galsim.hours, 27.13 * galsim.degrees)
-    print 'north.galactic = ',north.galactic()
+    print('north.galactic = ',north.galactic())
     el,b = north.galactic()
     numpy.testing.assert_almost_equal(b.rad(), pi/2., decimal=3)
 
     # The south pole is at 0h:51.4m, -27.13d
     south = galsim.CelestialCoord( (0.+51.4/60.) * galsim.hours, -27.13 * galsim.degrees)
-    print 'south.galactic = ',south.galactic()
+    print('south.galactic = ',south.galactic())
     el,b = south.galactic()
     numpy.testing.assert_almost_equal(b.rad(), -pi/2., decimal=3)
 
     # The anti-center is at 5h:42.6m, 28.92d
     anticenter = galsim.CelestialCoord( (5.+45.6/60.) * galsim.hours, 28.94 * galsim.degrees)
-    print 'anticenter.galactic = ',anticenter.galactic()
+    print('anticenter.galactic = ',anticenter.galactic())
     el,b = anticenter.galactic()
     numpy.testing.assert_almost_equal(el.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)

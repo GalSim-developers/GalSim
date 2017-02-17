@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,11 @@
 #ifndef NumpyHelper_H
 #define NumpyHelper_H
 
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
+#include <iostream>
+#include "Python.h"
+#include "capsulethunk.h" // cf. https://docs.python.org/3/howto/cporting.html#cobject-replaced-with-capsule
+
+#include "boost/python.hpp"
 
 #ifdef __INTEL_COMPILER
 #pragma warning (disable : 47)
@@ -48,11 +52,15 @@ namespace bp = boost::python;
 namespace galsim {
 
 template <typename T> struct NumPyTraits;
+template <> struct NumPyTraits<uint16_t> { static int getCode() { return NPY_UINT16; } };
+template <> struct NumPyTraits<uint32_t> { static int getCode() { return NPY_UINT32; } };
 template <> struct NumPyTraits<int16_t> { static int getCode() { return NPY_INT16; } };
 template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT32; } };
 //template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
+template <> struct NumPyTraits<std::complex<double> >
+{ static int getCode() { return NPY_COMPLEX128; } };
 
 inline int GetNumpyArrayTypeCode(PyObject* array)
 {
@@ -67,12 +75,14 @@ inline int GetNumpyArrayTypeCode(PyObject* array)
     if (sizeof(int) == sizeof(int16_t) && code == NPY_INT) return NPY_INT16;
     if (sizeof(int) == sizeof(int32_t) && code == NPY_INT) return NPY_INT32;
     if (sizeof(int) == sizeof(int64_t) && code == NPY_INT) return NPY_INT64;
+    if (sizeof(int) == sizeof(uint16_t) && code == NPY_INT) return NPY_UINT16;
+    if (sizeof(int) == sizeof(uint32_t) && code == NPY_INT) return NPY_UINT32;
     return code;
 }
 
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
-inline bp::object GetNumPyType() 
+inline bp::object GetNumPyType()
 {
     bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
     return bp::object(h).attr("type");
@@ -116,53 +126,71 @@ inline T* GetNumpyArrayData(PyObject* array)
     return reinterpret_cast<T*>(PyArray_DATA(numpy_array));
 }
 
+#if (PY_VERSION_HEX < 0x02070000)
 template <typename T>
-inline void DestroyCObjectOwner(T* p) 
+inline void DestroyCObjectOwner(T* p)
 {
     boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
     delete owner;
 }
+#else
+template <typename T>
+inline void DestroyCapsule(PyObject* capsule)
+{
+    void* p = PyCapsule_GetPointer(capsule, NULL);
+    boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
+    delete owner;
+}
+#endif
 
 template <typename T>
 struct PythonDeleter {
     void operator()(T* p) { owner.reset(); }
-    explicit PythonDeleter(PyObject* o) : owner(bp::borrowed(o)) {}
+    explicit PythonDeleter(PyObject* p) : owner(bp::borrowed(p)) {}
     bp::handle<> owner;
 };
 
 template <typename T>
+static bp::object ManageNumpyArray(PyObject* array, boost::shared_ptr<T> owner)
+{
+    // --- Manage ownership ---
+    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
+    // If memory was originally allocated by Python, we don't need to do anything here.
+    // Just let the python Image class keep a pointer to the original numpy array.
+    if (!pyDeleter) {
+        // ..if not, we put a shared_ptr in an opaque Python object.
+        boost::shared_ptr<T>* sp = new boost::shared_ptr<T>(owner);
+#if (PY_VERSION_HEX < 0x02070000)
+        PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCObjectOwner);
+#else
+        PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCapsule<T>);
+#endif
+
+#ifdef NPY_OLD_API
+        reinterpret_cast<PyArrayObject*>(array)->base = pyOwner;
+#else
+        PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(array),pyOwner);
+#endif
+    }
+
+    return bp::object(bp::handle<>(array));
+}
+
+template <typename T>
 static bp::object MakeNumpyArray(
-    const T* data, int n1, int n2, int stride, bool isConst,
+    const T* data, int n1, int n2, int step, int stride, bool isConst,
     boost::shared_ptr<T> owner = boost::shared_ptr<T>())
 {
     // --- Create array ---
     int flags = NPY_ARRAY_ALIGNED;
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[2] = { n1, n2 };
-    npy_intp strides[2] = { stride* int(sizeof(T)), int(sizeof(T)) };
-    PyObject* result = PyArray_New(
+    npy_intp strides[2] = { stride * int(sizeof(T)), step * int(sizeof(T)) };
+    PyObject* array = PyArray_New(
         &PyArray_Type, 2, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
 
-    // --- Manage ownership ---
-    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
-    bp::handle<> pyOwner;
-    if (pyDeleter) {
-        // If memory was original allocated by Python, we use that Python object as the owner...
-        pyOwner = pyDeleter->owner;
-    } else {
-        // ..if not, we put a shared_ptr in an opaque Python object.
-        pyOwner = bp::handle<>(
-            PyCObject_FromVoidPtr(new boost::shared_ptr<T>(owner), &DestroyCObjectOwner)
-        );
-    }
-#ifdef NPY_OLD_API
-    reinterpret_cast<PyArrayObject*>(result)->base = pyOwner.release();
-#else
-    PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(result),pyOwner.release());
-#endif
-
-    return bp::object(bp::handle<>(result));
+    return ManageNumpyArray(array, owner);
 }
 
 template <typename T>
@@ -174,41 +202,22 @@ static bp::object MakeNumpyArray(
     int flags = NPY_ARRAY_ALIGNED;
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[1] = { n1 };
-    npy_intp strides[1] = { stride* int(sizeof(T)) };
-    PyObject* result = PyArray_New(
+    npy_intp strides[1] = { stride * int(sizeof(T)) };
+    PyObject* array = PyArray_New(
         &PyArray_Type, 1, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
 
-    // --- Manage ownership ---
-    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
-    bp::handle<> pyOwner;
-    if (pyDeleter) {
-        // If memory was original allocated by Python, we use that Python object as the owner...
-        pyOwner = pyDeleter->owner;
-    } else {
-        // ..if not, we put a shared_ptr in an opaque Python object.
-        pyOwner = bp::handle<>(
-            PyCObject_FromVoidPtr(new boost::shared_ptr<T>(owner), &DestroyCObjectOwner)
-        );
-    }
-#ifdef NPY_OLD_API
-    reinterpret_cast<PyArrayObject*>(result)->base = pyOwner.release();
-#else
-    PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(result),pyOwner.release());
-#endif
-
-    return bp::object(bp::handle<>(result));
+    return ManageNumpyArray(array, owner);
 }
 
 // Check the type of the numpy array, input as array.
 // - It should be the same type as required for data (T).
 // - It should have dimensions dim
-// - It should be writeable if isConst=true
-// - It should have unit stride on the rows if ndim == 2
-// Also sets data, owner, stride to the appropriate values before returning.
+// - It should be writeable if isConst=false
+// Also sets data, owner, step, stride to the appropriate values before returning.
 template <typename T>
 static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
-    T*& data, boost::shared_ptr<T>& owner, int& stride)
+    T*& data, boost::shared_ptr<T>& owner, int& step, int& stride)
 {
     if (!PyArray_Check(array.ptr())) {
         PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument required");
@@ -229,51 +238,54 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
         oss<<"  NPY_INT16   = "<<NPY_INT16<<"\n";
         oss<<"  NPY_INT32   = "<<NPY_INT32<<"\n";
         oss<<"  NPY_INT64   = "<<NPY_INT64<<"\n";
+        oss<<"  NPY_UINT16   = "<<NPY_UINT16<<"\n";
+        oss<<"  NPY_UINT32   = "<<NPY_UINT32<<"\n";
         oss<<"  NPY_FLOAT   = "<<NPY_FLOAT<<"\n";
         oss<<"  NPY_DOUBLE  = "<<NPY_DOUBLE<<"\n";
         oss<<"  sizeof(int16_t) = "<<sizeof(int16_t)<<"\n";
         oss<<"  sizeof(int32_t) = "<<sizeof(int32_t)<<"\n";
         oss<<"  sizeof(int64_t) = "<<sizeof(int64_t)<<"\n";
+        oss<<"  sizeof(uint16_t) = "<<sizeof(uint16_t)<<"\n";
+        oss<<"  sizeof(uint32_t) = "<<sizeof(uint32_t)<<"\n";
         oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
         oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
         oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
         oss<<"  sizeof(npy_int16) = "<<sizeof(npy_int16)<<"\n";
         oss<<"  sizeof(npy_int32) = "<<sizeof(npy_int32)<<"\n";
         oss<<"  sizeof(npy_int64) = "<<sizeof(npy_int64)<<"\n";
+        oss<<"  sizeof(npy_uint16) = "<<sizeof(npy_uint16)<<"\n";
+        oss<<"  sizeof(npy_uint32) = "<<sizeof(npy_uint32)<<"\n";
         PyErr_SetString(PyExc_ValueError, oss.str().c_str());
         bp::throw_error_already_set();
     }
     if (GetNumpyArrayNDim(array.ptr()) != ndim) {
-        PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has must be 2-d");
+        std::ostringstream oss;
+        oss<<"numpy.ndarray argument must be "<<ndim<<"-d"<<"\n";
+        PyErr_SetString(PyExc_ValueError, oss.str().c_str());
         bp::throw_error_already_set();
     }
     if (!isConst && !(GetNumpyArrayFlags(array.ptr()) & NPY_ARRAY_WRITEABLE)) {
         PyErr_SetString(PyExc_TypeError, "numpy.ndarray argument must be writeable");
         bp::throw_error_already_set();
     }
-    if (ndim == 2 && GetNumpyArrayStride<T>(array.ptr(), 1) != 1) {
-        PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument must have contiguous rows");
-        bp::throw_error_already_set();
-    }
-
+    if (ndim == 2)
+        step = GetNumpyArrayStride<T>(array.ptr(), 1);
+    else
+        step = 1;
     stride = GetNumpyArrayStride<T>(array.ptr(), 0);
     data = GetNumpyArrayData<T>(array.ptr());
     PyObject* pyOwner = GetNumpyArrayBase(array.ptr());
-    if (pyOwner) {
-        if (PyArray_Check(pyOwner) && GetNumpyArrayTypeCode(pyOwner) == requiredType) {
-            // Not really important, but we try to use the full array for 
-            // the owner pointer if this is a subarray, just to be consistent
-            // with how it works for subimages.
-            // The deleter is really all that matters.
-            owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(pyOwner),
-                                         PythonDeleter<T>(pyOwner));
-        } else {
-            owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(array.ptr()),
-                                         PythonDeleter<T>(pyOwner));
-        }
+    if (pyOwner == NULL) pyOwner = array.ptr();
+    if (PyArray_Check(pyOwner) && GetNumpyArrayTypeCode(pyOwner) == requiredType) {
+        // Not really important, but we try to use the full array for
+        // the owner pointer if this is a subarray, just to be consistent
+        // with how it works for subimages.
+        // The deleter is really all that matters.
+        owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(pyOwner),
+                                     PythonDeleter<T>(pyOwner));
     } else {
         owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(array.ptr()),
-                                     PythonDeleter<T>(array.ptr()));
+                                     PythonDeleter<T>(pyOwner));
     }
 }
 

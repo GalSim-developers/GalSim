@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,7 +25,8 @@ This script is our first one to create multiple images.  Typically, you would wa
 to have at least some of its attributes vary when you are drawing multiple images (although 
 not necessarily -- you might just want different noise realization of the same profile).  
 The easiest way to do this is to read in the properties from a catalog, which is what we
-do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk.
+do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus disk,
+with knots of star formation modeled as point sources distributed according to a random walk.
 Both components get many of their parameters from an input catalog.  We also shift the 
 profile by a fraction of a pixel in each direction so the effect of pixelization varies
 among the images.  Each galaxy has the same applied shear.  The noise is simple Poisson noise.
@@ -36,6 +37,7 @@ New features introduced in this demo:
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.DeVaucouleurs(flux, half_light_radius)
+- obj = galsim.RandomWalk(npoints, half_light_radius, flux=)
 - obj = galsim.Add([list of objects])
 - obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)
@@ -57,6 +59,8 @@ def main(argv):
       - Only galaxies.  No stars.
       - PSF is Moffat
       - Each galaxy is bulge plus disk: deVaucouleurs + Exponential.
+      - A fraction of the disk flux is placed into point sources, which can model
+        knots of star formation.
       - The catalog's columns are:
          0 PSF beta (Moffat exponent)
          1 PSF FWHM
@@ -89,6 +93,22 @@ def main(argv):
     gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images
     gal_g1 = -0.009                 #
     gal_g2 = 0.011                  #
+
+    # the fraction of flux in each component
+    # 40% is in the bulge, 60% in a disk.  70% of that disk light is placed
+    # into point sources distributed as a random walk
+
+    bulge_frac       = 0.4
+    disk_frac        = 0.6
+    knot_frac        = 0.42
+    smooth_disk_frac = 0.18
+
+    # number of knots of star formation.  To simulate a nice irregular (all the
+    # flux is in knots) we find ~100 is a minimum number needed, but we will
+    # just use 10 here to make the demo run fast.
+
+    n_knots = 10
+
     xsize = 64                      # pixels
     ysize = 64                      # pixels
 
@@ -97,11 +117,13 @@ def main(argv):
     logger.info('    - Moffat PSF (parameters from catalog)')
     logger.info('    - pixel scale = %.2f',pixel_scale)
     logger.info('    - Bulge + Disc galaxies (parameters from catalog)')
+    logger.info('    - 100 Point sources, distributed as random walk')
     logger.info('    - Applied gravitational shear = (%.3f,%.3f)',gal_g1,gal_g2)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
     # Read in the input catalog
     cat = galsim.Catalog(cat_file_name)
+
 
     # save a list of the galaxy images in the "images" list variable:
     images = []
@@ -133,16 +155,32 @@ def main(argv):
         # Take the (e1, e2) shape parameters from the catalog as well.
         psf = psf.shear(e1=cat.getFloat(k,2), e2=cat.getFloat(k,3))
 
-        # Galaxy is a bulge + disk with parameters taken from the catalog:
-        disk = galsim.Exponential(flux=0.6, half_light_radius=cat.getFloat(k,5))
-        disk = disk.shear(e1=cat.getFloat(k,6), e2=cat.getFloat(k,7))
+        # Galaxy is a bulge + disk(+knots) with parameters taken from the catalog:
 
-        bulge = galsim.DeVaucouleurs(flux=0.4, half_light_radius=cat.getFloat(k,8))
-        bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
+        # put some fraction of the disk light into knots of star formation
+
+        disk_hlr = cat.getFloat(k,5)
+        disk_e1 = cat.getFloat(k,6)
+        disk_e2 = cat.getFloat(k,7)
+        bulge_hlr = cat.getFloat(k,8)
+        bulge_e1 = cat.getFloat(k,9)
+        bulge_e2 = cat.getFloat(k,10)
+
+        smooth_disk = galsim.Exponential(flux=smooth_disk_frac, half_light_radius=disk_hlr)
+
+        knots = galsim.RandomWalk(n_knots, disk_hlr, flux=knot_frac, rng=rng)
+
+        disk = galsim.Add([smooth_disk, knots])
+        disk = disk.shear(e1=disk_e1, e2=disk_e2)
+
+        # the rest of the light goes into the bulge
+        bulge = galsim.DeVaucouleurs(flux=bulge_frac, half_light_radius=bulge_hlr)
+        bulge = bulge.shear(e1=bulge_e1, e2=bulge_e2)
 
         # The flux of an Add object is the sum of the component fluxes.
         # Note that in demo3.py, a similar addition was performed by the binary operator "+".
         gal = galsim.Add([disk, bulge])
+
         # This flux may be overridden by withFlux.  The relative fluxes of the components
         # remains the same, but the total flux is set to gal_flux.
         gal = gal.withFlux(gal_flux)

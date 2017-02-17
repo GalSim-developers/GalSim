@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -35,7 +32,7 @@ namespace galsim {
 
     struct PyLVector {
 
-        static bp::object GetArrayImpl(bp::object self, bool isConst) 
+        static bp::object GetArrayImpl(bp::object self, bool isConst)
         {
             const LVector& lvector = bp::extract<const LVector&>(self);
             bp::object numpy_array = MakeNumpyArray(
@@ -51,8 +48,9 @@ namespace galsim {
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
+            int step = 0;
             int stride = 0;
-            CheckNumpyArray(array,1,true,data,owner,stride);
+            CheckNumpyArray(array,1,true,data,owner,step,stride);
             int size = GetNumpyArrayDim(array.ptr(), 0);
             if (size != PQIndex::size(order)) {
                 PyErr_SetString(PyExc_ValueError, "Array for LVector is the wrong size");
@@ -92,7 +90,8 @@ namespace galsim {
                 .def("getPQ", &GetPQ, bp::args("p","q"))
                 .def("setPQ", &SetPQ, bp::args("p","q","re","im"))
                 .def(bp::self * bp::other<double>())
-                .def(bp::self / bp::other<double>())
+                .def("__div__", &LVector::operator/)
+                .def("__truediv__", &LVector::operator/)
                 .def(bp::self + bp::other<LVector>())
                 .def(bp::self - bp::other<LVector>())
                 .def("dot", &LVector::dot, bp::args("other"))
@@ -100,13 +99,13 @@ namespace galsim {
                 .enable_pickling()
                 ;
 
-            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"), 
+            bp::def("ShapeletSize", &PQIndex::size, bp::arg("order"),
                     "Calculate the size of a shapelet vector for a given order");
 
         }
     };
 
-    struct PySBShapelet 
+    struct PySBShapelet
     {
         template <typename U>
         static void wrapImageTemplates() {
@@ -135,10 +134,12 @@ namespace galsim {
             wrapImageTemplates<double>();
             wrapImageTemplates<int16_t>();
             wrapImageTemplates<int32_t>();
+            wrapImageTemplates<uint16_t>();
+            wrapImageTemplates<uint32_t>();
         }
     };
 
-    void pyExportSBShapelet() 
+    void pyExportSBShapelet()
     {
         PyLVector::wrap();
         PySBShapelet::wrap();

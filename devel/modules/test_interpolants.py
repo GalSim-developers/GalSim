@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -63,7 +63,7 @@ shear_and_magnification_list =  [(0.05, 0., 1.),(0.03, 0., 1.), (0.01, 0., 1.),
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 # Catalog parameters
 catalog_dir = '../../examples/data'
-catalog_filename = 'real_galaxy_catalog_example.fits'
+catalog_filename = 'real_galaxy_catalog_23.5_example.fits'
 default_first_index = 0 # Note: both of these may be superceded via command-line arguments!
 default_nitems = 100 # How many galaxies to test
 pixel_scale = 0.03 # COSMOS pixel scale

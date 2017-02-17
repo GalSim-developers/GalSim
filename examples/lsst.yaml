@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,14 +43,14 @@ psf :
             coma1 : 0.02
             coma2 : -0.04
 
-gal : 
+gal :
     # For the "galaxy", we'll actually have some of the objects be stars, which
     # we'll model as delta functions.  We select from this list with index below.
     type : List
     items:
         - # First the galaxy, a bulge + disk model
             type : Sum
-            items : 
+            items :
                 - # The disk component.
                     type : Exponential
                     ellip :
@@ -65,14 +65,14 @@ gal :
                     flux : { type : Random, min : 0, max : 2 } # relative to disk flux
                     half_light_radius : { type : Random, min : 0.2, max : 0.6 }
                     shift : { type : RandomCircle, radius : 0.5 } # up to 0.5 arcsec shift.
-  
+
             flux :  # Power law distribution for total flux in photons
                 type : RandomDistribution
                 function : x**-1.5
                 x_min : 1.e1
                 x_max : 1.e6
 
-            dilation :  # Also a power law for the total size in arcsec 
+            dilation :  # Also a power law for the total size in arcsec
                         # This should really be correlated with the flux of the galaxy.
                         # It is possible to do so, but we didn't bother here.
                 type : RandomDistribution
@@ -95,18 +95,18 @@ gal :
             gsparams:
                 folding_threshold : 1.e-3  # Build PSFs a bit larger to avoid artifacts
                                            # that are apparent for the brightest stars.
-    index : 
+    index :
         type : Eval
         # 80% will be real galaxies, 20% stars
         str : 'int(p<0.2)'
         fp : { type : Random , min : 0, max : 1 }
 
-    gsparams: 
+    gsparams:
         # Some of these objects are a bit large, so allow for larger FFT images.
         maximum_fft_size : 10000
 
 image :
-    # The "Scattered" type means the objects can be anywhere in the image, even 
+    # The "Scattered" type means the objects can be anywhere in the image, even
     # overlapping. You can place them at specific locations if you want, but here,
     # we use the default, which is random locations.
     type : Scattered

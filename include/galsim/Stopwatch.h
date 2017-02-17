@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-class Stopwatch 
+class Stopwatch
 {
 private:
     double seconds;
@@ -35,7 +35,7 @@ public:
 
     void start() { gettimeofday(&tpStart, NULL); running=true; }
 
-    void stop() 
+    void stop()
     {
         if (!running) return;
         struct timeval tp;
