@@ -20,7 +20,7 @@
 /*
  * ------------------------------------------------------------------------------
  * Author: Craig Lage, UC Davis
- * Date: Nov 8, 2016
+ * Date: Feb 17, 2017
  * Routines for integrating the CCD simulations into GalSim
  */
 
@@ -121,7 +121,24 @@ namespace galsim {
     delete[] _testpoly;    
   }
 
-
+  /*
+    Got a start on implementing the absorption length lookup,
+    but couldn't get the python - C++ wrapper working, so I went
+    back to the analytic function - Craig Lage 17-Feb-17
+  double Silicon::AbsLength(double lambda)
+  {
+    // Looks up the absorption length and returns
+    // an interpolated value
+    int nminus;
+    double aminus, aplus, dlambda;
+    dlambda = _abs_data[2] - _abs_data[0];
+    // index of 
+    nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
+    if (nminus < 0) return _abs_data[1];
+    else if (nminus > _Nabs - 4) return _abs_data[_Nabs - 1];
+    else return _abs_data[nminus+1] + (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
+    }*/
+  
   void Silicon::BuildPolylist(Polygon** polylist, int nx, int ny)
   {
     int xpix, ypix, n, p, pointcounter = 0;
@@ -339,8 +356,9 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
       if (photons.hasAllocatedWavelengths())
 	{
 	  double lambda = photons.getWavelength(i); // in nm
-	  // The below is an approximation.  TODO: Need to do implement a look-up table
+	  // The below is an approximation.  ToDo: replace with lookup table
 	  double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
+	  //double abs_length = AbsLength(lambda); // in microns
 	  si_length = -abs_length * log(1.0 - ud()); // in microns
 #ifdef DEBUGLOGGING
       if (i % 1000 == 0)
@@ -499,7 +517,8 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
     dbg << " not in any pixel\n" << std::endl;
     return addedFlux;
 }
-
+  //template double Silicon::AbsLength(double lambda) const;      
+  
 template bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
                                    ImageView<double> target) const;
 template bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,

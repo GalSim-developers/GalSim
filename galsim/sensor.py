@@ -79,6 +79,7 @@ class SiliconSensor(Sensor):
                             If photon_file = 'None', no file is produced.  Otherwise
                             a file of name photon_file is produced with X,Y locations,
                             dxdz, dydz, and wavelength for each photon ID.
+
     """
     def __init__(self, config_file, vertex_file, NumElec, rng, DiffMult = 1.0, QDist = 3, Nrecalc = 10000):
         self.photon_file = None
@@ -96,18 +97,27 @@ class SiliconSensor(Sensor):
             Nx = ConfigData['PixelBoundaryNx']
             Ny = ConfigData['PixelBoundaryNy']
             PixelSize = ConfigData['PixelSize']                        
-            try:
-                vertex_data =  np.loadtxt(vertex_file, skiprows = 1)
-                #print "NumVertices = %d, NumElec = %d, Nx = %d, Ny = %d, array size = %d"%(NumVertices, NumElec, Nx, Ny, vertex_data.size)
-            except IOError:
-                print "Vertex file %s not found"%vertex_file
-            if vertex_data.size == 5 * Nx * Ny * (4 * NumVertices + 4):
-                self._silicon = galsim._galsim.Silicon(NumVertices, NumElec, Nx, Ny, QDist, Nrecalc, DiffStep, PixelSize, vertex_data)
-            else:
-                raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
         else:
             raise IOError("Error reading configuration file %s"%config_file)
-            
+
+        try:
+            vertex_data =  np.loadtxt(vertex_file, skiprows = 1)
+            #print "NumVertices = %d, NumElec = %d, Nx = %d, Ny = %d, array size = %d"%(NumVertices, NumElec, Nx, Ny, vertex_data.size)
+        except IOError:
+            print "Vertex file %s not found"%vertex_file
+
+        #try:
+        #    abs_data =  np.loadtxt(abs_file, skiprows = 1)
+        #    Nabs = abs_data.size()
+        #except IOError:
+        #    print "Absorption length file %s not found"%abs_file
+
+        if vertex_data.size == 5 * Nx * Ny * (4 * NumVertices + 4):
+            self._silicon = galsim._galsim.Silicon(NumVertices, NumElec, Nx, Ny, QDist, Nrecalc, DiffStep, PixelSize, vertex_data)
+        else:
+            raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
+
+
     def accumulate(self, photons, image):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.

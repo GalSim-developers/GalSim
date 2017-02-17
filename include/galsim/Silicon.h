@@ -53,6 +53,8 @@ namespace galsim
 
 	void BuildPolylist(Polygon** polylist, int nx, int ny);
 
+      //double AbsLength(double lambda);      
+
         template <typename T>
         double accumulate(const PhotonArray& photons, UniformDeviate ud,
                           ImageView<T> target);

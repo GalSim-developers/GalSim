@@ -53,7 +53,7 @@ def test_silicon():
     # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
     # to setting specific parameters via constructor arguments, rather than use a file at all.
     # (Should probably enable this feature anyway...)
-    silicon = galsim.SiliconSensor('../devel/poisson/numvertices_4/bf.cfg','../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 160000, rng=rng1, DiffMult = 0.0)    
+    silicon = galsim.SiliconSensor('../devel/poisson/17feb17_numvertices_4/bf.cfg','../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat', 80000, rng=rng1, DiffMult = 0.0)    
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
@@ -176,17 +176,9 @@ def test_bf_slopes():
         rng2 = galsim.BaseDeviate(5678)
         rng3 = galsim.BaseDeviate(5678)
         # silicon1 has diffusion turned off, silicon2 has it turned on.
-        # These are older simulations, but they will run faster (takes about 10 seconds)
-        silicon1 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng1, DiffMult = 0.0)
-        silicon2 = galsim.SiliconSensor('../devel/poisson/numvertices_8/bf.cfg','../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices', 160000, rng=rng2, DiffMult = 1.0)            
+        silicon1 = galsim.SiliconSensor('../devel/poisson/17feb17_numvertices_4/bf.cfg','../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat', 80000, rng=rng1, DiffMult = 0.0)
+        silicon2 = galsim.SiliconSensor('../devel/poisson/17feb17_numvertices_4/bf.cfg','../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat', 80000, rng=rng2, DiffMult = 1.0)
 
-
-        # silicon1 has diffusion turned off, silicon2 has it turned on.
-        # These are newer simulations, but use 32 vertices per edge, so will take longer (about 30 seconds).
-        #silicon1 = galsim.SiliconSensor('../devel/poisson/H7_BF8_NV32/bf.cfg','../devel/poisson/H7_BF8_NV32/BF_256_9x9_80_Vertices', 80000, rng=rng1, DiffMult = 0.0)
-        #silicon2 = galsim.SiliconSensor('../devel/poisson/H7_BF8_NV32/bf.cfg','../devel/poisson/H7_BF8_NV32/BF_256_9x9_80_Vertices', 80000, rng=rng2, DiffMult = 1.0)            
-
-        obj1 = obj * float(fluxmult + 1)
         # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
         im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon1 (diffusion off)
         im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon2 (diffusion on)        
@@ -261,7 +253,7 @@ def test_sensor_wavelengths_and_angles():
         rng3 = galsim.BaseDeviate(1234)
         sampler = galsim.WavelengthSampler(sed, bandpass, rng3)
         rng4 = galsim.BaseDeviate(5678)
-        silicon = galsim.SiliconSensor('../devel/poisson/numvertices_4/bf.cfg','../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 160000, rng=rng4, DiffMult = 1.0)    
+        silicon = galsim.SiliconSensor('../devel/poisson/17feb17_numvertices_4/bf.cfg','../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat', 80000, rng=rng4, DiffMult = 1.0)
 
         # We'll draw the same object using SiliconSensor
         im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths

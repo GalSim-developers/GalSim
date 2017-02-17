@@ -14,3 +14,13 @@ Update 16-Feb-17
 The file bf_plots_11Jan17.py and Spots_Forward_GalSim-10Jan17.ipynb have been modified to do the analysis described above without beeding Sextractor.  Basically, bf_plots_11Jan17.py writes out the .cat.reg files that Sextractor would create, which contain the spot centroids.
 
 The file bf_plots_15Feb17.py has been modified to create the above set of spot files in a directory called write_output, but it will also write out a set of photon list files (called bf_*_nx_*_ny_*_photon_file.dat) which have a list of the photon locations which are incident on the top of the sensor.  The purpose of these is to allow this same list of photons to be read into the Poisson_CCD code, where they can be tracked down to their collecting pixels.
+
+Update 17-Feb-17
+
+Added update pixel distortion files with three different values of NumVertices.  These are called:
+
+devel/poisson/17feb17_numvertices_*, where * in [4,8,32]
+
+These files were run with the 'hole17' branch of Poisson_CCD22. This code is available at https://github.com/craiglagegit/Poisson_CCD22 and how to run it is detailed there.
+
+Got a start on adding a lookup table for absorption length, as documented in /devel/poisson/absorption, but ran out of time.  The Jupyter notebook included there shows that the current analytic approximation is quite close, so this is not a big concern at this point. 
