@@ -932,3 +932,42 @@ class ZeroPerturbationModel(object):
         Return a list of wavefront aberration Zernike coefficients for use in OpticalScreen
         """
         return np.zeros(12., dtype=float)
+
+
+class HopkinsTelescope(object):
+    """A telescope object that can compute optical aberrations as a function of the location on
+    the field of view.
+
+    The model for the wavefront is a double Zernike polynomial expansion in the field angle `theta`
+    and the pupil position `u`:
+
+    W(theta, u) = Sum_{r,s} Sum_{n,m} a_{r,s,n,m} Z_{r,s}(theta) Z_{n,m}(u)
+
+    For a given theta, the aberrations passed to OpticalPSF are then:
+
+    a_{n,m}(theta) = Sum_{r,s} a_{r,s,n,m} Z_{r,s}(theta)
+
+    (Note that `theta` and `u` above are both 2-d vectors.)
+
+    @param a_nmrs       A two-dimensional array of coefficients.  First index is over nm, i.e. the
+                        pupil aberrations.  The second index is over rs, i.e., the field dependence.
+    @param fov_radius   Radius of the field-of-view from which FoV Zernike polynomials are
+                        normalized.
+    """
+    def __init__(self, a_nmrs, fov_radius=None):
+        if fov_radius is None:
+            raise ValueError("fov_radius is required for HopkinsTelescope")
+        self.fov_radius = fov_radius
+        self.a_nmrs = a_nmrs
+        self.jmax_pupil = self.a_nmrs.shape[0]-1
+        self.jmax_focal = self.a_nmrs.shape[1]-1
+        # Field-of-view does not have obscuration, so obscuration=0 and annular=False here.
+        noll_coef = _noll_coef_array(self.jmax_focal, 0.0, False)
+        # One coef_array for each wavefront aberration
+        self.coef_arrays = [np.dot(noll_coef, a[1:]) for a in self.a_nmrs]
+
+    def getAberrations(self, theta_x, theta_y):
+        """Return the aberrations for a particular field angle."""
+        r = theta_x/self.fov_radius + 1j*theta_y/self.fov_radius
+        rsqr = np.abs(r)**2
+        return [horner2d(rsqr, r, ca).real for ca in self.coef_arrays]
