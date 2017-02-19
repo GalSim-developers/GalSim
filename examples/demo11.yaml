@@ -197,18 +197,6 @@ image :
     # The default is 1.
     index_convention : 0
 
-    # In demo9, we said that you can specify either image_pos or world_pos to place
-    # each postage stamp on the full image.  If you don't specify either one, then the
-    # default is random x and y within the full image.
-    #
-    # image_pos :
-    #     type : XY
-    #     x : { type : Random , min : 0 , max : xsize-1 }
-    #     y : { type : Random , min : 0 , max : ysize-1 }
-    #
-    # Note: if image_convention were 1 as is the default, then these would instead be
-    #     min : 1 , max : {x,y}size
-
 
     # Add Gaussian noise.  When using the whitening feature, the whitening process will end
     # up with white Gaussian noise.  So adding more Gaussian noise can be done coherently.
