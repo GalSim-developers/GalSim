@@ -245,7 +245,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
                 'wmult', 'n_photons', 'max_extra_noise', 'poisson_flux',
-                'reject', 'min_flux_frac', 'min_snr', 'max_snr']
+                'reject', 'min_flux_frac', 'min_snr', 'max_snr', 'seed_offset']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
@@ -271,7 +271,11 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     builder = valid_stamp_types[stamp_type]
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
-    seed = galsim.config.SetupConfigRNG(config, seed_offset=1)
+    if 'seed_offset' in stamp:
+        seed_offset = galsim.config.ParseValue(stamp,'seed_offset',config,int)[0]
+    else:
+        seed_offset = 1
+    seed = galsim.config.SetupConfigRNG(config, seed_offset=seed_offset)
     logger.debug('obj %d: seed = %d',obj_num,seed)
 
     if 'retry_failures' in stamp:

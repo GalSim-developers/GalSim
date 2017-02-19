@@ -158,3 +158,5 @@ New config features
   (which is still the default behavior). (#820)
 - Added optional probability parameter 'p' for Random bool values. (#820)
 - Added ability to specify world_pos in celestial coordinates (#865)
+- Added ability to set a different offset for the random number seeds used
+  at the stamp level (default is 1).  (#865)
