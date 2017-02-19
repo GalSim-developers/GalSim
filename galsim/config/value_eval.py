@@ -69,7 +69,7 @@ def _GenerateFromEval(config, base, value_type):
     #print('base has ',base.keys())
     #print('config = ',config)
 
-    if isinstance(config['str'], str):
+    if str(config['str'])[0] == '@':
         # The ParseValue function can get confused if the first character is an @, but the
         # whole string isn't a Current item.  e.g. @image.pixel_scale * @image.stamp_size.
         # So if config['str'] is a string, just get it.  Otherwise, try parsing the dict.
