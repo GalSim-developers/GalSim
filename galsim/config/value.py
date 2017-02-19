@@ -68,7 +68,7 @@ def ParseValue(config, key, base, value_type):
 
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
-        is_seq = param['type'] == 'Sequence'
+        is_seq = param.get('type',None) == 'Sequence'
         # Note: this call will also set base['index_key'] and base['rng'] to the right values
         index, index_key = _get_index(param, base, is_seq)
         #print('index, index_key = ',index,index_key)

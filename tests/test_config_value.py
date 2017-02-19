@@ -101,6 +101,9 @@ def test_float_value():
         'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
         'nfw' : { 'type' : 'NFWHaloMagnification' },
         'ps' : { 'type' : 'PowerSpectrumMagnification' },
+        'no_type' : { 'value' : 34. },
+        'bad_key' : { 'type' : 'RandomGaussian', 'sig' : 1 },
+        'bad_value' : { 'type' : 'RandomGaussian', 'sigma' : 'not a number' },
     }
 
     test_yaml = True
@@ -385,6 +388,18 @@ def test_float_value():
             warnings.filterwarnings("ignore")
             ps2 = galsim.config.ParseValue(config,'ps',config, float)[0]
     np.testing.assert_almost_equal(ps2, 25.)
+
+    # Should raise an AttributeError if there is no type in the dict
+    try:
+        np.testing.assert_raises(AttributeError, galsim.config.ParseValue, config,
+                                 'no_type', config, float)
+        np.testing.assert_raises(AttributeError, galsim.config.ParseValue, config,
+                                 'bad_key', config, float)
+        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config,
+                                 'bad_value', config, float)
+    except ImportError:
+        pass
+
 
 @timer
 def test_int_value():
