@@ -156,3 +156,4 @@ New config features
   has an error, rather than just reporting the exception and continuing on
   (which is still the default behavior). (#820)
 - Added optional probability parameter 'p' for Random bool values. (#820)
+- Added ability to specify world_pos in celestial coordinates (#865)

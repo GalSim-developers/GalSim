@@ -196,21 +196,21 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
     if xsize: config['stamp_xsize'] = xsize
     if ysize: config['stamp_ysize'] = ysize
+
     if image_pos is not None and world_pos is None:
         # Calculate and save the position relative to the image center
         world_pos = config['wcs'].toWorld(image_pos)
-
-        # Wherever we use the world position, we expect a Euclidean position, not a
-        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-        # image center.
-        if isinstance(world_pos, galsim.CelestialCoord):
-            # Then project this position relative to the image center.
-            world_center = config['wcs'].toWorld(config['image_center'])
-            world_pos = world_center.project(world_pos, projection='gnomonic')
-
     elif world_pos is not None and image_pos is None:
         # Calculate and save the position relative to the image center
         image_pos = config['wcs'].toImage(world_pos)
+
+    # Wherever we use the world position, we expect a Euclidean position, not a
+    # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+    # image center.
+    if isinstance(world_pos, galsim.CelestialCoord):
+        # Then project this position relative to the image center.
+        world_center = config['wcs'].toWorld(config['image_center'])
+        world_pos = world_center.project(world_pos, projection='gnomonic')
 
     if image_pos is not None:
         # The image_pos refers to the location of the true center of the image, which is
@@ -518,6 +518,45 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     image = prof.drawImage(**kwargs)
     return image
 
+def ParseWorldPos(config, param_name, base):
+    """A helper function to parse the 'world_pos' value.
+
+    The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a
+    CelestialCoord) or as Euclidean coordinates in the local tangent plane relative to the
+    image center (a PositionD).
+
+    1. For the RA/Dec option, the world_pos field should use the type RADec, which includes two
+       values named ra and dec, each of which should be an Angle type.  e.g.
+
+            world_pos:
+                type : RADec
+                ra : 37 hours
+                dec: -23 degrees
+
+       Technically, any other type that results in a CelestialCoord is valid, but RADec is the
+       only one that is defined natively in GalSim.
+
+    2. For the relative position in the local tangent plane (where 0,0 is the position of the
+       image center), you can use any PositionD type.  e.g.
+
+            world_pos:
+                type : RandomCircle
+                radius : 12       # arcsec
+                inner_radius : 3  # arcsec
+
+    @param config       The configuration dict for the stamp field.
+    @param param_name   The name of the field in the config dict to parse as a world_pos.
+                        Normally, this is just 'world_pos'.
+    @param base         The base configuration dict.
+
+    @returns either a CelestialCoord or a PositionD instance.
+    """
+    try:
+        return galsim.config.ParseValue(config, param_name, base, galsim.PositionD)[0]
+    except (ValueError, AttributeError):
+        # This should raise an appropriate error if neither option is valid.
+        return galsim.config.ParseValue(config, param_name, base, galsim.CelestialCoord)[0]
+
 class StampBuilder(object):
     """A base class for building stamp images of individual objects.
 
@@ -580,9 +619,9 @@ class StampBuilder(object):
             image_pos = None
 
         if 'world_pos' in config:
-            world_pos = galsim.config.ParseValue(config, 'world_pos', base, galsim.PositionD)[0]
+            world_pos = galsim.config.ParseWorldPos(config, 'world_pos', base)
         elif 'world_pos' in image:
-            world_pos = galsim.config.ParseValue(image, 'world_pos', base, galsim.PositionD)[0]
+            world_pos = galsim.config.ParseWorldPos(image, 'world_pos', base)
         else:
             world_pos = None
 

@@ -560,6 +560,14 @@ def _GenerateFromRTheta(config, base, value_type):
     #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
     return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
 
+def _GenerateFromRADec(config, base, value_type):
+    """@brief Return a CelestialCoord constructed from given (ra,dec)
+    """
+    req = { 'ra' : galsim.Angle, 'dec' : galsim.Angle }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    #print(base['obj_num'],'Generate from RADec: kwargs = ',kwargs)
+    return galsim.CelestialCoord(**kwargs), safe
+
 def _GenerateFromRad(config, base, value_type):
     """@brief Return an Angle constructed from given theta in radians
     """
@@ -816,3 +824,4 @@ RegisterValueType('EtaBeta', _GenerateFromEtaBeta, [ galsim.Shear ])
 RegisterValueType('QBeta', _GenerateFromQBeta, [ galsim.Shear ])
 RegisterValueType('XY', _GenerateFromXY, [ galsim.PositionD ])
 RegisterValueType('RTheta', _GenerateFromRTheta, [ galsim.PositionD ])
+RegisterValueType('RADec', _GenerateFromRADec, [ galsim.CelestialCoord ])

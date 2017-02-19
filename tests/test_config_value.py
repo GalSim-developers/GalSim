@@ -1199,7 +1199,8 @@ def test_pos_value():
         'sum1' : { 'type' : 'Sum',
                    'items' : [ galsim.PositionD(0.2, -0.3),
                                galsim.PositionD(-0.5, 0.2),
-                               galsim.PositionD(0.1, 0.0) ] }
+                               galsim.PositionD(0.1, 0.0) ] },
+        'radec' : { 'type' : 'RADec', 'ra' : 13.4 * galsim.hours, 'dec' : -0.3 * galsim.degrees },
     }
 
     # Test direct values
@@ -1266,6 +1267,11 @@ def test_pos_value():
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.PositionD)[0]
     np.testing.assert_almost_equal(sum1.x, 0.2 - 0.5 + 0.1)
     np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
+
+    radec = galsim.config.ParseValue(config,'radec',config, galsim.CelestialCoord)[0]
+    np.testing.assert_almost_equal(radec.ra / galsim.hours, 13.4 - 24) # wraps around to negative.
+    np.testing.assert_almost_equal(radec.dec / galsim.degrees, -0.3)
+
 
 @timer
 def test_eval():
