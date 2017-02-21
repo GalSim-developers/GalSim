@@ -319,11 +319,6 @@ def test_shear_variance():
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
-    # For explanation of these two variables, see below, the comment starting "Note: the next..."
-    # These numbers are, however, hard-coded up here with the grid parameters because if the grid is
-    # changed, the erfmax and erfmin must change.
-    erfmax = 0.9875806693484477
-    erfmin = 0.007978712629263206
     # Now choose s such that s*kmax=2.5, i.e., very little power at kmax.
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
@@ -333,13 +328,12 @@ def test_shear_variance():
     assert g2.shape == (ngrid, ngrid)
     # For this case, the prediction for the variance is:
     # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
-    # Note: the next two lines of code are commented out because math.erf is not available in python
-    # v2.6, with which we must be compatible.  So instead the values of erf are hard-coded (above)
-    # based on the calculations from a machine that has python v2.7.  The implications here are that
-    # if one changes the grid parameters for this test in a way that also changes the values of
-    # these Erf[...] calculations, then the hard-coded erfmax and erfmin must be changed.
-    # erfmax = math.erf(s*kmax/math.sqrt(2.))
-    # erfmin = math.erf(s*kmin/math.sqrt(2.))
+    try:
+        erfmax = math.erf(s*kmax/math.sqrt(2.))
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except: # For python2.6, which doesn't have math.erf.
+        erfmax = 0.9875806693484477
+        erfmin = 0.007978712629263206
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
@@ -377,7 +371,10 @@ def test_shear_variance():
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
     # Here one of the Erf[...] values does change.
-    erfmin = 0.01595662743380396
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.01595662743380396
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
@@ -401,8 +398,10 @@ def test_shear_variance():
     kmax_factor = 2
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.*kmax_factor
-    # Back to the original erfmin value.
-    erfmin = 0.007978712629263206
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.007978712629263206
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     rng2 = rng.duplicate()
@@ -429,8 +428,12 @@ def test_shear_variance():
     kmax = np.pi/(grid_size/ngrid)/3600.
     s = 2.5/kmax
     # This time, erfmin is smaller.
-    erfmin = 0.003989406181481644
-    test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.003989406181481644
+    # Also, for this test, it should be equivalent to use the b-mode instead.
+    test_ps = galsim.PowerSpectrum(b_power_function=lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees, kmin_factor=kmin_factor)
     assert g1.shape == (ngrid, ngrid)
