@@ -43,7 +43,7 @@ class PowerSpectrumLoader(InputLoader):
         """
         # Ignore these parameters here, since they are for the buildGrid step, not the
         # initialization of the PowerSpectrum object.
-        ignore = ['grid_spacing', 'interpolant']
+        ignore = ['grid_spacing', 'interpolant', 'variance']
         opt = galsim.PowerSpectrum._opt_params
         return galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
@@ -86,6 +86,11 @@ class PowerSpectrumLoader(InputLoader):
         else:
             interpolant = None
 
+        if 'variance' in config:
+            variance = galsim.config.ParseValue(config, 'variance', base, float)[0]
+        else:
+            variance = None
+
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
         if base['wcs'].isCelestial():
@@ -94,7 +99,7 @@ class PowerSpectrumLoader(InputLoader):
             world_center = base['wcs'].toWorld(base['image_center'])
         rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
         input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
-                            rng=rng, interpolant=interpolant)
+                            rng=rng, interpolant=interpolant, variance=variance)
 
         # Make sure this process gives consistent results regardless of the number of processes
         # being used.

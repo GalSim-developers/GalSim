@@ -136,6 +136,8 @@ New Features
   are generally somewhat faster than the numpy functions. (#840)
 - Added a hook to the WCS classes to allow them to vary with color, although
   none of our current WCS classes are able to use this feature. (#865)
+- Added optional `variance` parameter to PowerSpectrum.buildGrid to
+  renormalize the variance of the returned shear values. (#865)
 
 
 New config features

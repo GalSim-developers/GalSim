@@ -1403,7 +1403,8 @@ def test_eval():
             {
                 'e_power_function' : 'np.exp(-k ** math.sqrt(0.04))',
                 'b_power_function' : 'np.exp(-k ** math.log(math.exp(1.2)))',
-                'grid_spacing' : 10
+                'grid_spacing' : 10,
+                'variance' : 0.05,
             },
         ]
     }
@@ -1446,7 +1447,7 @@ def test_eval():
     np.testing.assert_almost_equal(ps_mu, mu)
 
     # Check use of math in the evaluated string
-    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
+    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng, variance=0.05)
     g1,g2,mu = ps.getLensing(pos = config['world_pos'])
     ps_shear = galsim.config.ParseValue(config, 'ps_shear2', config, galsim.Shear)[0]
     ps_mu = galsim.config.ParseValue(config, 'ps_mu2', config, float)[0]
