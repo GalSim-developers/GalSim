@@ -33,43 +33,17 @@ def theoryToObserved(gamma1, gamma2, kappa):
 
     @param gamma1       The first shear component, which must be the NON-reduced shear.  This and
                         all other inputs should be supplied either as individual floating point
-                        numbers, tuples, lists, or NumPy arrays.
+                        numbers or NumPy arrays.
     @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
     @param kappa        The convergence.
 
     @returns the reduced shear and magnification as a tuple `(g1, g2, mu)` where each item has the
              same form as the input gamma1, gamma2, and kappa.
     """
-    # check nature of inputs to make sure they are appropriate
-    if type(gamma1) != type(gamma2):
-        raise ValueError("Input shear components must be of the same type!")
-    if type(kappa) != type(gamma1):
-        raise ValueError("Input shear and convergence must be of the same type!")
-    gamma1_tmp = np.array(gamma1)
-    gamma2_tmp = np.array(gamma2)
-    kappa_tmp = np.array(kappa)
-    if gamma1_tmp.shape != gamma2_tmp.shape:
-        raise ValueError("Shear arrays passed to theoryToObserved() do not have the same shape!")
-    if kappa_tmp.shape != gamma1_tmp.shape:
-        raise ValueError(
-           "Convergence and shear arrays passed to theoryToObserved() do not have the same shape!")
-
-    # Now convert to reduced shear and magnification
-    g1 = gamma1_tmp/(1.-kappa_tmp)
-    g2 = gamma2_tmp/(1.-kappa_tmp)
-    mu = 1./((1.-kappa_tmp)**2 - (gamma1_tmp**2 + gamma2_tmp**2))
-
-    # Put back into same format as inputs
-    if isinstance(gamma1, float):
-        return float(g1), float(g2), float(mu)
-    elif isinstance(gamma1, list):
-        return list(g1), list(g2), list(mu)
-    elif isinstance(gamma1, tuple):
-        return tuple(g1), tuple(g2), tuple(mu)
-    elif isinstance(gamma1, np.ndarray):
-        return g1, g2, mu
-    else:
-        raise ValueError("Unknown input type for shears, convergences: %s",type(gamma1))
+    g1 = gamma1/(1.-kappa)
+    g2 = gamma2/(1.-kappa)
+    mu = 1./((1.-kappa)**2 - (gamma1**2 + gamma2**2))
+    return g1, g2, mu
 
 class PowerSpectrum(object):
     """Class to represent a lensing shear field according to some power spectrum P(k).
