@@ -167,7 +167,7 @@ def SetupConfigImageSize(config, xsize, ysize):
     config['image_bounds'] = galsim.BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
 
     # Build the wcs
-    wcs = galsim.config.BuildWCS(config)
+    wcs = galsim.config.BuildWCS(config['image'], 'wcs', config)
     config['wcs'] = wcs
 
     # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The

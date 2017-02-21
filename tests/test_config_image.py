@@ -1092,6 +1092,191 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
+def test_wcs():
+    """Test various wcs options"""
+    config = {
+        # We'll need this for some of the items below.
+        'image_center' : galsim.PositionD(1024, 1024)
+    }
+    config['image'] = {
+        'pixel_scale' : 0.34,
+        'scale2' : { 'type' : 'PixelScale', 'scale' : 0.43 },
+        'scale3' : {
+            'type' : 'PixelScale',
+            'scale' : 0.43,
+            'origin' : galsim.PositionD(32,24),
+        },
+        'scale4' : {
+            'type' : 'PixelScale',
+            'scale' : 0.43,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'scale5' : galsim.PixelScale(0.49),
+        'scale6' : "$galsim.PixelScale(0.56)",
+        'scale7' : "@image.scale6",
+        'shear1' : {
+            'type' : 'Shear',
+            'scale' : 0.43,
+            'shear' : galsim.Shear(g1=0.2, g2=0.3)
+        },
+        'shear2' : {
+            'type' : 'Shear',
+            'scale' : 0.43,
+            'shear' : { 'type' : 'G1G2', 'g1' : 0.2, 'g2' : 0.3 },
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'jac1' : {
+            'type' : 'Jacobian',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21
+        },
+        'jac2' : {
+            'type' : 'Affine',  # Affine is really just a synonym for Jacobian here.
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21
+        },
+        'jac3' : {
+            'type' : 'Jacobian',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'jac4' : {
+            'type' : 'Affine',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'uv' : {
+            'type' : 'UVFunction',
+            'ufunc' : '0.05 * numpy.exp(1. + x/100.)',
+            'vfunc' : '0.05 * np.exp(1. + y/100.)',
+            'xfunc' : '100. * (np.log(u*20.) - 1.)',
+            'yfunc' : '100. * (np.log(v*20.) - math.sqrt(1.))',
+            'origin' : 'center',
+        },
+        'radec' : {
+            'type' : 'RaDecFunction',
+            'ra_func' : '0.05 * numpy.exp(1. + x/100.) * galsim.hours / galsim.radians',
+            'dec_func' : '0.05 * np.exp(math.sqrt(1.) + y/100.) * galsim.degrees / galsim.radians',
+            'origin' : 'center',
+        },
+        'fits1' : {
+            'type' : 'Fits',
+            'file_name' : 'tpv.fits',
+            'dir' : 'fits_files'
+        },
+        'fits2' : {
+            'type' : 'Fits',
+            'file_name' : 'fits_files/tpv.fits',
+        },
+        'tan1' : {
+            'type' : 'Tan',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'units' : 'arcsec',
+            'origin' : 'center',
+            'ra' : '19.3 hours',
+            'dec' : '-33.1 degrees',
+        },
+        'tan2' : {
+            'type' : 'Tan',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'ra' : '19.3 hours',
+            'dec' : '-33.1 degrees',
+        },
+        'invalid' : 34
+    }
+
+    reference = {
+        'scale1' : galsim.PixelScale(0.34),  # Missing from config.  Uses pixel_scale
+        'scale2' : galsim.PixelScale(0.43),
+        'scale3' : galsim.OffsetWCS(scale=0.43, origin=galsim.PositionD(32,24)),
+        'scale4' : galsim.OffsetWCS(scale=0.43, origin=galsim.PositionD(32,24),
+                                    world_origin=galsim.PositionD(15,90)),
+        'scale5' : galsim.PixelScale(0.49),
+        'scale6' : galsim.PixelScale(0.56),
+        'scale7' : galsim.PixelScale(0.56),
+        'shear1' : galsim.ShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3)),
+        'shear2' : galsim.OffsetShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3),
+                                         origin=galsim.PositionD(32,24),
+                                         world_origin=galsim.PositionD(15,90)),
+        'jac1' : galsim.JacobianWCS(0.2, 0.02, -0.04, 0.21),
+        'jac2' : galsim.JacobianWCS(0.2, 0.02, -0.04, 0.21),
+        'jac3' : galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                  origin=galsim.PositionD(32,24),
+                                  world_origin=galsim.PositionD(15,90)),
+        'jac4' : galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                  origin=galsim.PositionD(32,24),
+                                  world_origin=galsim.PositionD(15,90)),
+        'uv' : galsim.UVFunction(
+                ufunc = lambda x,y: 0.05 * np.exp(1. + x/100.),
+                vfunc = lambda x,y: 0.05 * np.exp(1. + y/100.),
+                xfunc = lambda u,v: 100. * (np.log(u*20.) - 1.),
+                yfunc = lambda u,v: 100. * (np.log(v*20.) - 1.),
+                origin = config['image_center']),
+        'radec' : galsim.RaDecFunction(
+                ra_func = lambda x,y: 0.05 * np.exp(1. + x/100.) * galsim.hours / galsim.radians,
+                dec_func = lambda x,y: 0.05 * np.exp(1. + y/100.) * galsim.degrees / galsim.radians,
+                origin = config['image_center']),
+        'fits1' : galsim.FitsWCS('fits_files/tpv.fits'),
+        'fits2' : galsim.FitsWCS('fits_files/tpv.fits'),
+        'tan1' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                                             origin=config['image_center']),
+                               world_origin=galsim.CelestialCoord(19.3*galsim.hours,
+                                                                  -33.1*galsim.degrees),
+                               units=galsim.arcsec),
+        'tan2' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21),
+                               world_origin=galsim.CelestialCoord(19.3*galsim.hours,
+                                                                  -33.1*galsim.degrees)),
+    }
+
+    for key in reference.keys():
+        wcs = galsim.config.BuildWCS(config['image'], key, config)
+        ref = reference[key]
+
+        print(key,'=',wcs)
+        #print('ref =',ref)
+
+        p = galsim.PositionD(23,12)
+        #print(wcs.toWorld(p), ref.toWorld(p))
+        if ref.isCelestial():
+            np.testing.assert_almost_equal(wcs.toWorld(p).ra.rad(), ref.toWorld(p).ra.rad())
+            np.testing.assert_almost_equal(wcs.toWorld(p).dec.rad(), ref.toWorld(p).dec.rad())
+        else:
+            np.testing.assert_almost_equal(wcs.toWorld(p).x, ref.toWorld(p).x)
+            np.testing.assert_almost_equal(wcs.toWorld(p).y, ref.toWorld(p).y)
+            #print(wcs.toImage(p), ref.toImage(p))
+            np.testing.assert_almost_equal(wcs.toImage(p).x, ref.toImage(p).x)
+            np.testing.assert_almost_equal(wcs.toImage(p).y, ref.toImage(p).y)
+
+    # Finally, check the default if there is no wcs or pixel_scale item
+    wcs = galsim.config.BuildWCS(config, 'wcs', config)
+    assert wcs == galsim.PixelScale(1.0)
+
+    try:
+        np.testing.assert_raises(ValueError,
+                                 galsim.config.BuildWCS, config['image'], 'invalid', config)
+    except ImportError:
+        pass
+
 
 if __name__ == "__main__":
     test_single()
@@ -1104,3 +1289,4 @@ if __name__ == "__main__":
     test_scattered_whiten()
     test_tiled()
     test_njobs()
+    test_wcs()

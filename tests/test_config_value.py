@@ -1457,56 +1457,6 @@ def test_eval():
     np.testing.assert_almost_equal(ps_shear.g2, g2)
     np.testing.assert_almost_equal(ps_mu, mu)
 
-    # Check WCS types that take user input
-    # First, test UVFunction
-    config['image'] = {
-        'wcs' : {
-            'type' : 'UVFunction',
-            'ufunc' : '0.05 * numpy.exp(1. + x/100.)',
-            'vfunc' : '0.05 * np.exp(1. + y/100.)',
-            'xfunc' : '100. * (np.log(u*20.) - 1.)',
-            'yfunc' : '100. * (np.log(v*20.) - math.sqrt(1.))',
-            'origin' : 'center',
-        },
-    }
-
-    wcs1 = galsim.UVFunction(
-            ufunc = lambda x,y: 0.05 * np.exp(1. + x/100.),
-            vfunc = lambda x,y: 0.05 * np.exp(1. + y/100.),
-            xfunc = lambda u,v: 100. * (np.log(u*20.) - 1.),
-            yfunc = lambda u,v: 100. * (np.log(v*20.) - 1.),
-            origin = config['image_center'])
-    wcs2 = galsim.config.BuildWCS(config)
-    print('wcs1 = ',wcs1)
-    print('wcs2 = ',wcs2)
-    p = galsim.PositionD(23,12)
-    print(wcs1.toWorld(p), wcs2.toWorld(p))
-    np.testing.assert_almost_equal(wcs1.toWorld(p).x, wcs2.toWorld(p).x)
-    np.testing.assert_almost_equal(wcs1.toWorld(p).y, wcs2.toWorld(p).y)
-    print(wcs1.toImage(p), wcs2.toImage(p))
-    np.testing.assert_almost_equal(wcs1.toImage(p).x, wcs2.toImage(p).x)
-    np.testing.assert_almost_equal(wcs1.toImage(p).y, wcs2.toImage(p).y)
-
-    # Next, test RaDecFunction
-    config['image']['wcs'] = {
-        'type' : 'RaDecFunction',
-        'ra_func' : '0.05 * numpy.exp(1. + x/100.) * galsim.hours / galsim.radians',
-        'dec_func' : '0.05 * np.exp(math.sqrt(1.) + y/100.) * galsim.degrees / galsim.radians',
-        'origin' : 'center',
-    }
-
-    wcs1 = galsim.RaDecFunction(
-            ra_func = lambda x,y: 0.05 * np.exp(1. + x/100.) * galsim.hours / galsim.radians,
-            dec_func = lambda x,y: 0.05 * np.exp(1. + y/100.) * galsim.degrees / galsim.radians,
-            origin = config['image_center'])
-    wcs2 = galsim.config.BuildWCS(config)
-    print('wcs1 = ',wcs1)
-    print('wcs2 = ',wcs2)
-    p = galsim.PositionD(23,12)
-    print(wcs1.toWorld(p), wcs2.toWorld(p))
-    np.testing.assert_almost_equal(wcs1.toWorld(p).ra.rad(), wcs2.toWorld(p).ra.rad())
-    np.testing.assert_almost_equal(wcs1.toWorld(p).dec.rad(), wcs2.toWorld(p).dec.rad())
-
 
 if __name__ == "__main__":
     test_float_value()

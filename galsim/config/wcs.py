@@ -28,39 +28,70 @@ import logging
 valid_wcs_types = {}
 
 
-def BuildWCS(config):
-    """Read the wcs parameters from the config dict and return a constructed wcs object.
+def BuildWCS(config, key, base=None, logger=None):
+    """Read the wcs parameters from config[key] and return a constructed wcs object.
+
+    @param config       A dict with the configuration information.
+    @param key          The key name in config indicating which object to build.
+    @param base         The base dict of the configuration. [default: config]
+    @param logger       Optionally, provide a logger for logging debug statements. [default: None]
+
+    @returns a BaseWCS instance
     """
-    image = config['image']
+    logger = galsim.config.LoggerWrapper(logger)
+    if base is None:
+        base = config
 
-    # If there is a wcs field, read it and update the wcs variable.
-    if 'wcs' in image:
-        image_wcs = image['wcs']
-        if 'type' in image_wcs:
-            wcs_type = image_wcs['type']
-        else:
-            wcs_type = 'PixelScale'
+    logger.debug('image %d: Start BuildGSObject %s',base.get('image_num',0),key)
 
-        # Special case: origin == center means to use image_center for the wcs origin
-        if 'origin' in image_wcs and image_wcs['origin'] == 'center':
-            origin = config['image_center']
-            image_wcs['origin'] = origin
-
-        if wcs_type not in valid_wcs_types:
-            raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
-
-        builder = valid_wcs_types[wcs_type]
-        wcs = builder.buildWCS(image_wcs, config)
-
-    else:
+    if key not in config:
         # Default if no wcs is to use PixelScale
-        if 'pixel_scale' in image:
-            scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
+        if 'pixel_scale' in config:
+            scale = galsim.config.ParseValue(config, 'pixel_scale', base, float)[0]
         else:
             scale = 1.0
-        wcs = galsim.PixelScale(scale)
+        return galsim.PixelScale(scale)
+
+    param = config[key]
+
+    # Check for direct value, else get the wcs type
+    if isinstance(param, galsim.BaseWCS):
+        return param
+    elif param == str(param) and (param[0] == '$' or param[0] == '@'):
+        return galsim.config.ParseValue(config, key, base, None)[0]
+    elif not isinstance(param, dict):
+        raise ValueError("wcs must be either a BaseWCS or a dict")
+    elif 'type' in param:
+        wcs_type = param['type']
+    else:
+        wcs_type = 'PixelScale'
+
+    # Check if we can use the current cached object
+    config['index_key'] = 'image_num'
+    index = config.get('image_num', 0)
+    if 'current_val' in param and param['current_index'] == index:
+        logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
+        return param['current_val']
+
+    # Special case: origin == center means to use image_center for the wcs origin
+    if 'origin' in param and param['origin'] == 'center':
+        origin = base['image_center']
+        param['origin'] = origin
+
+    if wcs_type not in valid_wcs_types:
+        raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
+    logger.debug('image %d: Buiding wcs type %s', base.get('image_num',0), wcs_type)
+    builder = valid_wcs_types[wcs_type]
+    wcs = builder.buildWCS(param, base)
+
+    param['current_val'] = wcs
+    param['current_safe'] = False
+    param['current_value_type'] = None
+    param['current_index'] = index
+    param['current_index_key'] = 'image_num'
 
     return wcs
+
 
 class WCSBuilder(object):
     """A base class for building WCS objects.

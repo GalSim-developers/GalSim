@@ -192,7 +192,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
     # Make sure we have a valid wcs in case image-level processing was skipped.
     if 'wcs' not in config:
-        config['wcs'] = galsim.config.BuildWCS(config)
+        config['wcs'] = galsim.config.BuildWCS(config['image'], 'wcs', config)
 
     if xsize: config['stamp_xsize'] = xsize
     if ysize: config['stamp_ysize'] = ysize
