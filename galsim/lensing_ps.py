@@ -649,17 +649,12 @@ class PowerSpectrum(object):
                         "Input provided: {0}\n".format(origpf)+
                         "Caught error: {0}".format(e))
 
-
         # Check that the function is sane.
         # Note: Only try tests below if it's not a LookupTable.
         #       (If it's a LookupTable, then it could be a valid function that isn't
-        #        defined at k=1, and by definition it must return something that is the
-        #        same length as the input.)
+        #        defined at k=1.)
         if not isinstance(pf, galsim.LookupTable):
-            f1 = pf(np.array((0.1,1.)))
-            if isinstance(f1, float):
-                raise AttributeError(
-                    "Power function MUST return a list/array same length as input")
+            pf(np.array((0.1,1.)))
         return pf
 
     def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
@@ -1696,10 +1691,10 @@ class PowerSpectrumRealizer(object):
             if mink < power_function.x_min or maxk > power_function.x_max:
                 raise ValueError(
                     "LookupTable P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
-        P_k = power_function(k)
+        P_k = np.empty_like(k)
+        P_k[:,:] = power_function(k)
 
         # Now fix the k=0 value of power to zero
-        assert type(P_k) is np.ndarray
         P_k[0,0] = type(P_k[0,1])(0.)
         if np.any(P_k < 0):
             raise ValueError("Negative power found for some values of k!")

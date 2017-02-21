@@ -913,8 +913,7 @@ def test_corr_func():
     # expression above.
     #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_0(x) x dx
     # We want the integrand to be x J_0(x), which leads me to conclude that we should set
-    # P=1 (i.e., use a power function of lambda k : np.ones_like(k)).  In that case we should
-    # find
+    # P(k)=1.  In that case we should find
     #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} x J_0(x) dx
     #          = (1/2pi) (1/r)^2 [r kmax J_1(r*kmax) - r kmin J_1(r*kmin)]
     #          = (1/2pi) (1/r) [kmax J_1(r*kmax) - kmin J_1(r*kmin)]
@@ -923,7 +922,7 @@ def test_corr_func():
     # Also, we're going to just work in arcsec, which is the natural set of units for the
     # lensing engine.  Other unit tests already ensure that the units are working out properly
     # so we will not test that here.
-    ps = galsim.PowerSpectrum(lambda k : np.ones_like(k))
+    ps = galsim.PowerSpectrum(lambda k : 1.)
     # Set up a grid, with the expectation that we'll use kmin_factor=kmax_factor=1 in our test:
     ngrid = 100
     grid_spacing = 360. # arcsec, i.e., 0.1 degrees
@@ -1257,6 +1256,40 @@ def test_normalization():
     np.testing.assert_allclose(vark, target_var/2., rtol=1.e-3,
                                err_msg="Incorrect kappa variance using renormalized variance")
 
+@timer
+def test_constant():
+    """Test P(k) = constant"""
+    # We used to require that P(k) return an array, but that's not required anymore.
+    ps_a = galsim.PowerSpectrum(lambda k: 4, units=galsim.arcsec)
+    ps_b = galsim.PowerSpectrum(lambda k: 4.*np.ones_like(k), units=galsim.arcsec)
+    rng_a = galsim.BaseDeviate(1234)
+    rng_b = galsim.BaseDeviate(1234)
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True)
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True)
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
+    # Repeat with bandlimit = None, since that's the only one that could actually be a problem.
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True, bandlimit=None)
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True, bandlimit=None)
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
+    # And might as well hit soft as well for good measure
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True, bandlimit='soft')
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True, bandlimit='soft')
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
 
 if __name__ == "__main__":
     test_nfwhalo()
@@ -1274,3 +1307,4 @@ if __name__ == "__main__":
     test_bandlimit()
     test_psr()
     test_normalization()
+    test_constant()
