@@ -4,6 +4,10 @@ Changes from v1.5 to v1.6
 API Changes
 -----------
 
+- Reduced the number of types for the return value of various NFWHalo and
+  PowerSpectrum methods.  Now they either return a single value if the input
+  `pos` is a single Position or a numpy array if multiple positions were
+  provided. (#855)
 
 
 Dependency Changes

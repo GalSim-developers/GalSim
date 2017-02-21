@@ -351,13 +351,12 @@ class PowerSpectrum(object):
 
                 >>> g1, g2 = my_ps.buildGrid(grid_spacing = 8., ngrid = 65,
                 ...                          rng = galsim.BaseDeviate(1413231),
-                ...                          center = (256.5, 256.5) )
+                ...                          center = galsim.PositionD(256.5, 256.5) )
 
         3. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
            all necessary values of k, then generate shears and convergences on a grid, and convert
            to reduced shear and magnification so they can be used to transform galaxy images.
-           Assuming that k and P_k are either lists, tuples, or 1d NumPy arrays containing k and
-           P(k):
+           E.g., assuming that k and P_k are NumPy arrays containing k and P(k):
 
                 >>> tab_pk = galsim.LookupTable(k, P_k)
                 >>> my_ps = galsim.PowerSpectrum(tab_pk)
@@ -426,17 +425,9 @@ class PowerSpectrum(object):
                 raise ValueError("kmax_factor must be an integer")
             kmax_factor = int(kmax_factor)
 
-        # Check if center is a Position
-        if isinstance(center,galsim.PositionD):
-            pass  # This is what it should be
-        elif isinstance(center,galsim.PositionI):
-            # Convert to a PositionD
-            center = galsim.PositionD(center.x, center.y)
-        elif isinstance(center, tuple) and len(center) == 2:
-            # Convert (x,y) tuple to PositionD
-            center = galsim.PositionD(center[0], center[1])
-        else:
-            raise TypeError("Unable to parse the input center argument for buildGrid")
+        # Check if center is a PositionD
+        if not isinstance(center,galsim.PositionD):
+            raise TypeError("center argument for buildGrid must be a PositionD instance")
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
@@ -867,9 +858,8 @@ class PowerSpectrum(object):
     def _hard_cutoff(self, k, k_max):
         if isinstance(k, float):
             return float(k < k_max)
-        elif isinstance(k, list) or isinstance(k, tuple):
-            return (np.array(k) < k_max).astype(float)
-        else: return (k < k_max).astype(float)
+        else:
+            return (k < k_max).astype(float)
 
     def _wrap_image(self, im, border=7):
         """
@@ -944,6 +934,22 @@ class PowerSpectrum(object):
                                                              im.bounds.ymax-b1, im.bounds.ymax)])
         return im_new
 
+
+    @staticmethod
+    def _return(pos, value_list):
+        """Helper to return a value in the right form.
+
+        if pos represents a single positions, return value_list[0]
+        else return array(value_list)
+        """
+        if isinstance(pos, galsim.PositionD):
+            return value_list[0]
+        elif len(pos) == 2 and isinstance(pos[0],float):
+            return value_list[0]
+        else:
+            return np.array(value_list)
+
+
     def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the shear values for a given
@@ -997,19 +1003,15 @@ class PowerSpectrum(object):
                 >>> g1, g2 = my_ps.getShear( poslist )
                 >>> g1, g2 = my_ps.getShear( (xlist, ylist) )
 
-           Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
-           The lists are the same length as the number of input positions.
+           Both calls do the same thing.  The returned g1, g2 this time are numpy arrays of g1, g2
+           values.  The arrays are the same length as the number of input positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param units        The angular units used for the positions.  [default: arcsec]
         @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
         @param periodic     Whether the interpolation should treat the positions as being defined
@@ -1025,8 +1027,7 @@ class PowerSpectrum(object):
         @returns the shear as a tuple, (g1,g2)
 
         If the input `pos` is given a single position, (g1,g2) are the two shear components.
-        If the input `pos` is given a list of positions, they are each a python list of values.
-        If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
 
         if not hasattr(self, 'im_g1'):
@@ -1119,14 +1120,7 @@ class PowerSpectrum(object):
                 g1.append(sbii_g1.xValue((iter_pos-self.center)/self.grid_spacing))
                 g2.append(sbii_g2.xValue((iter_pos-self.center)/self.grid_spacing))
 
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0]
-        elif isinstance(pos[0], np.ndarray):
-            return np.array(g1), np.array(g2)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0]
-        else:
-            return g1, g2
+        return self._return(pos,g1), self._return(pos,g2)
 
     def getConvergence(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1148,14 +1142,10 @@ class PowerSpectrum(object):
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list or array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param units        The angular units used for the positions.  [default: arcsec]
         @param periodic     Whether the interpolation should treat the positions as being defined
                             with respect to a periodic grid, which will wrap them around if they
@@ -1170,8 +1160,7 @@ class PowerSpectrum(object):
         @returns the convergence, kappa.
 
         If the input `pos` is given a single position, kappa is the convergence value.
-        If the input `pos` is given a list of positions, kappa is a python list of values.
-        If the input `pos` is given a NumPy array of positions, kappa is a NumPy array.
+        If the input `pos` is given a list/array of positions, kappa is a NumPy array.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -1231,14 +1220,7 @@ class PowerSpectrum(object):
             else:
                 kappa.append(sbii_kappa.xValue((iter_pos-self.center)/self.grid_spacing))
 
-        if isinstance(pos, galsim.PositionD):
-            return kappa[0]
-        elif isinstance(pos[0], np.ndarray):
-            return np.array(kappa)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return kappa[0]
-        else:
-            return kappa
+        return self._return(pos, kappa)
 
     def getMagnification(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1259,32 +1241,27 @@ class PowerSpectrum(object):
         single quantity (a magnification value or array of magnification values) rather than a pair
         of quantities.  See documentation for getShear() for some examples.
 
-        @param pos              Position(s) of the source(s), assumed to be post-lensing!
-                                Valid ways to input this:
-                                  - Single PositionD (or PositionI) instance
-                                  - tuple of floats: (x,y)
-                                  - list of PositionD (or PositionI) instances
-                                  - tuple of lists: ( xlist, ylist )
-                                  - NumPy array of PositionD (or PositionI) instances
-                                  - tuple of NumPy arrays: ( xarray, yarray )
-                                  - Multidimensional NumPy array, as long as array[0] contains
-                                    x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default: arcsec]
-        @param periodic         Whether the interpolation should treat the positions as being
-                                defined with respect to a periodic grid, which will wrap them around
-                                if they are outside the bounds of the original grid on which shears
-                                and convergences were defined.  If not, then magnification is set to
-                                1 for positions outside the original grid.  [default: False]
-        @param interpolant      Interpolant that will be used for interpolating the gridded shears.
-                                By default, the one that was specified when building the grid was
-                                used.  Specifying an interpolant here does not change the one that
-                                is stored as part of this PowerSpectrum instance. [default: None]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
+        @param units        The angular units used for the positions.  [default: arcsec]
+        @param periodic     Whether the interpolation should treat the positions as being
+                            defined with respect to a periodic grid, which will wrap them around
+                            if they are outside the bounds of the original grid on which shears
+                            and convergences were defined.  If not, then magnification is set to
+                            1 for positions outside the original grid.  [default: False]
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            By default, the one that was specified when building the grid was
+                            used.  Specifying an interpolant here does not change the one that
+                            is stored as part of this PowerSpectrum instance. [default: None]
 
         @returns the magnification, mu.
 
         If the input `pos` is given a single position, mu is the magnification value.
-        If the input `pos` is given a list of positions, mu is a python list of values.
-        If the input `pos` is given a NumPy array of positions, mu is a NumPy array.
+        If the input `pos` is given a list/array of positions, mu is a NumPy array.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -1351,14 +1328,7 @@ class PowerSpectrum(object):
             else:
                 mu.append(sbii_mu.xValue((iter_pos-self.center)/self.grid_spacing)+1.)
 
-        if isinstance(pos, galsim.PositionD):
-            return mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return np.array(mu)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return mu[0]
-        else:
-            return mu
+        return self._return(pos, mu)
 
     def getLensing(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1379,34 +1349,29 @@ class PowerSpectrum(object):
         quantities (two reduced shear components and magnification) rather than two.  See
         documentation for getShear() for some examples.
 
-        @param pos              Position(s) of the source(s), assumed to be post-lensing!
-                                Valid ways to input this:
-                                  - Single PositionD (or PositionI) instance
-                                  - tuple of floats: (x,y)
-                                  - list of PositionD (or PositionI) instances
-                                  - tuple of lists: ( xlist, ylist )
-                                  - NumPy array of PositionD (or PositionI) instances
-                                  - tuple of NumPy arrays: ( xarray, yarray )
-                                  - Multidimensional NumPy array, as long as array[0] contains
-                                    x-positions and array[1] contains y-positions
-        @param units            The angular units used for the positions.  [default: arcsec]
-        @param periodic         Whether the interpolation should treat the positions as being
-                                defined with respect to a periodic grid, which will wrap them around
-                                if they are outside the bounds of the original grid on which shears
-                                and convergences were defined.  If not, then shear is set to zero
-                                and magnification is set to 1 for positions outside the original
-                                grid.  [default: False]
-        @param interpolant      Interpolant that will be used for interpolating the gridded shears.
-                                By default, the one that was specified when building the grid was
-                                used.  Specifying an interpolant here does not change the one that
-                                is stored as part of this PowerSpectrum instance. [default: None]
+        @param pos          Position(s) of the source(s), assumed to be post-lensing!
+                            Valid ways to input this:
+                                - single PositionD (or PositionI) instance
+                                - tuple of floats: (x,y)
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
+        @param units        The angular units used for the positions.  [default: arcsec]
+        @param periodic     Whether the interpolation should treat the positions as being
+                            defined with respect to a periodic grid, which will wrap them around
+                            if they are outside the bounds of the original grid on which shears
+                            and convergences were defined.  If not, then shear is set to zero
+                            and magnification is set to 1 for positions outside the original
+                            grid.  [default: False]
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            By default, the one that was specified when building the grid was
+                            used.  Specifying an interpolant here does not change the one that
+                            is stored as part of this PowerSpectrum instance. [default: None]
 
         @returns shear and magnification as a tuple (g1,g2,mu).
 
         If the input `pos` is given a single position, the return values are the shear and
         magnification values at that position.
-        If the input `pos` is given a list of positions, they are python lists of values.
-        If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
 
         if not hasattr(self, 'im_kappa'):
@@ -1490,14 +1455,7 @@ class PowerSpectrum(object):
                 g2.append(sbii_g2.xValue((iter_pos-self.center)/self.grid_spacing))
                 mu.append(sbii_mu.xValue((iter_pos-self.center)/self.grid_spacing)+1.)
 
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0], mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return np.array(g1), np.array(g2), np.array(mu)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0], mu[0]
-        else:
-            return g1, g2, mu
+        return self._return(pos,g1), self._return(pos,g2), self._return(pos,mu)
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.

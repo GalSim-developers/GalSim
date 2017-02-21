@@ -230,10 +230,6 @@ class NFWHalo(object):
         @param ks       Lensing strength prefactor.
         @param out      NumPy array into which results should be placed. [default: None]
         """
-        # convenience: call with single number
-        if isinstance(x, np.ndarray) == False:
-            return self.__kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
-
         if out is None:
             out = np.zeros_like(x)
 
@@ -264,9 +260,6 @@ class NFWHalo(object):
         @param ks       Lensing strength prefactor.
         @param out      NumPy array into which results should be placed. [default: None]
         """
-        # convenience: call with single number
-        if isinstance(x, np.ndarray) == False:
-            return self.__gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
         if out is None:
             out = np.zeros_like(x)
 
@@ -300,25 +293,38 @@ class NFWHalo(object):
         k_s = dl * self.rs * rho_s / Sigma_c
         return k_s
 
+    @staticmethod
+    def _return(pos, value_list):
+        """Helper to return a value in the right form.
+
+        if pos represents a single positions, return value_list[0]
+        else return array(value_list)
+        """
+        if isinstance(pos, galsim.PositionD):
+            return value_list[0]
+        elif len(pos) == 2 and isinstance(pos[0],float):
+            return value_list[0]
+        else:
+            return np.array(value_list)
+
     def getShear(self, pos, z_s, units=galsim.arcsec, reduced=True):
         """Calculate (reduced) shear of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
         @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
-        @returns the reduced shears as a tuple `(g1,g2)`, which match the format of the input `pos`.
+        @returns the reduced shears as a tuple (g1,g2)
+
+        If the input `pos` is given a single position, (g1,g2) are the two shear components.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
@@ -345,18 +351,7 @@ class NFWHalo(object):
         g1 = -g*cos2phi
         g2 = -g*sin2phi
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0]
-        if isinstance(pos[0], np.ndarray):
-            return g1, g2
-        elif len(g) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0]
-        else:
-            return g1.tolist(), g2.tolist()
+        return self._return(pos,g1), self._return(pos,g2)
 
 
     def getConvergence(self, pos, z_s, units=galsim.arcsec):
@@ -364,19 +359,18 @@ class NFWHalo(object):
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the convergence, `kappa`, which matches the format of the input `pos`.
+        @returns the convergence, kappa
+
+        If the input `pos` is given a single position, kappa is the convergence value.
+        If the input `pos` is given a list/array of positions, kappa is a NumPy array.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -389,37 +383,25 @@ class NFWHalo(object):
             ks = ks*np.ones_like(r)
         kappa = self.__kappa(r, ks)
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return kappa[0]
-        elif isinstance(pos[0], np.ndarray):
-            return kappa
-        elif len(kappa) == 1 and not isinstance(pos[0], list):
-            return kappa[0]
-        else:
-            return kappa.tolist()
+        return self._return(pos,kappa)
 
     def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the magnification `mu`, which matches the format of the input `pos`.
+        @returns the magnification mu
+
+        If the input `pos` is given a single position, mu is the magnification value.
+        If the input `pos` is given a list/array of positions, mu is a NumPy array.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
@@ -434,38 +416,26 @@ class NFWHalo(object):
 
         mu = 1. / ( (1.-kappa)**2 - g**2 )
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return mu
-        elif len(mu) == 1 and not isinstance(pos[0],list):
-            return mu[0]
-        else:
-            return mu.tolist()
+        return self._return(pos,mu)
 
     def getLensing(self, pos, z_s, units=galsim.arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the reduced shears and magnifications as a tuple `(g1,g2,mu)`, which match the
-                 format of the input `pos`.
+        @returns the reduced shears and magnifications as a tuple (g1,g2,mu)
+
+        If the input `pos` is given a single position, the return values are the shear and
+        magnification values at that position.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
@@ -490,15 +460,4 @@ class NFWHalo(object):
         g1 = -g*cos2phi
         g2 = -g*sin2phi
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0], mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return g1, g2, mu
-        elif len(mu) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0], mu[0]
-        else:
-            return g1.tolist(), g2.tolist(), m.tolist()
+        return self._return(pos,g1), self._return(pos,g2), self._return(pos,mu)
