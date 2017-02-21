@@ -1471,7 +1471,7 @@ class GSObject(object):
 
         if Nk > self.gsparams.maximum_fft_size:
             raise RuntimeError(
-                "drawFFT requires an FFT that is too large: %s."%Nk +
+                "drawFFT requires an FFT that is too large: %s. "%Nk +
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
         # Draw the image in k space.
