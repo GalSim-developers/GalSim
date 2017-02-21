@@ -206,20 +206,17 @@ class NFWHalo(object):
             out = np.zeros_like(x)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
-        mask = (x < 0.999)
-        if mask.any():
-            a = ((1.-x[mask])/(x[mask]+1.))**0.5
-            out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
+        mask = np.where(x < 0.999)[0]
+        a = ((1.-x[mask])/(x[mask]+1.))**0.5
+        out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
 
-        mask = (x > 1.001)
-        if mask.any():
-            a = ((x[mask]-1.)/(x[mask]+1.))**0.5
-            out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
+        mask = np.where(x > 1.001)[0]
+        a = ((x[mask]-1.)/(x[mask]+1.))**0.5
+        out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
 
         # the approximation below has a maximum fractional error of 2.3e-7
-        mask = (x >= 0.999) & (x <= 1.001)
-        if mask.any():
-            out[mask] = 5./6. - x[mask]/3.
+        mask = np.where((x >= 0.999) & (x <= 1.001))[0]
+        out[mask] = 5./6. - x[mask]/3.
 
         return out
 
@@ -234,22 +231,17 @@ class NFWHalo(object):
             out = np.zeros_like(x)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
-        mask = (x < 0.999)
-        if mask.any():
-            a = ((1 - x[mask])/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
-                (1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
+        mask = np.where(x < 0.999)[0]
+        a = ((1 - x[mask])/(x[mask] + 1))**0.5
+        out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * (1 - np.log((1+a)/(1-a)) / (1-x[mask]**2)**0.5)
 
-        mask = (x > 1.001)
-        if mask.any():
-            a = ((x[mask] - 1)/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
-                (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
+        mask = np.where(x > 1.001)[0]
+        a = ((x[mask] - 1)/(x[mask] + 1))**0.5
+        out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
         # the approximation below has a maximum fractional error of 7.4e-7
-        mask = (x >= 0.999) & (x <= 1.001)
-        if mask.any():
-            out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
+        mask = np.where((x >= 0.999) & (x <= 1.001))[0]
+        out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
 
         return out
 
@@ -263,15 +255,13 @@ class NFWHalo(object):
         if out is None:
             out = np.zeros_like(x)
 
-        mask = (x > 0.01)
-        if mask.any():
-            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
-                x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
+        mask = np.where(x > 0.01)[0]
+        out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
+            x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
 
         # the approximation below has a maximum fractional error of 1.1e-7
-        mask = (x <= 0.01)
-        if mask.any():
-            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
+        mask = np.where(x <= 0.01)[0]
+        out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
 
         return out
 
