@@ -1691,8 +1691,8 @@ def kappaKaiserSquires(g1, g2):
     used should be modified to go to zero above the relevant maximum k value for the grid being
     used.
 
-    @param g1  Square Image or NumPy array containing the first component of shear.
-    @param g2  Square Image or NumPy array containing the second component of shear.
+    @param g1  Square NumPy array containing the first component of shear.
+    @param g2  Square NumPy array containing the second component of shear.
 
     @returns the tuple (kappa_E, kappa_B), as NumPy arrays.
 
@@ -1702,11 +1702,12 @@ def kappaKaiserSquires(g1, g2):
     """
     # Checks on inputs
     if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
+        from .deprecated import depr
+        depr('Image argments to kappaKaiserSquired', 1.5, 'kappaKaiserSquires(g1.array, g2.array)')
         g1 = g1.array
         g2 = g2.array
-    elif isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
-        pass
-    else:
+
+    if not isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
         raise TypeError("Input g1 and g2 must be galsim Image or NumPy arrays.")
     if g1.shape != g2.shape:
         raise ValueError("Input g1 and g2 must be the same shape.")
