@@ -141,6 +141,7 @@ New Features
 - Added ability to get position (x,y,z) on the unit sphere corresponding to
   a CelestialCoord with `coord.get_xyz()`.  Also make a CelestialCoord from
   (x,y,z) using `CeletialCoord.from_xyz(x,y,z)`. (#865)
+- Added an optional `center` argument for `Angle.wrap()`. (#865)
 
 
 New config features

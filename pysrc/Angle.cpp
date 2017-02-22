@@ -70,7 +70,7 @@ struct PyAngle {
             .def(bp::init<double, AngleUnit>(bp::args("val","unit")))
             .def(bp::init<const Angle&>(bp::args("rhs")))
             .def("rad", &Angle::rad)
-            .def("wrap", &Angle::wrap)
+            .def("wrap", &Angle::wrap, bp::arg("center")=0.)
             .def("sin", &Angle::sin)
             .def("cos", &Angle::cos)
             .def("tan", &Angle::tan)
