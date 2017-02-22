@@ -1524,9 +1524,6 @@ class PowerSpectrumRealizer(object):
         if p_B is None:  self.amplitude_B = None
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))/self.pixel_size
 
-    def recompute_power(self):
-        self.set_power(self.p_E, self.p_B)
-
     def __call__(self, gd, variance=None):
         """Generate a realization of the current power spectrum.
 
