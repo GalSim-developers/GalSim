@@ -620,6 +620,18 @@ def test_shear_units():
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
 
+    # Check ne
+    ps = galsim.PowerSpectrum('k', 'k**2', False, 'arcsec')
+    assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2')
+    assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2',
+                                      delta2=False, units=galsim.arcsec)
+    for ps2 in [ galsim.PowerSpectrum('k**2', 'k**2', False, 'arcsec'),
+                 galsim.PowerSpectrum('k', 'k', False, 'arcsec'),
+                 galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
+                 galsim.PowerSpectrum('k', 'k**2', False, 'arcmin'),
+               ]:
+        assert ps != ps2
+
 
 @timer
 def test_tabulated():
@@ -1154,6 +1166,18 @@ def test_psr():
     pb = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
     do_pickle(psr)
+
+    # Check ne
+    assert psr == galsim.lensing_ps.PowerSpectrumRealizer(ngrid=100, pixel_size=0.005,
+                                                          p_E=pe, p_B=pb)
+    for psr2 in [ galsim.lensing_ps.PowerSpectrumRealizer(50, 0.005, pe, pb),
+                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.003, pe, pb),
+                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, None),
+                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, None, pb),
+                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pb, pe),
+                ]:
+        assert psr != psr2
+
 
 @timer
 def test_normalization():
