@@ -138,6 +138,14 @@ def test_celestialcoord_basic():
     do_pickle(c4)
     do_pickle(c5)
 
+    assert c1 == galsim.CelestialCoord(ra=0.*galsim.degrees, dec=0.*galsim.degrees)
+    assert c2 == galsim.CelestialCoord(ra=165.*galsim.degrees, dec=-37.*galsim.degrees)
+    assert c1 != c2
+    assert c1 != c3
+    assert c1 != c4
+    # Depending on numerical rounding of the ra calculations, c2 may or may not come out
+    # as equal to c3, c4, so don't check these pairings.
+
 
 @timer
 def test_celestialcoord_distance():
@@ -299,6 +307,13 @@ def test_projection():
     # The lambert is supposed to preserve area
     #
 
+    # First the trivial case
+    p0 = center.project(center, projection='lambert')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='lambert')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='lambert'), (1,0,0,1))
+
     pA = center.project(cA, projection='lambert')
     pB = center.project(cB, projection='lambert')
     pC = center.project(cC, projection='lambert')
@@ -343,6 +358,13 @@ def test_projection():
     #
     # The stereographic is supposed to preserve angles
     #
+
+    # First the trivial case
+    p0 = center.project(center, projection='stereographic')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='stereographic')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='stereographic'), (1,0,0,1))
 
     pA = center.project(cA, projection='stereographic')
     pB = center.project(cB, projection='stereographic')
@@ -392,6 +414,13 @@ def test_projection():
     # I don't actually have any tests of that though...
     #
 
+    # First the trivial case
+    p0 = center.project(center, projection='gnomonic')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='gnomonic')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='gnomonic'), (1,0,0,1))
+
     pA = center.project(cA, projection='gnomonic')
     pB = center.project(cB, projection='gnomonic')
     pC = center.project(cC, projection='gnomonic')
@@ -434,6 +463,13 @@ def test_projection():
     #
     # The postel is supposed to preserve distance from the center
     #
+
+    # First the trivial case
+    p0 = center.project(center, projection='postel')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='postel')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='postel'), (1,0,0,1))
 
     pA = center.project(cA, projection='postel')
     pB = center.project(cB, projection='postel')
@@ -492,6 +528,12 @@ def test_precess():
     # back at the original epoch should leave the coord unchanged.
     orig = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
 
+    # First the trivial case of no precession.
+    c0 = orig.precess(2000., 2000.)
+    numpy.testing.assert_almost_equal(c0.ra.rad(), orig.ra.rad())
+    numpy.testing.assert_almost_equal(c0.dec.rad(), orig.dec.rad())
+
+    # Now to 1950 and back (via 1900).
     c1 = orig.precess(2000., 1950.)
     c2 = c1.precess(1950., 1900.)
     c3 = c2.precess(1900., 2000.)

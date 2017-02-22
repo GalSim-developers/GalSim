@@ -299,6 +299,8 @@ class CelestialCoord(object):
             k = 2. / (1. + cosc)
         elif projection[0] == 'g':
             k = 1. / cosc
+        elif cosc == 1.:
+            k = 1.
         else:
             c = np.arccos(cosc)
             k = c / np.sin(c)
@@ -484,13 +486,16 @@ class CelestialCoord(object):
             r = np.sqrt(rsq)
             if r == 0.:
                 c = s = 1
+                dcdu = -u
+                dcdv = -v
+                dsdu = dsdv = 0
             else:
                 c = np.cos(r)
                 s = np.sin(r)/r
-            dcdu = -s*u
-            dcdv = -s*v
-            dsdu = (c-s)*u/rsq
-            dsdv = (c-s)*v/rsq
+                dcdu = -s*u
+                dcdv = -s*v
+                dsdu = (c-s)*u/rsq
+                dsdv = (c-s)*v/rsq
 
         self._set_aux()
         s0 = self._sindec
