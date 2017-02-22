@@ -73,6 +73,28 @@ class CelestialCoord(object):
         self._dec = dec
         self._x = None  # Indicate that x,y,z are not set yet.
 
+    def get_xyz(self):
+        """Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).
+
+        @returns a tuple (x,y,z)
+        """
+        self._set_aux()
+        return self._x, self._y, self._z
+
+    @classmethod
+    def from_xyz(cls, x, y, z):
+        """Construct a CelestialCoord from a given (x,y,z) position in three dimensions.
+
+        The 3D (x,y,z) position does not need to fall on the unit sphere.
+
+        @returns a CelestialCoord instance
+        """
+        ret = cls.__new__(cls)
+        ret._ra = np.arctan2(y, x) * galsim.radians
+        ret._dec = np.arctan2(z, np.sqrt(x*x + y*y)) * galsim.radians
+        ret._x = None
+        return ret
+
     @property
     def ra(self): return self._ra
     @property

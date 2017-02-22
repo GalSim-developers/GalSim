@@ -138,6 +138,9 @@ New Features
   none of our current WCS classes are able to use this feature. (#865)
 - Added optional `variance` parameter to PowerSpectrum.buildGrid to
   renormalize the variance of the returned shear values. (#865)
+- Added ability to get position (x,y,z) on the unit sphere corresponding to
+  a CelestialCoord with `coord.get_xyz()`.  Also make a CelestialCoord from
+  (x,y,z) using `CeletialCoord.from_xyz(x,y,z)`. (#865)
 
 
 New config features

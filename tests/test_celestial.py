@@ -118,11 +118,25 @@ def test_celestialcoord_basic():
     numpy.testing.assert_almost_equal(c2.distanceTo(c3).rad(), 0., decimal=12)
     numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad(), 0., decimal=12)
 
+    x, y, z = c1.get_xyz()
+    print('c1 is at x,y,z = ',x,y,z)
+    np.testing.assert_equal((x,y,z), (1,0,0))
+    assert c1 == galsim.CelestialCoord.from_xyz(x,y,z)
+
+    x, y, z = c2.get_xyz()
+    print('c2 is at x,y,z = ',x,y,z)
+    assert c2 == galsim.CelestialCoord.from_xyz(x,y,z)
+
+    # 0,0,0 shouldn't die at least, although the return value is a bit arbitrary.
+    c5 = galsim.CelestialCoord.from_xyz(0,0,0)
+    print('0,0,0 returns coord ',c5)
+
     # Check picklability
     do_pickle(c1)
     do_pickle(c2)
     do_pickle(c3)
     do_pickle(c4)
+    do_pickle(c5)
 
 
 @timer
