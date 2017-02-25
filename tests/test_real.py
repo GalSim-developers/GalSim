@@ -237,76 +237,80 @@ def test_crg_roundtrip():
     f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
     f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
 
-    orig_f606w = f606w_cat.getGalImage(0)
-    orig_f814w = f814w_cat.getGalImage(0)
+    indices = [0] if __name__ != "__main__" else list(range(len(f606w_cat)))
 
-    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    for index in indices:
+        orig_f606w = f606w_cat.getGalImage(index)
+        orig_f814w = f814w_cat.getGalImage(index)
 
-    # Note that getPSF() return value already includes convolution by the pixel
-    f606w_obj = galsim.Convolve(crg, f606w_cat.getPSF(0))
-    f814w_obj = galsim.Convolve(crg, f814w_cat.getPSF(0))
-    f606w = f606w_cat.getBandpass()
-    f814w = f814w_cat.getBandpass()
+        crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=index)
 
-    im_f606w = f606w_obj.drawImage(f606w, image=orig_f606w.copy(), method='no_pixel')
-    im_f814w = f814w_obj.drawImage(f814w, image=orig_f814w.copy(), method='no_pixel')
+        # Note that getPSF() return value already includes convolution by the pixel
+        f606w_obj = galsim.Convolve(crg, f606w_cat.getPSF(index))
+        f814w_obj = galsim.Convolve(crg, f814w_cat.getPSF(index))
+        f606w = f606w_cat.getBandpass()
+        f814w = f814w_cat.getBandpass()
 
-    printval(im_f606w, orig_f606w)
-    printval(im_f814w, orig_f814w)
+        im_f606w = f606w_obj.drawImage(f606w, image=orig_f606w.copy(), method='no_pixel')
+        im_f814w = f814w_obj.drawImage(f814w, image=orig_f814w.copy(), method='no_pixel')
 
-    orig_f606w_mom = galsim.hsm.FindAdaptiveMom(orig_f606w)
-    orig_f814w_mom = galsim.hsm.FindAdaptiveMom(orig_f814w)
+        printval(im_f606w, orig_f606w)
+        printval(im_f814w, orig_f814w)
 
-    im_f606w_mom = galsim.hsm.FindAdaptiveMom(im_f606w)
-    im_f814w_mom = galsim.hsm.FindAdaptiveMom(im_f814w)
+        orig_f606w_mom = galsim.hsm.FindAdaptiveMom(orig_f606w)
+        orig_f814w_mom = galsim.hsm.FindAdaptiveMom(orig_f814w)
 
-    # Images are only pixel-by-pixel consistent to ~5% or so.  However, if you actually plot the
-    # residuals (which you can do by flipping False->True in printval above), they appear as ringing
-    # over the whole image.  Probably it's unrealistic to expect this test to work perfectly since
-    # we're effectively deconvolving and then reconvolving by the same PSF, not a fatter PSF.
-    np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
-                               rtol=0., atol=5e-2*orig_f606w.array.max())
-    np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
-                               rtol=0., atol=5e-2*orig_f814w.array.max())
+        im_f606w_mom = galsim.hsm.FindAdaptiveMom(im_f606w)
+        im_f814w_mom = galsim.hsm.FindAdaptiveMom(im_f814w)
 
-    # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
-    np.testing.assert_allclose(orig_f606w_mom.moments_amp,
-                               im_f606w_mom.moments_amp,
-                               rtol=1e-3, atol=0)
-    np.testing.assert_allclose(orig_f606w_mom.moments_centroid.x,
-                               im_f606w_mom.moments_centroid.x,
-                               rtol=0., atol=1e-2)
-    np.testing.assert_allclose(orig_f606w_mom.moments_centroid.y,
-                               im_f606w_mom.moments_centroid.y,
-                               rtol=0., atol=1e-2)
-    np.testing.assert_allclose(orig_f606w_mom.moments_sigma,
-                               im_f606w_mom.moments_sigma,
-                               rtol=1e-3, atol=0)
-    np.testing.assert_allclose(orig_f606w_mom.observed_shape.g1,
-                               im_f606w_mom.observed_shape.g1,
-                               rtol=0, atol=1e-4)
-    np.testing.assert_allclose(orig_f606w_mom.observed_shape.g2,
-                               im_f606w_mom.observed_shape.g2,
-                               rtol=0, atol=1e-4)
+        # Images are only pixel-by-pixel consistent to 5% or so.  However, if you actually plot the
+        # residuals (which you can do by flipping False->True in printval in galsim_test_helpers),
+        # they appear as ringing over the whole image.  Probably it's unrealistic to expect this
+        # test to work perfectly since we're effectively deconvolving and then reconvolving by the
+        # same PSF, not a fatter PSF.
+        np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
+                                   rtol=0., atol=5e-2*orig_f606w.array.max())
+        np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
+                                   rtol=0., atol=5e-2*orig_f814w.array.max())
 
-    np.testing.assert_allclose(orig_f814w_mom.moments_amp,
-                               im_f814w_mom.moments_amp,
-                               rtol=1e-3, atol=0)
-    np.testing.assert_allclose(orig_f814w_mom.moments_centroid.x,
-                               im_f814w_mom.moments_centroid.x,
-                               rtol=0., atol=1e-2)
-    np.testing.assert_allclose(orig_f814w_mom.moments_centroid.y,
-                               im_f814w_mom.moments_centroid.y,
-                               rtol=0., atol=1e-2)
-    np.testing.assert_allclose(orig_f814w_mom.moments_sigma,
-                               im_f814w_mom.moments_sigma,
-                               rtol=1e-3, atol=0)
-    np.testing.assert_allclose(orig_f814w_mom.observed_shape.g1,
-                               im_f814w_mom.observed_shape.g1,
-                               rtol=0, atol=1e-4)
-    np.testing.assert_allclose(orig_f814w_mom.observed_shape.g2,
-                               im_f814w_mom.observed_shape.g2,
-                               rtol=0, atol=1e-4)
+        # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
+        np.testing.assert_allclose(orig_f606w_mom.moments_amp,
+                                   im_f606w_mom.moments_amp,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f606w_mom.moments_centroid.x,
+                                   im_f606w_mom.moments_centroid.x,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f606w_mom.moments_centroid.y,
+                                   im_f606w_mom.moments_centroid.y,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f606w_mom.moments_sigma,
+                                   im_f606w_mom.moments_sigma,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f606w_mom.observed_shape.g1,
+                                   im_f606w_mom.observed_shape.g1,
+                                   rtol=0, atol=2e-4)
+        np.testing.assert_allclose(orig_f606w_mom.observed_shape.g2,
+                                   im_f606w_mom.observed_shape.g2,
+                                   rtol=0, atol=2e-4)
+
+        np.testing.assert_allclose(orig_f814w_mom.moments_amp,
+                                   im_f814w_mom.moments_amp,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f814w_mom.moments_centroid.x,
+                                   im_f814w_mom.moments_centroid.x,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f814w_mom.moments_centroid.y,
+                                   im_f814w_mom.moments_centroid.y,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f814w_mom.moments_sigma,
+                                   im_f814w_mom.moments_sigma,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f814w_mom.observed_shape.g1,
+                                   im_f814w_mom.observed_shape.g1,
+                                   rtol=0, atol=1e-4)
+        np.testing.assert_allclose(orig_f814w_mom.observed_shape.g2,
+                                   im_f814w_mom.observed_shape.g2,
+                                   rtol=0, atol=1e-4)
 
 
 @timer

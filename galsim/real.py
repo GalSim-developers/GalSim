@@ -511,6 +511,7 @@ class RealGalaxyCatalog(object):
         self.loaded_files = {}
 
     def getNObjects(self) : return self.nobjects
+    def __len__(self): return self.nobjects
     def getFileName(self) : return self.file_name
 
     def getIndexForID(self, id):
