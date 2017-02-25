@@ -30,6 +30,9 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
+
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
@@ -305,6 +308,76 @@ def test_crg_roundtrip():
                                im_f814w_mom.observed_shape.g2,
                                rtol=0, atol=1e-4)
 
+
+@timer
+def test_crg_roundtrip_larger_target_psf():
+    """Test that drawing a chromatic galaxy with a color gradient directly using an LSST-size PSF
+    is equivalent to first drawing the galaxy to HST-like images, and then using ChromaticRealGalaxy
+    to produce an LSST-like image.
+    """
+    # load some spectra
+    bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                            flux_type='flambda')
+                 .thin(rel_err=1e-3)
+                 .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
+
+    disk_SED = (galsim.SED(os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='ang',
+                           flux_type='flambda')
+                .thin(rel_err=1e-3)
+                .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
+
+    bulge = galsim.Sersic(n=4, half_light_radius=0.6)*bulge_SED
+    disk = galsim.Sersic(n=1, half_light_radius=0.4)*disk_SED
+    # Decenter components a bit to make the test more complicated
+    disk = disk.shift(0.05, 0.1)
+    gal = (bulge+disk).shear(g1=0.3, g2=0.1)
+
+    # Much faster to just use some achromatic HST-like PSFs.  We'll make them slightly different in
+    # each band though.
+    f606w_PSF = galsim.ChromaticObject(galsim.Gaussian(half_light_radius=0.05))
+    f814w_PSF = galsim.ChromaticObject(galsim.Gaussian(half_light_radius=0.07))
+    LSSTPSF = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.7),
+                                         600.0,
+                                         zenith_angle=0.0*galsim.degrees)
+
+    f606w = galsim.Bandpass(os.path.join(bppath, "ACS_wfc_F606W.dat"), 'nm').truncate()
+    f814w = galsim.Bandpass(os.path.join(bppath, "ACS_wfc_F814W.dat"), 'nm')
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+
+    truth_image = galsim.Convolve(LSSTPSF, gal).drawImage(LSST_i, nx=24, ny=24, scale=0.2)
+    f606w_image = galsim.Convolve(f606w_PSF, gal).drawImage(f606w, nx=192, ny=192, scale=0.03)
+    f814w_image = galsim.Convolve(f814w_PSF, gal).drawImage(f814w, nx=192, ny=192, scale=0.03)
+
+    crg = galsim.ChromaticRealGalaxy(_imgs=[f606w_image, f814w_image],
+                                     _bands=[f606w, f814w],
+                                     _xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+                                     _PSFs=[f606w_PSF, f814w_PSF],
+                                     SEDs=[bulge_SED, disk_SED])
+
+    test_image = galsim.Convolve(crg, LSSTPSF).drawImage(LSST_i, nx=24, ny=24, scale=0.2)
+
+    truth_mom = galsim.hsm.FindAdaptiveMom(truth_image)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_image)
+
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4)
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4)
+
 @timer
 def test_ne():
     """ Check that inequality works as expected."""
@@ -352,5 +425,6 @@ if __name__ == "__main__":
     test_real_galaxy_saved()
     test_pickle_crg()
     test_crg_roundtrip()
+    test_crg_roundtrip_larger_target_psf()
     test_ne()
     test_noise()
