@@ -279,6 +279,7 @@ namespace galsim {
         int miny = target.getYMin();
         int maxx = target.getXMax();
         int maxy = target.getYMax();
+        if (ix < minx || ix > maxx || iy < miny || iy > maxy) return false;
         int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
 
         // Scale the _testpoly vertices by zfactor
