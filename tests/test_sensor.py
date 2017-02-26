@@ -164,159 +164,6 @@ def test_silicon():
     """
 
 @timer
-def test_bf_slopes():
-    """Test the brighter-fatter slopes
-    with both the B-F effect and diffusion turned on and off.
-    """
-    from scipy import stats
-    simple = galsim.Sensor()
-
-    init_flux = 200000
-    obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
-
-    num_fluxes = 5
-    x_moments = np.zeros([num_fluxes, 3])
-    y_moments = np.zeros([num_fluxes, 3])
-    fluxes = np.zeros([num_fluxes])
-
-    for fluxmult in range(num_fluxes):
-        rng1 = galsim.BaseDeviate(5678)
-        rng2 = galsim.BaseDeviate(5678)
-        rng3 = galsim.BaseDeviate(5678)
-        # silicon1 has diffusion turned off, silicon2 has it turned on.
-        silicon1 = galsim.SiliconSensor(
-                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
-                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng1, diffusion_factor=0.0)
-        silicon2 = galsim.SiliconSensor(
-                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
-                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng2)
-
-        # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
-        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon1 (diffusion off)
-        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon2 (diffusion on)
-        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
-
-        obj1 = obj * (fluxmult + 1)
-
-        obj1.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon1, rng=rng1)
-        obj1.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon2, rng=rng2)
-        obj1.drawImage(im3, method='phot', poisson_flux=False, sensor=simple, rng=rng3)
-
-        print('Moments Mx, My, Mxx, Myy, Mxy for im1, flux = %f:'%obj1.flux)
-        mom = galsim.utilities.unweighted_moments(im1)
-        x_moments[fluxmult,0] = mom['Mxx']
-        y_moments[fluxmult,0] = mom['Myy']
-        print('Moments Mx, My, Mxx, Myy, Mxy for im2, flux = %f:'%obj1.flux)
-        mom = galsim.utilities.unweighted_moments(im2)
-        x_moments[fluxmult,1] = mom['Mxx']
-        y_moments[fluxmult,1] = mom['Myy']
-        print('Moments Mx, My, Mxx, Myy, Mxy for im3, flux = %f:'%obj1.flux)
-        mom = galsim.utilities.unweighted_moments(im3)
-        x_moments[fluxmult,2] = mom['Mxx']
-        y_moments[fluxmult,2] = mom['Myy']
-        fluxes[fluxmult] = im1.array.max()
-    print('fluxes = ',fluxes)
-    print('x_moments = ',x_moments[:,0])
-    print('y_moments = ',y_moments[:,0])
-    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,0])
-    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,0])
-    x_slope *= 50000.0 * 100.0
-    y_slope *= 50000.0 * 100.0
-    print('With BF turned on, diffusion off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
-            x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
-    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,1])
-    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,1])
-    x_slope *= 50000.0 * 100.0
-    y_slope *= 50000.0 * 100.0
-    print('With BF turned on, diffusion on, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
-            x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
-    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,2])
-    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,2])
-    x_slope *= 50000.0 * 100.0
-    y_slope *= 50000.0 * 100.0
-    print('With BF turned off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope ))
-    assert abs(x_slope) < 0.5
-    assert abs(y_slope) < 0.5
-
-
-@timer
-def test_sensor_wavelengths_and_angles():
-
-    print('Starting test_wavelengths_and_angles')
-    sys.stdout.flush()
-
-    bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    sedpath = os.path.abspath(os.path.join(path, "../share/"))
-    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
-
-    # Add the directions (not currently working?? seems to work - CL)
-    fratio = 1.2
-    obscuration = 0.2
-    seed = 12345
-    assigner = galsim.FRatioAngles(fratio, obscuration, seed)
-    obj = galsim.Gaussian(flux=3539, sigma=0.3)
-
-    if __name__ == "__main__":
-        bands = ['r', 'i', 'z', 'y']
-    else:
-        bands = ['i'] # Only test the i band for nosetests
-
-
-    for band in bands:
-        bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_%s.dat'%band), 'nm').thin()
-        rng3 = galsim.BaseDeviate(1234)
-        sampler = galsim.WavelengthSampler(sed, bandpass, rng3)
-        rng4 = galsim.BaseDeviate(5678)
-        silicon = galsim.SiliconSensor(
-                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
-                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng4)
-
-        # We'll draw the same object using SiliconSensor
-        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths
-        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths
-        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with angles
-        im4 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths, angles
-
-        rng1 = galsim.BaseDeviate(5678)
-        rng2 = galsim.BaseDeviate(5678)
-        rng3 = galsim.BaseDeviate(5678)
-        rng4 = galsim.BaseDeviate(5678)
-
-        # Use photon shooting, since that's more straightforward.
-        obj.drawImage(im1, method='phot', sensor=silicon, rng=rng1)
-        obj.drawImage(im2, method='phot', sensor=silicon, surface_ops=[sampler], rng=rng2)
-        obj.drawImage(im3, method='phot', sensor=silicon, surface_ops=[assigner], rng=rng3)
-        obj.drawImage(im4, method='phot', sensor=silicon, surface_ops=[sampler, assigner], rng=rng4)
-
-        r1 = im1.calculateMomentRadius(flux=obj.flux)
-        r2 = im2.calculateMomentRadius(flux=obj.flux)
-        r3 = im3.calculateMomentRadius(flux=obj.flux)
-        r4 = im4.calculateMomentRadius(flux=obj.flux)
-        print('Testing Wavelength and Angle sampling - %s band'%band)
-        print('Flux = %.0f:                sum        peak          radius'%obj.flux)
-        print('No lamb, no angles:         %.1f     %.2f       %f'%(
-                im1.array.sum(),im1.array.max(), r1))
-        print('W/ lamb, no angles:         %.1f     %.2f       %f'%(
-                im2.array.sum(),im2.array.max(), r2))
-        print('No lamb, w/ angles:         %.1f     %.2f       %f'%(
-                im3.array.sum(),im3.array.max(), r3))
-        print('W/ lamb, w/ angles:         %.1f     %.2f       %f'%(
-                im4.array.sum(),im4.array.max(), r4))
-
-        # r4 should be greater than r1 with wavelengths and angles turned on.
-        sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
-        print('check r4 > r1 due to added wavelengths and angles')
-        print('r1 = %f, r4 = %f, 2*sigma_r = %f'%(r1,r4,2.*sigma_r))
-        assert r4 > r1
-
-@timer
 def test_silicon_fft():
     """Test that drawing with method='fft' also works for SiliconSensor.
     """
@@ -399,6 +246,186 @@ def test_silicon_fft():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
     print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
     assert r1-r3 > 2.*sigma_r
+
+
+@timer
+def test_sensor_wavelengths_and_angles():
+
+    print('Starting test_wavelengths_and_angles')
+    sys.stdout.flush()
+
+    bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    sedpath = os.path.abspath(os.path.join(path, "../share/"))
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
+
+    # Add the directions (not currently working?? seems to work - CL)
+    fratio = 1.2
+    obscuration = 0.2
+    seed = 12345
+    assigner = galsim.FRatioAngles(fratio, obscuration, seed)
+    obj = galsim.Gaussian(flux=3539, sigma=0.3)
+
+    if __name__ == "__main__":
+        bands = ['r', 'i', 'z', 'y']
+    else:
+        bands = ['i'] # Only test the i band for nosetests
+
+    for band in bands:
+        bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_%s.dat'%band), 'nm').thin()
+        rng3 = galsim.BaseDeviate(1234)
+        sampler = galsim.WavelengthSampler(sed, bandpass, rng3)
+        rng4 = galsim.BaseDeviate(5678)
+        silicon = galsim.SiliconSensor(
+                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
+                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
+                80000, rng=rng4)
+
+        # We'll draw the same object using SiliconSensor
+        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths
+        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths
+        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with angles
+        im4 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, with wavelengths, angles
+
+        rng1 = galsim.BaseDeviate(5678)
+        rng2 = galsim.BaseDeviate(5678)
+        rng3 = galsim.BaseDeviate(5678)
+        rng4 = galsim.BaseDeviate(5678)
+
+        # Use photon shooting first
+        obj.drawImage(im1, method='phot', sensor=silicon, rng=rng1)
+        obj.drawImage(im2, method='phot', sensor=silicon, surface_ops=[sampler], rng=rng2)
+        obj.drawImage(im3, method='phot', sensor=silicon, surface_ops=[assigner], rng=rng3)
+        obj.drawImage(im4, method='phot', sensor=silicon, surface_ops=[sampler, assigner], rng=rng4)
+
+        r1 = im1.calculateMomentRadius(flux=obj.flux)
+        r2 = im2.calculateMomentRadius(flux=obj.flux)
+        r3 = im3.calculateMomentRadius(flux=obj.flux)
+        r4 = im4.calculateMomentRadius(flux=obj.flux)
+        print('Testing Wavelength and Angle sampling - %s band'%band)
+        print('Flux = %.0f:                sum        peak          radius'%obj.flux)
+        print('No lamb, no angles:         %.1f     %.2f       %f'%(
+                im1.array.sum(),im1.array.max(), r1))
+        print('W/ lamb, no angles:         %.1f     %.2f       %f'%(
+                im2.array.sum(),im2.array.max(), r2))
+        print('No lamb, w/ angles:         %.1f     %.2f       %f'%(
+                im3.array.sum(),im3.array.max(), r3))
+        print('W/ lamb, w/ angles:         %.1f     %.2f       %f'%(
+                im4.array.sum(),im4.array.max(), r4))
+
+        # r4 should be greater than r1 with wavelengths and angles turned on.
+        sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
+        print('check r4 > r1 due to added wavelengths and angles')
+        print('r1 = %f, r4 = %f, 2*sigma_r = %f'%(r1,r4,2.*sigma_r))
+        assert r4 > r1
+
+        # Now check fft
+        obj.drawImage(im1, method='fft', sensor=silicon, rng=rng1)
+        obj.drawImage(im2, method='fft', sensor=silicon, surface_ops=[sampler], rng=rng2)
+        obj.drawImage(im3, method='fft', sensor=silicon, surface_ops=[assigner], rng=rng3)
+        obj.drawImage(im4, method='fft', sensor=silicon, surface_ops=[sampler, assigner], rng=rng4)
+
+        r1 = im1.calculateMomentRadius(flux=obj.flux)
+        r2 = im2.calculateMomentRadius(flux=obj.flux)
+        r3 = im3.calculateMomentRadius(flux=obj.flux)
+        r4 = im4.calculateMomentRadius(flux=obj.flux)
+        print('Testing Wavelength and Angle sampling - %s band'%band)
+        print('Flux = %.0f:                sum        peak          radius'%obj.flux)
+        print('No lamb, no angles:         %.1f     %.2f       %f'%(
+                im1.array.sum(),im1.array.max(), r1))
+        print('W/ lamb, no angles:         %.1f     %.2f       %f'%(
+                im2.array.sum(),im2.array.max(), r2))
+        print('No lamb, w/ angles:         %.1f     %.2f       %f'%(
+                im3.array.sum(),im3.array.max(), r3))
+        print('W/ lamb, w/ angles:         %.1f     %.2f       %f'%(
+                im4.array.sum(),im4.array.max(), r4))
+
+        # r4 should be greater than r1 with wavelengths and angles turned on.
+        sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
+        print('check r4 > r1 due to added wavelengths and angles')
+        print('r1 = %f, r4 = %f, 2*sigma_r = %f'%(r1,r4,2.*sigma_r))
+        assert r4 > r1
+
+@timer
+def test_bf_slopes():
+    """Test the brighter-fatter slopes
+    with both the B-F effect and diffusion turned on and off.
+    """
+    from scipy import stats
+    simple = galsim.Sensor()
+
+    init_flux = 200000
+    obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
+
+    num_fluxes = 5
+    x_moments = np.zeros([num_fluxes, 3])
+    y_moments = np.zeros([num_fluxes, 3])
+    fluxes = np.zeros([num_fluxes])
+
+    for fluxmult in range(num_fluxes):
+        rng1 = galsim.BaseDeviate(5678)
+        rng2 = galsim.BaseDeviate(5678)
+        rng3 = galsim.BaseDeviate(5678)
+        # silicon1 has diffusion turned off, silicon2 has it turned on.
+        silicon1 = galsim.SiliconSensor(
+                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
+                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
+                80000, rng=rng1, diffusion_factor=0.0)
+        silicon2 = galsim.SiliconSensor(
+                '../devel/poisson/17feb17_numvertices_4/bf.cfg',
+                '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
+                80000, rng=rng2)
+
+        # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
+        im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon1 (diffusion off)
+        im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon2 (diffusion on)
+        im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
+
+        obj1 = obj * (fluxmult + 1)
+
+        obj1.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon1, rng=rng1)
+        obj1.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon2, rng=rng2)
+        obj1.drawImage(im3, method='phot', poisson_flux=False, sensor=simple, rng=rng3)
+
+        print('Moments Mx, My, Mxx, Myy, Mxy for im1, flux = %f:'%obj1.flux)
+        mom = galsim.utilities.unweighted_moments(im1)
+        x_moments[fluxmult,0] = mom['Mxx']
+        y_moments[fluxmult,0] = mom['Myy']
+        print('Moments Mx, My, Mxx, Myy, Mxy for im2, flux = %f:'%obj1.flux)
+        mom = galsim.utilities.unweighted_moments(im2)
+        x_moments[fluxmult,1] = mom['Mxx']
+        y_moments[fluxmult,1] = mom['Myy']
+        print('Moments Mx, My, Mxx, Myy, Mxy for im3, flux = %f:'%obj1.flux)
+        mom = galsim.utilities.unweighted_moments(im3)
+        x_moments[fluxmult,2] = mom['Mxx']
+        y_moments[fluxmult,2] = mom['Myy']
+        fluxes[fluxmult] = im1.array.max()
+    print('fluxes = ',fluxes)
+    print('x_moments = ',x_moments[:,0])
+    print('y_moments = ',y_moments[:,0])
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,0])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,0])
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0
+    print('With BF turned on, diffusion off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
+            x_slope, y_slope ))
+    assert x_slope > 0.5
+    assert y_slope > 0.5
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,1])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,1])
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0
+    print('With BF turned on, diffusion on, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
+            x_slope, y_slope ))
+    assert x_slope > 0.5
+    assert y_slope > 0.5
+    x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,2])
+    y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,2])
+    x_slope *= 50000.0 * 100.0
+    y_slope *= 50000.0 * 100.0
+    print('With BF turned off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope ))
+    assert abs(x_slope) < 0.5
+    assert abs(y_slope) < 0.5
+
 
 if __name__ == "__main__":
     test_silicon()
