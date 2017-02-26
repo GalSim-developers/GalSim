@@ -209,7 +209,7 @@ class SiliconSensor(Sensor):
     def WritePhotonFile(self, photons):
         # This writes out a list of the incoming photons.
         with open(self.photon_file, 'w') as file:
-            file.write('ID \t X(pixels) \t Y(pixels) \t dxdz      \t dydz      \t lambda(nm)\n')
+            file.write('# ID \t X(pixels) \t Y(pixels) \t dxdz      \t dydz      \t lambda(nm)\n')
             for i in range(photons.size()):
                 x0 = photons.getX(i) # in pixels
                 y0 = photons.getY(i) #in pixels

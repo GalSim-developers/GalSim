@@ -249,8 +249,37 @@ def test_photon_angles():
     except ImportError:
         pass
 
+def test_photon_io():
+    """Test the ability to read and write photons to a file
+    """
+    nphotons = 1000
+
+    obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
+    rng = galsim.UniformDeviate(1234)
+    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    assert photon_array.size() == nphotons
+
+    # For now, I/O is via SiliconSensor class.  Will change this.
+    silicon = galsim.SiliconSensor(
+            '../devel/poisson/17feb17_numvertices_4/bf.cfg',
+            '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
+            80000, rng=rng, DiffMult = 0.0)
+    silicon.photon_file = 'output/photons1.dat'
+    silicon.WritePhotonFile(photon_array)
+
+    cat = galsim.Catalog(silicon.photon_file)
+    assert cat.nobjects == nphotons
+    assert cat.ncols == 6
+    np.testing.assert_allclose(cat.data[:,1].astype(float), photon_array.x, rtol=1.e-5, atol=1.e-5)
+    np.testing.assert_allclose(cat.data[:,2].astype(float), photon_array.y, rtol=1.e-5, atol=1.e-5)
+    #np.testing.assert_allclose(cat.data[:,3], photon_array.flux, rtol=1.e-6)
+    np.testing.assert_array_equal(cat.data[:,3].astype(float), 0)
+    np.testing.assert_array_equal(cat.data[:,4].astype(float), 0)
+    np.testing.assert_array_equal(cat.data[:,5].astype(float), 0)
+
 
 if __name__ == '__main__':
     test_photon_array()
     test_wavelength_sampler()
     test_photon_angles()
+    test_photon_io()
