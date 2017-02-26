@@ -235,7 +235,7 @@ def test_photon_angles():
 
     chisqr_phi = np.sum(np.square(phi_histo - phi_ref)/phi_ref) / phi_histo.size
     chisqr_sintheta = np.sum(np.square(sintheta_histo - sintheta_ref) /
-                      sintheta_ref) / sintheta_histo.size
+                             sintheta_ref) / sintheta_histo.size
 
     print('chisqr_phi = ',chisqr_phi)
     print('chisqr_sintheta = ',chisqr_sintheta)

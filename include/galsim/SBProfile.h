@@ -46,8 +46,6 @@
 #include "Image.h"
 #include "PhotonArray.h"
 
-#include "Silicon.h"
-
 namespace galsim {
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation

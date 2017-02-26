@@ -1245,10 +1245,8 @@ class GSObject(object):
                             is set up correctly.  This is used internally by GalSim, but there
                             may be cases where the user will want the same functionality.
                             [default: False]
-
-       @param maxN          Sets the maximum number of photons that can be added to an image
-                            with a single call to drawImage
-                            
+        @param maxN         Sets the maximum number of photons that can be added to an image
+                            with a single call to drawImage [default: 100000]
 
         @returns the drawn Image.
         """
@@ -1692,10 +1690,9 @@ class GSObject(object):
         @param sensor       An optional Sensor instance, which will be used to accumulate the
                             photons onto the image. [default: None]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD).  [default: 1.]
-
+                            the numbers output from a CCD). [default: 1.]
         @param maxN         If provided, sets the maximum number of photons that can be added to an
-                            image with a single call to drawImage
+                            image with a single call to drawImage. [default: 100000]
 
         @returns The total flux of photons that landed inside the image bounds.
         """
@@ -1735,9 +1732,6 @@ class GSObject(object):
         # total flux falling inside image bounds, this will be returned on exit.
         added_flux = 0.
 
-        # Don't do more than this at a time to keep the  memory usage reasonable.
-        #maxN = 100000
-
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot
         while Nleft > 0:
@@ -1761,7 +1755,7 @@ class GSObject(object):
                 op.applyTo(phot_array)
 
             added_flux += sensor.accumulate(phot_array, image)
-            Nleft -= thisN;
+            Nleft -= thisN
 
         return added_flux
 
