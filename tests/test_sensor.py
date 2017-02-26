@@ -56,7 +56,7 @@ def test_silicon():
     silicon = galsim.SiliconSensor(
             '../devel/poisson/17feb17_numvertices_4/bf.cfg',
             '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-            80000, rng=rng1, DiffMult = 0.0)
+            80000, rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
@@ -187,11 +187,11 @@ def test_bf_slopes():
         silicon1 = galsim.SiliconSensor(
                 '../devel/poisson/17feb17_numvertices_4/bf.cfg',
                 '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng1, DiffMult = 0.0)
+                80000, rng=rng1, diffusion_factor=0.0)
         silicon2 = galsim.SiliconSensor(
                 '../devel/poisson/17feb17_numvertices_4/bf.cfg',
                 '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng2, DiffMult = 1.0)
+                80000, rng=rng2)
 
         # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
         im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon1 (diffusion off)
@@ -276,7 +276,7 @@ def test_sensor_wavelengths_and_angles():
         silicon = galsim.SiliconSensor(
                 '../devel/poisson/17feb17_numvertices_4/bf.cfg',
                 '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-                80000, rng=rng4, DiffMult = 1.0)
+                80000, rng=rng4)
 
         # We'll draw the same object using SiliconSensor
         im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths
@@ -334,7 +334,7 @@ def test_silicon_fft():
     silicon = galsim.SiliconSensor(
             '../devel/poisson/numvertices_8/bf.cfg',
             '../devel/poisson/numvertices_8/BF_256_9x9_0_Vertices',
-            160000, rng=rng, DiffMult = 0.0)
+            160000, rng=rng, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
     obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
@@ -342,8 +342,6 @@ def test_silicon_fft():
     obj.drawImage(im3, method='fft')
 
     printval(im1,im2)
-    im1.write('junk1.fits')
-    im2.write('junk2.fits')
 
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)
