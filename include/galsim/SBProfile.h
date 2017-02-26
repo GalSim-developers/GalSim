@@ -46,7 +46,7 @@
 #include "Image.h"
 #include "PhotonArray.h"
 
-#include "silicon.h"
+#include "Silicon.h"
 
 namespace galsim {
 
