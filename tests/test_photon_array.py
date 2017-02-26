@@ -30,6 +30,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+path, filename = os.path.split(__file__)
+bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+sedpath = os.path.abspath(os.path.join(path, "../share/"))
+
 @timer
 def test_photon_array():
     """Test the basic methods of PhotonArray class
@@ -71,7 +75,7 @@ def test_photon_array():
     # Now create from shooting a profile
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.shoot(nphotons, rng)
     orig_x = photon_array.x.copy()
     orig_y = photon_array.y.copy()
     orig_flux = photon_array.flux.copy()
@@ -104,7 +108,7 @@ def test_photon_array():
     np.testing.assert_array_equal(photon_array.dydz, 0.59)
 
     # Start over to check that assigning to wavelength leaves dxdz, dydz alone.
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.shoot(nphotons, rng)
     photon_array.wavelength = 500.
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
@@ -128,10 +132,8 @@ def test_wavelength_sampler():
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
 
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
+    photon_array = obj.shoot(nphotons, rng)
 
-    bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    sedpath = os.path.abspath(os.path.join(path, "../share/"))
     sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
     bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
 
@@ -187,7 +189,7 @@ def test_photon_angles():
     seed = 12345
     ud = galsim.UniformDeviate(seed)
     gal = galsim.Sersic(n=4, half_light_radius=1)
-    photon_array = gal.SBProfile.shoot(100000, ud)
+    photon_array = gal.shoot(100000, ud)
 
     # Add the directions (N.B. using the same seed as for generating the photon array
     # above.  The fact that it is the same does not matter here; the testing routine
@@ -249,6 +251,7 @@ def test_photon_angles():
     except ImportError:
         pass
 
+@timer
 def test_photon_io():
     """Test the ability to read and write photons to a file
     """
@@ -256,26 +259,47 @@ def test_photon_io():
 
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
-    photon_array = obj.SBProfile.shoot(nphotons, rng)
-    assert photon_array.size() == nphotons
+    photons = obj.shoot(nphotons, rng)
+    assert photons.size() == nphotons
 
-    # For now, I/O is via SiliconSensor class.  Will change this.
-    silicon = galsim.SiliconSensor(
-            '../devel/poisson/17feb17_numvertices_4/bf.cfg',
-            '../devel/poisson/17feb17_numvertices_4/BF_256_9x9_0_Vertices.dat',
-            80000, rng=rng, DiffMult = 0.0)
-    silicon.photon_file = 'output/photons1.dat'
-    silicon.WritePhotonFile(photon_array)
+    file_name = 'output/photons1.dat'
+    photons.write(file_name)
 
-    cat = galsim.Catalog(silicon.photon_file)
-    assert cat.nobjects == nphotons
-    assert cat.ncols == 6
-    np.testing.assert_allclose(cat.data[:,1].astype(float), photon_array.x, rtol=1.e-5, atol=1.e-5)
-    np.testing.assert_allclose(cat.data[:,2].astype(float), photon_array.y, rtol=1.e-5, atol=1.e-5)
-    #np.testing.assert_allclose(cat.data[:,3], photon_array.flux, rtol=1.e-6)
-    np.testing.assert_array_equal(cat.data[:,3].astype(float), 0)
-    np.testing.assert_array_equal(cat.data[:,4].astype(float), 0)
-    np.testing.assert_array_equal(cat.data[:,5].astype(float), 0)
+    photons1 = galsim.PhotonArray.read(file_name)
+
+    assert photons1.size() == nphotons
+    assert not photons1.hasAllocatedWavelengths()
+    assert not photons1.hasAllocatedAngles()
+
+    np.testing.assert_array_equal(photons1.x, photons.x)
+    np.testing.assert_array_equal(photons1.y, photons.y)
+    np.testing.assert_array_equal(photons1.flux, photons.flux)
+
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
+    bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
+
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+    angle_sampler = galsim.FRatioAngles(1.3, 0.3, rng)
+
+    ops = [ wave_sampler, angle_sampler ]
+    for op in ops:
+        op.applyTo(photons)
+
+    file_name = 'output/photons2.dat'
+    photons.write(file_name)
+
+    photons2 = galsim.PhotonArray.read(file_name)
+
+    assert photons2.size() == nphotons
+    assert photons2.hasAllocatedWavelengths()
+    assert photons2.hasAllocatedAngles()
+
+    np.testing.assert_array_equal(photons2.x, photons.x)
+    np.testing.assert_array_equal(photons2.y, photons.y)
+    np.testing.assert_array_equal(photons2.flux, photons.flux)
+    np.testing.assert_array_equal(photons2.dxdz, photons.dxdz)
+    np.testing.assert_array_equal(photons2.dydz, photons.dydz)
+    np.testing.assert_array_equal(photons2.wavelength, photons.wavelength)
 
 
 if __name__ == '__main__':

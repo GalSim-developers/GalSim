@@ -87,14 +87,9 @@ class SiliconSensor(Sensor):
     @param rng              A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
-    @param photon_file      A file which writes out a list of incoming photons to the sensor.
-                            If photon_file = 'None', no file is produced.  Otherwise
-                            a file of name photon_file is produced with X,Y locations,
-                            dxdz, dydz, and wavelength for each photon ID.
     """
     def __init__(self, config_file, vertex_file, NumElec, rng, DiffMult=1.0, QDist=3,
                  Nrecalc=10000):
-        self.photon_file = None
         self.rng = galsim.UniformDeviate(rng)
 
         ConfigData = self.ReadConfigFile(config_file)
@@ -123,9 +118,6 @@ class SiliconSensor(Sensor):
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
         """
-
-        if self.photon_file is not None:
-            self.WritePhotonFile(photons)
         return self._silicon.accumulate(photons, self.rng, image.image)
 
     def ReadConfigFile(self, filename):
@@ -205,23 +197,3 @@ class SiliconSensor(Sensor):
         # 100.0 is the detector thickness in microns.
         # .026 is kT/q at room temp (298 K)
         return DiffStep
-
-    def WritePhotonFile(self, photons):
-        # This writes out a list of the incoming photons.
-        with open(self.photon_file, 'w') as file:
-            file.write('# ID \t X(pixels) \t Y(pixels) \t dxdz      \t dydz      \t lambda(nm)\n')
-            for i in range(photons.size()):
-                x0 = photons.getX(i) # in pixels
-                y0 = photons.getY(i) #in pixels
-                if photons.hasAllocatedWavelengths():
-                    lamb = photons.getWavelength(i) # in nm
-                else:
-                    lamb = 0.0
-
-                if photons.hasAllocatedAngles():
-                    dxdz = photons.getDXDZ(i)
-                    dydz = photons.getDYDZ(i)
-                else:
-                    dxdz = 0.0
-                    dydz = 0.0
-                file.write('%d \t %.6f \t %.6f \t %.6f \t %.6f \t %.6f\n'%(i,x0,y0,dxdz,dydz,lamb))

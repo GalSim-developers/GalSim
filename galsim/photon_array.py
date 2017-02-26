@@ -20,6 +20,7 @@ Implements the PhotonArray class describing a collection of photons incident on 
 Also includes classes that modify PhotonArray objects in a number of ways.
 """
 
+import os
 import numpy as np
 # Most of the functionality comes from the C++ layer
 from ._galsim import PhotonArray
@@ -178,6 +179,56 @@ def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
     return galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
 
 PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
+
+def PhotonArray_write(self, file_name):
+    from galsim._pyfits import pyfits
+
+    cols = []
+    cols.append(pyfits.Column(name='id', format='J', array=range(self.size())))
+    cols.append(pyfits.Column(name='x', format='D', array=self.x))
+    cols.append(pyfits.Column(name='y', format='D', array=self.y))
+    cols.append(pyfits.Column(name='flux', format='D', array=self.flux))
+
+    if self.hasAllocatedAngles():
+        cols.append(pyfits.Column(name='dxdz', format='D', array=self.dxdz))
+        cols.append(pyfits.Column(name='dydz', format='D', array=self.dydz))
+
+    if self.hasAllocatedWavelengths():
+        cols.append(pyfits.Column(name='wavelength', format='D', array=self.wavelength))
+
+    cols = pyfits.ColDefs(cols)
+    try:
+        table = pyfits.BinTableHDU.from_columns(cols)
+    except:  # pragma: no cover  (Might need this for older pyfits versions)
+        table = pyfits.new_table(cols)
+    if os.path.isfile(file_name):
+        os.remove(file_name)
+    table.writeto(file_name)
+
+def PhotonArray_read(cls, file_name):
+    from galsim._pyfits import pyfits, pyfits_version
+    with pyfits.open(file_name) as fits:
+        data = fits[1].data
+    N = len(data)
+    if pyfits_version > '3.0':
+        names = data.columns.names
+    else:
+        names = data.dtype.names
+
+    ret = cls.__new__(cls)
+    _PhotonArray_empty_init(ret, N)
+    ret.x = data['x']
+    ret.y = data['y']
+    ret.flux = data['flux']
+    if 'dxdz' in names:
+        ret.dxdz = data['dxdz']
+        ret.dydz = data['dydz']
+    if 'wavelength' in names:
+        ret.wavelength = data['wavelength']
+    return ret
+
+PhotonArray.write = PhotonArray_write
+PhotonArray.read = classmethod(PhotonArray_read)
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
