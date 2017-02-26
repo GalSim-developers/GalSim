@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -50,7 +50,7 @@ namespace galsim {
                     --end;
                     conserve = false;
                 }
-                int n = strtol(str.substr(7,end).c_str(),0,0);
+                int n = strtol(str.c_str()+7,0,0);
                 if (n <= 0) {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();

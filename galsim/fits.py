@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,6 +23,7 @@ routines for handling multiple Images.
 """
 
 from future.utils import iteritems, iterkeys, itervalues
+from past.builtins import basestring
 import os
 import galsim
 import numpy as np
@@ -68,20 +69,22 @@ def _parse_compression(compression, file_name):
 class _ReadFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gunzip_call(self, file): # pragma: no cover
+    def gunzip_call(self, file):
         # cf. http://bugs.python.org/issue7471
         import subprocess
-        from io import StringIO
+        from io import BytesIO
         from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = StringIO(p.communicate()[0])
+        fin = BytesIO(p.communicate()[0])
         assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
-    def gzip_in_mem(self, file):
+    # Note: the above gzip_call function succeeds on travis, so the rest don't get run.
+    # Omit them from the coverage test.
+    def gzip_in_mem(self, file): # pragma: no cover
         import gzip
         from galsim._pyfits import pyfits
         fin = gzip.open(file, 'rb')
@@ -95,8 +98,6 @@ class _ReadFile:
         # done with hdu_list.
         return hdu_list, fin
 
-    # Note: the above gzip_in_mem function succeeds on travis, so the rest don't get run.
-    # Omit them from the coverage test.
     def pyfits_open(self, file):  # pragma: no cover
         from galsim._pyfits import pyfits
         # This usually works, although pyfits internally may (depending on the version)
@@ -121,17 +122,17 @@ class _ReadFile:
         hdu_list = pyfits.open(tmp)
         return hdu_list, tmp
 
-    def bunzip2_call(self, file): # pragma: no cover
+    def bunzip2_call(self, file):
         import subprocess
-        from io import StringIO
+        from io import BytesIO
         from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
-        fin = StringIO(p.communicate()[0])
+        fin = BytesIO(p.communicate()[0])
         assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
-    def bz2_in_mem(self, file):
+    def bz2_in_mem(self, file): # pragma: no cover
         import bz2
         from galsim._pyfits import pyfits
         # This normally works.  But it might not on old versions of pyfits.
@@ -181,7 +182,7 @@ class _ReadFile:
             file = os.path.join(dir,file)
 
         if not file_compress:
-            if pyfits_version < '3.1':
+            if pyfits_version < '3.1': # pragma: no cover
                 # Sometimes early versions of pyfits do weird things with the final hdu when
                 # writing fits files with rice compression.  It seems to add a bunch of '\0'
                 # characters after the end of what should be the last hdu.  When reading this
@@ -204,7 +205,7 @@ class _ReadFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
-                except:
+                except: # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
@@ -213,7 +214,7 @@ class _ReadFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(file)
-                except:
+                except: # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
@@ -363,7 +364,7 @@ class _WriteFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
-                except Exception:
+                except:  # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
@@ -371,7 +372,7 @@ class _WriteFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(hdu_list, file)
-                except Exception:
+                except:  # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
@@ -479,7 +480,7 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin:
-        if isinstance(fin, str): # pragma: no cover
+        if isinstance(fin, basestring): # pragma: no cover
             # In this case, it is a file name that we need to delete.
             # Note: This is relevant for the _tmp versions that are not run on Travis, so
             # don't include this bit in the coverage report.
@@ -1154,7 +1155,7 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
-        if isinstance(header, str):
+        if isinstance(header, basestring):
             file_name = header
             header = None
 
@@ -1355,7 +1356,7 @@ class FitsHeader(object):
     def __repr__(self):
         from galsim._pyfits import pyfits_str
         if self._tag is None:
-            return "galsim.FitsHeader(header=%r)"%self.items()
+            return "galsim.FitsHeader(header=%r)"%list(self.items())
         else:
             return "galsim.FitsHeader(%s)"%self._tag
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -245,11 +245,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in x correctly")
+        mom['Mx'], (nx+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in y correctly")
+        mom['My'], (ny+1.)/2., 4, "obj.drawImage(nx,ny,scale) (even) did not center in y correctly")
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1, scale=scale)
@@ -259,12 +259,12 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.+1.)/2., 4,
+        mom['Mx'], (nx+1.+1.)/2., 4,
         "obj.drawImage(nx,ny,scale) (odd) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.+1.)/2., 4,
+        mom['My'], (ny+1.+1.)/2., 4,
         "obj.drawImage(nx,ny,scale) (odd) did not center in y correctly")
 
     # Test if we provide nx, ny, and no scale.  It should:
@@ -277,11 +277,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in x correctly")
+        mom['Mx'], (nx+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in y correctly")
+        mom['My'], (ny+1.)/2., 4, "obj.drawImage(nx,ny) (even) did not center in y correctly")
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1)
@@ -291,11 +291,11 @@ def test_drawImage():
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(nx,ny) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
+    mom = galsim.utilities.unweighted_moments(im10)
     np.testing.assert_almost_equal(
-        mx, (nx+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in x correctly")
+        mom['Mx'], (nx+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in x correctly")
     np.testing.assert_almost_equal(
-        my, (ny+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in y correctly")
+        mom['My'], (ny+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in y correctly")
 
     try:
         # Test if we provide nx, ny, scale, and an existing image.  It should:
@@ -317,10 +317,10 @@ def test_drawImage():
                                    "obj.drawImage(bounds,scale) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(bounds,scale) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
-    np.testing.assert_almost_equal(mx, (nx+1.)/2., 4,
+    mom = galsim.utilities.unweighted_moments(im10)
+    np.testing.assert_almost_equal(mom['Mx'], (nx+1.)/2., 4,
                                    "obj.drawImage(bounds,scale) did not center in x correctly")
-    np.testing.assert_almost_equal(my, (ny+1.+1.)/2., 4,
+    np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds,scale) did not center in y correctly")
 
     # Test if we provide bounds and no scale.  It should:
@@ -334,10 +334,10 @@ def test_drawImage():
                                    "obj.drawImage(bounds) produced image with wrong scale")
     np.testing.assert_almost_equal(im10.array.sum(), test_flux, 4,
                                    "obj.drawImage(bounds) produced image with wrong flux")
-    mx, my, mxx, myy, mxy = getmoments(im10)
-    np.testing.assert_almost_equal(mx, (nx+1.)/2., 4,
+    mom = galsim.utilities.unweighted_moments(im10)
+    np.testing.assert_almost_equal(mom['Mx'], (nx+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in x correctly")
-    np.testing.assert_almost_equal(my, (ny+1.+1.)/2., 4,
+    np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in y correctly")
 
     try:
@@ -829,12 +829,12 @@ def test_offset():
 
         # Check that the default draw command puts the centroid in the center of the image.
         obj.drawImage(im, method='sb')
-        moments = getmoments(im)
+        mom = galsim.utilities.unweighted_moments(im)
         np.testing.assert_almost_equal(
-                moments[0], cenx, 5,
+                mom['Mx'], cenx, 5,
                 "obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                moments[1], ceny, 5,
+                mom['My'], ceny, 5,
                 "obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
 
         # Test that a few pixel values match xValue.
@@ -870,12 +870,12 @@ def test_offset():
 
             offset = galsim.PositionD(offx,offy)
             obj.drawImage(im, method='sb', offset=offset)
-            moments = getmoments(im)
+            mom = galsim.utilities.unweighted_moments(im)
             np.testing.assert_almost_equal(
-                    moments[0], cenx+offx, decimal,
+                    mom['Mx'], cenx+offx, decimal,
                     "obj.drawImage(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             np.testing.assert_almost_equal(
-                    moments[1], ceny+offy, decimal,
+                    mom['My'], ceny+offy, decimal,
                     "obj.drawImage(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             # Test that a few pixel values match xValue
             gal.drawImage(im2, method='sb', offset=offset)
@@ -892,12 +892,12 @@ def test_offset():
             # Check that shift also moves the centroid by the right amount.
             shifted_obj = obj.shift(offset * scale)
             shifted_obj.drawImage(im, method='sb')
-            moments = getmoments(im)
+            mom = galsim.utilities.unweighted_moments(im)
             np.testing.assert_almost_equal(
-                    moments[0], cenx+offx, decimal,
+                    mom['Mx'], cenx+offx, decimal,
                     "shifted_obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             np.testing.assert_almost_equal(
-                    moments[1], ceny+offy, decimal,
+                    mom['My'], ceny+offy, decimal,
                     "shifted_obj.drawImage(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
             # Test that a few pixel values match xValue
             shifted_gal = gal.shift(offset * scale)
@@ -933,13 +933,13 @@ def test_offset():
 
         # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
         obj.drawImage(im, method='sb', use_true_center=False)
-        moments = getmoments(im)
+        mom = galsim.utilities.unweighted_moments(im)
         np.testing.assert_almost_equal(
-                moments[0], nom_cenx, 4,
+                mom['Mx'], nom_cenx, 4,
                 "obj.drawImage(im, use_true_center=False) not centered correctly for (nx,ny) = "+
                 "%d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                moments[1], nom_ceny, 4,
+                mom['My'], nom_ceny, 4,
                 "obj.drawImage(im, use_true_center=False) not centered correctly for (nx,ny) = "+
                 "%d,%d"%(nx,ny))
         cen_offset = galsim.PositionD(nom_cenx - cenx, nom_ceny - ceny)
@@ -947,6 +947,32 @@ def test_offset():
         np.testing.assert_array_almost_equal(
                 im.array, im2.array, 6,
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
+
+def test_shoot():
+    """Test drawImage(..., method='phot')
+
+    Most tests of the photon shooting method are done using the `do_shoot` function calls
+    in various places.  Here we test other aspects of photon shooting that are not fully
+    covered by these other tests.
+    """
+    # This test comes from a bug report by Jim Chiang on issue #866.  There was a rounding
+    # problem when the number of photons to shoot came out to 100,000 + 1.  It did the first
+    # 100,000 and then was left with 1, but rounding errors (since it is a double, not an int)
+    # was 1 - epsilon, and it ended up in a place where it shouldn't have been able to get to
+    # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
+    obj =  galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
+    obj = obj.withFlux(100001)
+    image1 = galsim.ImageF(32,32, init_value=100)
+    rng = galsim.BaseDeviate(1234)
+    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng)
+
+    # The test here is really just that it doesn't crash.
+    # But let's do something to check correctness.
+    image2 = galsim.ImageF(32,32)
+    rng = galsim.BaseDeviate(1234)
+    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng)
+    image2 += 100
+    np.testing.assert_almost_equal(image1.array, image2.array, decimal=12)
 
 
 @timer
@@ -1114,6 +1140,192 @@ def test_fft():
             im2_real.array, im2_alt_real.array, 9,
             "inverse_fft produce a different array than obj2.drawImage(nx,ny,method='sb')")
 
+@timer
+def test_np_fft():
+    """Test the equivalence between np.fft functions and the galsim versions
+    """
+    input_list = []
+    input_list.append( np.array([ [0,1,2,1],
+                                  [1,2,3,2],
+                                  [2,3,4,3],
+                                  [1,2,3,2] ], dtype=int ))
+    input_list.append( np.array([ [0,1],
+                                  [1,2],
+                                  [2,3],
+                                  [1,2] ], dtype=int ))
+    noise = galsim.GaussianNoise(sigma=5, rng=galsim.BaseDeviate(1234))
+    for N in [2,4,8,10]:
+        xim = galsim.ImageD(N,N)
+        xim.addNoise(noise)
+        input_list.append(xim.array)
+
+    for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
+        xim = galsim.ImageD(Nx,Ny)
+        xim.addNoise(noise)
+        input_list.append(xim.array)
+
+    for N in [2,4,8,10]:
+        xim = galsim.ImageC(N,N)
+        xim.real.addNoise(noise)
+        xim.imag.addNoise(noise)
+        input_list.append(xim.array)
+
+    for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
+        xim = galsim.ImageC(Nx,Ny)
+        xim.real.addNoise(noise)
+        xim.imag.addNoise(noise)
+        input_list.append(xim.array)
+
+    for xar in input_list:
+        Ny,Nx = xar.shape
+        print('Nx,Ny = ',Nx,Ny)
+        if Nx + Ny < 10:
+            print('xar = ',xar)
+        kar1 = np.fft.fft2(xar)
+        #print('numpy kar = ',kar1)
+        kar2 = galsim.fft.fft2(xar)
+        if Nx + Ny < 10:
+            print('kar = ',kar2)
+        np.testing.assert_almost_equal(kar1, kar2, 9, "fft2 not equivalent to np.fft.fft2")
+
+        # Check that kar is Hermitian in the way that we describe in the doc for ifft2
+        if not np.iscomplexobj(xar):
+            for kx in range(Nx//2,Nx):
+                np.testing.assert_almost_equal(kar2[0,kx], kar2[0,Nx-kx].conjugate())
+                for ky in range(1,Ny):
+                    np.testing.assert_almost_equal(kar2[ky,kx], kar2[Ny-ky,Nx-kx].conjugate())
+
+        # Check shift_in
+        kar3 = np.fft.fft2(np.fft.fftshift(xar))
+        kar4 = galsim.fft.fft2(xar, shift_in=True)
+        np.testing.assert_almost_equal(kar3, kar4, 9, "fft2(shift_in) failed")
+
+        # Check shift_out
+        kar5 = np.fft.fftshift(np.fft.fft2(xar))
+        kar6 = galsim.fft.fft2(xar, shift_out=True)
+        np.testing.assert_almost_equal(kar5, kar6, 9, "fft2(shift_out) failed")
+
+        # Check both
+        kar7 = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(xar)))
+        kar8 = galsim.fft.fft2(xar, shift_in=True, shift_out=True)
+        np.testing.assert_almost_equal(kar7, kar8, 9, "fft2(shift_in,shift_out) failed")
+
+        # ifft2
+        #print('ifft2')
+        xar1 = np.fft.ifft2(kar2)
+        xar2 = galsim.fft.ifft2(kar2)
+        if Nx + Ny < 10:
+            print('xar2 = ',xar2)
+        np.testing.assert_almost_equal(xar1, xar2, 9, "ifft2 not equivalent to np.fft.ifft2")
+        np.testing.assert_almost_equal(xar2, xar, 9, "ifft2(fft2(a)) != a")
+
+        xar3 = np.fft.ifft2(np.fft.fftshift(kar6))
+        xar4 = galsim.fft.ifft2(kar6, shift_in=True)
+        np.testing.assert_almost_equal(xar3, xar4, 9, "ifft2(shift_in) failed")
+        np.testing.assert_almost_equal(xar4, xar, 9, "ifft2(fft2(a)) != a with shift_in/out")
+
+        xar5 = np.fft.fftshift(np.fft.ifft2(kar4))
+        xar6 = galsim.fft.ifft2(kar4, shift_out=True)
+        np.testing.assert_almost_equal(xar5, xar6, 9, "ifft2(shift_out) failed")
+        np.testing.assert_almost_equal(xar6, xar, 9, "ifft2(fft2(a)) != a with shift_out/in")
+
+        xar7 = np.fft.fftshift(np.fft.ifft2(np.fft.fftshift(kar8)))
+        xar8 = galsim.fft.ifft2(kar8, shift_in=True, shift_out=True)
+        np.testing.assert_almost_equal(xar7, xar8, 9, "ifft2(shift_in,shift_out) failed")
+        np.testing.assert_almost_equal(xar8, xar, 9, "ifft2(fft2(a)) != a with all shifts")
+
+        if np.iscomplexobj(xar): continue
+
+        # rfft2
+        #print('rfft2')
+        rkar1 = np.fft.rfft2(xar)
+        rkar2 = galsim.fft.rfft2(xar)
+        np.testing.assert_almost_equal(rkar1, rkar2, 9, "rfft2 not equivalent to np.fft.rfft2")
+
+        rkar3 = np.fft.rfft2(np.fft.fftshift(xar))
+        rkar4 = galsim.fft.rfft2(xar, shift_in=True)
+        np.testing.assert_almost_equal(rkar3, rkar4, 9, "rfft2(shift_in) failed")
+
+        rkar5 = np.fft.fftshift(np.fft.rfft2(xar),axes=(0,))
+        rkar6 = galsim.fft.rfft2(xar, shift_out=True)
+        np.testing.assert_almost_equal(rkar5, rkar6, 9, "rfft2(shift_out) failed")
+
+        rkar7 = np.fft.fftshift(np.fft.rfft2(np.fft.fftshift(xar)),axes=(0,))
+        rkar8 = galsim.fft.rfft2(xar, shift_in=True, shift_out=True)
+        np.testing.assert_almost_equal(rkar7, rkar8, 9, "rfft2(shift_in,shift_out) failed")
+
+        # irfft2
+        #print('irfft2')
+        xar1 = np.fft.irfft2(rkar1)
+        xar2 = galsim.fft.irfft2(rkar1)
+        np.testing.assert_almost_equal(xar1, xar2, 9, "irfft2 not equivalent to np.fft.irfft2")
+        np.testing.assert_almost_equal(xar2, xar, 9, "irfft2(rfft2(a)) != a")
+
+        xar3 = np.fft.irfft2(np.fft.fftshift(rkar6,axes=(0,)))
+        xar4 = galsim.fft.irfft2(rkar6, shift_in=True)
+        np.testing.assert_almost_equal(xar3, xar4, 9, "irfft2(shift_in) failed")
+        np.testing.assert_almost_equal(xar4, xar, 9, "irfft2(rfft2(a)) != a with shift_in/out")
+
+        xar5 = np.fft.fftshift(np.fft.irfft2(rkar4))
+        xar6 = galsim.fft.irfft2(rkar4, shift_out=True)
+        np.testing.assert_almost_equal(xar5, xar6, 9, "irfft2(shift_out) failed")
+        np.testing.assert_almost_equal(xar6, xar, 9, "irfft2(rfft2(a)) != a with shift_out/in")
+
+        xar7 = np.fft.fftshift(np.fft.irfft2(np.fft.fftshift(rkar8,axes=(0,))))
+        xar8 = galsim.fft.irfft2(rkar8, shift_in=True, shift_out=True)
+        np.testing.assert_almost_equal(xar7, xar8, 9, "irfft2(shift_in,shift_out) failed")
+        np.testing.assert_almost_equal(xar8, xar, 9, "irfft2(rfft2(a)) != a with all shifts")
+
+        # ifft can also accept real arrays
+        xar9 = galsim.fft.fft2(galsim.fft.ifft2(xar))
+        np.testing.assert_almost_equal(xar9, xar, 9, "fft2(ifft2(a)) != a")
+        xar10 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_in=True),shift_out=True)
+        np.testing.assert_almost_equal(xar10, xar, 9, "fft2(ifft2(a)) != a with shift_in/out")
+        xar11 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_out=True),shift_in=True)
+        np.testing.assert_almost_equal(xar11, xar, 9, "fft2(ifft2(a)) != a with shift_out/in")
+        xar12 = galsim.fft.fft2(galsim.fft.ifft2(xar,shift_in=True,shift_out=True),
+                                shift_in=True,shift_out=True)
+        np.testing.assert_almost_equal(xar12, xar, 9, "fft2(ifft2(a)) != a with all shifts")
+
+    # Check for invalid inputs
+    try:
+        # Must be 2-d arrays
+        xar_1d = input_list[0].ravel()
+        xar_3d = input_list[0].reshape(2,2,4)
+        xar_4d = input_list[0].reshape(2,2,2,2)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_4d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_1d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_3d)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_4d)
+
+        # Must have even sizes
+        xar_oo = input_list[0][:3,:3]
+        xar_oe = input_list[0][:3,:]
+        xar_eo = input_list[0][:,:3]
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oe)
+        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_eo)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oo)
+        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oe)
+        # eo is ok, since the second dimension is actually N/2+1
+    except ImportError:
+        pass
+
+
 if __name__ == "__main__":
     test_drawImage()
     test_draw_methods()
@@ -1123,3 +1335,5 @@ if __name__ == "__main__":
     test_offset()
     test_drawImage_area_exptime()
     test_fft()
+    test_np_fft()
+    test_shoot()

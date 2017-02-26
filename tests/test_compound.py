@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -132,6 +132,7 @@ def test_convolve():
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
+    do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
     gsobject_compare(single, psf)
@@ -589,6 +590,7 @@ def test_add():
     gsobject_compare(single, gauss1)
     check_basic(single, "`sum' of 1 Gaussian")
     do_pickle(single)
+    do_shoot(single, myImg, "Single Sum")
 
     single = galsim.Add([gauss1])
     gsobject_compare(single, gauss1)
@@ -731,11 +733,37 @@ def test_deconvolve():
     np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
     np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
 
-    check_basic(inv_psf, "Deconvolve(asym)", do_x=False)
+    check_basic(inv_obj, "Deconvolve(asym)", do_x=False)
 
     # Check picklability
     do_pickle(inv_obj)
     do_pickle(inv_obj.SBProfile)
+
+    # And a significantly transformed deconvolve object
+    jac = (0.3, -0.8, -0.7, 0.4)
+    transformed_obj = obj.transform(*jac)
+    transformed_inv_obj = inv_obj.transform(*jac)
+    # Fix the flux -- most of the transformation commutes with deconvolution, but not flux scaling
+    transformed_inv_obj /= transformed_obj.flux * transformed_inv_obj.flux
+    check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
+    conv = galsim.Convolve([transformed_inv_obj, transformed_obj, obj])
+    conv.drawImage(myImg1, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Transformed Deconvolve didn't cancel transformed original")
+
+    np.testing.assert_equal(transformed_inv_obj.centroid(), -transformed_obj.centroid())
+    np.testing.assert_almost_equal(transformed_inv_obj.getFlux(), 1./transformed_obj.flux)
+    np.testing.assert_almost_equal(transformed_inv_obj.flux, 1./transformed_obj.flux)
+    np.testing.assert_almost_equal(transformed_inv_obj.maxSB(),
+                                   -transformed_obj.maxSB() / transformed_obj.flux**2)
+
+    check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
+
+    # Check picklability
+    do_pickle(transformed_inv_obj)
+    do_pickle(transformed_inv_obj.SBProfile)
 
     # Should raise an exception for invalid arguments
     try:

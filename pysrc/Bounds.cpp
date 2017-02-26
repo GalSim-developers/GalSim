@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -31,7 +31,7 @@ namespace {
 template <typename T>
 struct PyPosition {
 
-    static void wrap(std::string const & suffix) {
+    static bp::class_< Position<T> > wrap(std::string const & suffix) {
 
         bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
         pyPosition.def(bp::init< const Position<T>& >(bp::args("other")))
@@ -51,6 +51,7 @@ struct PyPosition {
             .def("assign", &Position<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
+        return pyPosition;
     }
 
 };
@@ -109,7 +110,15 @@ struct PyBounds {
 } // anonymous
 
 void pyExportBounds() {
-    PyPosition<double>::wrap("D");
+    bp::class_<Position<double> > pyPosD = PyPosition<double>::wrap("D");
+    // Add PositionD [+-] PositionI operators.
+    // Note, *don't* add augmented assignment operators, since python Positions should be immutable.
+    pyPosD
+        .def(bp::self + bp::other<Position<int> >())
+        .def(bp::other<Position<int> >() + bp::self)
+        .def(bp::self - bp::other<Position<int> >())
+        .def(bp::other<Position<int> >() - bp::self)
+        ;
     PyBounds<double>::wrap("D");
     PyPosition<int>::wrap("I");
     PyBounds<int>::wrap("I");

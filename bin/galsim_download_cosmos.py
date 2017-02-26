@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -176,7 +176,7 @@ def download(url, target, unpack_dir, args, logger):
     u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
-    file_size = int(meta.getheaders("Content-Length")[0])
+    file_size = int(meta.get("Content-Length"))
     file_name = os.path.basename(url)
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 

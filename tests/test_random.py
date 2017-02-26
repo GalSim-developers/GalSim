@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -44,7 +44,7 @@ precisionS = 1  # "precision" also a silly concept for ints, but allows all 4 te
 precisionI = 1
 
 # The number of values to generate when checking the mean and variance calculations.
-# This is currenly low enough to not dominate the time of the unit tests, but when changing
+# This is currently low enough to not dominate the time of the unit tests, but when changing
 # something, it may be useful to add a couple zeros while testing.
 nvals = 100000
 
@@ -237,12 +237,33 @@ def test_uniform():
             testimage.array.flatten(), np.array(uResult), precision,
             err_msg='Wrong uniform random number sequence generated when applied to image.')
 
+    # Test filling an image with Fortran ordering
+    u.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(galsim.DeviateNoise(u))
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(uResult), precision,
+            err_msg="Wrong uniform randoms generated for Fortran-ordered Image")
+
     # Check picklability
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(u), drawNoise)
     do_pickle(u)
     do_pickle(galsim.DeviateNoise(u))
+
+    # Check that we can construct a UniformDeviate from None, and that it depends on dev/random.
+    u1 = galsim.UniformDeviate(None)
+    u2 = galsim.UniformDeviate(None)
+    assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
+    # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -368,6 +389,14 @@ def test_gaussian():
             testimage.array.flatten(), np.array(gResult)-gMean, precision,
             err_msg="GaussianNoise applied to Images does not reproduce expected sequence")
 
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(gn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(gResult)-gMean, precision,
+            err_msg="Wrong Gaussian noise generated for Fortran-ordered Image")
+
     # Check GaussianNoise variance:
     np.testing.assert_almost_equal(
             gn.getVariance(), gSigma**2, precision,
@@ -464,6 +493,19 @@ def test_gaussian():
     do_pickle(g)
     do_pickle(gn)
     do_pickle(galsim.DeviateNoise(g))
+
+    # Check that we can construct a GaussianDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GaussianDeviate(None)
+    g2 = galsim.GaussianDeviate(None)
+    assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -585,6 +627,19 @@ def test_binomial():
     do_pickle(galsim.DeviateNoise(b), drawNoise)
     do_pickle(b)
     do_pickle(galsim.DeviateNoise(b))
+
+    # Check that we can construct a BinomialDeviate from None, and that it depends on dev/random.
+    b1 = galsim.BinomialDeviate(None)
+    b2 = galsim.BinomialDeviate(None)
+    assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
+    # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -709,6 +764,14 @@ def test_poisson():
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg='Wrong poisson random number sequence generated using PoissonNoise')
 
+    # Test filling an image with Fortran ordering
+    rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((5, 5)).T)
+    testimage.addNoise(pn)
+    np.testing.assert_array_almost_equal(
+            [testimage(1,1),testimage(2,1),testimage(3,1)], np.array(pResult)-pMean,
+            err_msg="Wrong Poisson noise generated for Fortran-ordered Image")
+
     # Check PoissonNoise variance:
     np.testing.assert_almost_equal(
             pn.getVariance(), pMean, precision,
@@ -803,6 +866,19 @@ def test_poisson():
     do_pickle(p)
     do_pickle(pn)
     do_pickle(galsim.DeviateNoise(p))
+
+    # Check that we can construct a PoissonDeviate from None, and that it depends on dev/random.
+    p1 = galsim.PoissonDeviate(None)
+    p2 = galsim.PoissonDeviate(None)
+    assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
+    # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -933,6 +1009,19 @@ def test_weibull():
     do_pickle(w)
     do_pickle(galsim.DeviateNoise(w))
 
+    # Check that we can construct a WeibullDeviate from None, and that it depends on dev/random.
+    w1 = galsim.WeibullDeviate(None)
+    w2 = galsim.WeibullDeviate(None)
+    assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
+    # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_gamma():
@@ -1052,6 +1141,19 @@ def test_gamma():
     do_pickle(g)
     do_pickle(galsim.DeviateNoise(g))
 
+    # Check that we can construct a GammaDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GammaDeviate(None)
+    g2 = galsim.GammaDeviate(None)
+    assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_chi2():
@@ -1170,6 +1272,19 @@ def test_chi2():
     do_pickle(galsim.DeviateNoise(c), drawNoise)
     do_pickle(c)
     do_pickle(galsim.DeviateNoise(c))
+
+    # Check that we can construct a Chi2Deviate from None, and that it depends on dev/random.
+    c1 = galsim.Chi2Deviate(None)
+    c2 = galsim.Chi2Deviate(None)
+    assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
+    # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1328,6 +1443,19 @@ def test_distfunction():
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
 
+    # Check that we can construct a DistDeviate from None, and that it depends on dev/random.
+    c1 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    c2 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    assert c1 != c2, "Consecutive DistDeviate(None) compared equal!"
+    # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_distLookupTable():
@@ -1474,6 +1602,15 @@ def test_ccdnoise():
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
                 " using addNoise")
+
+        # Test filling an image with Fortran ordering
+        rng.seed(testseed)
+        testImageF = galsim.Image(np.zeros((2, 2)).T, dtype=types[i])
+        testImageF.fill(sky)
+        testImageF.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(
+                testImageF.array, cResult, prec,
+                err_msg="Wrong CCD noise generated for Fortran-ordered Image"+typestrings[i])
 
         # Now include sky_level in ccdnoise
         rng.seed(testseed)

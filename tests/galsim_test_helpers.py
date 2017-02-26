@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,6 +20,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+import logging
 
 path, filename = os.path.split(__file__)
 try:
@@ -52,18 +53,20 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
 def printval(image1, image2):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
-    print("Sum of values: ", np.sum(image1.array), np.sum(image2.array))
+    print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
     print("Maximum image value: ", np.max(image1.array), np.max(image2.array))
     print("Peak location: ", image1.array.argmax(), image2.array.argmax())
+
+    fmt = "      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}"
+
+    mom1 = galsim.utilities.unweighted_moments(image1)
     print("Moments Mx, My, Mxx, Myy, Mxy for new array: ")
-    getmoments(image1)
+    print(fmt.format(mom1['Mx'], mom1['My'], mom1['Mxx'], mom1['Myy'], mom1['Mxy']))
+
+    mom2 = galsim.utilities.unweighted_moments(image2)
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
-    getmoments(image2)
-    #xcen = image2.array.shape[0]/2
-    #ycen = image2.array.shape[1]/2
-    #print("new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4])
-    #print("saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4])
+    print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
     if False:
         import matplotlib.pylab as plt
@@ -72,23 +75,6 @@ def printval(image1, image2):
         ax1.imshow(image1.array)
         ax2.imshow(image2.array)
         plt.show()
-
-def getmoments(image):
-    #print('shape = ',image.array.shape)
-    #print('bounds = ',image.bounds)
-    a = image.array.astype(float) # Use float for better accuracy calculations.
-                                  # This matters more for numpy version <= 1.7
-    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + image.getXMin(),
-                               np.arange(image.array.shape[0]) + image.getYMin())
-    mx = np.sum(xgrid * a) / np.sum(a)
-    my = np.sum(ygrid * a) / np.sum(a)
-    mxx = np.sum(((xgrid-mx)**2) * a) / np.sum(a)
-    myy = np.sum(((ygrid-my)**2) * a) / np.sum(a)
-    mxy = np.sum((xgrid-mx) * (ygrid-my) * a) / np.sum(a)
-
-    print('      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
-            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy))
-    return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
     # Convert a distortion (e1,e2) to a shear (g1,g2)
@@ -109,9 +95,9 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     #print('  image scale,bounds = ',dx,image.bounds)
     if scale is None:
         assert image.scale == prof.nyquistScale()
-    print('  flux: ',prof.flux, image.array.sum()*dx**2, image.added_flux)
+    print('  flux: ',prof.flux, image.array.sum(dtype=float)*dx**2, image.added_flux)
     np.testing.assert_allclose(
-            image.array.sum() * dx**2, image.added_flux, 1.e-5,
+            image.array.sum(dtype=float) * dx**2, image.added_flux, 1.e-5,
             err_msg="%s profile drawImage(method='sb') returned wrong added_flux"%name)
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
@@ -200,12 +186,19 @@ def do_shoot(prof, img, name):
     test_flux = 1.8
 
     print('Start do_shoot')
+    # Verify that shoot with rng=None runs
+    prof.shoot(100, rng=None)
+    # And also verify 0, 1, or 2 photons.
+    prof.shoot(0)
+    prof.shoot(1)
+    prof.shoot(2)
+
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
     print('prof.getFlux = ',prof.getFlux())
     print('flux_max = ',flux_max)
-    flux_tot = img.array.sum()
+    flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
     if flux_max > 1.:
         # Since the number of photons required for a given accuracy level (in terms of
@@ -219,7 +212,7 @@ def do_shoot(prof, img, name):
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
     elif flux_max < 0.1:
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max;
+        scale = 0.1 / flux_max
         print('scale = ',scale)
         prof *= scale
         img *= scale
@@ -227,7 +220,7 @@ def do_shoot(prof, img, name):
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
     print('prof.getFlux => ',prof.getFlux())
-    print('img.sum => ',img.array.sum())
+    print('img.sum => ',img.array.sum(dtype=float))
     print('img.max => ',img.array.max())
     print('nphot = ',nphot)
     img2 = img.copy()
@@ -237,7 +230,7 @@ def do_shoot(prof, img, name):
     rng = galsim.UniformDeviate(12345)
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print('img2.sum => ',img2.array.sum())
+    print('img2.sum => ',img2.array.sum(dtype=float))
     #printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -255,8 +248,8 @@ def do_shoot(prof, img, name):
         img = galsim.ImageD(128,128, scale=dx)
     prof = prof.withFlux(test_flux)
     prof.drawImage(img)
-    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
+    print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
+    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
     # maxSB is not always very accurate, but it should be an overestimate if wrong.
     assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, "maxSB for %s is too small."%name
@@ -268,8 +261,8 @@ def do_shoot(prof, img, name):
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
+    print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
+    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.maxSB()*dx**2)
     print('ratio = ',img.array.max() / (prof.maxSB()*dx**2))
@@ -323,6 +316,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     import copy
     # In case the repr uses these:
     from numpy import array, uint16, uint32, int16, int32, float32, float64, ndarray
+    from astropy.units import Unit
+
     try:
         import astropy.io.fits
         from distutils.version import LooseVersion
@@ -330,7 +325,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             irreprable = True
     except:
         import pyfits
-    print('Try pickling ',obj1)
+    print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
     obj2 = pickle.loads(pickle.dumps(obj1))
@@ -370,33 +365,22 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    # A few objects we don't expect to work this way in GalSim, either because their repr strings
-    # are truncated or because they include floating point numbers with truncated precision.  For
-    # these, we just exit here.
-    if irreprable: return
+    # A few objects we don't expect to work this way in GalSim; when testing these, we set the
+    # `irreprable` kwarg to true.  Also, we skip anything with random deviates since these don't
+    # respect the eval/repr roundtrip.
 
-    try:
-        # It turns out that random deviates will still be successfully constructed even with a
-        # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
-        # here and just raise an exception to skip this test and get out of the try block.
-        if random:
-            raise TypeError
-        # A further complication is that the default numpy print options do not have sufficient
-        # precision for the eval string to exactly reproduce the original object.  So we temporarily
-        # bump up the numpy print precision.
-        with galsim.utilities.printoptions(precision=18):
-            #print('repr = ',repr(obj1))
+    if not random and not irreprable:
+        # A further complication is that the default numpy print options do not lead to sufficient
+        # precision for the eval string to exactly reproduce the original object, and start
+        # truncating the output for relatively small size arrays.  So we temporarily bump up the
+        # precision and truncation threshold for testing.
+        with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
-    except:
-        pass
-    else:
-        #print('obj1 = ',repr(obj1))
-        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
-        if random: f1 = func(obj1)
-        #print('func(obj1) = ',repr(f1))
-        #print('func(obj5) = ',repr(f5))
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
+    else:
+        # Even if we're not actually doing the test, still make the repr to check for syntax errors.
+        repr(obj1)
 
     # Try perturbing obj1 pickling arguments and verify that inequality results.
     # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
@@ -442,14 +426,16 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: can't change size of LVector or PhotonArray without changing array
             if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
-            with galsim.utilities.printoptions(precision=18, threshold=1e6):
+            with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
                     if classname in galsim._galsim.__dict__:
-                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim._galsim.' + classname + repr(tuple(newargs))
                     else:
-                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim.' + classname + repr(tuple(newargs))
+                    obj6 = eval(eval_str)
                 except Exception as e:
-                    print('e = ',e)
+                    print('caught exception: ',e)
+                    print('eval_str = ',eval_str)
                     raise TypeError("{0} not `eval`able!".format(
                             classname + repr(tuple(newargs))))
                 else:
@@ -528,7 +514,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         if isinstance(obj, galsim.ChromaticDeconvolution):
             continue
         np.testing.assert_allclose(
-                obj.evaluateAtWavelength(wave).drawImage().array.sum(),
+                obj.evaluateAtWavelength(wave).drawImage().array.sum(dtype=float),
                 desired,
                 rtol=1e-2)
 
@@ -536,10 +522,10 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         for bp in bps:
             calc_flux = obj.calculateFlux(bp)
             np.testing.assert_equal(obj.SED.calculateFlux(bp), calc_flux)
-            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(), rtol=1e-2)
+            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(dtype=float), rtol=1e-2)
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
-                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(), rtol=1e-2)
+                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
 
 def funcname():
     import inspect
@@ -552,7 +538,6 @@ def timer(f):
     @functools.wraps(f)
     def f2(*args, **kwargs):
         import time
-        import inspect
         t0 = time.time()
         result = f(*args, **kwargs)
         t1 = time.time()
@@ -560,3 +545,40 @@ def timer(f):
         print('time for %s = %.2f' % (fname, t1-t0))
         return result
     return f2
+
+
+class CaptureLog(object):
+    """A context manager that saves logging output into a string that is accessible for
+    checking in unit tests.
+
+    After exiting the context, the attribute `output` will have the logging output.
+
+    Sample usage:
+
+            >>> with CaptureLog() as cl:
+            ...     cl.logger.info('Do some stuff')
+            >>> assert cl.output == 'Do some stuff'
+
+    """
+    def __init__(self, level=3):
+        logging_levels = { 0: logging.CRITICAL,
+                           1: logging.WARNING,
+                           2: logging.INFO,
+                           3: logging.DEBUG }
+        self.logger = logging.getLogger('CaptureLog')
+        self.logger.setLevel(logging_levels[level])
+        try:
+            from StringIO import StringIO
+        except ImportError:
+            from io import StringIO
+        self.stream = StringIO()
+        self.handler = logging.StreamHandler(self.stream)
+        self.logger.addHandler(self.handler)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.handler.flush()
+        self.output = self.stream.getvalue().strip()
+        self.handler.close()

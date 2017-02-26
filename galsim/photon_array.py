@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,8 +34,8 @@ a detector.
 A PhotonArray object is not typically constructed directly by the user.  Rather, it is
 typically constructed as the return value of the `GSObject.shoot` method.
 At this point, the photons only have x,y,flux values.  Then there are a number of classes
-that perform various modifications to the photons such as giving them wavelenghts or
-inclination angles or remove some due to fringing or vignetting.
+that perform various modifications to the photons such as giving them wavelengths or
+inclination angles or removing some due to fringing or vignetting.
 
 TODO: fringing, vignetting, and angles are not implemented yet, but we expect them to
 be implemented soon, so the above paragraph is a bit aspirational atm.
@@ -78,12 +78,12 @@ needed.  The other arrays are only allocated on demand if the user accesses thes
 
 @param N            The number of photons to store in this PhotonArray.  This value cannot be
                     changed.
-@param x            Optionally, the inital x values. [default: None]
-@param y            Optionally, the inital y values. [default: None]
-@param flux         Optionally, the inital flux values. [default: None]
-@param dxdz         Optionally, the inital dxdz values. [default: None]
-@param dydz         Optionally, the inital dydz values. [default: None]
-@param wavelength   Optionally, the inital wavelength values. [default: None]
+@param x            Optionally, the initial x values. [default: None]
+@param y            Optionally, the initial y values. [default: None]
+@param flux         Optionally, the initial flux values. [default: None]
+@param dxdz         Optionally, the initial dxdz values. [default: None]
+@param dydz         Optionally, the initial dydz values. [default: None]
+@param wavelength   Optionally, the initial wavelength values. [default: None]
 """
 
 # In python we want the init function to be a bit more functional so we can serialize properly.
@@ -211,11 +211,11 @@ class FRatioAngles(object):
     obscuration.
 
     Assigns arrival directions at the focal plane for photons, drawing from a uniform
-    brightness distribution between the obscuration angle and the angle of the FOV defined
+    brightness distribution between the obscuration angle and the edge of the pupil defined
     by the f/ratio of the telescope.  The angles are expressed in terms of slopes dx/dz
     and dy/dz.
 
-    @param fratio           The f-ratio of the telescope (e.g. 1.2 for LSST)
+    @param fratio           The f/ratio of the telescope (e.g. 1.2 for LSST)
     @param obscuration      Linear dimension of central obscuration as fraction of aperture
                             linear dimension. [0., 1.).  [default: 0.0]
     @param rng              A random number generator to use or None, in which case an rng
@@ -227,10 +227,7 @@ class FRatioAngles(object):
             raise ValueError("The f-ratio must be positive.")
         if obscuration < 0 or obscuration >= 1:
             raise ValueError("The obscuration fraction must be between 0 and 1.")
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        else:
-            ud = galsim.UniformDeviate(rng)
+        ud = galsim.UniformDeviate(rng)
 
         self.fratio = fratio
         self.obscuration = obscuration
@@ -244,30 +241,27 @@ class FRatioAngles(object):
         dydz = photon_array.getDYDZArray()
         n_photons = len(dxdz)
 
-        fov_angle = np.arctan(0.5 / self.fratio)  # radians
-        obscuration_angle = self.obscuration * fov_angle
+        # The f/ratio is the ratio of the focal length to the diameter of the aperture of
+        # the telescope.  The angular radius of the field of view is defined by the
+        # ratio of the radius of the aperture to the focal length
+        pupil_angle = np.arctan(0.5 / self.fratio)  # radians
+        obscuration_angle = np.arctan(0.5 * self.obscuration / self.fratio)
 
         # Generate azimuthal angles for the photons
-        # Set up a loop to fill the array of azimuth angles for now
-        # (The array is initialized below but there's no particular need to do this.)
-        phi = np.zeros(n_photons)
-
-        for i in np.arange(n_photons):
-            phi[i] = self.ud() * 2 * np.pi
+        phi = np.empty(n_photons)
+        self.ud.generate(phi)
+        phi *= (2 * np.pi)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
-        # the sine of the obscuration angle and the sine of the FOV radius
-        sintheta = np.zeros(n_photons)
-
-        for i in np.arange(n_photons):
-            sintheta[i] = np.sin(obscuration_angle) + (np.sin(fov_angle) - \
-                          np.sin(obscuration_angle))*self.ud()
+        # the sine of the obscuration angle and the sine of the pupil radius
+        sintheta = np.empty(n_photons)
+        self.ud.generate(sintheta)
+        sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
+            * sintheta
 
         # Assign the directions to the arrays. In this class the convention for the
-        # zero of phi does not matter but it might if the obscuration dependent on
+        # zero of phi does not matter but it would if the obscuration is dependent on
         # phi
-        costheta = np.sqrt(1. - np.square(sintheta))
-        dxdz[:] = costheta * np.sin(phi)
-        dydz[:] = costheta * np.cos(phi)
-
-
+        tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
+        dxdz[:] = tantheta * np.sin(phi)
+        dydz[:] = tantheta * np.cos(phi)

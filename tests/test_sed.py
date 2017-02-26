@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,6 +43,14 @@ def test_SED_basic():
     h = 6.62606957e-27 # Planck's constant in erg seconds
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
+
+    try:
+        # Eval-str must return a Real
+        np.testing.assert_raises(ValueError, galsim.SED,
+                                 spec="'eggs'", wave_type='A', flux_type='flambda')
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
     # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
     s_list = [
@@ -196,10 +204,13 @@ def test_SED_sub():
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
-    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+    sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons')
-    for z in [0, 0.2, 0.4]:
-        a = a0.atRedshift(z)
+    sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
+    sed2 = galsim.SED(17.0, wave_type='ang', flux_type='1')
+
+    for sed, z in zip( [sed0, sed1, sed2], [0, 0.2, 0.4] ):
+        a = sed.atRedshift(z)
 
         # SED multiplied by function
         b = lambda w: w**2
@@ -217,13 +228,13 @@ def test_SED_mul():
         d = a*4.2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # assignment multiplication
         d *= 2
         np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
-        do_pickle(d)
+        if sed is sed0: do_pickle(d)
 
         # SED multiplied by dimensionless, constant SED
         e = galsim.SED(2.0, 'nm', '1')
@@ -407,13 +418,20 @@ def test_SED_withFlux():
     """
     rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                       flux_type='flambda')
-        if z != 0:
-            a = a.atRedshift(z)
-        a = a.withFlux(1.0, rband)
-        np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
-                                             "Setting SED flux failed.")
+        for fast in [True, False]:
+            a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                           flux_type='flambda', fast=fast)
+            if z != 0:
+                a = a.atRedshift(z)
+            a = a.withFlux(1.0, rband)
+            np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
+                                                 "Setting SED flux failed.")
+
+            # Should be equivalent to multiplying an SED * Bandpass and computing the
+            # "bolometric" flux.
+            ab = a * rband
+            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+                                                 "Calculating SED flux from sed * bp failed.")
 
 
 @timer
@@ -551,7 +569,7 @@ def test_SED_sampleWavelength():
 
     sed  = galsim.SED(galsim.LookupTable([1,2,3,4,5], [0.,1.,0.5,1.,0.]),
                       wave_type='nm', flux_type='fphotons')
-    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'), 
+    bandpass = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [0,0,1,1,0], interpolant='linear'),
                                'nm')
     sedbp = sed*bandpass
 
@@ -589,7 +607,7 @@ def test_SED_sampleWavelength():
                                    "to the nearest integer.")
 
     def create_cdfs(sed,out,nbins=100):
-        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,100000,retstep=True)
         centers = bins[:-1] + step/2.
         cdf = np.cumsum(sed(centers)*step)
         cdf /= cdf.max()
@@ -601,9 +619,9 @@ def test_SED_sampleWavelength():
 
     def create_counts(sed,out,nbins=100):
         bins,step = np.linspace(sed.blue_limit,sed.red_limit,nbins+1,retstep=True)
-        centers = bins[:-1] + step/2.        
+        centers = bins[:-1] + step/2.
         cts1,_ = np.histogram(out,nbins)
-        
+
         #cts2 = np.array([galsim.integ.int1d(sed,low,low+step,1e-3,1e-6) for low in bins[:-1]])
         cts2 = np.array([galsim.integ.trapz(sed,low,low+step) for low in bins[:-1]])
         cts2 *= (float(len(out))/cts2.sum())
@@ -611,7 +629,7 @@ def test_SED_sampleWavelength():
 
     # Test the output distribution
     out = sed.sampleWavelength(1e5,None,rng=seed)
-        
+
     _,(cts1,cts2) = create_counts(sed,out)
     chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
     np.testing.assert_almost_equal(chisq,1.0,1,"Sampled counts do not match input SED.")
@@ -634,7 +652,7 @@ def test_SED_sampleWavelength():
     _,(cdf1,cdf2) = create_cdfs(sedz,outz)
     np.testing.assert_almost_equal(cdf1, cdf2, 2,
                                    "Sampled CDF does not match input redshifted SED.")
-    
+
 
 @timer
 def test_fnu_vs_flambda():

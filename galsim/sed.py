@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,10 +19,10 @@
 Spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
+from past.builtins import basestring
 import numpy as np
 
 import galsim
-from . import utilities
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -179,7 +179,7 @@ class SED(object):
                 raise ValueError("Attempt to set spectral SED using float or integer.")
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
-        elif isinstance(self._orig_spec, str):
+        elif isinstance(self._orig_spec, basestring):
             import os
             if os.path.isfile(self._orig_spec):
                 self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
@@ -192,14 +192,18 @@ class SED(object):
                 # Are there any other types of errors we should trap here?
                 try:
                     self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
-                    self._spec(700)
+                    from numbers import Real
+                    if not isinstance(self._spec(700.0), Real):
+                        raise ValueError("The given SED function, %r, did not return a valid"
+                                         " number at test wavelength %s"%(
+                                         self._spec, 700.0))
                 except ArithmeticError:
                     pass
                 except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
-                        "Input provided: {0}\n".format(self._orig_spec) +
+                        "Input provided: {0!r}\n".format(self._orig_spec) +
                         "Caught error: {0}".format(e))
 
         else:
@@ -430,23 +434,16 @@ class SED(object):
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):
-            if self._const:
-                # make a new scaled Bandpass, and use that to initialize a new SED.
-                new_bp = other * self._spec(42.0) # const, so can eval anywhere
-                return SED(new_bp.func, 'nm', '1', redshift=self.redshift,
-                           _blue_limit=new_bp.blue_limit, _red_limit=new_bp.red_limit,
-                           _wave_list=new_bp._wave_list, _spectral=self.spectral)
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+            zfactor = (1.0+self.redshift) * other.wave_factor
+            if self.fast:
+                self._make_fast_spec()
+                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
             else:
-                wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-                zfactor = (1.0+self.redshift) * other.wave_factor
-                if self.fast:
-                    self._make_fast_spec()
-                    spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
-                else:
-                    spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
-                return SED(spec, 'nm', 'fphotons', redshift=self.redshift,
-                           _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                           _spectral=self.spectral)
+                spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
+            return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
+                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                       _spectral=self.spectral)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
         if hasattr(other, '__call__'):
@@ -456,7 +453,7 @@ class SED(object):
             else:
                 spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
             flux_type = 'fphotons' if self.spectral else '1'
-            return SED(spec, 'nm', flux_type, redshift=self.redshift,
+            return SED(spec, 'nm', flux_type, redshift=self.redshift, fast=self.fast,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
@@ -482,7 +479,7 @@ class SED(object):
                     spec = lambda w: self._fast_spec(w) * other
                 else:
                     spec = lambda w: self(w*(1.0+self.redshift)) * other
-            return SED(spec, wave_type, flux_type, redshift=self.redshift,
+            return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
@@ -507,7 +504,8 @@ class SED(object):
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
-        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type, redshift=self.redshift,
+        return SED(spec, flux_type=self.flux_type, wave_type=self.wave_type,
+                   redshift=self.redshift, fast=self.fast,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
@@ -560,7 +558,7 @@ class SED(object):
             spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
 
         return SED(spec, wave_type='nm', flux_type=flux_type,
-                   redshift=self.redshift, _wave_list=wave_list,
+                   redshift=self.redshift, fast=self.fast, _wave_list=wave_list,
                    _blue_limit=blue_limit, _red_limit=red_limit,
                    _spectral=_spectral)
 
@@ -643,7 +641,7 @@ class SED(object):
         if red_limit is not None:
             red_limit *= wave_factor
 
-        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift,
+        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def calculateFlux(self, bandpass):
@@ -733,12 +731,13 @@ class SED(object):
             spec_native_units = self._spec(rest_wave_native_units)
 
             # Note that this is thinning in native units, not nm and photons/nm.
-            newx, newf = utilities.thin_tabulated_values(
+            newx, newf = galsim.utilities.thin_tabulated_values(
                     rest_wave_native_units, spec_native_units,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
             newspec = galsim.LookupTable(newx, newf, interpolant='linear')
-            return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift)
+            return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
+                       fast=self.fast)
         else:
             return self
 
@@ -847,10 +846,10 @@ class SED(object):
         a bandpass.
 
         @param nphotons  Number of samples (photons) to randomly draw.
-        @param bandpass  A Bandpass object representing a filter, or None to sample over the full 
+        @param bandpass  A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
-        @param rng       If provided, a random number generator that is any kind of BaseDeviate 
-                         object. If `rng` is None, one will be automatically created, using the 
+        @param rng       If provided, a random number generator that is any kind of BaseDeviate
+                         object. If `rng` is None, one will be automatically created, using the
                          time as a seed. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
                          tables. [default: 256]
@@ -910,9 +909,12 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        outstr = ('galsim.SED(%r, redshift=%r, wave_type=%r, flux_type=%r' +
+        # For some reason, the dimensionless astropy unit, Unit(), doesn't eval/repr roundtrip, so
+        # we use a custom repr for this case.
+        flux_type = "Unit(1)" if self.dimensionless else repr(self.flux_type)
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
-                      self._orig_spec, self.redshift, self.wave_type, self.flux_type,
+                      self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit, self.red_limit)
         return outstr
 

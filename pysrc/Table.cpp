@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -198,6 +198,27 @@ namespace {
             table2d.interpManyMesh(xvec, yvec, valvec, Nx, Ny);
         }
 
+        static bp::tuple Gradient(const Table2D<double,double>& table2d,
+                                   double x, double y)
+        {
+            double dfdx;
+            double dfdy;
+            table2d.gradient(x, y, dfdx, dfdy);
+            return bp::make_tuple(dfdx, dfdy);
+        }
+
+        static void GradientMany(const Table2D<double,double>& table2d,
+                                 const bp::object& x, const bp::object& y,
+                                 const bp::object& dfdx, const bp::object& dfdy)
+        {
+            const double* xvec = GetNumpyArrayData<double>(x.ptr());
+            const double* yvec = GetNumpyArrayData<double>(y.ptr());
+            double* dfdxvec = GetNumpyArrayData<double>(dfdx.ptr());
+            double* dfdyvec = GetNumpyArrayData<double>(dfdy.ptr());
+            int N = GetNumpyArrayDim(x.ptr(), 0);
+            table2d.gradientMany(xvec, yvec, dfdxvec, dfdyvec, N);
+        }
+
         static bp::object convertGetXArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& x = table2d.getXArgs();
@@ -250,6 +271,8 @@ namespace {
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpMany", &interpMany)
                 .def("interpManyMesh", &interpManyMesh)
+                .def("gradient", &Gradient)
+                .def("gradientMany", &GradientMany)
                 .def("xmin", &Table2D<double,double>::xmin)
                 .def("xmax", &Table2D<double,double>::xmax)
                 .def("ymin", &Table2D<double,double>::ymin)

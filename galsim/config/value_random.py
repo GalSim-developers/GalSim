@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,9 +26,7 @@ import galsim
 def _GenerateFromRandom(config, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = Random")
-    rng = base['rng']
+    rng = base.get('rng',None)
     ud = galsim.UniformDeviate(rng)
 
     # Each value_type works a bit differently:
@@ -39,8 +37,10 @@ def _GenerateFromRandom(config, base, value_type):
         #print(base['obj_num'],'Random angle = ',val)
         return val, False
     elif value_type is bool:
-        galsim.config.CheckAllParams(config)
-        val = ud() < 0.5
+        opt = { 'p' : float }
+        kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
+        p = kwargs.get('p', 0.5)
+        val = ud() < p
         #print(base['obj_num'],'Random bool = ',val)
         return val, False
     else:
@@ -66,9 +66,7 @@ def _GenerateFromRandom(config, base, value_type):
 def _GenerateFromRandomGaussian(config, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomGaussian")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'sigma' : float }
     opt = { 'mean' : float, 'min' : float, 'max' : float }
@@ -129,9 +127,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
 def _GenerateFromRandomPoisson(config, base, value_type):
     """@brief Return a random value drawn from a Poisson distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomPoisson")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'mean' : float }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
@@ -147,9 +143,7 @@ def _GenerateFromRandomPoisson(config, base, value_type):
 def _GenerateFromRandomBinomial(config, base, value_type):
     """@brief Return a random value drawn from a Binomial distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomBinomial")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = {}
     opt = { 'p' : float }
@@ -176,9 +170,7 @@ def _GenerateFromRandomBinomial(config, base, value_type):
 def _GenerateFromRandomWeibull(config, base, value_type):
     """@brief Return a random value drawn from a Weibull distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomWeibull")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'a' : float, 'b' : float }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
@@ -195,9 +187,7 @@ def _GenerateFromRandomWeibull(config, base, value_type):
 def _GenerateFromRandomGamma(config, base, value_type):
     """@brief Return a random value drawn from a Gamma distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomGamma")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'k' : float, 'theta' : float }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
@@ -214,9 +204,7 @@ def _GenerateFromRandomGamma(config, base, value_type):
 def _GenerateFromRandomChi2(config, base, value_type):
     """@brief Return a random value drawn from a Chi^2 distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomChi2")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'n' : float }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
@@ -232,9 +220,7 @@ def _GenerateFromRandomChi2(config, base, value_type):
 def _GenerateFromRandomDistribution(config, base, value_type):
     """@brief Return a random value drawn from a user-defined probability distribution
     """
-    if 'rng' not in base:
-        raise ValueError("No rng available for type = RandomDistribution")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     ignore = [ 'x', 'f', 'x_log', 'f_log' ]
     opt = {'function' : str, 'interpolant' : str, 'npoints' : int,
@@ -282,22 +268,22 @@ def _GenerateFromRandomDistribution(config, base, value_type):
 def _GenerateFromRandomCircle(config, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
     """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RandomCircle")
-    rng = base['rng']
+    rng = base.get('rng',None)
 
     req = { 'radius' : float }
     opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     radius = kwargs['radius']
+    inner_radius = kwargs.get('inner_radius',0)
 
     ud = galsim.UniformDeviate(rng)
     max_rsq = radius**2
-    if 'inner_radius' in kwargs:
-        inner_radius = kwargs['inner_radius']
-        min_rsq = inner_radius**2
-    else:
-        min_rsq = 0.
+    min_rsq = inner_radius**2
+
+    if min_rsq >= max_rsq:
+        raise ValueError("inner_radius (%f) must be less than radius (%f) for type=RandomCircle"%(
+                         inner_radius, radius))
+
     # Emulate a do-while loop
     while True:
         x = (2*ud()-1) * radius

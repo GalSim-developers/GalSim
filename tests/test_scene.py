@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -140,8 +140,146 @@ def test_cosmos_fluxnorm():
         'Sersic galaxy does not retain index information after transformation'
     assert hasattr(gal1_param.shear(g1=0.05).original, 'index'), \
         'Bulge+disk galaxy does not retain index information after transformation'
+\
+@timer
+def test_cosmos_random():
+    """Check the random object functionality of the COSMOS catalog."""
+    # For most of this test, we'll use the selectRandomIndex() routine, which does not try to
+    # construct the GSObjects.  This makes the test go fast.  However, we will at the end have a
+    # test to ensure that calling makeGalaxy() while requesting a random object has the same
+    # behavior as using selectRandomIndex() in limited cases.
 
+    # Initialize the catalog.  The first will have weights, while the second will not (since they
+    # are in the RealGalaxyCatalog).
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                               dir=datapath)
+    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                     dir=datapath, use_real=False)
+    assert hasattr(cat, 'real_cat')
+    assert not hasattr(cat_param, 'real_cat')
+
+    # Check for exception handling if bad inputs given for the random functionality.
+    try:
+        np.testing.assert_raises(ValueError, cat.selectRandomIndex, 0)
+        np.testing.assert_raises(ValueError, cat.selectRandomIndex, 10.7)
+        np.testing.assert_raises(TypeError, cat.selectRandomIndex, 10, rng=3)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+    # Check that random objects give the right <weight> without/with weighting.
+    wt = cat.real_cat.weight[cat.orig_index]
+    wt /= np.max(wt)
+    avg_weight_val = np.sum(wt)/len(wt)
+    wavg_weight_val = np.sum(wt**2)/np.sum(wt)
+    try:
+        np.testing.assert_raises(AssertionError, np.testing.assert_almost_equal, avg_weight_val,
+                                 wavg_weight_val, 3)
+    except ImportError:
+        print('The assert_raises tests require nose')
+    # Make sure we use enough objects that the mean weights converge properly.
+    randind_wt = cat.selectRandomIndex(30000, rng=galsim.BaseDeviate(1234))
+    wtrand = cat.real_cat.weight[cat.orig_index[randind_wt]] / \
+        np.max(cat.real_cat.weight[cat.orig_index])
+    # The average value of wtrand should be wavgw_weight_val in this case, since we used the weights
+    # to probabilistically select galaxies.
+    np.testing.assert_almost_equal(np.mean(wtrand), wavg_weight_val,3,
+                                   err_msg='Average weight for random sample is wrong')
+    # From here on we need to suppress some warnings that come from calling cat_param.  It doesn't
+    # have weights, so it does unweighted selection, which emits a warning.  We know about this and
+    # don't want to spit out the warning each time, so suppress it.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        randind = cat_param.selectRandomIndex(30000, rng=galsim.BaseDeviate(1234))
+        wtrand = cat.real_cat.weight[cat.orig_index[randind]] / \
+            np.max(cat.real_cat.weight[cat.orig_index])
+        # The average value of wtrand should be avg_weight_val, since we did not do a weighted
+        # selection.
+        np.testing.assert_almost_equal(np.mean(wtrand), avg_weight_val,3,
+                                       err_msg='Average weight for random sample is wrong')
+
+        # Check for consistency of randoms with same random seed.  Do this both for the weighted and the
+        # unweighted calculation.
+        # Check for inconsistency of randoms with different random seed, or same seed but without/with
+        # weighting.
+        rng1 = galsim.BaseDeviate(1234)
+        rng2 = galsim.BaseDeviate(1234)
+        ind1 = cat.selectRandomIndex(10, rng=rng1)
+        ind2 = cat.selectRandomIndex(10, rng=rng2)
+        np.testing.assert_array_equal(ind1,ind2,
+                                      err_msg='Different random indices selected with same seed!')
+        ind1p = cat_param.selectRandomIndex(10, rng=rng1)
+        ind2p = cat_param.selectRandomIndex(10, rng=rng2)
+        np.testing.assert_array_equal(ind1p,ind2p,
+                                      err_msg='Different random indices selected with same seed!')
+        rng3 = galsim.BaseDeviate(5678)
+        ind3 = cat.selectRandomIndex(10, rng=rng3)
+        ind3p = cat_param.selectRandomIndex(10) # initialize RNG based on time
+        try:
+            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind1p)
+            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind3)
+            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1p, ind3p)
+        except ImportError:
+            print('The assert_raises tests require nose')
+
+        # Finally, make sure that directly calling selectRandomIndex() gives the same random ones as
+        # makeGalaxy().  We'll do one real object because they are slower, and multiple parametric (just
+        # to make sure that the multi-object selection works consistently).
+        use_seed = 567
+        obj = cat.makeGalaxy(rng=galsim.BaseDeviate(use_seed))
+        ind = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed))
+        obj_2 = cat.makeGalaxy(ind)
+        # Note: for real galaxies we cannot require that obj==obj_2, just that obj.index==obj_2.index.
+        # That's because we want to make sure the same galaxy is being randomly selected, but we cannot
+        # require that noise padding be the same, given the inconsistency in how the BaseDeviates are
+        # used in the above cases.
+        assert obj.index==obj_2.index,'makeGalaxy selects random objects inconsistently'
+
+        n_random = 3
+        objs = cat_param.makeGalaxy(rng=galsim.BaseDeviate(use_seed), n_random=n_random)
+        inds = cat_param.selectRandomIndex(n_random, rng=galsim.BaseDeviate(use_seed))
+        objs_2 = cat_param.makeGalaxy(inds)
+        for i in range(n_random):
+            # With parametric objects there is no noise padding, so we can require completely identical
+            # GSObjects (not just equal indices).
+            assert objs[i]==objs_2[i],'makeGalaxy selects random objects inconsistently'
+
+        # Finally, check for consistency with random object selected from RealGalaxyCatalog.  For this
+        # case, we need to make another COSMOSCatalog that does not flag the bad objects.
+        use_seed=31415
+        cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                   dir=datapath, exclusion_level='none')
+        rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                       dir=datapath)
+        ind_cc = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed))
+        foo = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(use_seed))
+        ind_rgc = foo.index
+        assert ind_cc==ind_rgc,\
+            'Different weighted random index selected from COSMOSCatalog and RealGalaxyCatalog'
+        # Also check for the unweighted case.  Just remove that info from the catalogs and redo the
+        # test.
+        del cat.real_cat
+        del rgc.weight
+        ind_cc = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed))
+        foo = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(use_seed))
+        ind_rgc = foo.index
+        assert ind_cc==ind_rgc,\
+            'Different unweighted random index selected from COSMOSCatalog and RealGalaxyCatalog'
+
+        # Check that setting _n_rng_calls properly tracks the RNG calls for n_random=1 and >1.
+        test_seed = 123456
+        ud = galsim.UniformDeviate(test_seed)
+        obj, n_rng_calls = cat.selectRandomIndex(1, rng=ud, _n_rng_calls=True)
+        ud2 = galsim.UniformDeviate(test_seed)
+        ud2.discard(n_rng_calls)
+        assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
+        ud = galsim.UniformDeviate(test_seed)
+        obj, n_rng_calls = cat.selectRandomIndex(17, rng=ud, _n_rng_calls=True)
+        ud2 = galsim.UniformDeviate(test_seed)
+        ud2.discard(n_rng_calls)
+        assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
 
 if __name__ == "__main__":
     test_cosmos_basic()
     test_cosmos_fluxnorm()
+    test_cosmos_random()

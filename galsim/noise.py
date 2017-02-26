@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,7 +72,7 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     @returns the variance of the noise that was applied to the image.
     """
     noise_var = noise.getVariance()
-    sumsq = np.sum(self.array**2)
+    sumsq = np.sum(self.array**2, dtype=float)
     if preserve_flux:
         new_noise_var = sumsq/snr/snr
         noise = noise.withVariance(new_noise_var)

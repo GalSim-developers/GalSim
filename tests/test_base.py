@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -85,7 +85,7 @@ def test_gaussian():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.sum() *dx**2, myImg.added_flux, 5,
+            myImg.array.sum(dtype=float) *dx**2, myImg.added_flux, 5,
             err_msg="Gaussian profile GSObject::draw returned wrong added_flux")
 
     # Check a non-square image
@@ -97,7 +97,7 @@ def test_gaussian():
             recImg[savedImg.bounds].array, savedImg.array, 5,
             err_msg="Drawing Gaussian on non-square image disagrees with expected result")
     np.testing.assert_almost_equal(
-            recImg.array.sum() *dx**2, recImg.added_flux, 5,
+            recImg.array.sum(dtype=float) *dx**2, recImg.added_flux, 5,
             err_msg="Gaussian profile GSObject::draw on non-square image returned wrong added_flux")
 
     # Check with default_params
@@ -140,7 +140,7 @@ def test_gaussian():
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
-    do_pickle(galsim.GSObject(gauss))
+    do_pickle(galsim.GSObject(gauss), irreprable=True)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -2026,7 +2026,7 @@ def test_kolmogorov_properties():
         dx = lor / 10.
         img = galsim.ImageF(256,256, scale=dx)
         psf.drawImage(image=img)
-        out_flux = img.array.sum()
+        out_flux = img.array.sum(dtype=float)
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
 

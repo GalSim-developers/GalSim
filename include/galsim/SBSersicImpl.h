@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@
 #define GalSim_SBSersicImpl_H
 
 #include "SBProfileImpl.h"
+#include "SBInclinedSersic.h"
 #include "SBSersic.h"
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
@@ -229,6 +230,9 @@ namespace galsim {
         void operator=(const SBSersicImpl& rhs);
 
         static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
+
+        friend class SBInclinedSersic;
+        friend class SBInclinedSersic::SBInclinedSersicImpl;
 
     };
 }

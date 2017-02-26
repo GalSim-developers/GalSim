@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -59,10 +59,9 @@ class DataCubeBuilder(OutputBuilder):
         base1 = galsim.config.CopyConfig(base)
         image0 = galsim.config.BuildImage(base1, image_num, obj_num, logger=logger)
         t2 = time.time()
-        if logger:
-            # Note: numpy shape is y,x
-            ys, xs = image0.array.shape
-            logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t2-t1)
+        # Note: numpy shape is y,x
+        ys, xs = image0.array.shape
+        logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t2-t1)
 
         # Note: numpy shape is y,x
         image_ysize, image_xsize = image0.array.shape

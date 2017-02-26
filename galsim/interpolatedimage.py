@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,6 +20,7 @@
 InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
+from past.builtins import basestring
 import galsim
 from galsim import GSObject
 from . import _galsim
@@ -296,7 +297,7 @@ class InterpolatedImage(GSObject):
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
-        self.image = image.view()
+        self.image = image._view()
         self.use_cache = use_cache
 
         # Set the wcs if necessary
@@ -320,7 +321,7 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
-            if isinstance(pad_image, str):
+            if isinstance(pad_image, basestring):
                 pad_image = galsim.fits.read(pad_image)
             if not isinstance(pad_image, galsim.Image):
                 raise ValueError("Supplied pad_image is not an Image!")
@@ -349,8 +350,8 @@ class InterpolatedImage(GSObject):
             im_cen = self.image.bounds.center()
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
-        self.min_scale = local_wcs.minLinearScale()
-        self.max_scale = local_wcs.maxLinearScale()
+        self.min_scale = local_wcs._minScale()
+        self.max_scale = local_wcs._maxScale()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
@@ -377,7 +378,7 @@ class InterpolatedImage(GSObject):
 
                 # We will change the bounds here, so make a new view to avoid modifying the
                 # input pad_image.
-                pad_image = pad_image.view()
+                pad_image = pad_image._view()
                 pad_image.setCenter(0,0)
                 new_pad_image.setCenter(0,0)
                 if new_pad_image.bounds.includes(pad_image.bounds):
@@ -484,7 +485,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the
         # draw function does.
-        prof = prof._fix_center(self.image.array.shape, offset, use_true_center, reverse=True)
+        prof = prof._fix_center(self.image.bounds, offset, use_true_center, reverse=True)
 
         # Save the offset we will need when pickling.
         if hasattr(prof, 'offset'):
@@ -493,7 +494,7 @@ class InterpolatedImage(GSObject):
             self._offset = None
 
         # Bring the profile from image coordinates into world coordinates
-        prof = local_wcs.toWorld(prof)
+        prof = local_wcs._profileToWorld(prof)
 
         # If the user specified a flux, then set to that flux value.
         if flux is not None:
@@ -525,7 +526,7 @@ class InterpolatedImage(GSObject):
                 # Make sure that we are using a specified RNG by resetting that in this cached
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
                 noise = noise.copy(rng=rng)
-        elif isinstance(noise_pad, str):
+        elif isinstance(noise_pad, basestring):
             noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
             if self.use_cache:
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
@@ -795,7 +796,7 @@ class InterpolatedKImage(GSObject):
             self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
-        self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
+        self.getImage(), self.getXInterp(), self.getKInterp(), self.getPadFactor(),
         self.stepK(), self.maxK(), self.getGSParams())
 _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
@@ -811,7 +812,7 @@ def _SBIKI_getinitargs(self):
 _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
+    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
     %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())

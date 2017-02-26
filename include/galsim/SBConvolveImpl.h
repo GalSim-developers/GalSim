@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,7 +29,7 @@ namespace galsim {
     {
     public:
 
-        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
+        SBConvolveImpl(const std::list<SBProfile>& plist, bool real_space,
                        const GSParamsPtr& gsparams);
         ~SBConvolveImpl() {}
 
@@ -47,8 +47,8 @@ namespace galsim {
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return _real_space; }
         bool isAnalyticK() const { return true; }    // convolvees must all meet this
-        double maxK() const { return _minMaxK; }
-        double stepK() const { return _netStepK; }
+        double maxK() const;
+        double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
@@ -129,19 +129,14 @@ namespace galsim {
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
         std::list<SBProfile> _plist; ///< list of profiles to convolve
+        bool _real_space; ///< Whether to do convolution as an integral in real space.
         double _x0; ///< Centroid position in x.
         double _y0; ///< Centroid position in y.
         bool _isStillAxisymmetric; ///< Is output SBProfile shape still circular?
-        double _minMaxK; ///< Minimum maxK() of the convolved SBProfiles.
-        double _netStepK; ///< Minimum stepK() of the convolved SBProfiles.
-        double _sumMinX; ///< sum of minX() of the convolved SBProfiles.
-        double _sumMaxX; ///< sum of maxX() of the convolved SBProfiles.
-        double _sumMinY; ///< sum of minY() of the convolved SBProfiles.
-        double _sumMaxY; ///< sum of maxY() of the convolved SBProfiles.
         double _fluxProduct; ///< Flux of the product.
-        bool _real_space; ///< Whether to do convolution as an integral in real space.
 
-        void initialize();
+        mutable double _maxk; ///< Minimum maxK() of the convolved SBProfiles.
+        mutable double _stepk; ///< Minimum stepK() of the convolved SBProfiles.
 
         // Copy constructor and op= are undefined.
         SBConvolveImpl(const SBConvolveImpl& rhs);

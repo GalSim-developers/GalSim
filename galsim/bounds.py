@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -191,9 +191,20 @@ def _new_BoundsI_init(self, *args, **kwargs):
         _orig_BoundsI_init(self, *args, **kwargs)
 BoundsI.__init__ = _new_BoundsI_init
 
+def _BoundsI(xmin, xmax, ymin, ymax):
+    """Equivalent to BoundsI constructor, but skips some sanity checks and argument parsing.
+    This requires that the four values already be int types.
+    """
+    ret = BoundsI.__new__(BoundsI)
+    _orig_BoundsI_init(ret, xmin, xmax, ymin, ymax)
+    return ret
+
 def BoundsI_numpyShape(self):
     """A simple utility function to get the numpy shape that corresponds to this Bounds object.
     """
-    return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    if self.isDefined():
+        return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+    else:
+        return 0,0
 
 BoundsI.numpyShape = BoundsI_numpyShape

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -127,10 +127,10 @@ namespace galsim {
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
-        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,++ptr) {
                 double ksq = kx*kx + ky*ky;
                 if (ksq > _maxksq) *ptr = 0.;
                 else {

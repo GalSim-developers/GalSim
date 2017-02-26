@@ -1,6 +1,6 @@
 # vim: set filetype=python et ts=4 sw=4:
 
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -36,7 +36,7 @@ EnsureSConsVersion(1, 1)
 
 # Subdirectories containing SConscript files.  We always process these, but
 # there are some other optional ones
-subdirs=['src', 'pysrc', 'bin', 'galsim', 'share']
+subdirs=['src', 'pysrc', 'bin', 'share', 'galsim']
 
 # Configurations will be saved here so command line options don't
 # have to be sent more than once
@@ -68,8 +68,6 @@ opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', False))
 opts.Add('PYTHON','Name of python executable','')
 
-opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
-
 opts.Add(PathVariable('PREFIX','prefix for installation',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
@@ -77,6 +75,7 @@ opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
 opts.Add(PathVariable('FINAL_PREFIX',
          'final installation prefix if different from PREFIX',
          '', PathVariable.PathAccept))
+opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
@@ -109,10 +108,7 @@ opts.Add(PathVariable('DYLD_LIBRARY_PATH',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('DYLD_FALLBACK_LIBRARY_PATH',
          'Set the DYLD_FALLBACK_LIBRARY_PATH inside of SCons.  '+
-         'Particularly useful on El Capitan (and later), since Apple strips out '+
-         'DYLD_FALLBACK_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
-         'this option enables SCons to set it back in for you by doing '+
-         '`scons DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH`.',
+         'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('LD_LIBRARY_PATH',
          'Set the LD_LIBRARY_PATH inside of SCons. '+
@@ -179,16 +175,16 @@ def ErrorExit(*args, **kwargs):
     libraries, compiler, etc., we don't want to cache the result.
     On the other hand, if we delete the .scon* files now, then they aren't
     available to diagnose any problems.
-    So we write a file called gs.error that
+    So we write a file called gs_error.txt that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
 
     import shutil
 
-    out = open("gs.error","wb")
+    out = open("gs_error.txt","wb")
 
-    # Start with the error message to output both to the screen and to the end of gs.error:
+    # Start with the error message to output both to the screen and to gs_error.txt:
     print
     for s in args:
         print s
@@ -233,8 +229,8 @@ def ErrorExit(*args, **kwargs):
             else:
                 cmd = env['PYTHON'] + " < " + conftest
             cmd = PrependLibraryPaths(cmd,env)
-            p = subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, shell=False)
+            p = subprocess.Popen(['bash -c ' + cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, shell=True)
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
@@ -251,9 +247,23 @@ def ErrorExit(*args, **kwargs):
                 otool_out = p.stdout.readlines()
                 out.write('Output of the command %s is:\n'%cmd)
                 out.write(''.join(otool_out) + '\n')
-    except:
+            else:
+                conftest_num = int(conftest.replace('.sconf_temp/conftest_',''))
+                conftest_mod = '.sconf_temp/conftest_%d_mod/'%(conftest_num-1)
+                if os.path.exists(conftest_mod):
+                    if sys.platform.find('darwin') != -1:
+                        cmd = 'otool -L ' + os.path.join(conftest_mod, 'check_*.so')
+                    else:
+                        cmd = 'ldd ' + os.path.join(conftest_mod, 'check_*.so')
+                    p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         shell=True)
+                    mod_out = p.stdout.readlines()
+                    out.write('Output of the command %s is:\n'%cmd)
+                    out.write(''.join(mod_out) + '\n')
+    except Exception as e:
         out.write("Error trying to get output of conftest executables.\n")
-        out.write(sys.exc_info()[0])
+        out.write("Caught exception: " + str(e) + '\n')
+        out.write(str(sys.exc_info()) + '\n')
 
     # Give a helpful message if running El Capitan.
     if sys.platform.find('darwin') != -1:
@@ -275,6 +285,13 @@ def ErrorExit(*args, **kwargs):
     print 'Note: you may want to look through the file INSTALL.md for advice.'
     print 'Also, if you are having trouble, please check the INSTALL FAQ at '
     print '   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ'
+    print
+    print 'If nothing there seems helpful, feel free to post an issue here:'
+    print '   https://github.com/GalSim-developers/GalSim/issues'
+    print 'describing the problem along with the particulars of your system and'
+    print 'configuration.  Include a copy of the above output to the screen, and'
+    print 'post and copy of the file gs_error.txt, which will help people diagnose'
+    print 'the problem.'
     print
     Exit(1)
 
@@ -531,7 +548,7 @@ def GetCompilerVersion(env):
     if compilertype != 'unknown':
         cmd = compiler + ' ' + versionflag + ' 2>&1'
         import subprocess
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
         lines = p.stdout.readlines()
 
         # Check if g++ is a symlink for something else:
@@ -1491,19 +1508,32 @@ PyMODINIT_FUNC initcheck_numpy(void)
         ErrorExit('Unable to build a python loadable module that uses numpy')
 
     config.Result(1)
+
+    result, numpy_ver = TryScript(config,"import numpy; print(numpy.__version__)",python)
+    print 'Numpy version is',numpy_ver
+
     return 1
 
 def CheckPyFITS(config):
     config.Message('Checking for PyFITS... ')
 
     result, output = TryScript(config,"import pyfits",python)
+    astropy = False
     if not result:
         result, output = TryScript(config,"import astropy.io.fits",python)
+        astropy = True
     if not result:
         ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
                   python)
-
     config.Result(1)
+
+    if astropy:
+        result, astropy_ver = TryScript(config,"import astropy; print(astropy.__version__)",python)
+        print 'Astropy version is',astropy_ver
+    else:
+        result, pyfits_ver = TryScript(config,"import pyfits; print(pyfits.__version__)",python)
+        print 'PyFITS version is',pyfits_ver
+
     return 1
 
 def CheckFuture(config):
@@ -1512,8 +1542,11 @@ def CheckFuture(config):
     result, output = TryScript(config,"import future",python)
     if not result:
         ErrorExit("Unable to import future using the python executable:\n" + python)
-
     config.Result(1)
+
+    result, future_ver = TryScript(config,"import future; print(future.__version__)",python)
+    print 'Future version is',future_ver
+
     return 1
 
 def CheckBoostPython(config):
@@ -1743,7 +1776,7 @@ int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
     ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
-    print 'TMV version is '+tmv_version.strip()
+    print 'TMV version is',tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
     version = config.env['CXXVERSION_NUMERICAL']
@@ -1840,7 +1873,7 @@ def GetNCPU():
                 return ncpus
         else: # OSX:
             import subprocess
-            p = subprocess.Popen(['sysctl','-n','hw.ncpu'],stdout=subprocess.PIPE,shell=True)
+            p = subprocess.Popen(['sysctl -n hw.ncpu'],stdout=subprocess.PIPE,shell=True)
             return int(p.stdout.read().strip())
     # Windows:
     if os.environ.has_key('NUMBER_OF_PROCESSORS'):
@@ -1986,12 +2019,12 @@ env['all_builds'] = []
 
 if not GetOption('help'):
 
-    # If there is a gs.error file, then this means the last run ended
+    # If there is a gs_error.txt file, then this means the last run ended
     # in an error, so we don't want to cache any of the configuration
     # tests from that run in case things in the environment changed.
     # (SCons isn't usually very good at detecting these kinds of changes.)
-    if os.path.exists("gs.error"):
-        os.remove("gs.error")
+    if os.path.exists("gs_error.txt"):
+        os.remove("gs_error.txt")
         ClearCache()
 
     if env['PYTHON'] == '':

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,8 +20,9 @@
 InclinedExponential is a class representing an exponential profile inclined to the LOS.
 """
 
-import galsim
 from galsim import GSObject
+import galsim
+
 from . import _galsim
 
 
@@ -44,22 +45,31 @@ class InclinedExponential(GSObject):
 
     At present, this profile is not enabled for photon-shooting.
 
+    A profile can be initialized using one (and only one) of two possible size parameters:
+    `scale_radius` or `half_light_radius`.  Exactly one of these two is required. Similarly,
+    at most one of `scale_height' and `scale_h_over_r' is required; if neither is given, the
+    default of scale_h_over_r = 0.1 will be used. Note that if half_light_radius and
+    scale_h_over_r are supplied (or the default value of scale_h_over_r is used),
+    scale_h_over_r will be assumed to refer to the scale radius, not the half-light radius.
+
     Initialization
     --------------
 
-    @param inclination      The inclination angle, which must be a galsim.Angle instance
-    @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
-                            This can be compared to the 'scale_radius' parameter of the
-                            galsim.Exponential class, and in the face-on case, the same same scale
-                            radius will result in the same 2D light distribution as with that
-                            class.
-    @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
-                            [default: None]
-    @param scale_h_over_r   In lieu of the scale height, you may also specify the ratio of the
-                            scale height to the scale radius. [default: 0.1]
-    @param flux             The flux (in photons) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    @param inclination          The inclination angle, which must be a galsim.Angle instance
+    @param scale_radius         The scale radius of the exponential disk.  Typically given in
+                                arcsec. This can be compared to the 'scale_radius' parameter of the
+                                galsim.Exponential class, and in the face-on case, the same scale
+                                radius will result in the same 2D light distribution as with that
+                                class.
+    @param half_light_radius    The half-light radius of the exponential disk, as an alternative to
+                                the scale radius.
+    @param scale_height         The scale height of the exponential disk.  Typically given in arcsec.
+                                [default: None]
+    @param scale_h_over_r       In lieu of the scale height, you may also specify the ratio of the
+                                scale height to the scale radius. [default: 0.1]
+    @param flux                 The flux (in photons) of the profile. [default: 1]
+    @param gsparams             An optional GSParams argument.  See the docstring for GSParams for
+                                details. [default: None]
 
     Methods
     -------
@@ -68,17 +78,60 @@ class InclinedExponential(GSObject):
 
         >>> inclination = inclined_exponential_obj.getInclination()
         >>> r0 = inclined_exponential_obj.getScaleRadius()
+        >>> rh = inclined_exponential_obj.getHalfLightRadius()
         >>> h0 = inclined_exponential_obj.getScaleHeight()
     """
-    _req_params = { "inclination" : galsim.Angle, "scale_radius" : float }
+    _req_params = { "inclination" : galsim.Angle }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
     _takes_rng = False
 
-    def __init__(self, inclination, scale_radius, scale_height=None, scale_h_over_r=0.1,
-                 flux=1., gsparams=None):
+    def __init__(self, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
+                 scale_h_over_r=None, flux=1., gsparams=None):
 
-        if scale_height is None:
-            scale_height = scale_h_over_r * scale_radius
+        # Check that the scale/half-light radius is valid
+        if scale_radius is not None:
+            if not scale_radius > 0.:
+                raise ValueError("scale_radius must be > zero.")
+        elif half_light_radius is not None:
+            if not half_light_radius > 0.:
+                raise ValueError("half_light_radius must be > zero.")
+        else:
+            raise TypeError(
+                    "Either scale_radius or half_light_radius must be " +
+                    "specified for InclinedExponential")
+
+        # Check that we have exactly one of scale_radius and half_light_radius,
+        # then get scale_radius
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius and half_light_radius may be " +
+                        "specified for InclinedExponential")
+            else:
+                # Use the factor from the Exponential class
+                scale_radius = half_light_radius / galsim.Exponential._hlr_factor
+
+        # Check that the height specification is valid
+        if scale_height is not None:
+            if not scale_height > 0.:
+                raise ValueError("scale_height must be > zero.")
+        elif scale_h_over_r is not None:
+            if not scale_h_over_r > 0.:
+                raise ValueError("half_light_radius must be > zero.")
+        else:
+            # Use the default scale_h_over_r
+            scale_h_over_r = 0.1
+
+        # Check that we have exactly one of scale_height and scale_h_over_r,
+        # then get scale_height
+        if scale_h_over_r is not None:
+            if scale_height is not None:
+                raise TypeError(
+                        "Only one of scale_height and scale_h_over_r may be " +
+                        "specified for InclinedExponential")
+            else:
+                scale_height = scale_radius * scale_h_over_r
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed
@@ -99,6 +152,12 @@ class InclinedExponential(GSObject):
         """
         return self.SBProfile.getScaleRadius()
 
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Exponential profile.
+        """
+        # Use the factor from the Exponential class
+        return self.SBProfile.getScaleRadius() * galsim.Exponential._hlr_factor
+
     def getScaleHeight(self):
         """Return the scale height for this profile.
         """
@@ -107,12 +166,14 @@ class InclinedExponential(GSObject):
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight()/self.SBProfile.getScaleRadius()
+        return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
 
     @property
     def inclination(self): return self.getInclination()
     @property
     def scale_radius(self): return self.getScaleRadius()
+    @property
+    def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def scale_height(self): return self.getScaleHeight()
     @property
@@ -131,7 +192,7 @@ class InclinedExponential(GSObject):
                     self.scale_height, self.flux, self._gsparams))
 
     def __repr__(self):
-        return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, '+
+        return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, gsparams=%r)') % (
             self.inclination, self.scale_radius, self.scale_height, self.flux, self._gsparams)
 

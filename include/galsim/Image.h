@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -257,27 +257,12 @@ namespace galsim {
         const T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
         //@}
 
-        /**
-         *  @brief const_iterator type for pixels within a row (unchecked).
-         */
-        typedef const T* const_iterator;
-
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        const_iterator rowBegin(int y) const { return _data + addressPixel(y); }
-
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        const_iterator rowEnd(int y) const { return _data + addressPixel(this->getXMax() + 1, y); }
-
         //@{
         /**
-         *  @brief Return an iterator to an arbitrary pixel.
+         *  @brief Return a pointer to the data at an arbitrary pixel.
          */
-        const_iterator getIter(int x, int y) const { return _data + addressPixel(x, y); }
-        const_iterator getIter(const Position<int>& pos) const { return getIter(pos.x,pos.y); }
+        const T* getPtr(int x, int y) const { return _data + addressPixel(x, y); }
+        const T* getPtr(const Position<int>& pos) const { return getPtr(pos.x,pos.y); }
         //@}
 
         /**
@@ -293,12 +278,19 @@ namespace galsim {
         /**
          *  @brief Perform a 2D FFT from real space to k-space.
          */
-        ImageView<std::complex<double> > fft(double dk) const;
+        ImageView<std::complex<double> > fft(bool shift_in=true, bool shift_out=true) const;
 
         /**
-         *  @brief Perform a 2D FFT from k-space to real space.
+         *  @brief Perform a 2D inverse FFT from k-space to real space.
          */
-        ImageView<double> inverse_fft(double dk) const;
+        ImageView<double> inverse_fft(bool shift_in=true, bool shift_out=true) const;
+
+        /**
+         *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
+         */
+        ImageView<std::complex<double> > cfft(bool inverse, bool shift_in=true,
+                                              bool shift_out=true) const;
+
 
     protected:
 
@@ -558,28 +550,6 @@ namespace galsim {
         { at(x,y) = value; }
 
         /**
-         *  @brief iterator type for pixels within a row (unchecked).
-         */
-        typedef T* iterator;
-
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        iterator rowBegin(int r) { return this->_data + this->addressPixel(r); }
-
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        iterator rowEnd(int r)
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-
-        /**
-         *  @brief Return an iterator to an arbitrary pixel.
-         */
-        iterator getIter(int x, int y)
-        { return this->_data + this->addressPixel(x, y); }
-
-        /**
          *  @brief Deep-copy pixel values from rhs to this.
          *
          *  The bounds must be commensurate (i.e. the same shape).
@@ -597,12 +567,7 @@ namespace galsim {
         {
             if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-            for (int y=this->getYMin(), y2=rhs.getYMin(); y <= this->getYMax(); ++y, ++y2) {
-                iterator it1 = rowBegin(y);
-                const iterator ee = rowEnd(y);
-                typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
-                while (it1 != ee) *(it1++) = T(*(it2++));
-            }
+            transform_pixel(*this, rhs, ReturnSecond<T,U>());
         }
     };
 
@@ -797,44 +762,6 @@ namespace galsim {
          */
         void setValue(int x, int y, T value)
         { at(x,y) = value; }
-
-        //@{
-        /**
-         *  @brief Iterator type for pixels within a row (unchecked).
-         */
-        typedef T* iterator;
-        typedef const T* const_iterator;
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to the beginning of a row.
-         */
-        iterator rowBegin(int r)
-        { return this->_data + this->addressPixel(r); }
-        const_iterator rowBegin(int r) const
-        { return this->_data + this->addressPixel(r); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to one-past-the-end of a row.
-         */
-        iterator rowEnd(int r)
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-        const_iterator rowEnd(int r) const
-        { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-        //@}
-
-        //@{
-        /**
-         *  @brief Return an iterator to an arbitrary pixel.
-         */
-        iterator getIter(int x, int y)
-        { return this->_data + this->addressPixel(x, y); }
-        const_iterator getIter(int x, int y) const
-        { return this->_data + this->addressPixel(x, y); }
-        //@}
 
         /**
          *  @brief Deep-copy pixel values from rhs to this.

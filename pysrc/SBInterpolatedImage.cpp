@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -60,6 +60,7 @@ namespace galsim {
                 .def("getPaddedImage", &SBInterpolatedImage::getPaddedImage)
                 .def("getXInterp", &SBInterpolatedImage::getXInterp)
                 .def("getKInterp", &SBInterpolatedImage::getKInterp)
+                .def("getPadFactor", &SBInterpolatedImage::getPadFactor)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);

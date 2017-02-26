@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1766,6 +1766,31 @@ def test_Image_subImage():
 
         do_pickle(image)
 
+def make_subImage(file_name, bounds):
+    """Helper function for test_subImage_persistence
+    """
+    full_im = galsim.fits.read(file_name)
+    stamp = full_im.subImage(bounds)
+    return stamp
+
+@timer
+def test_subImage_persistence():
+    """Test that a subimage is properly accessible even if the original image has gone out
+    of scope.
+    """
+    file_name = os.path.join('fits_files','tpv.fits')
+    bounds = galsim.BoundsI(123, 133, 45, 55)  # Something random
+
+    # In this case, the original image has gone out of scope.  At least on some systems,
+    # this used to caus a seg fault when accessing stamp1.array.  (BAD!)
+    stamp1 = make_subImage(file_name, bounds)
+    print('stamp1 = ',stamp1.array)
+
+    full_im = galsim.fits.read(file_name)
+    stamp2 = full_im.subImage(bounds)
+    print('stamp2 = ',stamp2.array)
+
+    np.testing.assert_array_equal(stamp1.array, stamp2.array)
 
 @timer
 def test_Image_resize():
@@ -2980,6 +3005,7 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_divide()
     test_Image_inplace_scalar_pow()
     test_Image_subImage()
+    test_subImage_persistence()
     test_Image_resize()
     test_ConstImage_array_constness()
     test_BoundsI_init_with_non_pure_ints()

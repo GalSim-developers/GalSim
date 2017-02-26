@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -38,7 +38,7 @@ New features introduced in this demo:
 - psf = galsim.InterpolatedImage(psf_filename, scale, flux)
 - tab = galsim.LookupTable(file)
 - cosmos_cat = galsim.COSMOSCatalog(file_name, dir)
-- gal = cosmos_cat.makeGalaxy(index, gal_type, noise_pad_size, rng)
+- gal = cosmos_cat.makeGalaxy(gal_type, noise_pad_size, rng)
 - ps = galsim.PowerSpectrum(..., units)
 - gal = gal.lens(g1, g2, mu)
 - image.whitenNoise(correlated_noise)
@@ -116,7 +116,7 @@ def main(argv):
     logger.info('Starting demo script 11')
 
     # Read in galaxy catalog
-    # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
+    # The COSMOSCatalog uses the same input file as we have been using for RealGalaxyCatalogs
     # along with a second file called real_galaxy_catalog_23.5_examples_fits.fits, which stores
     # the information about the parameteric fits.  There is no need to specify the second file
     # name, since the name is derivable from the name of the main catalog.
@@ -248,7 +248,14 @@ def main(argv):
         # a RealGalaxy using the original HST image and PSF, or a parametric model based on
         # parametric fits to the light distribution of the HST observation.  The parametric
         # models are either a Sersic fit to the data or a bulge + disk fit according to which
-        # one gave the better chisq value.
+        # one gave the better chisq value.  We will select a galaxy at random from the catalog.
+        # One could easily do this by choosing an index = int(ud() * cosmos_cat.nobjects), but
+        # we will instead allow the catalog to choose a random galaxy for us.  It will remove any
+        # selection effects involved in postage stamp creation using weights that are stored in
+        # the catalog.  (If for some reason you prefer not to do that, you can always choose a
+        # purely random index yourself using int(ud() * cosmos_cat.nobjects).)  We employ this
+        # random selection by simply failing to specify an index or identifier for a galaxy, in
+        # which case it chooses a random one.
 
         # First determine whether we will make a real galaxy (`gal_type = 'real'`) or a parametric
         # galaxy (`gal_type = 'parametric'`).  The real galaxies take longer to render, so for this
@@ -260,9 +267,6 @@ def main(argv):
         # i.e. How many heads you get after N flips if each flip has a chance, p, of being heads.
         binom = galsim.BinomialDeviate(ud, N=1, p=0.3)
         real = binom()
-
-        # Next determine which index in the catalog we will use for this object.
-        index = int(ud() * cosmos_cat.nobjects)
 
         if real:
             # For real galaxies, we will want to whiten the noise in the image (below).
@@ -282,9 +286,9 @@ def main(argv):
             # to at least 40 x sqrt(2), we should be safe even if the galaxy image is rotated
             # with respect to the psf image.
             #     noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec
-            gal = cosmos_cat.makeGalaxy(index=index, gal_type='real', rng=ud, noise_pad_size=11.3)
+            gal = cosmos_cat.makeGalaxy(gal_type='real', rng=ud, noise_pad_size=11.3)
         else:
-            gal = cosmos_cat.makeGalaxy(index=index, gal_type='parametric')
+            gal = cosmos_cat.makeGalaxy(gal_type='parametric', rng=ud)
 
         # Apply a random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,10 +21,6 @@ from __future__ import print_function
 import galsim
 
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
-
-# The NFWHalo doesn't need anything special other than registration as a valid input type.
-from .input import RegisterInputType, InputLoader
-RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo))
 
 # There are two value types associated with this: NFWHaloShear and NFWHaloMagnification.
 
@@ -98,3 +94,9 @@ RegisterValueType('NFWHaloShear', _GenerateFromNFWHaloShear, [ galsim.Shear ],
                   input_type='nfw_halo')
 RegisterValueType('NFWHaloMagnification', _GenerateFromNFWHaloMagnification, [ float ],
                   input_type='nfw_halo')
+
+# The NFWHalo doesn't need anything special other than registration as a valid input type.
+from .input import RegisterInputType, InputLoader
+RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo))
+
+
