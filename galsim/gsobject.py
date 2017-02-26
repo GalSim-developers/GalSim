@@ -1373,12 +1373,10 @@ class GSObject(object):
                 draw_image.setZero()
             else:
                 draw_image = imview
-            print 'draw_image = ',draw_image
             if prof.isAnalyticX():
                 added_photons = prof.drawReal(draw_image)
             else:
                 added_photons = prof.drawFFT(draw_image, wmult)
-            print 'added_photons = ',added_photons
             if sensor is not None:
                 # Setup the rng if not provided one.
                 if rng is None:
@@ -1394,7 +1392,6 @@ class GSObject(object):
                     op.applyTo(phot_array)
 
                 added_photons = sensor.accumulate(phot_array, imview)
-                print 'added_photons = ',added_photons
 
         image.added_flux = added_photons / flux_scale
 
