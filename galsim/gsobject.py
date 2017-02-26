@@ -1373,24 +1373,17 @@ class GSObject(object):
                 draw_image.setZero()
             else:
                 draw_image = imview
+
             if prof.isAnalyticX():
                 added_photons = prof.drawReal(draw_image)
             else:
                 added_photons = prof.drawFFT(draw_image, wmult)
+
             if sensor is not None:
-                # Setup the rng if not provided one.
-                if rng is None:
-                    ud = galsim.UniformDeviate()
-                elif isinstance(rng, galsim.BaseDeviate):
-                    ud = galsim.UniformDeviate(rng)
-                else:
-                    raise TypeError("The rng provided is not a BaseDeviate")
-
+                ud = galsim.UniformDeviate(rng)
                 phot_array = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
-
                 for op in surface_ops:
                     op.applyTo(phot_array)
-
                 added_photons = sensor.accumulate(phot_array, imview)
 
         image.added_flux = added_photons / flux_scale

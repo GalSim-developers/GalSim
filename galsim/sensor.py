@@ -95,12 +95,7 @@ class SiliconSensor(Sensor):
     def __init__(self, config_file, vertex_file, NumElec, rng, DiffMult=1.0, QDist=3,
                  Nrecalc=10000):
         self.photon_file = None
-        if rng is None:
-            self.rng = galsim.UniformDeviate()
-        elif not isinstance(rng, galsim.BaseDeviate):
-            raise TypeError("rng is not a BaseDeviate")
-        else:
-            self.rng = galsim.UniformDeviate(rng)
+        self.rng = galsim.UniformDeviate(rng)
 
         ConfigData = self.ReadConfigFile(config_file)
         DiffStep = self.CalcDiffStep(ConfigData['CollectingPhases'], ConfigData['PixelSize'],
