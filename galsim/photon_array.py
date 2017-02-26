@@ -20,7 +20,6 @@ Implements the PhotonArray class describing a collection of photons incident on 
 Also includes classes that modify PhotonArray objects in a number of ways.
 """
 
-import os
 import numpy as np
 # Most of the functionality comes from the C++ layer
 from ._galsim import PhotonArray
@@ -201,9 +200,7 @@ def PhotonArray_write(self, file_name):
         table = pyfits.BinTableHDU.from_columns(cols)
     except:  # pragma: no cover  (Might need this for older pyfits versions)
         table = pyfits.new_table(cols)
-    if os.path.isfile(file_name):
-        os.remove(file_name)
-    table.writeto(file_name)
+    galsim.fits.writeFile(file_name, table)
 
 def PhotonArray_read(cls, file_name):
     from galsim._pyfits import pyfits, pyfits_version
@@ -212,7 +209,7 @@ def PhotonArray_read(cls, file_name):
     N = len(data)
     if pyfits_version > '3.0':
         names = data.columns.names
-    else:
+    else: # pragma: no cover
         names = data.dtype.names
 
     ret = cls.__new__(cls)
