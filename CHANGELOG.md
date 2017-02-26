@@ -66,7 +66,7 @@ Deprecated Features
   returned image by gain, which will have the same effect and probably
   be clearer in your own code about what you meant. (#799)
 - Deprecated ability to create multiple PhaseScreenPSFs with single call
-  to makePSF, since it's now just as efficient to call makePSF multiple
+  to makePSF, since it is now just as efficient to call makePSF multiple
   times. (#824)
 
 
@@ -74,6 +74,11 @@ New Features
 ------------
 
 - Added support for reading in of unsigned int Images (#715)
+- Added a new Sensor class hierarchy, including SiliconSensor, which models
+  the repulsion of incoming electrons by the electrons already accumulated on
+  the sensor.  This effect is known as the "brighter-fatter effect", since it
+  means that brighter objects are a bit larger than dimmer but otherwise-
+  identical objects. (#722)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
