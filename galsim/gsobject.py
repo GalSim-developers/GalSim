@@ -1245,8 +1245,9 @@ class GSObject(object):
                             is set up correctly.  This is used internally by GalSim, but there
                             may be cases where the user will want the same functionality.
                             [default: False]
-        @param maxN         Sets the maximum number of photons that can be added to an image
-                            with a single call to drawImage [default: 100000]
+        @param maxN         Sets the maximum number of photons that will be added to the image
+                            at a time.  (Memory requirements are proportional to this number.)
+                            [default: 100000]
 
         @returns the drawn Image.
         """
@@ -1691,8 +1692,9 @@ class GSObject(object):
                             photons onto the image. [default: None]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD). [default: 1.]
-        @param maxN         If provided, sets the maximum number of photons that can be added to an
-                            image with a single call to drawImage. [default: 100000]
+        @param maxN         Sets the maximum number of photons that will be added to the image
+                            at a time.  (Memory requirements are proportional to this number.)
+                            [default: 100000]
 
         @returns The total flux of photons that landed inside the image bounds.
         """
