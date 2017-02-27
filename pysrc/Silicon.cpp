@@ -36,18 +36,20 @@ namespace {
 
         template <typename U, typename W>
         static void wrapTemplates(W & wrapper) {
+            typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
+                                                    ImageView<U>);
             wrapper
                 .def("accumulate",
-                     (double (Silicon::*)(const PhotonArray&, UniformDeviate, ImageView<U>))&Silicon::accumulate,		     
+                     (accumulate_fn)&Silicon::accumulate,
                      (bp::args("photons", "rng", "image")),
                      "Accumulate photons in image")
                 ;
         }
 
 
-        static Silicon* MakeSilicon(
-				    int NumVertices, int NumElect, int Nx, int Ny, int QDist, int Nrecalc, double DiffStep,
-            double PixelSize, const bp::object& array)
+        static Silicon* MakeSilicon(int NumVertices, int NumElect, int Nx, int Ny, int QDist,
+                                    int Nrecalc, double DiffStep, double PixelSize,
+                                    const bp::object& array)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -64,7 +66,8 @@ namespace {
             int Nv = 4 * NumVertices + 4;
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
-            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist, Nrecalc, DiffStep, PixelSize, data);
+            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
+                               Nrecalc, DiffStep, PixelSize, data);
         }
 
         static void wrap()
@@ -73,8 +76,8 @@ namespace {
             pySilicon
                 .def("__init__", bp::make_constructor(
                         &MakeSilicon, bp::default_call_policies(),
-                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist", "Nrecalc", "DiffStep",
-                                  "PixelSize", "vertex_data"))))
+                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
+                                  "Nrecalc", "DiffStep", "PixelSize", "vertex_data"))))
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<Silicon> >();
