@@ -180,6 +180,20 @@ def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
 PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
 
 def PhotonArray_write(self, file_name):
+    """Write a PhotonArray to a FITS file.
+
+    The output file will be a FITS binary table with a row for each photon in the PhotonArray.
+    Columns will include 'id' (sequential from 1 to nphotons), 'x', 'y', and 'flux'.
+    Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
+    set for this PhotonArray object.
+
+    The file can be read back in with the classmethod `PhotonArray.read`.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the output FITS file.
+    """
     from galsim._pyfits import pyfits
 
     cols = []
@@ -203,6 +217,16 @@ def PhotonArray_write(self, file_name):
     galsim.fits.writeFile(file_name, table)
 
 def PhotonArray_read(cls, file_name):
+    """Create a PhotonArray, reading the photon data from a FITS file.
+
+    The file being read in is not arbitrary.  It is expected to be a file that was written
+    out with the PhotonArray `write` method.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the input FITS file.
+    """
     from galsim._pyfits import pyfits, pyfits_version
     with pyfits.open(file_name) as fits:
         data = fits[1].data
