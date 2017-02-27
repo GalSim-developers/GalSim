@@ -1633,7 +1633,7 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
+    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
                  surface_ops=(), sensor=None, gain=1.0, maxN=100000):
         """
         Draw this profile into an Image by shooting photons.
