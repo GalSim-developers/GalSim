@@ -24,8 +24,6 @@
  * Routines for integrating the CCD simulations into GalSim
  */
 
-//****************** Silicon.h **************************
-
 #ifndef SILICON_H
 #define SILICON_H
 
@@ -39,33 +37,27 @@ namespace galsim
     class Silicon
     {
     public:
-        Silicon() {};
-        Silicon (int NumVertices, int NumElec, int Nx, int Ny, int QDist, int Nrecalc,
-                 double DiffStep, double PixelSize, double* vertex_data);
-        ~Silicon();  // Destructor
+        Silicon(int NumVertices, int NumElec, int Nx, int Ny, int QDist, int Nrecalc,
+                double DiffStep, double PixelSize, double* vertex_data);
 
         template <typename T>
-        bool InsidePixel(int ix, int iy, double x, double y, double zconv,
+        bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target) const;
 
         template <typename T>
-        void UpdatePixelDistortions(ImageView<T> target) const;
-
-        void BuildPolylist(Polygon** polylist, int nx, int ny);
+        void updatePixelDistortions(ImageView<T> target);
 
         //double AbsLength(double lambda);
 
         template <typename T>
-        double accumulate(const PhotonArray& photons, UniformDeviate ud,
-                          ImageView<T> target);
+        double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target);
+
     private:
-        Polygon** _distortions;
-        Polygon** _emptypoly;
-        Polygon** _testpoly;
-        Polygon** _imagepolys;
-        Point* _testpoint;
-        int _NumVertices, _NumElect, _Nx, _Ny, _Nv, _Nrecalc;
-        double _QDist, _DiffStep, _PixelSize; // _collXmin, _collXwidth, _collYmin, _collYwidth;
+        std::vector<Polygon> _distortions;
+        std::vector<Polygon> _emptypoly;
+        std::vector<Polygon> _imagepolys;
+        int _numVertices, _numElect, _nx, _ny, _nv, _nrecalc;
+        double _qDist, _diffStep, _pixelSize;
     };
 }
 

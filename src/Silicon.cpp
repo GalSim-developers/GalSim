@@ -44,44 +44,77 @@
 
 namespace galsim {
 
-    Silicon::Silicon(int NumVertices, int NumElec, int Nx, int Ny, int QDist, int Nrecalc,
-                     double DiffStep, double PixelSize, double* vertex_data) :
-        _NumVertices(NumVertices), _NumElect(NumElec), _Nx(Nx), _Ny(Ny), _QDist(QDist),
-        _DiffStep(DiffStep), _PixelSize(PixelSize), _Nrecalc(Nrecalc)
+    // Helper function used in a few places below.
+    void buildPolylist(std::vector<Polygon>& polylist, int nx, int ny, int numVertices)
+    {
+        dbg<<"Start buildPolylist: "<<nx<<','<<ny<<','<<numVertices<<std::endl;
+        double dtheta = M_PI / (2.0 * (numVertices + 1.0));
+        double theta0 = - M_PI / 4.0;
+
+        dbg<<"polylist.size = "<<polylist.size()<<std::endl;
+        polylist.resize(nx*ny);
+        for (int p=0; p<nx*ny; p++) {
+            polylist[p].clear();
+            polylist[p].reserve(numVertices*4 + 4);
+            dbg<<"p = "<<p<<std::endl;
+            dbg<<"polylist[p].size = "<<polylist[p].size()<<std::endl;
+            // First the corners
+            dbg<<"corners:\n";
+            for (int xpix=0; xpix<2; xpix++) {
+                for (int ypix=0; ypix<2; ypix++) {
+                    polylist[p].add(Point(xpix, ypix));
+                }
+            }
+            // Next the edges
+            dbg<<"x edges:\n";
+            for (int xpix=0; xpix<2; xpix++) {
+                for (int n=0; n<numVertices; n++) {
+                    double theta = theta0 + (n + 1.0) * dtheta;
+                    polylist[p].add(Point(xpix, (tan(theta) + 1.0) / 2.0));
+                }
+            }
+            dbg<<"y edges:\n";
+            for (int ypix=0; ypix<2; ypix++) {
+                for (int n=0; n<numVertices; n++) {
+                    double theta = theta0 + (n + 1.0) * dtheta;
+                    polylist[p].add(Point((tan(theta) + 1.0) / 2.0, ypix));
+                }
+            }
+            polylist[p].sort();
+        }
+        dbg<<"Generated "<<nx*ny<<" pixels\n";
+    }
+
+    Silicon::Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
+                     double diffStep, double pixelSize, double* vertex_data) :
+        _numVertices(numVertices), _numElect(numElec), _nx(nx), _ny(ny), _qDist(qDist),
+        _diffStep(diffStep), _pixelSize(pixelSize), _nrecalc(nrecalc)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
         // as a function of charge in the surrounding pixels.
 
-        // Next, we build the distorted polygons. We have an array of Nx*Ny polygons,
+        // Next, we build the distorted polygons. We have an array of nx*ny polygons,
         // an undistorted polygon, and a polygon for test.
 
-        _Nv = 4 * _NumVertices + 4; // Number of vertices in each pixel
+        _nv = 4 * _numVertices + 4; // Number of vertices in each pixel
 
-        _distortions = new Polygon*[_Nx * _Ny]; // This carries the distorted pixel information
-        BuildPolylist(_distortions, _Nx, _Ny);
-        _emptypoly = new Polygon*[1];
-        BuildPolylist(_emptypoly, 1, 1);
-        _testpoly = new Polygon*[1];
-        BuildPolylist(_testpoly, 1, 1);
+        buildPolylist(_distortions, _nx, _ny, _numVertices);
+        buildPolylist(_emptypoly, 1, 1, _numVertices);
 
-        //Next, we read in the pixel distortions from the Poisson_CCD simulations
+        // Next, we read in the pixel distortions from the Poisson_CCD simulations
 
-        double x0, y0, th, x1, y1;
-        int index, i, j, n;
-        for (index=0; index<_Nv*_Nx*_Ny; index++)
-        {
-            n = (index % (_Ny * _Nv)) % _Nv;
-            j = (index - n) / _Nv;
-            i = (index - n - j * _Nv) / (_Ny * _Nv);
-            x0 = vertex_data[5*index+0];
-            y0 = vertex_data[5*index+1];
-            th = vertex_data[5*index+2];
-            x1 = vertex_data[5*index+3];
-            y1 = vertex_data[5*index+4];
+        for (int index=0; index < _nv*_nx*_ny; index++) {
+            int n = (index % (_ny * _nv)) % _nv;
+            int j = (index - n) / _nv;
+            int i = (index - n - j * _nv) / (_ny * _nv);
+            double x0 = vertex_data[5*index+0];
+            double y0 = vertex_data[5*index+1];
+            double th = vertex_data[5*index+2];
+            double x1 = vertex_data[5*index+3];
+            double y1 = vertex_data[5*index+4];
 #ifdef DEBUGLOGGING
-            if (index == 73) // Test print out of read in
-            {
+            if (index == 73) { // Test print out of read in
                 dbg<<"Successfully reading the Pixel vertex file\n";
                 //dbg<<"line = "<<line<<std::endl;
                 dbg<<"n = "<<n<<", i = "<<i<<", j = "<<j<<", x0 = "<<x0<<", y0 = "<<y0
@@ -91,36 +124,22 @@ namespace galsim {
 
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.
-            double x = _distortions[i * _Ny + j]->pointlist[n]->x;
-            x = ((x1 - x0) / _PixelSize + 0.5 - x) / double(NumElec);
-            _distortions[i * _Ny + j]->pointlist[n]->x = x;
-            double y = _distortions[i * _Ny + j]->pointlist[n]->y;
-            y = ((y1 - y0) / _PixelSize + 0.5 - y) / double(NumElec);
-            _distortions[i * _Ny + j]->pointlist[n]->y = y;
+            double x = _distortions[i * _ny + j][n].x;
+            x = ((x1 - x0) / _pixelSize + 0.5 - x) / numElec;
+            _distortions[i * _ny + j][n].x = x;
+            double y = _distortions[i * _ny + j][n].y;
+            y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
+            _distortions[i * _ny + j][n].y = y;
         }
 #ifdef DEBUGLOGGING
         //Test print out of distortion for central pixel
-        i = 4; j = 4;
-        for (n=0; n<_Nv; n++)
-            xdbg<<"n = "<<n<<", x = "<<_distortions[i * _Ny + j]->pointlist[n]->x*(double)NumElec
-                <<", y = "<<_distortions[i * _Ny + j]->pointlist[n]->y*(double)NumElec<<std::endl;
-#endif
-        // We generate a testpoint for testing whether a point is inside or outside the array
-        _testpoint = new Point(0.0,0.0);
-    }
-
-    Silicon::~Silicon ()
-    {
-        int p;
-        for (p=0; p<_Nx*_Ny; p++)
-        {
-            delete _distortions[p];
+        int i = 4;
+        int j = 4;
+        for (int n=0; n < _nv; n++) {
+            xdbg<<"n = "<<n<<", x = "<<_distortions[i * _ny + j][n].x * numElec
+                <<", y = "<<_distortions[i * _ny + j][n].y * numElec<<std::endl;
         }
-        delete[] _distortions;
-        delete _emptypoly[0];
-        delete[] _emptypoly;
-        delete _testpoly[0];
-        delete[] _testpoly;
+#endif
     }
 
 #if 0
@@ -137,118 +156,60 @@ namespace galsim {
            // index of
            nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
            if (nminus < 0) return _abs_data[1];
-           else if (nminus > _Nabs - 4) return _abs_data[_Nabs - 1];
+           else if (nminus > _nabs - 4) return _abs_data[_nabs - 1];
            else return _abs_data[nminus+1] +
                (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
        }
 #endif
 
-    void Silicon::BuildPolylist(Polygon** polylist, int nx, int ny)
-    {
-        int xpix, ypix, n, p, pointcounter = 0;
-        double theta, theta0, dtheta;
-        dtheta = M_PI / (2.0 * ((double)_NumVertices + 1.0));
-        theta0 = - M_PI / 4.0;
-        Point **point = new Point*[_Nv * nx * ny];
-
-        for (p=0; p<nx*ny; p++)
-        {
-            polylist[p] = new Polygon(_Nv);
-            // First the corners
-            for (xpix=0; xpix<2; xpix++)
-            {
-                for (ypix=0; ypix<2; ypix++)
-                {
-                    point[pointcounter] = new Point((double)xpix, (double)ypix);
-                    polylist[p]->AddPoint(point[pointcounter]);
-                    pointcounter += 1;
-                }
-            }
-            // Next the edges
-            for (xpix=0; xpix<2; xpix++)
-            {
-                for (n=0; n<_NumVertices; n++)
-                {
-                    theta = theta0 + ((double)n + 1.0) * dtheta;
-                    point[pointcounter] = new Point((double)xpix, (tan(theta) + 1.0) / 2.0);
-                    polylist[p]->AddPoint(point[pointcounter]);
-                    pointcounter += 1;
-                }
-            }
-            for (ypix=0; ypix<2; ypix++)
-            {
-                for (n=0; n<_NumVertices; n++)
-                {
-                    theta = theta0 + ((double)n + 1.0) * dtheta;
-                    point[pointcounter] = new Point((tan(theta) + 1.0) / 2.0, (double)ypix);
-                    polylist[p]->AddPoint(point[pointcounter]);
-                    pointcounter += 1;
-                }
-            }
-            polylist[p]->Sort(); // Sort the vertices in CCW order
-        }
-        dbg<<"Generated "<<nx*ny<<" pixels\n";
-    }
-
     template <typename T>
-    void Silicon::UpdatePixelDistortions(ImageView<T> target) const
+    void Silicon::updatePixelDistortions(ImageView<T> target)
     {
         // This updates the pixel distortions in the _imagepolys
         // pixel list based on the amount of charge in each pixel
         // This distortion assumes the electron is created at the
         // top of the silicon.  It mus be scaled based on the conversion depth
-        // This is handled in InsidePixel.
+        // This is handled in insidePixel.
 
-        int i, j, ii, jj, ix, iy, index, chargei, chargej, n;
-        double charge;
-        int NxCenter, NyCenter;
-
-        NxCenter = (_Nx - 1) / 2;
-        NyCenter = (_Ny - 1) / 2;
+        int nxCenter = (_nx - 1) / 2;
+        int nyCenter = (_ny - 1) / 2;
 
         // Now add in the displacements
-        int minx, miny, maxx, maxy;
-        minx = target.getXMin();
-        miny = target.getYMin();
-        maxx = target.getXMax();
-        maxy = target.getYMax();
+        int minx = target.getXMin();
+        int miny = target.getYMin();
+        int maxx = target.getXMax();
+        int maxy = target.getYMax();
 
         // Now we cycle through the _imagepolys array
         // and update the pixel shapes
-        for (ix=minx; ix<maxx; ix++)
-        {
-            for (iy=miny; iy<maxy; iy++)
-            {
-                index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
+        for (int ix=minx; ix<maxx; ix++) {
+            for (int iy=miny; iy<maxy; iy++) {
+                int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
                 // First set the _imagepoly polygon to an undistorted polygon
-                for (n=0; n<_Nv; n++)
-                {
-                    _imagepolys[index]->pointlist[n]->x = _emptypoly[0]->pointlist[n]->x;
-                    _imagepolys[index]->pointlist[n]->y = _emptypoly[0]->pointlist[n]->y;
+                for (int n=0; n<_nv; n++) {
+                    _imagepolys[index][n].x = _emptypoly[0][n].x;
+                    _imagepolys[index][n].y = _emptypoly[0][n].y;
                 }
                 // Now add in the distortions
-                for (i=NxCenter-_QDist; i<NxCenter+_QDist+1; i++)
-                {
-                    for (j=NyCenter-_QDist; j<NyCenter+_QDist+1; j++)
-                    {
-                        chargei = ix + i - NxCenter;
-                        chargej = iy + j - NyCenter;
+                for (int i=nxCenter-_qDist; i<nxCenter+_qDist+1; i++) {
+                    for (int j=nyCenter-_qDist; j<nyCenter+_qDist+1; j++) {
+                        int chargei = ix + i - nxCenter;
+                        int chargej = iy + j - nyCenter;
                         if ((chargei < minx) || (chargei > maxx) ||
                             (chargej < miny) || (chargej > maxy))
                             continue;
 
-                        charge = target(chargei,chargej);
+                        double charge = target(chargei,chargej);
                         if (charge < 100.0) // Don't bother if less than 100 electrons
                             continue;
 
-                        for (n=0; n<_Nv; n++)
-                        {
-                            ii = 2 * NxCenter - i;
-                            jj = 2 * NyCenter - j;
-                            double dx = _distortions[ii * _Ny + jj]->pointlist[n]->x * charge;
-                            double dy = _distortions[ii * _Ny + jj]->pointlist[n]->y * charge;
-                            _imagepolys[index]->pointlist[n]->x += dx;
-                            _imagepolys[index]->pointlist[n]->y += dy;
+                        for (int n=0; n<_nv; n++) {
+                            int ii = 2 * nxCenter - i;
+                            int jj = 2 * nyCenter - j;
+                            double dx = _distortions[ii * _ny + jj][n].x * charge;
+                            double dy = _distortions[ii * _ny + jj][n].y * charge;
+                            _imagepolys[index][n].x += dx;
+                            _imagepolys[index][n].y += dy;
                         }
                     }
                 }
@@ -257,7 +218,7 @@ namespace galsim {
     }
 
     template <typename T>
-    bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
+    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               ImageView<T> target) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
@@ -272,37 +233,33 @@ namespace galsim {
         // the Vertices files have an additional look-up variable (z), but this doesn't
         // seem necessary at this point
 
-        double zfit = 12.0;
-        double zfactor = 0.0;
-        zfactor = tanh(zconv / zfit);
-        int minx = target.getXMin();
-        int miny = target.getYMin();
-        int maxx = target.getXMax();
-        int maxy = target.getYMax();
-        if (ix < minx || ix > maxx || iy < miny || iy > maxy) return false;
+        if (!target.getBounds().includes(Position<int>(ix,iy))) return false;
+
+        const double zfit = 12.0;
+        const double zfactor = tanh(zconv / zfit);
+        const int minx = target.getXMin();
+        const int miny = target.getYMin();
+        const int maxx = target.getXMax();
+        const int maxy = target.getYMax();
+
         int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
 
-        // Scale the _testpoly vertices by zfactor
-        for (int n=0; n<_Nv; n++)
-        {
-            _testpoly[0]->pointlist[n]->x = _emptypoly[0]->pointlist[n]->x +
-                (_imagepolys[index]->pointlist[n]->x - _emptypoly[0]->pointlist[n]->x) * zfactor;
-            _testpoly[0]->pointlist[n]->y = _emptypoly[0]->pointlist[n]->y +
-                (_imagepolys[index]->pointlist[n]->y - _emptypoly[0]->pointlist[n]->y) * zfactor;
-        }
+        // Scale the testpoly vertices by zfactor
+        Polygon testpoly = _imagepolys[index].scale(_emptypoly[0], zfactor);
+
         // Now test to see if the point is inside
-        _testpoint->x = x;
-        _testpoint->y = y;
-        return _testpoly[0]->PointInside(_testpoint);
+        return testpoly.contains(Point(x,y));
     }
 
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                ImageView<T> target)
     {
+        const double log10_over_250 = std::log(10.) / 250.;
+
         // Create and read in pixel distortions
-        int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
-        int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+        const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+        const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
         int n=0;
 
         // PhotonArray
@@ -324,85 +281,83 @@ namespace galsim {
         dbg<<"hasAllocatedAngles = "<<photons.hasAllocatedAngles()<<std::endl;
 #endif
 
-        int minx = target.getXMin();
-        int miny = target.getYMin();
-        int maxx = target.getXMax();
-        int maxy = target.getYMax();
-        int nx = maxx - minx + 1;
-        int ny = maxy - miny + 1;
+        int nx = b.getXMax() - b.getXMin() + 1;
+        int ny = b.getYMax() - b.getYMin() + 1;
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-        _imagepolys = new Polygon*[nx * ny]; // These pixels span the target image
-        BuildPolylist(_imagepolys, nx, ny);
+        buildPolylist(_imagepolys, nx, ny, _numVertices);
         dbg<<"Built poly list\n";
 
-        double addedFlux = 0.;
+#ifdef DEBUGLOGGING
         double Irr = 0.;
         double Irr0 = 0.;
-        for (int i=0; i<int(photons.size()); i++)
-        {
-            // Update shapes every _Nrecalc electrons
-            if (i % _Nrecalc == 0) UpdatePixelDistortions(target);
+#endif
+        double addedFlux = 0.;
+        double next_recalc = _nrecalc;
+        const int nphotons = photons.size();
+        for (int i=0; i<nphotons; i++) {
+            // Update shapes every _nrecalc electrons
+            if (addedFlux > next_recalc) {
+                updatePixelDistortions(target);
+                next_recalc = addedFlux + _nrecalc;
+            }
 
             // First we get the location where the photon strikes the silicon:
             double x0 = photons.getX(i); // in pixels
             double y0 = photons.getY(i); // in pixels
             // Next we determine the distance the photon travels into the silicon
-            double si_length, zconv;
-            if (photons.hasAllocatedWavelengths())
-            {
+            double si_length;
+            if (photons.hasAllocatedWavelengths()) {
                 double lambda = photons.getWavelength(i); // in nm
                 // The below is an approximation.  ToDo: replace with lookup table
-                double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
+                //double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
+                double abs_length = std::exp((lambda - 500.0) * log10_over_250); // in microns
                 //double abs_length = AbsLength(lambda); // in microns
                 si_length = -abs_length * log(1.0 - ud()); // in microns
 #ifdef DEBUGLOGGING
-                if (i % 1000 == 0)
-                {
+                if (i % 1000 == 0) {
                     dbg<<"lambda = "<<lambda<<std::endl;
                     dbg<<"si_length = "<<si_length<<std::endl;
                 }
 #endif
-            }
-            else
-            {
+            } else {
                 // If no wavelength info, assume conversion takes place near the top.
                 si_length = 5.0;
             }
+
             // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
-            if (photons.hasAllocatedAngles())
-            {
+            double zconv;
+            if (photons.hasAllocatedAngles()) {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
-                double dz = fmin(95.0, si_length / sqrt(1.0 + dxdz*dxdz + dydz*dydz)); // in microns
+                double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
+                dz = std::min(95.0, dz);  // max 95 microns
                 x0 += dxdz * dz / 10.0; // in pixels
                 y0 += dydz * dz / 10.0; // in pixels
                 zconv = 100.0 - dz; // Conversion depth in microns
 #ifdef DEBUGLOGGING
-                if (i % 1000 == 0)
-                {
+                if (i % 1000 == 0) {
                     dbg<<"dxdz = "<<dxdz<<std::endl;
                     dbg<<"dydz = "<<dydz<<std::endl;
                     dbg<<"dz = "<<dz<<std::endl;
                 }
 #endif
-            }
-            else
-            {
+            } else {
                 zconv = 100.0 - si_length;
             }
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
             // Now we add in a displacement due to diffusion
-            double DiffStep = fmax(0.0, _DiffStep * (zconv - 10.0) / 100.0); // in microns
-            x0 += DiffStep * gd() / 10.0; // in pixels
-            y0 += DiffStep * gd() / 10.0; // in pixels
+            if (_diffStep != 0.) {
+                double diffStep = fmax(0.0, _diffStep * (zconv - 10.0) / 100.0); // in microns
+                x0 += diffStep * gd() / 10.0; // in pixels
+                y0 += diffStep * gd() / 10.0; // in pixels
+            }
             double flux = photons.getFlux(i);
 
 #ifdef DEBUGLOGGING
-            if (i % 1000 == 0)
-            {
-                xdbg<<"DiffStep = "<<DiffStep<<std::endl;
+            if (i % 1000 == 0) {
+                xdbg<<"diffStep = "<<diffStep<<std::endl;
                 xdbg<<"zconv = "<<zconv<<std::endl;
                 xdbg<<"x0 = "<<x0<<std::endl;
                 xdbg<<"y0 = "<<y0<<std::endl;
@@ -415,14 +370,14 @@ namespace galsim {
             int ix0 = ix;
             int iy0 = iy;
 
-            double x = x0 - (double) ix + 0.5;
-            double y = y0 - (double) iy + 0.5;
+            double x = x0 - ix + 0.5;
+            double y = y0 - iy + 0.5;
             // (ix,iy) are the undistorted pixel coordinates.
             // (x,y) are the coordinates within the pixel, centered at the lower left
 
             // The following code finds which pixel we are in given
             // pixel distortion due to the brighter-fatter effect
-            bool FoundPixel = false;
+            bool foundPixel = false;
             // The following are set up to start the search in the undistorted pixel, then
             // search in the nearest neighbor first if it's not in the undistorted pixel.
             int step;
@@ -432,14 +387,12 @@ namespace galsim {
             else step = 5;
             int n=0;
             int m_found;
-            for (int m=0; m<9; m++)
-            {
+            for (int m=0; m<9; m++) {
                 int ix_off = ix + xoff[n];
                 int iy_off = iy + yoff[n];
-                double x_off = x - (double)xoff[n];
-                double y_off = y - (double)yoff[n];
-                if (InsidePixel(ix_off, iy_off, x_off, y_off, zconv, target))
-                {
+                double x_off = x - xoff[n];
+                double y_off = y - yoff[n];
+                if (insidePixel(ix_off, iy_off, x_off, y_off, zconv, target)) {
                     xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
                         <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
                     if (m == 0) zerocount += 1;
@@ -448,14 +401,13 @@ namespace galsim {
                     ix = ix_off;
                     iy = iy_off;
                     m_found = m;
-                    FoundPixel = true;
+                    foundPixel = true;
                     break;
                 }
                 n = ((n-1)+step) % 8 + 1;
                 // This is intended to start with the nearest neighbor, then cycle through others.
             }
-            if (!FoundPixel)
-            {
+            if (!foundPixel) {
                 xdbg<<"Not found in any pixel\n";
                 xdbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
                 // We should never arrive here, since this means we didn't find it in the
@@ -464,26 +416,23 @@ namespace galsim {
                 // When this happens, I put the electron in the undistorted pixel or the nearest
                 // neighbor with equal probability.
                 misscount += 1;
-                if (ud() > 0.5)
-                {
+                if (ud() > 0.5) {
                     n = 0;
                     zerocount +=1;
-                }
-                else
-                {
+                } else {
                     n = step;
                     nearestcount +=1;
                 }
                 ix = ix + xoff[n];
                 iy = iy + yoff[n];
-                FoundPixel = true;
+                foundPixel = true;
             }
 #if 0
             // (ix, iy) now give the actual pixel which will receive the charge
             if (ix != ix0 || iy != iy0) {
                 dbg<<"("<<ix0<<","<<iy0<<") -> ("<<ix<<","<<iy<<")\n";
-                double r0 = sqrt((ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5));
-                double r = sqrt((ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5));
+                double r0 = std::sqrt((ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5));
+                double r = std::sqrt((ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5));
                 dbg<<"r = "<<r0<<" -> "<<r;
                 if (r < r0) { dbg<<"  *****"; }
                 dbg<<"\nstep = "<<step<<", n = "<<n<<", m_found = "<<m_found<<std::endl;
@@ -492,36 +441,36 @@ namespace galsim {
 #endif
 
             if (b.includes(ix,iy)) {
+#ifdef DEBUGLOGGING
                 double rsq = (ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5);
                 Irr += flux * rsq;
                 rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
                 Irr0 += flux * rsq;
+#endif
                 target(ix,iy) += flux;
                 addedFlux += flux;
             }
         }
-        for (int p=0; p<nx*ny; p++)
-        {
-            delete _imagepolys[p];
-        }
+#ifdef DEBUGLOGGING
         Irr /= addedFlux;
         Irr0 /= addedFlux;
         dbg<<"Irr = "<<Irr<<"  cf. Irr0 = "<<Irr0<<std::endl;
         dbg << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount;
         dbg << " in closest neighbor, " << othercount << " in other neighbor. " << misscount;
         dbg << " not in any pixel\n" << std::endl;
+#endif
         return addedFlux;
     }
 
     //template double Silicon::AbsLength(double lambda) const;
 
-    template bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
+    template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<double> target) const;
-    template bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
+    template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<float> target) const;
 
-    template void Silicon::UpdatePixelDistortions(ImageView<double> target) const;
-    template void Silicon::UpdatePixelDistortions(ImageView<float> target) const;
+    template void Silicon::updatePixelDistortions(ImageView<double> target);
+    template void Silicon::updatePixelDistortions(ImageView<float> target);
 
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                         ImageView<double> target);
