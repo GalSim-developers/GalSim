@@ -53,8 +53,9 @@ namespace galsim
         double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target);
 
     private:
+        Polygon _emptypoly;
+        mutable Polygon _testpoly;
         std::vector<Polygon> _distortions;
-        std::vector<Polygon> _emptypoly;
         std::vector<Polygon> _imagepolys;
         int _numVertices, _numElect, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize;

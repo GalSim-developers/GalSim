@@ -63,9 +63,8 @@ namespace galsim {
         Point& operator[](int i) { return _points[i]; }
         const Point& operator[](int i) const { return _points[i]; }
 
-        // Make a new polygon that scales up the existing one by zfactor (relative to an empty
-        // Polygon).
-        Polygon scale(const Polygon& emptypoly, double zfactor) const;
+        // Make the Polygon a scaled version of a reference one (relative to an empty Polygon).
+        void scale(const Polygon& refpoly, const Polygon& emptypoly, double factor);
 
     private:
 

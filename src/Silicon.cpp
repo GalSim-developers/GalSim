@@ -45,44 +45,35 @@
 namespace galsim {
 
     // Helper function used in a few places below.
-    void buildPolylist(std::vector<Polygon>& polylist, int nx, int ny, int numVertices)
+    void buildEmptyPoly(Polygon& poly, int numVertices)
     {
-        dbg<<"Start buildPolylist: "<<nx<<','<<ny<<','<<numVertices<<std::endl;
         double dtheta = M_PI / (2.0 * (numVertices + 1.0));
         double theta0 = - M_PI / 4.0;
 
-        dbg<<"polylist.size = "<<polylist.size()<<std::endl;
-        polylist.resize(nx*ny);
-        for (int p=0; p<nx*ny; p++) {
-            polylist[p].clear();
-            polylist[p].reserve(numVertices*4 + 4);
-            dbg<<"p = "<<p<<std::endl;
-            dbg<<"polylist[p].size = "<<polylist[p].size()<<std::endl;
-            // First the corners
-            dbg<<"corners:\n";
-            for (int xpix=0; xpix<2; xpix++) {
-                for (int ypix=0; ypix<2; ypix++) {
-                    polylist[p].add(Point(xpix, ypix));
-                }
-            }
-            // Next the edges
-            dbg<<"x edges:\n";
-            for (int xpix=0; xpix<2; xpix++) {
-                for (int n=0; n<numVertices; n++) {
-                    double theta = theta0 + (n + 1.0) * dtheta;
-                    polylist[p].add(Point(xpix, (tan(theta) + 1.0) / 2.0));
-                }
-            }
-            dbg<<"y edges:\n";
+        poly.reserve(numVertices*4 + 4);
+        // First the corners
+        dbg<<"corners:\n";
+        for (int xpix=0; xpix<2; xpix++) {
             for (int ypix=0; ypix<2; ypix++) {
-                for (int n=0; n<numVertices; n++) {
-                    double theta = theta0 + (n + 1.0) * dtheta;
-                    polylist[p].add(Point((tan(theta) + 1.0) / 2.0, ypix));
-                }
+                poly.add(Point(xpix, ypix));
             }
-            polylist[p].sort();
         }
-        dbg<<"Generated "<<nx*ny<<" pixels\n";
+        // Next the edges
+        dbg<<"x edges:\n";
+        for (int xpix=0; xpix<2; xpix++) {
+            for (int n=0; n<numVertices; n++) {
+                double theta = theta0 + (n + 1.0) * dtheta;
+                poly.add(Point(xpix, (std::tan(theta) + 1.0) / 2.0));
+            }
+        }
+        dbg<<"y edges:\n";
+        for (int ypix=0; ypix<2; ypix++) {
+            for (int n=0; n<numVertices; n++) {
+                double theta = theta0 + (n + 1.0) * dtheta;
+                poly.add(Point((std::tan(theta) + 1.0) / 2.0, ypix));
+            }
+        }
+        poly.sort();
     }
 
     Silicon::Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
@@ -94,16 +85,18 @@ namespace galsim {
         // and builds an array of polygons for calculating the distorted pixel shapes
         // as a function of charge in the surrounding pixels.
 
-        // Next, we build the distorted polygons. We have an array of nx*ny polygons,
+        // First build the distorted polygons. We have an array of nx*ny polygons,
         // an undistorted polygon, and a polygon for test.
 
         _nv = 4 * _numVertices + 4; // Number of vertices in each pixel
 
-        buildPolylist(_distortions, _nx, _ny, _numVertices);
-        buildPolylist(_emptypoly, 1, 1, _numVertices);
+        buildEmptyPoly(_emptypoly, _numVertices);
+        _testpoly = _emptypoly;  // This is a mutable Polygon we'll use as scratch space
+        _distortions.resize(_nx*_ny);
+        for (int i=0; i<(_nx*_ny); ++i)
+            _distortions[i] = _emptypoly;  // These will accumulated the distortions over time.
 
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
-
         for (int index=0; index < _nv*_nx*_ny; index++) {
             int n = (index % (_ny * _nv)) % _nv;
             int j = (index - n) / _nv;
@@ -186,10 +179,7 @@ namespace galsim {
             for (int iy=miny; iy<maxy; iy++) {
                 int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
                 // First set the _imagepoly polygon to an undistorted polygon
-                for (int n=0; n<_nv; n++) {
-                    _imagepolys[index][n].x = _emptypoly[0][n].x;
-                    _imagepolys[index][n].y = _emptypoly[0][n].y;
-                }
+                _imagepolys[index] = _emptypoly;
                 // Now add in the distortions
                 for (int i=nxCenter-_qDist; i<nxCenter+_qDist+1; i++) {
                     for (int j=nyCenter-_qDist; j<nyCenter+_qDist+1; j++) {
@@ -206,8 +196,9 @@ namespace galsim {
                         for (int n=0; n<_nv; n++) {
                             int ii = 2 * nxCenter - i;
                             int jj = 2 * nyCenter - j;
-                            double dx = _distortions[ii * _ny + jj][n].x * charge;
-                            double dy = _distortions[ii * _ny + jj][n].y * charge;
+                            int kk = ii * _ny + jj;
+                            double dx = _distortions[kk][n].x * charge;
+                            double dy = _distortions[kk][n].y * charge;
                             _imagepolys[index][n].x += dx;
                             _imagepolys[index][n].y += dy;
                         }
@@ -245,10 +236,10 @@ namespace galsim {
         int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
 
         // Scale the testpoly vertices by zfactor
-        Polygon testpoly = _imagepolys[index].scale(_emptypoly[0], zfactor);
+        _testpoly.scale(_imagepolys[index], _emptypoly, zfactor);
 
         // Now test to see if the point is inside
-        return testpoly.contains(Point(x,y));
+        return _testpoly.contains(Point(x,y));
     }
 
     // Helper function to calculate how far down into the silicon the photon converts into
@@ -358,7 +349,9 @@ namespace galsim {
         int nx = b.getXMax() - b.getXMin() + 1;
         int ny = b.getYMax() - b.getYMin() + 1;
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-        buildPolylist(_imagepolys, nx, ny, _numVertices);
+        _imagepolys.resize(nx*ny);
+        for (int i=0; i<(nx*ny); ++i)
+            _imagepolys[i] = _emptypoly;
         dbg<<"Built poly list\n";
 
         const int nphotons = photons.size();

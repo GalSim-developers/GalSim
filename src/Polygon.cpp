@@ -124,14 +124,12 @@ namespace galsim {
         return inside;
     }
 
-    Polygon Polygon::scale(const Polygon& emptypoly, double zfactor) const
+    void Polygon::scale(const Polygon& refpoly, const Polygon& emptypoly, double factor)
     {
-        Polygon ret(*this);
         const int npoints = size();
-        for (int n=0; n<npoints; n++) {
-            ret._points[n].x = emptypoly[n].x + (_points[n].x - emptypoly[n].x) * zfactor;
-            ret._points[n].y = emptypoly[n].y + (_points[n].y - emptypoly[n].y) * zfactor;
+        for (int i=0; i<npoints; ++i) {
+            _points[i].x = emptypoly[i].x + (refpoly[i].x - emptypoly[i].x) * factor;
+            _points[i].y = emptypoly[i].y + (refpoly[i].y - emptypoly[i].y) * factor;
         }
-        return ret;
     }
 }
