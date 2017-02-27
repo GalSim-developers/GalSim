@@ -62,7 +62,7 @@ namespace galsim {
             // Calculate angle between centroid and point
             std::vector<double> angle(npoints);
             for (int i=0; i<npoints; i++) {
-                angle[i] = atan2(_points[i].y - cy, _points[i].x - cx);
+                angle[i] = std::atan2(_points[i].y - cy, _points[i].x - cx);
             }
 
             //sort _points in place using the angles

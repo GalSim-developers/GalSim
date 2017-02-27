@@ -143,23 +143,23 @@ namespace galsim {
     }
 
 #if 0
-       Got a start on implementing the absorption length lookup,
-       but couldn't get the python - C++ wrapper working, so I went
-       back to the analytic function - Craig Lage 17-Feb-17
-       double Silicon::AbsLength(double lambda)
-       {
-           // Looks up the absorption length and returns
-           // an interpolated value
-           int nminus;
-           double aminus, aplus, dlambda;
-           dlambda = _abs_data[2] - _abs_data[0];
-           // index of
-           nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
-           if (nminus < 0) return _abs_data[1];
-           else if (nminus > _nabs - 4) return _abs_data[_nabs - 1];
-           else return _abs_data[nminus+1] +
-               (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
-       }
+    // Got a start on implementing the absorption length lookup,
+    // but couldn't get the python - C++ wrapper working, so I went
+    // back to the analytic function - Craig Lage 17-Feb-17
+    double Silicon::AbsLength(double lambda)
+    {
+        // Looks up the absorption length and returns
+        // an interpolated value
+        int nminus;
+        double aminus, aplus, dlambda;
+        dlambda = _abs_data[2] - _abs_data[0];
+        // index of
+        nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
+        if (nminus < 0) return _abs_data[1];
+        else if (nminus > _nabs - 4) return _abs_data[_nabs - 1];
+        else return _abs_data[nminus+1] +
+            (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
+    }
 #endif
 
     template <typename T>
@@ -236,7 +236,7 @@ namespace galsim {
         if (!target.getBounds().includes(Position<int>(ix,iy))) return false;
 
         const double zfit = 12.0;
-        const double zfactor = tanh(zconv / zfit);
+        const double zfactor = std::tanh(zconv / zfit);
         const int minx = target.getXMin();
         const int miny = target.getYMin();
         const int maxx = target.getXMax();
@@ -251,60 +251,16 @@ namespace galsim {
         return testpoly.contains(Point(x,y));
     }
 
-    template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                               ImageView<T> target)
+    // Helper function to calculate how far down into the silicon the photon converts into
+    // an electron.
+    void calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
+                                  UniformDeviate ud)
     {
         const double log10_over_250 = std::log(10.) / 250.;
 
-        // Create and read in pixel distortions
-        const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
-        const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-        int n=0;
-
-        // PhotonArray
-        GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
-        int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
-
-        Bounds<int> b = target.getBounds();
-
-        if (!b.isDefined())
-            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
-                                     " undefined Bounds");
-
-        // Factor to turn flux into surface brightness in an Image pixel
-#ifdef DEBUGLOGGING
-        dbg<<"In Silicon::accumulate\n";
-        dbg<<"bounds = "<<b<<std::endl;
-        dbg<<"total nphotons = "<<photons.size()<<std::endl;
-        dbg<<"hasAllocatedWavelengths = "<<photons.hasAllocatedWavelengths()<<std::endl;
-        dbg<<"hasAllocatedAngles = "<<photons.hasAllocatedAngles()<<std::endl;
-#endif
-
-        int nx = b.getXMax() - b.getXMin() + 1;
-        int ny = b.getYMax() - b.getYMin() + 1;
-        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-        buildPolylist(_imagepolys, nx, ny, _numVertices);
-        dbg<<"Built poly list\n";
-
-#ifdef DEBUGLOGGING
-        double Irr = 0.;
-        double Irr0 = 0.;
-#endif
-        double addedFlux = 0.;
-        double next_recalc = _nrecalc;
         const int nphotons = photons.size();
-        for (int i=0; i<nphotons; i++) {
-            // Update shapes every _nrecalc electrons
-            if (addedFlux > next_recalc) {
-                updatePixelDistortions(target);
-                next_recalc = addedFlux + _nrecalc;
-            }
-
-            // First we get the location where the photon strikes the silicon:
-            double x0 = photons.getX(i); // in pixels
-            double y0 = photons.getY(i); // in pixels
-            // Next we determine the distance the photon travels into the silicon
+        for (int i=0; i<nphotons; ++i) {
+            // Determine the distance the photon travels into the silicon
             double si_length;
             if (photons.hasAllocatedWavelengths()) {
                 double lambda = photons.getWavelength(i); // in nm
@@ -325,12 +281,110 @@ namespace galsim {
             }
 
             // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
-            double zconv;
             if (photons.hasAllocatedAngles()) {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
                 double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
-                dz = std::min(95.0, dz);  // max 95 microns
+                depth[i] = std::min(95.0, dz);  // max 95 microns
+#ifdef DEBUGLOGGING
+                if (i % 1000 == 0) {
+                    dbg<<"dxdz = "<<dxdz<<std::endl;
+                    dbg<<"dydz = "<<dydz<<std::endl;
+                    dbg<<"dz = "<<dz<<std::endl;
+                }
+#endif
+            } else {
+                depth[i] = si_length;
+            }
+        }
+    }
+
+    static const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+    static const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+
+    // Break this bit out mostly to make it easier when profiling to see how much it would help
+    // to further optimize this part of the code.
+    template <typename T>
+    bool searchNeighbors(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
+                         ImageView<T> target, int& step)
+    {
+        // The following code finds which pixel we are in given
+        // pixel distortion due to the brighter-fatter effect
+        // The following are set up to start the search in the undistorted pixel, then
+        // search in the nearest neighbor first if it's not in the undistorted pixel.
+        if      ((x > y) && (x > 1.0 - y)) step = 1;
+        else if ((x < y) && (x < 1.0 - y)) step = 7;
+        else if ((x < y) && (x > 1.0 - y)) step = 3;
+        else step = 5;
+        int n=step;
+        for (int m=1; m<9; m++) {
+            int ix_off = ix + xoff[n];
+            int iy_off = iy + yoff[n];
+            double x_off = x - xoff[n];
+            double y_off = y - yoff[n];
+            if (silicon.insidePixel(ix_off, iy_off, x_off, y_off, zconv, target)) {
+                xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
+                    <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
+                ix = ix_off;
+                iy = iy_off;
+                return true;
+            }
+            n = ((n-1) + step) % 8 + 1;
+            // This is intended to start with the nearest neighbor, then cycle through others.
+        }
+        return false;
+    }
+
+    template <typename T>
+    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target)
+    {
+        Bounds<int> b = target.getBounds();
+        if (!b.isDefined())
+            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
+                                     " undefined Bounds");
+
+        // Factor to turn flux into surface brightness in an Image pixel
+#ifdef DEBUGLOGGING
+        dbg<<"In Silicon::accumulate\n";
+        dbg<<"bounds = "<<b<<std::endl;
+        dbg<<"total nphotons = "<<photons.size()<<std::endl;
+        dbg<<"hasAllocatedWavelengths = "<<photons.hasAllocatedWavelengths()<<std::endl;
+        dbg<<"hasAllocatedAngles = "<<photons.hasAllocatedAngles()<<std::endl;
+        double Irr = 0.;
+        double Irr0 = 0.;
+        int zerocount=0, neighborcount=0, misscount=0;
+#endif
+
+        int nx = b.getXMax() - b.getXMin() + 1;
+        int ny = b.getYMax() - b.getYMin() + 1;
+        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
+        buildPolylist(_imagepolys, nx, ny, _numVertices);
+        dbg<<"Built poly list\n";
+
+        const int nphotons = photons.size();
+        std::vector<double> depth(nphotons);
+        calculateConversionDepth(photons, depth, ud);
+
+        GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
+
+        double addedFlux = 0.;
+        double next_recalc = _nrecalc;
+        for (int i=0; i<nphotons; i++) {
+            // Update shapes every _nrecalc electrons
+            if (addedFlux > next_recalc) {
+                updatePixelDistortions(target);
+                next_recalc = addedFlux + _nrecalc;
+            }
+
+            // Get the location where the photon strikes the silicon:
+            double x0 = photons.getX(i); // in pixels
+            double y0 = photons.getY(i); // in pixels
+
+            double zconv;  // This is the reverse of depth. zconv is how far above the substrate.
+            if (photons.hasAllocatedAngles()) {
+                double dxdz = photons.getDXDZ(i);
+                double dydz = photons.getDYDZ(i);
+                double dz = depth[i];
                 x0 += dxdz * dz / 10.0; // in pixels
                 y0 += dydz * dz / 10.0; // in pixels
                 zconv = 100.0 - dz; // Conversion depth in microns
@@ -342,14 +396,14 @@ namespace galsim {
                 }
 #endif
             } else {
-                zconv = 100.0 - si_length;
+                zconv = 100.0 - depth[i];
             }
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-                double diffStep = fmax(0.0, _diffStep * (zconv - 10.0) / 100.0); // in microns
+                double diffStep = std::max(0.0, _diffStep * (zconv - 10.0) / 100.0); // in microns
                 x0 += diffStep * gd() / 10.0; // in pixels
                 y0 += diffStep * gd() / 10.0; // in pixels
             }
@@ -367,65 +421,44 @@ namespace galsim {
             // Now we find the undistorted pixel
             int ix = int(floor(x0 + 0.5));
             int iy = int(floor(y0 + 0.5));
+
+#ifdef DEBUGLOGGING
             int ix0 = ix;
             int iy0 = iy;
+#endif
 
             double x = x0 - ix + 0.5;
             double y = y0 - iy + 0.5;
             // (ix,iy) are the undistorted pixel coordinates.
             // (x,y) are the coordinates within the pixel, centered at the lower left
 
-            // The following code finds which pixel we are in given
-            // pixel distortion due to the brighter-fatter effect
-            bool foundPixel = false;
-            // The following are set up to start the search in the undistorted pixel, then
-            // search in the nearest neighbor first if it's not in the undistorted pixel.
-            int step;
-            if      ((x > y) && (x > 1.0 - y)) step = 1;
-            else if ((x < y) && (x < 1.0 - y)) step = 7;
-            else if ((x < y) && (x > 1.0 - y)) step = 3;
-            else step = 5;
-            int n=0;
-            int m_found;
-            for (int m=0; m<9; m++) {
-                int ix_off = ix + xoff[n];
-                int iy_off = iy + yoff[n];
-                double x_off = x - xoff[n];
-                double y_off = y - yoff[n];
-                if (insidePixel(ix_off, iy_off, x_off, y_off, zconv, target)) {
-                    xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
-                        <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
-                    if (m == 0) zerocount += 1;
-                    else if (m == 1) nearestcount += 1;
-                    else othercount +=1;
-                    ix = ix_off;
-                    iy = iy_off;
-                    m_found = m;
-                    foundPixel = true;
-                    break;
-                }
-                n = ((n-1)+step) % 8 + 1;
-                // This is intended to start with the nearest neighbor, then cycle through others.
+            // First check the obvious choice, since this will usually work.
+            bool foundPixel = insidePixel(ix, iy, x, y, zconv, target);
+#ifdef DEBUGLOGGING
+            if (foundPixel) ++zerocount;
+#endif
+
+            // Then check neighbors
+            int step;  // We might need this below, so let searchNeighbors return it.
+            if (!foundPixel) {
+                foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
+#ifdef DEBUGLOGGING
+                if (foundPixel) ++neighborcount;
+#endif
             }
+
+            // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
+            // If we do arrive here due to roundoff error of the pixel boundary, put the electron
+            // in the undistorted pixel or the nearest neighbor with equal probability.
             if (!foundPixel) {
                 xdbg<<"Not found in any pixel\n";
                 xdbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
-                // We should never arrive here, since this means we didn't find it in the
-                // undistorted pixel or any of the neighboring pixels.  However, sometimes (about
-                // 0.1% of the time) we do arrive here due to roundoff error of the pixel boundary.
-                // When this happens, I put the electron in the undistorted pixel or the nearest
-                // neighbor with equal probability.
-                misscount += 1;
-                if (ud() > 0.5) {
-                    n = 0;
-                    zerocount +=1;
-                } else {
-                    n = step;
-                    nearestcount +=1;
-                }
+                int n = (ud() > 0.5) ? 0 : step;
                 ix = ix + xoff[n];
                 iy = iy + yoff[n];
-                foundPixel = true;
+#ifdef DEBUGLOGGING
+                ++misscount;
+#endif
             }
 #if 0
             // (ix, iy) now give the actual pixel which will receive the charge
@@ -455,8 +488,8 @@ namespace galsim {
         Irr /= addedFlux;
         Irr0 /= addedFlux;
         dbg<<"Irr = "<<Irr<<"  cf. Irr0 = "<<Irr0<<std::endl;
-        dbg << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount;
-        dbg << " in closest neighbor, " << othercount << " in other neighbor. " << misscount;
+        dbg << "Found "<< zerocount << " photons in undistorted pixel, " << neighborcount;
+        dbg << " in one of the neighbors, and "<<misscount;
         dbg << " not in any pixel\n" << std::endl;
 #endif
         return addedFlux;

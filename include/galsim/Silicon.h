@@ -37,8 +37,8 @@ namespace galsim
     class Silicon
     {
     public:
-        Silicon(int NumVertices, int NumElec, int Nx, int Ny, int QDist, int Nrecalc,
-                double DiffStep, double PixelSize, double* vertex_data);
+        Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
+                double diffStep, double pixelSize, double* vertex_data);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
