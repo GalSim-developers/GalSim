@@ -38,8 +38,10 @@ namespace galsim {
     class Polygon
     {
     public:
-        Polygon() : _sorted(false), _area(0.0) {}
-        Polygon(const Polygon& p) : _sorted(p._sorted), _area(p._area), _points(p._points) {}
+        Polygon() : _sorted(false), _area(0.0), _npoints(0) {}
+        Polygon(const Polygon& p) :
+            _sorted(p._sorted), _area(p._area), _points(p._points), _npoints(p._npoints),
+            _inner(p._inner), _outer(p._outer) {}
         ~Polygon() {}
 
         // Add a point to a Polygon
@@ -47,14 +49,21 @@ namespace galsim {
         // added after either of those calls, an exception will be thrown.
         void add(const Point& point);
 
-        // Get the area of the Polygon
-        double area();
+        // Sort the points. The user is responsible for calling this after adding all the points
+        // or after making any modification that might change the order of the points around
+        // the origin.
+        void sort();
+
+        // Get the area of the Polygon.  The result is saved, so if you make modifications to
+        // the polyon and want the saved value to be reset, you can call updateBounds() to reset it.
+        double area() const;
 
         // Return whether the Polygon contains a given point
-        bool contains(const Point& point);
+        bool contains(const Point& point) const;
 
-        // Sort the points.  Done automatically by area and contains, but can be done manually.
-        void sort();
+        // Two functions that check whether the point is trivially inside or outside.
+        bool triviallyContains(const Point& point) const;
+        bool mightContain(const Point& point) const;
 
         // Some methods that let Polygon act (in some ways) like a vector<Point>
         size_t size() const { return _points.size(); }
@@ -66,11 +75,18 @@ namespace galsim {
         // Make the Polygon a scaled version of a reference one (relative to an empty Polygon).
         void scale(const Polygon& refpoly, const Polygon& emptypoly, double factor);
 
+        // Update the inner and outer bounds approximations of the polygon.  Need to make
+        // sure you do this any time you update the positions of the points.
+        void updateBounds();
+
     private:
 
         bool _sorted;
-        double _area;
+        mutable double _area;
         std::vector<Point> _points;
+        int _npoints;  // Always equivalent to _points.size(), but convenient to have it as an int.
+        Bounds<double> _inner;
+        Bounds<double> _outer;
     };
 
 }

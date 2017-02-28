@@ -181,6 +181,7 @@ namespace galsim {
                 // First set the _imagepoly polygon to an undistorted polygon
                 _imagepolys[index] = _emptypoly;
                 // Now add in the distortions
+                bool changed = false;
                 for (int i=nxCenter-_qDist; i<nxCenter+_qDist+1; i++) {
                     for (int j=nyCenter-_qDist; j<nyCenter+_qDist+1; j++) {
                         int chargei = ix + i - nxCenter;
@@ -202,8 +203,10 @@ namespace galsim {
                             _imagepolys[index][n].x += dx;
                             _imagepolys[index][n].y += dy;
                         }
+                        changed = true;
                     }
                 }
+                if (changed) _imagepolys[index].updateBounds();
             }
         }
     }
@@ -218,16 +221,9 @@ namespace galsim {
         // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
         // photon within the pixel, with (0,0) in the lower left
 
-        // The term zfactor decreases the pixel shifts as we get closer to the bottom
-        // It is an empirical fit to the Poisson solver simulations, and only matters
-        // when we get quite close to the bottom.  This could be more accurate by making
-        // the Vertices files have an additional look-up variable (z), but this doesn't
-        // seem necessary at this point
-
+        // If test pixel is off the image, return false.  (Avoids seg faults!)
         if (!target.getBounds().includes(Position<int>(ix,iy))) return false;
 
-        const double zfit = 12.0;
-        const double zfactor = std::tanh(zconv / zfit);
         const int minx = target.getXMin();
         const int miny = target.getYMin();
         const int maxx = target.getXMax();
@@ -235,11 +231,25 @@ namespace galsim {
 
         int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
 
+        // First do some easy checks if the point isn't terribly close to the boundary.
+        Point p(x,y);
+        if (_imagepolys[index].triviallyContains(p)) return true;
+        if (!_imagepolys[index].mightContain(p)) return false;
+
+        // OK, it must be near the boundary, so now be careful.
+        // The term zfactor decreases the pixel shifts as we get closer to the bottom
+        // It is an empirical fit to the Poisson solver simulations, and only matters
+        // when we get quite close to the bottom.  This could be more accurate by making
+        // the Vertices files have an additional look-up variable (z), but this doesn't
+        // seem necessary at this point
+        const double zfit = 12.0;
+        const double zfactor = std::tanh(zconv / zfit);
+
         // Scale the testpoly vertices by zfactor
         _testpoly.scale(_imagepolys[index], _emptypoly, zfactor);
 
         // Now test to see if the point is inside
-        return _testpoly.contains(Point(x,y));
+        return _testpoly.contains(p);
     }
 
     // Helper function to calculate how far down into the silicon the photon converts into
