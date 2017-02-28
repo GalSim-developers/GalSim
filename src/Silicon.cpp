@@ -159,7 +159,7 @@ namespace galsim {
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
         // This updates the pixel distortions in the _imagepolys
-        // pixel list based on the amount of charge in each pixel
+        // pixel list based on the amount of additional charge in each pixel
         // This distortion assumes the electron is created at the
         // top of the silicon.  It mus be scaled based on the conversion depth
         // This is handled in insidePixel.
@@ -173,41 +173,39 @@ namespace galsim {
         int maxx = target.getXMax();
         int maxy = target.getYMax();
 
-        // Now we cycle through the _imagepolys array
-        // and update the pixel shapes
-        for (int ix=minx; ix<maxx; ix++) {
-            for (int iy=miny; iy<maxy; iy++) {
-                int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
-                // First set the _imagepoly polygon to an undistorted polygon
-                _imagepolys[index] = _emptypoly;
-                // Now add in the distortions
-                bool changed = false;
-                for (int i=nxCenter-_qDist; i<nxCenter+_qDist+1; i++) {
-                    for (int j=nyCenter-_qDist; j<nyCenter+_qDist+1; j++) {
-                        int chargei = ix + i - nxCenter;
-                        int chargej = iy + j - nyCenter;
-                        if ((chargei < minx) || (chargei > maxx) ||
-                            (chargej < miny) || (chargej > maxy))
-                            continue;
+        // Now we cycle through the pixels in the target image and update any affected
+        // pixel shapes.
+        std::vector<bool> changed(_imagepolys.size(), false);
+        for (int i=minx; i<maxx; ++i) {
+            for (int j=miny; j<maxy; ++j) {
+                double charge = target(i,j);
+                if (charge == 0.0) continue;
 
-                        double charge = target(chargei,chargej);
-                        if (charge < 100.0) // Don't bother if less than 100 electrons
+                for (int di=-_qDist; di<=_qDist; ++di) {
+                    for (int dj=-_qDist; dj<=_qDist; ++dj) {
+                        int polyi = i + di;
+                        int polyj = j + dj;
+                        if ((polyi < minx) || (polyi > maxx) || (polyj < miny) || (polyj > maxy))
                             continue;
+                        int index = (polyi - minx) * (maxy - miny + 1) + (polyj - miny);
+
+                        int disti = nxCenter + di;
+                        int distj = nxCenter + dj;
+                        int dist_index = disti * _ny + distj;
 
                         for (int n=0; n<_nv; n++) {
-                            int ii = 2 * nxCenter - i;
-                            int jj = 2 * nyCenter - j;
-                            int kk = ii * _ny + jj;
-                            double dx = _distortions[kk][n].x * charge;
-                            double dy = _distortions[kk][n].y * charge;
+                            double dx = _distortions[dist_index][n].x * charge;
+                            double dy = _distortions[dist_index][n].y * charge;
                             _imagepolys[index][n].x += dx;
                             _imagepolys[index][n].y += dy;
                         }
-                        changed = true;
+                        changed[index] = true;
                     }
                 }
-                if (changed) _imagepolys[index].updateBounds();
             }
+        }
+        for (size_t k=0; k<_imagepolys.size(); ++k) {
+            if (changed[k]) _imagepolys[k].updateBounds();
         }
     }
 
@@ -370,12 +368,21 @@ namespace galsim {
 
         GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
+        // Start with the correct distortions for the initial image as it is already
+        updatePixelDistortions(target);
+
+        // Keep track of the charge we are accumulating on a separate image for efficiency
+        // of the distortion updates.
+        ImageAlloc<T> delta(b, 0.);
+
         double addedFlux = 0.;
         double next_recalc = _nrecalc;
         for (int i=0; i<nphotons; i++) {
             // Update shapes every _nrecalc electrons
             if (addedFlux > next_recalc) {
-                updatePixelDistortions(target);
+                updatePixelDistortions(delta.view());
+                target += delta;
+                delta.setZero();
                 next_recalc = addedFlux + _nrecalc;
             }
 
@@ -483,10 +490,13 @@ namespace galsim {
                 rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
                 Irr0 += flux * rsq;
 #endif
-                target(ix,iy) += flux;
+                delta(ix,iy) += flux;
                 addedFlux += flux;
             }
         }
+        // No need to update the distortions again, but we do need to add the delta image.
+        target += delta;
+
 #ifdef DEBUGLOGGING
         Irr /= addedFlux;
         Irr0 /= addedFlux;
