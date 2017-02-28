@@ -97,8 +97,8 @@ def main(argv):
 
     rng = galsim.BaseDeviate(5678)    
     sensor1 = galsim.Sensor()
-    sensor2 = galsim.SiliconSensor('../../devel/poisson/17feb17_numvertices_8/bf.cfg','../../devel/poisson/17feb17_numvertices_8/BF_256_9x9_0_Vertices.dat', 80000, rng=rng, DiffMult = 0.0)                    
-    sensor3 = galsim.SiliconSensor('../../devel/poisson/17feb17_numvertices_8/bf.cfg','../../devel/poisson/17feb17_numvertices_8/BF_256_9x9_0_Vertices.dat', 80000, rng=rng, DiffMult = 1.0)                
+    sensor2 = galsim.SiliconSensor('../../devel/poisson/17feb17_numvertices_8/bf.cfg','../../devel/poisson/17feb17_numvertices_8/BF_256_9x9_0_Vertices.dat', 80000, rng=rng, diffusion_factor = 0.0)                    
+    sensor3 = galsim.SiliconSensor('../../devel/poisson/17feb17_numvertices_8/bf.cfg','../../devel/poisson/17feb17_numvertices_8/BF_256_9x9_0_Vertices.dat', 80000, rng=rng, diffusion_factor = 1.0)                
 
     for set in range(1,4):
         starttime = time.time()
