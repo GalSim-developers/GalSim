@@ -354,13 +354,18 @@ namespace galsim {
         int zerocount=0, neighborcount=0, misscount=0;
 #endif
 
-        int nx = b.getXMax() - b.getXMin() + 1;
-        int ny = b.getYMax() - b.getYMin() + 1;
+        const int nx = b.getXMax() - b.getXMin() + 1;
+        const int ny = b.getYMax() - b.getYMin() + 1;
+        const int nxny = nx * ny;
         dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-        _imagepolys.resize(nx*ny);
-        for (int i=0; i<(nx*ny); ++i)
+        _imagepolys.resize(nxny);
+        for (int i=0; i<nxny; ++i)
             _imagepolys[i] = _emptypoly;
         dbg<<"Built poly list\n";
+
+        const double invPixelSize = 1./_pixelSize; // pixels/micron
+        const double height = 100.;  // microns   TODO: should be an input parameter.
+        const double diffStep_pixel_z = _diffStep / (height * _pixelSize);
 
         const int nphotons = photons.size();
         std::vector<double> depth(nphotons);
@@ -390,14 +395,13 @@ namespace galsim {
             double x0 = photons.getX(i); // in pixels
             double y0 = photons.getY(i); // in pixels
 
-            double zconv;  // This is the reverse of depth. zconv is how far above the substrate.
+            double dz = depth[i];  // microns
             if (photons.hasAllocatedAngles()) {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
-                double dz = depth[i];
-                x0 += dxdz * dz / 10.0; // in pixels
-                y0 += dydz * dz / 10.0; // in pixels
-                zconv = 100.0 - dz; // Conversion depth in microns
+                double dz_pixel = dz * invPixelSize;
+                x0 += dxdz * dz_pixel; // dx in pixels
+                y0 += dydz * dz_pixel; // dy in pixels
 #ifdef DEBUGLOGGING
                 if (i % 1000 == 0) {
                     dbg<<"dxdz = "<<dxdz<<std::endl;
@@ -405,17 +409,19 @@ namespace galsim {
                     dbg<<"dz = "<<dz<<std::endl;
                 }
 #endif
-            } else {
-                zconv = 100.0 - depth[i];
             }
+            // This is the reverse of depth. zconv is how far above the substrate the e- converts.
+            double zconv = height - dz;
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-                double diffStep = std::max(0.0, _diffStep * (zconv - 10.0) / 100.0); // in microns
-                x0 += diffStep * gd() / 10.0; // in pixels
-                y0 += diffStep * gd() / 10.0; // in pixels
+                // 100 is the height of the silicon.
+                // 10.0 is the pixel size in microns / pixels
+                double diffStep = std::max(0.0, diffStep_pixel_z * (zconv - 10.0));
+                x0 += diffStep * gd();
+                y0 += diffStep * gd();
             }
             double flux = photons.getFlux(i);
 
