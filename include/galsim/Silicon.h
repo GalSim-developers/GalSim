@@ -38,11 +38,14 @@ namespace galsim
     {
     public:
         Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
-                double diffStep, double pixelSize, double* vertex_data);
+                double diffStep, double pixelSize, double sensorThickness, double minCharge, double* vertex_data);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target) const;
+
+        void calculateConversionDepth(const PhotonArray& photons, 
+      			 std::vector<double>& depth, UniformDeviate ud) const;
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
@@ -58,7 +61,7 @@ namespace galsim
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
         int _numVertices, _numElect, _nx, _ny, _nv, _nrecalc;
-        double _qDist, _diffStep, _pixelSize;
+      double _qDist, _diffStep, _pixelSize, _sensorThickness, _minCharge;
     };
 }
 

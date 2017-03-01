@@ -77,9 +77,12 @@ namespace galsim {
     }
 
     Silicon::Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
-                     double diffStep, double pixelSize, double* vertex_data) :
+                     double diffStep, double pixelSize, double sensorThickness,
+                     double minCharge, double* vertex_data) :
         _numVertices(numVertices), _numElect(numElec), _nx(nx), _ny(ny), _qDist(qDist),
-        _diffStep(diffStep), _pixelSize(pixelSize), _nrecalc(nrecalc)
+        _diffStep(diffStep), _pixelSize(pixelSize), _sensorThickness(sensorThickness),
+        _nrecalc(nrecalc), _minCharge(minCharge)
+
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -192,7 +195,6 @@ namespace galsim {
                         int disti = nxCenter + di;
                         int distj = nxCenter + dj;
                         int dist_index = disti * _ny + distj;
-
                         for (int n=0; n<_nv; n++) {
                             double dx = _distortions[dist_index][n].x * charge;
                             double dy = _distortions[dist_index][n].y * charge;
@@ -252,8 +254,9 @@ namespace galsim {
 
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
-    void calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
-                                  UniformDeviate ud)
+
+    void Silicon::calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
+                                           UniformDeviate ud) const
     {
         const double log10_over_250 = std::log(10.) / 250.;
 
@@ -276,7 +279,7 @@ namespace galsim {
 #endif
             } else {
                 // If no wavelength info, assume conversion takes place near the top.
-                si_length = 5.0;
+                si_length = 1.0;
             }
 
             // Next we partition the si_length into x,y,z.  Assuming dz is positive downward
@@ -284,7 +287,7 @@ namespace galsim {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
                 double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
-                depth[i] = std::min(95.0, dz);  // max 95 microns
+                depth[i] = std::min(_sensorThickness - 1.0, dz);  // max 1 micron from top
 #ifdef DEBUGLOGGING
                 if (i % 1000 == 0) {
                     dbg<<"dxdz = "<<dxdz<<std::endl;
@@ -364,8 +367,7 @@ namespace galsim {
         dbg<<"Built poly list\n";
 
         const double invPixelSize = 1./_pixelSize; // pixels/micron
-        const double height = 100.;  // microns   TODO: should be an input parameter.
-        const double diffStep_pixel_z = _diffStep / (height * _pixelSize);
+        const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
 
         const int nphotons = photons.size();
         std::vector<double> depth(nphotons);
@@ -402,24 +404,15 @@ namespace galsim {
                 double dz_pixel = dz * invPixelSize;
                 x0 += dxdz * dz_pixel; // dx in pixels
                 y0 += dydz * dz_pixel; // dy in pixels
-#ifdef DEBUGLOGGING
-                if (i % 1000 == 0) {
-                    dbg<<"dxdz = "<<dxdz<<std::endl;
-                    dbg<<"dydz = "<<dydz<<std::endl;
-                    dbg<<"dz = "<<dz<<std::endl;
-                }
-#endif
             }
             // This is the reverse of depth. zconv is how far above the substrate the e- converts.
-            double zconv = height - dz;
+            double zconv = _sensorThickness - dz;
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-                // 100 is the height of the silicon.
-                // 10.0 is the pixel size in microns / pixels
-                double diffStep = std::max(0.0, diffStep_pixel_z * (zconv - 10.0));
+                double diffStep = std::max(0.0, diffStep_pixel_z * (zconv - _pixelSize));
                 x0 += diffStep * gd();
                 y0 += diffStep * gd();
             }

@@ -20,8 +20,10 @@ bf_plot.py
 
 Modifying demo5.py to create 5 x 5 arrays of Gaussian spots
 for characterizing the B-F effect
-Craig Lage - 15-Feb-17
+Craig Lage - 1-Mar-17
 This version tests the writing out of the photon list.
+and uses the latest pixel distortion maps from the
+latest 'hole17 branch of the Poisson_CCD22 code
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
@@ -78,8 +80,8 @@ def main(argv):
     sky_level = 0.01                # ADU / arcsec^2
 
     # Make output directory if not already present.
-    if not os.path.isdir('write_output'):
-        os.mkdir('write_output')
+    if not os.path.isdir('new_output'):
+        os.mkdir('new_output')
 
     gal_sigma = 0.2     # arcsec
     psf_sigma = 0.01     # arcsec
@@ -95,19 +97,19 @@ def main(argv):
 
     rng = galsim.BaseDeviate(5678)    
     sensor1 = galsim.Sensor()
-    sensor2 = galsim.SiliconSensor('../../devel/poisson/numvertices_4/bf.cfg','../../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 200000, rng=rng, DiffMult = 0.0)
-    sensor3 = galsim.SiliconSensor('../../devel/poisson/numvertices_4/bf.cfg','../../devel/poisson/numvertices_4/BF_256_9x9_0_Vertices', 200000, rng=rng, DiffMult = 1.0)                
+    sensor2 = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
+    sensor3 = galsim.SiliconSensor(rng=rng)
 
-    for set in range(3,4):
+    for set in range(1,4):
         starttime = time.time()
         exec("sensor = sensor%d"%set)
         for nfile in range(1,6):
             # Make bf_x directory if not already present.
-            if not os.path.isdir('write_output/bf_%d'%set):
-                os.mkdir('write_output/bf_%d'%set)
+            if not os.path.isdir('new_output/bf_%d'%set):
+                os.mkdir('new_output/bf_%d'%set)
 
-            gal_file_name = os.path.join('write_output','bf_%d/bf_%d.fits'%(set,nfile))
-            sex_file_name = os.path.join('write_output','bf_%d/bf_%d_SEX.fits.cat.reg'%(set,nfile))
+            gal_file_name = os.path.join('new_output','bf_%d/bf_%d.fits'%(set,nfile))
+            sex_file_name = os.path.join('new_output','bf_%d/bf_%d_SEX.fits.cat.reg'%(set,nfile))
             sexfile = open(sex_file_name, 'w')
             gal_flux = 2.0e5 * nfile    # total counts on the image
             # Define the galaxy profile
@@ -195,7 +197,7 @@ def main(argv):
                     final_gal = galsim.Convolve([psf,this_gal])
 
                     # Draw the image
-                    sensor.photon_file = os.path.join('write_output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.dat'%(set,nfile,ix,iy))
+                    #sensor.photon_file = os.path.join('new_output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.dat'%(set,nfile,ix,iy))
                     final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng)
 
                     # Now add an appropriate amount of noise to get our desired S/N
