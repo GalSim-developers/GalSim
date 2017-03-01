@@ -37,7 +37,7 @@ def test_silicon():
 
     # Note: Use something quite small in terms of npixels so the B/F effect kicks in without
     # requiring a ridiculous number of photons
-    obj = galsim.Gaussian(flux=1000, sigma=0.3)
+    obj = galsim.Gaussian(flux=10000, sigma=0.3)
 
     # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
     im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon
@@ -129,39 +129,34 @@ def test_silicon():
     sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
     print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), 2.*sigma_r))
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
-    print('check r1 > r3 due to brighter-fatter')
-    assert r1 > r3
-    print('Finished test_silicon')
-    sys.stdout.flush()
+    print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
+    assert r1 - r3 > 2*sigma_r
 
-    """
-    if __name__ == "__main__":
-        # Check that it is really responding to flux, not number of photons.
-        # Using fewer shot photons will mean each one encapsulates several electrons at once.
-        obj.drawImage(im1, method='phot', n_photons=10000, poisson_flux=False, sensor=silicon,
-                      rng=rng1)
-        obj.drawImage(im2, method='phot', n_photons=10000, poisson_flux=False, sensor=simple,
-                      rng=rng2)
-        obj.drawImage(im3, method='phot', n_photons=10000, poisson_flux=False, rng=rng3)
+    # Check that it is really responding to flux, not number of photons.
+    # Using fewer shot photons will mean each one encapsulates several electrons at once.
+    obj.drawImage(im1, method='phot', n_photons=1000, poisson_flux=False, sensor=silicon,
+                  rng=rng1)
+    obj.drawImage(im2, method='phot', n_photons=1000, poisson_flux=False, sensor=simple,
+                  rng=rng2)
+    obj.drawImage(im3, method='phot', n_photons=1000, poisson_flux=False, rng=rng3)
 
-        r1 = im1.calculateMomentRadius(flux=obj.flux)
-        r2 = im2.calculateMomentRadius(flux=obj.flux)
-        r3 = im3.calculateMomentRadius(flux=obj.flux)
-        print('Flux = %.0f:  sum        peak          radius'%obj.flux)
-        print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
-        print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
-        print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %.0f:  sum        peak          radius'%obj.flux)
+    print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
-        np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
-        np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
-        np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
-        np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
-        np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
-        np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
 
-        print('check |r1-r3| = %f >? %f'%(r1-r3, 2.*sigma_r))
-        assert r1 > r3
-    """
+    print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
+    assert r1 - r3 > 2*sigma_r
 
 @timer
 def test_silicon_fft():
