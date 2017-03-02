@@ -48,8 +48,9 @@ namespace {
 
 
         static Silicon* MakeSilicon(int NumVertices, int NumElect, int Nx, int Ny, int QDist,
-                                    int Nrecalc, double DiffStep, double PixelSize, double SensorThickness,
-                                    double min_charge, const bp::object& array)
+                                    int Nrecalc, double DiffStep, double PixelSize,
+                                    double SensorThickness,
+                                    const bp::object& array)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -67,7 +68,7 @@ namespace {
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                               Nrecalc, DiffStep, PixelSize, SensorThickness, min_charge, data);
+                               Nrecalc, DiffStep, PixelSize, SensorThickness, data);
         }
 
         static void wrap()
@@ -77,8 +78,8 @@ namespace {
                 .def("__init__", bp::make_constructor(
                         &MakeSilicon, bp::default_call_policies(),
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
-                                  "Nrecalc", "DiffStep", "PixelSize", "SensorThickness", "min_charge",
-				  "vertex_data"))))
+                                  "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
+                                  "vertex_data"))))
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<Silicon> >();

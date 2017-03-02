@@ -91,15 +91,11 @@ class SiliconSensor(Sensor):
                             Poisson simulation must be increased to match. [default: 3]
     @param nrecalc          The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
-    @param min_charge       A parameter which controls the minimum charge below which we don't
-                            bother to distort the pixel.  In other words, if there are less
-                            than min_charge electrons in the pixel, the pixel remains
-                            undistorted. [default: 100]
 
     """
     def __init__(self, dir='/Users/cslage/Research/LSST/code/galsim-newgit/GalSim/devel/poisson/lsst_itl/',
                  num_elec=None, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, min_charge=100):
+                 nrecalc=10000):
         self.rng = galsim.UniformDeviate(rng)
         import glob
         config_files = glob.glob(dir+'*.cfg')
@@ -124,7 +120,7 @@ class SiliconSensor(Sensor):
 
         if vertex_data.size == 5 * Nx * Ny * (4 * NumVertices + 4):
             self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, qdist, nrecalc,
-                                                   diff_step, PixelSize, SensorThickness, min_charge,
+                                                   diff_step, PixelSize, SensorThickness,
                                                    vertex_data)
         else:
             raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
@@ -183,6 +179,9 @@ class SiliconSensor(Sensor):
             Vdiff = (Vparallel_lo + 2.0 * Vparallel_hi) / 3.0 - Vbb
         else: # pragma: no cover
             return 0.0;
-        diff_step = SensorThickness * np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff) * diffusion_factor
+
         # 0.026 is kT/q at room temp (298 K)
+        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff)
+        diff_step *= SensorThickness * diffusion_factor
+
         return diff_step

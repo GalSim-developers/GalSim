@@ -78,10 +78,10 @@ namespace galsim {
 
     Silicon::Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
-                     double minCharge, double* vertex_data) :
+                     double* vertex_data) :
         _numVertices(numVertices), _numElect(numElec), _nx(nx), _ny(ny), _qDist(qDist),
         _diffStep(diffStep), _pixelSize(pixelSize), _sensorThickness(sensorThickness),
-        _nrecalc(nrecalc), _minCharge(minCharge)
+        _nrecalc(nrecalc)
 
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
