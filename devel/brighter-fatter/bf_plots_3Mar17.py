@@ -197,9 +197,14 @@ def main(argv):
                     final_gal = galsim.Convolve([psf,this_gal])
 
                     # Draw the image
-                    #sensor.photon_file = os.path.join('new_output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.dat'%(set,nfile,ix,iy))
-                    final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng)
 
+                    if ix == 0 and iy == 0:
+                        final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng, save_photons = True)
+                        photon_file = os.path.join('new_output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.fits'%(set,nfile,ix,iy))
+                        sub_gal_image.photons.write(photon_file)
+                    else:
+                        final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng)
+                    
                     # Now add an appropriate amount of noise to get our desired S/N
                     # There are lots of definitions of S/N, but here is the one used by Great08
                     # We use a weighted integral of the flux:

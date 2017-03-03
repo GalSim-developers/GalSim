@@ -287,7 +287,7 @@ namespace galsim {
                 double dxdz = photons.getDXDZ(i);
                 double dydz = photons.getDYDZ(i);
                 double dz = si_length / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz); // in microns
-                depth[i] = std::min(_sensorThickness - 1.0, dz);  // max 1 micron from top
+                depth[i] = std::min(_sensorThickness - 1.0, dz);  // max 1 micron from bottom
 #ifdef DEBUGLOGGING
                 if (i % 1000 == 0) {
                     dbg<<"dxdz = "<<dxdz<<std::endl;
@@ -412,7 +412,7 @@ namespace galsim {
 
             // Now we add in a displacement due to diffusion
             if (_diffStep != 0.) {
-                double diffStep = std::max(0.0, diffStep_pixel_z * (zconv - _pixelSize));
+                double diffStep = std::max(0.0, diffStep_pixel_z * (zconv - 10.0));
                 x0 += diffStep * gd();
                 y0 += diffStep * gd();
             }
