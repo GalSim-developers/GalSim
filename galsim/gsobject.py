@@ -983,7 +983,7 @@ class GSObject(object):
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
                   poisson_flux=None, surface_ops=(), sensor=None, setup_only=False,
-                  dx=None, wmult=1., maxN=100000):
+                  dx=None, wmult=1., maxN=None, save_photons=False):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1247,7 +1247,9 @@ class GSObject(object):
                             [default: False]
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
-                            [default: 100000]
+                            [default: None, which means no limit]
+        @param save_photons If True, save the PhotonArray as `image.photons`. Only valid if method
+                            is 'phot' or sensor is not None.  [default: False]
 
         @returns the drawn Image.
         """
@@ -1303,6 +1305,8 @@ class GSObject(object):
                 raise ValueError("poisson_flux is only relevant for method='phot'")
             if surface_ops != ():
                 raise ValueError("surface_ops are only relevant for method='phot'")
+            if save_photons:
+                raise ValueError("save_photons is only valid for method='phot'")
 
         # Do any delayed computation needed by fft or real_space drawing.
         if method != 'phot':
@@ -1363,8 +1367,8 @@ class GSObject(object):
         imview.wcs = galsim.PixelScale(1.0)
 
         if method == 'phot':
-            added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
-                                          surface_ops, sensor, gain, maxN)
+            added_photons, photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise,
+                                                   poisson_flux, surface_ops, sensor, gain, maxN)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1380,12 +1384,14 @@ class GSObject(object):
 
             if sensor is not None:
                 ud = galsim.UniformDeviate(rng)
-                phot_array = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
+                photons= galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
                 for op in surface_ops:
-                    op.applyTo(phot_array)
-                added_photons = sensor.accumulate(phot_array, imview)
+                    op.applyTo(photons)
+                added_photons = sensor.accumulate(photons, imview)
 
         image.added_flux = added_photons / flux_scale
+        if save_photons:
+            image.photons = photons
 
         return image
 
@@ -1635,7 +1641,7 @@ class GSObject(object):
 
 
     def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
-                 surface_ops=(), sensor=None, gain=1.0, maxN=100000):
+                 surface_ops=(), sensor=None, gain=1.0, maxN=None):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1694,7 +1700,7 @@ class GSObject(object):
                             the numbers output from a CCD). [default: 1.]
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
-                            [default: 100000]
+                            [default: None, which means no limit]
 
         @returns The total flux of photons that landed inside the image bounds.
         """
@@ -1734,14 +1740,18 @@ class GSObject(object):
         # total flux falling inside image bounds, this will be returned on exit.
         added_flux = 0.
 
+        if maxN is None:
+            maxN = Ntot
+
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot
+        photons = None  # Just in case Nleft is already 0.
         while Nleft > 0:
             # Shoot at most maxN at a time
             thisN = min(maxN, Nleft)
 
             try:
-                phot_array = self.shoot(thisN, ud)
+                photons = self.shoot(thisN, ud)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1751,15 +1761,15 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
 
-            phot_array.scaleFlux(g * thisN / Ntot)
+            photons.scaleFlux(g * thisN / Ntot)
 
             for op in surface_ops:
-                op.applyTo(phot_array)
+                op.applyTo(photons)
 
-            added_flux += sensor.accumulate(phot_array, image)
+            added_flux += sensor.accumulate(photons, image)
             Nleft -= thisN
 
-        return added_flux
+        return added_flux, photons
 
 
     def shoot(self, n_photons, rng=None):

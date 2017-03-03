@@ -259,7 +259,8 @@ def test_photon_io():
 
     obj = galsim.Exponential(flux=1.7, scale_radius=2.3)
     rng = galsim.UniformDeviate(1234)
-    photons = obj.shoot(nphotons, rng)
+    image = obj.drawImage(method='phot', n_photons=nphotons, save_photons=True, rng=rng)
+    photons = image.photons
     assert photons.size() == nphotons
 
     file_name = 'output/photons1.dat'
