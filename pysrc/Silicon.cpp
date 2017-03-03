@@ -47,8 +47,8 @@ namespace {
         }
 
 
-        static Silicon* MakeSilicon(int NumVertices, int NumElect, int Nx, int Ny, int QDist,
-                                    int Nrecalc, double DiffStep, double PixelSize,
+        static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
+                                    double Nrecalc, double DiffStep, double PixelSize,
                                     double SensorThickness,
                                     const bp::object& array)
         {

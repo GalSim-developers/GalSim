@@ -76,10 +76,10 @@ namespace galsim {
         poly.sort();
     }
 
-    Silicon::Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
+    Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
                      double* vertex_data) :
-        _numVertices(numVertices), _numElect(numElec), _nx(nx), _ny(ny), _qDist(qDist),
+        _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
         _diffStep(diffStep), _pixelSize(pixelSize), _sensorThickness(sensorThickness),
         _nrecalc(nrecalc)
 

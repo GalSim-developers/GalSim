@@ -71,16 +71,8 @@ class SiliconSensor(Sensor):
                             It must contain, at a minimum, the *.cfg file used to simulate the
                             pixel distortions, and the *_Vertices.dat file which carries the
                             distorted pixel information.  [default: 'lsst_itl']
-    @param num_elec         This parameter is the number of electrons in the central pixel in the
-                            Poisson simulation that generated the vertex_file.  Depending how the
-                            simulation was done, it may depend on different parameters in the
-                            config_file, so can be entered manually. Note that you can also
-                            use this parameter to adjust the strength of the brighter-fatter
-                            effect.  For example, if *_Vertices.dat file was generated with
-                            80,000 e- in the reference pixel, and you enter 40,000 in num_elec,
-                            you will basically be doubling the strength of the brighter-fatter
-                            effect.  [default: None, in which case the code reads the
-                            CollectedCharge_0_0 parameter from  the .cfg file]
+    @param strength         Set the strength of the brighter-fatter effect relative to the
+                            amount in specified by the Poisson simulation results.  [default: 1]
     @param rng              A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
@@ -94,7 +86,7 @@ class SiliconSensor(Sensor):
                             distortion of the pixel shapes. [default: 10000]
 
     """
-    def __init__(self, dir='lsst_itl', num_elec=None, rng=None, diffusion_factor=1.0, qdist=3,
+    def __init__(self, dir='lsst_itl', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000):
         self.rng = galsim.UniformDeviate(rng)
         if not os.path.isdir(dir):
@@ -118,9 +110,9 @@ class SiliconSensor(Sensor):
         Ny = config['PixelBoundaryNy']
         PixelSize = config['PixelSize']
         SensorThickness = config['SensorThickness']
+        num_elec = float(config['CollectedCharge_0_0']) / strength
+        nrecalc = float(nrecalc) / strength # Scale this too, especially important if strength >> 1
         vertex_file = os.path.join(dir,config['outputfilebase'] + '_0_Vertices.dat')
-        if num_elec == None:
-            num_elec = config['CollectedCharge_0_0']
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
         if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):

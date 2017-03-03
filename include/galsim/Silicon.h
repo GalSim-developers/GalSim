@@ -37,7 +37,7 @@ namespace galsim
     class Silicon
     {
     public:
-        Silicon(int numVertices, int numElec, int nx, int ny, int qDist, int nrecalc,
+        Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness,
                 double* vertex_data);
 
@@ -59,7 +59,7 @@ namespace galsim
         mutable Polygon _testpoly;
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
-        int _numVertices, _numElect, _nx, _ny, _nv, _nrecalc;
+        int _numVertices, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
     };
 }

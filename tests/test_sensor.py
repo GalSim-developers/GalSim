@@ -53,7 +53,7 @@ def test_silicon():
     # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
     # to setting specific parameters via constructor arguments, rather than use a file at all.
     # (Should probably enable this feature anyway...)
-    silicon = galsim.SiliconSensor(dir='lsst_itl', rng=rng1, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
@@ -157,6 +157,40 @@ def test_silicon():
 
     print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
     assert r1 - r3 > 2*sigma_r
+
+    # Can also get the stronger BF effect with the strength parameter.
+    obj /= 100  # Back to what it originally was.
+    rng1 = galsim.BaseDeviate(5678)
+    rng2 = galsim.BaseDeviate(5678)
+    rng3 = galsim.BaseDeviate(5678)
+
+    silicon = galsim.SiliconSensor(dir='lsst_itl', strength=100., rng=rng1, diffusion_factor=0.0)
+    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
+    obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
+
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %.0f:  sum        peak          radius'%obj.flux)
+    print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
+
+    # Fluxes should still be fine.
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
+
+    # Sizes for 2,3 should be about equal, but 1 should be larger.
+    sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
+    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), 2.*sigma_r))
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
+    print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
+    assert r1 - r3 > 2*sigma_r / 100
 
 @timer
 def test_silicon_fft():
