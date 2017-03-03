@@ -79,6 +79,8 @@ New Features
   the sensor.  This effect is known as the "brighter-fatter effect", since it
   means that brighter objects are a bit larger than dimmer but otherwise-
   identical objects. (#722)
+- Added `save_photons` option to `drawImage` to output the photons that were
+  shot when photon shooting (if applicable). (#722)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
