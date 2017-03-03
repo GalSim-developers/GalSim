@@ -88,38 +88,84 @@ class SiliconSensor(Sensor):
     """
     def __init__(self, dir='lsst_itl', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000):
+        self.dir = dir
+        self.strength = strength
         self.rng = galsim.UniformDeviate(rng)
-        if not os.path.isdir(dir):
-            dir1 = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
-            if not os.path.isdir(dir1):
-                raise IOError("Cannot locate directory %s or %s"%(dir,dir1))
-            dir = dir1
+        self.diffusion_factor = diffusion_factor
+        self.qdist = qdist
+        self.nrecalc = nrecalc
 
-        config_files = glob.glob(os.path.join(dir,'*.cfg'))
+        if not os.path.isdir(dir):
+            self.full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
+            if not os.path.isdir(self.full_dir):
+                raise IOError("Cannot locate directory %s or %s"%(dir,self.full_dir))
+        else:
+            self.full_dir = dir
+
+        config_files = glob.glob(os.path.join(self.full_dir,'*.cfg'))
         if len(config_files) == 0:
-            raise IOError("No .cfg file found in dir %s"%dir)
+            raise IOError("No .cfg file found in dir %s"%self.full_dir)
         elif len(config_files) > 1:
-            raise IOError("Multiple .cfg files found in dir %s"%dir)
+            raise IOError("Multiple .cfg files found in dir %s"%self.full_dir)
         else:
             config_file = config_files[0]
 
-        config = self._read_config_file(config_file)
-        diff_step = self._calculate_diff_step(config, diffusion_factor)
-        NumVertices = config['NumVertices']
-        Nx = config['PixelBoundaryNx']
-        Ny = config['PixelBoundaryNy']
-        PixelSize = config['PixelSize']
-        SensorThickness = config['SensorThickness']
-        num_elec = float(config['CollectedCharge_0_0']) / strength
-        nrecalc = float(nrecalc) / strength # Scale this too, especially important if strength >> 1
-        vertex_file = os.path.join(dir,config['outputfilebase'] + '_0_Vertices.dat')
+        self.config = self._read_config_file(config_file)
+        self._init_silicon()
+
+    def _init_silicon(self):
+        diff_step = self._calculate_diff_step() * self.diffusion_factor
+        NumVertices = self.config['NumVertices']
+        Nx = self.config['PixelBoundaryNx']
+        Ny = self.config['PixelBoundaryNy']
+        PixelSize = self.config['PixelSize']
+        SensorThickness = self.config['SensorThickness']
+        num_elec = float(self.config['CollectedCharge_0_0']) / self.strength
+        # Scale this too, especially important if strength >> 1
+        nrecalc = float(self.nrecalc) / self.strength
+        vertex_file = os.path.join(self.full_dir,self.config['outputfilebase'] + '_0_Vertices.dat')
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
         if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
             raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
 
-        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, qdist, nrecalc,
+        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data)
+
+    def __str__(self):
+        s = 'galsim.SiliconSensor(%r'%self.dir
+        if self.strength != 1.: s += ', strength=%f'%self.strength
+        if self.diffusion_factor != 1.: s += ', diffusion_factor=%f'%self.diffusion_factor
+        s += ')'
+        return s
+
+    def __repr__(self):
+        return ('galsim.SiliconSensor(dir=%r, strength=%f, rng=%r, diffusion_factor=%f, '
+                'qdist=%d, nrecalc=%f'%(self.full_dir, self.strength, self.rng,
+                                        self.diffusion_factor, self.qdist, self.nrecalc))
+
+    def __eq__(self, other):
+        return (isinstance(other, SiliconSensor) and
+                self.config == other.config and
+                self.strength == other.strength and
+                self.rng == other.rng and
+                self.diffusion_factor == other.diffusion_factor and
+                self.qdist == other.qdist and
+                self.nrecalc == other.nrecalc)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = None
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_silicon']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._init_silicon()  # Build the _silicon object.
 
     def accumulate(self, photons, image):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
@@ -150,15 +196,15 @@ class SiliconSensor(Sensor):
                 pass
         return config
 
-    def _calculate_diff_step(self, config, diffusion_factor):
-        CollectingPhases = config['CollectingPhases']
-        PixelSize = config['PixelSize']
-        SensorThickness = config['SensorThickness']
-        ChannelStopWidth = config['ChannelStopWidth']
-        Vbb = config['Vbb']
-        Vparallel_lo = config['Vparallel_lo']
-        Vparallel_hi = config['Vparallel_hi']
-        CCDTemperature = config['CCDTemperature']
+    def _calculate_diff_step(self):
+        CollectingPhases = self.config['CollectingPhases']
+        PixelSize = self.config['PixelSize']
+        SensorThickness = self.config['SensorThickness']
+        ChannelStopWidth = self.config['ChannelStopWidth']
+        Vbb = self.config['Vbb']
+        Vparallel_lo = self.config['Vparallel_lo']
+        Vparallel_hi = self.config['Vparallel_hi']
+        CCDTemperature = self.config['CCDTemperature']
         # This calculates the diffusion step size given the detector
         # parameters.  The diffusion step size is the mean radius of diffusion
         # assuming the electron propagates the full width of the sensor.
@@ -176,7 +222,6 @@ class SiliconSensor(Sensor):
             return 0.0;
 
         # 0.026 is kT/q at room temp (298 K)
-        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff)
-        diff_step *= SensorThickness * diffusion_factor
+        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff) * SensorThickness
 
         return diff_step
