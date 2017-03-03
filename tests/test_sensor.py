@@ -102,6 +102,9 @@ def test_silicon():
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
+    # Also check the construction with an explicit directory.
+    dir = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl')
+    silicon = galsim.SiliconSensor(dir=dir, rng=rng1, diffusion_factor=0.0)
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)

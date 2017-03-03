@@ -37,7 +37,6 @@ class Sensor(object):
     sensor model that just converts each photon into an electron and drops it in the appropriate
     pixel.
     """
-
     def __init__(self):
         pass
 
