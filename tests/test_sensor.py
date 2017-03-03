@@ -53,7 +53,7 @@ def test_silicon():
     # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
     # to setting specific parameters via constructor arguments, rather than use a file at all.
     # (Should probably enable this feature anyway...)
-    silicon = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(dir='lsst_itl', rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.

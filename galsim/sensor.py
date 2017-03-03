@@ -28,6 +28,8 @@ bottom of the detector.
 
 import numpy as np
 import galsim
+import glob
+import os
 
 class Sensor(object):
     """
@@ -64,12 +66,12 @@ class SiliconSensor(Sensor):
     effect).
 
     @param dir              The name of the directory which contains the sensor information,
-                            presumably calculated from the Poisson_CCD simulator.
-                            This directory must contain, at a minimum, the *.cfg file used
-                            to simulate the pixel distortions, and the *_Vertices.dat file which
-                            carries the distorted pixel information. The program looks in the
-                            devel/poisson directory to find this directory.
-                            [default: 'devel/poisson/lsst_itl']
+                            presumably calculated from the Poisson_CCD simulator.  This directory
+                            may be specified either as an absolute path or as a subdirectory of
+                            share_dir/sensors/, where share_dir is `galsim.meta_data.share_dir`.
+                            It must contain, at a minimum, the *.cfg file used to simulate the
+                            pixel distortions, and the *_Vertices.dat file which carries the
+                            distorted pixel information.  [default: 'lsst_itl']
     @param num_elec         This parameter is the number of electrons in the central pixel in the
                             Poisson simulation that generated the vertex_file.  Depending how the
                             simulation was done, it may depend on different parameters in the
@@ -77,9 +79,9 @@ class SiliconSensor(Sensor):
                             use this parameter to adjust the strength of the brighter-fatter
                             effect.  For example, if *_Vertices.dat file was generated with
                             80,000 e- in the reference pixel, and you enter 40,000 in num_elec,
-                            you will basically be doubling the strength of the brighter-fatter effect.
-                            [default: None, in which case the code reads the CollectedCharge_0_0
-                            parameter from  the .cfg file]
+                            you will basically be doubling the strength of the brighter-fatter
+                            effect.  [default: None, in which case the code reads the
+                            CollectedCharge_0_0 parameter from  the .cfg file]
     @param rng              A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
@@ -93,19 +95,23 @@ class SiliconSensor(Sensor):
                             distortion of the pixel shapes. [default: 10000]
 
     """
-    def __init__(self, dir='/Users/cslage/Research/LSST/code/galsim-newgit/GalSim/devel/poisson/lsst_itl/',
-                 num_elec=None, rng=None, diffusion_factor=1.0, qdist=3,
+    def __init__(self, dir='lsst_itl', num_elec=None, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000):
         self.rng = galsim.UniformDeviate(rng)
-        import glob
-        config_files = glob.glob(dir+'*.cfg')
+        if not os.path.isdir(dir):
+            dir1 = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
+            if not os.path.isdir(dir1):
+                raise IOError("Cannot locate directory %s or %s"%(dir,dir1))
+            dir = dir1
+
+        config_files = glob.glob(os.path.join(dir,'*.cfg'))
         if len(config_files) == 0:
             raise IOError("No .cfg file found in dir %s"%dir)
         elif len(config_files) > 1:
             raise IOError("Multiple .cfg files found in dir %s"%dir)
         else:
             config_file = config_files[0]
-        
+
         config = self._read_config_file(config_file)
         diff_step = self._calculate_diff_step(config, diffusion_factor)
         NumVertices = config['NumVertices']
@@ -113,18 +119,16 @@ class SiliconSensor(Sensor):
         Ny = config['PixelBoundaryNy']
         PixelSize = config['PixelSize']
         SensorThickness = config['SensorThickness']
-        vertex_file = dir + config['outputfilebase'] + '_0_Vertices.dat'
+        vertex_file = os.path.join(dir,config['outputfilebase'] + '_0_Vertices.dat')
         if num_elec == None:
             num_elec = config['CollectedCharge_0_0']
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
-        if vertex_data.size == 5 * Nx * Ny * (4 * NumVertices + 4):
-            self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, qdist, nrecalc,
-                                                   diff_step, PixelSize, SensorThickness,
-                                                   vertex_data)
-        else:
+        if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
             raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
 
+        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, qdist, nrecalc,
+                                               diff_step, PixelSize, SensorThickness, vertex_data)
 
     def accumulate(self, photons, image):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
@@ -158,7 +162,7 @@ class SiliconSensor(Sensor):
     def _calculate_diff_step(self, config, diffusion_factor):
         CollectingPhases = config['CollectingPhases']
         PixelSize = config['PixelSize']
-        SensorThickness = config['SensorThickness']                
+        SensorThickness = config['SensorThickness']
         ChannelStopWidth = config['ChannelStopWidth']
         Vbb = config['Vbb']
         Vparallel_lo = config['Vparallel_lo']
