@@ -119,7 +119,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method', 'wmult',
                     'n_photons', 'max_extra_noise', 'poisson_flux']
 
-def SetupConfigObjNum(config, obj_num):
+def SetupConfigObjNum(config, obj_num, logger=None):
     """Do the basic setup of the config dict at the stamp (or object) processing level.
 
     Includes:
@@ -133,7 +133,9 @@ def SetupConfigObjNum(config, obj_num):
 
     @param config           A configuration dict.
     @param obj_num          The current obj_num.
+    @param logger           If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['obj_num'] = obj_num
     config['index_key'] = 'obj_num'
 
@@ -166,7 +168,7 @@ def SetupConfigObjNum(config, obj_num):
         stamp['draw_method'] = 'auto'
 
 
-def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
+def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None):
     """Do further setup of the config dict at the stamp (or object) processing level reflecting
     the stamp size and position in either image or world coordinates.
 
@@ -188,11 +190,13 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     @param ysize            The size of the stamp in the y-dimension. [may be None]
     @param image_pos        The position of the stamp in image coordinates. [may be None]
     @param world_pos        The position of the stamp in world coordinates. [may be None]
+    @param logger           If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
 
     # Make sure we have a valid wcs in case image-level processing was skipped.
     if 'wcs' not in config:
-        config['wcs'] = galsim.config.BuildWCS(config['image'], 'wcs', config)
+        config['wcs'] = galsim.config.BuildWCS(config['image'], 'wcs', config, logger)
 
     if xsize: config['stamp_xsize'] = xsize
     if ysize: config['stamp_ysize'] = ysize
@@ -262,7 +266,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     @returns the tuple (image, current_var)
     """
     logger = galsim.config.LoggerWrapper(logger)
-    SetupConfigObjNum(config,obj_num)
+    SetupConfigObjNum(config, obj_num, logger)
 
     stamp = config['stamp']
     stamp_type = stamp['type']
@@ -275,7 +279,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         seed_offset = galsim.config.ParseValue(stamp,'seed_offset',config,int)[0]
     else:
         seed_offset = 1
-    seed = galsim.config.SetupConfigRNG(config, seed_offset=seed_offset)
+    seed = galsim.config.SetupConfigRNG(config, seed_offset=seed_offset, logger=logger)
     logger.debug('obj %d: seed = %d',obj_num,seed)
 
     if 'retry_failures' in stamp:
@@ -304,7 +308,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                     stamp, config, xsize, ysize, stamp_ignore, logger)
 
             # Save these values for possible use in Evals or other modules
-            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
+            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger)
             stamp_center = config['stamp_center']
             if xsize:
                 logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
@@ -527,7 +531,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         raise
     return image
 
-def ParseWorldPos(config, param_name, base):
+def ParseWorldPos(config, param_name, base, logger):
     """A helper function to parse the 'world_pos' value.
 
     The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a
@@ -562,8 +566,8 @@ def ParseWorldPos(config, param_name, base):
     """
     try:
         return galsim.config.ParseValue(config, param_name, base, galsim.PositionD)[0]
-    except (ValueError, AttributeError):
-        # This should raise an appropriate error if neither option is valid.
+    except (ValueError, AttributeError) as e1:
+        logger.debug("Parsing %s as PositionD, caught error %s",param_name,e1)
         return galsim.config.ParseValue(config, param_name, base, galsim.CelestialCoord)[0]
 
 class StampBuilder(object):
@@ -628,9 +632,9 @@ class StampBuilder(object):
             image_pos = None
 
         if 'world_pos' in config:
-            world_pos = galsim.config.ParseWorldPos(config, 'world_pos', base)
+            world_pos = galsim.config.ParseWorldPos(config, 'world_pos', base, logger)
         elif 'world_pos' in image:
-            world_pos = galsim.config.ParseWorldPos(image, 'world_pos', base)
+            world_pos = galsim.config.ParseWorldPos(image, 'world_pos', base, logger)
         else:
             world_pos = None
 

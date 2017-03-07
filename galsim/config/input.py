@@ -245,7 +245,7 @@ def ProcessInputNObjects(config, logger=None):
     return None
 
 
-def SetupInputsForImage(config, logger):
+def SetupInputsForImage(config, logger=None):
     """Do any necessary setup of the input items at the start of an image.
 
     @param config       The configuration dict to process

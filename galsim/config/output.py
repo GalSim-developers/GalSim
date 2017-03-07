@@ -81,8 +81,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nproc = 1
 
     for k in range(nfiles + first_file_num):
-        SetupConfigFileNum(config, file_num, image_num, obj_num)
-        seed = galsim.config.SetupConfigRNG(config)
+        SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
+        seed = galsim.config.SetupConfigRNG(config, logger=logger)
 
         # Get the number of objects in each image for this file.
         nobj = GetNObjForFile(config,file_num,image_num)
@@ -178,8 +178,8 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     import time
     t1 = time.time()
 
-    SetupConfigFileNum(config,file_num,image_num,obj_num)
-    seed = galsim.config.SetupConfigRNG(config)
+    SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
+    seed = galsim.config.SetupConfigRNG(config, logger=logger)
     logger.debug('file %d: seed = %d',file_num,seed)
 
     # Put these values in the config dict so we won't have to run them again later if
@@ -282,7 +282,7 @@ def GetNObjForFile(config, file_num, image_num):
     return nobj
 
 
-def SetupConfigFileNum(config, file_num, image_num, obj_num):
+def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     """Do the basic setup of the config dict at the file processing level.
 
     Includes:
@@ -301,7 +301,9 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
                             start_obj_num items in the config dict.)
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
+    @param logger           If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['file_num'] = file_num
     config['start_obj_num'] = obj_num
     config['start_image_num'] = image_num

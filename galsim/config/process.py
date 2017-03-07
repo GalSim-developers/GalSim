@@ -404,7 +404,7 @@ def UpdateNProc(nproc, ntot, config, logger=None):
     return nproc
 
 
-def SetupConfigRNG(config, seed_offset=0):
+def SetupConfigRNG(config, seed_offset=0, logger=None):
     """Set up the RNG in the config dict.
 
     - Setup config['image']['random_seed'] if necessary
@@ -413,9 +413,12 @@ def SetupConfigRNG(config, seed_offset=0):
     @param config           The configuration dict.
     @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
                             [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
 
     @returns the seed used to initialize the RNG.
     """
+    logger = LoggerWrapper(logger)
+
     # Normally, random_seed is just a number, which really means to use that number
     # for the first item and go up sequentially from there for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the

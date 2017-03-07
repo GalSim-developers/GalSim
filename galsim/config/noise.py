@@ -73,7 +73,7 @@ def AddNoise(config, im, current_var=0., logger=None):
     orig_index = config.get('index_key','image_num')
 
     # This makes sure draw_method is properly copied over and given a default value.
-    galsim.config.stamp.SetupConfigObjNum(config, config.get('obj_num',0))
+    galsim.config.stamp.SetupConfigObjNum(config, config.get('obj_num',0), logger)
     draw_method = galsim.config.GetCurrentValue('stamp.draw_method',config,str)
 
     # We need to use image_num for the index_key, but if we are in the stamp processing

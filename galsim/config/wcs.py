@@ -42,7 +42,7 @@ def BuildWCS(config, key, base=None, logger=None):
     if base is None:
         base = config
 
-    logger.debug('image %d: Start BuildGSObject %s',base.get('image_num',0),key)
+    logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
 
     if key not in config:
         # Default if no wcs is to use PixelScale
@@ -67,8 +67,8 @@ def BuildWCS(config, key, base=None, logger=None):
         wcs_type = 'PixelScale'
 
     # Check if we can use the current cached object
-    config['index_key'] = 'image_num'
-    index = config.get('image_num', 0)
+    base['index_key'] = 'image_num'
+    index = base.get('image_num', 0)
     if 'current_val' in param and param['current_index'] == index:
         logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
         return param['current_val']
@@ -82,7 +82,7 @@ def BuildWCS(config, key, base=None, logger=None):
         raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
     logger.debug('image %d: Buiding wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
-    wcs = builder.buildWCS(param, base)
+    wcs = builder.buildWCS(param, base, logger)
 
     param['current_val'] = wcs
     param['current_safe'] = False
@@ -98,13 +98,14 @@ class WCSBuilder(object):
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -158,11 +159,12 @@ class SimpleWCSBuilder(WCSBuilder):
             kwargs['rng'] = galsim.config.check_for_rng(base, None, build_func.__name__)
         return kwargs
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -178,12 +180,13 @@ class OriginWCSBuilder(SimpleWCSBuilder):
         self.init_func = init_func
         self.origin_init_func = origin_init_func
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict, using the appropriate
         type depending on whether an origin is provided.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -203,11 +206,12 @@ class TanWCSBuilder(WCSBuilder):
     """
     def __init__(self): pass
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the TanWCS based on the specifications in the config dict.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
