@@ -45,7 +45,7 @@ namespace galsim {
         ~Polygon() {}
 
         // Add a point to a Polygon
-        // Note: all points need to be added before doing area or containts.  If more points are
+        // Note: all points need to be added before doing area or contains.  If more points are
         // added after either of those calls, an exception will be thrown.
         void add(const Point& point);
 

@@ -21,7 +21,7 @@ of the detector in the focal plane into an image with counts of electrons in eac
 
 The Sensor class itself implements the simplest possible sensor model, which just converts each
 photon into an electron in whatever pixel is below the location where the photon hits.
-However, it also serves as a base class for other more classes that implement more sophisticated
+However, it also serves as a base class for other classes that implement more sophisticated
 treatments of the photon to electron conversion and the drift from the conversion layer to the
 bottom of the detector.
 """
@@ -51,7 +51,7 @@ class Sensor(object):
         The base class implementation simply accumulates the photons above each pixel into that
         pixel.
 
-        @param photons      A PhotonArray instance describing the incident photons
+        @param photons      A PhotonArray instance describing the incident photons.
         @param image        The image into which the photons should be accumuated.
         """
         return photons.addTo(image.image)
@@ -72,11 +72,11 @@ class SiliconSensor(Sensor):
                             pixel distortions, and the *_Vertices.dat file which carries the
                             distorted pixel information.  [default: 'lsst_itl']
     @param strength         Set the strength of the brighter-fatter effect relative to the
-                            amount in specified by the Poisson simulation results.  [default: 1]
+                            amount specified by the Poisson simulation results.  [default: 1]
     @param rng              A BaseDeviate object to use for the random number generation
                             for the stochastic aspects of the electron production and drift.
                             [default: None, in which case one will be made for you]
-    @param diffusion_factor A factor by which to multiple the diffusion.  Use 0.0 to turn off the
+    @param diffusion_factor A factor by which to multiply the diffusion.  Use 0.0 to turn off the
                             effect of diffusion entirely. [default: 1.0]
     @param qdist            The maximum number of pixels away to calculate the distortion due to
                             the charge accumulation. A large value will increase accuracy but
