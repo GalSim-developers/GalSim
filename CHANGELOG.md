@@ -30,6 +30,10 @@ API Changes
 - Some of the backend (but nonetheless public API) methods of PhaseScreen and
   PhaseScreenList have changed.  See the docstrings of these classes for
   the new API if you have been using these methods. (#824)
+- Slightly changed the signatures of some back-end, but nonetheless public,
+  config-layer functions.  If you have been using custom config modules,
+  there may be slight changes to your code required.  See the doc strings of
+  these functions for more information. (#865)
 
 
 Dependency Changes
@@ -166,3 +170,6 @@ New config features
 - Added ability to specify world_pos in celestial coordinates (#865)
 - Added ability to set a different offset for the random number seeds used
   at the stamp level (default is 1).  (#865)
+- Added the ability to have multiple rngs with different update sequences
+  (e.g. to have some random galaxy properties repeat for the corresponding
+  galaxies on multiple images).  (#865)

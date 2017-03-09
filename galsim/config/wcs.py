@@ -68,7 +68,7 @@ def BuildWCS(config, key, base=None, logger=None):
 
     # Check if we can use the current cached object
     base['index_key'] = 'image_num'
-    index = base.get('image_num', 0)
+    index, _ = galsim.config.value._get_index(param, base, False)
     if 'current_val' in param and param['current_index'] == index:
         logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
         return param['current_val']
@@ -83,6 +83,7 @@ def BuildWCS(config, key, base=None, logger=None):
     logger.debug('image %d: Buiding wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
     wcs = builder.buildWCS(param, base, logger)
+    logger.debug('image %d: wcs = %s', base.get('image_num',0), wcs)
 
     param['current_val'] = wcs
     param['current_safe'] = False

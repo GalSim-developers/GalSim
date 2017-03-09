@@ -1277,6 +1277,61 @@ def test_wcs():
     except ImportError:
         pass
 
+@timer
+def test_multirng():
+    """Test using multiple rngs.
+
+    Actually, this tests a few features.
+    - Multiple rngs (random_seed being a list and using rng_num)
+    - Multiple input fields (although tests in test_config_value.py also do this)
+    - Using a non-default build_index for power_spectrum
+    """
+    nimages = 6
+
+    # First generate using the config layer.
+    config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
+    images = galsim.config.BuildImages(nimages, config)
+
+    # Now generate by hand
+    ngals = 5
+    psf_ps = galsim.PowerSpectrum('(k**2 + (1./180)**2)**(-11./6.)',
+                                  '(k**2 + (1./180)**2)**(-11./6.)',
+                                  units=galsim.arcsec)
+    gal_ps = galsim.PowerSpectrum('3.5e-8 * (k/10)**-1.4', units=galsim.radians)
+
+    for n in range(nimages):
+        seed = 12345 + n*ngals
+        rng = galsim.UniformDeviate(seed)
+        centeru = rng() * 10. - 5.
+        centerv = rng() * 10. - 5.
+        wcs = galsim.OffsetWCS(scale=0.1, world_origin=galsim.PositionD(centeru,centerv),
+                               origin=galsim.PositionD(128.5,128.5))
+        im = galsim.ImageF(256, 256, wcs=wcs)
+        world_center = im.wcs.toWorld(im.trueCenter())
+        psf_ps.buildGrid(grid_spacing=1.0, ngrid=26, rng=rng, center=world_center, variance=0.1)
+        gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rng, center=galsim.PositionD(0,0))
+        for i in range(ngals):
+            seedb = 123456789 + (n//3)*ngals + i + 1
+            rngb = galsim.UniformDeviate(seedb)
+            u = rngb() * 40. - 20.
+            v = rngb() * 40. - 20.
+            world_pos = galsim.PositionD(u,v)
+            psf_g1, psf_g2 = psf_ps.getShear(world_pos)
+            psf = galsim.Moffat(fwhm=0.9, beta=2).shear(g1=psf_g1, g2=psf_g2)
+            gal_g1, gal_g2 = gal_ps.getShear(world_pos)
+            gal = galsim.Exponential(half_light_radius=1.3, flux=100).shear(g1=gal_g1, g2=gal_g2)
+            print(n,i,u,v,psf_g1,psf_g2,gal_g1,gal_g2)
+            image_pos = wcs.toImage(world_pos)
+            ix = int(math.floor(image_pos.x+1))
+            iy = int(math.floor(image_pos.y+1))
+            offset = galsim.PositionD(image_pos.x-ix+0.5, image_pos.y-iy+0.5)
+            stamp = galsim.Convolve(psf,gal).drawImage(scale=0.1, offset=offset)
+            stamp.setCenter(ix,iy)
+            b = stamp.bounds & im.bounds
+            im[b] += stamp[b]
+        im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
+        im.write('output/test_multirng%02d.fits'%n)
+        np.testing.assert_array_equal(im.array, images[n].array)
 
 if __name__ == "__main__":
     test_single()
@@ -1290,3 +1345,4 @@ if __name__ == "__main__":
     test_tiled()
     test_njobs()
     test_wcs()
+    test_multirng()

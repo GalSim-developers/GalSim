@@ -37,7 +37,7 @@ valid_value_types = {}
 standard_ignore = [
     'type',
     'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
-    'index_key', 'repeat',
+    'index_key', 'repeat', 'rng_num',
     '#' # When we read in json files, there represent comments
 ]
 
@@ -65,6 +65,9 @@ def ParseValue(config, key, base, value_type):
     # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
+    orig_rngs = [ base.get('obj_num_rng',None),
+                  base.get('image_num_rng',None),
+                  base.get('file_num_rng',None) ]
 
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
@@ -175,6 +178,9 @@ def ParseValue(config, key, base, value_type):
         base['index_key'] = orig_index_key
     if orig_rng is not None:
         base['rng'] = orig_rng
+        base['obj_num_rng'] = orig_rngs[0]
+        base['image_num_rng'] = orig_rngs[1]
+        base['file_num_rng'] = orig_rngs[2]
 
     return val, safe
 
@@ -402,6 +408,16 @@ def _get_index(config, base, is_sequence=False):
         index_key = base.get('index_key','obj_num')
         if index_key == 'obj_num' and is_sequence:
             index_key = 'obj_num_in_file'
+
+    if 'rng_num' in config:
+        if 'rngs' not in base:
+            raise AttributeError("rng_num is only allowed when image.random_seed is a list")
+        rng_num = config['rng_num']
+        if int(rng_num) != rng_num:
+            raise ValueError("rng_num must be an integer")
+        for key in ['obj_num', 'image_num', 'file_num']:
+            if key + '_rngs' in base:
+                base[key + '_rng'] = base[key + '_rngs'][rng_num]
 
     if index_key == 'obj_num_in_file':
         index = base.get('obj_num',0) - base.get('start_obj_num',0)

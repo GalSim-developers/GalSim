@@ -404,6 +404,48 @@ def UpdateNProc(nproc, ntot, config, logger=None):
     return nproc
 
 
+def ParseRandomSeed(config, param_name, base, seed_offset):
+    # Normally, random_seed parameter is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the
+    # normal case, we just convert it into a Sequence.
+    if isinstance(config[param_name], int):
+         # The "first" is actually the seed value to use for anything at file or image scope
+         # using the obj_num of the first object in the file or image.  Seeds for objects
+         # will start at 1 more than this.
+         first = galsim.config.ParseValue(config, param_name, base, int)[0]
+         config[param_name] = {
+                 'type' : 'Sequence',
+                 'index_key' : 'obj_num',
+                 'first' : first
+         }
+
+    index_key = base['index_key']
+    if index_key == 'obj_num':
+        # The normal case
+        seed = galsim.config.ParseValue(config, param_name, base, int)[0]
+    else:
+        # If we are setting either the file_num or image_num rng, we need to be careful.
+        base['index_key'] = 'obj_num'
+        obj_num = base['obj_num']
+        if 'start_obj_num' in base:
+            base['obj_num'] = base['start_obj_num']
+        seed = galsim.config.ParseValue(config, param_name, base, int)[0]
+        base['index_key'] = index_key
+        base['obj_num'] = obj_num
+    seed += seed_offset
+
+    # Normally, the file_num rng and the image_num rng can be the same.  So if seed
+    # comes out the same as what we already built, then just use the existing file_num_rng.
+    if (index_key == 'image_num' and seed == base.get('seed',None) and
+        base.get('file_num_rng',None) is not None):
+        rng = base['file_num_rng']
+    else:
+        rng = galsim.BaseDeviate(seed)
+
+    return seed, rng
+
+
 def SetupConfigRNG(config, seed_offset=0, logger=None):
     """Set up the RNG in the config dict.
 
@@ -419,66 +461,52 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     """
     logger = LoggerWrapper(logger)
 
-    # Normally, random_seed is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
-    # However, we allow for random_seed to be a gettable parameter, so for the
-    # normal case, we just convert it into a Sequence.
-    if ( 'image' in config
-         and 'random_seed' in config['image']
-         and not isinstance(config['image']['random_seed'],dict) ):
-         # The "first" is actually the seed value to use for anything at file or image scope
-         # using the obj_num of the first object in the file or image.  Seeds for objects
-         # will start at 1 more than this.
-         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-         config['image']['random_seed'] = {
-                 'type' : 'Sequence',
-                 'index_key' : 'obj_num',
-                 'first' : first
-         }
-
-    index_key = config['index_key']
-
     # If we are starting a new file, clear out the existing rngs.
+    index_key = config['index_key']
     if index_key == 'file_num':
         for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
             config.pop(key, None)
 
-    if 'image' in config and 'random_seed' in config['image']:
-        if index_key == 'obj_num':
-            # The normal case
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        else:
-            # If we are setting either the file_num or image_num rng, we need to be careful.
-            config['index_key'] = 'obj_num'
-            obj_num = config['obj_num']
-            if 'start_obj_num' in config:
-                config['obj_num'] = config['start_obj_num']
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['index_key'] = index_key
-            config['obj_num'] = obj_num
-        seed += seed_offset
-    else:
-        seed = 0
-
-    # Normally, the file_num rng and the image_num rng can be the same.  So if seed
-    # comes out the same as what we already built, then just use the existing file_num_rng.
-    if index_key == 'image_num' and 'file_num_rng' in config and seed == config.get('seed',None):
-        rng = config['file_num_rng']
-    else:
-        config['seed'] = seed
-        rng = galsim.BaseDeviate(seed)
-        config['rng'] = rng
-
-    # Also save this rng as 'file_num_rng' or 'image_num_rng' or 'obj_num_rng' according
-    # to whatever the index_key is.
-    config[index_key + '_rng'] = rng
-
     # This can be present for efficiency, since GaussianDeviates produce two values at a time,
     # so it is more efficient to not create a new GaussianDeviate object each time.
     # But if so, we need to remove it now.
-    config.pop('gd',None)
+    config.pop('gd', None)
 
-    return seed
+    if 'image' not in config or 'random_seed' not in config['image']:
+        logger.debug('obj %d: No random_seed specified.  Using /dev/urandom',
+                     config.get('obj_num',0))
+        config['seed'] = 0
+        rng = galsim.BaseDeviate()
+        config['rng'] = rng
+        config[index_key + '_rng'] = rng
+        return 0
+
+    image = config['image']
+    # Normally, there is just one random_seed and it is just an integer.  However, sometimes
+    # it is useful to have 2 (or more) rngs going with different seed sequences.  To enable this,
+    # image.random_seed is allowed to be a list, each item of which may be either an integer or
+    # a dict defining an integer sequence.  If it is a list, we parse each item separately
+    # and then put the combined results into config['rng'] as a list.
+    if isinstance(image['random_seed'], list):
+        lst = image['random_seed']
+        seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
+        config['seeds'] = seeds
+        config['rngs'] = rngs
+        config[index_key + '_rngs'] = rngs
+        config['seed'] = seeds[0]  # rng_num=0 is the default
+        config['rng'] = rngs[0]
+        config[index_key + '_rng'] = rngs[0]
+        logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
+                     config.get('obj_num',0), seeds)
+        return seeds[0]
+    else:
+        seed, rng = ParseRandomSeed(image, 'random_seed', config, seed_offset)
+        config['seed'] = seed
+        config['rng'] = rng
+        config[index_key + '_rng'] = rng
+        logger.debug('obj %d: Initializing rng with seed %s', config.get('obj_num',0), seed)
+        return seed
+
 
 def ImportModules(config):
     """Import any modules listed in config['modules'].
