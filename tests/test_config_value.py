@@ -1050,7 +1050,8 @@ def test_shear_value():
 
         'input' : { 'nfw_halo' : { 'mass' : halo_mass, 'conc' : halo_conc, 'redshift' : halo_z },
                     'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)',
-                                         'grid_spacing' : 10, 'interpolant' : 'linear' },
+                                         'grid_spacing' : 10, 'interpolant' : 'linear',
+                                         'ngrid' : 40, 'center' : '5,5' },
                   }
     }
 
@@ -1164,7 +1165,8 @@ def test_shear_value():
     rng = galsim.BaseDeviate(1234)
     config['rng'] = rng.duplicate()
     ps = galsim.PowerSpectrum(e_power_function='np.exp(-k**0.2)')
-    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
+    ps.buildGrid(grid_spacing=10, ngrid=40, center=galsim.PositionD(5,5), interpolant='linear',
+                 rng=rng)
     config['image_xsize'] = config['image_ysize'] = 2000
     config['wcs'] = galsim.PixelScale(0.1)
     config['image_center'] = galsim.PositionD(0,0)
@@ -1176,12 +1178,13 @@ def test_shear_value():
     np.testing.assert_almost_equal(ps1a.g2, ps1b[1])
 
     # Beef up the amplitude to get strong lensing.
-    ps = galsim.PowerSpectrum(e_power_function='50 * np.exp(-k**0.2)')
-    ps.buildGrid(grid_spacing=10, ngrid=20, interpolant='linear', rng=rng)
-    print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
+    ps = galsim.PowerSpectrum(e_power_function='500 * np.exp(-k**0.2)')
+    ps.buildGrid(grid_spacing=10, ngrid=40, center=galsim.PositionD(5,5), interpolant='linear',
+                 rng=rng)
+    print("strong lensing shear = ",ps.getShear((0.1,0.2)))
     galsim.config.RemoveCurrent(config)
     del config['input_objs']
-    config['input']['power_spectrum']['e_power_function'] = '50 * np.exp(-k**0.2)'
+    config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
     galsim.config.SetupInputsForImage(config, None)
     ps2b = ps.getShear((0.1,0.2))
     print("ps shear= ",ps2b)

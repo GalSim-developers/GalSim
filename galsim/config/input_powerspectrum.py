@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import galsim
 import math
+import warnings
 
 # This file adds input type nfw_halo and value types PowerSpectrumShear and
 # PowerSpectrumMagnification.
@@ -43,7 +44,7 @@ class PowerSpectrumLoader(InputLoader):
         """
         # Ignore these parameters here, since they are for the buildGrid step, not the
         # initialization of the PowerSpectrum object.
-        ignore = ['grid_spacing', 'interpolant', 'variance']
+        ignore = ['grid_spacing', 'ngrid', 'interpolant', 'variance', 'center']
         opt = galsim.PowerSpectrum._opt_params
         return galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
@@ -56,6 +57,7 @@ class PowerSpectrumLoader(InputLoader):
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress.
         """
+        logger = galsim.config.LoggerWrapper(logger)
         if 'grid_spacing' in config:
             grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
         elif 'grid_xsize' in base and 'grid_ysize' in base:
@@ -69,7 +71,9 @@ class PowerSpectrumLoader(InputLoader):
         else:
             raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
 
-        if 'grid_xsize' in base and base['grid_xsize'] == base['grid_ysize']:
+        if 'ngrid' in config:
+            ngrid = galsim.config.ParseValue(config, 'ngrid', base, float)[0]
+        elif 'grid_xsize' in base and base['grid_xsize'] == base['grid_ysize']:
             # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
             nx_grid = int(math.ceil(base['image_xsize']/base['grid_xsize']))
             ny_grid = int(math.ceil(base['image_ysize']/base['grid_ysize']))
@@ -91,14 +95,20 @@ class PowerSpectrumLoader(InputLoader):
         else:
             variance = None
 
+        if 'center' in config:
+            center = galsim.config.stamp.ParseWorldPos(config, 'center', base, logger)
+        elif base['wcs'].isCelestial():
+            center = galsim.PositionD(0,0)
+        else:
+            center = base['wcs'].toWorld(base['image_center'])
+
+        rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
+
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
-        if base['wcs'].isCelestial():
-            world_center = galsim.PositionD(0,0)
-        else:
-            world_center = base['wcs'].toWorld(base['image_center'])
-        rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
-        input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
+        logger.debug('image %d: PowerSpectrum buildGrid(grid_spacing=%s, ngrid=%s, center=%s)',
+                     base.get('image_num',0),grid_spacing, ngrid, center)
+        input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=center,
                             rng=rng, interpolant=interpolant, variance=variance)
 
         # Make sure this process gives consistent results regardless of the number of processes
@@ -135,7 +145,6 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        import warnings
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
@@ -164,7 +173,6 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             "Invalid max_mu=%f (must be > 0) for type = PowerSpectrumMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
-        import warnings
         warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
             mu,max_mu))
         mu = max_mu
