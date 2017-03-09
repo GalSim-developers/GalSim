@@ -44,7 +44,7 @@ class PowerSpectrumLoader(InputLoader):
         """
         # Ignore these parameters here, since they are for the buildGrid step, not the
         # initialization of the PowerSpectrum object.
-        ignore = ['grid_spacing', 'ngrid', 'interpolant', 'variance', 'center']
+        ignore = ['grid_spacing', 'ngrid', 'interpolant', 'variance', 'center', 'index']
         opt = galsim.PowerSpectrum._opt_params
         return galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
@@ -101,6 +101,15 @@ class PowerSpectrumLoader(InputLoader):
             center = galsim.PositionD(0,0)
         else:
             center = base['wcs'].toWorld(base['image_center'])
+
+        if 'index' in config:
+            index = galsim.config.ParseValue(config, 'index', base, int)[0]
+            current_index = config.get('current_index',None)
+            if index == current_index:
+                logger.info('image %d: power spectrum grid is already current',
+                            base.get('image_num',0))
+                return
+            config['current_index'] = index
 
         rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
 

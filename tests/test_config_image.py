@@ -1281,19 +1281,32 @@ def test_wcs():
 def test_multirng():
     """Test using multiple rngs.
 
+    This models a run where the galaxies are the same for 3 images, then a new set for the next
+    3 images.  This includes both the galaxy positions and the shear from a power spectrum.
+    The psf changes each image (also from a power spectrum) and the telescope pointing moves
+    around a bit within the field being observed.
+
     Actually, this tests a few features.
     - Multiple rngs (random_seed being a list and using rng_num)
     - Multiple input fields (although tests in test_config_value.py also do this)
     - Using a non-default build_index for power_spectrum
     """
     nimages = 6
+    ngals = 5
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
-    images = galsim.config.BuildImages(nimages, config)
+    config1 = galsim.config.CopyConfig(config)  # Make sure the config dict is clean for each pass.
+    config2 = galsim.config.CopyConfig(config)
+    config3 = galsim.config.CopyConfig(config)
+
+    images1 = galsim.config.BuildImages(nimages, config1)
+    config2['image']['nproc'] = 6
+    images2 = galsim.config.BuildImages(nimages, config2)
+    images3 = [ galsim.config.BuildImage(config3, image_num=n, obj_num=n*ngals)
+                for n in range(nimages) ]
 
     # Now generate by hand
-    ngals = 5
     psf_ps = galsim.PowerSpectrum('(k**2 + (1./180)**2)**(-11./6.)',
                                   '(k**2 + (1./180)**2)**(-11./6.)',
                                   units=galsim.arcsec)
@@ -1309,7 +1322,8 @@ def test_multirng():
         im = galsim.ImageF(256, 256, wcs=wcs)
         world_center = im.wcs.toWorld(im.trueCenter())
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=26, rng=rng, center=world_center, variance=0.1)
-        gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rng, center=galsim.PositionD(0,0))
+        if n % 3 == 0:
+            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rng, center=galsim.PositionD(0,0))
         for i in range(ngals):
             seedb = 123456789 + (n//3)*ngals + i + 1
             rngb = galsim.UniformDeviate(seedb)
@@ -1331,7 +1345,9 @@ def test_multirng():
             im[b] += stamp[b]
         im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
         im.write('output/test_multirng%02d.fits'%n)
-        np.testing.assert_array_equal(im.array, images[n].array)
+        np.testing.assert_array_equal(im.array, images1[n].array)
+        #np.testing.assert_array_equal(im.array, images2[n].array)
+        np.testing.assert_array_equal(im.array, images3[n].array)
 
 if __name__ == "__main__":
     test_single()

@@ -3,7 +3,7 @@ psf:
     type: Moffat
     beta: 2
     fwhm: 0.9
-    ellip: 
+    ellip:
         type: PowerSpectrumShear
         num: 0
 
@@ -25,7 +25,6 @@ input:
             units: arcsec
             grid_spacing: 1  # arcsec
             variance: 1.e-1  # e_rms = 0.3 (Way more than a normal PSF.  Makes the shapes clearer.)
-
         -
             # A power law approximation to a cosmological power spectrum.
             e_power_function: '3.5e-8 * (k/10)**-1.4'
@@ -33,6 +32,11 @@ input:
             grid_spacing: 1  # arcsec
             ngrid: 40
             center: 0,0
+            index:
+                # Rebuild every 3 images
+                index_key: image_num
+                type: Sequence
+                repeat: 3
 
 image:
     type: Scattered
@@ -62,7 +66,7 @@ output:  # This bit isn't used by test_multirng, but it lets you run `galsim mul
     type: Fits
     nfiles: 6
     dir: output
-    file_name: 
+    file_name:
         type: NumberedFile
         root: multirng   # multirngXX.fits
         digits: 2
