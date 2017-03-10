@@ -74,14 +74,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     except KeyError:
         return None, True
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take
-    # effect on all lower branches, and then we can reset it back to this at the end.
-    orig_index_key = base.get('index_key',None)
-    orig_rng = base.get('rng',None)
-
     # Check what index key we want to use for this object.
     # Note: this call will also set base['index_key'] and base['rng'] to the right values
-    index, index_key = galsim.config.value._get_index(param, base)
+    index, index_key = galsim.config.GetIndex(param, base)
 
     # Get the type to be parsed.
     if not 'type' in param:
@@ -113,13 +108,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                              base.get('obj_num',0),repeat,index)
             else:
                 logger.debug('obj %d: This object is already current', base.get('obj_num',0))
-
-        # Make sure to reset these values in case they were changed.
-        # Note: it is impossible to get here if orig_index_key is None
-        assert orig_index_key is not None
-        base['index_key'] = orig_index_key
-        if orig_rng is not None:
-            base['rng'] = orig_rng
 
         return param['current_val'], param['current_safe']
 
@@ -203,12 +191,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     param['current_index'] = index
     param['current_index_key'] = index_key
 
-    # Reset these values in case they were changed.
-    if orig_index_key is not None:
-        base['index_key'] = orig_index_key
-    if orig_rng is not None:
-        base['rng'] = orig_rng
-
     return gsobject, safe
 
 
@@ -247,7 +229,7 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if build_func._takes_rng:
-        kwargs['rng'] = galsim.config.check_for_rng(base, logger, type_name)
+        kwargs['rng'] = galsim.config.GetRNG(config, base, logger, type_name)
         safe = False
 
     logger.debug('obj %d: kwargs = %s',base.get('obj_num',0),kwargs)

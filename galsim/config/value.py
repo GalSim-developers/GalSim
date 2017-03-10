@@ -61,19 +61,10 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, str) and param[0] == '@':
         param = { 'type' : 'Current', 'key' : param[1:] }
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take
-    # effect on all lower branches, and then we can reset it back to this at the end.
-    orig_index_key = base.get('index_key',None)
-    orig_rng = base.get('rng',None)
-    orig_rngs = [ base.get('obj_num_rng',None),
-                  base.get('image_num_rng',None),
-                  base.get('file_num_rng',None) ]
-
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
         is_seq = param.get('type',None) == 'Sequence'
-        # Note: this call will also set base['index_key'] and base['rng'] to the right values
-        index, index_key = _get_index(param, base, is_seq)
+        index, index_key = galsim.config.GetIndex(param, base, is_seq)
         #print('index, index_key = ',index,index_key)
 
         if index is None:
@@ -172,15 +163,6 @@ def ParseValue(config, key, base, value_type):
         param['current_index'] = index
         param['current_index_key'] = index_key
         #print(key,' = ',val)
-
-    # Reset these values in case they were changed.
-    if orig_index_key is not None:
-        base['index_key'] = orig_index_key
-    if orig_rng is not None:
-        base['rng'] = orig_rng
-        base['obj_num_rng'] = orig_rngs[0]
-        base['image_num_rng'] = orig_rngs[1]
-        base['file_num_rng'] = orig_rngs[2]
 
     return val, safe
 
@@ -391,48 +373,6 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
     return kwargs, safe
 
 
-def _get_index(config, base, is_sequence=False):
-    """Return the index to use for the current object or parameter
-
-    First check for an explicit index_key value given by the user.
-    Then if base[index_key] is other than obj_num, use that.
-    Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
-
-    @returns index, index_key
-    """
-    if 'index_key' in config:
-        index_key = config['index_key']
-        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
-            raise AttributeError("Invalid index_key=%s."%index_key)
-    else:
-        index_key = base.get('index_key','obj_num')
-        if index_key == 'obj_num' and is_sequence:
-            index_key = 'obj_num_in_file'
-
-    if 'rng_num' in config:
-        if 'rngs' not in base:
-            raise AttributeError("rng_num is only allowed when image.random_seed is a list")
-        rng_num = config['rng_num']
-        if int(rng_num) != rng_num:
-            raise ValueError("rng_num must be an integer")
-        for key in ['obj_num', 'image_num', 'file_num']:
-            if key + '_rngs' in base:
-                base[key + '_rng'] = base[key + '_rngs'][rng_num]
-
-    if index_key == 'obj_num_in_file':
-        index = base.get('obj_num',0) - base.get('start_obj_num',0)
-        rng = base.get('obj_num_rng', None)
-    else:
-        index = base.get(index_key,None)
-        rng = base.get(index_key + '_rng', None)
-
-    if not is_sequence:
-        base['index_key'] = index_key
-        if rng is not None:
-            base['rng'] = rng
-
-    return index, index_key
-
 
 
 #
@@ -625,7 +565,7 @@ def _GenerateFromSequence(config, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
-    index, index_key = _get_index(kwargs, base, is_sequence=True)
+    index, index_key = galsim.config.GetIndex(kwargs, base, is_sequence=True)
     if index is None:
         raise ValueError("The base config dict does not have index_key set correctly.")
 

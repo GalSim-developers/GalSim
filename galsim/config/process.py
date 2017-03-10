@@ -440,12 +440,35 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
 
     return seed, rng
 
+def PropagateIndexKeyRNGNum(config, index_key, rng_num):
+    """Propagate any index_key or rng_num specification in a dict to all sub-fields
+    """
+    if isinstance(config, list):
+        for item in config:
+            PropagateIndexKeyRNGNum(item, index_key, rng_num)
+        return
+
+    if not isinstance(config, dict): return
+
+    if 'index_key' in config:
+        index_key = config['index_key']
+    elif index_key is not None:
+        config['index_key'] = index_key
+
+    if 'rng_num' in config:
+        rng_num = config['rng_num']
+    elif rng_num is not None:
+        config['rng_num'] = rng_num
+
+    for field in config.values():
+        PropagateIndexKeyRNGNum(field, index_key, rng_num)
+
 
 def SetupConfigRNG(config, seed_offset=0, logger=None):
     """Set up the RNG in the config dict.
 
     - Setup config['image']['random_seed'] if necessary
-    - Set config['rng'] based on appropriate random_seed
+    - Set config['rng'] and other related values based on appropriate random_seed
 
     @param config           The configuration dict.
     @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
@@ -467,6 +490,18 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     # But if so, we need to remove it now.
     config.pop('gd', None)
 
+    # All fields have a default index_key that they would normally use as well as a default
+    # rng_num = 0 if the random_seed is a list.  But we allow users to specify alternate values
+    # of index_key and/or rng_num at any level in the dict.  We want that specification to
+    # propagate down to lower levels from that point forward.  The easiest way to do so is to
+    # explicitly run through the dict once and propagate any index_key and/or rng_num fields
+    # to all sub-fields.
+    if not config.get('_propagated_index_key_rng_num',False):
+        logger.debug('Propagating any index_key or rng_num specifications')
+        for field in config.values():
+            PropagateIndexKeyRNGNum(field, None, None)
+        config['_propagated_index_key_rng_num'] = True
+
     if 'image' not in config or 'random_seed' not in config['image']:
         logger.debug('obj %d: No random_seed specified.  Using /dev/urandom',
                      config.get('obj_num',0))
@@ -485,13 +520,11 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     if isinstance(image['random_seed'], list):
         lst = image['random_seed']
         seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
-        config['seeds'] = seeds
-        config['rngs'] = rngs
-        config[index_key + '_rngs'] = rngs
-        config['seed'] = seeds[0]  # rng_num=0 is the default
+        config['seed'] = seeds[0]
         config['rng'] = rngs[0]
         config[index_key + '_seed'] = seeds[0]
         config[index_key + '_rng'] = rngs[0]
+        config[index_key + '_rngs'] = rngs
         logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
                      config.get('obj_num',0), seeds)
         return seeds[0]
@@ -954,16 +987,69 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
     return results
 
-def check_for_rng(base, logger, tag):
-    """A helper function to check for base['rng'] and emit a warning if it is not present.
 
-    @returns either base['rng'] or None
+def GetIndex(config, base, is_sequence=False):
+    """Return the index to use for the current object or parameter and the index_key.
+
+    First check for an explicit index_key value given by the user.
+    Then if base[index_key] is other than obj_num, use that.
+    Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
+
+    @returns index, index_key
     """
-    if 'rng' not in base and logger:
+    if 'index_key' in config:
+        index_key = config['index_key']
+        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
+            raise AttributeError("Invalid index_key=%s."%index_key)
+    else:
+        index_key = base.get('index_key','obj_num')
+        if index_key == 'obj_num' and is_sequence:
+            index_key = 'obj_num_in_file'
+
+    if index_key == 'obj_num_in_file':
+        index = base.get('obj_num',0) - base.get('start_obj_num',0)
+        index_key = 'obj_num'
+    else:
+        index = base.get(index_key,None)
+
+    return index, index_key
+
+
+def GetRNG(config, base, logger=None, tag=None):
+    """Get the appropriate current rng according to whatever the current index_key is.
+
+    If a logger is provided, then it will emit a warning if there is no current rng setup.
+
+    @param config           The configuration dict for the current item being worked on.
+    @param base             The base configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param tag              If given, an appropriate name for the current item to use ing the
+                            warning message. [default: None]
+
+    @returns either the appropriate rng for the current index_key or None
+    """
+    logger = LoggerWrapper(logger)
+    index, index_key = GetIndex(config, base)
+
+    if 'rng_num' in config:
+        rng_num = config['rng_num']
+        if int(rng_num) != rng_num:
+            raise ValueError("rng_num must be an integer")
+        if not (index_key + '_rngs') in base:
+            raise AttributeError("rng_num is only allowed when image.random_seed is a list")
+        rng = base.get(index_key + '_rngs', None)[int(rng_num)]
+    else:
+        rng = base.get(index_key + '_rng', None)
+
+    if rng is None:
+        rng = base.get('rng',None)
+
+    if rng is None and logger:
         # Only report the warning the first time.
         rng_tag = tag + '_reported_no_rng'
         if rng_tag not in base:
             base[rng_tag] = True
             logger.warning("No base['rng'] available for %s.  Using /dev/urandom."%tag)
-    return base.get('rng',None)
+
+    return rng
 

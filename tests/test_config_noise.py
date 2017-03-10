@@ -254,7 +254,7 @@ def test_ccdnoise():
     # without any real noise there yet.
     image2.fill(0)
     rng.reset(124)
-    config['rng'] = rng
+    config['image_num_rng'] = rng
     galsim.config.AddNoise(config, image2, current_var=1.e-20, logger=logger)
 
     print('with negligible current_var: ',np.mean(image2.array),np.var(image2.array))

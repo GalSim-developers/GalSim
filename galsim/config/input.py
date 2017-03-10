@@ -253,6 +253,7 @@ def SetupInputsForImage(config, logger=None):
     """
     if 'input' in config:
         if 'input_objs' not in config: ProcessInput(config)
+        config['index_key'] = 'image_num'
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
@@ -357,7 +358,7 @@ class InputLoader(object):
         single = self.init_func._single_params
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
         if self.init_func._takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
-            rng = galsim.config.check_for_rng(base, logger, 'input ' + self.init_func.__name__)
+            rng = galsim.config.GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
         return kwargs, safe

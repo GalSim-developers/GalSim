@@ -58,6 +58,7 @@ class PowerSpectrumLoader(InputLoader):
         @param logger       If given, a logger object to log progress.
         """
         logger = galsim.config.LoggerWrapper(logger)
+
         if 'grid_spacing' in config:
             grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
         elif 'grid_xsize' in base and 'grid_ysize' in base:
@@ -111,7 +112,7 @@ class PowerSpectrumLoader(InputLoader):
                 return
             config['current_index'] = index
 
-        rng = galsim.config.check_for_rng(base, logger, 'PowerSpectrum')
+        rng = galsim.config.GetRNG(config, base, logger, 'PowerSpectrum')
 
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.

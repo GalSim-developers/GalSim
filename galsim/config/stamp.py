@@ -485,7 +485,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if 'wcs' not in kwargs and 'scale' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
     if method == 'phot' and 'rng' not in kwargs:
-        kwargs['rng'] = galsim.config.check_for_rng(base, logger, "method='phot'")
+        kwargs['rng'] = galsim.config.GetRNG(config, base, logger, "method='phot'")
 
     # Check validity of extra phot options:
     max_extra_noise = None
@@ -733,7 +733,7 @@ class StampBuilder(object):
                         raise AttributeError('Only one of whiten or symmetrize is allowed')
                     whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
                     # In case the galaxy was cached, update the rng
-                    rng = galsim.config.check_for_rng(base, logger, "whiten")
+                    rng = galsim.config.GetRNG(noise, base, logger, "whiten")
                     prof.noise.rng.reset(rng)
                     current_var = prof.noise.whitenImage(image)
                 elif 'symmetrize' in noise:

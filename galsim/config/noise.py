@@ -36,14 +36,12 @@ valid_noise_types = {}
 def AddSky(config, im):
     """Add the sky level to the image
     """
-    orig_index = config.get('index_key',None)
+    index, orig_index_key = galsim.config.GetIndex(config['image'], config)
     config['index_key'] = 'image_num'
-
     sky = GetSky(config['image'], config)
     if sky:
         im += sky
-
-    config['index_key'] = orig_index
+    config['index_key'] = orig_index_key
 
 
 def AddNoise(config, im, current_var=0., logger=None):
@@ -69,27 +67,20 @@ def AddNoise(config, im, current_var=0., logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    # We'll mess this up below, so store it so we can reset it back at the end.
-    orig_index = config.get('index_key','image_num')
+    # We need to use image_num for the index_key, but if we are running this from the stamp
+    # building phase, then we want to use obj_num_rng for the noise rng.  So get the rng now
+    # before we change config['index_key'].
+    index, orig_index_key = galsim.config.GetIndex(noise, config)
+    rng = galsim.config.GetRNG(noise, config)
 
     # This makes sure draw_method is properly copied over and given a default value.
     galsim.config.stamp.SetupConfigObjNum(config, config.get('obj_num',0), logger)
     draw_method = galsim.config.GetCurrentValue('stamp.draw_method',config,str)
 
-    # We need to use image_num for the index_key, but if we are in the stamp processing
-    # make sure to reset it back when we are done.  Also, we want to use obj_num_rng in this
-    # case for the noise.  The easiest way to make sure this doesn't get messed up by any
-    # value parsing is to copy it over to a new item in the dict.
-    rng = galsim.config.check_for_rng(config, logger, 'AddNoise')
-    if orig_index == 'obj_num':
-        config['index_key'] = 'image_num'
-        rng = config.get('obj_num_rng', rng)
-
     builder = valid_noise_types[noise_type]
+    config['index_key'] = 'image_num'
     var = builder.addNoise(noise, config, im, rng, current_var, draw_method, logger)
-
-    if orig_index == 'obj_num':
-        config['index_key'] = 'obj_num'
+    config['index_key'] = orig_index_key
 
     return var
 
@@ -112,13 +103,12 @@ def CalculateNoiseVariance(config):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    orig_index = config.get('index_key',None)
+    index, orig_index_key = galsim.config.GetIndex(noise, config)
     config['index_key'] = 'image_num'
 
     builder = valid_noise_types[noise_type]
     var = builder.getNoiseVariance(noise, config)
-
-    config['index_key'] = orig_index
+    config['index_key'] = orig_index_key
 
     return var
 
@@ -151,13 +141,12 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise"%noise_type)
 
-    orig_index = config.get('index_key',None)
+    index, orig_index_key = galsim.config.GetIndex(noise, config)
     config['index_key'] = 'image_num'
 
     builder = valid_noise_types[noise_type]
     builder.addNoiseVariance(noise, config, im, include_obj_var, logger)
-
-    config['index_key'] = orig_index
+    config['index_key'] = orig_index_key
 
 def GetSky(config, base):
     """Parse the sky information and return either a float value for the sky level per pixel
@@ -515,7 +504,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             kwargs = galsim.config.GetAllParams(config, base, opt=opt,
                                                 ignore=noise_ignore)[0]
             if rng is None:
-                rng = base.get('rng',None)
+                rng = galsim.config.GetRNG(config, base)
             cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
             base['_current_cn'] = cn
             base['_current_cn_tag'] = tag

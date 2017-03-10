@@ -133,6 +133,10 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
     if image_type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%image_type)
 
+    # Build the rng to use at the image level.
+    seed = galsim.config.SetupConfigRNG(config, logger=logger)
+    logger.debug('image %d: seed = %d',image_num,seed)
+
 
 
 def SetupConfigImageSize(config, xsize, ysize, logger=None):
@@ -208,10 +212,6 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
                                  # we will build later.
     image_type = cfg_image['type']
 
-    # Build the rng to use at the image level.
-    seed = galsim.config.SetupConfigRNG(config, logger=logger)
-    logger.debug('image %d: seed = %d',image_num,seed)
-
     # Do the necessary initial setup for this image type.
     builder = valid_image_types[image_type]
     xsize, ysize = builder.setup(cfg_image, config, image_num, obj_num, image_ignore, logger)
@@ -251,8 +251,6 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Go back to using image_num for any indexing.
     config['index_key'] = 'image_num'
-    # And put the right rng into config['rng'] for use by the AddNoise function.
-    config['rng'] = config['image_num_rng']
 
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)

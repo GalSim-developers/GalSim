@@ -82,7 +82,6 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
 
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
-        seed = galsim.config.SetupConfigRNG(config, logger=logger)
 
         # Get the number of objects in each image for this file.
         nobj = GetNObjForFile(config,file_num,image_num)
@@ -179,8 +178,6 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     t1 = time.time()
 
     SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
-    seed = galsim.config.SetupConfigRNG(config, logger=logger)
-    logger.debug('file %d: seed = %d',file_num,seed)
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
@@ -320,6 +317,9 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     output_type = config['output']['type']
     if output_type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%output_type)
+
+    seed = galsim.config.SetupConfigRNG(config, logger=logger)
+    logger.debug('file %d: seed = %d',file_num,seed)
 
 
 def SetDefaultExt(config, default_ext):
