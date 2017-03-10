@@ -57,9 +57,6 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     # in the config for all file_nums.  This is more important if nproc != 1.
     galsim.config.ProcessInput(config, file_num=0, logger=logger, safe_only=True)
 
-    # We'll want a pristine version later to give to the workers.
-    orig_config = galsim.config.CopyConfig(config)
-
     jobs = []  # Will be a list of the kwargs to use for each job
     info = []  # Will be a list of (file_num, file_name) correspongind to each jobs.
 
@@ -77,8 +74,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
         # Update this in case the config value is -1
         nproc = galsim.config.UpdateNProc(nproc, nfiles, config, logger)
+        # We'll want a pristine version later to give to the workers.
+        orig_config = galsim.config.CopyConfig(config)
     else:
         nproc = 1
+        orig_config = config
 
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)

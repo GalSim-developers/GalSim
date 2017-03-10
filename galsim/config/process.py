@@ -427,18 +427,13 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
     else:
         # If we are setting either the file_num or image_num rng, we need to be careful.
         base['index_key'] = 'obj_num'
-        obj_num = base['obj_num']
-        if 'start_obj_num' in base:
-            base['obj_num'] = base['start_obj_num']
         seed = galsim.config.ParseValue(config, param_name, base, int)[0]
         base['index_key'] = index_key
-        base['obj_num'] = obj_num
     seed += seed_offset
 
     # Normally, the file_num rng and the image_num rng can be the same.  So if seed
     # comes out the same as what we already built, then just use the existing file_num_rng.
-    if (index_key == 'image_num' and seed == base.get('seed',None) and
-        base.get('file_num_rng',None) is not None):
+    if index_key == 'image_num' and seed == base.get('file_num_seed',None):
         rng = base['file_num_rng']
     else:
         rng = galsim.BaseDeviate(seed)
@@ -495,6 +490,7 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
         config[index_key + '_rngs'] = rngs
         config['seed'] = seeds[0]  # rng_num=0 is the default
         config['rng'] = rngs[0]
+        config[index_key + '_seed'] = seeds[0]
         config[index_key + '_rng'] = rngs[0]
         logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
                      config.get('obj_num',0), seeds)
@@ -503,6 +499,7 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
         seed, rng = ParseRandomSeed(image, 'random_seed', config, seed_offset)
         config['seed'] = seed
         config['rng'] = rng
+        config[index_key + '_seed'] = seed
         config[index_key + '_rng'] = rng
         logger.debug('obj %d: Initializing rng with seed %s', config.get('obj_num',0), seed)
         return seed

@@ -1278,6 +1278,107 @@ def test_wcs():
         pass
 
 @timer
+def test_index_key():
+    """Test some aspects of setting non-default index_key values
+    """
+    nfiles = 3
+    nimages = 3
+    nx = 3
+    ny = 3
+    n_per_file = nimages * nx * ny
+    n_per_image = nx * ny
+
+    # First generate using the config layer.
+    config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
+    config1 = galsim.config.CopyConfig(config)
+    galsim.config.BuildFiles(nfiles, config1)
+    images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+    # Now generate by hand
+    for n in range(nfiles):
+        seed = 12345 + n*n_per_file
+        file_rng = galsim.UniformDeviate(seed)
+        fwhm = file_rng() * 0.2 + 0.9
+        e = 0.2 + 0.05 * n
+        beta = file_rng() * 2 * np.pi * galsim.radians
+        kolm = galsim.Kolmogorov(fwhm=fwhm)
+        psf_shear = galsim.Shear(e=e, beta=beta)
+        kolm = kolm.shear(psf_shear)
+        airy = galsim.Airy(lam=700, diam=4)
+        psf = galsim.Convolve(kolm, airy)
+        print('fwhm, shear = ',fwhm,psf_shear._g)
+
+        for i in range(nimages):
+            if i == 0:
+                image_rng = file_rng
+            else:
+                seed = 12345 + n*n_per_file + i*n_per_image
+                image_rng = galsim.UniformDeviate(seed)
+            im = galsim.ImageF(32*3, 32*3, scale=0.3)
+            ellip_e1 = image_rng() * 0.4 - 0.2
+            if i==0:
+                ellip_e2 = file_rng() * 0.4 - 0.2
+            ellip = galsim.Shear(e1=ellip_e1, e2=ellip_e2)
+            shear_g2 = image_rng() * 0.04 - 0.02
+
+            for k in range(nx*ny):
+                seed = 12345 + n*n_per_file + i*n_per_image + k + 1
+                obj_rng = galsim.UniformDeviate(seed)
+                kx = k % 3
+                ky = k // 3
+                b = galsim.BoundsI(32*kx+1, 32*kx+32, 32*ky+1, 32*ky+32)
+                stamp = im[b]
+                flux = 100 + k*100
+                hlr = 0.5 + i*0.5
+                gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
+                while True:
+                    shear_g1 = obj_rng() * 0.04 - 0.02
+                    bd = galsim.BinomialDeviate(obj_rng, N=1, p=0.2)
+                    if bd() == 0: break;
+                shear = galsim.Shear(g1=shear_g1, g2=shear_g2)
+                gal = gal.shear(ellip).shear(shear)
+                print(n,i,k,flux,hlr,ellip._g,shear._g)
+                final = galsim.Convolve(gal, psf)
+                final.drawImage(stamp)
+
+            if __name__ == '__main__':
+                im.write('output/test_index_key%02d_%02d.fits'%(n,i))
+            np.testing.assert_array_equal(im.array, images1[n][i].array)
+
+    assert 'current_val' in config1['psf']
+    assert 'current_val' in config1['psf']['items'][1]
+    assert config1['psf']['items'][1]['current_safe']
+    assert 'current_val' in config1['gal']
+    assert 'current_val' in config1['gal']['ellip']
+    assert 'current_val' in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1, keep_safe=True, index_key='obj_num')
+
+    assert 'current_val' in config1['psf']
+    assert 'current_val' in config1['psf']['items'][1]
+    assert 'current_val' not in config1['gal']
+    assert 'current_val' in config1['gal']['ellip']
+    assert 'current_val' not in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1, keep_safe=True)
+
+    assert 'current_val' not in config1['psf']
+    assert 'current_val' in config1['psf']['items'][1]
+    assert 'current_val' not in config1['gal']
+    assert 'current_val' not in config1['gal']['ellip']
+    assert 'current_val' not in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1)
+
+    assert 'current_val' not in config1['psf']
+    assert 'current_val' not in config1['psf']['items'][1]
+    assert 'current_val' not in config1['gal']
+    assert 'current_val' not in config1['gal']['ellip']
+    assert 'current_val' not in config1['gal']['shear']
+
+
+
+@timer
 def test_multirng():
     """Test using multiple rngs.
 
@@ -1361,4 +1462,5 @@ if __name__ == "__main__":
     test_tiled()
     test_njobs()
     test_wcs()
+    test_index_key()
     test_multirng()
