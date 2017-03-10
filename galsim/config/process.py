@@ -263,8 +263,11 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     else:
         return force
 
-top_level_fields = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
-                     'eval_variables', 'root', 'modules', 'profile' ]
+top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
+                    'eval_variables', 'root', 'modules', 'profile']
+
+rng_fields = ['rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng',
+              'obj_num_rngs', 'image_num_rngs', 'file_num_rngs']
 
 def CopyConfig(config):
     """
@@ -285,8 +288,8 @@ def CopyConfig(config):
     config1.pop('input_manager',None)
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
-    # get clobbered by two processes writing to the same dict.
-    for field in top_level_fields:
+    # get clobbered by two processes writing to the same dict.  Also the rngs.
+    for field in top_level_fields + rng_fields:
         if field in config:
             config1[field] = copy.deepcopy(config[field])
 
@@ -482,7 +485,7 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     # If we are starting a new file, clear out the existing rngs.
     index_key = config['index_key']
     if index_key == 'file_num':
-        for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
+        for key in rng_fields + ['seed', 'obj_num_seed', 'image_num_seed', 'file_num_seed']:
             config.pop(key, None)
 
     # This can be present for efficiency, since GaussianDeviates produce two values at a time,

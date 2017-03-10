@@ -1290,9 +1290,47 @@ def test_index_key():
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
+
+    # Normal sequential
     config1 = galsim.config.CopyConfig(config)
     galsim.config.BuildFiles(nfiles, config1)
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+    if __name__ == '__main__':
+        # For nose tests skip these 3 to save some time.
+        # images5 is really the hardest test, and images1 is the easiest, so those two will
+        # give good diagnostics for any errors.
+
+        # Multiprocessing files
+        config2 = galsim.config.CopyConfig(config)
+        config2['output']['nproc'] = nfiles
+        galsim.config.BuildFiles(nfiles, config2)
+        images2 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+        # Multiprocessing images
+        config3 = galsim.config.CopyConfig(config)
+        config3['image']['nproc'] = nfiles
+        galsim.config.BuildFiles(nfiles, config3)
+        images3 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+        # New config for each file
+        config4 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
+        for n in range(nfiles):
+            galsim.config.SetupConfigFileNum(config4[n], n, n*nimages, n*n_per_file)
+        images4 = [ galsim.config.BuildImages(nimages, config4[n],
+                                             image_num=n*nimages, obj_num=n*n_per_file)
+                    for n in range(nfiles) ]
+
+    # New config for each image
+    config5 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
+    for n in range(nfiles):
+        galsim.config.SetupConfigFileNum(config5[n], n, n*nimages, n*n_per_file)
+
+    images5 = [ [ galsim.config.BuildImage(galsim.config.CopyConfig(config5[n]),
+                                           image_num=n*nimages+i,
+                                           obj_num=n*n_per_file + i*n_per_image)
+                  for i in range(nimages) ]
+                for n in range(nfiles) ]
 
     # Now generate by hand
     for n in range(nfiles):
@@ -1307,6 +1345,7 @@ def test_index_key():
         airy = galsim.Airy(lam=700, diam=4)
         psf = galsim.Convolve(kolm, airy)
         print('fwhm, shear = ',fwhm,psf_shear._g)
+        ellip_e1 = file_rng() * 0.4 - 0.2
 
         for i in range(nimages):
             if i == 0:
@@ -1315,9 +1354,7 @@ def test_index_key():
                 seed = 12345 + n*n_per_file + i*n_per_image
                 image_rng = galsim.UniformDeviate(seed)
             im = galsim.ImageF(32*3, 32*3, scale=0.3)
-            ellip_e1 = image_rng() * 0.4 - 0.2
-            if i==0:
-                ellip_e2 = file_rng() * 0.4 - 0.2
+            ellip_e2 = image_rng() * 0.4 - 0.2
             ellip = galsim.Shear(e1=ellip_e1, e2=ellip_e2)
             shear_g2 = image_rng() * 0.04 - 0.02
 
@@ -1343,8 +1380,20 @@ def test_index_key():
 
             if __name__ == '__main__':
                 im.write('output/test_index_key%02d_%02d.fits'%(n,i))
-            np.testing.assert_array_equal(im.array, images1[n][i].array)
+                images5[n][i].write('output/test_index_key%02d_%02d_5.fits'%(n,i))
+            np.testing.assert_array_equal(im.array, images1[n][i].array,
+                                          "index_key parsing failed for sequential BuildFiles run")
+            if __name__ == '__main__':
+                np.testing.assert_array_equal(im.array, images2[n][i].array,
+                                              "index_key parsing failed for output.nproc > 1")
+                np.testing.assert_array_equal(im.array, images3[n][i].array,
+                                              "index_key parsing failed for image.nproc > 1")
+                np.testing.assert_array_equal(im.array, images4[n][i].array,
+                                              "index_key parsing failed for BuildImages")
+            np.testing.assert_array_equal(im.array, images5[n][i].array,
+                                          "index_key parsing failed for BuildImage")
 
+    # Check that current values get removed properly for various options to RemoveCurrent
     assert 'current_val' in config1['psf']
     assert 'current_val' in config1['psf']['items'][1]
     assert config1['psf']['items'][1]['current_safe']
@@ -1353,7 +1402,6 @@ def test_index_key():
     assert 'current_val' in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True, index_key='obj_num')
-
     assert 'current_val' in config1['psf']
     assert 'current_val' in config1['psf']['items'][1]
     assert 'current_val' not in config1['gal']
@@ -1361,7 +1409,6 @@ def test_index_key():
     assert 'current_val' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True)
-
     assert 'current_val' not in config1['psf']
     assert 'current_val' in config1['psf']['items'][1]
     assert 'current_val' not in config1['gal']
@@ -1369,13 +1416,11 @@ def test_index_key():
     assert 'current_val' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1)
-
     assert 'current_val' not in config1['psf']
     assert 'current_val' not in config1['psf']['items'][1]
     assert 'current_val' not in config1['gal']
     assert 'current_val' not in config1['gal']['ellip']
     assert 'current_val' not in config1['gal']['shear']
-
 
 
 @timer
@@ -1392,11 +1437,16 @@ def test_multirng():
     - Multiple input fields (although tests in test_config_value.py also do this)
     - Using a non-default build_index for power_spectrum
     """
-    nimages = 6
-    ngals = 5
+    if __name__ == '__main__':
+        nimages = 6
+        ngals = 20
+    else:
+        nimages = 3
+        ngals = 3
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
+    config['image']['nobjects'] = ngals
     config1 = galsim.config.CopyConfig(config)  # Make sure the config dict is clean for each pass.
     config2 = galsim.config.CopyConfig(config)
     config3 = galsim.config.CopyConfig(config)
@@ -1423,8 +1473,10 @@ def test_multirng():
         im = galsim.ImageF(256, 256, wcs=wcs)
         world_center = im.wcs.toWorld(im.trueCenter())
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=26, rng=rng, center=world_center, variance=0.1)
+        seedb = 123456789 + (n//3)*ngals
+        rngb = galsim.UniformDeviate(seedb)
         if n % 3 == 0:
-            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rng, center=galsim.PositionD(0,0))
+            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rngb, center=galsim.PositionD(0,0))
         for i in range(ngals):
             seedb = 123456789 + (n//3)*ngals + i + 1
             rngb = galsim.UniformDeviate(seedb)
@@ -1445,9 +1497,10 @@ def test_multirng():
             b = stamp.bounds & im.bounds
             im[b] += stamp[b]
         im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
-        im.write('output/test_multirng%02d.fits'%n)
+        if __name__ == '__main__':
+            im.write('output/test_multirng%02d.fits'%n)
         np.testing.assert_array_equal(im.array, images1[n].array)
-        #np.testing.assert_array_equal(im.array, images2[n].array)
+        np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
 
 if __name__ == "__main__":

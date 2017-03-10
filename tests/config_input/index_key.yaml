@@ -3,7 +3,7 @@ psf:
     index_key: file_num
     type: Convolve
     items:
-        - 
+        -
             type: Kolmogorov
             fwhm: { type: Random, min: 0.9, max: 1.1 }
             ellip:
@@ -17,7 +17,7 @@ psf:
 
 gal:
     type: Exponential
-    half_light_radius: 
+    half_light_radius:
         index_key: image_num
         type: Sequence
         first: 0.5
@@ -26,8 +26,8 @@ gal:
     ellip:
         index_key: image_num
         type: E1E2
-        e1: { type: Random, min: -0.2, max: 0.2 }
-        e2: { index_key: file_num, type: Random, min: -0.2, max: 0.2 }
+        e1: { index_key: file_num, type: Random, min: -0.2, max: 0.2 }
+        e2: { type: Random, min: -0.2, max: 0.2 }
     flux:
         type: Sequence
         first: 100
@@ -48,7 +48,6 @@ image:
     ny_tiles: 3
     random_seed: 12345
     pixel_scale: 0.3
-    #nproc: 3
 
 output:
     type: MultiFits
