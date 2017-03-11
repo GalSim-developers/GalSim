@@ -42,6 +42,40 @@ class PowerSpectrumLoader(InputLoader):
 
         @returns kwargs, safe
         """
+        if ('index' in config and 'rng_num' not in config and 'image' in base and
+            'random_seed' in base['image']):
+            # Then in order for this feature to work properly in a multiprocessing context,
+            # we need to have it use an rng that also updates at the same cadence as this
+            # index value.  So if we don't have an rng_num yet, make a new random_seed value
+            # that tracks this index.
+            obj_num = base.get('obj_num',None)
+            image_num = base.get('image_num',None)
+            file_num = base.get('file_num',None)
+            base['obj_num'] = base['image_num'] = base['file_num'] = 0
+            if isinstance(base['image']['random_seed'],list):
+                first_seed = galsim.config.ParseValue(base['image']['random_seed'], 0, base, int)[0]
+            else:
+                first_seed = galsim.config.ParseValue(base['image'], 'random_seed', base, int)[0]
+            rs = base['image']['random_seed']
+            if not isinstance(rs, list): rs = [rs]
+            first_seed += 31415  # An arbitrary offset to avoid the chance of unwanted correlations
+            rs.append({ 'type' : 'Eval',
+                        'str' : 'first + ps_index',
+                        'ifirst' : first_seed,
+                        'ips_index' : config['index'] })
+            config['rng_num'] = len(rs) - 1
+            base['image']['random_seed'] = rs
+            if file_num is not None:
+                base['index_key'] = 'file_num'
+                galsim.config.SetupConfigRNG(base, logger=logger)
+            if image_num is not None:
+                base['index_key'] = 'image_num'
+                galsim.config.SetupConfigRNG(base, logger=logger)
+            base['index_key'] = 'file_num'  # This is what we want to leave it as.
+            base['obj_num'] = obj_num
+            base['image_num'] = image_num
+            base['file_num'] = file_num
+
         # Ignore these parameters here, since they are for the buildGrid step, not the
         # initialization of the PowerSpectrum object.
         ignore = ['grid_spacing', 'ngrid', 'interpolant', 'variance', 'center', 'index']

@@ -32,7 +32,6 @@ input:
             grid_spacing: 1  # arcsec
             ngrid: 40
             center: 0,0
-            rng_num: 1
             index:
                 # Rebuild every 3 images
                 index_key: image_num

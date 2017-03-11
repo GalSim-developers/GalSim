@@ -1440,9 +1440,13 @@ def test_multirng():
     if __name__ == '__main__':
         nimages = 6
         ngals = 20
+        logger = logging.getLogger('test_multirng')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.DEBUG)
     else:
         nimages = 3
         ngals = 3
+        logger = None
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
@@ -1451,10 +1455,11 @@ def test_multirng():
     config2 = galsim.config.CopyConfig(config)
     config3 = galsim.config.CopyConfig(config)
 
-    images1 = galsim.config.BuildImages(nimages, config1)
+    images1 = galsim.config.BuildImages(nimages, config1, logger=logger)
     config2['image']['nproc'] = 6
     images2 = galsim.config.BuildImages(nimages, config2)
-    images3 = [ galsim.config.BuildImage(config3, image_num=n, obj_num=n*ngals)
+    images3 = [ galsim.config.BuildImage(galsim.config.CopyConfig(config),
+                                         image_num=n, obj_num=n*ngals)
                 for n in range(nimages) ]
 
     # Now generate by hand
@@ -1473,10 +1478,9 @@ def test_multirng():
         im = galsim.ImageF(256, 256, wcs=wcs)
         world_center = im.wcs.toWorld(im.trueCenter())
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=26, rng=rng, center=world_center, variance=0.1)
-        seedb = 123456789 + (n//3)*ngals
-        rngb = galsim.UniformDeviate(seedb)
+        ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
         if n % 3 == 0:
-            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=rngb, center=galsim.PositionD(0,0))
+            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=ps_rng, center=galsim.PositionD(0,0))
         for i in range(ngals):
             seedb = 123456789 + (n//3)*ngals + i + 1
             rngb = galsim.UniformDeviate(seedb)
