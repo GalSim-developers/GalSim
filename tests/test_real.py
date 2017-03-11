@@ -382,6 +382,7 @@ def test_crg_roundtrip_larger_target_psf():
                                truth_mom.observed_shape.g2,
                                rtol=0, atol=1e-4)
 
+
 @timer
 def test_ne():
     """ Check that inequality works as expected."""
@@ -393,10 +394,13 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, flux=1.1),
+            galsim.RealGalaxy(rgc, index=0, flux_rescale=1.2),
+            galsim.RealGalaxy(rgc, index=0, normalize_area=True),
             galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
     all_obj_diff(gals)
+
 
 @timer
 def test_noise():
@@ -424,6 +428,43 @@ def test_noise():
     cf_2 = cf_2.withVariance(var_2)
     assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
+
+@timer
+def test_normalize_area():
+    """Check that normalize_area works as expected"""
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    psf = galsim.Gaussian(fwhm=0.6)
+
+    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, normalize_area=True)
+    assert crg1 != crg2
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+    obj1 = galsim.Convolve(crg1, psf)
+    obj2 = galsim.Convolve(crg2, psf)
+    im1 = obj1.drawImage(LSST_i, exptime=1, area=1)
+    im2 = obj2.drawImage(LSST_i, exptime=1, area=galsim.real.HST_area)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array)
+    np.testing.assert_almost_equal(
+            obj1.noise.getVariance(),
+            obj2.noise.getVariance() * galsim.real.HST_area**2)
+
+    rg1 = galsim.RealGalaxy(f606w_cat, index=1)
+    rg2 = galsim.RealGalaxy(f606w_cat, index=1, normalize_area=True)
+    assert rg1 != rg2
+    obj1 = galsim.Convolve(rg1, psf)
+    obj2 = galsim.Convolve(rg2, psf)
+    im1 = obj1.drawImage()
+    im2 = obj2.drawImage(exptime=1, area=galsim.real.HST_area)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array)
+    np.testing.assert_almost_equal(
+            obj1.noise.getVariance(),
+            obj2.noise.getVariance() * galsim.real.HST_area**2)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
@@ -432,3 +473,4 @@ if __name__ == "__main__":
     test_crg_roundtrip_larger_target_psf()
     test_ne()
     test_noise()
+    test_normalize_area()

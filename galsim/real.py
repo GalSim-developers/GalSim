@@ -38,6 +38,7 @@ from .chromatic import ChromaticSum
 import os
 import numpy as np
 
+HST_area = 45238.93416
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -74,10 +75,11 @@ class RealGalaxy(GSObject):
     comments.
 
     If you don't set a flux, the flux of the returned object will be the flux of the original
-    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux appropriate
-    for a longer exposure, you can set flux_rescale = the exposure time.  You can also account
-    for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
-    this way.
+    HST data, scaled to correspond to a 1 second HST exposure (though see the `normalize_area`
+    parameter below, and also caveats related to using the `flux` parameter).  If you want a flux
+    appropriate for a longer exposure, or for a telescope with a different collecting area than HST,
+    you can either renormalize the object with the `flux_rescale` parameter, or by using the
+    `exptime` and `area` parameters to `drawImage`.
 
     Note that RealGalaxy objects use arcsec for the units of their linear dimension.  If you
     are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
@@ -110,8 +112,14 @@ class RealGalaxy(GSObject):
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  We strongly recommend leaving this parameter at its default
                             value; see text above for details.  [default: galsim.Quintic()]
-    @param flux             Total flux, if None then original flux in galaxy is adopted without
-                            change. [default: None]
+    @param flux             Total flux, if None then original flux in image is adopted without
+                            change.  Note that, technically, this parameter sets the flux of the
+                            postage stamp image and not the flux of the contained galaxy.  These two
+                            values will be strongly correlated when the signal-to-noise ratio of the
+                            galaxy is large, but may be considerably different if the flux of the
+                            galaxy is small with respect to the noise variations in the postage
+                            stamp.  To avoid complications with faint galaxies, consider using the
+                            flux_rescale parameter.  [default: None]
     @param flux_rescale     Flux rescaling factor; if None, then no rescaling is done.  Either
                             `flux` or `flux_rescale` may be set, but not both. [default: None]
     @param pad_factor       Factor by which to pad the Image when creating the
@@ -123,6 +131,13 @@ class RealGalaxy(GSObject):
                             should make sure that the padded image is larger than the postage
                             stamp onto which you are drawing this object.
                             [default: None]
+    @param normalize_area   By default, the flux of the returned object is normalized such that
+                            drawing with exptime=1 and area=1 (the `drawImage` defaults) simulates
+                            an image with the appropriate number of counts for a 1 second HST
+                            exposure.  Setting this keyword to True will instead normalize the
+                            returned object such that to simulate a 1 second HST exposure, you must
+                            use drawImage with exptime=1 and area=45238.93416 (the HST collecting
+                            area in cm^2).  [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
@@ -139,14 +154,15 @@ class RealGalaxy(GSObject):
                     "flux" : float ,
                     "flux_rescale" : float ,
                     "pad_factor" : float,
-                    "noise_pad_size" : float
+                    "noise_pad_size" : float,
+                    "normalize_area" : bool
                   }
     _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
-                 pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
+                 pad_factor=4, noise_pad_size=0, normalize_area=False, gsparams=None, logger=None):
 
 
         if rng is None:
@@ -172,11 +188,11 @@ class RealGalaxy(GSObject):
         else:
             # Get the index to use in the catalog
             if index is not None:
-                if id is not None or random is True:
+                if id is not None or random:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = index
             elif id is not None:
-                if random is True:
+                if random:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalog.getIndexForID(id)
             elif random:
@@ -233,6 +249,8 @@ class RealGalaxy(GSObject):
         self._pad_factor = pad_factor
         self._noise_pad_size = noise_pad_size
         self._flux = flux
+        self._flux_rescale = flux_rescale
+        self._normalize_area = normalize_area
         self._gsparams = gsparams
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
@@ -261,10 +279,14 @@ class RealGalaxy(GSObject):
         if logger:
             logger.debug('RealGalaxy %d: Made original_gal',use_index)
 
-        # If flux is None, leave flux as given by original image
-        if flux is not None:
-            flux_rescale = flux / self.original_gal.getFlux()
-        if flux_rescale is not None:
+        # Only alter normalization if a change is requested
+        if flux is not None or flux_rescale is not None or normalize_area:
+            if flux_rescale is None:
+                flux_rescale = 1
+            if normalize_area:
+                flux_rescale /= HST_area
+            if flux is not None:
+                flux_rescale *= flux/self.original_gal.getFlux()
             self.original_gal *= flux_rescale
             self.noise *= flux_rescale**2
 
@@ -295,13 +317,15 @@ class RealGalaxy(GSObject):
                 self._pad_factor == other._pad_factor and
                 self._noise_pad_size == other._noise_pad_size and
                 self._flux == other._flux and
+                self._flux_rescale == other._flux_rescale and
+                self._normalize_area == other._normalize_area and
                 self._rng == other._rng and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
         return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
                      self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
-                     self._rng.serialize(), self._gsparams))
+                     self._flux_rescale, self._normalize_area, self._rng.serialize(), self._gsparams))
 
     def __repr__(self):
         s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
@@ -315,6 +339,10 @@ class RealGalaxy(GSObject):
             s += 'noise_pad_size=%r, '%self._noise_pad_size
         if self._flux is not None:
             s += 'flux=%r, '%self._flux
+        if self._flux_rescale is not None:
+            s += 'flux_rescale=%r, '%self._flux_rescale
+        if self._normalize_area:
+            s += 'normalize_area=True, '
         s += 'rng=%r, '%self._rng
         s += 'gsparams=%r)'%self._gsparams
         return s
@@ -910,7 +938,16 @@ class ChromaticRealGalaxy(ChromaticSum):
     to choose at random but accounting for the non-constant weight factors (probabilities for
     objects to make it into the training sample).
 
-    TODO: Figure out how to manipulate flux!
+    The flux normalization of the returned object will by default match the original data, scaled to
+    correspond to a 1 second HST exposure (though see the `normalize_area` parameter).  If you want
+    a flux appropriate for a longer exposure or telescope with different collecting area, you can
+    use the `ChromaticObject` method `withScaledFlux` on the returned object, or use the `exptime`
+    and `area` keywords to `drawImage`.  Note that while you can also use the `ChromaticObject`
+    methods `withFlux`, `withMagnitude`, and `withFluxDensity` to set the absolute normalization,
+    these methods technically adjust the flux of the entire postage stamp image (including noise!)
+    and not necessarily the flux of the galaxy itself.  (These two fluxes will be strongly
+    correlated for high signal-to-noise ratio galaxies, but may be considerably different at low
+    signal-to-noise ratio.)
 
     Note that ChromaticRealGalaxy objects use arcsec for the units of their linear dimension.  If
     you are using a different unit for other things (the PSF, WCS, etc.), then you should dilate the
@@ -950,6 +987,13 @@ class ChromaticRealGalaxy(ChromaticSum):
                             real-space profiles).  We strongly recommend leaving this parameter
                             at its default value; see text in Realgalaxy docstring for details.
                             [default: 4]
+    @param normalize_area   By default, the flux of the returned object is normalized such that
+                            drawing with exptime=1 and area=1 (the `drawImage` defaults) simulates
+                            an image with the appropriate number of counts for a 1 second HST
+                            exposure.  Setting this keyword to True will instead normalize the
+                            returned object such that to simulate a 1 second HST exposure, you must
+                            use drawImage with exptime=1 and area=45238.93416 (the HST collecting
+                            area in cm^2).  [default: False]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
@@ -957,10 +1001,11 @@ class ChromaticRealGalaxy(ChromaticSum):
     Methods
     -------
 
-    There are no additional methods for ChromaticRealGalaxy beyond the usual GSObject methods.
+    There are no additional methods for ChromaticRealGalaxy beyond the usual ChromaticObject
+    methods.
     """
     def __init__(self, real_galaxy_catalogs=None, SEDs=None, index=None, id=None, random=False,
-                 rng=None, k_interpolant=None, maxk=None, pad_factor=4.,
+                 rng=None, k_interpolant=None, maxk=None, pad_factor=4., normalize_area=False,
                  _imgs=None, _bands=None, _xis=None, _PSFs=None,  # hidden args
                  gsparams=None, logger=None):
         import numpy as np
@@ -993,14 +1038,14 @@ class ChromaticRealGalaxy(ChromaticSum):
 
             # Get the index to use in the catalog
             if index is not None:
-                if id is not None or random is True:
+                if id is not None or random:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = index
             elif id is not None:
-                if random is True:
+                if random:
                     raise AttributeError('Too many methods for selecting a galaxy!')
                 use_index = real_galaxy_catalogs[0].getIndexForID(id)
-            elif random is True:
+            elif random:
                 uniform_deviate = galsim.UniformDeviate(self.rng)
                 use_index = int(real_galaxy_catalogs[0].nobjects * uniform_deviate())
             else:
@@ -1043,6 +1088,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             SEDs = self._poly_SEDs(bands)
         self.SEDs = SEDs
 
+        self._normalize_area = normalize_area
         self._k_interpolant = k_interpolant
         self._gsparams = gsparams
 
@@ -1052,6 +1098,10 @@ class ChromaticRealGalaxy(ChromaticSum):
         assert Nim == len(xis)
         assert Nim == len(PSFs)
         assert Nim >= NSED
+
+        if normalize_area:
+            imgs = [img/HST_area for img in imgs]
+            xis = [xi/HST_area/HST_area for xi in xis]
 
         # Need to sample three different types of objects on the same Fourier grid: the input
         # effective PSFs, the input images, and the input correlation-functions/power-spectra.
@@ -1217,17 +1267,20 @@ class ChromaticRealGalaxy(ChromaticSum):
                 self.SEDs == other.SEDs and
                 self._k_interpolant == other._k_interpolant and
                 self._rng == other._rng and
+                self._normalize_area == other._normalize_area and
                 self._gsparams == other._gsparams)
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         return hash(("galsim.ChromaticRealGalaxy", tuple(self.catalog_files), self.index,
-                     tuple(self.SEDs), self._k_interpolant, self._rng.serialize(), self._gsparams))
+                     tuple(self.SEDs), self._k_interpolant, self._rng.serialize(),
+                     self._normalize_area, self._gsparams))
 
     def __str__(self):
         return "galsim.RealChromaticGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
 
     def __repr__(self):
         return ("galsim.RealChromaticGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
-                "gsparams=%r)"%(self.catalog_files, self.SEDs, self.index, self._rng,
-                                self._k_interpolant, self._gsparams))
+                "normalize_area=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
+                                                   self._rng, self._k_interpolant,
+                                                   self._normalize_area, self._gsparams))
