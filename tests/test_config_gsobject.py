@@ -777,8 +777,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
-    # The convolution here
+    gal6b = galsim.RealGalaxy(real_cat, index=5).original_gal
     gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['obj_num'] = 6
@@ -790,7 +789,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index=0)
+    gal8b = galsim.RealGalaxy(real_cat, index=7)
     gsobject_compare(gal8a, gal8b, conv=conv)
 
 @timer

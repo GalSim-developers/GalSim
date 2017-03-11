@@ -32,18 +32,18 @@ import inspect
 valid_extra_outputs = {}
 
 
-def SetupExtraOutput(config, file_num=0, logger=None):
+def SetupExtraOutput(config, logger=None):
     """
     Set up the extra output items as necessary, including building Managers for the work
     space so they can work safely in multi-processing mode.  Each builder will be placed in
     config['extra_builder'][key] where key is the key in galsim.config.valid_extra_outputs.
 
     @param config       The configuration dict.
-    @param file_num     The file number being worked on currently. [default: 0]
     @param logger       If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
+    file_num = config.get('file_num',0)
 
     # We'll iterate through this list of keys a few times
     all_keys = [ k for k in valid_extra_outputs.keys() if k in output ]
@@ -163,7 +163,6 @@ def WriteExtraOutputs(config, main_data, logger=None):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
     output = config['output']
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -244,7 +243,6 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
 
     @returns data with additional hdus added
     """
-    config['index_key'] = 'file_num'
     output = config['output']
     hdus = {}
     for key in [ k for k in valid_extra_outputs.keys() if k in output ]:

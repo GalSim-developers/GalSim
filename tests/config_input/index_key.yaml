@@ -51,7 +51,7 @@ image:
 
 output:
     type: MultiFits
-    nfiles: 1
+    nfiles: 3
     nimages: 3
     dir: output
     file_name:

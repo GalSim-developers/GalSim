@@ -213,6 +213,7 @@ class TiledImageBuilder(ImageBuilder):
 
         @returns the number of objects
         """
+        orig_index_key = base.get('index_key',None)
         base['index_key'] = 'image_num'
         base['image_num'] = image_num
 
@@ -221,6 +222,7 @@ class TiledImageBuilder(ImageBuilder):
                 "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
         nx = galsim.config.ParseValue(config,'nx_tiles',base,int)[0]
         ny = galsim.config.ParseValue(config,'ny_tiles',base,int)[0]
+        base['index_key'] = orig_index_key
         return nx*ny
 
 # Register this as a valid image type

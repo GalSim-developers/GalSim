@@ -133,6 +133,9 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
     if image_type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%image_type)
 
+    # In case this hasn't been done yet.
+    galsim.config.SetupInput(config, logger)
+
     # Build the rng to use at the image level.
     seed = galsim.config.SetupConfigRNG(config, logger=logger)
     logger.debug('image %d: seed = %d',image_num,seed)

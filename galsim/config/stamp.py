@@ -167,6 +167,9 @@ def SetupConfigObjNum(config, obj_num, logger=None):
     if 'draw_method' not in stamp:
         stamp['draw_method'] = 'auto'
 
+    # In case this hasn't been done yet.
+    galsim.config.SetupInput(config, logger)
+
 
 def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None):
     """Do further setup of the config dict at the stamp (or object) processing level reflecting

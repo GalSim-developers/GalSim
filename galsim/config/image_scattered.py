@@ -181,6 +181,7 @@ class ScatteredImageBuilder(ImageBuilder):
 
         @returns the number of objects
         """
+        orig_index_key = base.get('index_key',None)
         base['index_key'] = 'image_num'
         base['image_num'] = image_num
 
@@ -189,10 +190,10 @@ class ScatteredImageBuilder(ImageBuilder):
             nobj = galsim.config.ProcessInputNObjects(base)
             if nobj is None:
                 raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-            return nobj
         else:
             nobj = galsim.config.ParseValue(config,'nobjects',base,int)[0]
-            return nobj
+        base['index_key'] = orig_index_key
+        return nobj
 
 # Register this as a valid image type
 from .image import RegisterImageType

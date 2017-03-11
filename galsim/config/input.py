@@ -40,7 +40,7 @@ valid_input_types = {}
 connected_types = {}
 
 
-def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
+def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -55,7 +55,6 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     config['input']['catalog'] (if any).
 
     @param config           The configuration dict to process
-    @param file_num         The file number being worked on currently [default: 0]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_scope_only  If True, only process the input items that are marked as being
                             possibly relevant for file- and image-level items. [default: False]
@@ -63,12 +62,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             are not going to change every file, so it can be made once and
                             used by multiple processes if appropriate. [default: False]
     """
-    logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    logger.debug('file %d: Start ProcessInput',file_num)
-    # Process the input field (read any necessary input files)
     if 'input' in config:
+        logger = galsim.config.LoggerWrapper(logger)
+        file_num = config.get('file_num',0)
+        logger.debug('file %d: Start ProcessInput',file_num)
+
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
 
@@ -200,6 +198,20 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
 
 
+def SetupInput(config, logger=None):
+    """Process the input field if it hasn't been processed yet.
+
+    This is mostly useful if the user isn't running through the full processing and just starting
+    at BuidlImage say.  This will make sure the input objects are set up in the way that they
+    normally would have been by the first level of processing in a `galsim config_file` run.
+    """
+    if 'input_objs' not in config:
+        orig_index_key = config.get('index_key',None)
+        config['index_key'] = 'file_num'
+        ProcessInput(config, logger=logger)
+        config['index_key'] = orig_index_key
+
+
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
 
@@ -222,9 +234,8 @@ def ProcessInputNObjects(config, logger=None):
     @returns the number of objects to use.
     """
     logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
     if 'input' in config:
-        if 'input_objs' not in config: ProcessInput(config)
+        SetupInput(config, logger=logger)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
@@ -252,8 +263,7 @@ def SetupInputsForImage(config, logger=None):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
-        if 'input_objs' not in config: ProcessInput(config)
-        config['index_key'] = 'image_num'
+        SetupInput(config, logger=logger)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:

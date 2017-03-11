@@ -55,7 +55,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    galsim.config.ProcessInput(config, file_num=0, logger=logger, safe_only=True)
+    galsim.config.ProcessInput(config, logger=logger, safe_only=True)
 
     jobs = []  # Will be a list of the kwargs to use for each job
     info = []  # Will be a list of (file_num, file_name) correspongind to each jobs.
@@ -83,11 +83,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
 
+        # Process the input fields that might be relevant at file scope:
+        galsim.config.ProcessInput(config, logger=logger, file_scope_only=True)
+
         # Get the number of objects in each image for this file.
         nobj = GetNObjForFile(config,file_num,image_num)
-
-        # Process the input fields that might be relevant at file scope:
-        galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
 
         # The kwargs to pass to BuildFile
         kwargs = {
@@ -193,8 +193,8 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
                  file_num,output_type,nimages,image_num)
 
     # Make sure the inputs and extra outputs are set up properly.
-    galsim.config.ProcessInput(config, file_num=file_num, logger=logger)
-    galsim.config.SetupExtraOutput(config, file_num=file_num, logger=logger)
+    galsim.config.ProcessInput(config, logger=logger)
+    galsim.config.SetupExtraOutput(config, logger=logger)
 
     builder = valid_output_types[output_type]
 
@@ -226,6 +226,9 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if len(data) == 0:
         logger.warning('Skipping file %d = %s because all images were None',file_num,file_name)
         return file_name, 0
+
+    # Go back to file_num as the default index_key.
+    config['index_key'] = 'file_num'
 
     if builder.canAddHdus():
         data = galsim.config.AddExtraOutputHDUs(config,data,logger)
