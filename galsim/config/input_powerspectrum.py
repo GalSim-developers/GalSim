@@ -42,12 +42,15 @@ class PowerSpectrumLoader(InputLoader):
 
         @returns kwargs, safe
         """
+        logger = galsim.config.LoggerWrapper(logger)
+
+        # If we are going to use a different rebuilding cadence than the normal once per image,
+        # then in order for this feature to work properly in a multiprocessing context,
+        # we need to have it use an rng that also updates at the same cadence as this
+        # index value.  So if we don't have an rng_num yet, make a new random_seed value
+        # that tracks this index.
         if ('index' in config and 'rng_num' not in config and 'image' in base and
             'random_seed' in base['image']):
-            # Then in order for this feature to work properly in a multiprocessing context,
-            # we need to have it use an rng that also updates at the same cadence as this
-            # index value.  So if we don't have an rng_num yet, make a new random_seed value
-            # that tracks this index.
             obj_num = base.get('obj_num',None)
             image_num = base.get('image_num',None)
             file_num = base.get('file_num',None)
@@ -92,6 +95,8 @@ class PowerSpectrumLoader(InputLoader):
         @param logger       If given, a logger object to log progress.
         """
         logger = galsim.config.LoggerWrapper(logger)
+        # Attach the logger to the input_obj so we can use it when evaluating values.
+        input_obj.logger = logger
 
         if 'grid_spacing' in config:
             grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
@@ -174,6 +179,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
     """
     power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
+    logger = power_spectrum.logger
 
     if 'world_pos' not in base:
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
@@ -183,17 +189,31 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     # one present.
     galsim.config.CheckAllParams(config, opt={ 'num' : int })
 
-    try:
+    with warnings.catch_warnings(record=True) as w:
         g1,g2 = power_spectrum.getShear(pos)
+    if len(w) > 1:
+        # Send the warning to the logger, rather than raising a normal warning.
+        # The warning here would typically be that the position is out of range of where the
+        # power spectrum is defined.  So if we do get this and the position is not on the image,
+        # we probably don't care.  In that case, just log it as debug, now warn.
+        log_level = logging.WARNING if base['current_image'].bounds.includes(pos) else loggin.DEBUG
+        for ww in w:
+            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww)
+
+    try:
         shear = galsim.Shear(g1=g1,g2=g2)
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
-                      "Using shear = 0.")
+        if logger:
+            logger.warning('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
+                           base['obj_num'],g1,g2) + 'Using shear = 0.')
+        else:
+            warnings.warn('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
+                          base['obj_num'],g1,g2) + 'Using shear = 0.')
         shear = galsim.Shear(g1=0,g2=0)
 
-    #print(base['obj_num'],'PS shear = ',shear)
+    logger.debug('obj %d: PowerSpectrum shear = %s',base['obj_num'],shear)
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
@@ -201,6 +221,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     """
     power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base,
                                                'PowerSpectrumMagnification')
+    logger = power_spectrum.logger
 
     if 'world_pos' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
@@ -209,7 +230,12 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 
-    mu = power_spectrum.getMagnification(pos)
+    with warnings.catch_warnings(record=True) as w:
+        mu = power_spectrum.getMagnification(pos)
+    if len(w) > 1:
+        log_level = logging.WARNING if base['current_image'].bounds.includes(pos) else loggin.DEBUG
+        for ww in w:
+            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.:
@@ -217,11 +243,15 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             "Invalid max_mu=%f (must be > 0) for type = PowerSpectrumMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
-        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
-            mu,max_mu))
+        if logger:
+            logger.warning('obj %d: Warning: PowerSpectrum mu = %f means strong lensing. '%(
+                           base['obj_num'],mu) + 'Using mu=%f'%max_mu)
+        else:
+            warnings.warn('obj %d: Warning: PowerSpectrum mu = %f means strong lensing. '%(
+                          base['obj_num'],mu) + 'Using mu=%f'%max_mu)
         mu = max_mu
 
-    #print(base['obj_num'],'PS mu = ',mu)
+    logger.debug('obj %d: PowerSpectrum mu = %s',base['obj_num'],mu)
     return mu, False
 
 # Register these as valid value types
