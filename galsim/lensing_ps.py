@@ -683,9 +683,7 @@ class PowerSpectrum(object):
         #        same length as the input.)
         if not isinstance(pf, galsim.LookupTable):
             f1 = pf(np.array((0.1,1.)))
-            fake_arr = np.zeros(2)
-            fake_p = pf(fake_arr)
-            if isinstance(fake_p, float):
+            if isinstance(f1, float):
                 raise AttributeError(
                     "Power function MUST return a list/array same length as input")
         return pf
