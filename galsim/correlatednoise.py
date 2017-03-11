@@ -1535,7 +1535,7 @@ class CovarianceSpectrum(object):
         return self.withScaledVariance(1./variance_ratio)
 
     def __truediv__(self, variance_ratio):
-        return self.withScaledVariance(1./variance_ratio)
+        return self.__div__(variance_ratio)
 
     def expand(self, scale):
         Sigma = {}

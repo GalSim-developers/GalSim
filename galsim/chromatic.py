@@ -1850,8 +1850,11 @@ class ChromaticSum(ChromaticObject):
 
         @returns the object with the new flux.
         """
-        return ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
-
+        new_obj = ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
+        if hasattr(self, 'covspec'):
+            new_covspec = self.covspec * flux_ratio**2
+            new_obj.covspec = new_covspec
+        return new_obj
 
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat

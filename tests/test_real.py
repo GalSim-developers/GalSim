@@ -437,8 +437,10 @@ def test_normalize_area():
 
     psf = galsim.Gaussian(fwhm=0.6)
 
-    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
-    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, normalize_area=True)
+    rng = galsim.BaseDeviate(5772)
+    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate())
+    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate(),
+                                      normalize_area=True)
     assert crg1 != crg2
     LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
     obj1 = galsim.Convolve(crg1, psf)
@@ -465,6 +467,34 @@ def test_normalize_area():
             obj2.noise.getVariance() * galsim.real.HST_area**2)
 
 
+@timer
+def test_covspec():
+    """Test various transformations of Covariance Spectra.
+    """
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], id=14886)
+    psf = galsim.Gaussian(fwhm=0.6)
+
+    factor = 1.5
+
+    obj = galsim.Convolve(crg, psf)
+    multiplied = obj * factor
+    im1 = obj.drawImage(LSST_i)
+    im2 = multiplied.drawImage(LSST_i)
+    np.testing.assert_almost_equal(
+            obj.noise.getVariance(),
+            multiplied.noise.getVariance()/factor**2)
+
+    divided = obj / factor
+    im2 = divided.drawImage(LSST_i)
+    np.testing.assert_almost_equal(
+            obj.noise.getVariance(),
+            divided.noise.getVariance()*factor**2)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
@@ -474,3 +504,4 @@ if __name__ == "__main__":
     test_ne()
     test_noise()
     test_normalize_area()
+    test_covspec()
