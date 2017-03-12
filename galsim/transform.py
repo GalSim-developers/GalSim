@@ -131,19 +131,6 @@ class Transformation(galsim.GSObject):
         self._offset = sbt.getOffset()
         self._flux_ratio = sbt.getFluxScaling()
         self._gsparams = gsparams
-        self._set_fwd()
-
-    def _set_fwd(self):
-        if np.array_equal(self._jac[1:3], (0,0)):
-            if np.array_equal(self._jac[::3], (1,1)):   # jac is (1,0,0,1)
-                self._fwd = self._fwd_ident
-                self._det = 1
-            else:                                       # jac is (a,0,0,b)
-                self._fwd = self._fwd_diag
-                self._det = self._jac[0] * self._jac[3]
-        else:                                           # Fully general case
-            self._fwd = self._fwd_normal
-            self._det = self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2]
 
     def getJac(self):
         """Return the Jacobian of the transformation.
@@ -251,12 +238,25 @@ class Transformation(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
+        # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
+        if np.array_equal(self._jac[1:3], (0,0)):
+            if np.array_equal(self._jac[::3], (1,1)):   # jac is (1,0,0,1)
+                fwd = self._fwd_ident
+                det = 1
+            else:                                       # jac is (a,0,0,b)
+                fwd = self._fwd_diag
+                det = self._jac[0] * self._jac[3]
+        else:                                           # Fully general case
+            fwd = self._fwd_normal
+            det = self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2]
+
         ud = galsim.UniformDeviate(rng)
         photon_array = self.original.shoot(n_photons, ud)
-        newx, newy = self._fwd(photon_array.x,photon_array.y)
+
+        newx, newy = fwd(photon_array.x,photon_array.y)
         photon_array.x = newx + self.offset.x
         photon_array.y = newy + self.offset.y
-        photon_array.scaleFlux(self._det*self.flux_ratio)
+        photon_array.scaleFlux(det*self.flux_ratio)
         return photon_array
 
     def __getstate__(self):
@@ -266,7 +266,6 @@ class Transformation(galsim.GSObject):
         # SBInterpolatedImage.
         d = self.__dict__.copy()
         del d['SBProfile']
-        del d['_fwd']
         return d
 
     def __setstate__(self, d):
@@ -292,7 +291,6 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     ret._offset = sbt.getOffset()
     ret._flux_ratio = sbt.getFluxScaling()
     ret._gsparams = gsparams
-    ret._set_fwd()
     return ret
 
 def SBTransform_init(self):
