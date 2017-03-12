@@ -28,20 +28,17 @@ import logging
 valid_wcs_types = {}
 
 
-def BuildWCS(config, key, base=None, logger=None):
+def BuildWCS(config, key, base, logger=None):
     """Read the wcs parameters from config[key] and return a constructed wcs object.
 
-    @param config       A dict with the configuration information.
+    @param config       A dict with the configuration information. (usually base['image'])
     @param key          The key name in config indicating which object to build.
-    @param base         The base dict of the configuration. [default: config]
+    @param base         The base dict of the configuration.
     @param logger       Optionally, provide a logger for logging debug statements. [default: None]
 
     @returns a BaseWCS instance
     """
     logger = galsim.config.LoggerWrapper(logger)
-    if base is None:
-        base = config
-
     logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
 
     if key not in config:

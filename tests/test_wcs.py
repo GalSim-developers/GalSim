@@ -350,6 +350,9 @@ def do_wcs_image(wcs, name, approx=False):
                                    "Image value at center after setCenter is wrong.")
 
     # Test makeSkyImage
+    if __name__ == '__main__':
+        # Use a smaller image to speed things up.
+        im = im[galsim.BoundsI(im.xmin,im.xmin+5,im.ymin,im.ymin+5)]
     new_origin = (-134, 128)
     im.setOrigin(new_origin)
     sky_level = 177
@@ -1269,8 +1272,7 @@ def test_uvfunction():
     vfunc = lambda x,y : 0.17 * y * (1. + 1.e-5 * math.sqrt(x**2 + y**2))
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with math funcs', test_pickle=False)
-    if __name__ == "__main__":
-        do_wcs_image(wcs, 'UVFunction_math')
+    do_wcs_image(wcs, 'UVFunction_math')
 
     # 8. A non-trivial color example
     ufunc = lambda x,y,c: (dudx + 0.1*c)*x + dudy*y
@@ -1510,9 +1512,7 @@ def test_radecfunction():
     # Check that using a wcs in the context of an image works correctly
     # (Uses the last wcs2, wcs3 set in the above loops.)
     do_wcs_image(wcs2, 'RaDecFunction')
-    if __name__ == "__main__":
-        # As advertised, this is slow.  So only run it when doing python test_wcs.py.
-        do_wcs_image(wcs3, 'RaDecFunction')
+    do_wcs_image(wcs3, 'RaDecFunction')
 
 
 def do_ref(wcs, ref_list, name, approx=False, image=None):

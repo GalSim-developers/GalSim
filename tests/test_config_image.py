@@ -1203,6 +1203,7 @@ def test_wcs():
             'ra' : '19.3 hours',
             'dec' : '-33.1 degrees',
         },
+        'ref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
         'invalid' : 34
     }
 
@@ -1247,6 +1248,7 @@ def test_wcs():
         'tan2' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21),
                                world_origin=galsim.CelestialCoord(19.3*galsim.hours,
                                                                   -33.1*galsim.degrees)),
+        'ref' : galsim.PixelScale(0.43).withOrigin(galsim.PositionD(22,33)),
     }
 
     for key in reference.keys():
@@ -1267,6 +1269,12 @@ def test_wcs():
             #print(wcs.toImage(p), ref.toImage(p))
             np.testing.assert_almost_equal(wcs.toImage(p).x, ref.toImage(p).x)
             np.testing.assert_almost_equal(wcs.toImage(p).y, ref.toImage(p).y)
+
+    # If we build something again with the same index, it should get the current_Val
+    wcs = galsim.config.BuildWCS(config['image'], 'shear2', config)
+    ref = reference['shear2']
+    assert wcs == ref
+    assert wcs is config['image']['shear2']['current_val']
 
     # Finally, check the default if there is no wcs or pixel_scale item
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
