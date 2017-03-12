@@ -523,8 +523,8 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
 
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.
-        alt_kwargs = { k : str(kwargs[k]) if isinstance(kwargs[k],galsim.Image) else kwargs[k]
-                       for k in kwargs }
+        alt_kwargs = dict([(k,str(kwargs[k]) if isinstance(kwargs[k],galsim.Image) else kwargs[k])
+                           for k in kwargs])
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
     try:
         image = prof.drawImage(**kwargs)
