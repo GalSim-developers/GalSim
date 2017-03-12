@@ -103,6 +103,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             import scipy  # AstropyWCS constructor will do this, so check now.
             import scipy.optimize # Check this too, since it's actually what we need from scipy.
 
+        self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the repr.
 
         # Read the file if given.
@@ -427,6 +428,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcsinfo=None, origin=None):
+        self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the repr.
 
         # Read the file if given.
@@ -681,6 +683,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
     _takes_rng = False
 
     def __init__(self, file_name, dir=None, origin=None):
+        self._color = None
         import os
         if dir:
             file_name = os.path.join(dir, file_name)
@@ -940,6 +943,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         #       private constructor of GSFitsWCS by the function TanWCS.  The details of its
         #       use are intentionally not documented above.
 
+        self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the str.
 
         # If _data is given, copy the data and we're done.
