@@ -410,8 +410,12 @@ def test_psf_wf_movie():
         wf_vmax = 50.0
         outfile = "output/test_psf_wf_movie.mp4"
     import psf_wf_movie
-    psf_wf_movie.make_movie(Args)
-    # Just checks that this runs, not the value of the output.
+    try:
+        psf_wf_movie.make_movie(Args)
+        # Just checks that this runs, not the value of the output.
+    except FileNotFoundError as e:
+        print(e)
+        print('skipping test of psf_wf_movie.make_movie')
 
 @timer
 @in_examples
@@ -444,8 +448,12 @@ def test_fft_vs_geom_movie():
         vmax = 1.e-3
         out = "output/test_fft_vs_geom_"
     import fft_vs_geom_movie
-    fft_vs_geom_movie.make_movie(Args)
-    # Just checks that this runs, not the value of the outputs.
+    try:
+        fft_vs_geom_movie.make_movie(Args)
+        # Just checks that this runs, not the value of the outputs.
+    except FileNotFoundError as e:
+        print(e)
+        print('skipping test of fft_vs_geom_movie.make_movie')
 
 
 if __name__ == "__main__":
