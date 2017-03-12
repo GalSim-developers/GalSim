@@ -388,9 +388,7 @@ def _GetAngleValue(param):
         value = float(value)
         unit = galsim.angle.get_angle_unit(unit)
         return galsim.Angle(value, unit)
-    except KeyboardInterrupt:
-        raise
-    except Exception as e:
+    except (TypeError, AttributeError) as e:
         raise AttributeError("Unable to parse %s as an Angle.  Caught %s"%(param,e))
 
 
@@ -400,16 +398,12 @@ def _GetPositionValue(param):
     try:
         x = float(param[0])
         y = float(param[1])
-    except KeyboardInterrupt:
-        raise
-    except:
+    except (ValueError, TypeError):
         try:
             x, y = param.split(',')
             x = float(x.strip())
             y = float(y.strip())
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
+        except (TypeError, AttributeError) as e:
             raise AttributeError("Unable to parse %s as a PositionD.  Caught %s"%(param,e))
     return galsim.PositionD(x,y)
 
@@ -426,17 +420,13 @@ def _GetBoolValue(param):
             try:
                 val = bool(int(param))
                 return val
-            except KeyboardInterrupt:
-                raise
-            except Exception as e:
+            except (TypeError, AttributeError) as e:
                 raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
     else:
         try:
             val = bool(param)
             return val
-        except KeyboardInterrupt:
-            raise
-        except Exception as e:
+        except (TypeError, AttributeError) as e:
             raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
 
 

@@ -556,7 +556,7 @@ class Image(with_metaclass(MetaImage, object)):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         try:
             self.image.resize(bounds)
-        except:
+        except AttributeError:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
         self._array = self.image.array

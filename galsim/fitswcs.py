@@ -236,7 +236,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         try:
             # If the inputs were numpy arrays, return the same
             len(x)
-        except:
+        except TypeError:
             # Otherwise, return scalars
             assert len(ra) == 1
             assert len(dec) == 1
@@ -307,7 +307,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # If the inputs were numpy arrays, return the same
             len(ra)
             x, y = np.array(xy).transpose()
-        except:
+        except TypeError:
             # Otherwise, return scalars
             if len(xy) == 1:
                 x, y = xy[0]
@@ -541,7 +541,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         try:
             len(x)
-        except:
+        except TypeError:
             # If the inputs weren't numpy arrays, return scalars
             assert len(ra) == 1
             assert len(dec) == 1
@@ -556,7 +556,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         try:
             len(ra)
-        except:
+        except TypeError:
             assert len(x) == 1
             assert len(y) == 1
             x = x[0]
@@ -790,7 +790,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             len(x)
             # If the inputs were numpy arrays, return the same
             return np.array(ra)*factor, np.array(dec)*factor
-        except:
+        except TypeError:
             # Otherwise return scalars
             assert len(ra) == 1
             assert len(dec) == 1
@@ -832,7 +832,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             len(ra)
             # If the inputs were numpy arrays, return the same
             return np.array(x), np.array(y)
-        except:
+        except TypeError:
             # Otherwise return scalars
             assert len(x) == 1
             assert len(y) == 1
@@ -1374,7 +1374,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             len(x)
             # If the inputs were numpy arrays, return the same
             return ra, dec
-        except:
+        except TypeError:
             # Otherwise return scalars
             assert len(ra) == 1
             assert len(dec) == 1

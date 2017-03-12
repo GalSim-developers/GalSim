@@ -674,6 +674,8 @@ def readFromFitsHeader(header):
     elif 'CTYPE1' in header:
         try:
             wcs = galsim.FitsWCS(header=header, suppress_warning=True)
+        except KeyboardInterrupt:
+            raise
         except:  # pragma: no cover
             # This shouldn't ever happen, but just in case...
             wcs = galsim.PixelScale(1.)
@@ -816,7 +818,7 @@ class EuclideanWCS(BaseWCS):
             # Try using numpy arrays first, since it should be faster if it works.
             u = self._u(xlist,ylist,color)
             v = self._v(xlist,ylist,color)
-        except:
+        except TypeError:
             # Otherwise do them one at a time.
             u = [ self._u(x,y,color) for (x,y) in zip(xlist,ylist) ]
             v = [ self._v(x,y,color) for (x,y) in zip(xlist,ylist) ]
@@ -847,7 +849,7 @@ class EuclideanWCS(BaseWCS):
             # First try to use the _u, _v function with the numpy arrays.
             u = self._u(x.ravel(),y.ravel(),color)
             v = self._v(x.ravel(),y.ravel(),color)
-        except:
+        except TypeError:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             u = np.array([ self._u(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ])
             v = np.array([ self._v(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ])
@@ -989,7 +991,7 @@ class CelestialWCS(BaseWCS):
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             ra, dec = self._radec(xlist,ylist,color)
-        except:
+        except TypeError:
             # Otherwise do them one at a time.
             world = [ self._radec(x,y,color) for (x,y) in zip(xlist,ylist) ]
             ra = [ w[0] for w in world ]
@@ -1022,7 +1024,7 @@ class CelestialWCS(BaseWCS):
         try:
             # First try to use the _radec function with the numpy arrays.
             ra, dec = self._radec(x.ravel(),y.ravel(),color)
-        except:
+        except TypeError:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             rd = [ self._radec(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ]
             ra = np.array([ radec[0] for radec in rd ])
@@ -1948,7 +1950,7 @@ def _writeFuncToHeader(func, letter, header):
                 name = func.__name__
                 defaults = func.__defaults__
                 closure = func.__closure__
-            except:  # pragma: no cover
+            except AttributeError:  # pragma: no cover
                 # Older Python2 syntax, just in case.
                 code = marshal.dumps(func.func_code)
                 name = func.func_name

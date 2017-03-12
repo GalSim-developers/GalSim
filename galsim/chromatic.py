@@ -862,7 +862,7 @@ class ChromaticObject(object):
                         d = args[0](w)
                         return np.asarray( (d.x, d.y) )
                     offset = offset_func
-                except:
+                except AttributeError:
                     # Then it's a function returning a tuple or list or array.
                     # Just make sure it is actually an array to make our life easier later.
                     offset = lambda w: np.asarray(args[0](w))

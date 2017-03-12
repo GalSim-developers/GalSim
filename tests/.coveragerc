@@ -54,7 +54,3 @@ exclude_lines =
     # Or code for special cases of older versions of things.
     except ImportError
     if .*pyfits_version
-
-    # These are usually for dealing with bad user input, so skip them too.
-    except Exception
-

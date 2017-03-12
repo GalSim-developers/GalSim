@@ -568,8 +568,8 @@ def ParseWorldPos(config, param_name, base, logger):
     """
     try:
         return galsim.config.ParseValue(config, param_name, base, galsim.PositionD)[0]
-    except (ValueError, AttributeError) as e1:
-        logger.debug("Parsing %s as PositionD, caught error %s",param_name,e1)
+    except (ValueError, AttributeError) as e:
+        logger.debug("Parsing %s as PositionD, caught error %s",param_name,e)
         return galsim.config.ParseValue(config, param_name, base, galsim.CelestialCoord)[0]
 
 class StampBuilder(object):

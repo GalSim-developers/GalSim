@@ -452,7 +452,7 @@ class RealGalaxyCatalog(object):
         try:
             self.noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
             self.noise_file_name = [ os.path.join(self.noise_dir,f) for f in self.noise_file_name ]
-        except:
+        except KeyError:
             self.noise_file_name = None
 
         self.gal_hdu = self.cat.field('gal_hdu') # HDU containing the galaxy image

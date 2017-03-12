@@ -121,7 +121,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     """
     def canindex(arg):
         try: arg[0], arg[1]
-        except: return False
+        except (TypeError, IndexError): return False
         else: return True
 
     other_vals = []
@@ -278,7 +278,7 @@ def _convertPositions(pos, units, func):
         try:
             pos = [ np.array([float(pos[0])], dtype='float'),
                     np.array([float(pos[1])], dtype='float') ]
-        except:
+        except TypeError:
             # Only other valid option is ( xlist , ylist )
             pos = [ np.array(pos[0], dtype='float'),
                     np.array(pos[1], dtype='float') ]
@@ -578,7 +578,7 @@ def _gammafn(x):  # pragma: no cover
     try:
         import math
         return math.gamma(x)
-    except:
+    except AttributeError:
         y  = float(x) - 1.0
         sm = _gammafn._a[-1]
         for an in _gammafn._a[-2::-1]:
@@ -1019,7 +1019,7 @@ def dol_to_lod(dol, N=None):
                 out[k] = v
             except KeyboardInterrupt:
                 raise
-            except Exception:
+            except: # pragma: no cover
                 raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
@@ -1035,7 +1035,7 @@ def set_func_doc(func, doc):
     try:
         # Python3
         func.__doc__ = doc
-    except:
+    except AttributeError:
         func.__func__.__doc__ = doc
 
 

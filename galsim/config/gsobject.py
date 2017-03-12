@@ -178,7 +178,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if key == 'psf':
         try:
             param['saved_re'] = gsobject.getHalfLightRadius()
-        except:
+        except AttributeError:
             pass
 
     # Apply any dilation, ellip, shear, etc. modifications.
