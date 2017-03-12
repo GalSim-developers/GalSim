@@ -1139,7 +1139,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like AffineTransform', test_pickle=False)
 
     # Check that passing functions as strings works correctly.
-    wcs = galsim.UVFunction(ufunc='%f*x + %f*y'%(dudx,dudy), vfunc='%f*x + %f*y'%(dvdx,dvdy))
+    wcs = galsim.UVFunction(ufunc='%r*x + %r*y'%(dudx,dudy), vfunc='%r*x + %r*y'%(dvdx,dvdy))
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string funcs', test_pickle=True)
 
     # Check that using a wcs in the context of an image works correctly
@@ -1148,18 +1148,18 @@ def test_uvfunction():
     # Also check with inverse functions.
     det = dudx*dvdy - dudy*dvdx
     wcs = galsim.UVFunction(
-            ufunc='%f*x + %f*y'%(dudx,dudy),
-            vfunc='%f*x + %f*y'%(dvdx,dvdy),
-            xfunc='(%f*u + %f*v)/(%.8f)'%(dvdy,-dudy,det),
-            yfunc='(%f*u + %f*v)/(%.8f)'%(-dvdx,dudx,det) )
+            ufunc='%r*x + %r*y'%(dudx,dudy),
+            vfunc='%r*x + %r*y'%(dvdx,dvdy),
+            xfunc='(%r*u + %r*v)/(%r)'%(dvdy,-dudy,det),
+            yfunc='(%r*u + %r*v)/(%r)'%(-dvdx,dudx,det) )
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string inverse funcs', test_pickle=True)
 
     # The same thing in fact, but nominally takes color as an argument.
     wcsc = galsim.UVFunction(
-            ufunc='%f*x + %f*y'%(dudx,dudy),
-            vfunc='%f*x + %f*y'%(dvdx,dvdy),
-            xfunc='(%f*u + %f*v)/(%.8f)'%(dvdy,-dudy,det),
-            yfunc='(%f*u + %f*v)/(%.8f)'%(-dvdx,dudx,det), uses_color=True)
+            ufunc='%r*x + %r*y'%(dudx,dudy),
+            vfunc='%r*x + %r*y'%(dvdx,dvdy),
+            xfunc='(%r*u + %r*v)/(%r)'%(dvdy,-dudy,det),
+            yfunc='(%r*u + %r*v)/(%r)'%(-dvdx,dudx,det), uses_color=True)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with unused color term', test_pickle=True)
 
     # 4. Next some UVFunctions with non-trivial offsets
@@ -1282,15 +1282,15 @@ def test_uvfunction():
                     'UVFunction with color-dependence', test_pickle=False, color=-0.3)
 
     # Check that passing functions as strings works correctly.
-    wcs = galsim.UVFunction(ufunc='(%f+0.1*c)*x + %f*y'%(dudx,dudy),
-                            vfunc='%f*x + (%f-0.2*c)*y'%(dvdx,dvdy),
-                            xfunc='((%f-0.2*c)*u - %f*v)/((%f+0.1*c)*(%f-0.2*c)-%f)'%(
+    wcs = galsim.UVFunction(ufunc='(%r+0.1*c)*x + %r*y'%(dudx,dudy),
+                            vfunc='%r*x + (%r-0.2*c)*y'%(dvdx,dvdy),
+                            xfunc='((%r-0.2*c)*u - %r*v)/((%r+0.1*c)*(%r-0.2*c)-%r)'%(
                                 dvdy,dudy,dudx,dvdy,dudy*dvdx),
-                            yfunc='(-%f*u + (%f+0.1*c)*v)/((%f+0.1*c)*(%f-0.2*c)-%f)'%(
+                            yfunc='(-%r*u + (%r+0.1*c)*v)/((%r+0.1*c)*(%r-0.2*c)-%r)'%(
                                 dvdx,dudx,dudx,dvdy,dudy*dvdx),
                             uses_color=True)
-    do_nonlocal_wcs(wcs, lambda x,y:  ufunc(x,y,0.2), lambda x,y: vfunc(x,y,0.2),
-                    'UVFunction with color-dependence, string', test_pickle=True, color=0.2)
+    do_nonlocal_wcs(wcs, lambda x,y:  ufunc(x,y,1.7), lambda x,y: vfunc(x,y,1.7),
+                    'UVFunction with color-dependence, string', test_pickle=True, color=1.7)
 
 
 @timer
