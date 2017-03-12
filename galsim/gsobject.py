@@ -1913,6 +1913,7 @@ def SBProfile_setstate(self, state):
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
 # Quick and dirty.  Just check serializations are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
+_galsim.SBProfile.__eq__ = lambda self, other: (
+    isinstance(other,_galsim.SBProfile) and self.serialize() == other.serialize())
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())

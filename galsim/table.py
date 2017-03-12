@@ -564,7 +564,7 @@ class LookupTable2D(object):
                 self.edge_mode == other.edge_mode)
 
     def __ne__(self, other):
-        return not self.__eq__(self, other)
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(("galsim._galsim._LookupTable2D", self.table, self.edge_mode))
