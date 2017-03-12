@@ -417,6 +417,10 @@ class ImageBuilder(object):
         ysize = base['image_ysize']
         logger.debug('image %d: Single Image: size = %s, %s',image_num,xsize,ysize)
 
+        # In case there was one set from before, we don't want to confuse the stamp builder
+        # thinking that this is the full image onto which we are drawing this object.
+        base['current_image'] = None
+
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
         return image, current_var

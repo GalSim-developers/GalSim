@@ -55,7 +55,7 @@ def test_single():
 
     logger = logging.getLogger('test_single')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     im1_list = []
     nimages = 6
@@ -124,9 +124,9 @@ def test_positions():
         }
     }
 
-    logger = logging.getLogger('test_single')
+    logger = logging.getLogger('test_positions')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     gal = galsim.Gaussian(sigma=1.7, flux=100)
     im1= gal.drawImage(nx=21, ny=21, scale=1)
@@ -329,9 +329,9 @@ def test_reject():
     galsim.config.ProcessInput(config)
 
     if False:
-        logger = logging.getLogger('test_single')
+        logger = logging.getLogger('test_reject')
         logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
+        #logger.setLevel(logging.DEBUG)
     else:
         logger = galsim.config.LoggerWrapper(None)
 
@@ -884,7 +884,7 @@ def test_scattered_whiten():
     with CaptureLog() as cl:
         im3 = galsim.config.BuildImage(config, logger=cl.logger)
     #print(cl.output)
-    assert "Object centered at (-24,-43) is entirely off the main image" in cl.output
+    assert "skip drawing object because its image will be entirely off the main image." in cl.output
     im2 = galsim.config.BuildImage(config)
 
 
@@ -1072,8 +1072,9 @@ def test_njobs():
             },
         },
     }
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger()
+
+    logger = logging.getLogger('test_njobs')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
     galsim.config.Process(config, logger=logger)
 
     # Repeat with 2 jobs
@@ -1442,7 +1443,7 @@ def test_multirng():
         ngals = 20
         logger = logging.getLogger('test_multirng')
         logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
+        #logger.setLevel(logging.DEBUG)
     else:
         nimages = 3
         ngals = 3
@@ -1477,15 +1478,15 @@ def test_multirng():
                                origin=galsim.PositionD(128.5,128.5))
         im = galsim.ImageF(256, 256, wcs=wcs)
         world_center = im.wcs.toWorld(im.trueCenter())
-        psf_ps.buildGrid(grid_spacing=1.0, ngrid=26, rng=rng, center=world_center, variance=0.1)
+        psf_ps.buildGrid(grid_spacing=1.0, ngrid=30, rng=rng, center=world_center, variance=0.1)
         ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
         if n % 3 == 0:
-            gal_ps.buildGrid(grid_spacing=1.0, ngrid=40, rng=ps_rng, center=galsim.PositionD(0,0))
+            gal_ps.buildGrid(grid_spacing=1.0, ngrid=50, rng=ps_rng, center=galsim.PositionD(0,0))
         for i in range(ngals):
             seedb = 123456789 + (n//3)*ngals + i + 1
             rngb = galsim.UniformDeviate(seedb)
-            u = rngb() * 40. - 20.
-            v = rngb() * 40. - 20.
+            u = rngb() * 50. - 25.
+            v = rngb() * 50. - 25.
             world_pos = galsim.PositionD(u,v)
             psf_g1, psf_g2 = psf_ps.getShear(world_pos)
             psf = galsim.Moffat(fwhm=0.9, beta=2).shear(g1=psf_g1, g2=psf_g2)
@@ -1499,7 +1500,8 @@ def test_multirng():
             stamp = galsim.Convolve(psf,gal).drawImage(scale=0.1, offset=offset)
             stamp.setCenter(ix,iy)
             b = stamp.bounds & im.bounds
-            im[b] += stamp[b]
+            if b.isDefined():
+                im[b] += stamp[b]
         im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
         if __name__ == '__main__':
             im.write('output/test_multirng%02d.fits'%n)

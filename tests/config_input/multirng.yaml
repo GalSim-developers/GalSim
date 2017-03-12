@@ -24,13 +24,14 @@ input:
             b_power_function: '@input.power_spectrum.0.e_power_function'
             units: arcsec
             grid_spacing: 1  # arcsec
+            ngrid: 30  # A bit larger than the image
             variance: 1.e-1  # e_rms = 0.3 (Way more than a normal PSF.  Makes the shapes clearer.)
         -
             # A power law approximation to a cosmological power spectrum.
             e_power_function: '3.5e-8 * (k/10)**-1.4'
             units: radians
             grid_spacing: 1  # arcsec
-            ngrid: 40
+            ngrid: 50
             center: 0,0
             index:
                 # Rebuild every 3 images
@@ -48,8 +49,8 @@ image:
     world_pos:
         rng_num: 1
         type: XY
-        x: { type: Random, min: -20, max: 20 }
-        y: { type: Random, min: -20, max: 20 }
+        x: { type: Random, min: -25, max: 25 }
+        y: { type: Random, min: -25, max: 25 }
     wcs:
         type: PixelScale
         scale: 0.1

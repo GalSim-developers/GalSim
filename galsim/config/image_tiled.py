@@ -112,6 +112,7 @@ class TiledImageBuilder(ImageBuilder):
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
+        base['current_image'] = full_image
 
         nobjects = self.nx_tiles * self.ny_tiles
 

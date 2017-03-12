@@ -356,6 +356,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 logger.debug('obj %d: stamp_offset = %s, offset = %s',obj_num,
                              config['stamp_offset'], offset)
 
+                skip = builder.updateSkip(prof, im, method, offset, stamp, config, logger)
+
+            if not skip:
                 im = builder.draw(prof, im, method, offset, stamp, config, logger)
 
                 scale_factor = builder.getSNRScale(im, stamp, config, logger)
@@ -691,6 +694,48 @@ class StampBuilder(object):
             return im
         else:
             return None
+
+    def updateSkip(self, prof, image, method, offset, config, base, logger):
+        """Before drawing the profile, see whether this object can be trivially skipped.
+
+        The base method checks if the object is completely off the main image, so the
+        intersection bounds will be undefined.  In this case, don't bother drawing the
+        postage stamp for this object.
+
+        @param prof         The profile to draw.
+        @param image        The image onto which to draw the profile (which may be None).
+        @param method       The method to use in drawImage.
+        @param offset       The offset to apply when drawing.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
+
+        @returns whether to skip drawing this object.
+        """
+        if prof is not None and base.get('current_image',None) is not None:
+            if image is None:
+                prof = base['wcs'].toImage(prof, image_pos=base['image_pos'])
+                N = prof.getGoodImageSize(1.)
+                N += 2 + int(np.abs(offset.x) + np.abs(offset.y))
+                bounds = galsim._BoundsI(1,N,1,N)
+            else:
+                bounds = image.bounds
+
+            # Set the origin appropriately
+            stamp_center = base['stamp_center']
+            if stamp_center:
+                bounds = bounds.shift(stamp_center - bounds.center())
+            else:
+                bounds = bounds.shift(base.get('image_origin',galsim.PositionI(1,1)) -
+                                      galsim.PositionI(bounds.xmin, bounds.ymin))
+
+            overlap = bounds & base['current_image'].bounds
+            if not overlap.isDefined():
+                logger.info('obj %d: skip drawing object because its image will be entirely off '
+                            'the main image.', base['obj_num'])
+                return True
+
+        return False
 
     def draw(self, prof, image, method, offset, config, base, logger):
         """Draw the profile on the postage stamp image.

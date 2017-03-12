@@ -98,6 +98,7 @@ class ScatteredImageBuilder(ImageBuilder):
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
+        base['current_image'] = full_image
 
         if 'image_pos' in config and 'world_pos' in config:
             raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
@@ -128,7 +129,7 @@ class ScatteredImageBuilder(ImageBuilder):
             if bounds.isDefined():
                 full_image[bounds] += stamps[k][bounds]
             else:
-                logger.warning(
+                logger.info(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
                         stamps[k].bounds.center().x, stamps[k].bounds.center().y) +
                     "whose bounds are (%d,%d,%d,%d)."%(

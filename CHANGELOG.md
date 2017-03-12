@@ -173,3 +173,7 @@ New config features
 - Added the ability to have multiple rngs with different update sequences
   (e.g. to have some random galaxy properties repeat for the corresponding
   galaxies on multiple images).  (#865)
+- Added ngrid, center, variance, index options to power_spectrum input field.
+  (#865)
+- Skip drawing objects whose postage stamps will end up completely off the
+  main image currently being worked on. (#865)
