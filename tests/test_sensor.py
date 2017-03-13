@@ -48,11 +48,6 @@ def test_silicon():
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
-    # TODO: This file needs a better location (and probably name).
-    # If it's generic, we can put it in shared, which will install into an accessibly location
-    # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
-    # to setting specific parameters via constructor arguments, rather than use a file at all.
-    # (Should probably enable this feature anyway...)
     silicon = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
