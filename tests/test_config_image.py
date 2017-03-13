@@ -1203,7 +1203,9 @@ def test_wcs():
             'ra' : '19.3 hours',
             'dec' : '-33.1 degrees',
         },
-        'ref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
+        # This needs to be done after 'scale2', so call it zref to make sure it happens
+        # alphabetically after scale2 in a sorted list.
+        'zref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
         'invalid' : 34
     }
 
@@ -1248,10 +1250,10 @@ def test_wcs():
         'tan2' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21),
                                world_origin=galsim.CelestialCoord(19.3*galsim.hours,
                                                                   -33.1*galsim.degrees)),
-        'ref' : galsim.PixelScale(0.43).withOrigin(galsim.PositionD(22,33)),
+        'zref' : galsim.PixelScale(0.43).withOrigin(galsim.PositionD(22,33)),
     }
 
-    for key in reference.keys():
+    for key in sorted(reference.keys()):
         wcs = galsim.config.BuildWCS(config['image'], key, config)
         ref = reference[key]
 
