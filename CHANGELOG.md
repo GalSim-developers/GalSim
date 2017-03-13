@@ -81,6 +81,7 @@ New Features
   identical objects. (#722)
 - Added `save_photons` option to `drawImage` to output the photons that were
   shot when photon shooting (if applicable). (#722)
+- Added image.bin and image.subsample methods. (#722)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate

@@ -207,6 +207,8 @@ class Image(with_metaclass(MetaImage, object)):
         view        Return a view of the image, possibly giving it a new scale or wcs.
         subImage    Return a view of a portion of the full image.
         wrap        Wrap the values in a image onto a given subimage and return the subimage.
+        bin         Bin the image pixels in blocks of nx x ny pixels.
+        subsample   Subdivide the image pixels into nx x ny sub-pixels.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
         setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
@@ -695,6 +697,117 @@ class Image(with_metaclass(MetaImage, object)):
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return _Image(subimage.array, bounds, self.wcs)
+
+    def bin(self, nx, ny):
+        """Bin the image pixels in blocks of nx x ny pixels.
+
+        This returns a new image that is a binned version of the current image.
+        Adjacent pixel values in nx x ny blocks are added together to produce the flux in each
+        output pixel.
+
+        If the current number of pixels in each direction is not a multiple of nx, ny, then the
+        last pixel in each direction will be the sum of fewer than nx or ny pixels as needed.
+
+        See also subsample, which is the opposite of this.
+
+        If the wcs is a Jacobian (or simpler), the output image will have its wcs set properly.
+        But if the wcs is most complicated, the output wcs would be fairly complicated to figure
+        out properly, so we leave it as None.  The user should set it themselves if required.
+
+        @param nx       The number of adjacent pixels in the x direction to add together into each
+                        output pixel.
+        @param ny       The number of adjacent pixels in the y direction to add together into each
+                        output pixel.
+
+        @returns a new Image
+        """
+        ncol = self.xmax - self.xmin + 1
+        nrow = self.ymax - self.ymin + 1
+        nbins_x = (ncol-1) // nx + 1
+        nbins_y = (nrow-1) // ny + 1
+        nbins = nbins_x * nbins_y
+
+        # target_bins just provides a number from 0..nbins for each target pixel
+        target_bins = np.arange(nbins).reshape(nbins_y, nbins_x)
+        # current_bins is the same number for each pixel in the current image.
+        current_bins = np.repeat(np.repeat(target_bins, ny, axis=0), nx, axis=1)
+        current_bins = current_bins[0:nrow, 0:ncol]
+
+        # bincount with weights is a tricky way to do the sum over the bins
+        target_ar = np.bincount(current_bins.ravel(), weights=self.array.ravel())
+        target_ar = target_ar.reshape(target_bins.shape)
+
+        if self.wcs is None or not self.wcs.isUniform():
+            target_wcs = None
+        else:
+            if self.wcs.isPixelScale() and nx == ny:
+                target_wcs = galsim.PixelScale(self.scale * nx)
+            else:
+                dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
+                dudx *= nx
+                dvdx *= nx
+                dudy *= ny
+                dvdy *= ny
+                target_wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+
+            # Set the origin so that corresponding image positions correspond to the same world_pos
+            x0 = (self.wcs.origin.x - self.xmin + 0.5) / nx + 0.5
+            y0 = (self.wcs.origin.y - self.ymin + 0.5) / ny + 0.5
+            target_wcs = target_wcs.withOrigin(galsim.PositionD(x0,y0), self.wcs.world_origin)
+
+        target_bounds = galsim.BoundsI(1, nbins_x, 1, nbins_y)
+
+        return _Image(target_ar, target_bounds, target_wcs)
+
+    def subsample(self, nx, ny):
+        """Subdivide the image pixels into nx x ny sub-pixels.
+
+        This returns a new image that is a subsampled version of the current image.
+        Each pixel's flux is split (uniformly) into nx x ny smaller pixels.
+
+        See also bin, which is the opposite of this.  Note that subsample(nx,ny) followed by
+        bin(nx,ny) is essentially a no op.
+
+        If the wcs is a Jacobian (or simpler), the output image will have its wcs set properly.
+        But if the wcs is most complicated, the output wcs would be fairly complicated to figure
+        out properly, so we leave it as None.  The user should set it themselves if required.
+
+        @param nx       The number of sub-pixels in the x direction for each original pixel.
+        @param ny       The number of sub-pixels in the y direction for each original pixel.
+
+        @returns a new Image
+        """
+        ncol = self.xmax - self.xmin + 1
+        nrow = self.ymax - self.ymin + 1
+        npix_x = ncol * nx
+        npix_y = nrow * ny
+        npix = npix_x * npix_y
+        flux_factor = nx * ny
+
+        target_ar = np.repeat(np.repeat(self.array, ny, axis=0), nx, axis=1)
+        target_ar /= flux_factor
+
+        if self.wcs is None or not self.wcs.isUniform():
+            target_wcs = None
+        else:
+            if self.wcs.isPixelScale() and nx == ny:
+                target_wcs = galsim.PixelScale(self.scale / nx)
+            else:
+                dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
+                dudx /= nx
+                dvdx /= nx
+                dudy /= ny
+                dvdy /= ny
+                target_wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+
+            # Set the origin so that corresponding image positions correspond to the same world_pos
+            x0 = (self.wcs.origin.x - self.xmin + 0.5) * nx + 0.5
+            y0 = (self.wcs.origin.y - self.ymin + 0.5) * ny + 0.5
+            target_wcs = target_wcs.withOrigin(galsim.PositionD(x0,y0), self.wcs.world_origin)
+
+        target_bounds = galsim.BoundsI(1, npix_x, 1, npix_y)
+
+        return _Image(target_ar, target_bounds, target_wcs)
 
     def calculate_fft(self):
         """Performs an FFT of an Image in real space to produce a k-space Image.
