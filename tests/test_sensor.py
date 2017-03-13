@@ -248,8 +248,10 @@ def test_silicon_fft():
     print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
-    # First, im2 and im3 should be essentially exactly equal.
-    np.testing.assert_almost_equal(im2.array, im3.array, decimal=10)
+    # First, im2 and im3 should be almost exactly equal.  Not precisely, since im2 was made with
+    # subsampling and then binning, so there are slight difference at the ~1.e-8 relative level.
+    # So with a flux of ~3k, 5 digits is all we manage to get here.
+    np.testing.assert_almost_equal(im2.array, im3.array, decimal=5)
 
     # im1 should be similar, but not equal
     np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
@@ -470,6 +472,6 @@ def test_bf_slopes():
 
 if __name__ == "__main__":
     test_silicon()
-    test_sensor_wavelengths_and_angles()
     test_silicon_fft()
+    test_sensor_wavelengths_and_angles()
     test_bf_slopes()

@@ -982,8 +982,8 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, surface_ops=(), sensor=None, setup_only=False,
-                  dx=None, wmult=1., maxN=None, save_photons=False):
+                  poisson_flux=None, sensor=None, surface_ops=(), n_subsample=3, maxN=None,
+                  save_photons=False, setup_only=False, dx=None, wmult=1.):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1236,20 +1236,26 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param surface_ops  A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
-        @param sensor       An optional Sensor instance, which will be used to accumulate the
-                            photons onto the image. [default: None]
-        @param setup_only   Don't actually draw anything on the image.  Just make sure the image
-                            is set up correctly.  This is used internally by GalSim, but there
-                            may be cases where the user will want the same functionality.
-                            [default: False]
+        @param n_subsample  The number of sub-pixels per final pixel to use for fft drawing when
+                            using a sensor.  The sensor step needs to know the sub-pixel positions
+                            of the photons, which is lost in the fft method.  So using smaller
+                            pixels for the fft step keeps some of that information, making the
+                            assumption of uniform flux per pixel less bad of an approximation.
+                            [default: 3]
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
                             [default: None, which means no limit]
         @param save_photons If True, save the PhotonArray as `image.photons`. Only valid if method
                             is 'phot' or sensor is not None.  [default: False]
+        @param setup_only   Don't actually draw anything on the image.  Just make sure the image
+                            is set up correctly.  This is used internally by GalSim, but there
+                            may be cases where the user will want the same functionality.
+                            [default: False]
 
         @returns the drawn Image.
         """
@@ -1368,12 +1374,13 @@ class GSObject(object):
 
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise,
-                                                   poisson_flux, surface_ops, sensor, gain, maxN)
+                                                   poisson_flux, gain, sensor, surface_ops, maxN)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
-                draw_image = imview.copy()
+                draw_image = imview.subsample(n_subsample, n_subsample)
                 draw_image.setZero()
+                draw_image.setCenter(0,0)
             else:
                 draw_image = imview
 
@@ -1384,7 +1391,7 @@ class GSObject(object):
 
             if sensor is not None:
                 ud = galsim.UniformDeviate(rng)
-                photons= galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
+                photons = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
                 for op in surface_ops:
                     op.applyTo(photons)
                 added_photons = sensor.accumulate(photons, imview)
@@ -1641,7 +1648,7 @@ class GSObject(object):
 
 
     def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
-                 surface_ops=(), sensor=None, gain=1.0, maxN=None):
+                 gain=1.0, sensor=None, surface_ops=(), maxN=None):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1691,13 +1698,13 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD). [default: 1.]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param surface_ops  A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
-        @param sensor       An optional Sensor instance, which will be used to accumulate the
-                            photons onto the image. [default: None]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD). [default: 1.]
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
                             [default: None, which means no limit]
