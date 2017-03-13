@@ -69,9 +69,8 @@ class PowerSpectrumLoader(InputLoader):
                         'ips_index' : config['index'] })
             config['rng_num'] = len(rs) - 1
             base['image']['random_seed'] = rs
-            if file_num is not None:
-                base['index_key'] = 'file_num'
-                galsim.config.SetupConfigRNG(base, logger=logger)
+            base['index_key'] = 'file_num'
+            galsim.config.SetupConfigRNG(base, logger=logger)
             if image_num is not None:
                 base['index_key'] = 'image_num'
                 galsim.config.SetupConfigRNG(base, logger=logger)
