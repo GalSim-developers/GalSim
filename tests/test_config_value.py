@@ -1469,7 +1469,8 @@ def test_eval():
             {
                 'e_power_function' : 'numpy.exp(-k**0.2)',
                 'b_power_function' : 'numpy.exp(-k**1.2)',
-                'grid_spacing' : 10
+                'grid_spacing' : 10,
+                'index' : { 'type' : 'Sequence', 'repeat' : 3 }
             },
             # math doesn't work for acting on k, since it is a numpy array, but
             # we can check that math.sqrt works.
@@ -1488,6 +1489,10 @@ def test_eval():
     config['ps_shear2'] = { 'type' : 'PowerSpectrumShear', 'num' : 2 }
     config['ps_mu2'] = { 'type' : 'PowerSpectrumMagnification', 'num' : 2 }
 
+    config['index_key'] = 'file_num'
+    config['file_num'] = 0
+    config['image'] = { 'random_seed' : 1234 }
+    rng = galsim.BaseDeviate(1234)
     galsim.config.ProcessInput(config)
     galsim.config.SetupInputsForImage(config, None)
     ps = galsim.PowerSpectrum(e_power_function = lambda k: np.exp(-k**0.2),
@@ -1508,7 +1513,8 @@ def test_eval():
     np.testing.assert_almost_equal(ps_mu, mu)
 
     # Check use of numpy in the evaluated string
-    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
+    rng2 = galsim.BaseDeviate(1234 + 31415)
+    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng2)
     g1,g2,mu = ps.getLensing(pos = config['world_pos'])
     ps_shear = galsim.config.ParseValue(config, 'ps_shear1', config, galsim.Shear)[0]
     ps_mu = galsim.config.ParseValue(config, 'ps_mu1', config, float)[0]
