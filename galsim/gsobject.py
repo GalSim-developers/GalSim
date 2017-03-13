@@ -992,6 +992,9 @@ class GSObject(object):
         optionally add to the given Image if `add_to_image = True`, but the default is to replace
         the current contents with new values.
 
+        Providing an input image
+        ------------------------
+
         Note that if you provide an `image` parameter, it is the image onto which the profile
         will be drawn.  The provided image *will be modified*.  A reference to the same image
         is also returned to provide a parallel return behavior to when `image` is `None`
@@ -1011,6 +1014,9 @@ class GSObject(object):
                 >>> stamp = obj.drawImage(image = full_image[b])
                 >>> assert (stamp.array == full_image[b].array).all()
 
+        Letting drawImage create the image for you
+        ------------------------------------------
+
         If drawImage() will be creating the image from scratch for you, then there are several ways
         to control the size of the new image.  If the `nx` and `ny` keywords are present, then an
         image with these numbers of pixels on a side will be created.  Similarly, if the `bounds`
@@ -1025,6 +1031,9 @@ class GSObject(object):
         not provide either `scale` or `wcs`, then drawImage() will default to using the Nyquist
         scale for the current object.  You can also set the data type used in the new Image with the
         `dtype` parameter that has the same options as for the Image constructor.
+
+        The drawing "method"
+        --------------------
 
         There are several different possible methods drawImage() can use for rendering the image.
         This is set by the `method` parameter.  The options are:
@@ -1080,21 +1089,6 @@ class GSObject(object):
                         it could be useful if you want to view the surface brightness profile of an
                         object directly, without including the pixel integration.
 
-        Normally, the flux of the object should be equal to the sum of all the pixel values in the
-        image, less some small amount of flux that may fall off the edge of the image (assuming you
-        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
-        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
-        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
-        quantum efficiency into the gain as well, so the units are photons/ADU.
-
-        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
-        So if you want, you can keep track of this properly and provide an `area` and `exposure`
-        time here. This detail is more important with chromatic objects where the SED is typically
-        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
-        objects however, it is often more convenient to ignore these details and just consider the
-        flux to be the total number of photons for this exposure, in which case, you would leave the
-        area and exptime parameters at their default value of 1.
-
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
         taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime
@@ -1110,6 +1104,15 @@ class GSObject(object):
         `poisson_flux=False`.  It also defaults to False if you set an explicit value for
         `n_photons`.
 
+        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
+        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
+        the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
+        use to reduce the level of these artifacts, in particular `folding_threshold` may be
+        helpful if you see such artifacts in your images.
+
+        Setting the offset
+        ------------------
+
         The object will by default be drawn with its nominal center at the center location of the
         image.  There is thus a qualitative difference in the appearance of the rendered profile
         when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
@@ -1120,6 +1123,24 @@ class GSObject(object):
         `image.center()` which is an integer pixel value, and is not the true center of an
         even-sized image.  You can also arbitrarily offset the profile from the image center with
         the `offset` parameter to handle any sub-pixel dithering you want.
+
+        Setting the overall normalization
+        ---------------------------------
+
+        Normally, the flux of the object should be equal to the sum of all the pixel values in the
+        image, less some small amount of flux that may fall off the edge of the image (assuming you
+        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
+        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
+        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
+        quantum efficiency into the gain as well, so the units are photons/ADU.
+
+        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
+        So if you want, you can keep track of this properly and provide an `area` and `exposure`
+        time here. This detail is more important with chromatic objects where the SED is typically
+        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
+        objects however, it is often more convenient to ignore these details and just consider the
+        flux to be the total number of photons for this exposure, in which case, you would leave the
+        area and exptime parameters at their default value of 1.
 
         On return, the image will have an attribute `added_flux`, which will be set to the total
         flux added to the image.  This may be useful as a sanity check that you have provided a
@@ -1160,11 +1181,49 @@ class GSObject(object):
             >>> im.array.sum()
             49.998158
 
-        Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
-        to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-        the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
-        use to reduce the level of these artifacts, in particular `folding_threshold` may be
-        helpful if you see such artifacts in your images.
+        Using a non-trivial sensor
+        --------------------------
+
+        Normally the sensor is modeled as an array of pixels where any photon that hits a given
+        pixel is accumulated into that pixel.  The final pixel value then just reflects the total
+        number of pixels that hit each sensor.  However, real sensors do not (quite) work this way.
+
+        In real CCDs, the photons travel some distance into the silicon before converting to
+        electrons.  Then the electrons diffuse laterally some amount as they are pulled by the
+        electric field toward the substrate.  Finally, previous electrons that have already been
+        deposited will repel subsequent electrons, both slowing down their descent, leading to
+        more diffusion, and pushing them laterally toward neighboring pixels, which is called
+        the brighter-fatter effect.
+
+        Users interested in modeling this kind of effect can supply a `sensor` object to use
+        for the accumulation step.  See `SiliconSensor` in sensory.py for a class that models
+        silicon-based CCD sensors.
+
+        Some related effects may need to be done to the photons at the surface layer before being
+        passed into the sensor object.  For instance, the photons may need to be given appropriate
+        incidence angles according to the optics of the telescope (since this matters for where the
+        photons are converted to electrons).  You may also need to give the photons wavelengths
+        according to the SED of the object.  Such steps are specified in a `surface_ops` parameter,
+        which should be a list of any such operations you wish to perform on the photon array
+        before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` in
+        photon_array.py for two examples of such surface operators.
+
+        Since the sensor deals with photons, it is most natural to use this feature in conjunction
+        with photon shooting (`method='phot'`).  However, it is allowed with FFT methods too.
+        But there is a caveat one should be aware of in this case.  The FFT drawing is used to
+        produce an intermediate image, which is then converted to a PhotonArray using the
+        factory function `PhotonArray.makeFromImage`.  This assigns photon positions randomly
+        within each pixel where they were drawn, which isn't always a particularly good
+        approximation.
+
+        To improve this behavior, the intermediate image is drawn with smaller pixels than the
+        target image, so the photons are given positions closer to their true locations.  The
+        amount of subsampling is controlled by the `n_subsample` parameter, which defaults to 3.
+        Larger values will be more accurate at the expense of larger FFTs (i.e. slower and using
+        more memory).
+
+        Initialization parameters
+        -------------------------
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image` is None, then an automatically-sized Image will be created.
