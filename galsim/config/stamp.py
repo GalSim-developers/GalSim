@@ -528,7 +528,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
     try:
         image = prof.drawImage(**kwargs)
-    except Exception as e:
+    except Exception as e: # pragma: no cover
         logger.debug('obj %d: prof = %r', base.get('obj_num',0), prof)
         raise
     return image

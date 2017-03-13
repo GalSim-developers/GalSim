@@ -388,7 +388,7 @@ def _GetAngleValue(param):
         value = float(value)
         unit = galsim.angle.get_angle_unit(unit)
         return galsim.Angle(value, unit)
-    except (TypeError, AttributeError) as e:
+    except (TypeError, AttributeError) as e: # pragma: no cover
         raise AttributeError("Unable to parse %s as an Angle.  Caught %s"%(param,e))
 
 
@@ -403,7 +403,7 @@ def _GetPositionValue(param):
             x, y = param.split(',')
             x = float(x.strip())
             y = float(y.strip())
-        except (TypeError, AttributeError) as e:
+        except (TypeError, AttributeError) as e: # pragma: no cover
             raise AttributeError("Unable to parse %s as a PositionD.  Caught %s"%(param,e))
     return galsim.PositionD(x,y)
 
@@ -420,13 +420,13 @@ def _GetBoolValue(param):
             try:
                 val = bool(int(param))
                 return val
-            except (TypeError, AttributeError) as e:
+            except (TypeError, AttributeError) as e: # pragma: no cover
                 raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
     else:
         try:
             val = bool(param)
             return val
-        except (TypeError, AttributeError) as e:
+        except (TypeError, AttributeError) as e: # pragma: no cover
             raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
 
 
@@ -707,7 +707,7 @@ def _GenerateFromCurrent(config, base, value_type):
     key = params['key']
     try:
         return GetCurrentValue(key, base, value_type, return_safe=True)
-    except ValueError:
+    except ValueError: # pragma: no cover
         raise ValueError("Invalid key = %s given for type=Current"%key)
 
 

@@ -1362,7 +1362,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         cfimage = galsim.fits.read(file_name)
     except KeyboardInterrupt:
         raise
-    except: # pragma no cover
+    except: # pragma: no cover
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
