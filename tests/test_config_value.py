@@ -406,22 +406,32 @@ def test_float_value():
     config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
     galsim.config.SetupInputsForImage(config, None)
     try:
-        ps2 = np.testing.assert_warns(
+        ps2a = np.testing.assert_warns(
                 UserWarning, galsim.config.ParseValue, config, 'ps', config, float)[0]
     except ImportError:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            ps2 = galsim.config.ParseValue(config,'ps',config, float)[0]
-    np.testing.assert_almost_equal(ps2, 25.)
+            ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
+    np.testing.assert_almost_equal(ps2a, 25.)
 
     galsim.config.RemoveCurrent(config)
     # Need a different point that happens to have strong lensing, since the PS realization changed.
     config['world_pos'] = galsim.PositionD(3.1,24.2)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
-        ps2 = galsim.config.ParseValue(config, 'ps', config, float)[0]
+        ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
     assert "Warning: PowerSpectrum mu = 29.287659 means strong lensing." in cl.output
-    np.testing.assert_almost_equal(ps2, 25.)
+    np.testing.assert_almost_equal(ps2b, 25.)
+
+    # Out of bounds results in shear = 0, and a warning.
+    galsim.config.RemoveCurrent(config)
+    config['world_pos'] = galsim.PositionD(1000,2000)
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, cl.logger)
+        ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
+    print(cl.output)
+    assert "Warning: position (1000.000000,2000.000000) not within the bounds" in cl.output
+    np.testing.assert_almost_equal(ps2c, 1.)
 
     # Should raise an AttributeError if there is no type in the dict
     try:
@@ -1243,11 +1253,20 @@ def test_shear_value():
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
-        ps2a = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
+        ps2b = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
     print(cl.output)
     assert "Warning: PowerSpectrum shear (g1=-1.626101, g2=0.287082) is invalid." in cl.output
-    np.testing.assert_almost_equal((ps2a.g1, ps2a.g2), (0,0))
+    np.testing.assert_almost_equal((ps2b.g1, ps2b.g2), (0,0))
 
+    # Out of bounds results in shear = 0, and a warning.
+    galsim.config.RemoveCurrent(config)
+    config['world_pos'] = galsim.PositionD(1000,2000)
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, cl.logger)
+        ps2c = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
+    print(cl.output)
+    assert "Warning: position (1000.000000,2000.000000) not within the bounds" in cl.output
+    np.testing.assert_almost_equal((ps2c.g1, ps2c.g2), (0,0))
 
 
 @timer

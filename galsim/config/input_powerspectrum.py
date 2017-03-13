@@ -21,6 +21,7 @@ from __future__ import print_function
 import galsim
 import math
 import warnings
+import logging
 
 # This file adds input type nfw_halo and value types PowerSpectrumShear and
 # PowerSpectrumMagnification.
@@ -191,14 +192,16 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
 
     with warnings.catch_warnings(record=True) as w:
         g1,g2 = power_spectrum.getShear(pos)
-    if len(w) > 1:
+    if len(w) > 0:
         # Send the warning to the logger, rather than raising a normal warning.
         # The warning here would typically be that the position is out of range of where the
         # power spectrum is defined.  So if we do get this and the position is not on the image,
         # we probably don't care.  In that case, just log it as debug, now warn.
-        log_level = logging.WARNING if base['current_image'].bounds.includes(pos) else loggin.DEBUG
+        log_level = (logging.WARNING if 'current_image' in base and
+                                        base['current_image'].getOuterBounds().includes(pos)
+                     else logging.DEBUG)
         for ww in w:
-            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww)
+            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww.message)
 
     try:
         shear = galsim.Shear(g1=g1,g2=g2)
@@ -232,10 +235,12 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
 
     with warnings.catch_warnings(record=True) as w:
         mu = power_spectrum.getMagnification(pos)
-    if len(w) > 1:
-        log_level = logging.WARNING if base['current_image'].bounds.includes(pos) else loggin.DEBUG
+    if len(w) > 0:
+        log_level = (logging.WARNING if 'current_image' in base and
+                                        base['current_image'].getOuterBounds().includes(pos)
+                     else logging.DEBUG)
         for ww in w:
-            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww)
+            logger.log(log_level, 'obj %d: %s',base['obj_num'], ww.message)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.:
