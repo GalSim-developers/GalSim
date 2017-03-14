@@ -597,6 +597,49 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
+def horner(x, coef, dtype=None):
+    """Evaluate univariate polynomial using Horner's method.
+
+    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
+    A + x(B + x(C + x(D)))
+
+    @param x        A numpy array of values at which to evaluate the polynomial.
+    @param coef     Polynomial coefficients of increasing powers of x.
+    @param dtype    Optionally specify the dtype of the return array. [default: None]
+
+    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
+    """
+    coef = np.trim_zeros(coef, trim='b')
+    result = np.zeros_like(x, dtype=dtype)
+    if len(coef) == 0: return result
+    result += coef[-1]
+    for c in coef[-2::-1]:
+        result *= x
+        if c != 0: result += c
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    return result
+
+def horner2d(x, y, coefs, dtype=None):
+    """Evaluate bivariate polynomial using nested Horner's method.
+
+    @param x        A numpy array of the x values at which to evaluate the polynomial.
+    @param y        A numpy array of the y values at which to evaluate the polynomial.
+    @param coefs    2D array-like of coefficients in increasing powers of x and y.
+                    The first axis corresponds to increasing the power of y, and the second to
+                    increasing the power of x.
+    @param dtype    Optionally specify the dtype of the return array. [default: None]
+
+    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
+    """
+    result = horner(y, coefs[-1], dtype=dtype)
+    for coef in coefs[-2::-1]:
+        result *= x
+        result += horner(y, coef, dtype=dtype)
+    # Useful when working on this... (Numpy method is much slower, btw.)
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
+    return result
+
+
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     """
     The routine to do the opposite of what 'interleaveImages' routine does. It generates a
