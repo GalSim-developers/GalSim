@@ -37,7 +37,7 @@ class TruthBuilder(ExtraOutputBuilder):
     """
     def initialize(self, data, scratch, config, base, logger):
         # Call the base class initialize first.
-        super(self.__class__,self).initialize(data,scratch,config,base,logger)
+        super(TruthBuilder,self).initialize(data,scratch,config,base,logger)
 
         # Warn if the config dict isn't an OrderedDict.
         if logger and not hasattr(config, '__reversed__') and not hasattr(self,'warned'): # pragma: no cover
