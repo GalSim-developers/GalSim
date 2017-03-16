@@ -1477,7 +1477,7 @@ class GSObject(object):
         # Draw the image in k space.
         bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
         kimage = galsim.ImageC(bounds=bounds, scale=dk)
-        self.SBProfile.drawK(kimage.image.view(), dk)
+        self._drawKImage(kimage)
 
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
@@ -1882,6 +1882,24 @@ class GSObject(object):
             image /= gain
 
         return image
+
+    def _drawKImage(self, image, add_to_image=False):
+        """Equivalent to drawKImage(image, add_to_image), but without the normal sanity checks
+        or the option to create the image automatically.
+
+        The input image must be provided as an ImageC instancec, and the center should be set to
+        coordinate (0,0).  This is not checked (in the interest of efficiency).
+
+        @param image        The ImageC onto which to draw the k-space image. [required]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.  [default: False]
+
+        @returns an ImageC instance (created if necessary)
+        """
+        if not add_to_image: image.setZero()
+        self.SBProfile.drawK(image.image.view(), image.scale)
+        return image
+
 
     def __eq__(self, other):
         return (type(self) == type(other) and
