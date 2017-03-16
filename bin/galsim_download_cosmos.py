@@ -286,7 +286,7 @@ def download(url, target, unpack_dir, args, logger):
                     if args.verbosity >= 2:
                         status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
                             file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
-                        status = status + chr(8)*(len(status)+1)
+                        status = status + '\b'*len(status)
                         sys.stdout.write(status)
                         sys.stdout.flush()
                     elif args.verbosity >= 1 and file_size_dl > next_dot:
