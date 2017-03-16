@@ -567,7 +567,7 @@ namespace galsim {
         {
             if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-            transform_pixel(*this, rhs, ReturnSecond<T,U>());
+            transform_pixel(*this, rhs, ReturnSecond<T>());
         }
     };
 

@@ -429,6 +429,7 @@ namespace galsim {
     template double SBProfile::draw(ImageView<float> image, double dx) const;
     template double SBProfile::draw(ImageView<double> image, double dx) const;
 
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
     template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
 
 }

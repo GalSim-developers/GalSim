@@ -100,7 +100,7 @@ from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI, _Image
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
 
 # PhotonArray
 from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles

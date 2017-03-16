@@ -511,7 +511,7 @@ def test_drawKImage():
     #   - also return that image
     #   - set the scale to obj.stepK()
     #   - zero out any existing data
-    im3 = galsim.ImageC(1149,1149)
+    im3 = galsim.ImageCD(1149,1149)
     im4 = obj.drawKImage(im3)
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(im3) produced image with wrong scale")
@@ -531,7 +531,7 @@ def test_drawKImage():
     #   - resize the provided image
     #   - also return that image
     #   - set the scale to obj.stepK()
-    im5 = galsim.ImageC()
+    im5 = galsim.ImageCD()
     obj.drawKImage(im5)
     np.testing.assert_almost_equal(im5.scale, stepk, 9,
                                    "obj.drawKImage(im5) produced image with wrong scale")
@@ -566,7 +566,7 @@ def test_drawKImage():
     #   - write to the existing image
     #   - use the image's scale
     nx = 401
-    im9 = galsim.ImageC(nx,nx, scale=scale)
+    im9 = galsim.ImageCD(nx,nx, scale=scale)
     obj.drawKImage(im9)
     np.testing.assert_almost_equal(im9.scale, scale, 9,
                                    "obj.drawKImage(im9) produced image with wrong scale")
@@ -727,7 +727,7 @@ def test_drawKImage_Gaussian():
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
-    kimage_test = galsim.ImageC(test_imsize, test_imsize)
+    kimage_test = galsim.ImageCD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different scale (reasonably matched for size)
     for scale_test in (0.03 / test_sigma, 0.4 / test_sigma):
@@ -769,7 +769,7 @@ def test_drawKImage_Exponential_Moffat():
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
-    kimage_test = galsim.ImageC(test_imsize, test_imsize)
+    kimage_test = galsim.ImageCD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different scale (reasonably matched for size)
     for scale_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
@@ -1165,13 +1165,13 @@ def test_np_fft():
         input_list.append(xim.array)
 
     for N in [2,4,8,10]:
-        xim = galsim.ImageC(N,N)
+        xim = galsim.ImageCD(N,N)
         xim.real.addNoise(noise)
         xim.imag.addNoise(noise)
         input_list.append(xim.array)
 
     for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
-        xim = galsim.ImageC(Nx,Ny)
+        xim = galsim.ImageCD(Nx,Ny)
         xim.real.addNoise(noise)
         xim.imag.addNoise(noise)
         input_list.append(xim.array)

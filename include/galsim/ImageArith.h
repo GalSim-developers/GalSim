@@ -57,6 +57,14 @@ namespace galsim {
     template <typename T> class ImageAlloc;
     template <typename T> class ImageView;
 
+    // These ops are not defined by the standard library, but might be required below.
+    inline std::complex<double> operator*(double x, const std::complex<float>& y)
+    { return std::complex<double>(x*y.real(), x*y.imag()); }
+    inline std::complex<double> operator/(double x, const std::complex<float>& y)
+    { return x * (1.F / y); }
+    inline std::complex<float>& operator+=(std::complex<float>& x, const std::complex<double>& y)
+    { return x += std::complex<float>(y); }
+
     //
     // Templates for stepping through image pixels
     // Not all of these are used for the below arithmetic, but we keep them all
@@ -155,10 +163,10 @@ namespace galsim {
             const int step2 = image2.getStep();
             if (step1 == 1 && step2 == 1) {
                 for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
-                    for (int i=0; i<ncol; i++, ++ptr1, ++ptr2) *ptr1 = f(*ptr1,*ptr2);
+                    for (int i=0; i<ncol; i++, ++ptr1, ++ptr2) *ptr1 = f(*ptr1,T1(*ptr2));
             } else {
                 for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
-                    for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,*ptr2);
+                    for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,T1(*ptr2));
             }
         }
         return f;
@@ -182,11 +190,11 @@ namespace galsim {
         T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
     };
 
-    template <typename T1, typename T2>
+    template <typename T1>
     class ReturnSecond
     {
     public:
-        T1 operator()(T1, T2 v) const { return T1(v); }
+        T1 operator()(T1, T1 v) const { return v; }
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation

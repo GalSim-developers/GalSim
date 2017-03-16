@@ -1476,7 +1476,7 @@ class GSObject(object):
 
         # Draw the image in k space.
         bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
-        kimage = galsim.ImageC(bounds=bounds, scale=dk)
+        kimage = galsim.ImageCD(bounds=bounds, scale=dk)
         self._drawKImage(kimage)
 
         # Wrap the full image to the size we want for the FT.
@@ -1763,7 +1763,7 @@ class GSObject(object):
         Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
         transform of the surface brightness profile.
 
-        @param image        If provided, this will be the ImageC onto which to draw the k-space
+        @param image        If provided, this will be the Image onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
                             created.  If `image` is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
@@ -1784,7 +1784,7 @@ class GSObject(object):
                             Note: This requires that `image` be provided and that it has defined
                             bounds. [default: False]
 
-        @returns an ImageC instance (created if necessary)
+        @returns an Image instance (created if necessary)
         """
         if isinstance(image,galsim.Image) and isinstance(nx,galsim.Image):
             # If the user calls drawK(re,im), then give the proper deprecation below.
@@ -1806,9 +1806,9 @@ class GSObject(object):
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
         if re is not None or im is not None: # pragma: no cover
             from .deprecated import depr
-            depr('re,im', 1.5, 'image as a single complex ImageC',
+            depr('re,im', 1.5, 'image as a single complex Image',
                  'Warning: the input re, im images are being changed to have their arrays be '
-                 'the real and imag parts of the output ImageC object.')
+                 'the real and imag parts of the output Image object.')
             if re is None or im is None:
                 raise ValueError("Only one of re or im was provided.")
             if image is not None:
@@ -1823,9 +1823,9 @@ class GSObject(object):
                  "The gain parameter doesn't really make sense for drawKImage.  If you had been "
                  "using it, you should now just divide the final image by gain instead.")
 
-        # Make sure provided image is an ImageC
-        if image is not None and image.array.dtype != np.complex128:
-            raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
+        # Make sure provided image is complex
+        if image is not None and not image.iscomplex:
+            raise ValueError("Provided image must be complex")
 
         # Possibly get the scale from image.
         if image is not None and scale is None:
@@ -1853,7 +1853,7 @@ class GSObject(object):
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
         if image is None: dtype = np.complex128
-        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
+        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
                                        odd=True, wmult=wmult)
 
         # Set the wcs of the images to use the dk scale size
@@ -1887,14 +1887,14 @@ class GSObject(object):
         """Equivalent to drawKImage(image, add_to_image), but without the normal sanity checks
         or the option to create the image automatically.
 
-        The input image must be provided as an ImageC instancec, and the center should be set to
-        coordinate (0,0).  This is not checked (in the interest of efficiency).
+        The input image must be provided as a complex Image instancec, and the center should
+        be set to coordinate (0,0).  This is not checked (in the interest of efficiency).
 
-        @param image        The ImageC onto which to draw the k-space image. [required]
+        @param image        The Image onto which to draw the k-space image. [required]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.  [default: False]
 
-        @returns an ImageC instance (created if necessary)
+        @returns an Image instance (created if necessary)
         """
         if not add_to_image: image.setZero()
         self.SBProfile.drawK(image.image.view(), image.scale)

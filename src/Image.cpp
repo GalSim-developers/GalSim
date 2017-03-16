@@ -910,7 +910,7 @@ void ImageView<T>::copyFrom(const BaseImage<T>& rhs)
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
         throw ImageError("Attempt im1 = im2, but bounds not the same shape");
-    transform_pixel(*this, rhs, ReturnSecond<T,T>());
+    transform_pixel(*this, rhs, ReturnSecond<T>());
 }
 
 // A helper function that will return the smallest 2^n or 3x2^n value that is
@@ -937,6 +937,7 @@ template class BaseImage<int32_t>;
 template class BaseImage<int16_t>;
 template class BaseImage<uint32_t>;
 template class BaseImage<uint16_t>;
+template class BaseImage<std::complex<float> >;
 template class BaseImage<std::complex<double> >;
 template class ImageAlloc<double>;
 template class ImageAlloc<float>;
@@ -944,6 +945,7 @@ template class ImageAlloc<int32_t>;
 template class ImageAlloc<int16_t>;
 template class ImageAlloc<uint32_t>;
 template class ImageAlloc<uint16_t>;
+template class ImageAlloc<std::complex<float> >;
 template class ImageAlloc<std::complex<double> >;
 template class ImageView<double>;
 template class ImageView<float>;
@@ -951,6 +953,7 @@ template class ImageView<int32_t>;
 template class ImageView<int16_t>;
 template class ImageView<uint32_t>;
 template class ImageView<uint16_t>;
+template class ImageView<std::complex<float> >;
 template class ImageView<std::complex<double> >;
 template class ConstImageView<double>;
 template class ConstImageView<float>;
@@ -958,6 +961,7 @@ template class ConstImageView<int32_t>;
 template class ConstImageView<int16_t>;
 template class ConstImageView<uint32_t>;
 template class ConstImageView<uint16_t>;
+template class ConstImageView<std::complex<float> >;
 template class ConstImageView<std::complex<double> >;
 } // namespace galsim
 
