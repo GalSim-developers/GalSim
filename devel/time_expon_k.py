@@ -19,8 +19,8 @@ def draw(params, image=None):
     if image is None:   
         image = exp.drawKImage()
     else:
-        #image = exp._drawKImage(image)
-        image = exp.drawKImage(image)
+        image = exp._drawKImage(image)
+        #image = exp.drawKImage(image)
     return image
 
 def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
@@ -61,7 +61,7 @@ t1 = time.time()
 pr.disable()
 
 ps = pstats.Stats(pr).sort_stats('time')
-ps = pstats.Stats(pr).sort_stats('cumtime')
+#ps = pstats.Stats(pr).sort_stats('cumtime')
 ps.print_stats(20)
 
 print('True params = ',true_params)
