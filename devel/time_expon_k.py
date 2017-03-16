@@ -9,13 +9,14 @@ import time
 import cProfile, pstats
 pr = cProfile.Profile()
 
-def draw(params, image=None):
+def draw(params, image=None, gsparams=None):
     """Draw an Exponential profile in k-space onto the given image
 
     params = [ half_light_radius, flux, e1, e2 ]
     image is optional, but if provided will be used as is.
     """
-    exp = galsim.Exponential(params[0], flux=params[1]).shear(g1=params[2], g2=params[3])
+    exp = galsim.Exponential(params[0], flux=params[1], gsparams=gsparams)
+    exp = exp.shear(g1=params[2], g2=params[3])
     if image is None:   
         image = exp.drawKImage()
     else:
@@ -29,13 +30,14 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
 
     class resid(object):
         def __init__(self, image):
+            self._gsp = galsim.GSParams(kvalue_accuracy=1.e-3)
             self._target_image = image.copy()
             self._scratch_image = image.copy()
         def __call__(self, params):
             if params[0] < 0. or abs(params[2]) > 1. or abs(params[3]) > 1.:
                 return 1.e500
             try:
-                draw(params, self._scratch_image)
+                draw(params, self._scratch_image, gsparams=self._gsp)
             except ValueError:
                 return 1.e500
             a = self._scratch_image.array
