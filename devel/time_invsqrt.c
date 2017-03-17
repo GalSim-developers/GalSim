@@ -15,38 +15,35 @@ void sse_rsqrt(float* x, float* y)
 void sse_rsqrt_nr(float* x, float* y)
 {
     const float threehalfs = 1.5F;
-    const float x2 = *x * 0.5F;
+    const float halfx = *x * 0.5F;
     __m128 in = _mm_load_ss(x);
-    _mm_store_ss(y, _mm_rsqrt_ss( in ) );
-
-    *y *= ( threehalfs - ( x2 * *y * *y ) );
+    float yy;
+    _mm_store_ss(&yy, _mm_rsqrt_ss( in ) );
+    *y = yy * (threehalfs - halfx * yy * yy);
 }
-
 
 void carmack_rsqrt(float* x, float* y)
 {
     const float threehalfs = 1.5F;
-    const float x2 = *x * 0.5F;
+    const float halfx = *x * 0.5F;
     float yy = *x;
     int32_t i  = *(int32_t *)(&yy);
     i  = 0x5f3759df - (i >> 1);
     yy = *(float *)(&i);
-    yy *= ( threehalfs - ( x2 * yy * yy ) );
-    *y = yy;
+    *y = yy * (threehalfs - halfx * yy * yy);
 }
 
 // with extra newton raphson step
 void carmack_rsqrt_nr2(float* x, float* y)
 {
     const float threehalfs = 1.5F;
-    const float x2 = *x * 0.5F;
+    const float halfx = *x * 0.5F;
     float yy  = *x;
     int32_t i  = *(int32_t *)(&yy);
     i  = 0x5f3759df - (i >> 1);
     yy = *(float *)(&i);
-    yy *= threehalfs - ( x2 * yy * yy );
-    yy *= threehalfs - ( x2 * yy * yy );
-    *y = yy;
+    yy *= threehalfs - halfx * yy * yy;
+    *y = yy * (threehalfs - halfx * yy * yy);
 }
 
 void std_invsqrt(float* x, float* y)
@@ -67,13 +64,13 @@ void sse4_rsqrt_nr(float* x, float* y)
     const __m128 half = _mm_set_ps1(0.5F);
 
     __m128 x4 = _mm_loadu_ps(x);
-    __m128 x2 = _mm_mul_ps(half,x4);   // 0.5 * x
-    __m128 y4 = _mm_rsqrt_ps(x4);
-    __m128 tmp = _mm_mul_ps(y4,y4);  // y * y
-    tmp = _mm_mul_ps(x2,tmp);  // 0.5 * x * y * y
-    tmp = _mm_sub_ps(threehalfs,tmp);
-    y4 = _mm_mul_ps(y4, tmp);
-    _mm_storeu_ps(y, y4);
+    __m128 halfx = _mm_mul_ps(half,x4);   // 0.5 * x
+    __m128 yy = _mm_rsqrt_ps(x4);
+    __m128 tmp = _mm_mul_ps(yy,yy);  // yy * yy
+    __m128 tmp2 = _mm_mul_ps(halfx,tmp);  // 0.5 * x * y * y
+    tmp = _mm_sub_ps(threehalfs,tmp2);
+    tmp2 = _mm_mul_ps(yy, tmp);
+    _mm_storeu_ps(y, tmp2);
 }
 
 void sse4_invsqrt(float* x, float* y)
@@ -81,20 +78,35 @@ void sse4_invsqrt(float* x, float* y)
     const __m128 one = _mm_set_ps1(1.0F);
 
     __m128 x4 = _mm_loadu_ps(x);
-    __m128 y4 = _mm_sqrt_ps(x4);
-    y4 = _mm_div_ps(one,y4);
-    _mm_storeu_ps(y, y4);
+    __m128 sqrtx = _mm_sqrt_ps(x4);
+    __m128 invsqrtx = _mm_div_ps(one,sqrtx);
+    _mm_storeu_ps(y, invsqrtx);
 }
 
 double time_loop(long n, float* input, float* output, void (*func)(float*,float*), int inc)
 {
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
-    for (long i=0; i<n; i+=inc) {
-        (*func)(input+i, output+i);
+    int N = 20;
+    double t = 0.;
+    for (int i=0; i<N; ++i) {
+        // Flush the cache.
+        // Taken from http://stackoverflow.com/questions/3446138/how-to-clear-cpu-l1-and-l2-cache
+        const int size = 4*1024*1024; // Allocate 4M.  L3 on my system is 3M
+        char *c = (char *)malloc(size);
+        for (int i = 0; i < 10; i++)
+            for (int j = 0; j < size; j++)
+                c[j] = (char) (i*c[(int)(c[j]) % size]);
+
+        // Time the loop we care about.
+        struct timeval stop, start;
+        gettimeofday(&start, NULL);
+        for (long i=0; i<n; i+=inc) {
+            (*func)(input+i, output+i);
+        }
+        gettimeofday(&stop, NULL);
+        t += (stop.tv_usec - start.tv_usec)/1.e6;
     }
-    gettimeofday(&stop, NULL);
-    return (stop.tv_usec - start.tv_usec)/1.e6;
+    t /= N;
+    return t;
 }
 
 double max_err(long n, float* val, float* truth)
@@ -145,7 +157,7 @@ int main()
     printf("sse 1 nr:     %g msec, max error = %g\n", t4*1.e3, err4);
     printf("1./sqrt(x):   %g msec, max error = %g\n", t5*1.e3, err5);
     printf("1./sqrtd(x):  %g msec, max error = %g\n", t6*1.e3, err6);
-    printf("sse4:         %g msec, max error = %g\n", t7*1.e3, err7);
+    printf("sse4 rsqrt:   %g msec, max error = %g\n", t7*1.e3, err7);
     printf("sse4 1 nr:    %g msec, max error = %g\n", t8*1.e3, err8);
     printf("sse4 invsqrt: %g msec, max error = %g\n", t9*1.e3, err9);
 
