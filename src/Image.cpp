@@ -145,8 +145,16 @@ template <typename T>
 struct Sum
 {
     Sum(): sum(0) {}
-    void operator()(T x) { sum += x; }
-    T sum;
+    void operator()(T x) { sum += double(x); }
+    double sum;
+};
+
+template <typename T>
+struct Sum<std::complex<T> >
+{
+    Sum(): sum(0) {}
+    void operator()(std::complex<T> x) { sum += std::complex<double>(x); }
+    std::complex<double> sum;
 };
 
 template <typename T>
@@ -154,7 +162,7 @@ T BaseImage<T>::sumElements() const
 {
     Sum<T> sum;
     sum = for_each_pixel(*this, sum);
-    return sum.sum;
+    return T(sum.sum);
 }
 
 template <typename T>

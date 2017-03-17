@@ -248,8 +248,9 @@ namespace galsim {
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
 
+    template <typename T>
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double> im,
+        ImageView<T> im,
         double x0, double dx, int izero,
         double y0, double dy, int jzero) const
     {
@@ -258,7 +259,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         assert(im.getStep() == 1);
 
         if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
@@ -282,8 +283,9 @@ namespace galsim {
         }
     }
 
+    template <typename T>
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, int izero,
         double ky0, double dky, int jzero) const
     {
@@ -292,7 +294,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         assert(im.getStep() == 1);
         checkK();
 
@@ -383,8 +385,9 @@ namespace galsim {
         }
     }
 
+    template <typename T>
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, double dkxy,
         double ky0, double dky, double dkyx) const
     {
@@ -393,7 +396,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
         checkK();

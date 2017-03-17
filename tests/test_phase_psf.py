@@ -376,8 +376,8 @@ def test_scale_unit():
     im1 = psf.drawImage(nx=32, ny=32, scale=0.1, method='no_pixel')
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcmin)
     im2 = psf2.drawImage(nx=32, ny=32, scale=0.1/60.0, method='no_pixel')
-    np.testing.assert_array_equal(
-            im1.array, im2.array,
+    np.testing.assert_almost_equal(
+            im1.array, im2.array, 8,
             'PhaseScreenPSF inconsistent use of scale_unit')
 
     opt_psf1 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit=galsim.arcsec)

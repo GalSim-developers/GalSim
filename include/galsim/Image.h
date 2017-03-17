@@ -25,6 +25,7 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <string>
+#include <complex>
 
 // Need this for instantiated types, since we will use int16_t and int32_t
 // rather than short and int to explicitly match the python levels numpy.int16 and numpy.int32.
@@ -37,15 +38,49 @@
 
 #include "Std.h"
 #include "Bounds.h"
-#include "ImageArith.h"
 
 namespace galsim {
+
+    // All code between the @cond and @endcond is excluded from Doxygen documentation
+    //! @cond
+
+    /**
+     *  @brief Exception class usually thrown by images.
+     */
+    class ImageError : public std::runtime_error {
+    public:
+        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
+
+    };
+
+    /**
+     *  @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
+     */
+    class ImageBoundsError : public ImageError {
+    public:
+        ImageBoundsError(const std::string& m) :
+            ImageError("Access to out-of-bounds pixel " + m) {}
+
+        ImageBoundsError(const std::string& m, int min, int max, int tried);
+
+        ImageBoundsError(int x, int y, const Bounds<int> b);
+    };
+
+    //! @endcond
+
 
     template <typename T> class AssignableToImage;
     template <typename T> class BaseImage;
     template <typename T> class ImageAlloc;
     template <typename T> class ImageView;
     template <typename T> class ConstImageView;
+
+    template <typename T1>
+    class ReturnSecond
+    {
+    public:
+        T1 operator()(T1, T1 v) const { return v; }
+    };
 
     /**
      *  @brief AssignableToImage is a base class for anything that can be assigned to
@@ -780,5 +815,7 @@ namespace galsim {
     int goodFFTSize(int input);
 
 } // namespace galsim
+
+#include "ImageArith.h"
 
 #endif

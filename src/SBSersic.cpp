@@ -181,7 +181,8 @@ namespace galsim {
         return _flux * _info->kValue(ksq);
     }
 
-    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
     {
@@ -205,7 +206,7 @@ namespace galsim {
             // By a lot, I mean ~0.5%, which is enough to care about.
             if (izero != 0 && jzero != 0) {
                 // NB: _info->xValue(0) = 1
-                double* ptr = im.getData() + jzero*im.getStride() + izero;
+                T* ptr = im.getData() + jzero*im.getStride() + izero;
                 *ptr = _xnorm;
             }
 #endif
@@ -213,7 +214,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            double* ptr = im.getData();
+            T* ptr = im.getData();
             const int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -231,7 +232,8 @@ namespace galsim {
         }
     }
 
-    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
@@ -240,7 +242,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -296,10 +298,10 @@ namespace galsim {
             dbg<<"xValue(0) = "<<_info->xValue(0.)<<std::endl;
 #endif
         }
-
     }
 
-    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -313,7 +315,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -331,7 +333,8 @@ namespace galsim {
         }
     }
 
-    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -340,7 +343,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 

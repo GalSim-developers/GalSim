@@ -521,7 +521,8 @@ namespace galsim {
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(fluxScaling , -k.x*cen.x-k.y*cen.y); }
 
-    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<T> im,
                                                   double x0, double dx, int izero,
                                                   double y0, double dy, int jzero) const
     {
@@ -579,7 +580,8 @@ namespace galsim {
         im *= _ampScaling;
     }
 
-    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<T> im,
                                                   double x0, double dx, double dxy,
                                                   double y0, double dy, double dyx) const
     {
@@ -611,7 +613,8 @@ namespace galsim {
         im *= _ampScaling;
     }
 
-    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<T> > im,
                                                   double kx0, double dkx, int izero,
                                                   double ky0, double dky, int jzero) const
     {
@@ -653,7 +656,7 @@ namespace galsim {
             // separately.
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -675,7 +678,8 @@ namespace galsim {
         }
     }
 
-    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<T> > im,
                                                   double kx0, double dkx, double dkxy,
                                                   double ky0, double dky, double dkyx) const
     {
@@ -714,7 +718,7 @@ namespace galsim {
             xdbg<<"!zeroCen\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 

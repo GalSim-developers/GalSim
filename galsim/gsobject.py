@@ -1814,9 +1814,6 @@ class GSObject(object):
             if image is not None:
                 raise ValueError("re and im were provided along with image")
             image = re + 1j * im
-        if dtype is not None: # pragma: no cover
-            from .deprecated import depr
-            depr('dtype', 1.5, '', 'dtype of returned image will always be numpy.complex128')
         if gain is not None: # pragma: no cover
             from .deprecated import depr
             depr('gain', 1.5, ''
@@ -1826,6 +1823,12 @@ class GSObject(object):
         # Make sure provided image is complex
         if image is not None and not image.iscomplex:
             raise ValueError("Provided image must be complex")
+        if dtype is not None and np.dtype(dtype).kind != 'c':
+            raise ValueError("Provided dtype must be complex")
+        if image is not None and dtype is not None and image.array.dtype != dtype:
+            raise ValueError("Cannot specify dtype != image.array.dtype if image is provided")
+        if image is None and dtype is None:
+            dtype = np.complex128
 
         # Possibly get the scale from image.
         if image is not None and scale is None:
@@ -1852,7 +1855,6 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        if image is None: dtype = np.complex128
         image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
                                        odd=True, wmult=wmult)
 

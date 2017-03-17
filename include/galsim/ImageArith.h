@@ -21,41 +21,9 @@
 #define GalSim_ImageArith_H
 
 #include <complex>
+#include "galsim/Image.h"
 
 namespace galsim {
-
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
-
-    /**
-     *  @brief Exception class usually thrown by images.
-     */
-    class ImageError : public std::runtime_error {
-    public:
-        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
-
-    };
-
-    /**
-     *  @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
-     */
-    class ImageBoundsError : public ImageError {
-    public:
-        ImageBoundsError(const std::string& m) :
-            ImageError("Access to out-of-bounds pixel " + m) {}
-
-        ImageBoundsError(const std::string& m, int min, int max, int tried);
-
-        ImageBoundsError(int x, int y, const Bounds<int> b);
-    };
-
-    //! @endcond
-
-
-    template <typename T> class AssignableToImage;
-    template <typename T> class BaseImage;
-    template <typename T> class ImageAlloc;
-    template <typename T> class ImageView;
 
     // These ops are not defined by the standard library, but might be required below.
     inline std::complex<double> operator*(double x, const std::complex<float>& y)
@@ -190,11 +158,13 @@ namespace galsim {
         T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
     };
 
-    template <typename T1>
-    class ReturnSecond
+    template <typename T, typename T2>
+    class MultiplyConstant
     {
+        const T2 _x;
     public:
-        T1 operator()(T1, T1 v) const { return v; }
+        MultiplyConstant(const T2 x) : _x(x) {}
+        T operator()(const T val) const { return T(_x * val); }
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -346,7 +316,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<T> operator*=(ImageView<T> im, T x)
-    { transform_pixel(im, bind2nd(std::multiplies<T>(),x)); return im; }
+    { transform_pixel(im, MultiplyConstant<T,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator*=(ImageAlloc<T>& im, const T& x)
@@ -367,6 +337,15 @@ namespace galsim {
     template <typename T>
     inline ImageAlloc<CT>& operator*=(ImageAlloc<CT>& im, const T& x)
     { im.view() *= x; return im; }
+
+    // These are worth specializing so we can do im *= x at higher accuracy
+    // than we'd get by casting x to float(x).
+    inline ImageView<float> operator*=(ImageView<float> im, double x)
+    { transform_pixel(im, MultiplyConstant<float,double>(x)); return im; }
+
+    inline ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im, double x)
+    { transform_pixel(im, MultiplyConstant<std::complex<float>,double>(x)); return im; }
+
 
     //
     // Image / Scalar

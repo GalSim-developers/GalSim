@@ -9,7 +9,7 @@ import time
 import cProfile, pstats
 pr = cProfile.Profile()
 
-def draw(params, image=None, gsparams=None):
+def draw(params, image=None, gsparams=None, dtype=None):
     """Draw an Exponential profile in k-space onto the given image
 
     params = [ half_light_radius, flux, e1, e2 ]
@@ -18,7 +18,7 @@ def draw(params, image=None, gsparams=None):
     exp = galsim.Exponential(params[0], flux=params[1], gsparams=gsparams)
     exp = exp.shear(g1=params[2], g2=params[3])
     if image is None:   
-        image = exp.drawKImage()
+        image = exp.drawKImage(dtype=dtype)
     else:
         image = exp._drawKImage(image)
         #image = exp.drawKImage(image)
@@ -30,9 +30,9 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
 
     class resid(object):
         def __init__(self, image):
-            self._gsp = galsim.GSParams(kvalue_accuracy=1.e-3)
-            self._target_image = image.copy()
-            self._scratch_image = image.copy()
+            self._gsp = galsim.GSParams(kvalue_accuracy=1.e-5)
+            self._target_image = galsim.ImageCF(image)
+            self._scratch_image = galsim.ImageCF(image)
         def __call__(self, params):
             if params[0] < 0. or abs(params[2]) > 1. or abs(params[3]) > 1.:
                 return 1.e500
@@ -43,11 +43,13 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
             a = self._scratch_image.array
             a -= self._target_image.array
             a **= 2
-            return numpy.abs(numpy.sum(a))
+            chisq = numpy.abs(numpy.sum(a))
+            return chisq
 
     guess = numpy.array(guess)
     print('guess = ',guess)
-    result = scipy.optimize.minimize(resid(image), guess, tol=tol)
+    # With float images, the numerical derivatives fail for the default method.
+    result = scipy.optimize.minimize(resid(image), guess, tol=tol, method='Nelder-Mead')
     print('result = ',result.x)
     print('number of iterations = ',result.nit)
     print('number of function evals = ',result.nfev)

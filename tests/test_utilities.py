@@ -377,7 +377,7 @@ def test_interleaveImages():
     scale = im_list[0].scale
     gal.drawImage(image=im,scale=1.*scale/n,method='no_pixel')
 
-    np.testing.assert_array_equal(im.array, img.array,
+    np.testing.assert_almost_equal(im.array, img.array, 12,
                                   err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
 

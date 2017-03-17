@@ -78,7 +78,8 @@ namespace galsim {
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, int izero,
                                                     double ky0, double dky, int jzero) const
     {
@@ -90,7 +91,7 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -111,7 +112,8 @@ namespace galsim {
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, double dkxy,
                                                     double ky0, double dky, double dkyx) const
     {
@@ -123,7 +125,7 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
