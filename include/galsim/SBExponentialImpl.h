@@ -157,6 +157,7 @@ namespace galsim {
         double _inv_r0_sq;
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _k_max;   ///< sqrt(_ksq_max)
         double _norm; ///< flux / r0^2 / 2pi
         double _flux_over_2pi; ///< Flux / 2pi
 

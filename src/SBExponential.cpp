@@ -79,6 +79,7 @@ namespace galsim {
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
         _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
+        _k_max = std::sqrt(_ksq_max);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
@@ -121,6 +122,29 @@ namespace galsim {
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
+
+    // A helper class for doing the inner loops in the below fill*Image functions.
+    // This lets us do type-specific optimizations on just this portion.
+    template <typename T>
+    struct InnerLoopHelper
+    {
+        static inline void kloop_1d(std::complex<T>*& ptr, int n,
+                                    double kx, double dkx, double kysq, double flux)
+        {
+            for (; n; --n,kx+=dkx) {
+                double temp = 1. + kx*kx + kysq;
+                *ptr++ =  flux/(temp*sqrt(temp));
+            }
+        }
+        static inline void kloop_2d(std::complex<T>*& ptr, int n,
+                                    double kx, double dkx, double ky, double dky, double flux)
+        {
+            for (; n; --n,kx+=dkx,ky+=dky) {
+                double temp = 1. + kx*kx + ky*ky;
+                *ptr++ =  flux/(temp*sqrt(temp));
+            }
+        }
+    };
 
     template <typename T>
     void SBExponential::SBExponentialImpl::fillXImage(ImageView<T> im,
@@ -209,8 +233,11 @@ namespace galsim {
             dky *= _r0;
 
             for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
-                double kx = kx0;
+                if (std::abs(ky0) >= _k_max) { ptr += m; continue; }
                 double kysq = ky0*ky0;
+                double kx = kx0;
+#if 0
+                // Original preserved for clarity
                 for (int i=0; i<m; ++i,kx+=dkx) {
                     double ksq = kx*kx + kysq;
                     if (ksq > _ksq_max) {
@@ -222,6 +249,31 @@ namespace galsim {
                         *ptr++ =  _flux/(temp*sqrt(temp));
                     }
                 }
+#else
+                // Most of the time, there is no region to skip, so only bother with thisi
+                // calculation if either end is large enough.
+                double dsq = _ksq_max - kysq;
+                int i1,i2;
+                if (kx0*kx0 > dsq || (kx0+m*dkx)*(kx0+m*dkx) > dsq) {
+                    // first and last i are where
+                    //   (kx0 + dkx*i)^2 + kysq = ksq_max
+                    double d = sqrt(dsq);
+                    i1 = int(ceil((-kx0 - d) / dkx));
+                    i2 = int(floor((-kx0 + d) / dkx));
+                    if (i1 > i2) std::swap(i1,i2);
+                    ++i2;
+                    if (i2 <= 0 || i1 >= m) { ptr += m; continue; }
+                    if (i1 < 0) i1 = 0;
+                    if (i2 > m) i2 = m;
+                    kx += i1 * dkx;
+                    ptr += i1;
+                } else {
+                    i1 = 0;
+                    i2 = m;
+                }
+                InnerLoopHelper<T>::kloop_1d(ptr, i2-i1, kx, dkx, kysq, _flux);
+                ptr += (m-i2);
+#endif
             }
         }
     }
@@ -250,6 +302,8 @@ namespace galsim {
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
+#if 0
+            // Original preserved for clarity
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
                 if (ksq > _ksq_max) {
@@ -261,6 +315,66 @@ namespace galsim {
                     *ptr++ =  _flux/(temp*sqrt(temp));
                 }
             }
+#else
+#ifdef DEBUGLOGGING
+            xdbg<<"j = "<<j<<", kx0, ky0 = "<<kx0<<','<<ky0<<"  kmax = "<<_k_max<<std::endl;
+            xdbg<<"   "<<std::abs(kx0)<<"  "<<std::abs(kx0+m*dkx)<<"   "<<
+                std::abs(ky0)<<"  "<<std::abs(ky0+m+dkyx)<<std::endl;
+#endif
+            int i1,i2;
+            // Most of the time, there is no region to skip, so only bother with this calculation
+            // if at least one of the extreme values of kx or ky is > _k_max.
+            if (std::abs(kx0) > _k_max || std::abs(kx0+m*dkx) > _k_max ||
+                std::abs(ky0) > _k_max || std::abs(ky0+m+dkyx) > _k_max) {
+                double ky0sq = ky0*ky0;
+                // first and last i are where
+                //   (kx0 + i*dkx)^2 + (ky0 + i*dkyx)^2 = ksq_max
+                double a = dkx*dkx + dkyx*dkyx;
+                double b = dkx*kx0 + dkyx*ky0;
+                double c = kx0*kx0 + ky0*ky0 - _ksq_max;
+                double d = b*b-a*c;
+                xdbg<<"d = "<<d<<std::endl;
+                if (d <= 0.) { ptr += m; continue; }
+                d = sqrt(d);
+                i1 = int(ceil((-b - d) / a));
+                i2 = int(floor((-b + d) / a));
+#ifdef DEBUGLOGGING
+                xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
+                double ksq = (kx0+i1*dkx)*(kx0+i1*dkx) + (ky0+i1*dkyx)*(ky0+i1*dkyx);
+                xdbg<<"k at i1 = "<<sqrt(ksq)<<std::endl;
+                assert(ksq <= _ksq_max);
+                ksq = (kx0+i2*dkx)*(kx0+i2*dkx) + (ky0+i2*dkyx)*(ky0+i2*dkyx);
+                xdbg<<"k at i2 = "<<sqrt(ksq)<<std::endl;
+                assert(ksq <= _ksq_max);
+                ksq = (kx0+(i1-1)*dkx)*(kx0+(i1-1)*dkx) + (ky0+(i1-1)*dkyx)*(ky0+(i1-1)*dkyx);
+                xdbg<<"k at i1-1 = "<<sqrt(ksq)<<std::endl;
+                assert(ksq > _ksq_max);
+                ksq = (kx0+(i2+1)*dkx)*(kx0+(i2+1)*dkx) + (ky0+(i2+1)*dkyx)*(ky0+(i2+1)*dkyx);
+                xdbg<<"k at i2+1 = "<<sqrt(ksq)<<std::endl;
+                assert(ksq > _ksq_max);
+#endif
+                if (i1 > i2) std::swap(i1,i2);
+                ++i2;
+                if (i2 <= 0 || i1 >= m) { ptr += m; continue; }
+                if (i1 < 0) i1 = 0;
+                if (i2 > m) i2 = m;
+#ifdef DEBUGLOGGING
+                xdbg<<"i1,i2 => "<<i1<<','<<i2<<std::endl;
+                ksq = (kx0+i1*dkx)*(kx0+i1*dkx) + (ky0+i1*dkyx)*(ky0+i1*dkyx);
+                xdbg<<"k at i1 = "<<sqrt(ksq)<<std::endl;
+                ksq = (kx0+i2*dkx)*(kx0+i2*dkx) + (ky0+i2*dkyx)*(ky0+i2*dkyx);
+                xdbg<<"k at i2 = "<<sqrt(ksq)<<std::endl;
+#endif
+                ptr += i1;
+                kx += i1 * dkx;
+                ky += i1 * dkyx;
+            } else {
+                i1 = 0;
+                i2 = m;
+            }
+            InnerLoopHelper<T>::kloop_2d(ptr, i2-i1, kx, dkx, ky, dkyx, _flux);
+            ptr += (m-i2);
+#endif
         }
     }
 
