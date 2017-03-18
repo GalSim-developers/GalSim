@@ -93,7 +93,7 @@ version = __version__
 # First some basic building blocks that don't usually depend on anything else
 from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD, _BoundsI
-from .shear import Shear
+from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog

@@ -732,6 +732,21 @@ class GSObject(object):
             new_obj.noise = self.noise.shear(shear)
         return new_obj
 
+    def _shear(self, shear):
+        """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
+        ways to input the shear value.
+
+        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shear.
+
+        @param shear    The Shear to be applied. Must be a galsim.Shear instance.
+
+        @returns the sheared object.
+        """
+        new_obj = galsim._Transform(self, *shear.getMatrix().ravel().tolist())
+        if hasattr(self, 'noise'):
+            new_obj.noise = self.noise.shear(shear)
+        return new_obj
+
     def lens(self, g1, g2, mu):
         """Create a version of the current object with both a lensing shear and magnification
         applied to it.

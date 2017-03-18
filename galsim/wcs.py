@@ -1242,7 +1242,7 @@ class ShearWCS(LocalWCS):
         scale = header["GS_SCALE"]
         g1 = header["GS_G1"]
         g2 = header["GS_G2"]
-        return ShearWCS(scale, galsim.Shear(g1,g2))
+        return ShearWCS(scale, galsim.Shear(g1=g1, g2=g2))
 
     def _newOrigin(self, origin, world_origin):
         return OffsetShearWCS(self._scale, self._shear, origin, world_origin)

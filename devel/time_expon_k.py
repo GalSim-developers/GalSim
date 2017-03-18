@@ -16,7 +16,7 @@ def draw(params, image=None, gsparams=None, dtype=None):
     image is optional, but if provided will be used as is.
     """
     exp = galsim.Exponential(params[0], flux=params[1], gsparams=gsparams)
-    exp = exp.shear(g1=params[2], g2=params[3])
+    exp = exp._shear(galsim._Shear(params[2] + 1j * params[3]))
     if image is None:   
         image = exp.drawKImage(dtype=dtype)
     else:

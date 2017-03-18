@@ -92,7 +92,7 @@ def test_smallshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss = gauss.shear(myShear)
+    gauss = gauss._shear(myShear)
     gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -147,7 +147,7 @@ def test_largeshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with default_params disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    devauc = devauc.shear(myShear)
+    devauc = devauc._shear(myShear)
     devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -203,7 +203,7 @@ def test_rotate():
             err_msg="Using GSObject rotate with default_params disagrees with expected "
             "result")
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
+    gal = gal._shear(myShear).rotate(45.0 * galsim.degrees)
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
