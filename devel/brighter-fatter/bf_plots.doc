@@ -1,0 +1,23 @@
+Craig Lage (cslage@ucdavis.edu)
+UC Davis
+9-Nov-16
+Update 3-Mar-17
+
+The code in this directory is set up to run example GalSim runs that allow you to characterize the brighter-fatter effect. The basic code is called bf_plots.py.  This code, when run, will generate 3 sets of 5 images. Each fits image contains a 5x5 array of postage stamps, each one containing a simulated star with a Gaussian profile.  The 5 images have successively increasing flux. The three sets are (bf_1) B-F off, (bf_2) B-F on, diffusion off, (bf_3) B-F and diffusion on.  Each image is in output/bf_<set>/bf_<nfile>.fits, where set ranges from 1-3 and nfile ranges from 1-5.  Generating the 15 image files takes about 30 minutes.  The file Spots_Forward_GalSim.ipynb is a Jupyter notebook which generates the bright-fatter plots called output/bf_<set>/Forward_Model_Spots.png.  Note that the Jupyter notebook will require the code in the directory forward_model_varying_i.  
+
+If you want to investigate the impact of the brighter-fatter effect, you can do this by creating alternate sensors using the Poisson simulator code.  This code is available at https://github.com/craiglagegit/Poisson_CCD22 and how to run it is detailed there.  As an example, the configuration file data/run3/bf.cfg at that site will generate a ***_Vertices file that is then read into Galsim to characterize the pixel distortions.  This can be customized by changing the sensor dopings, voltages, etc, or by changing the distribution of collected charge in three dimensions.  The syntax for reading this into GalSim is shown in the bf_plots_3Mar17.py file or in the tests/test_sensor.py file, as follows (see class SiliconSensor in sensor.py):
+
+    sensor = galsim.SiliconSensor()
+final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, rng = rng)
+
+Update 16-Feb-17 and 3-Mar-17
+
+The file bf_plots_11Jan17.py and Spots_Forward_GalSim-10Jan17.ipynb have been modified to do the analysis described above without beeding Sextractor.  Basically, bf_plots_11Jan17.py writes out the .cat.reg files that Sextractor would create, which contain the spot centroids.
+
+The file bf_plots_3Mar17.py has been modified to create the above set of spot files in a directory called new_output, but it will also write out a set of photon list files (called bf_*_nx_*_ny_*_photon_file.fits) which have a list of the photon locations which are incident on the top of the sensor.  The purpose of these is to allow this same list of photons to be read into the Poisson_CCD code, where they can be tracked down to their collecting pixels.  The current version only writes out the photon file for the spot at (nx,ny) = (0,0), but this is easily changed at line 201 in bf_plots_3Mar17.py.
+
+Update 3-Mar-17
+
+The only pixel distortion file currently in GalSim is in the share/sensors/lsst_itl/ directory.
+
+These files were run with the 'hole17' branch of Poisson_CCD22. This code is available at https://github.com/craiglagegit/Poisson_CCD22 and how to run it is detailed there.
