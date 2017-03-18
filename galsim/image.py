@@ -711,7 +711,7 @@ class Image(with_metaclass(MetaImage, object)):
         See also subsample, which is the opposite of this.
 
         If the wcs is a Jacobian (or simpler), the output image will have its wcs set properly.
-        But if the wcs is most complicated, the output wcs would be fairly complicated to figure
+        But if the wcs is more complicated, the output wcs would be fairly complicated to figure
         out properly, so we leave it as None.  The user should set it themselves if required.
 
         @param nx       The number of adjacent pixels in the x direction to add together into each
@@ -769,7 +769,7 @@ class Image(with_metaclass(MetaImage, object)):
         bin(nx,ny) is essentially a no op.
 
         If the wcs is a Jacobian (or simpler), the output image will have its wcs set properly.
-        But if the wcs is most complicated, the output wcs would be fairly complicated to figure
+        But if the wcs is more complicated, the output wcs would be fairly complicated to figure
         out properly, so we leave it as None.  The user should set it themselves if required.
 
         @param nx       The number of sub-pixels in the x direction for each original pixel.
@@ -781,7 +781,6 @@ class Image(with_metaclass(MetaImage, object)):
         nrow = self.ymax - self.ymin + 1
         npix_x = ncol * nx
         npix_y = nrow * ny
-        npix = npix_x * npix_y
         flux_factor = nx * ny
 
         target_ar = np.repeat(np.repeat(self.array, ny, axis=0), nx, axis=1)

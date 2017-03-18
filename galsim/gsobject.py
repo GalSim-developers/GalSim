@@ -1196,7 +1196,7 @@ class GSObject(object):
         the brighter-fatter effect.
 
         Users interested in modeling this kind of effect can supply a `sensor` object to use
-        for the accumulation step.  See `SiliconSensor` in sensory.py for a class that models
+        for the accumulation step.  See `SiliconSensor` in sensor.py for a class that models
         silicon-based CCD sensors.
 
         Some related effects may need to be done to the photons at the surface layer before being
