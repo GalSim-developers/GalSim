@@ -56,11 +56,17 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
     return result.x
 
 true_params = [3.49, 99.123, 0.0812, -0.2345]
-true_image = draw(true_params)
+true_image_cd = draw(true_params, dtype=numpy.complex128)
+if False:
+    # Check that I didn't mess up the SSE stuff.
+    true_image_cf = draw(true_params, dtype=numpy.complex64)
+    print('diff = ',(true_image_cd-true_image_cf)[galsim.BoundsI(-5,6,-5,6)].array)
+    print('max diff = ',numpy.max(numpy.abs(true_image_cd.array-true_image_cf.array)/numpy.sum(true_image_cd.array)))
+    quit()
 
 pr.enable()
 t0 = time.time()
-fit_params = fit(true_image, tol=1.e-12)
+fit_params = fit(true_image_cd, tol=1.e-6)
 t1 = time.time()
 pr.disable()
 
