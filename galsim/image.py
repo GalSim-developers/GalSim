@@ -1099,6 +1099,16 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify the values of an immutable Image")
         self.image.invertSelf()
 
+    def replaceNegative(self, replace_value=0):
+        """Replace any negative values currently in the image with 0 (or some other value).
+
+        Sometimes FFT drawing can result in tiny negative values, which may be undesirable for
+        some purposes.  This method replaces those values with 0 or some other value if desired.
+
+        @param replace_value    The value with which to replace any negative pixels. [default: 0]
+        """
+        self.array[self.array<0] = replace_value
+
     def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
         """Returns the half-light radius of a drawn object.
 

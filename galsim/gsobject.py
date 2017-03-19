@@ -1491,7 +1491,10 @@ class GSObject(object):
 
         # Draw the image in k space.
         bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
-        kimage = galsim.ImageCD(bounds=bounds, scale=dk)
+        if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
+            kimage = galsim.ImageCD(bounds=bounds, scale=dk)
+        else:
+            kimage = galsim.ImageCF(bounds=bounds, scale=dk)
         self._drawKImage(kimage)
 
         # Wrap the full image to the size we want for the FT.
