@@ -577,7 +577,7 @@ namespace galsim {
         }
 
         // Apply flux scaling
-        im *= _ampScaling;
+        im *= T(_ampScaling);
     }
 
     template <typename T>
@@ -610,7 +610,7 @@ namespace galsim {
         GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
 
         // Apply flux scaling
-        im *= _ampScaling;
+        im *= T(_ampScaling);
     }
 
     template <typename T>
@@ -648,7 +648,7 @@ namespace galsim {
         // Apply phases
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _fluxScaling;
+            im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
@@ -713,7 +713,7 @@ namespace galsim {
         // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _fluxScaling;
+            im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             const int m = im.getNCol();

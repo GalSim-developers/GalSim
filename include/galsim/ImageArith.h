@@ -146,7 +146,7 @@ namespace galsim {
     {
     public:
         ConstReturn(const T v): val(v) {}
-        T operator()(const T ) const { return val; }
+        inline T operator()(const T ) const { return val; }
     private:
         T val;
     };
@@ -155,7 +155,7 @@ namespace galsim {
     class ReturnInverse
     {
     public:
-        T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
+        inline T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
     };
 
     template <typename T, typename T2>
@@ -164,7 +164,7 @@ namespace galsim {
         const T2 _x;
     public:
         MultiplyConstant(const T2 x) : _x(x) {}
-        T operator()(const T val) const { return T(_x * val); }
+        inline T operator()(const T val) const { return T(_x * val); }
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -332,7 +332,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator*=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::multiplies<CT>(),x)); return im; }
+    { transform_pixel(im, MultiplyConstant<CT,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator*=(ImageAlloc<CT>& im, const T& x)
