@@ -142,14 +142,14 @@ namespace galsim {
         double kV_trunc(double ksq) const;
 
         // pow(x,beta) for special (probably not uncommon) cases.
-        static double pow_1(double x, double ) { return x; }
-        static double pow_15(double x, double ) { return x * sqrt(x); }
-        static double pow_2(double x, double ) { return x*x; }
-        static double pow_25(double x, double ) { return x*x * sqrt(x); }
-        static double pow_3(double x, double ) { return x*x*x; }
-        static double pow_35(double x, double ) { return x*x*x * sqrt(x); }
-        static double pow_4(double x, double ) { double xsq=x*x; return xsq*xsq; }
-        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
+        static double pow_1(double x, double );
+        static double pow_15(double x, double );
+        static double pow_2(double x, double );
+        static double pow_25(double x, double );
+        static double pow_3(double x, double );
+        static double pow_35(double x, double );
+        static double pow_4(double x, double );
+        static double pow_gen(double x, double beta);
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,

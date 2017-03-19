@@ -25,8 +25,12 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
 #include "bessel/Roots.h"
+#include "fmath/fmath.hpp"
 
 namespace galsim {
+
+    inline double fast_pow(double x, double y)
+    { return fmath::expd(y * std::log(x)); }
 
     SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
                          const GSParamsPtr& gsparams) :
@@ -377,12 +381,12 @@ namespace galsim {
     double SpergelInfo::xValue(double r) const
     {
         if (r == 0.) return _xnorm0;
-        else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r, _nu);
+        else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
     {
-        return std::pow(1. + ksq, -1. - _nu);
+        return fast_pow(1. + ksq, -1. - _nu);
     }
 
     class SpergelNuPositiveRadialFunction: public FluxDensity
@@ -392,7 +396,7 @@ namespace galsim {
             _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
             if (r == 0.) return _xnorm0;
-            else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+            else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -407,7 +411,7 @@ namespace galsim {
         double operator()(double r) const {
             if (r <= _rmin) {
                 return _a + _b*r;
-            } else return boost::math::cyl_bessel_k(_nu, r) * std::pow(r,_nu);
+            } else return boost::math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -438,7 +442,7 @@ namespace galsim {
                 // a + b rmin = K_nu(rmin) * rmin^nu
                 double flux_target = _gsparams->shoot_accuracy;
                 double shoot_rmin = calculateFluxRadius(flux_target);
-                double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*std::pow(shoot_rmin, _nu);
+                double knur = boost::math::cyl_bessel_k(_nu, shoot_rmin)*fast_pow(shoot_rmin, _nu);
                 double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
                 double a = knur - shoot_rmin*b;
                 dbg<<"flux target: "<<flux_target<<std::endl;

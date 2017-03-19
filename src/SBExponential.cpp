@@ -21,6 +21,7 @@
 
 #include "SBExponential.h"
 #include "SBExponentialImpl.h"
+#include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -107,7 +108,7 @@ namespace galsim {
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x * p.x + p.y * p.y);
-        return _norm * std::exp(-r * _inv_r0);
+        return _norm * fmath::expd(-r * _inv_r0);
     }
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const
@@ -415,7 +416,7 @@ namespace galsim {
                 double x = x0;
                 double ysq = y0*y0;
                 for (int i=0;i<m;++i,x+=dx)
-                    *ptr++ = _norm * std::exp(-sqrt(x*x + ysq));
+                    *ptr++ = _norm * fmath::expd(-sqrt(x*x + ysq));
             }
         }
     }
@@ -445,7 +446,7 @@ namespace galsim {
             double x = x0;
             double y = y0;
             for (int i=0;i<m;++i,x+=dx,y+=dyx)
-                *ptr++ = _norm * std::exp(-sqrt(x*x + y*y));
+                *ptr++ = _norm * fmath::expd(-sqrt(x*x + y*y));
         }
     }
 

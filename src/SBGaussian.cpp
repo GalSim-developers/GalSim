@@ -21,6 +21,7 @@
 
 #include "SBGaussian.h"
 #include "SBGaussianImpl.h"
+#include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -107,7 +108,7 @@ namespace galsim {
     double SBGaussian::SBGaussianImpl::xValue(const Position<double>& p) const
     {
         double rsq = p.x*p.x + p.y*p.y;
-        return _norm * std::exp( -0.5 * rsq * _inv_sigma_sq );
+        return _norm * fmath::expd( -0.5 * rsq * _inv_sigma_sq );
     }
 
     std::complex<double> SBGaussian::SBGaussianImpl::kValue(const Position<double>& k) const
@@ -118,7 +119,7 @@ namespace galsim {
         } else if (ksq < _ksq_min) {
             return _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
         } else {
-            return _flux * std::exp(-0.5*ksq);
+            return _flux * fmath::expd(-0.5*ksq);
         }
     }
 
@@ -153,13 +154,13 @@ namespace galsim {
             std::vector<double> gauss_y(n);
             typedef std::vector<double>::iterator It;
             It xit = gauss_x.begin();
-            for (int i=0; i<m; ++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+            for (int i=0; i<m; ++i,x0+=dx) *xit++ = fmath::expd(-0.5 * x0*x0);
 
             if ((x0 == y0) && (dx == dy) && (m==n)) {
                 gauss_y = gauss_x;
             } else {
                 It yit = gauss_y.begin();
-                for (int j=0; j<n; ++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+                for (int j=0; j<n; ++j,y0+=dy) *yit++ = fmath::expd(-0.5 * y0*y0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -194,7 +195,7 @@ namespace galsim {
             double x = x0;
             double y = y0;
             for (int i=0; i<m; ++i,x+=dx,y+=dyx)
-                *ptr++ = _norm * std::exp( -0.5 * (x*x + y*y) );
+                *ptr++ = _norm * fmath::expd( -0.5 * (x*x + y*y) );
         }
     }
 
@@ -230,13 +231,13 @@ namespace galsim {
             typedef std::vector<double>::iterator It;
             It kxit = gauss_kx.begin();
 
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = exp(-0.5 * kx0*kx0);
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = fmath::expd(-0.5 * kx0*kx0);
 
             if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
                 gauss_ky = gauss_kx;
             } else {
                 It kyit = gauss_ky.begin();
-                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = exp(-0.5 * ky0*ky0);
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = fmath::expd(-0.5 * ky0*ky0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -277,7 +278,7 @@ namespace galsim {
                 } else if (ksq < _ksq_min) {
                     *ptr++ = _flux * (1. - 0.5*ksq*(1. - 0.25*ksq));
                 } else {
-                    *ptr++ =  _flux * std::exp(-0.5*ksq);
+                    *ptr++ =  _flux * fmath::expd(-0.5*ksq);
                 }
             }
         }

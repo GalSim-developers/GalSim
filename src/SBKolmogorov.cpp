@@ -21,6 +21,7 @@
 
 #include "SBKolmogorov.h"
 #include "SBKolmogorovImpl.h"
+#include "fmath/fmath.hpp"
 
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
 // and fwhm and hlr.
@@ -36,6 +37,9 @@
 #define XVAL_ZERO 0.55090124543985636638457099311149824 / (2.*M_PI)
 
 namespace galsim {
+
+    inline double fast_pow(double x, double y)
+    { return fmath::expd(y * std::log(x)); }
 
     SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux,
                                const GSParamsPtr& gsparams) :
@@ -248,7 +252,7 @@ namespace galsim {
     // f(k) = exp(-(k/k0)^5/3)
     // The input value should already be (k/k0)^2
     double KolmogorovInfo::kValue(double ksq) const
-    { return exp(-std::pow(ksq,5./6.)); }
+    { return fmath::expd(-fast_pow(ksq,5./6.)); }
 
     // Integrand class for the Hankel transform of Kolmogorov
     class KolmIntegrand : public std::unary_function<double,double>
@@ -256,7 +260,7 @@ namespace galsim {
     public:
         KolmIntegrand(double r) : _r(r) {}
         double operator()(double k) const
-        { return k*std::exp(-std::pow(k, 5./3.))*j0(k*_r); }
+        { return k*fmath::expd(-fast_pow(k, 5./3.))*j0(k*_r); }
 
     private:
         double _r;
