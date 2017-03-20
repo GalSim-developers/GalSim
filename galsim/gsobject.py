@@ -1427,6 +1427,85 @@ class GSObject(object):
         """
         return self.SBProfile.getGoodImageSize(pixel_scale)
 
+    def drawFFT_makeKImage(self, image, wmult=1.):
+        """
+        This is a helper routine for drawFFT that just makes the (blank) k-space image
+        onto which the profile will be drawn.  This can be useful if you want to break
+        up the calculation into parts for extra efficiency.  E.g. save the k-space image of
+        the PSF so drawing many models of the galaxy with the given PSF profile can avoid
+        drawing the PSF each time.
+
+        @param image        The Image onto which to place the flux. [required]
+                            Note: The flux will be added to any flux already on the image,
+                            so this corresponds to the add_to_image=True option in drawImage.
+
+        @returns (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
+                                      the result should be wrapped before doing the inverse fft.
+        """
+        # Start with what this profile thinks a good size would be given the image's pixel scale.
+        N = self.getGoodImageSize(image.scale/wmult)
+
+        # We must make something big enough to cover the target image size:
+        image_N = max(image.bounds.numpyShape())
+        N = max(N, image_N)
+
+        # Round up to a good size for making FFTs:
+        N = image.good_fft_size(N)
+
+        # Make sure we hit the minimum size specified in the gsparams.
+        N = max(N, self.gsparams.minimum_fft_size)
+
+        dk = 2.*np.pi / (N * image.scale)
+
+        maxk = self.maxK()
+        if N*dk/2 > maxk:
+            Nk = N
+        else:
+            # There will be aliasing.  Make a larger image and then wrap it.
+            Nk = int(np.ceil(maxk/dk)) * 2
+
+        if Nk > self.gsparams.maximum_fft_size:
+            raise RuntimeError(
+                "drawFFT requires an FFT that is too large: %s."%Nk +
+                "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+
+        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
+        if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
+            kimage = galsim.ImageCD(bounds=bounds, scale=dk)
+        else:
+            kimage = galsim.ImageCF(bounds=bounds, scale=dk)
+        return kimage, N
+
+    def drawFFT_finish(self, image, kimage, wrap_size):
+        """
+        This is a helper routine for drawFFT that finishes the calculation, based on the
+        drawn k-space image.
+
+        It applies the Fourier transform to `kimage` and adds the result to `image`.
+
+        @param image        The Image onto which to place the flux.
+        @param kimage       The k-space Image where the object was drawn.
+        @param wrap_size    The size of the region to wrap kimage, which must be either the same
+                            size as kimage or smaller.
+
+        @returns The total flux drawn inside the image bounds.
+        """
+        # Wrap the full image to the size we want for the FT.
+        # Even if N == Nk, this is useful to make this portion properly Hermitian in the
+        # N/2 column and N/2 row.
+        bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
+        kimage_wrap = kimage.image.wrap(bwrap, True, False)
+
+        # Perform the fourier transform.
+        real_image = kimage_wrap.irfft()
+        real_image.shift(image.center())
+
+        # Add (a portion of) this to the original image.
+        ar = real_image.subImage(image.bounds).array
+        image.array[:,:] += ar
+        added_photons = ar.sum(dtype=float)
+        return added_photons
+
     def drawFFT(self, image, wmult=1.):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
@@ -1463,54 +1542,9 @@ class GSObject(object):
             if type(wmult) != float:
                 wmult = float(wmult)
 
-        # Start with what this profile thinks a good size would be given the image's pixel scale.
-        N = self.getGoodImageSize(image.scale/wmult)
-
-        # We must make something big enough to cover the target image size:
-        image_N = max(image.bounds.numpyShape())
-        N = max(N, image_N)
-
-        # Round up to a good size for making FFTs:
-        N = image.good_fft_size(N)
-
-        # Make sure we hit the minimum size specified in the gsparams.
-        N = max(N, self.gsparams.minimum_fft_size)
-
-        dk = 2.*np.pi / N
-
-        if N*dk/2 > self.maxK():
-            Nk = N
-        else:
-            # There will be aliasing.  Make a larger image and then wrap it.
-            Nk = int(np.ceil(self.maxK()/dk)) * 2
-
-        if Nk > self.gsparams.maximum_fft_size:
-            raise RuntimeError(
-                "drawFFT requires an FFT that is too large: %s."%Nk +
-                "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
-
-        # Draw the image in k space.
-        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
-        if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
-            kimage = galsim.ImageCD(bounds=bounds, scale=dk)
-        else:
-            kimage = galsim.ImageCF(bounds=bounds, scale=dk)
+        kimage, wrap_size = self.drawFFT_makeKImage(image, wmult)
         self._drawKImage(kimage)
-
-        # Wrap the full image to the size we want for the FT.
-        # Even if N == Nk, this is useful to make this portion properly Hermitian in the
-        # N/2 column and N/2 row.
-        bwrap = galsim._BoundsI(0, N//2, -N//2, N//2-1)
-        kimage_wrap = kimage.image.wrap(bwrap, True, False)
-
-        # Perform the fourier transform.
-        real_image = kimage_wrap.irfft()
-
-        # Add (a portion of) this to the original image.
-        image.image += real_image.subImage(image.bounds)
-        added_photons = real_image.subImage(image.bounds).array.sum(dtype=float)
-
-        return added_photons
+        return self.drawFFT_finish(image, kimage, wrap_size)
 
     def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
         """Calculate how many photons to shoot and what flux_ratio (called g) each one should
