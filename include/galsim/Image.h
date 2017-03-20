@@ -352,7 +352,7 @@ namespace galsim {
             _owner(owner), _data(data), _nElements(nElements),
             _step(step), _stride(stride),
             _ncol(b.getXMax()-b.getXMin()+1), _nrow(b.getYMax()-b.getYMin()+1)
-        {}
+        { if (_nElements == 0) _nElements = _ncol * _nrow; }
 
         /**
          *  @brief Copy constructor also protected
@@ -466,8 +466,8 @@ namespace galsim {
          *  @brief Direct constructor given all the necessary information
          */
         ImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
-                  const Bounds<int>& b) :
-            BaseImage<T>(data, 0, owner, step, stride, b) {}
+                  const Bounds<int>& b, int nElements=0) :
+            BaseImage<T>(data, nElements, owner, step, stride, b) {}
 
         /**
          *  @brief Shallow copy constructor.
@@ -730,7 +730,7 @@ namespace galsim {
         ImageView<T> view()
         {
             return ImageView<T>(this->_data, this->_owner, this->_step, this->_stride,
-                                this->_bounds);
+                                this->_bounds, this->_nElements);
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}

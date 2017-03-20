@@ -904,7 +904,10 @@ ImageView<std::complex<double> > BaseImage<T>::cfft(bool inverse, bool shift_in,
 template <typename T>
 void ImageView<T>::fill(T x)
 {
-    transform_pixel(*this, ConstReturn<T>(x));
+    if (x == T(0) && this->getNSkip()==0 && this->getStep()==1)
+        memset(this->getData(), 0, this->getNElements() * sizeof(T));
+    else
+        transform_pixel(*this, ConstReturn<T>(x));
 }
 
 template <typename T>
