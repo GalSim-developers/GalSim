@@ -149,8 +149,6 @@ namespace galsim {
         }
     };
 
-    inline bool IsAligned(void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
-
 #ifdef __SSE__
     template <>
     struct InnerLoopHelper<float>
@@ -160,7 +158,7 @@ namespace galsim {
         {
             const float kysqp1 = kysq + 1.;
 
-            // First get the point to an aligned boundary.  This usually requires at most one
+            // First get the pointer to an aligned boundary.  This usually requires at most one
             // iteration (often 0), but if the input is pathalogically not aligned on a 64 bit
             // boundary, then this will just run through the whole thing and produce the corrent
             // answer.  Just without any SSE speed up.
@@ -175,7 +173,7 @@ namespace galsim {
 
             // Do 4 at a time as far as possible.
             if (n4) {
-                __m128 mzero = _mm_set1_ps(0.);
+                __m128 mzero = _mm_setzero_ps();
                 __m128 mflux = _mm_set1_ps(flux);
                 __m128 mkysqp1 = _mm_set1_ps(kysqp1);
                 __m128 mdkx = _mm_set1_ps(4.*dkx);
@@ -225,7 +223,7 @@ namespace galsim {
 
             // Do 4 at a time as far as possible.
             if (n4) {
-                __m128 mzero = _mm_set1_ps(0.);
+                __m128 mzero = _mm_setzero_ps();
                 __m128 mone = _mm_set1_ps(1.);
                 __m128 mflux = _mm_set1_ps(flux);
                 __m128 mdkx = _mm_set1_ps(4.*dkx);
@@ -320,7 +318,7 @@ namespace galsim {
                 } while (--n2);
             }
 
-            // Finally finish up the possible last value
+            // Finally finish up the last value, if any
             if (n) {
                 kx += na * dkx;
                 double temp = kx*kx + kysqp1;
@@ -377,7 +375,7 @@ namespace galsim {
                 } while (--n2);
             }
 
-            // Finally finish up the single possible last value
+            // Finally finish up the last value, if any
             if (n) {
                 kx += na * dkx;
                 ky += na * dky;
