@@ -43,7 +43,7 @@ def main():
         # Account for the fact that this is an even sized image.  The drawFFT function will
         # draw the profile centered on the nominal (integer) center pixel, which (since this is
         # an even-sized image) actuall +0.5,+0.5 from the true center.
-        gal_prof_cen = gal_prof.shift(-0.5*pixel_scale, -0.5*pixel_scale)
+        gal_prof_cen = gal_prof._shift(galsim.PositionD(-0.5*pixel_scale, -0.5*pixel_scale))
 
         # Draw just the galaxy profile in k-space
         gal_prof_cen._drawKImage(gal_kimage)

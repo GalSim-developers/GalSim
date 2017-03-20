@@ -12,19 +12,19 @@ pr = cProfile.Profile()
 def draw(params, image=None, gsparams=None, dtype=None):
     """Draw an Exponential profile in k-space onto the given image
 
-    params = [ half_light_radius, flux, e1, e2 ]
+    params = [ half_light_radius, flux, e1, e2, x0, y0 ]
     image is optional, but if provided will be used as is.
     """
     exp = galsim.Exponential(params[0], flux=params[1], gsparams=gsparams)
     exp = exp._shear(galsim._Shear(params[2] + 1j * params[3]))
+    exp = exp._shift(galsim.PositionD(params[4],params[5]))
     if image is None:   
         image = exp.drawKImage(dtype=dtype)
     else:
         image = exp._drawKImage(image)
-        #image = exp.drawKImage(image)
     return image
 
-def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
+def fit(image, guess=(1.,1.,0.,0.,0.,0.), tol=1.e-6):
     """Find the best fitting exponential to the given k-space image
     """
 
@@ -43,7 +43,7 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
             a = self._scratch_image.array
             a -= self._target_image.array
             a **= 2
-            chisq = numpy.abs(numpy.sum(a))
+            chisq = numpy.sum(numpy.abs(a))
             return chisq
 
     guess = numpy.array(guess)
@@ -55,7 +55,7 @@ def fit(image, guess=(1.,1.,0.,0.), tol=1.e-6):
     print('number of function evals = ',result.nfev)
     return result.x
 
-true_params = [3.49, 99.123, 0.0812, -0.2345]
+true_params = [3.49, 99.123, 0.0812, -0.2345, 0.1, -0.5]
 true_image_cd = draw(true_params, dtype=numpy.complex128)
 if False:
     # Check that I didn't mess up the SSE stuff.
@@ -66,7 +66,8 @@ if False:
 
 pr.enable()
 t0 = time.time()
-fit_params = fit(true_image_cd, tol=1.e-6)
+for n in range(1):
+    fit_params = fit(true_image_cd, tol=1.e-6)
 t1 = time.time()
 pr.disable()
 

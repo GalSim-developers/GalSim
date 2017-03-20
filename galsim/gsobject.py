@@ -843,6 +843,8 @@ class GSObject(object):
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
+         -- or --
+        @param offset   The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
 
         @returns the shifted object.
         """
@@ -853,6 +855,21 @@ class GSObject(object):
             new_obj.noise = self.noise
         return new_obj
 
+    def _shift(self, offset):
+        """Equivalent to self.shift(shift), but without the overhead of sanity checks or option
+        to give the shift as (dx,dy).
+
+        This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shift.
+
+        @param offset   The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
+
+        @returns the shifted object.
+        """
+        new_obj = galsim._Transform(self, offset=offset)
+
+        if hasattr(self, 'noise'):
+            new_obj.noise = self.noise
+        return new_obj
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=1.):
@@ -965,7 +982,7 @@ class GSObject(object):
         if offset == galsim.PositionD(0,0):
             return self
         else:
-            return self.shift(offset)
+            return self._shift(offset)
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         # Determine the correct wcs given the input scale, wcs and image.
