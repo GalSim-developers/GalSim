@@ -127,11 +127,11 @@ namespace galsim {
             if (!sbp.isAnalyticX() && _real_space)
                 throw SBError("Real-space SBConvolve requires members to be analytic in x");
             _plist.push_back(sbp);
+            _x0 += sbp.centroid().x;
+            _y0 += sbp.centroid().y;
+            _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
+            _fluxProduct *= sbp.getFlux();
         }
-        _x0 += sbp.centroid().x;
-        _y0 += sbp.centroid().y;
-        _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
-        _fluxProduct *= sbp.getFlux();
     }
 
     double SBConvolve::SBConvolveImpl::maxK() const
