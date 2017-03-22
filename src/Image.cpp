@@ -21,6 +21,7 @@
 
 #include <sstream>
 #include <numeric>
+#include <cstring>
 
 #include "fftw3.h"
 
