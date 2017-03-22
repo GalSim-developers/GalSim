@@ -1675,6 +1675,20 @@ class ChromaticTransformation(ChromaticObject):
             self._last_wcs = image.wcs
             return image
 
+    @property
+    def noise(self):
+        # Condition for being able to propagate noise:
+        # 1) All transformations are achromatic.
+        # 2) This ChromaticTransformation wraps a ChromaticConvolution with a valid noise property.
+        if (hasattr(self._jac, '__call__') or
+            hasattr(self._offset, '__call__') or
+            not self._flux_ratio._const):
+            raise TypeError("Cannot propagate noise through chromatic transformation")
+        noise = self.original.noise
+        jac = self._jac
+        flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
+        return noise.transform(jac[0,0], jac[0,1], jac[1,0], jac[1,1])*flux_ratio**2
+
 
 class ChromaticSum(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
@@ -1855,6 +1869,7 @@ class ChromaticSum(ChromaticObject):
             new_covspec = self.covspec * flux_ratio**2
             new_obj.covspec = new_covspec
         return new_obj
+
 
 class ChromaticConvolution(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat

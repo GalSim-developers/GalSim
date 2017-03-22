@@ -468,32 +468,101 @@ def test_normalize_area():
 
 
 @timer
-def test_covspec():
-    """Test various transformations of Covariance Spectra.
+def test_crg_noise_draw_transform_commutativity():
+    """Test commutativity of ChromaticRealGalaxy correlated noise under operations of drawImage and
+    applying transformations.
     """
     LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
     f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
     f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
 
-    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], id=14886)
     psf = galsim.Gaussian(fwhm=0.6)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], id=14886,
+                                     maxk=psf.maxK())
 
     factor = 1.5
+    g1 = g2 = 0.1
+    mu = 1.2
+    theta = 45*galsim.degrees
+    jac = [1.1, 0.1, -0.1, 1.2]
 
-    obj = galsim.Convolve(crg, psf)
-    multiplied = obj * factor
-    im1 = obj.drawImage(LSST_i)
-    im2 = multiplied.drawImage(LSST_i)
-    np.testing.assert_almost_equal(
-            obj.noise.getVariance(),
-            multiplied.noise.getVariance()/factor**2)
+    orig = galsim.Convolve(crg, psf)
+    orig.drawImage(LSST_i)
 
-    divided = obj / factor
-    im2 = divided.drawImage(LSST_i)
-    np.testing.assert_almost_equal(
-            obj.noise.getVariance(),
-            divided.noise.getVariance()*factor**2)
+    draw_transform_img = galsim.ImageD(16, 16, scale=0.2)
+    transform_draw_img = draw_transform_img.copy()
 
+    multiplied = orig * factor
+    multiplied.drawImage(LSST_i) # needed to populate noise property
+    (orig.noise*factor**2).drawImage(image=draw_transform_img)
+    multiplied.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    divided = orig / factor
+    divided.drawImage(LSST_i)
+    (orig.noise/factor**2).drawImage(image=draw_transform_img)
+    divided.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    expanded = orig.expand(factor)
+    expanded.drawImage(LSST_i)
+    orig.noise.expand(factor).drawImage(image=draw_transform_img)
+    expanded.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    dilated = orig.dilate(factor)
+    dilated.drawImage(LSST_i)
+    orig.noise.dilate(factor).drawImage(image=draw_transform_img)
+    dilated.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    magnified = orig.magnify(mu)
+    magnified.drawImage(LSST_i)
+    orig.noise.magnify(mu).drawImage(image=draw_transform_img)
+    magnified.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    lensed = orig.lens(g1, g2, mu)
+    lensed.drawImage(LSST_i)
+    orig.noise.lens(g1, g2, mu).drawImage(image=draw_transform_img)
+    lensed.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    rotated = orig.rotate(theta)
+    rotated.drawImage(LSST_i)
+    orig.noise.rotate(theta).drawImage(image=draw_transform_img)
+    rotated.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    sheared = orig.shear(g1=g1, g2=g2)
+    sheared.drawImage(LSST_i)
+    orig.noise.shear(g1=g1, g2=g2).drawImage(image=draw_transform_img)
+    sheared.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    transformed = orig.transform(*jac)
+    transformed.drawImage(LSST_i)
+    orig.noise.transform(*jac).drawImage(image=draw_transform_img)
+    transformed.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
@@ -504,4 +573,4 @@ if __name__ == "__main__":
     test_ne()
     test_noise()
     test_normalize_area()
-    test_covspec()
+    test_crg_noise_draw_transform_commutativity()
