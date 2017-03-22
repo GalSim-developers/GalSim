@@ -32,6 +32,9 @@ namespace galsim {
     inline double fast_pow(double x, double y)
     { return fmath::expd(y * std::log(x)); }
 
+    inline float fast_pow(float x, float y)
+    { return fmath::exp(y * fmath::log(x)); }
+
     SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
                          const GSParamsPtr& gsparams) :
         SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
@@ -93,6 +96,12 @@ namespace galsim {
         dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
 
+        // For large k, we clip the result of kValue to 0.
+        // We do this when the correct answer is less than kvalue_accuracy.
+        // (1+k^2 r0^2)^-(nu+1) = kvalue_accuracy
+        _ksq_max = std::pow(this->gsparams->kvalue_accuracy,-1./(nu+1.))-1.;
+        _k_max = std::sqrt(_ksq_max);
+
         // Set size of this instance according to type of size given in constructor
         switch(rType) {
           case HALF_LIGHT_RADIUS:
@@ -139,6 +148,281 @@ namespace galsim {
         double ksq = (k.x*k.x + k.y*k.y) * _r0_sq;
         return _flux * _info->kValue(ksq);
     }
+
+    // A helper class for doing the inner loops in the below fill*Image functions.
+    // This lets us do type-specific optimizations on just this portion.
+    // First the normal (legible) version that we use if there is no SSE support.
+    template <typename T>
+    struct InnerLoopHelper
+    {
+        static inline void kloop_1d(std::complex<T>*& ptr, int n, double mnup1,
+                                    double kx, double dkx, double kysq, double flux)
+        {
+            const double kysqp1 = kysq + 1.;
+            for (; n; --n,kx+=dkx) {
+                double ksqp1 = kx*kx + kysqp1;
+                *ptr++ = flux * std::pow(ksqp1, mnup1);
+            }
+        }
+        static inline void kloop_2d(std::complex<T>*& ptr, int n, double mnup1,
+                                    double kx, double dkx, double ky, double dky, double flux)
+        {
+            for (; n; --n,kx+=dkx,ky+=dky) {
+                double ksqp1 = 1. + kx*kx + ky*ky;
+                *ptr++ = flux * std::pow(ksqp1, mnup1);
+            }
+        }
+    };
+
+#ifdef __SSE__
+    template <>
+    struct InnerLoopHelper<float>
+    {
+        static inline void kloop_1d(std::complex<float>*& ptr, int n, float mnup1,
+                                    float kx, float dkx, float kysq, float flux)
+        {
+            const float kysqp1 = kysq + 1.;
+
+            // First get the pointer to an aligned boundary.  This usually requires at most one
+            // iteration (often 0), but if the input is pathalogically not aligned on a 64 bit
+            // boundary, then this will just run through the whole thing and produce the corrent
+            // answer.  Just without any SSE speed up.
+            for (; n && !IsAligned(ptr); --n,kx+=dkx) {
+                float ksqp1 = kx*kx + kysqp1;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+
+            int n4 = n>>2;
+            int na = n4<<2;
+            n -= na;
+
+            // Do 4 at a time as far as possible.
+            if (n4) {
+                __m128 zero = _mm_setzero_ps();
+                __m128 xmnup1 = _mm_set1_ps(mnup1);
+                __m128 xflux = _mm_set1_ps(flux);
+                __m128 xkysqp1 = _mm_set1_ps(kysqp1);
+                __m128 xdkx = _mm_set1_ps(4.*dkx);
+                // I never really understood why these are backwards, but that's just how
+                // this function works.  They need to be in reverse order.
+                __m128 xkx = _mm_set_ps(kx+3.*dkx, kx+2.*dkx, kx+dkx, kx);
+                do {
+                    // kxsq = kx * kx
+                    __m128 kxsq = _mm_mul_ps(xkx, xkx);
+                    // ksqp1 = kxsq + kysqp1
+                    __m128 ksqp1 = _mm_add_ps(kxsq, xkysqp1);
+                    // kx += 4*dkx
+                    xkx = _mm_add_ps(xkx, xdkx);
+                    // temp = pow(ksqp1, mnup1) = exp(mnup1 * log(ksqp1))
+                    __m128 temp = fmath::exp_ps(_mm_mul_ps(xmnup1,fmath::log_ps(ksqp1)));
+                    // final = flux * temp
+                    __m128 final = _mm_mul_ps(xflux, temp);
+                    // lo = unpacked final[0], 0.F, final[1], 0.F
+                    __m128 lo = _mm_unpacklo_ps(final, zero);
+                    // hi = unpacked final[2], 0.F, final[3], 0.F
+                    __m128 hi = _mm_unpackhi_ps(final, zero);
+                    // store these into the ptr array
+                    _mm_store_ps(reinterpret_cast<float*>(ptr), lo);
+                    _mm_store_ps(reinterpret_cast<float*>(ptr+2), hi);
+                    ptr += 4;
+                } while (--n4);
+            }
+            kx += na * dkx;
+
+            // Finally finish up the last few values
+            for (; n; --n,kx+=dkx) {
+                float ksqp1 = kx*kx + kysqp1;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+        }
+        static inline void kloop_2d(std::complex<float>*& ptr, int n, float mnup1,
+                                    float kx, float dkx, float ky, float dky, float flux)
+        {
+            for (; n && !IsAligned(ptr); --n,kx+=dkx,ky+=dky) {
+                float ksqp1 = 1. + kx*kx + ky*ky;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+
+            int n4 = n>>2;
+            int na = n4<<2;
+            n -= na;
+
+            // Do 4 at a time as far as possible.
+            if (n4) {
+                __m128 zero = _mm_setzero_ps();
+                __m128 one = _mm_set1_ps(1.);
+                __m128 xmnup1 = _mm_set1_ps(mnup1);
+                __m128 xflux = _mm_set1_ps(flux);
+                __m128 xdkx = _mm_set1_ps(4.*dkx);
+                __m128 xdky = _mm_set1_ps(4.*dky);
+                __m128 xkx = _mm_set_ps(kx+3.*dkx, kx+2.*dkx, kx+dkx, kx);
+                __m128 xky = _mm_set_ps(ky+3.*dky, ky+2.*dky, ky+dky, ky);
+                do {
+                    // kxsq = kx * kx
+                    __m128 kxsq = _mm_mul_ps(xkx, xkx);
+                    // kysq = ky * ky
+                    __m128 kysq = _mm_mul_ps(xky, xky);
+                    // ksqp1 = 1 + kxsq + kysq
+                    __m128 ksqp1 = _mm_add_ps(one, _mm_add_ps(kxsq, kysq));
+                    // kx += 4*dkx
+                    xkx = _mm_add_ps(xkx, xdkx);
+                    // ky += 4*dky
+                    xky = _mm_add_ps(xky, xdky);
+                    // temp = pow(ksqp1, mnup1) = exp(mnup1 * log(ksqp1))
+                    __m128 temp = fmath::exp_ps(_mm_mul_ps(xmnup1,fmath::log_ps(ksqp1)));
+                    // final = flux * temp
+                    __m128 final = _mm_mul_ps(xflux, temp);
+                    // lo = unpacked final[0], 0.F, final[1], 0.F
+                    __m128 lo = _mm_unpacklo_ps(final, zero);
+                    // hi = unpacked final[2], 0.F, final[3], 0.F
+                    __m128 hi = _mm_unpackhi_ps(final, zero);
+                    // store these into the ptr array
+                    _mm_store_ps(reinterpret_cast<float*>(ptr), lo);
+                    _mm_store_ps(reinterpret_cast<float*>(ptr+2), hi);
+                    ptr += 4;
+                } while (--n4);
+            }
+            kx += na * dkx;
+            ky += na * dky;
+
+            // Finally finish up the last few values
+            for (; n; --n,kx+=dkx,ky+=dky) {
+                float ksqp1 = 1. + kx*kx + ky*ky;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+        }
+    };
+#endif
+#ifdef __SSE2__
+    // fmath doesn't have a log_pd function, so this does the equivalent using std::log.
+    inline __m128d log_pd(__m128d x)
+    {
+        union { __m128d m; double d[2]; } logx;
+        logx.d[0] = std::log(*reinterpret_cast<double*>(&x));
+        logx.d[1] = std::log(*(reinterpret_cast<double*>(&x)+1));
+        return logx.m;
+    }
+
+    template <>
+    struct InnerLoopHelper<double>
+    {
+        static inline void kloop_1d(std::complex<double>*& ptr, int n, double mnup1,
+                                    double kx, double dkx, double kysq, double flux)
+        {
+            const double kysqp1 = kysq + 1.;
+
+            // If ptr isn't aligned, there is no hope in getting it there by incrementing,
+            // since complex<double> is 128 bits, so just do the regular loop.
+            if (!IsAligned(ptr)) {
+                for (; n; --n,kx+=dkx) {
+                    double ksqp1 = kx*kx + kysqp1;
+                    *ptr++ = flux * fast_pow(ksqp1, mnup1);
+                }
+                return;
+            }
+
+            int n2 = n>>1;
+            int na = n2<<1;
+            n -= na;
+
+            // Do 2 at a time as far as possible.
+            if (n2) {
+                __m128d zero = _mm_set1_pd(0.);
+                __m128d xmnup1 = _mm_set1_pd(mnup1);
+                __m128d xflux = _mm_set1_pd(flux);
+                __m128d xkysqp1 = _mm_set1_pd(kysqp1);
+                __m128d xdkx = _mm_set1_pd(2.*dkx);
+                __m128d xkx = _mm_set_pd(kx+dkx, kx);
+                do {
+                    // kxsq = kx * kx
+                    __m128d kxsq = _mm_mul_pd(xkx, xkx);
+                    // ksqp1 = kxsq + kysqp1
+                    __m128d ksqp1 = _mm_add_pd(kxsq, xkysqp1);
+                    // kx += 2*dkx
+                    xkx = _mm_add_pd(xkx, xdkx);
+                    // temp = pow(ksqp1, mnup1) = exp(mnup1 * logksqp1)
+                    __m128d temp = fmath::exp_pd(_mm_mul_pd(xmnup1,log_pd(ksqp1)));
+                    // final = flux * temp
+                    __m128d final = _mm_mul_pd(xflux, temp);
+                    // lo = unpacked final[0], 0.
+                    __m128d lo = _mm_unpacklo_pd(final, zero);
+                    // hi = unpacked final[1], 0.
+                    __m128d hi = _mm_unpackhi_pd(final, zero);
+                    // store these into the ptr array
+                    _mm_store_pd(reinterpret_cast<double*>(ptr), lo);
+                    _mm_store_pd(reinterpret_cast<double*>(ptr+1), hi);
+                    ptr += 2;
+                } while (--n2);
+            }
+
+            // Finally finish up the last value, if any
+            if (n) {
+                kx += na * dkx;
+                double ksqp1 = kx*kx + kysqp1;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+        }
+        static inline void kloop_2d(std::complex<double>*& ptr, int n, double mnup1,
+                                    double kx, double dkx, double ky, double dky, double flux)
+        {
+            if (!IsAligned(ptr)) {
+                for (; n; --n,kx+=dkx) {
+                    double ksqp1 = 1. + kx*kx + ky*ky;
+                    *ptr++ = flux * fast_pow(ksqp1, mnup1);
+                }
+                return;
+            }
+
+            int n2 = n>>1;
+            int na = n2<<1;
+            n -= na;
+
+            // Do 2 at a time as far as possible.
+            if (n2) {
+                __m128d zero = _mm_set1_pd(0.);
+                __m128d one = _mm_set1_pd(1.);
+                __m128d xmnup1 = _mm_set1_pd(mnup1);
+                __m128d xflux = _mm_set1_pd(flux);
+                __m128d xdkx = _mm_set1_pd(2.*dkx);
+                __m128d xdky = _mm_set1_pd(2.*dky);
+                __m128d xkx = _mm_set_pd(kx+dkx, kx);
+                __m128d xky = _mm_set_pd(ky+dky, ky);
+                do {
+                    // kxsq = kx * kx
+                    __m128d kxsq = _mm_mul_pd(xkx, xkx);
+                    // kysq = ky * ky
+                    __m128d kysq = _mm_mul_pd(xky, xky);
+                    // ksqp1 = 1 + kxsq + kysq
+                    __m128d ksqp1 = _mm_add_pd(one, _mm_add_pd(kxsq, kysq));
+                    // kx += 2*dkx
+                    xkx = _mm_add_pd(xkx, xdkx);
+                    // ky += 2*dky
+                    xky = _mm_add_pd(xky, xdky);
+                    // temp = pow(ksqp1, mnup1) = exp(mnup1 * logksqp1)
+                    __m128d temp = fmath::exp_pd(_mm_mul_pd(xmnup1,log_pd(ksqp1)));
+                    // final = flux * temp
+                    __m128d final = _mm_mul_pd(xflux, temp);
+                    // lo = unpacked final[0], 0.
+                    __m128d lo = _mm_unpacklo_pd(final, zero);
+                    // hi = unpacked final[1], 0.
+                    __m128d hi = _mm_unpackhi_pd(final, zero);
+                    // store these into the ptr array
+                    _mm_store_pd(reinterpret_cast<double*>(ptr), lo);
+                    _mm_store_pd(reinterpret_cast<double*>(ptr+1), hi);
+                    ptr += 2;
+                } while (--n2);
+            }
+
+            // Finally finish up the last value, if any
+            if (n) {
+                kx += na * dkx;
+                ky += na * dky;
+                double ksqp1 = 1. + kx*kx + ky*ky;
+                *ptr++ = flux * fast_pow(ksqp1, mnup1);
+            }
+        }
+    };
+#endif
 
     template <typename T>
     void SBSpergel::SBSpergelImpl::fillXImage(ImageView<T> im,
@@ -226,11 +510,17 @@ namespace galsim {
             ky0 *= _r0;
             dky *= _r0;
 
+            double mnup1 = -(_nu + 1.);
+
             for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
-                double kx = kx0;
-                double kysq = ky0*ky0;
-                for (int i=0;i<m;++i,kx+=dkx)
-                    *ptr++ = _flux * _info->kValue(kx*kx + kysq);
+                int i1,i2;
+                double kysq; // GetKValueRange1d will compute this i1 != m
+                GetKValueRange1d(i1, i2, m, _k_max, _ksq_max, kx0, dkx, ky0, kysq);
+                ptr += i1;
+                if (i1 == m) continue;
+                double kx = kx0 + i1 * dkx;
+                InnerLoopHelper<T>::kloop_1d(ptr, i2-i1, mnup1, kx, dkx, kysq, _flux);
+                ptr += (m-i2);
             }
         }
     }
@@ -255,12 +545,17 @@ namespace galsim {
         ky0 *= _r0;
         dky *= _r0;
         dkyx *= _r0;
+        double mnup1 = -(_nu + 1.);
 
-        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
-            double kx = kx0;
-            double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
-                *ptr++ = _flux * _info->kValue(kx*kx + ky*ky);
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            int i1,i2;
+            GetKValueRange2d(i1, i2, m, _k_max, _ksq_max, kx0, dkx, ky0, dkyx);
+            ptr += i1;
+            if (i1 == m) continue;
+            double kx = kx0 + i1 * dkx;
+            double ky = ky0 + i1 * dkyx;
+            InnerLoopHelper<T>::kloop_2d(ptr, i2-i1, mnup1, kx, dkx, ky, dkyx, _flux);
+            ptr += (m-i2);
         }
     }
 
@@ -361,10 +656,7 @@ namespace galsim {
     {
         if(_maxk == 0.) {
             // Solving (1+k^2)^(-1-nu) = maxk_threshold for k
-            // exact:
-            // _maxk = std::sqrt(std::pow(gsparams->maxk_threshold, -1./(1+_nu))-1.0);
-            // approximate 1+k^2 ~ k^2 => good enough:
-            _maxk = std::pow(_gsparams->maxk_threshold, -1./(2*(1+_nu)));
+            _maxk = std::sqrt(std::pow(_gsparams->maxk_threshold, -1./(1+_nu))-1.0);
         }
         return _maxk;
     }

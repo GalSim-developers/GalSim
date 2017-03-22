@@ -187,6 +187,17 @@ namespace galsim {
         void operator=(const SBProfileImpl& rhs);
     };
 
+    // Some helper functions that some Profiles use to speed up the calculations.
+
+    // Get the range i1 <= i < i2 where (kx0 + i dkx)^2 + ky^2 <= ksqmax
+    // Note: this calculates kysq along the way, so it is a reference.
+    void GetKValueRange1d(int& i1, int& i2, int m, double kmax, double ksqmax,
+                          double kx0, double dkx, double ky, double& kysq);
+
+    // Get the range i1 <= i < i2 where (kx0 + i dkx)^2 + (ky0 + i dky)^2 <= ksqmax
+    void GetKValueRange2d(int& i1, int& i2, int m, double kmax, double ksqmax,
+                          double kx0, double dkx, double ky0, double dky);
+
 }
 
 #endif

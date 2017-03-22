@@ -197,6 +197,8 @@ namespace galsim {
 
         double _r0_sq;
         double _inv_r0;
+        double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _k_max;   ///< sqrt(_ksq_max)
 
         boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 

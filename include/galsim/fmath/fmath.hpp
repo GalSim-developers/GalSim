@@ -490,7 +490,7 @@ inline double expd(double x)
 }
 
 // not fast
-#if 0
+#if 1
 inline __m128d exp_pd(__m128d x)
 {
 	using namespace local;

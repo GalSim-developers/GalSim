@@ -9,7 +9,7 @@ import time
 import cProfile, pstats
 pr = cProfile.Profile()
 
-def draw(params, image=None, gsparams=None, dtype=None):
+def draw_exp(params, image=None, gsparams=None, dtype=None):
     """Draw an Exponential profile in k-space onto the given image
 
     params = [ half_light_radius, flux, e1, e2, x0, y0 ]
@@ -18,14 +18,48 @@ def draw(params, image=None, gsparams=None, dtype=None):
     exp = galsim.Exponential(params[0], flux=params[1], gsparams=gsparams)
     exp = exp._shear(galsim._Shear(params[2] + 1j * params[3]))
     exp = exp._shift(galsim.PositionD(params[4],params[5]))
-    if image is None:   
-        image = exp.drawKImage(dtype=dtype)
+    if image is None:
+        image = exp.drawKImage(dtype=dtype, nx=256, ny=256)
     else:
         image = exp._drawKImage(image)
     return image
 
+def draw_spergel(params, image=None, gsparams=None, dtype=None):
+    """Draw a Spergel profile in k-space onto the given image
+
+    params = [ half_light_radius, flux, e1, e2, x0, y0 ]
+    image is optional, but if provided will be used as is.
+    """
+    nu = 0.5
+    gal = galsim.Spergel(nu, params[0], flux=params[1], gsparams=gsparams)
+    gal = gal._shear(galsim._Shear(params[2] + 1j * params[3]))
+    gal = gal._shift(galsim.PositionD(params[4],params[5]))
+    if image is None:
+        image = gal.drawKImage(dtype=dtype, nx=256, ny=256)
+    else:
+        image = gal._drawKImage(image)
+    return image
+
+def draw_sersic(params, image=None, gsparams=None, dtype=None):
+    """Draw a Sersic profile in k-space onto the given image
+
+    params = [ half_light_radius, flux, e1, e2, x0, y0 ]
+    image is optional, but if provided will be used as is.
+    """
+    n = 1
+    gal = galsim.Sersic(n, params[0], flux=params[1], gsparams=gsparams)
+    gal = gal._shear(galsim._Shear(params[2] + 1j * params[3]))
+    gal = gal._shift(galsim.PositionD(params[4],params[5]))
+    if image is None:
+        image = gal.drawKImage(dtype=dtype, nx=256, ny=256)
+    else:
+        image = gal._drawKImage(image)
+    return image
+
+draw = draw_spergel
+
 def fit(image, guess=(1.,1.,0.,0.,0.,0.), tol=1.e-6):
-    """Find the best fitting exponential to the given k-space image
+    """Find the best fitting profile to the given k-space image
     """
 
     class resid(object):
@@ -44,6 +78,7 @@ def fit(image, guess=(1.,1.,0.,0.,0.,0.), tol=1.e-6):
             a -= self._target_image.array
             a **= 2
             chisq = numpy.sum(numpy.abs(a))
+            #print(params,'  ',chisq)
             return chisq
 
     guess = numpy.array(guess)
@@ -56,10 +91,12 @@ def fit(image, guess=(1.,1.,0.,0.,0.,0.), tol=1.e-6):
     return result.x
 
 true_params = [3.49, 99.123, 0.0812, -0.2345, 0.1, -0.5]
-true_image_cd = draw(true_params, dtype=numpy.complex128)
+true_image_cd = draw(true_params, dtype=numpy.complex128)  # Do truth at double precision
 if False:
     # Check that I didn't mess up the SSE stuff.
     true_image_cf = draw(true_params, dtype=numpy.complex64)
+    print('cf = ',true_image_cf[galsim.BoundsI(-5,6,-5,6)].array)
+    print('cd = ',true_image_cd[galsim.BoundsI(-5,6,-5,6)].array)
     print('diff = ',(true_image_cd-true_image_cf)[galsim.BoundsI(-5,6,-5,6)].array)
     print('max diff = ',numpy.max(numpy.abs(true_image_cd.array-true_image_cf.array)/numpy.sum(true_image_cd.array)))
     quit()
