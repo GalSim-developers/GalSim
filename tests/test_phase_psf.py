@@ -390,7 +390,7 @@ def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
     aper = galsim.Aperture(diam=1.0)
-    rng = galsim.BaseDeviate(1234)
+    rng = galsim.BaseDeviate(123456)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)

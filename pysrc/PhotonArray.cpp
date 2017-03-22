@@ -31,8 +31,15 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    struct PyPhotonArray {
+    template <typename T>
+    boost::shared_ptr<PhotonArray> MakePhotonsFromImage(
+        const BaseImage<T>& image, double maxFlux, UniformDeviate ud)
+    {
+        return boost::shared_ptr<PhotonArray>(new PhotonArray(image,maxFlux,ud));
+    }
 
+
+    struct PyPhotonArray {
         template <typename U, typename W>
         static void wrapTemplates(W & wrapper) {
             wrapper
@@ -41,6 +48,10 @@ namespace {
                      (bp::arg("image")),
                      "Add flux of photons to an image by binning into pixels.")
                 ;
+            bp::def("MakePhotonsFromImage",
+                (boost::shared_ptr<PhotonArray> (*)(const BaseImage<U>&, double, UniformDeviate))
+                &MakePhotonsFromImage<U>,
+                bp::args("image", "maxFlux", "ud"));
         }
 
         static bp::object GetXArray(PhotonArray& phot)

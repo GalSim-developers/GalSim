@@ -52,8 +52,8 @@ for chip_num in {1..$nfiles}
 do
     root=DECam_00154912_01
     file_name=${root}_psfex_image.fits
-    ../check_diff.py output/$file_name output_yaml/$file_name
+    $python ../check_diff.py output/$file_name output_yaml/$file_name
     file_name=${root}_fitpsf_image.fits
-    ../check_diff.py output/$file_name output_yaml/$file_name
+    $python ../check_diff.py output/$file_name output_yaml/$file_name
 done
 
