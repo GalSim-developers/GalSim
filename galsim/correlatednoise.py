@@ -1531,48 +1531,6 @@ class CovarianceSpectrum(object):
     def __mul__(self, variance_ratio):
         return self.withScaledVariance(variance_ratio)
 
-    def __div__(self, variance_ratio):
-        return self.withScaledVariance(1./variance_ratio)
-
-    def __truediv__(self, variance_ratio):
-        return self.__div__(variance_ratio)
-
-    def expand(self, scale):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.expand(scale)
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
-    def dilate(self, scale):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.dilate(scale) / scale**4
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
-    def magnify(self, scale):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.magnify(scale)
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
-    def lens(self, g1, g2, mu):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.lens(g1, g2, mu)
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
-    def rotate(self, theta):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.rotate(theta)
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
-    def shear(self, *args, **kwargs):
-        Sigma = {}
-        for k, v in iteritems(self.Sigma):
-            Sigma[k] = v.shear(*args, **kwargs)
-        return CovarianceSpectrum(Sigma, self.SEDs)
-
     def transform(self, dudx, dudy, dvdx, dvdy):
         Sigma = {}
         for k, v in iteritems(self.Sigma):
