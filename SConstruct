@@ -324,7 +324,7 @@ def TrySSEFlags(env, flags):
 """
     if len(flags) == 0: return
 
-    orig_flags = env['CFLAGS']
+    orig_flags = env['CCFLAGS']
     config = env.Configure()
     found = False
     for flag in flags:
