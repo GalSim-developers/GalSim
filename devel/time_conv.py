@@ -52,8 +52,7 @@ def main():
         gal_kimage.array[:,:] *= psf_kimage.array
 
         # Finish the draw process
-        convolved_image.setZero()
-        gal_prof.drawFFT_finish(convolved_image, gal_kimage, wrap_size)
+        gal_prof.drawFFT_finish(convolved_image, gal_kimage, wrap_size, add_to_image=False)
 
         if False:
             # Check that we get the same thing as the normal draw procedure

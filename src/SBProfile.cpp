@@ -312,19 +312,8 @@ namespace galsim {
         }
     }
 
-    // For draw with float, short, ushort, use float for the temporary fill image.
-    // Otherwise use double.
     template <typename T>
-    struct fill_type { typedef double type; };
-    template <>
-    struct fill_type<float> { typedef float type; };
-    template <>
-    struct fill_type<short> { typedef float type; };
-    template <>
-    struct fill_type<unsigned short> { typedef float type; };
-
-    template <typename T>
-    double SBProfile::draw(ImageView<T> image, double dx) const
+    double SBProfile::draw(ImageView<T> image, double dx, bool add) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
@@ -334,17 +323,25 @@ namespace galsim {
         const int n = image.getNRow();
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        typedef typename fill_type<T>::type ftype;
-        ImageAlloc<ftype> im2(image.getBounds(), 0.);
-        _pimpl->fillXImage(im2.view(), xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
-
-        double total_flux = im2.sumElements();
-        image += im2;
-        return total_flux;
+        if (add) {
+            ImageAlloc<T> im2(image.getBounds());
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            image += im2;
+            return im2.sumElements();
+        } else if (image.getStep() != 1) {
+            ImageAlloc<T> im2(image.getBounds());
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            image = im2;
+            return im2.sumElements();
+        } else {
+            image.setZero(); // Some profile's rely on starting with zeros.
+            _pimpl->fillXImage(image, xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            return image.sumElements();
+        }
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk, bool add) const
     {
         dbg<<"Start drawK: \n";
         typedef std::complex<T> CT;
@@ -356,10 +353,18 @@ namespace galsim {
         const int ymin = image.getYMin();
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        typedef typename fill_type<T>::type ftype;
-        ImageAlloc<std::complex<ftype> > im2(image.getBounds(), 0.);
-        _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
-        image += im2;
+        if (add) {
+            ImageAlloc<std::complex<T> > im2(image.getBounds());
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+            image += im2;
+        } else if (image.getStep() != 1) {
+            ImageAlloc<std::complex<T> > im2(image.getBounds());
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+            image = im2;
+        } else {
+            image.setZero();
+            _pimpl->fillKImage(image.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+        }
     }
 
     // The type of T (real or complex) determines whether the call-back is to
@@ -528,11 +533,13 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::draw(ImageView<float> image, double dx) const;
-    template double SBProfile::draw(ImageView<double> image, double dx) const;
+    template double SBProfile::draw(ImageView<float> image, double dx, bool add) const;
+    template double SBProfile::draw(ImageView<double> image, double dx, bool add) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
-    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk,
+                                   bool add) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk,
+                                   bool add) const;
 
     template void SBProfile::SBProfileImpl::defaultFillXImage(
         ImageView<double> im,

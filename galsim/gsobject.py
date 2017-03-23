@@ -910,13 +910,8 @@ class GSObject(object):
             if odd: N += 1
             bounds = galsim._BoundsI(1,N,1,N)
             image.resize(bounds)
-            image.setZero()
 
         # Else use the given image as is
-        else:
-            # Clear the image if we are not adding to it.
-            if not add_to_image:
-                image.setZero()
 
         return image
 
@@ -1388,18 +1383,19 @@ class GSObject(object):
         imview.wcs = galsim.PixelScale(1.0)
 
         if method == 'phot':
+            if not add_to_image: imview.setZero()
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
                                           surface_ops, gain)
         elif prof.isAnalyticX():
-            added_photons = prof.drawReal(imview)
+            added_photons = prof.drawReal(imview, add_to_image)
         else:
-            added_photons = prof.drawFFT(imview, wmult)
+            added_photons = prof.drawFFT(imview, add_to_image, wmult)
 
         image.added_flux = added_photons / flux_scale
 
         return image
 
-    def drawReal(self, image):
+    def drawReal(self, image, add_to_image=False):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
@@ -1421,12 +1417,25 @@ class GSObject(object):
         the pixel, you can convolve with a Pixel first and draw that.
 
         @param image        The Image onto which to place the flux. [required]
-                            Note: The flux will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing. [default: False]
 
         @returns The total flux drawn inside the image bounds.
         """
-        return self.SBProfile.draw(image.image, image.scale)
+        if image.dtype in [ np.float64, np.float32 ]:
+            return self.SBProfile.draw(image.image, image.scale, add_to_image)
+        else:
+            # Need a temporary
+            if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
+                im1 = galsim.ImageD(bounds=image.bounds)
+            else:
+                im1 = galsim.ImageF(bounds=image.bounds)
+            added_flux = self.SBProfile.draw(im1.image.view(), image.scale, False)
+            if add_to_image:
+                image.array[:,:] += im1.array
+            else:
+                image.array[:,:] = im1.array
+            return added_flux
 
     def getGoodImageSize(self, pixel_scale):
         """Return a good size to use for drawing this profile.
@@ -1452,9 +1461,7 @@ class GSObject(object):
         the PSF so drawing many models of the galaxy with the given PSF profile can avoid
         drawing the PSF each time.
 
-        @param image        The Image onto which to place the flux. [required]
-                            Note: The flux will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
+        @param image        The Image onto which to place the flux.
 
         @returns (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
                                       the result should be wrapped before doing the inverse fft.
@@ -1493,7 +1500,7 @@ class GSObject(object):
             kimage = galsim.ImageCF(bounds=bounds, scale=dk)
         return kimage, N
 
-    def drawFFT_finish(self, image, kimage, wrap_size):
+    def drawFFT_finish(self, image, kimage, wrap_size, add_to_image):
         """
         This is a helper routine for drawFFT that finishes the calculation, based on the
         drawn k-space image.
@@ -1504,6 +1511,8 @@ class GSObject(object):
         @param kimage       The k-space Image where the object was drawn.
         @param wrap_size    The size of the region to wrap kimage, which must be either the same
                             size as kimage or smaller.
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing.
 
         @returns The total flux drawn inside the image bounds.
         """
@@ -1519,11 +1528,14 @@ class GSObject(object):
 
         # Add (a portion of) this to the original image.
         ar = real_image.subImage(image.bounds).array
-        image.array[:,:] += ar
+        if add_to_image:
+            image.array[:,:] += ar
+        else:
+            image.array[:,:] = ar
         added_photons = ar.sum(dtype=float)
         return added_photons
 
-    def drawFFT(self, image, wmult=1.):
+    def drawFFT(self, image, add_to_image=False, wmult=1.):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
@@ -1534,11 +1546,6 @@ class GSObject(object):
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawFFT`.
-
         Note that the image produced by `drawFFT` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
         integrated over the area of the pixel.  If you want to render a profile integrated over
@@ -1547,6 +1554,8 @@ class GSObject(object):
         @param image        The Image onto which to place the flux. [required]
                             Note: The flux will be added to any flux already on the image,
                             so this corresponds to the add_to_image=True option in drawImage.
+        @param add_to_image Whether to add flux to the existing image rather than clear out
+                            anything in the image before drawing. [default: False]
 
         @returns The total flux drawn inside the image bounds.
         """
@@ -1561,7 +1570,7 @@ class GSObject(object):
 
         kimage, wrap_size = self.drawFFT_makeKImage(image, wmult)
         self._drawKImage(kimage)
-        return self.drawFFT_finish(image, kimage, wrap_size)
+        return self.drawFFT_finish(image, kimage, wrap_size, add_to_image)
 
     def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
         """Calculate how many photons to shoot and what flux_ratio (called g) each one should
@@ -1923,9 +1932,10 @@ class GSObject(object):
         # If the profile needs to be constructed from scratch, the _setup_image function will
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
-        real_prof = galsim.PixelScale(dx).toImage(self)
-        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
-                                       odd=True, wmult=wmult)
+        if image is None or not image.bounds.isDefined():
+            real_prof = galsim.PixelScale(dx).toImage(self)
+            image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
+                                           odd=True, wmult=wmult)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
@@ -1947,7 +1957,7 @@ class GSObject(object):
         # Making views of the images lets us change the centers without messing up the originals.
         image.setCenter(0,0)
 
-        self.SBProfile.drawK(image.image.view(), dk)
+        self.SBProfile.drawK(image.image.view(), dk, add_to_image)
 
         if gain is not None:  # pragma: no cover
             image /= gain
@@ -1967,8 +1977,7 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        if not add_to_image: image.setZero()
-        self.SBProfile.drawK(image.image.view(), image.scale)
+        self.SBProfile.drawK(image.image.view(), image.scale, add_to_image)
         return image
 
 
