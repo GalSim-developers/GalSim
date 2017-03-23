@@ -2235,37 +2235,37 @@ def test_copy():
     im2.setValue(3,8,11.)
     assert im(3,8) != 11.
 
-    # Can also use constructor to "copy", although this doesn't copy the numpy array.
+    # Can also use constructor to "copy"
     im3 = galsim.Image(im)
     assert im3.wcs == im.wcs
     assert im3.bounds == im.bounds
     np.testing.assert_array_equal(im3.array, im.array)
     im3.setValue(3,8,11.)
-    assert im(3,8) == 11.   # im value changes when im3 value changes.
+    assert im(3,8) != 11.
 
-    # Constructor can change the wcs, but keep the array.
+    # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
     assert im4.wcs != im.wcs            # wcs is not equal this time.
     assert im4.bounds == im.bounds
     np.testing.assert_array_equal(im4.array, im.array)
-    im4.setValue(3,8,13.)
-    assert im(3,8) == 13.
+    im4.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
     im5 = galsim.Image(im, wcs=galsim.PixelScale(1.4))
     assert im5.wcs != im.wcs            # wcs is not equal this time.
     assert im5.bounds == im.bounds
     np.testing.assert_array_equal(im5.array, im.array)
-    im5.setValue(3,8,15.)
-    assert im(3,8) == 15.
+    im5.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
     im6 = galsim.Image(im, wcs=wcs)
     assert im6.wcs == im.wcs            # This is the same wcs now.
     assert im6.bounds == im.bounds
     np.testing.assert_array_equal(im6.array, im.array)
-    im6.setValue(3,8,17.)
-    assert im(3,8) == 17.
+    im6.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
-    # With dtype different from the original, then should actually copy.
+    # Can also change the dtype
     im7 = galsim.Image(im, dtype=float)
     assert im7.wcs == im.wcs
     assert im7.bounds == im.bounds
@@ -2294,8 +2294,8 @@ def test_copy():
     # copyFrom copies the data only.
     im5.copyFrom(im8)
     assert im5.wcs != im.wcs  # im5 had a different wcs.  Should still have it.
-    assert im5.bounds == im.bounds
-    np.testing.assert_array_equal(im5.array, im.array)
+    assert im5.bounds == im8.bounds
+    np.testing.assert_array_equal(im5.array, im8.array)
     assert im5(3,8) == 11.
     im8[3,8] = 15
     assert im5(3,8) == 11.

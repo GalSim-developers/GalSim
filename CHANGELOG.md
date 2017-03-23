@@ -30,6 +30,8 @@ API Changes
 - Some of the backend (but nonetheless public API) methods of PhaseScreen and
   PhaseScreenList have changed.  See the docstrings of these classes for
   the new API if you have been using these methods. (#824)
+- Switched galsim.Image(image) to make a copy of the image rather than a view.
+  If you want a view, you should use the more intuitive image.view().  (#873)
 
 
 Dependency Changes

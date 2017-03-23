@@ -67,6 +67,8 @@ def fit(image, guess=(1.,1.,0.,0.,0.,0.), tol=1.e-6):
             self._gsp = galsim.GSParams(kvalue_accuracy=1.e-5)
             self._target_image = galsim.ImageCF(image)
             self._scratch_image = galsim.ImageCF(image)
+            #self._target_image = galsim.ImageCD(image)
+            #self._scratch_image = galsim.ImageCD(image)
         def __call__(self, params):
             if params[0] < 0. or abs(params[2]) > 1. or abs(params[3]) > 1.:
                 return 1.e500

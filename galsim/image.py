@@ -368,7 +368,7 @@ class Image(with_metaclass(MetaImage, object)):
                         #      im2 = ImageD(im)
                         self.image = _galsim.ImageAlloc[dtype](image)
                     else:
-                        self.image = image
+                        self.image = _galsim.ImageAlloc[im_dtype](image)
                     break
             if self.image is None:
                 # Then never found the dtype above:
@@ -847,9 +847,11 @@ class Image(with_metaclass(MetaImage, object)):
             return galsim.Image(wcs=wcs, dtype=self.dtype)
 
         if make_const:
-            ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
+            array = self.array.view()
+            array.flags.writeable = False
+            ret = _Image(array, self.bounds, wcs)
         else:
-            ret = Image(image=self.image.view(), wcs=wcs)
+            ret = _Image(self.array, self.bounds, wcs)
 
         if origin is not None:
             ret.setOrigin(origin)
@@ -861,12 +863,7 @@ class Image(with_metaclass(MetaImage, object)):
     def _view(self):
         """Equivalent to im.view(), but without some of the sanity checks and extra options.
         """
-        ret = Image.__new__(Image)
-        ret.image = self.image.view()
-        ret._array = self._array
-        ret.dtype = self.dtype
-        ret.wcs = self.wcs
-        return ret
+        return _Image(self.array.view(), self.bounds, self.wcs)
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
