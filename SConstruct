@@ -296,6 +296,46 @@ def ErrorExit(*args, **kwargs):
     Exit(1)
 
 
+def TrySSEFlags(env, flags):
+    """Try some options for the sse flags.  Take the first in the list that works.
+    """
+    sse_source_file = """
+    #include <complex>
+    #include "xmmintrin.h"
+
+#ifdef __SSE__
+    double dot(double* a, double *b)
+    {
+        __m128d xA = _mm_load_pd(a);
+        __m128d xB = _mm_load_pd(b);
+        union { __m128d xm; double xd[2]; } res;
+        res.xm = _mm_mul_pd(xA,xB);
+        return res.xd[0] + res.xd[1];
+    }
+#endif
+    float dot(float* a, float *b)
+    {
+        __m128 xA = _mm_load_ps(a);
+        __m128 xB = _mm_load_ps(b);
+        union { __m128 xm; float xf[4]; } res;
+        res.xm = _mm_mul_ps(xA,xB);
+        return res.xf[0] + res.xf[1] + res.xf[2] + res.xf[3];
+    }
+"""
+    if len(flags) == 0: return
+
+    orig_flags = env['CFLAGS']
+    config = env.Configure()
+    found = False
+    for flag in flags:
+        config.env.Replace(CCFLAGS=orig_flags + [flag])
+        found = config.TryCompile(sse_source_file,'.cpp')
+        if found:
+            print 'Using SSE with flag',flag
+            env = config.Finish()
+            return
+    print 'None of the possible SSE flags worked.'
+
 
 def BasicCCFlags(env):
     """
@@ -318,8 +358,10 @@ def BasicCCFlags(env):
         env.AppendUnique(LIBS='pthread')
 
     if env['FLAGS'] == '':
+        sse_flags = []
         if compiler == 'g++':
-            env.Replace(CCFLAGS=['-O2','-std=c++98','-march=native'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-march=native', '-msse2', 'msse']
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
@@ -333,7 +375,8 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'clang++':
-            env.Replace(CCFLAGS=['-O2','-march=native'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-march=native', '-msse2', 'msse']
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -343,7 +386,8 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2','-msse2','-march=native'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-march=native', '-msse2', 'msse']
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
             if env['WITH_PROF']:
@@ -381,6 +425,7 @@ def BasicCCFlags(env):
         else:
             print '\nWARNING: Unknown compiler.  You should set FLAGS directly.\n'
             env.Replace(CCFLAGS=[])
+        TrySSEFlags(env, sse_flags)
 
     else :
         # If flags are specified as an option use them:
