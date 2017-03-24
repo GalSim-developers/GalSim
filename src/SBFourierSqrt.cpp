@@ -85,8 +85,10 @@ namespace galsim {
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
-                *ptr = (kx*kx+kysq <= _maxksq) ? std::sqrt(*ptr) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx) {
+                std::complex<T> val = *ptr;
+                *ptr++ = (kx*kx+kysq <= _maxksq) ? std::sqrt(val) : 0.;
+            }
         }
     }
 
@@ -110,8 +112,10 @@ namespace galsim {
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
-                *ptr = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(*ptr) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx) {
+                std::complex<T> val = *ptr;
+                *ptr++ = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(val) : 0.;
+            }
         }
     }
 

@@ -334,7 +334,6 @@ namespace galsim {
             image = im2;
             return im2.sumElements();
         } else {
-            image.setZero(); // Some profile's rely on starting with zeros.
             _pimpl->fillXImage(image, xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
             return image.sumElements();
         }
@@ -362,7 +361,6 @@ namespace galsim {
             _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
             image = im2;
         } else {
-            image.setZero();
             _pimpl->fillKImage(image.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
         }
     }
@@ -411,7 +409,7 @@ namespace galsim {
         const int n2 = n - n1 - 1;
 
         // Make a smaller single-quadrant image and fill that the normal way.
-        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1,0.);
+        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1);
         QuadrantHelper<T>::fill(prof, q.view(), m1==0?x0:0., dx, n1==0?y0:0., dy);
 
         // Use those values to fill the original image.

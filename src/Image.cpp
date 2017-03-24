@@ -182,9 +182,7 @@ Bounds<int> BaseImage<T>::nonZeroBounds() const
     return nz.bounds;
 }
 
-template <typename T>
-ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
-    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+void CheckSize(int ncol, int nrow)
 {
     if (ncol <= 0 || nrow <= 0) {
         std::ostringstream oss(" ");
@@ -202,7 +200,33 @@ ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
         }
         throw ImageError(oss.str());
     }
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+{
+    CheckSize(ncol, nrow);
+#ifdef DEBUGLOGGING
+    fill(T(99999));
+#endif
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
+{
+    CheckSize(ncol, nrow);
     fill(init_value);
+}
+
+template <typename T>
+ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds) :
+    BaseImage<T>(bounds)
+{
+#ifdef DEBUGLOGGING
+    fill(T(99999));
+#endif
 }
 
 template <typename T>

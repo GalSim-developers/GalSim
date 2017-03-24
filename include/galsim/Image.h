@@ -639,12 +639,24 @@ namespace galsim {
          *
          *  An exception is thrown if ncol or nrow <= 0
          */
-        ImageAlloc(int ncol, int nrow, T init_value = T(0));
+        ImageAlloc(int ncol, int nrow);
+
+        /**
+         *  @brief Create a new image with origin at (1,1), intialized with some init_value
+         *
+         *  An exception is thrown if ncol or nrow <= 0
+         */
+        ImageAlloc(int ncol, int nrow, T init_value);
+
+        /**
+         *  @brief Create a new image with the given bounding box
+         */
+        ImageAlloc(const Bounds<int>& bounds);
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
          */
-        ImageAlloc(const Bounds<int>& bounds, T init_value = T(0));
+        ImageAlloc(const Bounds<int>& bounds, T init_value);
 
         /**
          *  @brief Deep copy constructor.

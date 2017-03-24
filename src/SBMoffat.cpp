@@ -401,10 +401,12 @@ namespace galsim {
             for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
                 double ysq = y0*y0;
-                for (int i=0; i<m; ++i,x+=dx,++ptr) {
+                for (int i=0; i<m; ++i,x+=dx) {
                     double rsq = x*x + ysq;
                     if (rsq <= _maxRrD_sq)
-                        *ptr = _norm / _pow_beta(1.+rsq, _beta);
+                        *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                    else
+                        *ptr++ = T(0);
                 }
             }
         }
@@ -434,10 +436,12 @@ namespace galsim {
         for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0; i<m; ++i,x+=dx,y+=dyx,++ptr) {
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 if (rsq <= _maxRrD_sq)
-                    *ptr = _norm / _pow_beta(1.+rsq, _beta);
+                    *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                else
+                    *ptr++ = T(0);
             }
         }
     }

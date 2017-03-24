@@ -476,11 +476,11 @@ namespace galsim {
                 int i1,i2;
                 double kysq; // GetKValueRange1d will compute this i1 != m
                 GetKValueRange1d(i1, i2, m, _k_max, _ksq_max, kx0, dkx, ky0, kysq);
-                ptr += i1;
+                for (int i=i1; i; --i) *ptr++ = T(0);
                 if (i1 == m) continue;
                 double kx = kx0 + i1 * dkx;
                 InnerLoopHelper<T>::kloop_1d(ptr, i2-i1, kx, dkx, kysq, _flux);
-                ptr += (m-i2);
+                for (int i=m-i2; i; --i) *ptr++ = T(0);
             }
         }
     }
@@ -509,12 +509,12 @@ namespace galsim {
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             int i1,i2;
             GetKValueRange2d(i1, i2, m, _k_max, _ksq_max, kx0, dkx, ky0, dkyx);
-            ptr += i1;
+            for (int i=i1; i; --i) *ptr++ = T(0);
             if (i1 == m) continue;
             double kx = kx0 + i1 * dkx;
             double ky = ky0 + i1 * dkyx;
             InnerLoopHelper<T>::kloop_2d(ptr, i2-i1, kx, dkx, ky, dkyx, _flux);
-            ptr += (m-i2);
+            for (int i=m-i2; i; --i) *ptr++ = T(0);
         }
     }
 

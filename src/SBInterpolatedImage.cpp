@@ -323,6 +323,7 @@ namespace galsim {
         double ky = ky0;
         for (int j=j1; j<j2; ++j,ky+=dky) *uyit++ = ky * _uscale;
 
+        im.setZero();
         const InterpolantXY* kInterpXY = dynamic_cast<const InterpolantXY*>(_kInterp.get());
         if (kInterpXY) {
             // Again, the KTable interpolation routine will go faster if we make y iteration
@@ -415,7 +416,7 @@ namespace galsim {
             double uy = uy0;
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,ux+=dux,uy+=duyx) {
                 if (std::abs(kx) > _maxk1 || std::abs(ky) > _maxk1) {
-                    ++ptr;
+                    *ptr++ = T(0);
                 } else {
                     double xKernelTransform = _xInterp->uval(ux, uy);
                     *ptr++ = xKernelTransform * _ktab->interpolate(kx, ky, *_kInterp);

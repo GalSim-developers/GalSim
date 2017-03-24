@@ -118,6 +118,7 @@ namespace galsim {
         ptr += im.getStride() * j1 + i1;
         skip += m - (i2-i1);
 
+        im.setZero();
         for (int j=j1; j<j2; ++j,ptr+=skip) {
             for (int i=i1;i<i2;++i)
                 *ptr++ = _norm;
@@ -146,11 +147,11 @@ namespace galsim {
             // Use the fact that any slice through the box has only one segment that is non-zero.
             // So start with zeroes until in the box (already there), then _norm, then more zeroes.
             for (;i<m && (std::abs(x)>_wo2 || std::abs(y)>_ho2); ++i,x+=dx,y+=dyx)
-                ++ptr;
+                *ptr++ = T(0);
             for (;i<m && std::abs(x)<_wo2 && std::abs(y)<_ho2; ++i,x+=dx,y+=dyx)
                 *ptr++ = _norm;
             for (;i<m; ++i,x+=dx,y+=dyx)
-                ++ptr;
+                *ptr++ = T(0);
         }
     }
 
@@ -337,6 +338,7 @@ namespace galsim {
         y0 += j1 * dy;
         ptr += j1*im.getStride();
 
+        im.setZero();
         for (int j=j1; j<j2; ++j,y0+=dy,ptr+=skip) {
             double ysq = y0*y0;
             double xmax = std::sqrt(_r0sq - ysq);
@@ -375,9 +377,9 @@ namespace galsim {
             // for the non-sheared fillXImage (the one with izero, jzero), but I didn't
             // bother.  This is probably plenty fast enough for as often as the function is
             // called (i.e. almost never!)
-            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++ptr;
+            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) *ptr++ = T(0);
             for (;i<m && (x*x+y*y < _r0sq); ++i,x+=dx,y+=dyx) *ptr++ = _norm;
-            for (;i<m; ++i,x+=dx,y+=dyx) ++ptr;
+            for (;i<m; ++i,x+=dx,y+=dyx) *ptr++ = T(0);
         }
     }
 

@@ -139,7 +139,6 @@ namespace galsim {
         if (++pptr != _plist.end()) {
             ImageAlloc<T> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,izero,y0,dy,jzero);
                 im += im2;
             }
@@ -160,7 +159,6 @@ namespace galsim {
         if (++pptr != _plist.end()) {
             ImageAlloc<T> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,dxy,y0,dy,dyx);
                 im += im2;
             }
@@ -181,7 +179,6 @@ namespace galsim {
         if (++pptr != _plist.end()) {
             ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 im += im2;
             }
@@ -202,7 +199,6 @@ namespace galsim {
         if (++pptr != _plist.end()) {
             ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 im += im2;
             }
