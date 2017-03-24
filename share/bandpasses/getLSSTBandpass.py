@@ -20,23 +20,26 @@ Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-5.  Note tha
 this script, which are the files GALSIM_DIR/examples/data/LSST_?.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
-
+from __future__ import print_function
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 import galsim
-import urllib2
 import numpy as np
 import os
 
-urldir='https://raw.githubusercontent.com/lsst/throughputs/2016.02.29/baseline/'
+urldir='https://raw.githubusercontent.com/lsst/throughputs/master/baseline/'
 for band in 'ugrizy':
     urlfile = urldir + 'total_{0}.dat'.format(band)
     base = os.path.basename(urlfile).replace('total_', 'LSST_')
-    file_ = urllib2.urlopen(urlfile)
+    file_ = urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(

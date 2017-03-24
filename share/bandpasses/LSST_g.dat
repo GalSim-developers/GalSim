@@ -1,5 +1,5 @@
 # LSST g-band total throughput at airmass 1.2
-# File taken from https://raw.githubusercontent.com/lsst/throughputs/2016.02.29/baseline/total_g.dat
+# File taken from https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_g.dat
 #
 #  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
 #  with fast_search=False.

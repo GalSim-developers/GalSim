@@ -20,9 +20,12 @@ Grab HST ACS bandpasses from the web, and then thin with rel_err = 1.e-3.  Note 
 this script, which are the files GALSIM_DIR/examples/data/ACS*.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
-
+from __future__ import print_function
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 import galsim
-import urllib2
 import numpy as np
 import os
 
@@ -30,7 +33,7 @@ urldir = 'http://www.stsci.edu/hst/acs/analysis/throughputs/tables/'
 for band in ['wfc_F435W', 'wfc_F606W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
     urlfile = urldir + band + '.dat'
     base = os.path.basename(urlfile).replace('wfc_', 'ACS_wfc_')
-    file_ = urllib2.urlopen(urlfile)
+    file_ = urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
     # For some reason, the F814W filter has repeated wavelengths in the file from STSci.  We
     # clip these out manually here.
@@ -41,8 +44,8 @@ for band in ['wfc_F435W', 'wfc_F606W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(

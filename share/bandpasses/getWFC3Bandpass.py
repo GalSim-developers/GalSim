@@ -18,9 +18,12 @@
 """@file getWFC3Bandpass.py
 Grab HST WFC3 bandpasses from the web, and then thin with rel_err = 1.e-3.
 """
-
+from __future__ import print_function
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 import galsim
-import urllib2
 import numpy as np
 import os
 
@@ -28,14 +31,14 @@ urldir = 'http://www.stsci.edu/hst/wfc3/ins_performance/throughputs/Throughput_T
 for band in ['f105w', 'f125w', 'f160w']:
     urlfile = urldir + band + '.IR.tab'
     base = 'WFC3_ir_'+os.path.basename(urlfile).upper().replace('.IR.TAB', '.dat')
-    file_ = urllib2.urlopen(urlfile)
+    file_ = urlopen(urlfile)
     i,x,f = np.loadtxt(file_, unpack=True)
     x /= 10.0 #Ang -> nm
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(
@@ -54,8 +57,8 @@ for band in ['f275w', 'f336w']:
     urlfile = urldir + band + '.UVIS1.tab'
     urlfile2 = urldir + band + '.UVIS2.tab'
     base = 'WFC3_uvis_'+os.path.basename(urlfile).upper().replace('.UVIS1.TAB', '.dat')
-    file_ = urllib2.urlopen(urlfile)
-    file2 = urllib2.urlopen(urlfile2)
+    file_ = urlopen(urlfile)
+    file2 = urlopen(urlfile2)
     i,x,f = np.loadtxt(file_, unpack=True)
     i2,x2,f2 = np.loadtxt(file2, unpack=True)
     x /= 10.0 #Ang -> nm
@@ -68,8 +71,8 @@ for band in ['f275w', 'f336w']:
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(
