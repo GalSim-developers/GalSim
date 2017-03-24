@@ -459,7 +459,7 @@ class ChromaticObject(object):
         _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
-        wave_list = self._getCombinedWaveList(bandpass)
+        wave_list, _ , _ = galsim.utilities.combine_wave_list(self, bandpass)
 
         if self.separable:
             if len(wave_list) > 0:
@@ -512,13 +512,6 @@ class ChromaticObject(object):
             image.setZero()
         image += image_int
         return image
-
-    def _getCombinedWaveList(self, bandpass):
-        wave_list = bandpass.wave_list
-        wave_list = np.union1d(wave_list, self.wave_list)
-        wave_list = wave_list[wave_list <= bandpass.red_limit]
-        wave_list = wave_list[wave_list >= bandpass.blue_limit]
-        return wave_list
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
