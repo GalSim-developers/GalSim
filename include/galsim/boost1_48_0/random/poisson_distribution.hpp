@@ -274,39 +274,26 @@ private:
 
         bool first = true;
 
-        RealType r1 = uniform_01<RealType>()(urng);
-        RealType r2 = uniform_01<RealType>()(urng);
+        boost::random::mt11213b alt_rng1(urng());
+        alt_rng1.discard(2);
 
-        long lseed = static_cast<long>(r1*std::numeric_limits<long>::max());
-
-        boost::random::mt11213b alt_rng(lseed);
-        alt_rng.discard(2);
+        URNG alt_rng2(alt_rng1());
 
         while(true) {
-            if(first)
-            {
-                first = false;
-            }
-            else
-            {
-                r1 = uniform_01<RealType>()(alt_rng);
-                r2 = uniform_01<RealType>()(alt_rng);
-            }
             RealType u;
-            RealType v;
-            if(r1 <= 0.86 * _ptrd.v_r) {
-                u = r1 / _ptrd.v_r - 0.43;
+            RealType v = uniform_01<RealType>()(alt_rng2);
+            if(v <= 0.86 * _ptrd.v_r) {
+                u = v / _ptrd.v_r - 0.43;
                 return static_cast<IntType>(floor(
                     (2*_ptrd.a/(0.5-abs(u)) + _ptrd.b)*u + _mean + 0.445));
             }
 
-            if(r1 >= _ptrd.v_r) {
-                u = r2 - 0.5;
-                v = r1;
+            if(v >= _ptrd.v_r) {
+                u = uniform_01<RealType>()(alt_rng2) - 0.5;
             } else {
-                u = r1/_ptrd.v_r - 0.93;
+                u = v/_ptrd.v_r - 0.93;
                 u = ((u < 0)? -0.5 : 0.5) - u;
-                v = r2 * _ptrd.v_r;
+                v = uniform_01<RealType>()(alt_rng2) * _ptrd.v_r;
             }
 
             RealType us = 0.5 - abs(u);
@@ -348,9 +335,6 @@ private:
             ++x;
             p = _mean * p / x;
         }
-
-        // Generate an extra value for consistency with generate()
-        uniform_01<RealType>()(urng);
 
         return x;
     }
