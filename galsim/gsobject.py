@@ -1826,7 +1826,8 @@ class GSObject(object):
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
+                   add_to_image=False, recenter=True,
+                   dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
 
@@ -1861,6 +1862,8 @@ class GSObject(object):
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
                             bounds. [default: False]
+        @param recenter     Whether to recenter the image to put k = 0 at the center (True) or to
+                            trust the provided bounds (False).  [default: True]
 
         @returns an Image instance (created if necessary)
         """
@@ -1937,6 +1940,10 @@ class GSObject(object):
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
                                            odd=True, wmult=wmult)
 
+        # Set the center to 0,0 if appropriate
+        if recenter and image.center() != galsim.PositionI(0,0):
+            image._shift(-image.center())
+
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
 
@@ -1954,9 +1961,6 @@ class GSObject(object):
             re.setOrigin(image.origin())
             im.setOrigin(image.origin())
 
-        # Making views of the images lets us change the centers without messing up the originals.
-        image.setCenter(0,0)
-
         self.SBProfile.drawK(image.image.view(), dk, add_to_image)
 
         if gain is not None:  # pragma: no cover
@@ -1965,8 +1969,8 @@ class GSObject(object):
         return image
 
     def _drawKImage(self, image, add_to_image=False):
-        """Equivalent to drawKImage(image, add_to_image), but without the normal sanity checks
-        or the option to create the image automatically.
+        """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal
+        sanity checks or the option to create the image automatically.
 
         The input image must be provided as a complex Image instancec, and the center should
         be set to coordinate (0,0).  This is not checked (in the interest of efficiency).

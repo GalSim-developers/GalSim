@@ -884,6 +884,10 @@ class Image(with_metaclass(MetaImage, object)):
         self._shift(delta)
 
     def _shift(self, delta):
+        """Equivalent to im.shift(delta), but without some of the sanity checks and extra options.
+
+        @param delta    The amount to shift.  Must be a galsim.PositionI instance.
+        """
         # The parse_pos_args function is a bit slow, so go directly to this point when we
         # call shift from setCenter or setOrigin.
         if delta.x != 0 or delta.y != 0:

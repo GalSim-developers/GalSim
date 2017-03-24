@@ -135,6 +135,16 @@ New Features
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
   are generally somewhat faster than the numpy functions. (#840)
+- Added some variants of normal functions and methods with a leading underscore.
+  These variants skip the normal sanity checks of the input parameters and
+  often have more limited options for the input arguments.  Some examples:
+  `_Image`, `_Shear`, `_BoundsI`, `_Transform`, `obj._shear`, `obj._shift`,
+  `obj._drawKImage`, `image._view`, `image._shift`.  These are appropriate
+  for advanced users who are optimizing a tight loop and find that the normal
+  Python checks are taking a significant amount of time. (#840, #873)
+- Added `recenter` option to drawKImage to optionally not recenter the input
+  image at (0,0).  The default `recenter=True` is consistent with how this
+  function has worked in previous versions. (#873)
 
 
 New config features

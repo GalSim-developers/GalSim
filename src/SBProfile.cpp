@@ -350,18 +350,19 @@ namespace galsim {
         const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
+        const int izero = xmin < 0 ? -xmin : 0;
+        const int jzero = ymin < 0 ? -ymin : 0;
 
-        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         if (add) {
             ImageAlloc<std::complex<T> > im2(image.getBounds());
-            _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
             image += im2;
         } else if (image.getStep() != 1) {
             ImageAlloc<std::complex<T> > im2(image.getBounds());
-            _pimpl->fillKImage(im2.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
             image = im2;
         } else {
-            _pimpl->fillKImage(image.view(), xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
+            _pimpl->fillKImage(image.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
         }
     }
 

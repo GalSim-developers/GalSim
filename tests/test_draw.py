@@ -239,7 +239,7 @@ def test_drawImage():
     #   - set the scale
     ny = 100  # Make it non-square
     im10 = obj.drawImage(nx=nx, ny=ny, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny, nx),
                                    "obj.drawImage(nx,ny,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
@@ -253,7 +253,7 @@ def test_drawImage():
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx+1), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx+1),
                                    "obj.drawImage(nx,ny,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
@@ -271,7 +271,7 @@ def test_drawImage():
     #   - create a new image with the right size
     #   - set the scale to obj2.nyquistScale()
     im10 = obj.drawImage(nx=nx, ny=ny)
-    np.testing.assert_almost_equal(im10.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny, nx),
                                    "obj.drawImage(nx,ny) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
@@ -285,7 +285,7 @@ def test_drawImage():
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx+1), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx+1),
                                    "obj.drawImage(nx,ny) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
@@ -311,7 +311,7 @@ def test_drawImage():
     #   - set the scale
     bounds = galsim.BoundsI(1,nx,1,ny+1)
     im10 = obj.drawImage(bounds=bounds, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx),
                                    "obj.drawImage(bounds,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(bounds,scale) produced image with wrong scale")
@@ -328,7 +328,7 @@ def test_drawImage():
     #   - set the scale to obj2.nyquistScale()
     bounds = galsim.BoundsI(1,nx,1,ny+1)
     im10 = obj.drawImage(bounds=bounds)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx),
                                    "obj.drawImage(bounds) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(bounds) produced image with wrong scale")
@@ -663,8 +663,8 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, scale, 9,
             "obj.drawKImage(nx,ny,scale) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(nx,ny,scale) produced image with wrong shape")
 
     # Test if we provide nx, ny, and no scale.  It should:
@@ -674,9 +674,21 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, stepk, 9,
             "obj.drawKImage(nx,ny) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(nx,ny) produced image with wrong shape")
+
+    # Test if we provide bounds and no scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale to obj.stepK()
+    bounds = galsim.BoundsI(1,nx,1,ny)
+    im4 = obj.drawKImage(bounds=bounds)
+    np.testing.assert_almost_equal(
+            im4.scale, stepk, 9,
+            "obj.drawKImage(bounds) produced image with wrong scale")
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
+            "obj.drawKImage(bounds) produced image with wrong shape")
 
     # Test if we provide bounds and scale.  It should:
     #   - create a new image with the right size
@@ -686,22 +698,38 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, scale, 9,
             "obj.drawKImage(bounds,scale) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(bounds,scale) produced image with wrong shape")
 
+    # Test recenter = False option
+    bounds6 = galsim.BoundsI(0, nx//3, 0, ny//4)
+    im6 = obj.drawKImage(bounds=bounds6, scale=scale, recenter=False)
+    np.testing.assert_equal(
+            im6.bounds, bounds6,
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong bounds")
+    np.testing.assert_almost_equal(
+            im6.scale, scale, 9,
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong scale")
+    np.testing.assert_equal(
+            im6.array.shape, (ny//4+1, nx//3+1),
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong shape")
+    np.testing.assert_almost_equal(
+            im6.array, im4[bounds6].array, 9,
+            "obj.drawKImage(recenter=False) produced different values than recenter=True")
 
-    # Test if we provide bounds and scale.  It should:
-    #   - create a new image with the right size
-    #   - set the scale to obj.stepK()
-    bounds = galsim.BoundsI(1,nx,1,ny)
-    im4 = obj.drawKImage(bounds=bounds)
+    # Test recenter = False option
+    im6.setZero()
+    obj.drawKImage(im6, recenter=False)
     np.testing.assert_almost_equal(
-            im4.scale, stepk, 9,
-            "obj.drawKImage(bounds) produced image with wrong scale")
+            im6.scale, scale, 9,
+            "obj.drawKImage(image,recenter=False) produced image with wrong scale")
+    np.testing.assert_equal(
+            im6.array.shape, (ny//4+1, nx//3+1),
+            "obj.drawKImage(image,recenter=False) produced image with wrong shape")
     np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
-            "obj.drawKImage(bounds) produced image with wrong shape")
+            im6.array, im4[bounds6].array, 9,
+            "obj.drawKImage(image,rcenter=False) produced different values than recenter=True")
 
 
 @timer
