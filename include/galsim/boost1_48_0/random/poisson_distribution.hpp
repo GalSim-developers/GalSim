@@ -274,6 +274,12 @@ private:
 
         bool first = true;
 
+        /*
+         * This part is modified a bit so that only one random value is drawn from this
+         * generator each time it's used. We basically run its generated value through
+         * a different generator a couple times, then use that as a seed for a new
+         * generator of this type.
+         */
         boost::random::mt11213b alt_rng1(urng());
         alt_rng1.discard(2);
 
