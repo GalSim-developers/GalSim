@@ -338,13 +338,15 @@ namespace galsim {
     inline ImageAlloc<CT>& operator*=(ImageAlloc<CT>& im, const T& x)
     { im.view() *= x; return im; }
 
-    // These are worth specializing so we can do im *= x at higher accuracy
-    // than we'd get by casting x to float(x).
-    inline ImageView<float> operator*=(ImageView<float> im, double x)
-    { transform_pixel(im, MultiplyConstant<float,double>(x)); return im; }
-
-    inline ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im, double x)
-    { transform_pixel(im, MultiplyConstant<std::complex<float>,double>(x)); return im; }
+    // Specialize variants that can be sped up using SSE
+    ImageView<float> operator*=(ImageView<float> im, float x);
+    ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im, float x);
+    ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im,
+                                               std::complex<float> x);
+    ImageView<double> operator*=(ImageView<double> im, double x);
+    ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im, double x);
+    ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im,
+                                                std::complex<double> x);
 
 
     //
@@ -425,8 +427,8 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline ImageAlloc<T1>& operator+=(ImageAlloc<T1>& im, const BaseImage<T2>& x)
-    { im.view() += x; return im; }
+    inline ImageAlloc<T1>& operator+=(ImageAlloc<T1>& im, const BaseImage<T2>& im2)
+    { im.view() += im2; return im; }
 
 
     //
@@ -464,8 +466,8 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline ImageAlloc<T1>& operator-=(ImageAlloc<T1>& im, const BaseImage<T2>& x)
-    { im.view() -= x; return im; }
+    inline ImageAlloc<T1>& operator-=(ImageAlloc<T1>& im, const BaseImage<T2>& im2)
+    { im.view() -= im2; return im; }
 
 
     //
@@ -503,8 +505,21 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline ImageAlloc<T1>& operator*=(ImageAlloc<T1>& im, const BaseImage<T2>& x)
-    { im.view() *= x; return im; }
+    inline ImageAlloc<T1>& operator*=(ImageAlloc<T1>& im, const BaseImage<T2>& im2)
+    { im.view() *= im2; return im; }
+
+    // Specialize variants that can be sped up using SSE
+    ImageView<float> operator*=(ImageView<float> im1, const BaseImage<float>& im2);
+    ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                               const BaseImage<float>& im2);
+    ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                               const BaseImage<std::complex<float> >& im2);
+
+    ImageView<double> operator*=(ImageView<double> im1, const BaseImage<double>& im2);
+    ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                                const BaseImage<double>& im2);
+    ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                                const BaseImage<std::complex<double> >& im2);
 
 
     //
@@ -542,8 +557,8 @@ namespace galsim {
     }
 
     template <typename T1, typename T2>
-    inline ImageAlloc<T1>& operator/=(ImageAlloc<T1>& im, const BaseImage<T2>& x)
-    { im.view() /= x; return im; }
+    inline ImageAlloc<T1>& operator/=(ImageAlloc<T1>& im, const BaseImage<T2>& im2)
+    { im.view() /= im2; return im; }
 
     //! @endcond
 

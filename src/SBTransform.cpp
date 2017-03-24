@@ -22,6 +22,7 @@
 #include "TMV.h"
 #include "SBTransform.h"
 #include "SBTransformImpl.h"
+#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE include.
 
 namespace galsim {
 

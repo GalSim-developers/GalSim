@@ -24,6 +24,7 @@
 #include <cstring>
 
 #include "fftw3.h"
+#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE include.
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -963,6 +964,334 @@ int goodFFTSize(int input)
     int Nk = int(std::ceil(std::exp(std::min(log2n, log2n3))-1.e-5));
     return Nk;
 }
+
+// Some Image arithmetic that can be sped up with SSE
+
+// First the default implementation that we get if SSE isn't available.
+template <typename T>
+struct InnerLoopHelper
+{
+    template <typename T1, typename T2>
+    static inline void mult_const(T1*& ptr, T2 x, int n)
+    { for (; n; --n) *ptr++ *= x; }
+
+    template <typename T1, typename T2>
+    static inline void mult_im(T1*& p1, const T2*& p2, int n)
+    { for (; n; --n) *p1++ *= *p2++; }
+};
+
+#ifdef __SSE__
+template <>
+struct InnerLoopHelper<float>
+{
+    static inline void mult_const(float*& ptr, float x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        if (n4) {
+            __m128 xx = _mm_set1_ps(x);
+            do {
+                _mm_store_ps(ptr, _mm_mul_ps(_mm_load_ps(ptr), xx));
+                ptr += 4;
+            } while (--n4);
+        }
+
+        for (; n; --n) *ptr++ *= x;
+    }
+    static inline void mult_const(std::complex<float>*& ptr, float x, int n)
+    {
+        float* fptr = reinterpret_cast<float*>(ptr);
+        mult_const(fptr, x, 2*n);
+        ptr += n;
+    }
+    static inline void mult_const(std::complex<float>*& ptr, std::complex<float> x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            const float xr = x.real();
+            const float xi = x.imag();
+            __m128 xxr = _mm_set1_ps(xr);
+            __m128 xxi = _mm_set_ps(xi, -xi, xi, -xi);
+            do {
+                __m128 p = _mm_load_ps(reinterpret_cast<float*>(ptr));
+                __m128 pir = _mm_shuffle_ps(p, p, _MM_SHUFFLE(2,3,0,1));  // (pi, pr)
+                __m128 z1 = _mm_mul_ps(xxr, p);    // (xr * pr, xr * pi)
+                __m128 z2 = _mm_mul_ps(xxi, pir);  // (-xi * pi, xi * pr)
+                __m128 z = _mm_add_ps(z1, z2);     // (xr pr - xi pi, xr pi + xi pr)
+                _mm_store_ps(reinterpret_cast<float*>(ptr), z);
+                ptr += 2;
+            } while (--n2);
+        }
+
+        for (; n; --n) *ptr++ *= x;
+    }
+
+    static inline void mult_im(float*& p1, const float*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        for (; n4; --n4) {
+            _mm_store_ps(p1, _mm_mul_ps(_mm_load_ps(p1), _mm_loadu_ps(p2)));
+            p1 += 4;
+            p2 += 4;
+        }
+
+        for (; n; --n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<float>*& p1, const float*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n4 = n>>2;
+        int na = n4<<2;
+        n -= na;
+
+        for (; n4; --n4) {
+            __m128 xp2 = _mm_loadu_ps(p2);                           // This holds 4 real from p2
+            p2 += 4;
+            __m128 xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));  // This holds 2 complex from p1
+            __m128 prod = _mm_mul_ps(xp1, _mm_unpacklo_ps(xp2,xp2)); // First 2 products
+            _mm_store_ps(reinterpret_cast<float*>(p1), prod);
+            p1 += 2;
+            xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));         // This is now the next 2.
+            prod = _mm_mul_ps(xp1, _mm_unpackhi_ps(xp2,xp2));        // Next 2 products
+            _mm_store_ps(reinterpret_cast<float*>(p1), prod);
+            p1 += 2;
+        }
+
+        for (; n; --n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<float>*& p1, const std::complex<float>*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            const __m128 mneg = _mm_set_ps(1, -1, 1, -1);
+            do {
+                __m128 xp2 = _mm_loadu_ps(reinterpret_cast<const float*>(p2));
+                p2 += 2;
+                __m128 xp1 = _mm_load_ps(reinterpret_cast<float*>(p1));
+                __m128 p1ir = _mm_shuffle_ps(xp1, xp1, _MM_SHUFFLE(2,3,0,1));
+                __m128 p2rr = _mm_shuffle_ps(xp2, xp2, _MM_SHUFFLE(2,2,0,0));
+                __m128 p2ii = _mm_shuffle_ps(xp2, xp2, _MM_SHUFFLE(3,3,1,1));
+                p2ii = _mm_mul_ps(mneg, p2ii);
+                __m128 z1 = _mm_mul_ps(p2rr, xp1);
+                __m128 z2 = _mm_mul_ps(p2ii, p1ir);
+                __m128 z = _mm_add_ps(z1, z2);
+                _mm_store_ps(reinterpret_cast<float*>(p1), z);
+                p1 += 2;
+            } while (--n2);
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+};
+#endif
+
+#ifdef __SSE2__
+template <>
+struct InnerLoopHelper<double>
+{
+    static inline void mult_const(double*& ptr, double x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        if (n2) {
+            __m128d xx = _mm_set1_pd(x);
+            do {
+                _mm_store_pd(ptr, _mm_mul_pd(_mm_load_pd(ptr), xx));
+                ptr += 2;
+            } while (--n2);
+        }
+
+        if (n) *ptr++ *= x;
+    }
+    static inline void mult_const(std::complex<double>*& ptr, double x, int n)
+    {
+        double* fptr = reinterpret_cast<double*>(ptr);
+        mult_const(fptr, x, 2*n);
+        ptr += n;
+    }
+    static inline void mult_const(std::complex<double>*& ptr, std::complex<double> x, int n)
+    {
+        for (; n && !IsAligned(ptr); --n) *ptr++ *= x;
+
+        if (n) {
+            const double xr = x.real();
+            const double xi = x.imag();
+            __m128d xxr = _mm_set1_pd(xr);
+            __m128d xxi = _mm_set_pd(xi, -xi);
+            do {
+                __m128d p = _mm_load_pd(reinterpret_cast<double*>(ptr));
+                __m128d pir = _mm_shuffle_pd(p, p, _MM_SHUFFLE2(0,1));  // (pi, pr)
+                __m128d z1 = _mm_mul_pd(xxr, p);    // (xr * pr, xr * pi)
+                __m128d z2 = _mm_mul_pd(xxi, pir);  // (-xi * pi, xi * pr)
+                __m128d z = _mm_add_pd(z1, z2);     // (xr pr - xi pi, xr pi + xi pr)
+                _mm_store_pd(reinterpret_cast<double*>(ptr++), z);
+            } while (--n);
+        }
+    }
+
+    static inline void mult_im(double*& p1, const double*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        for (; n2; --n2) {
+            _mm_store_pd(p1, _mm_mul_pd(_mm_load_pd(p1), _mm_loadu_pd(p2)));
+            p1 += 2;
+            p2 += 2;
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<double>*& p1, const double*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        int n2 = n>>1;
+        int na = n2<<1;
+        n -= na;
+
+        for (; n2; --n2) {
+            __m128d xp2 = _mm_loadu_pd(p2);
+            p2 += 2;
+            __m128d xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+            __m128d prod = _mm_mul_pd(xp1, _mm_unpacklo_pd(xp2,xp2));
+            _mm_store_pd(reinterpret_cast<double*>(p1++), prod);
+            xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+            prod = _mm_mul_pd(xp1, _mm_unpackhi_pd(xp2,xp2));
+            _mm_store_pd(reinterpret_cast<double*>(p1++), prod);
+        }
+
+        if (n) *p1++ *= *p2++;
+    }
+    static inline void mult_im(std::complex<double>*& p1, const std::complex<double>*& p2, int n)
+    {
+        for (; n && !IsAligned(p1); --n) *p1++ *= *p2++;
+
+        if (n) {
+            const __m128d mneg = _mm_set_pd(1, -1);
+            do {
+                __m128d xp2 = _mm_loadu_pd(reinterpret_cast<const double*>(p2++));
+                __m128d xp1 = _mm_load_pd(reinterpret_cast<double*>(p1));
+                __m128d p1ir = _mm_shuffle_pd(xp1, xp1, _MM_SHUFFLE2(0,1));
+                __m128d p2rr = _mm_shuffle_pd(xp2, xp2, _MM_SHUFFLE2(0,0));
+                __m128d p2ii = _mm_shuffle_pd(xp2, xp2, _MM_SHUFFLE2(1,1));
+                p2ii = _mm_mul_pd(mneg, p2ii);
+                __m128d z1 = _mm_mul_pd(p2rr, xp1);
+                __m128d z2 = _mm_mul_pd(p2ii, p1ir);
+                __m128d z = _mm_add_pd(z1, z2);
+                _mm_store_pd(reinterpret_cast<double*>(p1++), z);
+            } while (--n);
+        }
+    }
+};
+#endif
+
+template <typename T1, typename T2>
+inline ImageView<T1>& MultConst(ImageView<T1>& im, T2 x)
+{
+    typedef typename ComplexHelper<T1>::real_type RT;
+    T1* ptr = im.getData();
+    if (ptr) {
+        const int skip = im.getNSkip();
+        const int step = im.getStep();
+        const int nrow = im.getNRow();
+        const int ncol = im.getNCol();
+        if (step == 1) {
+            for (int j=0; j<nrow; j++, ptr+=skip)
+                InnerLoopHelper<RT>::mult_const(ptr, x, ncol);
+        } else {
+            for (int j=0; j<nrow; j++, ptr+=skip)
+                for (int i=0; i<ncol; i++, ptr+=step) *ptr *= x;
+        }
+    }
+    return im;
+}
+
+ImageView<float> operator*=(ImageView<float> im, float x)
+{ return MultConst(im,x); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im, float x)
+{ return MultConst(im,x); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im,
+                                           std::complex<float> x)
+{ return MultConst(im,x); }
+
+ImageView<double> operator*=(ImageView<double> im, double x)
+{ return MultConst(im,x); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im, double x)
+{ return MultConst(im,x); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im,
+                                            std::complex<double> x)
+{ return MultConst(im,x); }
+
+template <typename T1, typename T2>
+inline ImageView<T1>& MultIm(ImageView<T1>& im1, const BaseImage<T2>& im2)
+{
+    typedef typename ComplexHelper<T1>::real_type RT;
+    T1* ptr1 = im1.getData();
+    if (ptr1) {
+        const int skip1 = im1.getNSkip();
+        const int step1 = im1.getStep();
+        const int nrow = im1.getNRow();
+        const int ncol = im1.getNCol();
+        const T2* ptr2 = im2.getData();
+        const int skip2 = im2.getNSkip();
+        const int step2 = im2.getStep();
+        if (step1 == 1 && step2 == 1) {
+            for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                InnerLoopHelper<RT>::mult_im(ptr1, ptr2, ncol);
+        } else {
+            for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 *= *ptr2;
+        }
+    }
+    return im1;
+}
+
+ImageView<float> operator*=(ImageView<float> im1, const BaseImage<float>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                           const BaseImage<float>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<float> > operator*=(ImageView<std::complex<float> > im1,
+                                           const BaseImage<std::complex<float> >& im2)
+{ return MultIm(im1,im2); }
+
+ImageView<double> operator*=(ImageView<double> im1, const BaseImage<double>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                            const BaseImage<double>& im2)
+{ return MultIm(im1,im2); }
+ImageView<std::complex<double> > operator*=(ImageView<std::complex<double> > im1,
+                                            const BaseImage<std::complex<double> >& im2)
+{ return MultIm(im1,im2); }
+
 
 
 // instantiate for expected types
