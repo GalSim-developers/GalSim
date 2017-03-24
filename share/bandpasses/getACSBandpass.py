@@ -17,7 +17,7 @@
 #
 """@file getACSBandpass.py
 Grab HST ACS bandpasses from the web, and then thin with rel_err = 1.e-3.  Note that the outputs of
-this script, which are the files GALSIM_DIR/examples/data/ACS*.dat, are already included in the
+this script, which are the files GALSIM_DIR/share/bandpasses/ACS*.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
 from __future__ import print_function

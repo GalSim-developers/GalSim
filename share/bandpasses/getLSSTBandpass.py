@@ -16,8 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 """@file getLSSTBandpass.py
-Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-5.  Note that the outputs of
-this script, which are the files GALSIM_DIR/examples/data/LSST_?.dat, are already included in the
+Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-3.  Note that the outputs of
+this script, which are the files GALSIM_DIR/share/bandpasses/LSST_?.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
 from __future__ import print_function

@@ -38,7 +38,7 @@ from .chromatic import ChromaticSum
 import os
 import numpy as np
 
-HST_area = 45238.93416
+HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
