@@ -1353,6 +1353,39 @@ def test_np_fft():
     except ImportError:
         pass
 
+@timer
+def test_types():
+    """Test drawing onto image types other than float32, float64.
+    """
+
+    # Methods test drawReal, drawFFT, drawPhot respectively
+    for method in ['no_pixel', 'fft', 'phot']:
+        if method == 'phot':
+            rng = galsim.BaseDeviate(1234)
+        else:
+            rng = None
+        obj = galsim.Exponential(flux=177, scale_radius=2)
+        ref_im = obj.drawImage(method=method, dtype=float, rng=rng)
+
+        for dt in [ np.float32, np.float64, np.int16, np.int32, np.uint16, np.uint32,
+                    np.complex128, np.complex64 ]:
+            if method == 'phot': rng.reset(1234)
+            print('Checking',method,'with dt =', dt)
+            im = obj.drawImage(method=method, dtype=dt, rng=rng)
+            np.testing.assert_equal(im.scale, ref_im.scale,
+                                    "wrong scale when drawing onto dt=%s"%dt)
+            np.testing.assert_equal(im.bounds, ref_im.bounds,
+                                    "wrong bounds when drawing onto dt=%s"%dt)
+            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt), 6,
+                                           "wrong array when drawing onto dt=%s"%dt)
+
+            if method == 'phot':
+                rng.reset(1234)
+            obj.drawImage(im, method=method, add_to_image=True, rng=rng)
+            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt) * 2, 6,
+                                           "wrong array when adding to image with dt=%s"%dt)
+
+
 
 if __name__ == "__main__":
     test_drawImage()
@@ -1365,3 +1398,4 @@ if __name__ == "__main__":
     test_fft()
     test_np_fft()
     test_shoot()
+    test_types()

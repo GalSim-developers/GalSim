@@ -1432,7 +1432,7 @@ class GSObject(object):
                 im1 = galsim.ImageF(bounds=image.bounds)
             added_flux = self.SBProfile.draw(im1.image.view(), image.scale, False)
             if add_to_image:
-                image.array[:,:] += im1.array
+                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
                 image.array[:,:] = im1.array
             return added_flux
@@ -1529,7 +1529,7 @@ class GSObject(object):
         # Add (a portion of) this to the original image.
         ar = real_image.subImage(image.bounds).array
         if add_to_image:
-            image.array[:,:] += ar
+            image.array[:,:] += ar.astype(image.dtype, copy=False)
         else:
             image.array[:,:] = ar
         added_photons = ar.sum(dtype=float)
@@ -1805,7 +1805,14 @@ class GSObject(object):
             for op in surface_ops:
                 op.applyTo(phot_array)
 
-            added_flux += phot_array.addTo(image.image)
+            if image.dtype in [np.float32, np.float64]:
+                added_flux += phot_array.addTo(image.image)
+            else:
+                # Need a temporary
+                im1 = galsim.ImageD(bounds=image.bounds)
+                added_flux += phot_array.addTo(im1.image.view())
+                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
+
             Nleft -= thisN
 
         return added_flux
