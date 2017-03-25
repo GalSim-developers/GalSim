@@ -37,7 +37,7 @@ With DS9, this can be viewed with a slider to quickly move through the different
 
 New features introduced in this demo:
 
-- real_cat = galsim.RealGalaxyCatalog(file_name, dir)
+- real_cat = galsim.RealGalaxyCatalog(file_name, dir, flux)
 - obj = galsim.Gaussian(fwhm, flux)
 - obj = galsim.RealGalaxy(real_cat, index)
 - obj = obj.rotate(theta)
@@ -131,12 +131,9 @@ def main(argv):
         # Initialize the random number generator we will be using.
         rng = galsim.UniformDeviate(random_seed+k+1)
 
-        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
+        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k, flux=gal_flux)
         logger.debug('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
-
-        # Set the flux
-        gal = gal.withFlux(gal_flux)
 
         # Rotate by a random angle
         theta = 2.*math.pi * rng() * galsim.radians
