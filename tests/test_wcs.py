@@ -728,6 +728,26 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
                 jac.dvdy, (w3.dec - w4.dec)/galsim.arcsec, digits2,
                 'jacobian dvdy incorrect for '+name)
 
+        # toWorld with projection should be (roughly) equivalent to the local around the
+        # projection point.
+        origin = galsim.PositionD(0,0)
+        uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
+        uv_pos2 = wcs.local(origin).toWorld(image_pos)
+        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-1, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-1, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+
+        origin = galsim.PositionD(x0+0.5, y0-0.5)
+        uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
+        uv_pos2 = wcs.local(origin).toWorld(image_pos - origin)
+        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-2, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-2, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+
         # Test drawing the profile on an image with the given wcs
         ix0 = int(x0)
         iy0 = int(y0)

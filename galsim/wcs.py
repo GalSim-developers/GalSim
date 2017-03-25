@@ -214,16 +214,23 @@ class BaseWCS(object):
         else:
             return self.posToWorld(arg, **kwargs)
 
-    def posToWorld(self, image_pos):
+    def posToWorld(self, image_pos, **kwargs):
         """Convert a position from image coordinates to world coordinates.
 
         This is equivalent to `wcs.toWorld(image_pos)`.
+
+        @param image_pos        The position in image coordinates
+        @param project_center   (Only valid for CelestialWCS) A CelestialCoord to use for
+                                projecting the result onto a tangent plane world system rather
+                                than returning a CelestialCoord. [default: None]
+        @param projection       If project_center != None, the kind of projection to use.  See
+                                CelestialCoord.project for the valid options. [default: 'gnomonic']
         """
         if isinstance(image_pos, galsim.PositionI):
             image_pos = galsim.PositionD(image_pos.x, image_pos.y)
         elif not isinstance(image_pos, galsim.PositionD):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        return self._posToWorld(image_pos)
+        return self._posToWorld(image_pos, **kwargs)
 
     def profileToWorld(self, image_profile, image_pos=None, world_pos=None):
         """Convert a profile from image coordinates to world coordinates.
@@ -985,11 +992,15 @@ class CelestialWCS(BaseWCS):
 
 
     # Simple.  Just call _radec.
-    def _posToWorld(self, image_pos):
+    def _posToWorld(self, image_pos, project_center=None, projection='gnomonic'):
         x = image_pos.x - self.x0
         y = image_pos.y - self.y0
         ra, dec = self._radec(x,y)
-        return galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+        coord = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+        if project_center is None:
+            return coord
+        else:
+            return project_center.project(coord, projection=projection)
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos):
