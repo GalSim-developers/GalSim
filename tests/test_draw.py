@@ -1000,7 +1000,14 @@ def test_shoot():
     rng = galsim.BaseDeviate(1234)
     obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng)
     image2 += 100
-    np.testing.assert_almost_equal(image1.array, image2.array, decimal=12)
+    np.testing.assert_almost_equal(image2.array, image1.array, decimal=12)
+
+    # Also check that you get the same answer with a smaller maxN.
+    image3 = galsim.ImageF(32,32, init_value=100)
+    rng = galsim.BaseDeviate(1234)
+    obj.drawImage(image3, method='phot', poisson_flux=False, add_to_image=True, rng=rng, maxN=1000)
+    # It's not exactly the same, since the rngs are realized in a different order.
+    np.testing.assert_allclose(image3.array, image1.array, rtol=0.25)
 
 
 @timer
