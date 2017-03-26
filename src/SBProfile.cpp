@@ -317,24 +317,29 @@ namespace galsim {
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
-        const int xmin = image.getXMin();
-        const int ymin = image.getYMin();
+
         const int m = image.getNCol();
         const int n = image.getNRow();
+        const int xmin = image.getXMin();
+        const int ymin = image.getYMin();
+        const int izero = xmin < 0 ? -xmin : 0;
+        const int jzero = ymin < 0 ? -ymin : 0;
 
-        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         if (add) {
             ImageAlloc<T> im2(image.getBounds());
-            _pimpl->fillXImage(im2.view(), xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) im2 *= dx*dx;
             image += im2;
             return im2.sumElements();
         } else if (image.getStep() != 1) {
             ImageAlloc<T> im2(image.getBounds());
-            _pimpl->fillXImage(im2.view(), xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) im2 *= dx*dx;
             image = im2;
             return im2.sumElements();
         } else {
-            _pimpl->fillXImage(image, xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
+            _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) image *= dx*dx;
             return image.sumElements();
         }
     }
@@ -343,7 +348,6 @@ namespace galsim {
     void SBProfile::drawK(ImageView<std::complex<T> > image, double dk, bool add) const
     {
         dbg<<"Start drawK: \n";
-        typedef std::complex<T> CT;
         assert(_pimpl.get());
 
         const int m = image.getNCol();

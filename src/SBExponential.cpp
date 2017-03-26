@@ -624,6 +624,8 @@ namespace galsim {
         }
 #else
         // Get photons from the ExponentialInfo structure, rescale flux and size for this instance
+        dbg<<"flux scaling = "<<_flux_over_2pi<<std::endl;
+        dbg<<"r0 = "<<_r0<<std::endl;
         boost::shared_ptr<PhotonArray> result = _info->shoot(N,u);
         result->scaleFlux(_flux_over_2pi);
         result->scaleXY(_r0);

@@ -992,13 +992,15 @@ def test_shoot():
     obj = obj.withFlux(100001)
     image1 = galsim.ImageF(32,32, init_value=100)
     rng = galsim.BaseDeviate(1234)
-    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng)
+    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng,
+                  maxN=100000)
 
     # The test here is really just that it doesn't crash.
     # But let's do something to check correctness.
     image2 = galsim.ImageF(32,32)
     rng = galsim.BaseDeviate(1234)
-    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng)
+    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng,
+                  maxN=100000)
     image2 += 100
     np.testing.assert_almost_equal(image2.array, image1.array, decimal=12)
 
@@ -1392,7 +1394,75 @@ def test_types():
             np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt) * 2, 6,
                                            "wrong array when adding to image with dt=%s"%dt)
 
+@timer
+def test_direct_scale():
+    """Test the explicit functions with scale != 1
 
+    The default behavior is to change the profile to image coordinates, and draw that onto an
+    image with scale=1.  But the three direct functions allow the image to have a non-unit
+    pixel scale.  (Not more complicated wcs though.)
+
+    This test checks that the results are equivalent between the two calls.
+    """
+
+    scale = 0.25
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Exponential(flux=177, scale_radius=2)
+    obj_with_pixel = galsim.Convolve(obj, galsim.Pixel(scale))
+    obj_sb = obj / scale**2
+
+    # Make these odd, so we don't have to deal with the centering offset stuff.
+    im1 = galsim.ImageD(65, 65, scale=scale)
+    im2 = galsim.ImageD(65, 65, scale=scale)
+    im2.setCenter(0,0)
+
+    obj.drawImage(im1, method='no_pixel')
+    obj.drawReal(im2)
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                  "drawReal made different image than method='no_pixel'")
+
+    obj.drawImage(im1, method='sb')
+    obj_sb.drawReal(im2)
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                  "drawReal made different image than method='sb'")
+
+    obj.drawImage(im1, method='fft')
+    obj_with_pixel.drawFFT(im2)
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                  "drawFFT made different image than method='fft'")
+
+    obj.drawImage(im1, method='real_space')
+    obj_with_pixel.drawReal(im2)
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    # I'm not sure why this one comes out a bit less precisely equal.  But 11 digits is still
+    # plenty accurate enough.
+    np.testing.assert_almost_equal(im1.array, im2.array, 11,
+                                  "drawReal made different image than method='real_space'")
+
+    obj.drawImage(im1, method='phot', rng=rng.duplicate())
+    obj.drawPhot(im2, rng=rng.duplicate())
+    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                  "drawPhot made different image than method='phot'")
+
+    # Check images with invalid wcs raise ValueError
+    im4 = galsim.ImageD(65, 65)
+    im5 = galsim.ImageD(65, 65, wcs=galsim.JacobianWCS(0.4,0.1,-0.1,0.5))
+    try:
+        np.testing.assert_raises(ValueError, obj.drawReal, im4)
+        np.testing.assert_raises(ValueError, obj.drawReal, im5)
+        np.testing.assert_raises(ValueError, obj.drawFFT, im4)
+        np.testing.assert_raises(ValueError, obj.drawFFT, im5)
+        np.testing.assert_raises(ValueError, obj.drawPhot, im4)
+        np.testing.assert_raises(ValueError, obj.drawPhot, im5)
+        # Also some other errors from drawPhot
+        np.testing.assert_raises(ValueError, obj.drawPhot, im2, n_photons=-20)
+        np.testing.assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
+    except ImportError:
+        pass
 
 if __name__ == "__main__":
     test_drawImage()
@@ -1406,3 +1476,4 @@ if __name__ == "__main__":
     test_np_fft()
     test_shoot()
     test_types()
+    test_direct_scale()

@@ -1457,9 +1457,9 @@ class GSObject(object):
         imview.wcs = galsim.PixelScale(1.0)
 
         if method == 'phot':
-            if not add_to_image: imview.setZero()
-            added_photons, photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise,
-                                                   poisson_flux, gain, sensor, surface_ops, maxN)
+            added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
+                                                   n_photons, rng, max_extra_noise, poisson_flux,
+                                                   sensor, surface_ops, maxN)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1525,15 +1525,11 @@ class GSObject(object):
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawReal`.
-
-        Note that the image produced by `drawReal` represents the profile sampled at the center
+        Note that the image produced by `drawFFT` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
         integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.
+        the pixel, you can convolve with a Pixel first and draw that.  This is equivalent to
+        method='no_pixel' in drawImage.
 
         @param image        The Image onto which to place the flux. [required]
         @param add_to_image Whether to add flux to the existing image rather than clear out
@@ -1541,8 +1537,11 @@ class GSObject(object):
 
         @returns The total flux drawn inside the image bounds.
         """
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+
         if image.dtype in [ np.float64, np.float32 ]:
-            return self.SBProfile.draw(image.image, image.scale, add_to_image)
+            return self.SBProfile.draw(image.image.view(), image.scale, add_to_image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
@@ -1668,11 +1667,10 @@ class GSObject(object):
         Note that the image produced by `drawFFT` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
         integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.
+        the pixel, you can convolve with a Pixel first and draw that.  This is equivalent to
+        method='no_pixel' in drawImage.
 
         @param image        The Image onto which to place the flux. [required]
-                            Note: The flux will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
         @param add_to_image Whether to add flux to the existing image rather than clear out
                             anything in the image before drawing. [default: False]
 
@@ -1686,6 +1684,9 @@ class GSObject(object):
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
             if type(wmult) != float:
                 wmult = float(wmult)
+
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawPhot requires an image with a PixelScale wcs")
 
         kimage, wrap_size = self.drawFFT_makeKImage(image, wmult)
         self._drawKImage(kimage)
@@ -1809,8 +1810,9 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=False,
-                 gain=1.0, sensor=None, surface_ops=(), maxN=None):
+    def drawPhot(self, image, gain=1., add_to_image=False,
+                 n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
+                 sensor=None, surface_ops=(), maxN=None):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1821,18 +1823,17 @@ class GSObject(object):
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        The image is not cleared out before drawing.  So this profile will be added to anything
-        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
-        options.  If you don't want to add to the existing image, just call `image.setZero()`
-        before calling `drawPhot`.
-
         Note that the image produced by `drawPhot` represents the profile integrated over the
         area of each pixel.  This is equivalent to convolving the profile by a square `Pixel`
-        profile and sampling the value at the center of each pixel.
+        profile and sampling the value at the center of each pixel, although this happens
+        automatically by the shooting algorithm, so you do not need to manually convolve by
+        a Pixel as you would for `drawReal` or `drawFFT`.
 
         @param image        The Image onto which to place the flux. [required]
-                            Note: The shot photons will be added to any flux already on the image,
-                            so this corresponds to the add_to_image=True option in drawImage.
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD). [default: 1.]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.  [default: False]
         @param n_photons    If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. `n_photons = 0`), use as many photons as
                             necessary to result in an image with the correct Poisson shot
@@ -1860,8 +1861,6 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD). [default: 1.]
         @param sensor       An optional Sensor instance, which will be used to accumulate the
                             photons onto the image. [default: None]
         @param surface_ops  A list of operators that can modify the photon array that will be
@@ -1891,10 +1890,8 @@ class GSObject(object):
         ud = galsim.UniformDeviate(rng)
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
-        if image.wcs != galsim.PixelScale(1.0):
-            raise ValueError("drawPhot requires an image with scale=1.0")
-        if image.center() != galsim.PositionI(0,0):
-            raise ValueError("drawPhot requires an image centered at 0,0")
+        if image.wcs is None or not image.wcs.isPixelScale():
+            raise ValueError("drawPhot requires an image with a PixelScale wcs")
 
         if sensor is None:
             sensor = galsim.Sensor()
@@ -1911,6 +1908,8 @@ class GSObject(object):
 
         if maxN is None:
             maxN = Ntot
+
+        if not add_to_image: image.setZero()
 
         # Nleft is the number of photons remaining to shoot.
         Nleft = Ntot
