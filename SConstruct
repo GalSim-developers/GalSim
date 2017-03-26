@@ -381,7 +381,7 @@ def BasicCCFlags(env):
         sse_flags = []
         if compiler == 'g++':
             env.Replace(CCFLAGS=['-O2','-std=c++98'])
-            sse_flags = ['-march=native -mno-avx', '-march=native', '-msse2', '-msse']
+            sse_flags = ['-msse2', '-msse']
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
@@ -396,7 +396,7 @@ def BasicCCFlags(env):
 
         elif compiler == 'clang++':
             env.Replace(CCFLAGS=['-O2','-std=c++98'])
-            sse_flags = ['-march=native', '-msse2', '-msse']
+            sse_flags = ['-msse2', '-msse']
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -407,7 +407,7 @@ def BasicCCFlags(env):
 
         elif compiler == 'icpc':
             env.Replace(CCFLAGS=['-O2','-std=c++98'])
-            sse_flags = ['-march=native', '-msse2', '-msse']
+            sse_flags = ['-msse2', '-msse']
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
             if env['WITH_PROF']:
