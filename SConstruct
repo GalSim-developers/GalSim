@@ -353,6 +353,8 @@ def TrySSEFlags(env, flags):
             env = config.Finish()
             return
     print 'None of the possible SSE flags worked.'
+    config.env.Replace(CCFLAGS=orig_flags)
+    env = config.Finish()
 
 
 def BasicCCFlags(env):
@@ -379,7 +381,7 @@ def BasicCCFlags(env):
         sse_flags = []
         if compiler == 'g++':
             env.Replace(CCFLAGS=['-O2','-std=c++98'])
-            sse_flags = ['-march=native', '-march=native -mno-avx', '-msse2', '-msse']
+            sse_flags = ['-march=native -mno-avx', '-march=native', '-msse2', '-msse']
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
