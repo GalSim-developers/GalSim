@@ -246,27 +246,6 @@ def do_wcs_image(wcs, name, approx=False):
     world3 = im.wcs.toWorld(image_pos)
     value3 = im(image_pos)
 
-    # Test that im.shift does the right thing to the wcs
-    # Also test parsing a position as x,y args.
-    dx = 3
-    dy = 9
-    im.shift(3,9)
-    image_pos = im.origin() + offset
-    np.testing.assert_equal(im.origin().x, 1+dx, "shift set origin to wrong value")
-    np.testing.assert_equal(im.origin().y, 1+dy, "shift set origin to wrong value")
-    check_world(im.wcs.toWorld(im.origin()), world1, digits,
-                "World position of origin after shift is wrong.")
-    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
-                                   "Image value at origin after shift is wrong.")
-    check_world(im.wcs.toWorld(im.center()), world2, digits,
-                "World position of center after shift is wrong.")
-    np.testing.assert_almost_equal(im(im.center()), value2, digits,
-                                   "Image value at center after shift is wrong.")
-    check_world(im.wcs.toWorld(image_pos), world3, digits,
-                "World position of image_pos after shift is wrong.")
-    np.testing.assert_almost_equal(im(image_pos), value3, digits,
-                                   "image value at center after shift is wrong.")
-
     # Test writing the image to a fits file and reading it back in.
     # The new image doesn't have to have the same wcs type.  But it does have to produce
     # consistent values of the world coordinates.
@@ -299,7 +278,6 @@ def do_wcs_image(wcs, name, approx=False):
         # describe an equivalent WCS as this one.
         hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
         affine = galsim.AffineTransform._readHeader(hdu.header)
-        affine = affine.withOrigin(galsim.PositionD(dx,dy))
         galsim.fits.closeHDUList(hdu_list, fin)
         check_world(affine.toWorld(im.origin()), world1, digits2,
                     "World position of origin is wrong after write/read.")
@@ -308,6 +286,26 @@ def do_wcs_image(wcs, name, approx=False):
         check_world(affine.toWorld(image_pos), world3, digits2,
                     "World position of image_pos is wrong after write/read.")
 
+    # Test that im.shift does the right thing to the wcs
+    # Also test parsing a position as x,y args.
+    dx = 3
+    dy = 9
+    im.shift(dx,dy)
+    image_pos = im.origin() + offset
+    np.testing.assert_equal(im.origin().x, 1+dx, "shift set origin to wrong value")
+    np.testing.assert_equal(im.origin().y, 1+dy, "shift set origin to wrong value")
+    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+                "World position of origin after shift is wrong.")
+    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+                                   "Image value at origin after shift is wrong.")
+    check_world(im.wcs.toWorld(im.center()), world2, digits,
+                "World position of center after shift is wrong.")
+    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+                                   "Image value at center after shift is wrong.")
+    check_world(im.wcs.toWorld(image_pos), world3, digits,
+                "World position of image_pos after shift is wrong.")
+    np.testing.assert_almost_equal(im(image_pos), value3, digits,
+                                   "image value at center after shift is wrong.")
 
     # Test that im.setOrigin does the right thing to the wcs
     # Also test parsing a position as a tuple.
