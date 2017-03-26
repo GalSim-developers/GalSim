@@ -1463,7 +1463,11 @@ class GSObject(object):
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
-                draw_image = imview.subsample(n_subsample, n_subsample)
+                if imview.dtype in [np.float32, np.float64]:
+                    dtype = None
+                else:
+                    dtype = np.float64
+                draw_image = imview.real.subsample(n_subsample, n_subsample, dtype=dtype)
                 draw_image.setCenter(0,0)
                 if method in ['auto', 'fft', 'real_space']:
                     # Need to reconvolve by the new smaller pixel instead

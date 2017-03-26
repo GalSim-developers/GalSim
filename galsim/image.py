@@ -758,7 +758,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         return _Image(target_ar, target_bounds, target_wcs)
 
-    def subsample(self, nx, ny):
+    def subsample(self, nx, ny, dtype=None):
         """Subdivide the image pixels into nx x ny sub-pixels.
 
         This returns a new image that is a subsampled version of the current image.
@@ -773,6 +773,8 @@ class Image(with_metaclass(MetaImage, object)):
 
         @param nx       The number of sub-pixels in the x direction for each original pixel.
         @param ny       The number of sub-pixels in the y direction for each original pixel.
+        @param dtype    Optionally provide a dtype for the return image. [default: None, which
+                        means to use the same dtype as the original image]
 
         @returns a new Image
         """
@@ -783,6 +785,7 @@ class Image(with_metaclass(MetaImage, object)):
         flux_factor = nx * ny
 
         target_ar = np.repeat(np.repeat(self.array, ny, axis=0), nx, axis=1)
+        target_ar = target_ar.astype(dtype, copy=False)  # Cute. This is a no op if dtype=None
         target_ar /= flux_factor
 
         if self.wcs is None or not self.wcs.isUniform():

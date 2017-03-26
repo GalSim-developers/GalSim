@@ -56,6 +56,18 @@ class Sensor(object):
         """
         return photons.addTo(image.image.view())
 
+    def __repr__(self):
+        return 'galsim.Sensor()'
+
+    def __eq__(self, other):
+        return (isinstance(other, Sensor) and
+                repr(self) == repr(other))  # Checks that neither is a subclass
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self): return hash(repr(self))
+
 
 class SiliconSensor(Sensor):
     """

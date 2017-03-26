@@ -31,6 +31,94 @@ except ImportError:
     import galsim
 
 @timer
+def test_simple():
+    """Test the default Sensor class that acts basically like not passing any sensor object.
+    """
+
+    # Start with photon shooting, since that's the most typical way that sensors are used.
+    obj = galsim.Gaussian(flux=10000, sigma=1.3)
+
+    # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
+    im1 = galsim.ImageD(64, 64, scale=0.3)  # Refefence image with sensor=None
+    im2 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple
+
+    rng1 = galsim.BaseDeviate(5678)
+    rng2 = galsim.BaseDeviate(5678)
+
+    simple = galsim.Sensor()
+
+    # Start with photon shooting, since that's more straightforward.
+    obj.drawImage(im1, method='phot', poisson_flux=False, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
+
+    # Should be exactly equal
+    np.testing.assert_array_equal(im2.array, im1.array)
+
+    # Fluxes should all equal obj.flux
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+
+    # Now test fft drawing, which is more complicated with possible temporaries and subsampling.
+
+    im1 = galsim.ImageD(64, 64, scale=0.3)  # Reference image with sensor=None
+    im2 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple
+    im3 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple, no subsampling
+    im4 = galsim.ImageCD(64, 64, scale=0.3) # Equivalent to image2, but checks using a temporary.
+                                            # Also check add_to_image=True with im5.
+    im5 = galsim.ImageD(64, 64, scale=0.3)  # Check manually convolving by the pixel.
+    im6 = galsim.ImageD(64, 64, scale=0.3)  # Check manually convolving by the pixel, n_subsample=1
+
+    # The rng shouldn't matter anymore for these, so just use the default rng=None
+    obj.drawImage(im1, method='fft')
+    obj.drawImage(im2, method='fft', sensor=simple)
+    obj.drawImage(im3, method='fft', sensor=simple, n_subsample=1)
+    obj.drawImage(im4, method='fft', sensor=simple, add_to_image=True)
+
+    obj_with_pixel = galsim.Convolve(obj, galsim.Pixel(0.3))
+    obj_with_pixel.drawImage(im5, method='no_pixel', sensor=simple)
+    obj_with_pixel.drawImage(im6, method='no_pixel', sensor=simple, n_subsample=1)
+
+    # Fluxes should all equal obj.flux
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im4.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im5.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im6.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im4.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im5.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im6.added_flux, obj.flux, decimal=3)
+
+    # im1 and im2 are not precisely equal, since im2 was made with subsampling and then binning,
+    # but with a largish object relative to the pixel, it's very close. (cf. similar test below
+    # in test_silicon_fft, where the agreement is not so good.)
+    print('max diff between im1, im2 with fft = ',np.max(np.abs(im2.array-im1.array)))
+    np.testing.assert_almost_equal(im2.array, im1.array, decimal=10)
+
+    # With no subsampling it should be nearly perfect (although this would be expected to be worse
+    # when done with a real Sensor model).
+    print('max diff without subsampling = ',np.max(np.abs(im3.array-im1.array)))
+    np.testing.assert_almost_equal(im3.array, im1.array, decimal=12)
+
+    # Using a temporary (and add_to_image) shouldn't affect anything for the D -> CD case.
+    print('max diff with temporary = ',np.max(np.abs(im4.array-im2.array)))
+    np.testing.assert_almost_equal(im4.array.real, im2.array, decimal=12)
+
+    # Manual convolution should be identical to what 'fft' does automatically.
+    print('max diff with manual pixel conv = ',np.max(np.abs(im5.array-im2.array)))
+    #np.testing.assert_almost_equal(im5.array, im2.array, decimal=12)
+    print('max diff with manual pixel conv, no subsampling = ',np.max(np.abs(im6.array-im3.array)))
+    np.testing.assert_almost_equal(im6.array, im3.array, decimal=12)
+
+    do_pickle(simple)
+
+
+@timer
 def test_silicon():
     """Test the basic construction and use of the SiliconSensor class.
     """
@@ -251,14 +339,12 @@ def test_silicon_fft():
     # First, im2 and im3 should be almost exactly equal.  Not precisely, since im2 was made with
     # subsampling and then binning, so the FFT ringing is different (im3 is worse in this regard,
     # since it used convolution with a larger pixel).  So 3 digits is all we manage to get here.
-    print('max diff between im2, im3 = ',np.max(np.abs(im2.array-im3.array)))
     np.testing.assert_almost_equal(im2.array, im3.array, decimal=3)
 
     # im1 should be similar, but not equal
     np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
 
     # Fluxes should all equal obj.flux
-    print('im1.array = ',im1.array)
     np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=3)
     np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=3)
     np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=3)
@@ -472,6 +558,7 @@ def test_bf_slopes():
 
 
 if __name__ == "__main__":
+    test_simple()
     test_silicon()
     test_silicon_fft()
     test_sensor_wavelengths_and_angles()
