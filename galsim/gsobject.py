@@ -1439,6 +1439,7 @@ class GSObject(object):
                 real_space = False
             else:
                 real_space = True
+            prof_no_pixel = prof
             prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0, gsparams=self.gsparams),
                                    real_space=real_space, gsparams=self.gsparams)
 
@@ -1466,8 +1467,22 @@ class GSObject(object):
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
                 draw_image = imview.subsample(n_subsample, n_subsample)
-                draw_image.scale = 1.
                 draw_image.setCenter(0,0)
+                if method in ['auto', 'fft', 'real_space']:
+                    # Need to reconvolve by the new smaller pixel instead
+                    prof = galsim.Convolve(
+                            prof_no_pixel,
+                            galsim.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            real_space=real_space, gsparams=self.gsparams)
+                    prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+                elif n_subsample != 1:
+                    # We can't just pull off the pixel-free version, so we need to deconvolve
+                    # by the original pixel and reconvolve by the smaller one.
+                    prof = galsim.Convolve(
+                            prof,
+                            galsim.Deconvolve(galsim.Pixel(scale=1.0, gsparams=self.gsparams)),
+                            galsim.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            gsparams=self.gsparams)
                 add = False
                 if not add_to_image: imview.setZero()
             else:

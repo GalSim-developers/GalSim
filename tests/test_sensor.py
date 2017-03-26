@@ -249,9 +249,10 @@ def test_silicon_fft():
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
     # First, im2 and im3 should be almost exactly equal.  Not precisely, since im2 was made with
-    # subsampling and then binning, so there are slight difference at the ~1.e-8 relative level.
-    # So with a flux of ~3k, 5 digits is all we manage to get here.
-    np.testing.assert_almost_equal(im2.array, im3.array, decimal=5)
+    # subsampling and then binning, so the FFT ringing is different (im3 is worse in this regard,
+    # since it used convolution with a larger pixel).  So 3 digits is all we manage to get here.
+    print('max diff between im2, im3 = ',np.max(np.abs(im2.array-im3.array)))
+    np.testing.assert_almost_equal(im2.array, im3.array, decimal=3)
 
     # im1 should be similar, but not equal
     np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
