@@ -1519,7 +1519,7 @@ class GSObject(object):
 
         This is usually called from the `drawImage` function, rather than called directly by the
         user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale wcs.  The profile being
+        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
         drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
@@ -1659,8 +1659,8 @@ class GSObject(object):
 
         This is usually called from the `drawImage` function, rather than called directly by the
         user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  The profile being drawn should have already been converted to
-        image coordinates via
+        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
+        drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
@@ -1815,7 +1815,7 @@ class GSObject(object):
 
         This is usually called from the `drawImage` function, rather than called directly by the
         user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
+        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
         drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
@@ -1929,7 +1929,11 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
 
-            photons.scaleFlux(g * thisN / Ntot)
+            if g != 1. or thisN != Ntot:
+                photons.scaleFlux(g * thisN / Ntot)
+
+            if image.scale != 1.:
+                photons.scaleXY(1./image.scale)  # Convert x,y to image coords if necessary
 
             for op in surface_ops:
                 op.applyTo(photons)
