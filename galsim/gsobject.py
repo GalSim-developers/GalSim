@@ -737,14 +737,13 @@ class GSObject(object):
         ways to input the shear value.
 
         This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shear.
+        Also, it won't propagate any noise attribute.
 
         @param shear    The Shear to be applied. Must be a galsim.Shear instance.
 
         @returns the sheared object.
         """
         new_obj = galsim._Transform(self, *shear.getMatrix().ravel().tolist())
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.shear(shear)
         return new_obj
 
     def lens(self, g1, g2, mu):
@@ -860,15 +859,13 @@ class GSObject(object):
         to give the shift as (dx,dy).
 
         This is only valid for GSObjects.  For ChromaticObjects, you must use the regular shift.
+        Also, it won't propagate any noise attribute.
 
         @param offset   The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)
 
         @returns the shifted object.
         """
         new_obj = galsim._Transform(self, offset=offset)
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise
         return new_obj
 
     # Make sure the image is defined with the right size and wcs for drawImage()
