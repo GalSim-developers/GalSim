@@ -22,6 +22,14 @@ API Changes
 - Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
+- Dynamic PhaseScreenPSFs now require an explicit start time and time step.
+  Clock management of phase screens now handled implicitly. (#824)
+- The time_step for updating atmospheric screens and the time_step used for
+  integrating a PhaseScreenPSF over time are now independent (#824)
+- OpticalScreen now requires `diam` argument. (#824)
+- Some of the backend (but nonetheless public API) methods of PhaseScreen and
+  PhaseScreenList have changed.  See the docstrings of these classes for
+  the new API if you have been using these methods. (#824)
 
 
 Dependency Changes
@@ -57,6 +65,9 @@ Deprecated Features
   sense.  If you had been using it, you should instead just divide the
   returned image by gain, which will have the same effect and probably
   be clearer in your own code about what you meant. (#799)
+- Deprecated ability to create multiple PhaseScreenPSFs with single call
+  to makePSF, since it is now just as efficient to call makePSF multiple
+  times. (#824)
 
 
 New Features
@@ -65,6 +76,14 @@ New Features
 - Added new surface brightness profile, 'DeltaFunction'. This represents a 
   point source with a a flux value.
 - Added support for reading in of unsigned int Images (#715)
+- Added a new Sensor class hierarchy, including SiliconSensor, which models
+  the repulsion of incoming electrons by the electrons already accumulated on
+  the sensor.  This effect is known as the "brighter-fatter effect", since it
+  means that brighter objects are a bit larger than dimmer but otherwise-
+  identical objects. (#722)
+- Added `save_photons` option to `drawImage` to output the photons that were
+  shot when photon shooting (if applicable). (#722)
+- Added image.bin and image.subsample methods. (#722)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
@@ -98,6 +117,9 @@ New Features
   doing so are `im.calculate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
+- Added new surface brightness profile, 'InclinedSersic'. This is a
+  generalization of the InclinedExponential profile, allowing Sersic disks and
+  a truncation radius for the disk. (#811)
 - Added new profile `galsim.RandomWalk`, a class for generating a set of
   point sources distributed using a random walk.  Uses of this profile include
   representing an "irregular" galaxy, or adding this profile to an Exponential
@@ -108,6 +130,10 @@ New Features
   random wavelengths from an SED. (#822)
 - Added function assignPhotonAngles to add arrival directions (in the form of
   dx/dz and dy/dz slopes) to an existing photon array. (#823)
+- Added geometric optics approximation for photon-shooting through
+  PhaseScreenPSFs (includes atmospheric PSF and OpticalPSF).  This
+  approximation is now the default for non-optical PhaseScreenPSFs. (#824)
+- Added gradient method to LookupTable2D. (#824)
 - Added `surface_ops` option to `drawImage` function, which applies a list of
   surface operations to the photon array before accumulating on the image.
   (#827)

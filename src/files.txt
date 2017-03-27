@@ -24,9 +24,12 @@ SBFourierSqrt.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
+SBInclinedSersic.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
 Version.cpp
+Polygon.cpp
+Silicon.cpp

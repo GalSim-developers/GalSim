@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -2979,6 +2979,121 @@ def test_FITS_bad_type():
     # Don't forget to set it back to the original.
     setattr(galsim.Image,'valid_dtypes',orig_dtypes)
 
+@timer
+def test_bin():
+    """Test the bin and subsample methods"""
+
+    # Start with a relatively simple case of 2x2 binning with no partial bins to worry about.
+    obj = galsim.Gaussian(sigma=2, flux=17).shear(g1=0.1, g2=0.3)
+    im1 = obj.drawImage(nx=10, ny=14, scale=0.6, dtype=float)
+
+    im2 = obj.drawImage(nx=20, ny=28, scale=0.3, dtype=float)
+    im3 = im2.bin(2,2)
+    ar2 = im2.array
+    ar3b = ar2[0::2,0::2] + ar2[0::2,1::2] + ar2[1::2,0::2] + ar2[1::2,1::2]
+
+    np.testing.assert_almost_equal(ar3b.sum(), im2.array.sum(), 6,
+                                   "direct binning didn't perserve total flux")
+    np.testing.assert_almost_equal(ar3b, im3.array, 6,
+                                   "direct binning didn't match bin function.")
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.sum(), 6,
+                                   "bin didn't preserve the total flux")
+    np.testing.assert_almost_equal(im3.array, im1.array, 6,
+                                   "2x2 binned image doesn't match image with 2x2 larger pixels")
+    np.testing.assert_almost_equal(im3.scale, im1.scale, 6, "bin resulted in wrong scale")
+
+    im4 = im2.subsample(2,2)
+    np.testing.assert_almost_equal(im4.array.sum(), im2.array.sum(), 6,
+                                   "subsample didn't preserve the total flux")
+    np.testing.assert_almost_equal(im4.scale, im2.scale/2., 6, "subsample resulted in wrong scale")
+    im5 = im4.bin(2,2)
+    np.testing.assert_almost_equal(im5.array, im2.array, 6,
+                                   "Round trip subsample then bin 2x2 doesn't match original")
+    np.testing.assert_almost_equal(im5.scale, im2.scale, 6, "round trip resulted in wrong scale")
+
+    # Next do nx != ny.  And wcs = JacobianWCS
+    wcs1 = galsim.JacobianWCS(0.6, 0.14, 0.15, 0.7);
+    im1 = obj.drawImage(nx=11, ny=15, wcs=wcs1, dtype=float)
+    im1.wcs = im1.wcs.withOrigin(im1.trueCenter(), galsim.PositionD(200,300))
+    center1 = im1.wcs.toWorld(im1.trueCenter())
+    print('center1 = ',center1)
+
+    wcs2 = galsim.JacobianWCS(0.2, 0.07, 0.05, 0.35);
+    im2 = obj.drawImage(nx=33, ny=30, wcs=wcs2, dtype=float)
+    im2.wcs = im2.wcs.withOrigin(im2.trueCenter(), galsim.PositionD(200,300))
+    center2 = im2.wcs.toWorld(im2.trueCenter())
+    print('center2 = ',center2)
+    im3 = im2.bin(3,2)
+    center3 = im2.wcs.toWorld(im2.trueCenter())
+    print('center3 = ',center3)
+    ar2 = im2.array
+    ar3b = (ar2[0::2,0::3] + ar2[0::2,1::3] + ar2[0::2,2::3] +
+            ar2[1::2,0::3] + ar2[1::2,1::3] + ar2[1::2,2::3])
+
+    np.testing.assert_almost_equal(ar3b.sum(), im2.array.sum(), 6,
+                                   "direct binning didn't perserve total flux")
+    np.testing.assert_almost_equal(ar3b, im3.array, 6,
+                                   "direct binning didn't match bin function.")
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.sum(), 6,
+                                   "bin didn't preserve the total flux")
+    np.testing.assert_almost_equal(im3.array, im1.array, 6,
+                                   "3x2 binned image doesn't match image with 3x2 larger pixels")
+    np.testing.assert_almost_equal((center3.x, center3.y), (center1.x, center1.y), 6,
+                                   "3x2 binned image wcs is wrong")
+
+    im4 = im2.subsample(3,2)
+    np.testing.assert_almost_equal(im4.array.sum(), im2.array.sum(), 6,
+                                   "subsample didn't preserve the total flux")
+    center4 = im4.wcs.toWorld(im4.trueCenter())
+    print('center4 = ',center4)
+    np.testing.assert_almost_equal((center4.x, center4.y), (center1.x, center1.y), 6,
+                                   "3x2 subsampled image wcs is wrong")
+
+    im5 = im4.bin(3,2)
+    np.testing.assert_almost_equal(im5.array, im2.array, 6,
+                                   "Round trip subsample then bin 3x2 doesn't match original")
+    center5 = im5.wcs.toWorld(im5.trueCenter())
+    print('center5 = ',center5)
+    np.testing.assert_almost_equal((center5.x, center5.y), (center1.x, center1.y), 6,
+                                   "Round trip 3x2 image wcs is wrong")
+
+    # If the initial wcs is None or not uniform, then the resulting wcs will be None.
+    im2.wcs = galsim.UVFunction('0.6 + np.sin(x*y)', '0.6 + np.cos(x+y)')
+    im3b = im2.bin(3,2)
+    assert im3b.wcs is None
+    np.testing.assert_array_equal(im3b.array, im3.array,
+                                  "The wcs shouldn't affect what bin does to the array.")
+    im4b = im2.subsample(3,2)
+    assert im4b.wcs is None
+    np.testing.assert_array_equal(im4b.array, im4.array,
+                                  "The wcs shouldn't affect what subsample does to the array.")
+
+    im2.wcs = None
+    im3c = im2.bin(3,2)
+    assert im3c.wcs is None
+    np.testing.assert_array_equal(im3c.array, im3.array,
+                                  "The wcs shouldn't affect what bin does to the array.")
+    im4c = im2.subsample(3,2)
+    assert im4c.wcs is None
+    np.testing.assert_array_equal(im4c.array, im4.array,
+                                  "The wcs shouldn't affect what subsample does to the array.")
+
+    # Finally, binning should still work, even if the number of pixels doesn't go evenly into
+    # the number of pixels/block specified.
+    im6 = im1.bin(8,8)
+    ar6 = np.array([[ im1.array[0:8,0:8].sum(), im1.array[0:8,8:].sum() ],
+                    [ im1.array[8:,0:8].sum(),  im1.array[8:,8:].sum()  ]])
+    np.testing.assert_almost_equal(im6.array, ar6, 6,
+                                   "Binning past the edge of the image didn't work properly")
+    # The center of this image doesn't correspond to the center of the original.
+    # But the lower left edge does.
+    origin1 = im1.wcs.toWorld(galsim.PositionD(im1.xmin-0.5, im1.ymin-0.5))
+    origin6 = im6.wcs.toWorld(galsim.PositionD(im1.xmin-0.5, im6.ymin-0.5))
+    print('origin1 = ',origin1)
+    print('origin6 = ',origin6)
+    np.testing.assert_almost_equal((origin6.x, origin6.y), (origin1.x, origin1.y), 6,
+                                   "Binning past the edge resulted in wrong wcs")
+
 if __name__ == "__main__":
     test_Image_basic()
     test_undefined_image()
@@ -3019,3 +3134,4 @@ if __name__ == "__main__":
     test_int_image_arith()
     test_wrap()
     test_FITS_bad_type()
+    test_bin()

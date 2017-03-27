@@ -1,3 +1,29 @@
+/* -*- c++ -*-
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ * https://github.com/GalSim-developers/GalSim
+ *
+ * GalSim is free software: redistribution and use in source and binary forms,
+ * with or without modification, are permitted provided that the following
+ * conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions, and the disclaimer given in the accompanying LICENSE
+ *    file.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, and the disclaimer given in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
+// This isn't actually written by anyone in GalSim, it is taken from the following website:
+// https://docs.python.org/3/howto/cporting.html#cobject-replaced-with-capsule
+//
+// It's easier to keep the GalSim license here like all our other files, but this particular file
+// is presumably licensed by whatever license the python docs use.  See the above website for
+// more details.
+
 #ifndef __CAPSULETHUNK_H
 #define __CAPSULETHUNK_H
 

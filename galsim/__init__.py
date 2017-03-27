@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -53,7 +53,7 @@ Use the galsim tag to flag it as a question about GalSim.
 
 
 
-Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
@@ -122,6 +122,7 @@ from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .inclinedexponential import InclinedExponential
+from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from .interpolatedimage import InterpolatedImage, InterpolatedKImage
@@ -152,8 +153,8 @@ from .lensing_ps import PowerSpectrum
 from .nfw_halo import NFWHalo, Cosmology
 
 # Detector effects
-# Everything here is migrated into the Image class, so nothing to import by name.
-from . import detectors
+from .sensor import Sensor, SiliconSensor
+from . import detectors  # Everything here is a method of Image, so nothing to import by name.
 
 # Deprecation warning class
 from .deprecated import GalSimDeprecationWarning

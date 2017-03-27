@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,9 +20,9 @@ Implements the PhotonArray class describing a collection of photons incident on 
 Also includes classes that modify PhotonArray objects in a number of ways.
 """
 
+import numpy as np
 # Most of the functionality comes from the C++ layer
 from ._galsim import PhotonArray
-import numpy as np
 import galsim
 
 # Add on more methods in the python layer
@@ -156,6 +156,100 @@ PhotonArray.dydz = property(PhotonArray.getDYDZArray, PhotonArray_setdydz)
 def PhotonArray_setwavelength(self, wavelength): self.getWavelengthArray()[:] = wavelength
 PhotonArray.wavelength = property(PhotonArray.getWavelengthArray, PhotonArray_setwavelength)
 
+def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
+    """Turn an existing image into a PhotonArray that would accumulate into this image.
+
+    The flux in each non-zero pixel will be turned into 1 or more photons with random positions
+    within the pixel bounds.  The `max_flux` parameter (which defaults to 1) sets an upper
+    limit for the absolute value of the flux of any photon.  Pixels with abs values > maxFlux will
+    spawn multiple photons.
+
+    TODO: This corresponds to the `Nearest` interpolant.  It would be worth figuring out how
+          to implement other (presumably better) interpolation options here.
+
+    @param image        The image to turn into a PhotonArray
+    @param max_flux     The maximum flux value to use for any output photon [default: 1]
+    @param rng          A BaseDeviate to use for the random number generation [default: None]
+
+    @returns a PhotonArray
+    """
+    ud = galsim.UniformDeviate(rng)
+    max_flux = float(max_flux)
+    return galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+
+PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
+
+def PhotonArray_write(self, file_name):
+    """Write a PhotonArray to a FITS file.
+
+    The output file will be a FITS binary table with a row for each photon in the PhotonArray.
+    Columns will include 'id' (sequential from 1 to nphotons), 'x', 'y', and 'flux'.
+    Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
+    set for this PhotonArray object.
+
+    The file can be read back in with the classmethod `PhotonArray.read`.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the output FITS file.
+    """
+    from galsim._pyfits import pyfits
+
+    cols = []
+    cols.append(pyfits.Column(name='id', format='J', array=range(self.size())))
+    cols.append(pyfits.Column(name='x', format='D', array=self.x))
+    cols.append(pyfits.Column(name='y', format='D', array=self.y))
+    cols.append(pyfits.Column(name='flux', format='D', array=self.flux))
+
+    if self.hasAllocatedAngles():
+        cols.append(pyfits.Column(name='dxdz', format='D', array=self.dxdz))
+        cols.append(pyfits.Column(name='dydz', format='D', array=self.dydz))
+
+    if self.hasAllocatedWavelengths():
+        cols.append(pyfits.Column(name='wavelength', format='D', array=self.wavelength))
+
+    cols = pyfits.ColDefs(cols)
+    try:
+        table = pyfits.BinTableHDU.from_columns(cols)
+    except:  # pragma: no cover  (Might need this for older pyfits versions)
+        table = pyfits.new_table(cols)
+    galsim.fits.writeFile(file_name, table)
+
+def PhotonArray_read(cls, file_name):
+    """Create a PhotonArray, reading the photon data from a FITS file.
+
+    The file being read in is not arbitrary.  It is expected to be a file that was written
+    out with the PhotonArray `write` method.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the input FITS file.
+    """
+    from galsim._pyfits import pyfits, pyfits_version
+    with pyfits.open(file_name) as fits:
+        data = fits[1].data
+    N = len(data)
+    if pyfits_version > '3.0':
+        names = data.columns.names
+    else: # pragma: no cover
+        names = data.dtype.names
+
+    ret = cls.__new__(cls)
+    _PhotonArray_empty_init(ret, N)
+    ret.x = data['x']
+    ret.y = data['y']
+    ret.flux = data['flux']
+    if 'dxdz' in names:
+        ret.dxdz = data['dxdz']
+        ret.dydz = data['dydz']
+    if 'wavelength' in names:
+        ret.wavelength = data['wavelength']
+    return ret
+
+PhotonArray.write = PhotonArray_write
+PhotonArray.read = classmethod(PhotonArray_read)
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
@@ -181,7 +275,6 @@ class WavelengthSampler(object):
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
 
-
 class FRatioAngles(object):
     """A surface-layer operator that assigns photon directions based on the f/ratio and
     obscuration.
@@ -203,10 +296,7 @@ class FRatioAngles(object):
             raise ValueError("The f-ratio must be positive.")
         if obscuration < 0 or obscuration >= 1:
             raise ValueError("The obscuration fraction must be between 0 and 1.")
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        else:
-            ud = galsim.UniformDeviate(rng)
+        ud = galsim.UniformDeviate(rng)
 
         self.fratio = fratio
         self.obscuration = obscuration
@@ -221,20 +311,20 @@ class FRatioAngles(object):
         n_photons = len(dxdz)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of
-        # the telescope.  The angular radius of the field of view is defined by the 
+        # the telescope.  The angular radius of the field of view is defined by the
         # ratio of the radius of the aperture to the focal length
         pupil_angle = np.arctan(0.5 / self.fratio)  # radians
         obscuration_angle = np.arctan(0.5 * self.obscuration / self.fratio)
 
         # Generate azimuthal angles for the photons
         phi = np.empty(n_photons)
-        self.ud.generate(phi) 
+        self.ud.generate(phi)
         phi *= (2 * np.pi)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
         # the sine of the obscuration angle and the sine of the pupil radius
         sintheta = np.empty(n_photons)
-        self.ud.generate(sintheta) 
+        self.ud.generate(sintheta)
         sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
             * sintheta
 
@@ -244,4 +334,3 @@ class FRatioAngles(object):
         tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
-

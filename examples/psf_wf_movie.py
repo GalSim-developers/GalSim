@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
+"""@file psf_wf_movie.py
+Script to visualize the build up of an atmospheric PSF due to a frozen-flow Kolmogorov atmospheric
+phase screens.  Note that the ffmpeg command line tool is required to run this script.
+"""
+
 import warnings
 import numpy as np
 import galsim
 
 try:
     import matplotlib
-    import matplotlib.pyplot as plt
+    from matplotlib.figure import Figure
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
     import matplotlib.animation as anim
 except ImportError:
     raise ImportError("This demo requires matplotlib!")
@@ -34,27 +40,6 @@ try:
     from astropy.utils.console import ProgressBar
 except ImportError:
     raise ImportError("This demo requires astropy!")
-
-def simple_moments(img):
-    """Compute unweighted 0th, 1st, and 2nd moments of image.  Return result as a dictionary.
-    """
-    array = img.array
-    scale = img.scale
-    x = y = np.arange(array.shape[0])*scale
-    y, x = np.meshgrid(y, x)
-    I0 = np.sum(array)
-    Ix = np.sum(x*array)/I0
-    Iy = np.sum(y*array)/I0
-    Ixx = np.sum((x-Ix)**2*array)/I0
-    Iyy = np.sum((y-Iy)**2*array)/I0
-    Ixy = np.sum((x-Ix)*(y-Iy)*array)/I0
-    return dict(I0=I0, Ix=Ix, Iy=Iy, Ixx=Ixx, Iyy=Iyy, Ixy=Ixy)
-
-def ellip(mom):
-    """Convert moments dictionary into dictionary with ellipticity (e1, e2) and size (rsqr).
-    """
-    rsqr = mom['Ixx'] + mom['Iyy']
-    return dict(rsqr=rsqr, e1=(mom['Ixx']-mom['Iyy'])/rsqr, e2=2*mom['Ixy']/rsqr)
 
 def make_movie(args):
     """Actually make the movie of the atmosphere given command line arguments stored in `args`.
@@ -89,12 +74,11 @@ def make_movie(args):
     # galsim.Atmosphere helper function is useful for constructing this list, and requires lists of
     # parameters for the different layers.
 
-    max_speed = 20  # Pick (an arbitrary) maximum wind speed in m/s.
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
     r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
     for i in range(args.nlayers):
-        spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
+        spd.append(u()*args.max_speed)  # Use a random speed between 0 and max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         # The turbulence strength of each layer is specified by through its Fried parameter r0_500,
         # which can be thought of as the diameter of a telescope for which atmospheric turbulence
@@ -104,14 +88,13 @@ def make_movie(args):
         # distribute the input "net" Fried parameter into a Fried parameter for each layer.  For
         # Kolmogorov turbulence, this is r0_500 ~ (structure function)**(-3/5):
         r0_500.append(args.r0_500*weights[i]**(-3./5))
-        print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
-               "and r0_500 {:5.3f} m."
-               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
+        print("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
+              "and r0_500 {:5.3f} m."
+              .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
 
-    # Additionally, we set the screen temporal evolution `time_step`, and the screen size and scale.
+    # Additionally, we set the screen size and scale.
     atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
-                            time_step=args.time_step, screen_size=args.screen_size,
-                            screen_scale=args.screen_scale)
+                            screen_size=args.screen_size, screen_scale=args.screen_scale)
     # `atm` is now an instance of a galsim.PhaseScreenList object.
 
     # Place to store the cumulative PSF image if args.accumulate is set.
@@ -135,7 +118,8 @@ def make_movie(args):
 
     # For the animation code, we essentially draw a single figure first, and then use various
     # `set_XYZ` methods to update each successive frame.
-    fig = plt.figure(facecolor='k', figsize=(11, 6))
+    fig = Figure(facecolor='k', figsize=(11, 6))
+    FigureCanvasAgg(fig)
 
     # Axis for the PSF image on the left.
     psf_ax = fig.add_axes([0.08, 0.15, 0.35, 0.7])
@@ -154,7 +138,7 @@ def make_movie(args):
                          extent=np.r_[-1, 1, -1, 1]*0.5*aper.pupil_plane_size)
     cbar_ax = fig.add_axes([0.88, 0.175, 0.03, 0.65])
     cbar_ax.set_ylabel("Radians")
-    plt.colorbar(wf_im, cax=cbar_ax)
+    fig.colorbar(wf_im, cax=cbar_ax)
 
     # Overlay an alpha-mask on the wavefront image showing which parts are actually illuminated.
     ilum = np.ma.masked_greater(aper.illuminated, 0.5)
@@ -173,21 +157,25 @@ def make_movie(args):
     etext.set_color('w')
 
     nstep = int(args.exptime / args.time_step)
+    t0 = 0.0
     # Use astropy ProgressBar to keep track of progress and show an estimate for time to completion.
     with ProgressBar(nstep) as bar:
         with writer.saving(fig, args.outfile, 100):
             for i in range(nstep):
-                # The wavefront() method with `compact=False` returns a 2D array over the pupil
-                # plane described by `aper`.  Here, we just get the wavefront for visualization;
-                # this step is normally handled automatically by the PhasePSF code behind the
-                # scenes.
-                wf = atm.wavefront(aper, theta, compact=False) * 2*np.pi / args.lam  # radians
+                # The wavefront() method accepts pupil plane coordinates `u` and `v` in meters, a
+                # time `t` in seconds, and possibly a field angle `theta`.  It returns the wavefront
+                # lag or lead in nanometers with respect to the "perfect" planar wavefront at the
+                # specified location angle and time.  In normal use for computing atmospheric PSFs,
+                # this is just an implementation detail.  In this script, however, we include the
+                # wavefront in the visualization.
+                wf = atm.wavefront(aper.u, aper.v, t0, theta=theta) * 2*np.pi/args.lam  # radians
                 # To make an actual PSF GSObject, we use the makePSF() method, including arguments
-                # for the wavelength `lam`, the field angle `theta`, the aperture `aper`, and the
-                # exposure time `exptime`.  Here, since we're making a movie, we set the exptime
-                # equal to just a single timestep, though normally we'd want to set this to the
-                # full exposure time.
-                psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper, exptime=args.time_step)
+                # for the wavelength `lam`, the field angle `theta`, the aperture `aper`, the
+                # starting time t0, and the exposure time `exptime`.  Here, since we're making a
+                # movie, we set the exptime equal to just a single timestep, though normally we'd
+                # want to set this to the full exposure time.
+                psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper,
+                                  t0=t0, exptime=args.time_step)
                 # `psf` is now just like an any other GSObject, ready to be convolved, drawn, or
                 # transformed.  Here, we just draw it into an image to add to our movie.
                 psf_img0 = psf.drawImage(nx=args.psf_nx, ny=args.psf_nx, scale=args.psf_scale)
@@ -198,15 +186,18 @@ def make_movie(args):
                 else:
                     psf_img = psf_img0
 
-                # Calculate simple estimate of ellipticity
-                e = ellip(simple_moments(psf_img))
+                # Calculate simple estimate of size and ellipticity
+                e = galsim.utilities.unweighted_shape(psf_img)
+
+                # Update t0 for the next movie frame.
+                t0 += args.time_step
 
                 # Matplotlib code updating plot elements
                 wf_im.set_array(wf)
                 wf_ax.set_title("t={:5.2f} s".format(i*args.time_step))
                 psf_im.set_array(psf_img.array)
                 etext.set_text("$e_1$={:6.3f}, $e_2$={:6.3f}, $r^2$={:6.3f}".format(
-                        e['e1'], e['e2'], e['rsqr']))
+                        e['e1'], e['e2'], e['rsqr']*args.psf_scale**2))
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     writer.grab_frame(facecolor=fig.get_facecolor())
@@ -214,32 +205,38 @@ def make_movie(args):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    parser = ArgumentParser(description=(
+"""
+Script to visualize the build up of an atmospheric PSF due to a frozen-flow Kolmogorov atmospheric
+phase screens.  Note that the ffmpeg command line tool is required to run this script.
+"""), formatter_class=RawDescriptionHelpFormatter)
+
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed for generating turbulence.  Default: 1")
     parser.add_argument("--r0_500", type=float, default=0.2,
                         help="Fried parameter at wavelength 500 nm in meters.  Default: 0.2")
     parser.add_argument("--nlayers", type=int, default=6,
                         help="Number of atmospheric layers.  Default: 6")
-    parser.add_argument("--lam", type=float, default=700.0,
-                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--time_step", type=float, default=0.03,
                         help="Incremental time step for advancing phase screens and accumulating "
                              "instantaneous PSFs in seconds.  Default: 0.03")
     parser.add_argument("--exptime", type=float, default=3.0,
                         help="Total amount of time to integrate in seconds.  Default: 3.0")
+    parser.add_argument("--screen_size", type=float, default=102.4,
+                        help="Size of atmospheric screen in meters.  Note that the screen wraps "
+                             "with periodic boundary conditions.  Default: 102.4")
+    parser.add_argument("--screen_scale", type=float, default=0.1,
+                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
+    parser.add_argument("--max_speed", type=float, default=20.0,
+                        help="Maximum wind speed in m/s.  Default: 20.0")
     parser.add_argument("-x", "--x", type=float, default=0.0,
                         help="x-coordinate of PSF in arcmin.  Default: 0.0")
     parser.add_argument("-y", "--y", type=float, default=0.0,
                         help="y-coordinate of PSF in arcmin.  Default: 0.0")
-    parser.add_argument("--psf_nx", type=int, default=512,
-                        help="Output PSF image dimensions in pixels.  Default: 512")
-    parser.add_argument("--psf_scale", type=float, default=0.005,
-                        help="Scale of PSF output pixels in arcseconds.  Default: 0.005")
-    parser.add_argument("--accumulate", action='store_true',
-                        help="Set to accumulate flux over exposure, as opposed to displaying the "
-                             "instantaneous PSF.  Default: False")
+
+    parser.add_argument("--lam", type=float, default=700.0,
+                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--diam", type=float, default=4.0,
                         help="Size of circular telescope pupil in meters.  Default: 4.0")
     parser.add_argument("--obscuration", type=float, default=0.0,
@@ -250,23 +247,29 @@ if __name__ == '__main__':
                         help="Thickness of struts as fraction of aperture diameter.  Default: 0.05")
     parser.add_argument("--strut_angle", type=float, default=0.0,
                         help="Starting angle of first strut in degrees.  Default: 0.0")
-    parser.add_argument("--screen_size", type=float, default=102.4,
-                        help="Size of atmospheric screen in meters.  Note that the screen wraps "
-                             "with periodic boundary conditions.  Default: 102.4")
-    parser.add_argument("--screen_scale", type=float, default=0.1,
-                        help="Resolution of atmospheric screen in meters.  Default: 0.1")
+
+    parser.add_argument("--psf_nx", type=int, default=512,
+                        help="Output PSF image dimensions in pixels.  Default: 512")
+    parser.add_argument("--psf_scale", type=float, default=0.005,
+                        help="Scale of PSF output pixels in arcseconds.  Default: 0.005")
+    parser.add_argument("--accumulate", action='store_true',
+                        help="Set to accumulate flux over exposure, as opposed to displaying the "
+                             "instantaneous PSF.  Default: False")
+
     parser.add_argument("--pad_factor", type=float, default=1.0,
                         help="Factor by which to pad PSF InterpolatedImage to avoid aliasing. "
                              "Default: 1.0")
     parser.add_argument("--oversampling", type=float, default=1.0,
                         help="Factor by which to oversample the PSF InterpolatedImage. "
                              "Default: 1.0")
+
     parser.add_argument("--psf_vmax", type=float, default=0.0003,
                         help="Matplotlib imshow vmax kwarg for PSF image.  Sets value that "
                              "maxes out the colorbar range.  Default: 0.0003")
     parser.add_argument("--wf_vmax", type=float, default=50.0,
                         help="Matplotlib imshow vmax kwarg for wavefront image.  Sets value "
                              "that maxes out the colorbar range.  Default: 50.0")
+
     parser.add_argument("--outfile", type=str, default="output/psf_wf_movie.mp4",
                         help="Output filename.  Default: output/psf_wf_movie.mp4")
 

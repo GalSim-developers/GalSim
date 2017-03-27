@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -756,13 +756,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # rotate
     if rotation_angle is not None:
         real_galaxy = real_galaxy.rotate(rotation_angle)
-    elif rotation_angle is None and rand_rotate == True:
-        if rng is None:
-            ud = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            ud = galsim.UniformDeviate(rng)
-        else:
-            raise TypeError("The rng provided is not a BaseDeviate")
+    elif rotation_angle is None and rand_rotate:
+        ud = galsim.UniformDeviate(rng)
         rand_angle = galsim.Angle(math.pi*ud(), galsim.radians)
         real_galaxy = real_galaxy.rotate(rand_angle)
 

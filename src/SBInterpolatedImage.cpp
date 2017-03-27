@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -719,7 +719,6 @@ namespace galsim {
                 _pt.push_back(Pixel(xx,yy,flux));
             }
         }
-        _pt.buildTree();
 
         // The above just computes the positive and negative flux for the main image.
         // This is convolved by the interpolant, so we need to correct these values
@@ -733,6 +732,10 @@ namespace galsim {
         _positiveFlux = p1*p2 + n1*n2;
         _negativeFlux = p1*n2 + n1*p2;
         dbg<<"positiveFlux => "<<_positiveFlux<<", negativeFlux => "<<_negativeFlux<<std::endl;
+
+        double thresh = std::numeric_limits<double>::epsilon() * (_positiveFlux + _negativeFlux);
+        dbg<<"thresh = "<<thresh<<std::endl;
+        _pt.buildTree(thresh);
 
         _readyToShoot = true;
     }

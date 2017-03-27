@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -209,6 +209,32 @@ class Transformation(galsim.GSObject):
             s += ' * %s'%self.flux_ratio
         return s
 
+    def _prepareDraw(self):
+        self._original._prepareDraw()
+        dudx, dudy, dvdx, dvdy = self.getJac()
+        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
+                                                    dudx, dudy, dvdx, dvdy,
+                                                    self.getOffset(), self.getFluxRatio(),
+                                                    self._gsparams)
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        ud = galsim.UniformDeviate(rng)
+        photon_array = self.original.shoot(n_photons, ud)
+        new = np.dot(self.jac, np.vstack([photon_array.x, photon_array.y]))
+        photon_array.x = new[0, :] + self.offset.x
+        photon_array.y = new[1, :] + self.offset.y
+        photon_array.scaleFlux(np.abs(np.linalg.det(self.jac))*self.flux_ratio)
+        return photon_array
+
     def __getstate__(self):
         # While the SBProfile should be picklable, it is better to reconstruct it from the
         # original object, which will pickle better.  The SBProfile is only picklable via its
@@ -238,7 +264,7 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     else:
         ret._original = obj
     sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                gsparams)
+                              gsparams)
     galsim.GSObject.__init__(ret, sbt)
     ret._gsparams = gsparams
     return ret

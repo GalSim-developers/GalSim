@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1108,6 +1108,36 @@ def test_dep_optics():
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
 @timer
+def test_dep_phase_psf():
+    """Test deprecated input in PhaseScreenPSF"""
+    import time
+    NPSFs = 10
+    exptime = 0.3
+    rng = galsim.BaseDeviate(1234)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
+    theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in range(NPSFs)]
+
+    kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)
+
+    t1 = time.time()
+    psfs = check_dep(atm.makePSF, theta=theta, **kwargs)
+    imgs = [psf.drawImage() for psf in psfs]
+    print('time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1))
+
+    t2 = time.time()
+    more_imgs = []
+    for th in theta:
+        psf = atm.makePSF(theta=th, **kwargs)
+        more_imgs.append(psf.drawImage())
+
+    print('time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t2))
+
+    for img1, img2 in zip(imgs, more_imgs):
+        np.testing.assert_array_equal(
+            img1, img2,
+            "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
+
+@timer
 def test_dep_wmult():
     """Test drawImage with wmult parameter.
 
@@ -1691,6 +1721,7 @@ if __name__ == "__main__":
     test_dep_shapelet()
     test_dep_shear()
     test_dep_optics()
+    test_dep_phase_psf()
     test_dep_wmult()
     test_dep_drawKImage()
     test_dep_drawKImage_Gaussian()

@@ -1,6 +1,6 @@
 # vim: set filetype=python et ts=4 sw=4:
 
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -319,7 +319,7 @@ def BasicCCFlags(env):
 
     if env['FLAGS'] == '':
         if compiler == 'g++':
-            env.Replace(CCFLAGS=['-O2'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
