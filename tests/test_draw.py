@@ -1405,7 +1405,7 @@ def test_direct_scale():
     This test checks that the results are equivalent between the two calls.
     """
 
-    scale = 0.25
+    scale = 0.35
     rng = galsim.BaseDeviate(1234)
     obj = galsim.Exponential(flux=177, scale_radius=2)
     obj_with_pixel = galsim.Convolve(obj, galsim.Pixel(scale))
@@ -1416,37 +1416,56 @@ def test_direct_scale():
     im2 = galsim.ImageD(65, 65, scale=scale)
     im2.setCenter(0,0)
 
+    # One possibe use of the specific functions is to not automatically recenter on 0,0.
+    # So make sure they work properly if 0,0 is not the center
+    im3 = galsim.ImageD(32, 32, scale=scale)  # origin is (1,1)
+
     obj.drawImage(im1, method='no_pixel')
     obj.drawReal(im2)
-    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    obj.drawReal(im3)
+    print('no_pixel: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
-                                  "drawReal made different image than method='no_pixel'")
+                                   "drawReal made different image than method='no_pixel'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when off-center")
 
     obj.drawImage(im1, method='sb')
     obj_sb.drawReal(im2)
-    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    obj_sb.drawReal(im3)
+    print('sb: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
-                                  "drawReal made different image than method='sb'")
+                                   "drawReal made different image than method='sb'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when off-center")
 
     obj.drawImage(im1, method='fft')
     obj_with_pixel.drawFFT(im2)
-    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    obj_with_pixel.drawFFT(im3)
+    print('fft: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
-                                  "drawFFT made different image than method='fft'")
+                                   "drawFFT made different image than method='fft'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawFFT made different image when off-center")
 
     obj.drawImage(im1, method='real_space')
     obj_with_pixel.drawReal(im2)
-    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
-    # I'm not sure why this one comes out a bit less precisely equal.  But 11 digits is still
+    obj_with_pixel.drawReal(im3)
+    print('real_space: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    # I'm not sure why this one comes out a bit less precisely equal.  But 12 digits is still
     # plenty accurate enough.
-    np.testing.assert_almost_equal(im1.array, im2.array, 11,
-                                  "drawReal made different image than method='real_space'")
+    np.testing.assert_almost_equal(im1.array, im2.array, 12,
+                                   "drawReal made different image than method='real_space'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 14,
+                                   "drawReal made different image when off-center")
 
     obj.drawImage(im1, method='phot', rng=rng.duplicate())
     obj.drawPhot(im2, rng=rng.duplicate())
-    print('max diff = ',np.max(np.abs(im1.array - im2.array)))
+    obj.drawPhot(im3, rng=rng.duplicate())
+    print('phot: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
-                                  "drawPhot made different image than method='phot'")
+                                   "drawPhot made different image than method='phot'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawPhot made different image when off-center")
 
     # Check images with invalid wcs raise ValueError
     im4 = galsim.ImageD(65, 65)

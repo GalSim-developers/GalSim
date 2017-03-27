@@ -1519,13 +1519,14 @@ class GSObject(object):
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
         This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
-        drawn should have already been converted to image coordinates via
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
-        Note that the image produced by `drawFFT` represents the profile sampled at the center
+        Note that the image produced by `drawReal` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
         integrated over the area of the pixel.  If you want to render a profile integrated over
         the pixel, you can convolve with a Pixel first and draw that.  This is equivalent to
@@ -1588,7 +1589,8 @@ class GSObject(object):
         N = self.getGoodImageSize(image.scale/wmult)
 
         # We must make something big enough to cover the target image size:
-        image_N = max(image.bounds.numpyShape())
+        image_N = max(np.max(np.abs((image.bounds.__getinitargs__()))) * 2,
+                      np.max(image.bounds.numpyShape()))
         N = max(N, image_N)
 
         # Round up to a good size for making FFTs:
@@ -1642,7 +1644,7 @@ class GSObject(object):
 
         # Perform the fourier transform.
         real_image = kimage_wrap.irfft()
-        real_image.shift(image.center())
+        real_image.shift(real_image.bounds.center())
 
         # Add (a portion of) this to the original image.
         ar = real_image.subImage(image.bounds).array
@@ -1655,12 +1657,13 @@ class GSObject(object):
 
     def drawFFT(self, image, add_to_image=False, wmult=1.):
         """
-        Draw this profile into an Image by direct evaluation at the location of each pixel.
+        Draw this profile into an Image by computing the k-space image and performing an FFT.
 
         This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
-        drawn should have already been converted to image coordinates via
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
@@ -1817,9 +1820,10 @@ class GSObject(object):
         Draw this profile into an Image by shooting photons.
 
         This is usually called from the `drawImage` function, rather than called directly by the
-        user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a PixelScale wcs.  The profile being
-        drawn should have already been converted to image coordinates via
+        user.  In particular, the input image must be already set up with defined bounds.  The
+        profile will be drawn centered on whatever pixel corresponds to (0,0) with the given
+        bounds, not the image center (unlike drawImage).  The image also must have a PixelScale
+        wcs.  The profile being drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
 
@@ -2112,8 +2116,9 @@ class GSObject(object):
         """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal
         sanity checks or the option to create the image automatically.
 
-        The input image must be provided as a complex Image instancec, and the center should
-        be set to coordinate (0,0).  This is not checked (in the interest of efficiency).
+        The input image must be provided as a complex Image instancec, and the bounds should be
+        set up appropriately (e.g. with 0,0 in the center if so desired).  This corresponds to
+        recenter=False for the normal drawKImage.
 
         @param image        The Image onto which to draw the k-space image. [required]
         @param add_to_image Whether to add to the existing images rather than clear out
