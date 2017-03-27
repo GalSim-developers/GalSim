@@ -165,9 +165,6 @@ class SiliconSensor(Sensor):
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc)
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     __hash__ = None
 
     def __getstate__(self):
