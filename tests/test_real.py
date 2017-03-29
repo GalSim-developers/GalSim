@@ -269,9 +269,9 @@ def test_crg_roundtrip():
         # test to work perfectly since we're effectively deconvolving and then reconvolving by the
         # same PSF, not a fatter PSF.
         np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
-                                   rtol=0., atol=6e-2*orig_f606w.array.max())
+                                   rtol=0., atol=5e-2*orig_f606w.array.max())
         np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
-                                   rtol=0., atol=8e-2*orig_f814w.array.max())
+                                   rtol=0., atol=5e-2*orig_f814w.array.max())
 
         # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
         np.testing.assert_allclose(orig_f606w_mom.moments_amp,
