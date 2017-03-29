@@ -1171,7 +1171,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         nkx = 2*int(np.floor(maxk/x_stepk))
         nky = 2*int(np.floor(maxk/y_stepk))
 
-        nkx = nyx = max(nkx, nky)
+        nkx = nky = max(nkx, nky)
         x_stepk = y_stepk = min(x_stepk, y_stepk)
         wcs = galsim.JacobianWCS(x_stepk, 0.0, 0.0, y_stepk)
 
