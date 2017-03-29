@@ -953,6 +953,31 @@ class ChromaticRealGalaxy(ChromaticSum):
     you are using a different unit for other things (the PSF, WCS, etc.), then you should dilate the
     resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
 
+    Noise from the original catalog images is propagated by this class, though certain restrictions
+    apply to when and how that noise is made available.  The propagated noise depends on which
+    Bandpass the ChromaticRealGalaxy is being imaged through, so the noise is only available after
+    the `drawImage(bandpass, ...)` method has been called.  Also, since ChromaticRealGalaxy will
+    only produce reasonable images when convolved with a (suitably wide) PSF, the noise attribute is
+    attached to the `ChromaticConvolution` (or `ChromaticTransformation` of the
+    `ChromaticConvolution`) which holds as one of its convolutants the `ChromaticRealGalaxy`.
+
+    >>> crg = galsim.ChromaticRealGalaxy(...)
+    >>> psf = ...
+    >>> obj = galsim.Convolve(crg, psf)
+    >>> bandpass = galsim.Bandpass(...)
+    >>> assert not hasattr(obj, 'noise')
+    >>> image = obj.drawImage(bandpass)
+    >>> assert hasattr(obj, 'noise')
+    >>> noise1 = obj.noise
+
+    Note that the noise attribute is only associated with the most recently used bandpass.  If you
+    draw another image of the same object using a different bandpass, the noise object will be
+    replaced.
+
+    >>> bandpass2 = galsim.Bandpass(...)
+    >>> image2 = obj.drawImage(bandpass2)
+    >>> assert noise1 != obj.noise
+
     @param real_galaxy_catalogs  A list of `RealGalaxyCatalog` objects from which to create
                             `RealChromaticGalaxy`s.  Each catalog should represent the same set of
                             galaxies, and in the same order, just imaged through different filters.
