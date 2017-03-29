@@ -5,6 +5,9 @@ API Changes
 -----------
 
 - Simplified the return value of galsim.config.ReadConfig. (#580)
+- Changed RealGalaxyCatalog methods `getGal` and `getPSF` to return
+  `GSObject`s instead of `Image`s; added `getGalImage` and `getPSFImage` to
+  enable former behavior (#640)
 - Changed the dimensions of `SED` from [photons/wavelength-interval] to either
   [photons/wavelength-interval/area/time] or [1] (dimensionless).
   `ChromaticObject`s representing stars or galaxies take SEDs with the former
@@ -73,6 +76,15 @@ Deprecated Features
 New Features
 ------------
 
+- Added `ChromaticRealGalaxy`, which can use multi-band HST-images to model
+  realistic galaxies, including color gradients (#640)
+- Added `CovarianceSpectrum` to propagate noise through
+  `ChromaticRealGalaxy` (#640)
+- Updated packaged bandpasses and SEDs and associated download scripts (#640)
+- Added HST bandpasses covering AEGIS and CANDELS surveys (#640)
+- Added `drawKImage` method for `ChromaticObject` and `CorrelatedNoise` (#640)
+- Added support for `wcs` keyword to `GSObject.drawKImage` (#640)
+- Added support for `InterpolatedKImage` with non-PixelScale wcs (#640)
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models
   the repulsion of incoming electrons by the electrons already accumulated on
