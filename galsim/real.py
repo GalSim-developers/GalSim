@@ -1225,19 +1225,28 @@ class ChromaticRealGalaxy(ChromaticSum):
             # pk = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
             # pks[i] = pk.array.real * nx * ny
 
+        w = 1./np.sqrt(pks)
+
         # Allocate and fill output coefficients and covariances.
-        Sigma = np.empty((NSED, NSED, nky, nkx), dtype=np.complex128)
-        coef = np.zeros((NSED, nky, nkx), dtype=np.complex128)
+        # Note: put NSED axis last, since significantly faster to compute them this way,
+        # even though we eventually convert to images which are strided in this format.
+        coef = np.zeros((nky, nkx, NSED), dtype=np.complex128)
+        Sigma = np.empty((nky, nkx, NSED, NSED), dtype=np.complex128)
+
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
-        for ix in range(nkx//2+1):
+        if False:  # MJ: Leaving this here for now.  Also repeated in RealGalaxy.cpp, so can
+                   #     probably remove it.  But I'll let Josh do that.
+                   # Note: On my machine, with this branch __init__ takes 73 sec when running
+                   #       through test_real.py.  With the other branch, it takes 7.3 sec.
+                   #       So a full order of magnitude speed up doing this in C++ with TMV.
+          for ix in range(nkx//2+1):
             for iy in range(nky):
                 if (ix == 0 or ix == nkx//2) and iy > nky//2:
                     break # already filled in the rest of this column
-                w = np.diag(1.0/pks[:, iy, ix])
-                root_w = np.sqrt(w)
-                A = np.dot(root_w, PSF_eff_kimgs[:, :, iy, ix])
-                b = np.dot(root_w, kimgs[:, iy, ix])
+                ww = np.diag(w[:, iy, ix])
+                A = np.dot(ww, PSF_eff_kimgs[:, :, iy, ix])
+                b = np.dot(ww, kimgs[:, iy, ix])
                 try:
                     x, resids, rank, singval = np.linalg.lstsq(A, b)
                     # condition number is max singular value over min singular value
@@ -1247,15 +1256,23 @@ class ChromaticRealGalaxy(ChromaticSum):
                         dx = np.linalg.inv(np.dot(np.conj(A.T), A))
                     else:
                         dx = np.zeros((NSED, NSED), dtype=np.complex128)
-                except:
+                except Exception as e:
                     x = 0.0
                     dx = np.zeros((NSED, NSED), dtype=np.complex128)
-
-                coef[:, iy, ix] = x
-                Sigma[:, :, iy, ix] = dx
+                coef[iy, ix] = x
+                Sigma[iy, ix] = dx
                 # Save work by filling in conjugates.
-                coef[:, -iy, -ix] = np.conj(x)
-                Sigma[:, :, -iy, -ix] = np.conj(dx)
+                coef[-iy, -ix] = np.conj(x)
+                Sigma[-iy, -ix] = np.conj(dx)
+        else:
+          galsim._galsim.ComputeCRGCoefficients(
+            coef.ctypes.data, Sigma.ctypes.data,
+            w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
+            NSED, Nim, nkx, nky)
+
+        # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
+        coef = np.moveaxis(coef, (0,1,2), (1,2,0))
+        Sigma = np.moveaxis(Sigma, (0,1,2,3), (2,3,0,1))
 
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
