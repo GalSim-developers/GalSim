@@ -1376,8 +1376,114 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             assert len(dec) == 1
             return ra[0], dec[0]
 
+    def _invert_pv(self, u, v, pv):
+        # Let (u0,v0) be the current value of (u,v).  Then we want to find a new (u,v) such that
+        #
+        #       [ u0 v0 ] = [ 1 u u^2 u^3 ] pv [ 1 v v^2 v^3 ]^T
+        #
+        # Start with (u,v) = (u0,v0)
+        #
+        # Then use Newton-Raphson iteration to improve (u,v).  This is extremely fast
+        # for typical PV distortions, since the distortions are generally very small.
+        # Newton-Raphson doubles the number of significant digits in each iteration.
+
+        MAX_ITER = 10
+        TOL = 1.e-6 * galsim.arcsec / galsim.degrees   # pv always uses degrees units
+        prev_err = None
+        u0 = u.copy()
+        v0 = v.copy()
+        for iter in range(MAX_ITER):  # pragma: no branch
+            usq = u*u
+            vsq = v*v
+            upow = np.array([ 1., u, usq, usq*u ])
+            vpow = np.array([ 1., v, vsq, vsq*v ])
+
+            diff = np.dot(np.dot(pv, vpow), upow) - (u0,v0)
+
+            # Check that things are improving...
+            err = np.max(np.abs(diff))
+            if prev_err and err > prev_err:  # pragma: no cover
+                raise RuntimeError("Unable to solve for image_pos (not improving)")
+            prev_err = err
+
+            # If we are below tolerance, return this value
+            if err < TOL:
+                # Update p2 to the new value.
+                return u,v
+            else:
+                dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
+                dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
+                j1 = np.transpose([ np.dot(np.dot(pv, vpow), dupow) ,
+                                    np.dot(np.dot(pv, dvpow), upow) ])
+                dp = np.linalg.solve(j1, diff)
+                u -= dp[0]
+                v -= dp[1]
+                if np.max(np.abs(dp / (u,v))) < 1.e-15:
+                    # If we're hitting the limits of double precision, stop iterating.
+                    return u,v
+
+        if not err < TOL: # pragma: no cover
+            raise RuntimeError("Unable to solve for image_pos (max iter reached)")
+
+    def _invert_ab(self, x, y, ab, abp):
+        order = len(ab[0])-1
+        x0 = x.copy()
+        y0 = y.copy()
+
+        if abp is not None:
+            xpow = x ** np.arange(order+1)
+            ypow = y ** np.arange(order+1)
+            temp = np.dot(abp, ypow)
+            dp1 = np.sum(xpow * temp, axis=1)
+            x += dp1[0]
+            y += dp1[1]
+
+        # We do this iteration even if we have AP and BP matrices, since the inverse
+        # transformation is not always very accurate.
+        # The assumption here is that the A adn B matrices are correct and the AP and BP
+        # matrices are estimated from them, and thus are approximate at some level.
+        # Of course, in reality the A and B matrices are also approximate, but at least this
+        # way the WCS is consistent transforming in the two directions.
+        MAX_ITER = 10
+        TOL = 1.e-6 * galsim.arcsec / galsim.degrees
+        prev_err = None
+        for iter in range(MAX_ITER):  # pragma: no branch
+            # Slightly easier here than in _radec function, since we don't have to worry
+            # about the possibility of doing many x,y at once.
+            xpow = x ** np.arange(order+1)
+            ypow = y ** np.arange(order+1)
+
+            diff = np.dot(np.dot(ab, ypow), xpow) + (x,y) - (x0,y0)
+
+            # Check that things are improving...
+            err = np.max(np.abs(diff))
+            if prev_err and err > prev_err:  # pragma: no cover
+                raise RuntimeError("Unable to solve for image_pos (not improving)")
+            prev_err = err
+
+            # If we are below tolerance, return this value
+            if err < TOL:
+                # Update p1 to the new value.
+                return x,y
+            else:
+                dxpow = np.zeros(order+1)
+                dypow = np.zeros(order+1)
+                dxpow[1:] = (np.arange(order)+1.) * xpow[:-1]
+                dypow[1:] = (np.arange(order)+1.) * ypow[:-1]
+                j1 = np.transpose([ np.dot(np.dot(ab, ypow), dxpow) ,
+                                    np.dot(np.dot(ab, dypow), xpow) ])
+                j1 += np.diag([1,1])
+                dp = np.linalg.solve(j1, diff)
+                x -= dp[0]
+                y -= dp[1]
+                if np.max(np.abs(dp / (x,y))) < 1.e-15:
+                    # If we're hitting the limits of double precision, stop iterating.
+                    return x,y
+
+        if not err < TOL: # pragma: no cover
+            raise RuntimeError("Unable to solve for image_pos (max iter reached)")
+
     def _xy(self, ra, dec):
-        import numpy.linalg
 
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
 
@@ -1386,126 +1492,17 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         u *= -factor
         v *= factor
 
-        p2 = np.array( [ u, v ] )
-
         if self.pv is not None:
-            # Let (s,t) be the current value of (u,v).  Then we want to find a new (u,v) such that
-            #
-            #       [ s t ] = [ 1 u u^2 u^3 ] pv [ 1 v v^2 v^3 ]^T
-            #
-            # Start with (u,v) = (s,t)
-            #
-            # Then use Newton-Raphson iteration to improve (u,v).  This is extremely fast
-            # for typical PV distortions, since the distortions are generally very small.
-            # Newton-Raphson doubles the number of significant digits in each iteration.
+            u, v = self._invert_pv(u, v, self.pv)
 
-
-            MAX_ITER = 10
-            TOL = 1.e-8 * galsim.arcsec / galsim.degrees   # pv always uses degrees units
-            prev_err = None
-            u = p2[0]
-            v = p2[1]
-            for iter in range(MAX_ITER):
-                usq = u*u
-                vsq = v*v
-                upow = np.array([ 1., u, usq, usq*u ])
-                vpow = np.array([ 1., v, vsq, vsq*v ])
-
-                diff = np.dot(np.dot(self.pv, vpow), upow) - p2
-
-                # Check that things are improving...
-                err = np.max(np.abs(diff))
-                if prev_err:
-                    if err > prev_err:
-                        raise RuntimeError("Unable to solve for image_pos (not improving)")
-                prev_err = err
-
-                # If we are below tolerance, break out of the loop
-                if err < TOL:
-                    # Update p2 to the new value.
-                    p2 = np.array( [ u, v ] )
-                    break
-                else:
-                    dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
-                    dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
-                    j1 = np.transpose([ np.dot(np.dot(self.pv, vpow), dupow) ,
-                                        np.dot(np.dot(self.pv, dvpow), upow) ])
-                    dp = numpy.linalg.solve(j1, diff)
-                    u -= dp[0]
-                    v -= dp[1]
-                    if np.max(np.abs(dp / (u,v))) < 1.e-15:
-                        # If we're hitting the limits of double precision, stop iterating.
-                        err = 0
-                        p2 = np.array( [ u, v ] )
-                        break
-            if not err < TOL:
-                raise RuntimeError("Unable to solve for image_pos (max iter reached)")
-
-        p1 = np.dot(numpy.linalg.inv(self.cd), p2)
+        x, y = np.dot(np.linalg.inv(self.cd), [u,v])
 
         if self.ab is not None:
-            x = p1[0]
-            y = p1[1]
-            order = len(self.ab[0])-1
-            if self.abp is not None:
-                xpow = x ** np.arange(order+1)
-                ypow = y ** np.arange(order+1)
-                temp = np.dot(self.abp, ypow)
-                dp1 = np.sum(xpow * temp, axis=1)
-                x += dp1[0]
-                y += dp1[1]
+            x, y = self._invert_ab(x, y, self.ab, self.abp)
 
-            # We do this iteration even if we have AP and BP matrices, since the inverse
-            # transformation is not always very accurate.
-            # The assumption here is that the A adn B matrices are correct and the AP and BP
-            # matrices are estimated from them, and thus are approximate at some level.
-            # Of course, in reality the A and B matrices are also approximate, but at least this
-            # way the WCS is consistent transforming in the two directions.
-            MAX_ITER = 10
-            TOL = 1.e-8 * galsim.arcsec / galsim.degrees
-            prev_err = None
-            for iter in range(MAX_ITER):
-                # Slightly easier here than in _radec function, since we don't have to worry
-                # about the possibility of doing many x,y at once.
-                xpow = x ** np.arange(order+1)
-                ypow = y ** np.arange(order+1)
+        x += self.crpix[0]
+        y += self.crpix[1]
 
-                diff = np.dot(np.dot(self.ab, ypow), xpow) + np.array([x,y]) - p1
-
-                # Check that things are improving...
-                err = np.max(np.abs(diff))
-                if prev_err:
-                    if err > prev_err:
-                        raise RuntimeError("Unable to solve for image_pos (not improving)")
-                prev_err = err
-
-                # If we are below tolerance, break out of the loop
-                if err < TOL:
-                    # Update p1 to the new value.
-                    p1 = np.array( [ x, y ] )
-                    break
-                else:
-                    dxpow = np.zeros(order+1)
-                    dypow = np.zeros(order+1)
-                    dxpow[1:] = (np.arange(order)+1.) * xpow[:-1]
-                    dypow[1:] = (np.arange(order)+1.) * ypow[:-1]
-                    j1 = np.transpose([ np.dot(np.dot(self.ab, ypow), dxpow) ,
-                                        np.dot(np.dot(self.ab, dypow), xpow) ])
-                    j1 += np.diag([1,1])
-                    dp = numpy.linalg.solve(j1, diff)
-                    x -= dp[0]
-                    y -= dp[1]
-                    if np.max(np.abs(dp / (x,y))) < 1.e-15:
-                        # If we're hitting the limits of double precision, stop iterating.
-                        err = 0
-                        p1 = np.array( [ x, y ] )
-                        break
-            if not err < TOL:
-                raise RuntimeError("Unable to solve for image_pos (max iter reached)")
-
-        p1 += self.crpix
-
-        x, y = p1
         return x, y
 
     # Override the version in CelestialWCS, since we can do this more efficiently.
@@ -1713,7 +1710,6 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
 
     @returns a GSFitsWCS describing this WCS.
     """
-    import numpy.linalg
     # These will raise the appropriate errors if affine is not the right type.
     dudx = affine.dudx * units / galsim.degrees
     dudy = affine.dudy * units / galsim.degrees
