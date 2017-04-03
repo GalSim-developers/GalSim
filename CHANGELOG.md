@@ -46,6 +46,7 @@ Bug Fixes
   using the config functionality. (#792)
 - Fixed some handling of images with undefined bounds. (#799)
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
+- Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
 
 
 Deprecated Features

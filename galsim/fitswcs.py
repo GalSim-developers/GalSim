@@ -1433,6 +1433,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     dp = numpy.linalg.solve(j1, diff)
                     u -= dp[0]
                     v -= dp[1]
+                    if np.max(np.abs(dp / (u,v))) < 1.e-15:
+                        # If we're hitting the limits of double precision, stop iterating.
+                        err = 0
+                        p2 = np.array( [ u, v ] )
+                        break
             if not err < TOL:
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
 
@@ -1476,7 +1481,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
                 # If we are below tolerance, break out of the loop
                 if err < TOL:
-                    # Update p2 to the new value.
+                    # Update p1 to the new value.
                     p1 = np.array( [ x, y ] )
                     break
                 else:
@@ -1490,6 +1495,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     dp = numpy.linalg.solve(j1, diff)
                     x -= dp[0]
                     y -= dp[1]
+                    if np.max(np.abs(dp / (x,y))) < 1.e-15:
+                        # If we're hitting the limits of double precision, stop iterating.
+                        err = 0
+                        p1 = np.array( [ x, y ] )
+                        break
             if not err < TOL:
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
 
