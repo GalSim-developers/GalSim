@@ -127,9 +127,14 @@ def test_Image_basic():
         assert im1.getBounds() == bounds
         assert im1.bounds == bounds
 
+        # Same thing if ncol,nrow are kwargs.  Also can give init_value
+        im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, init_value=23)
+        np.testing.assert_array_equal(im1b.array, 23.)
+        assert im1 == im1b
+
         # Adding on xmin, ymin allows you to set an origin other than (1,1)
         im1a = galsim.Image(ncol, nrow, dtype=array_type, xmin=4, ymin=7)
-        im1b = galsim.Image(ncol, nrow, dtype=array_type, xmin=0, ymin=0)
+        im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, xmin=0, ymin=0)
         assert im1a.getXMin() == 4
         assert im1a.getXMax() == ncol+3
         assert im1a.getYMin() == 7

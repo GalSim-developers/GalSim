@@ -280,6 +280,8 @@ class Image(with_metaclass(MetaImage, object)):
             else:
                 ncol = kwargs.pop('ncol',None)
                 nrow = kwargs.pop('nrow',None)
+                xmin = kwargs.pop('xmin',1)
+                ymin = kwargs.pop('ymin',1)
 
         # Pop off the other valid kwargs:
         dtype = kwargs.pop('dtype', None)
