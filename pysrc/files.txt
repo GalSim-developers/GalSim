@@ -31,3 +31,4 @@ CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp
 Silicon.cpp
+WCS.cpp
