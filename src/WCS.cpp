@@ -46,15 +46,15 @@ namespace galsim {
         tmv::ConstMatrixView<double> pvv(pvar + 16, 4, 4, 4, 1, tmv::NonConj);
 
         // Some temporary vectors/matrices we'll use within the loop below.
-        tmv::Vector<double> upow(4);
-        tmv::Vector<double> vpow(4);
-        tmv::Vector<double> pvu_vpow(4);
-        tmv::Vector<double> pvv_vpow(4);
-        tmv::Vector<double> dupow(4);
-        tmv::Vector<double> dvpow(4);
-        tmv::Matrix<double> j1(2,2);
-        tmv::Vector<double> diff(2);
-        tmv::Vector<double> duv(2);
+        tmv::SmallVector<double,4> upow;
+        tmv::SmallVector<double,4> vpow;
+        tmv::SmallVector<double,4> pvu_vpow;
+        tmv::SmallVector<double,4> pvv_vpow;
+        tmv::SmallVector<double,4> dupow;
+        tmv::SmallVector<double,4> dvpow;
+        tmv::SmallMatrix<double,2,2> j1;
+        tmv::SmallVector<double,2> diff;
+        tmv::SmallVector<double,2> duv;
 
         double prev_err = -1.;
         for (int iter=0; iter<MAX_ITER; ++iter) {
@@ -120,9 +120,9 @@ namespace galsim {
         tmv::Vector<double> aby_ypow(order+1);
         tmv::Vector<double> dxpow(order+1,0.);
         tmv::Vector<double> dypow(order+1,0.);
-        tmv::Matrix<double> j1(2,2);
-        tmv::Vector<double> diff(2);
-        tmv::Vector<double> dxy(2);
+        tmv::SmallMatrix<double,2,2> j1;
+        tmv::SmallVector<double,2> diff;
+        tmv::SmallVector<double,2> dxy;
 
         if (abpar) {
             setup_pow(x, y, xpow, ypow);
