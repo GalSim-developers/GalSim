@@ -109,40 +109,35 @@ namespace galsim {
         double x0 = x;
         double y0 = y;
 
-        tmv::ConstMatrixView<double> abx(abar, order+1, order+1, order+1, 1, tmv::NonConj);
-        tmv::ConstMatrixView<double> aby(abar + (order+1)*(order+1), order+1, order+1, order+1, 1, tmv::NonConj);
+        const int op1 = order+1;
+        tmv::ConstMatrixView<double> abx(abar, op1, op1, op1, 1, tmv::NonConj);
+        tmv::ConstMatrixView<double> aby(abar + op1*op1, op1, op1, op1, 1, tmv::NonConj);
         dbg<<"abx = "<<abx<<std::endl;
         dbg<<"aby = "<<aby<<std::endl;
 
-        tmv::Vector<double> xpow(order+1,1.);
-        tmv::Vector<double> ypow(order+1,1.);
-        tmv::Vector<double> abx_ypow(order+1);
-        tmv::Vector<double> aby_ypow(order+1);
-        tmv::Vector<double> dxpow(order+1,0.);
-        tmv::Vector<double> dypow(order+1,0.);
+        tmv::Vector<double> xpow(op1,1.);
+        tmv::Vector<double> ypow(op1,1.);
+        tmv::Vector<double> abx_ypow(op1);
+        tmv::Vector<double> aby_ypow(op1);
+        tmv::Vector<double> dxpow(op1,0.);
+        tmv::Vector<double> dypow(op1,0.);
         tmv::SmallMatrix<double,2,2> j1;
         tmv::SmallVector<double,2> diff;
         tmv::SmallVector<double,2> dxy;
 
         if (abpar) {
             setup_pow(x, y, xpow, ypow);
-            dbg<<"xpow = "<<xpow<<std::endl;
-            dbg<<"ypow = "<<ypow<<std::endl;
-
-            tmv::ConstMatrixView<double> abpx(abpar, order+1, order+1, order+1, 1, tmv::NonConj);
-            tmv::ConstMatrixView<double> abpy(abpar + (order+1)*(order+1), order+1, order+1, order+1, 1, tmv::NonConj);
+            tmv::ConstMatrixView<double> abpx(abpar, op1, op1, op1, 1, tmv::NonConj);
+            tmv::ConstMatrixView<double> abpy(abpar + op1*op1, op1, op1, op1, 1, tmv::NonConj);
             abx_ypow = abpx * ypow;
             aby_ypow = abpy * ypow;
-            dbg<<"dx = "<<xpow * abx_ypow<<std::endl;
-            dbg<<"dy = "<<xpow * aby_ypow<<std::endl;
             x += xpow * abx_ypow;
             y += xpow * aby_ypow;
-            dbg<<"x,y = "<<x<<" "<<y<<std::endl;
         }
 
         // We do this iteration even if we have AP and BP matrices, since the inverse
         // transformation is not always very accurate.
-        // The assumption here is that the A adn B matrices are correct and the AP and BP
+        // The assumption here is that the A and B matrices are correct and the AP and BP
         // matrices are estimated from them, and thus are approximate at some level.
         // Of course, in reality the A and B matrices are also approximate, but at least this
         // way the WCS is consistent transforming in the two directions.
@@ -153,8 +148,6 @@ namespace galsim {
         for (int iter=0; iter<MAX_ITER; ++iter) {
             dbg<<iter<<" x,y = "<<x<<" "<<y<<std::endl;
             setup_pow(x, y, xpow, ypow);
-            dbg<<"xpow = "<<xpow<<std::endl;
-            dbg<<"ypow = "<<ypow<<std::endl;
 
             abx_ypow = abx * ypow;
             aby_ypow = aby * ypow;
@@ -170,15 +163,10 @@ namespace galsim {
             dbg<<"err = "<<err<<std::endl;
 
             // If we are below tolerance, return this value
-            if (err < TOL) {
-                dbg<<"err < TOL\n";
-                return;
-            }
+            if (err < TOL) return;
             else {
                 for(int i=1; i<=order; ++i) dxpow[i] = i * xpow[i-1];
                 for(int i=1; i<=order; ++i) dypow[i] = i * ypow[i-1];
-                dbg<<"dxpow = "<<dxpow<<std::endl;
-                dbg<<"dypow = "<<dypow<<std::endl;
 
                 j1 << dxpow * abx_ypow,  xpow * abx * dypow,
                       dxpow * aby_ypow,  xpow * aby * dypow;
@@ -186,14 +174,11 @@ namespace galsim {
                 dbg<<"j1 = "<<j1<<std::endl;
                 diff << dx, dy;
                 dxy = diff / j1;
-                dbg<<"dp = "<<dxy<<std::endl;
+                dbg<<"dxy = "<<dxy<<std::endl;
                 x -= dxy[0];
                 y -= dxy[1];
                 // If we're hitting the limits of double precision, stop iterating.
-                if (std::abs(dxy[0]/x) < 1.e-15 && std::abs(dxy[1]/y) < 1.e-15) {
-                    dbg<<"dp too small\n";
-                    return;
-                }
+                if (std::abs(dxy[0]/x) < 1.e-15 && std::abs(dxy[1]/y) < 1.e-15) return;
             }
         }
 
