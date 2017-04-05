@@ -874,8 +874,17 @@ namespace galsim {
             // delta Var = (1 - 4*eta + 4*eta^2) * flux
             //           = (1-2eta)^2 * flux
             double mean = eta_factor*eta_factor * flux;
-            PoissonDeviate pd(u, mean);
-            double pd_val = pd() - mean + flux;
+            double pd_val;
+            if (mean > 1<<30) {
+                // Near 2**31, the boost poisson rng can wrap around to negative integers, which
+                // is bad.  But this high, the Gaussian approximation is extremely accurate, so
+                // just use that.
+                GaussianDeviate gd(u, 0., std::sqrt(mean));
+                pd_val = flux + gd();
+            } else {
+                PoissonDeviate pd(u, mean);
+                pd_val = pd() - mean + flux;
+            }
             dbg<<"Poisson flux = "<<pd_val<<", c.f. flux = "<<flux<<std::endl;
             double ratio = pd_val / flux;
             flux_scaling *= ratio;
@@ -885,6 +894,11 @@ namespace galsim {
         }
 
         if (N == 0.) N = mod_flux;
+        if (N < 0.) {
+            // I think we've guarded against this, but just in case, raise an exception.
+            throw std::runtime_error("N < 0 in drawShoot");
+        }
+
         double origN = N;
 
         // If not adding to the current image, zero it out:

@@ -188,7 +188,7 @@ Changes from v1.4.0 to v1.4.1
 Bug fix
 -------
 
-- Fixed an installation error when using both DYLD_LIBRARY_PATH and 
+- Fixed an installation error when using both DYLD_LIBRARY_PATH and
   DYLD_FALLBACK_LIBRARY_PATH.
 
 Changes from v1.4.1 to v1.4.2
@@ -197,7 +197,7 @@ Changes from v1.4.1 to v1.4.2
 Bug fix
 -------
 
-- Fixed bug when whitening noise in images based on COSMOS training datasets using 
+- Fixed bug when whitening noise in images based on COSMOS training datasets using
   the config functionality, and other minor config bug. (#792)
 
 Changes from v1.4.2 to v1.4.3
@@ -208,3 +208,13 @@ Bug fix
 
 - Fixed bug in the photon shooting code that could occasionally lead to an assert
   failure due to rounding errors if the numbers came out just right. (#866)
+
+Changes from v1.4.3 to v1.4.4
+=============================
+
+Bug fix
+-------
+
+- Fixed bug in the photon shooting code where poisson_flux=True could result in
+  a negative number of photons to be shot, which in turn could (depending on
+  the profile) lead to an assert failure.  (#881)
