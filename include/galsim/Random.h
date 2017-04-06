@@ -583,7 +583,7 @@ namespace galsim {
 
     private:
         boost::random::poisson_distribution<> _pd;
-        std::shared_ptr<boost::random::normal_distribution<> > _gd;
+        boost::shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
     /**
