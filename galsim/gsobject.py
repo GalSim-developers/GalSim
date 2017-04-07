@@ -1528,9 +1528,9 @@ class GSObject(object):
 
         Note that the image produced by `drawReal` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
-        integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.  This is equivalent to
-        method='no_pixel' in drawImage.
+        integrated over the area of the pixel.  This is equivalent to method='no_pixel' in
+        drawImage.  If you want to render a profile integrated over the pixel, you can convolve
+        with a Pixel first and draw that.
 
         @param image        The Image onto which to place the flux. [required]
         @param add_to_image Whether to add flux to the existing image rather than clear out
@@ -1668,9 +1668,9 @@ class GSObject(object):
 
         Note that the image produced by `drawFFT` represents the profile sampled at the center
         of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
-        integrated over the area of the pixel.  If you want to render a profile integrated over
-        the pixel, you can convolve with a Pixel first and draw that.  This is equivalent to
-        method='no_pixel' in drawImage.
+        integrated over the area of the pixel.  This is equivalent to method='no_pixel' in
+        drawImage.  If you want to render a profile integrated over the pixel, you can convolve
+        with a Pixel first and draw that.
 
         @param image        The Image onto which to place the flux. [required]
         @param add_to_image Whether to add flux to the existing image rather than clear out
