@@ -2392,6 +2392,7 @@ def test_complex_image():
         # Check picklability
         do_pickle(im1)
         do_pickle(im1_view)
+        do_pickle(im1_cview)
         do_pickle(im2)
         do_pickle(im2_view)
         do_pickle(im3_view)
