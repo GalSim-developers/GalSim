@@ -776,7 +776,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             for line in lines:
                 vals = line.split()
                 if len(vals) != 5:
-                    raise RuntimeError('wcstools xy2sky returned invalid result near %f,%f'%(x0,y0))
+                    raise RuntimeError('wcstools xy2sky returned invalid result near %s'%(xy1))
                 ra.append(float(vals[0]))
                 dec.append(float(vals[1]))
 
