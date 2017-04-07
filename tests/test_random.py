@@ -859,7 +859,6 @@ def test_poisson_highmean():
         np.testing.assert_allclose(
                 pn.getSkyLevel(), mean, rtol=1.e-8,
                 err_msg="PoissonNoise getSkyLevel returns wrong value")
-        continue
 
         # Check that the noise model really does produce this variance.
         big_im = galsim.Image(2048,2048,dtype=float)
