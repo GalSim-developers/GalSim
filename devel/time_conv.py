@@ -22,6 +22,7 @@ def main():
 
     pixel_scale = 0.02
     convolved_image = galsim.Image(256,256, scale=pixel_scale)
+    convolved_image.setCenter(0,0)
 
     # Do this once here to get the right kimage size/shape and wrap size.
     gal_prof = galsim.Sersic(n=4, half_light_radius=0.3, gsparams=gsparams)
