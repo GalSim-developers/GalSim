@@ -885,6 +885,11 @@ namespace galsim {
         }
 
         if (N == 0.) N = mod_flux;
+        if (N < 0.) {
+            // I think we've guarded against this, but just in case, raise an exception.
+            throw std::runtime_error("N < 0 in drawShoot");
+        }
+
         double origN = N;
 
         // If not adding to the current image, zero it out:

@@ -283,28 +283,18 @@ namespace galsim {
         template <typename T>
         void applyToView(ImageView<T> data) 
         {
-            // Above this many e's, assume Poisson distribution == Gaussian 
-            // The Gaussian deviate is about 20% faster than Poisson, and for high N
-            // they are virtually identical.
-            const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
 
             data += T(_sky_level);
 
             PoissonDeviate pd(*_rng, 1.); // will reset the mean for each pixel below.
-            GaussianDeviate gd(*_rng, 0., 1.);
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
                 for (ImIter it = data.rowBegin(y); it != ee; ++it) {
                     if (*it <= 0.) continue;
-                    if (*it < MAX_POISSON) {
-                        pd.setMean(*it);
-                        *it = T(pd());
-                    } else {
-                        gd.setSigma(sqrt(*it));
-                        *it = T(*it + gd());
-                    }
+                    pd.setMean(*it);
+                    *it = T(pd());
                 }
             }
 
@@ -448,10 +438,6 @@ namespace galsim {
         template <typename T>
         void applyToView(ImageView<T> data) 
         {
-            // Above this many e's, assume Poisson distribution == Gaussian 
-            // The Gaussian deviate is about 20% faster than Poisson, and for high N
-            // they are virtually identical.
-            const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
 
@@ -460,19 +446,13 @@ namespace galsim {
             // Add the Poisson noise first:
             if (_gain > 0.) {
                 PoissonDeviate pd(*_rng, 1.); // will reset the mean for each pixel below.
-                GaussianDeviate gd(*_rng, 0., 1.);
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it) {
                         if (*it <= 0.) continue;
                         double electrons = *it * _gain;
-                        if (electrons < MAX_POISSON) {
-                            pd.setMean(electrons);
-                            *it = T(pd() / _gain);
-                        } else {
-                            gd.setSigma(sqrt(electrons)/_gain);
-                            *it = T(*it + gd());
-                        }
+                        pd.setMean(electrons);
+                        *it = T(pd() / _gain);
                     }
                 }
             }
