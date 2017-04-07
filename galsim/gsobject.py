@@ -1644,7 +1644,6 @@ class GSObject(object):
 
         # Perform the fourier transform.
         real_image = kimage_wrap.irfft()
-        real_image.shift(real_image.bounds.center())
 
         # Add (a portion of) this to the original image.
         ar = real_image.subImage(image.bounds).array
