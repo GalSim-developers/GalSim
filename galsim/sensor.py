@@ -120,9 +120,9 @@ class SiliconSensor(Sensor):
         elif len(config_files) > 1:
             raise IOError("Multiple .cfg files found in dir %s"%self.full_dir)
         else:
-            config_file = config_files[0]
+            self.config_file = config_files[0]
 
-        self.config = self._read_config_file(config_file)
+        self.config = self._read_config_file(self.config_file)
         self._init_silicon()
 
     def _init_silicon(self):
@@ -139,7 +139,8 @@ class SiliconSensor(Sensor):
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
         if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
-            raise IOError("Vertex file %s does not match config file %s"%(vertex_file, config_file))
+            raise IOError("Vertex file %s does not match config file %s"
+                          % (vertex_file, self.config_file))
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data)
@@ -228,7 +229,7 @@ class SiliconSensor(Sensor):
             #This is two collecting gates
             Vdiff = (Vparallel_lo + 2.0 * Vparallel_hi) / 3.0 - Vbb
         else: # pragma: no cover
-            return 0.0;
+            return 0.0
 
         # 0.026 is kT/q at room temp (298 K)
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff) * SensorThickness

@@ -1539,7 +1539,7 @@ class GSObject(object):
         @returns The total flux drawn inside the image bounds.
         """
         if image.wcs is None or not image.wcs.isPixelScale():
-            raise ValueError("drawPhot requires an image with a PixelScale wcs")
+            raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ]:
             return self.SBProfile.draw(image.image.view(), image.scale, add_to_image)

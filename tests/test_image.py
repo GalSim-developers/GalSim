@@ -1996,9 +1996,6 @@ def test_BoundsI_init_with_non_pure_ints():
 def test_Image_constructor():
     """Check that the Image constructor that takes NumPy array does not mangle input.
     """
-    from sys import byteorder
-    native_byteorder = {'big': '>', 'little': '<'}[byteorder]
-
     # Loop over types.
     for i in range(ntypes):
 
@@ -3028,13 +3025,13 @@ def test_bin():
     np.testing.assert_almost_equal(im5.scale, im2.scale, 6, "round trip resulted in wrong scale")
 
     # Next do nx != ny.  And wcs = JacobianWCS
-    wcs1 = galsim.JacobianWCS(0.6, 0.14, 0.15, 0.7);
+    wcs1 = galsim.JacobianWCS(0.6, 0.14, 0.15, 0.7)
     im1 = obj.drawImage(nx=11, ny=15, wcs=wcs1, dtype=float)
     im1.wcs = im1.wcs.withOrigin(im1.trueCenter(), galsim.PositionD(200,300))
     center1 = im1.wcs.toWorld(im1.trueCenter())
     print('center1 = ',center1)
 
-    wcs2 = galsim.JacobianWCS(0.2, 0.07, 0.05, 0.35);
+    wcs2 = galsim.JacobianWCS(0.2, 0.07, 0.05, 0.35)
     im2 = obj.drawImage(nx=33, ny=30, wcs=wcs2, dtype=float)
     im2.wcs = im2.wcs.withOrigin(im2.trueCenter(), galsim.PositionD(200,300))
     center2 = im2.wcs.toWorld(im2.trueCenter())

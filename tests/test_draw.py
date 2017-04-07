@@ -45,7 +45,6 @@ def CalculateScale(im):
         T = complex
     else:
         T = float
-    a = im.array.astype(T)
     flux = im.array.astype(T).sum()
     mx = (x * im.array.astype(T)).sum() / flux
     my = (y * im.array.astype(T)).sum() / flux
@@ -499,7 +498,7 @@ def test_drawKImage():
                                    "Measured wrong scale after obj.drawKImage()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0));
+    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0))
     np.testing.assert_almost_equal(im1(0,0), test_flux, 2,
                                    "obj.drawKImage() produced image with wrong flux")
     # Imaginary component should all be 0.
@@ -988,7 +987,7 @@ def test_shoot():
     # 100,000 and then was left with 1, but rounding errors (since it is a double, not an int)
     # was 1 - epsilon, and it ended up in a place where it shouldn't have been able to get to
     # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
-    obj =  galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
+    obj = galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
     obj = obj.withFlux(100001)
     image1 = galsim.ImageF(32,32, init_value=100)
     rng = galsim.BaseDeviate(1234)
@@ -1137,7 +1136,6 @@ def test_fft():
     N = 1162  # NB. It is useful to have this come out not a multiple of 4, since some of the
               #     calculation needs to be different when N/2 is odd.
     nyq_scale = obj.nyquistScale()
-    stepk = obj.stepK()
 
     # If we inverse_fft the above automatic image, it should match the automatic real image
     # for method = 'sb' and use_true_center=False.

@@ -1174,7 +1174,7 @@ def test_airy_radii():
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverD")
     except ImportError:
@@ -1829,10 +1829,10 @@ def test_moffat_radii():
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
     except ImportError:
         pass
 
@@ -2116,9 +2116,9 @@ def test_kolmogorov_radii():
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius");
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverR0");
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getLamOverR0")
     except ImportError:
         pass
 

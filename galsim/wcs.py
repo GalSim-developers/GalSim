@@ -752,8 +752,6 @@ class EuclideanWCS(BaseWCS):
         # Calculate the Jacobian using finite differences for the derivatives.
         x0 = image_pos.x - self.x0
         y0 = image_pos.y - self.y0
-        u0 = self._u(x0,y0)
-        v0 = self._v(x0,y0)
 
         # Use dx,dy = 1 pixel for numerical derivatives
         dx = 1
@@ -1195,22 +1193,22 @@ class ShearWCS(LocalWCS):
     def _u(self, x, y):
         u = x * (1.-self._g1) - y * self._g2
         u *= self._gfactor * self._scale
-        return u;
+        return u
 
     def _v(self, x, y):
         v = y * (1.+self._g1) - x * self._g2
         v *= self._gfactor * self._scale
-        return v;
+        return v
 
     def _x(self, u, v):
         x = u * (1.+self._g1) + v * self._g2
         x *= self._gfactor / self._scale
-        return x;
+        return x
 
     def _y(self, u, v):
         y = v * (1.-self._g1) + u * self._g2
         y *= self._gfactor / self._scale
-        return y;
+        return y
 
     def _profileToWorld(self, image_profile):
         return image_profile.dilate(self._scale).shear(-self.shear)
@@ -1966,7 +1964,7 @@ def _readFuncFromHeader(letter, header):
         import cPickle as pickle
     except ImportError:
         import pickle
-    import types, marshal, base64, types
+    import types, marshal, base64
     if 'GS_'+letter+'_STR' in header:
         # Read in a regular string
         n = header["GS_" + letter + "_N"]

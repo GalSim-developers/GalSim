@@ -10,7 +10,7 @@ def main():
                                folding_threshold=0.1,
                                kvalue_accuracy=1e-3,
                                stepk_minimum_hlr=2.5,)
-    
+
     # Note - we actually use an interpolated image instead; just putting this in
     # so you can run the code without needing that file
     psf_prof = galsim.OpticalPSF(lam=725, # nm
@@ -32,7 +32,7 @@ def main():
     # Draw the PSF onto the kimage.
     psf_prof._drawKImage(psf_kimage)
 
-    # Use the same size/shape for the galay part.
+    # Use the same size/shape for the galaxy part.
     gal_kimage = psf_kimage.copy()
     convolved_image2 = convolved_image.copy()
 
@@ -73,5 +73,3 @@ if __name__ == "__main__":
     pr.disable()
     ps = pstats.Stats(pr).sort_stats('time')
     ps.print_stats(20)
-
-

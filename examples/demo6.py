@@ -37,9 +37,9 @@ With DS9, this can be viewed with a slider to quickly move through the different
 
 New features introduced in this demo:
 
-- real_cat = galsim.RealGalaxyCatalog(file_name, dir, flux)
+- real_cat = galsim.RealGalaxyCatalog(file_name, dir)
 - obj = galsim.Gaussian(fwhm, flux)
-- obj = galsim.RealGalaxy(real_cat, index)
+- obj = galsim.RealGalaxy(real_cat, index, flux)
 - obj = obj.rotate(theta)
 - obj = obj.magnify(mu)
 - image += background
@@ -51,7 +51,6 @@ New features introduced in this demo:
 import sys
 import os
 import math
-import numpy
 import logging
 import time
 import galsim
