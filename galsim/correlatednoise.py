@@ -1517,7 +1517,7 @@ class CovarianceSpectrum(object):
     Fourier mode amplitudes in different components of a `ChromaticSum`.  Note that the covariance
     in question exists between different SED-components of the `ChromaticSum`, and not between
     different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally
-    for `RealChromaticGalaxy`s (see devel/modules/CGNotes.pdf for more details).
+    for `ChromaticRealGalaxy`s (see devel/modules/CGNotes.pdf for more details).
 
     @param Sigma   A dictionary whose keys are tuples numerically indicating a pair of ChromaticSum
                    components whose Fourier mode amplitude covariances are described by the

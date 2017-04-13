@@ -979,7 +979,7 @@ class ChromaticRealGalaxy(ChromaticSum):
     >>> assert noise1 != obj.noise
 
     @param real_galaxy_catalogs  A list of `RealGalaxyCatalog` objects from which to create
-                            `RealChromaticGalaxy`s.  Each catalog should represent the same set of
+                            `ChromaticRealGalaxy`s.  Each catalog should represent the same set of
                             galaxies, and in the same order, just imaged through different filters.
                             Note that the number of catalogs must be equal to or larger than the
                             number of SEDs.
@@ -1321,10 +1321,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                      self._normalize_area, self._gsparams))
 
     def __str__(self):
-        return "galsim.RealChromaticGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
+        return "galsim.ChromaticRealGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
 
     def __repr__(self):
-        return ("galsim.RealChromaticGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
+        return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
                 "normalize_area=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
                                                    self._rng, self._k_interpolant,
                                                    self._normalize_area, self._gsparams))
