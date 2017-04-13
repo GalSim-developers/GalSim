@@ -454,8 +454,8 @@ class COSMOSCatalog(object):
         @param index            Index of the desired galaxy in the catalog for which a GSObject
                                 should be constructed.  You may also provide a list or array of
                                 indices, in which case a list of objects is returned. If None,
-                                then a random galaxy (or more: see n_random kwarg) is chosen, 
-                                correcting for catalog-level selection effects if weights are 
+                                then a random galaxy (or more: see n_random kwarg) is chosen,
+                                correcting for catalog-level selection effects if weights are
                                 available. [default: None]
         @param gal_type         Either 'real' or 'parametric'.  This determines which kind of
                                 galaxy model is made. [If catalog was loaded with `use_real=False`,
@@ -597,7 +597,7 @@ class COSMOSCatalog(object):
         # Set up the random number generator.
         if rng is None:
             rng = galsim.BaseDeviate()
-        
+
         if hasattr(self, 'real_cat') and hasattr(self.real_cat, 'weight'):
             use_weights = self.real_cat.weight[self.orig_index]
         else:
@@ -642,7 +642,7 @@ class COSMOSCatalog(object):
                 # exposure, we use this zeropoint directly.
                 zp = 25.94
                 self._bandpass = galsim.Bandpass(
-                    os.path.join(galsim.meta_data.share_dir, 'bandpasses/ACS_wfc_F814W.dat'),
+                    os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'ACS_wfc_F814W.dat'),
                     wave_type='nm').withZeropoint(zp)
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
@@ -652,13 +652,16 @@ class COSMOSCatalog(object):
                 # too seriously.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_E_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_E_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_Scd_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_Scd_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_Sbc_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_Sbc_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda')]
 
         gal_list = []

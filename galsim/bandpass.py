@@ -395,7 +395,7 @@ class Bandpass(object):
             elif zeropoint.upper()=='VEGA':
                 # Use vega spectrum for SED
                 import os
-                vegafile = os.path.join(galsim.meta_data.share_dir, "SEDs/vega.txt")
+                vegafile = os.path.join(galsim.meta_data.share_dir, "SEDs", "vega.txt")
                 sed = galsim.SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
