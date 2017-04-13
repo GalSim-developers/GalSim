@@ -89,7 +89,7 @@ namespace galsim {
         std::vector<double>& _vx;
         std::vector<double>& _vy;
         std::vector<double>& _vf;
-        const double& _maxFlux;
+        const double _maxFlux;
         UniformDeviate _ud;
     };
 

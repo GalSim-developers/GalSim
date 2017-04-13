@@ -1851,7 +1851,7 @@ class GSObject(object):
         @returns PhotonArray.
         """
         ud = galsim.UniformDeviate(rng)
-        return self.SBProfile.shoot(n_photons, ud)
+        return self.SBProfile.shoot(int(n_photons), ud)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None,
                    add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
