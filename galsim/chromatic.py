@@ -508,9 +508,10 @@ class ChromaticObject(object):
         # Note: Don't do image = integral and return that for add_to_image==False.
         #       Remember that python doesn't actually do assignments, so this won't update the
         #       original image if the user provided one.  The following procedure does work.
-        if not add_to_image:
-            image.setZero()
-        image += image_int
+        if add_to_image:
+            image += image_int
+        else:
+            image.copyFrom(image_int)
         return image
 
     def evaluateAtWavelength(self, wave):
