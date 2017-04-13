@@ -2185,16 +2185,14 @@ class ChromaticConvolution(ChromaticObject):
     def noise(self):
         # Condition for being able to propagate noise:
         # Exactly one of the convolutants has a .covspec attribute.
-        has_covspec = [hasattr(obj, 'covspec') for obj in self.objlist]
-        ncovspec = sum(has_covspec)
-        if ncovspec != 1:
+        covspecs = [ obj.covspec for obj in self.objlist if hasattr(obj, 'covspec') ]
+        if len(covspecs) != 1:
             raise TypeError("Cannot compute noise for ChromaticConvolution for which number "
                             "of convolutants with covspec attribute is not 1.")
         if not hasattr(self, '_last_bp'):
             raise TypeError("Cannot compute noise for ChromaticConvolution until after drawImage "
                             "has been called.")
-
-        covspec = self.objlist[has_covspec.index(True)].covspec
+        covspec = covspecs[0]
         other = galsim.Convolve([obj for obj in self.objlist if not hasattr(obj, 'covspec')])
         return covspec.toNoise(self._last_bp, other, self._last_wcs)  # rng=?
 
