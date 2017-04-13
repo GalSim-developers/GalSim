@@ -197,9 +197,9 @@ class Bandpass(object):
         if self._tp is not None:
             pass
         elif isinstance(self._orig_tp, basestring):
-            import os
-            if os.path.isfile(self._orig_tp):
-                self._tp = galsim.LookupTable(file=self._orig_tp, interpolant='linear')
+            isfile, filename = galsim.utilities.check_share_file(self._orig_tp, 'bandpasses')
+            if isfile:
+                self._tp = galsim.LookupTable(file=filename, interpolant='linear')
             else:
                 # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if self.red_limit is not None:

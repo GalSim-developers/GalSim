@@ -224,8 +224,9 @@ def test_Bandpass_div():
 def test_Bandpass_wave_type():
     """Check that `wave_type='ang'` works in Bandpass.__init__
     """
+    # Also check with and without explicit directory
     a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='nm')
-    a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
+    a1 = galsim.Bandpass('LSST_r.dat', wave_type='ang')
 
     np.testing.assert_approx_equal(a0.red_limit, a1.red_limit*10,
                                    err_msg="Bandpass.red_limit doesn't respect wave_type")

@@ -328,8 +328,7 @@ def test_SED_atRedshift():
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
-    a = galsim.SED(os.path.join(sedpath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
-                   flux_type='flambda')
+    a = galsim.SED('CWW_Scd_ext.sed', wave_type='nanometers', flux_type='flambda')
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
         w1 = b.wave_list[0]

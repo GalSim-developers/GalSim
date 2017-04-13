@@ -1284,8 +1284,8 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     if weight is not None:
         # We need some sanity checks here in case people passed in weird values.
         if len(weight) != n_choices:
-            raise ValueError("Array of weights has wrong length: %d instead of %d"%\
-                                 (len_weight,n_choices))
+            raise ValueError("Array of weights has wrong length: %d instead of %d"%
+                                 (len(weight), n_choices))
         if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
                 np.any(np.isinf(weight)):
             raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
@@ -1331,3 +1331,28 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
         return index, n_rng_calls
     else:
         return index
+
+
+def check_share_file(filename, subdir):
+    """Find SED or Bandpass file, possibly adding share dir or raising deprecation warning if old
+    share dir was specified.
+    """
+    from .deprecated import depr
+    import os
+
+    if os.path.isfile(filename):
+        return True, filename
+
+    new_filename = os.path.join(galsim.meta_data.share_dir, subdir, filename)
+    if os.path.isfile(new_filename):
+        return True, new_filename
+
+    dirname, basename = os.path.split(filename)
+    new_filename = os.path.join(dirname, subdir, basename)
+    if os.path.isfile(new_filename):
+        depr("Filename os.path.join(galsim.meta_data.share_dir, {0})".format(basename),
+             1.5,
+             "os.path.join(galsim.meta_data.share_dir, '{0}', {1})".format(subdir, basename))
+        return True, new_filename
+
+    return False, ''

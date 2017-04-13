@@ -120,6 +120,8 @@ def test_dep_bandpass():
     np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3.0, 4.4, 5.5],
                                          err_msg="wrong wave_list in Bandpass.__rdiv__")
 
+    check_dep(galsim.Bandpass, os.path.join(galsim.meta_data.share_dir, 'LSST_r.dat'), 'nm')
+
 
 @timer
 def test_dep_base():
