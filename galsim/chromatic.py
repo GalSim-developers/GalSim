@@ -1681,7 +1681,12 @@ class ChromaticTransformation(ChromaticObject):
         noise = self.original.noise
         jac = self._jac
         flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
-        return noise.transform(jac[0,0], jac[0,1], jac[1,0], jac[1,1])*flux_ratio**2
+        return galsim.correlatednoise._BaseCorrelatedNoise(
+                noise.rng,
+                galsim._Transform(noise._profile,
+                                  jac[0,0], jac[0,1], jac[1,0], jac[1,1],
+                                  flux_ratio=flux_ratio**2),
+                noise.wcs)
 
 
 class ChromaticSum(ChromaticObject):
