@@ -1034,8 +1034,8 @@ class ChromaticRealGalaxy(ChromaticSum):
     """
     def __init__(self, real_galaxy_catalogs=None, SEDs=None, index=None, id=None, random=False,
                  rng=None, k_interpolant=None, maxk=None, pad_factor=4., normalize_area=False,
-                 _imgs=None, _bands=None, _xis=None, _PSFs=None,  # hidden args
-                 gsparams=None, logger=None):
+                 gsparams=None, logger=None,
+                 _imgs=None, _bands=None, _xis=None, _PSFs=None):  # hidden args
         import numpy as np
 
         if rng is None:
