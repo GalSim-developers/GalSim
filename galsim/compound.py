@@ -1144,8 +1144,8 @@ class RandomWalk(Sum):
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
 
-        gsobj = galsim._galsim.SBAdd(self._gaussians, gsparams)
-        galsim.GSObject.__init__(self, gsobj)
+        sbp = galsim._galsim.SBAdd(self._gaussians, gsparams)
+        galsim.GSObject.__init__(self, sbp)
 
     def calculateHLR(self):
         """

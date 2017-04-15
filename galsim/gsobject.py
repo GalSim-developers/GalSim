@@ -206,16 +206,10 @@ class GSObject(object):
                   'range_division_for_extrema' : int,
                   'small_fraction_of_flux' : float
                 }
-    def __init__(self, obj):
-        # This guarantees that all GSObjects have an SBProfile
-        if isinstance(obj, GSObject):
-            self.SBProfile = obj.SBProfile
-            if hasattr(obj,'noise'):
-                self.noise = obj.noise
-        elif isinstance(obj, _galsim.SBProfile):
-            self.SBProfile = obj
-        else:
-            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
+    def __init__(self, sbp):
+        if not isinstance(sbp, _galsim.SBProfile):
+            raise TypeError("GSObject must be initialized with an SBProfile!")
+        self.SBProfile = sbp
 
     # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
     @property

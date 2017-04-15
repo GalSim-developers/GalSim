@@ -1066,7 +1066,6 @@ def test_uncorrelated_noise_tracking():
     print('new_int_im.noise = ',new_int_im.noise)
     new_int_im = galsim.Convolve(new_int_im, orig_object)
     print('new_int_im.noise => ',new_int_im.noise)
-    new_int_im = galsim.GSObject(new_int_im)  # A copy made this way should copy the noise attr.
     final_noise = new_int_im.noise
 
     # Now, make a correlated noise object directly based on a realization of the original

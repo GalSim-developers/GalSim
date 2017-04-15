@@ -10,6 +10,8 @@ API Changes
   enable former behavior (#640)
 - Moved packaged `SED` and `Bandpass` files from `.../share/galsim/` to
   `.../share/galsim/SEDs` and `.../share/galsim/bandpasses` respectively.
+  (#640)
+- Removed option to pass subclass of GSObject to GSObject initializer. (#640)
 - Changed the dimensions of `SED` from [photons/wavelength-interval] to either
   [photons/wavelength-interval/area/time] or [1] (dimensionless).
   `ChromaticObject`s representing stars or galaxies take SEDs with the former

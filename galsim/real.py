@@ -315,7 +315,7 @@ class RealGalaxy(GSObject):
 
         # Initialize the SBProfile attribute
         GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams))
+            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams).SBProfile)
         if logger:
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
@@ -382,7 +382,7 @@ class RealGalaxy(GSObject):
         self.__dict__ = d
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=self._gsparams)
         GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams))
+            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams).SBProfile)
 
 
 
