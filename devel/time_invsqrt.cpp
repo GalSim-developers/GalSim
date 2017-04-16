@@ -191,12 +191,14 @@ void fmath_exp_ps(float* x, float* y)
 
 void time_exp()
 {
-    long n = 5000;
+    long n = 10000;
     float input[n], truth[n], e1[n], e2[n], e3[n], e4[n];
 
-    for (long i=0; i<n; ++i) {
-        input[i] = i/100.;
+    for (long i=0; i<n; i+=2) {
+        input[i] = -i/200.;
         truth[i] = exp(input[i]);
+        input[i+1] = i/200.;
+        truth[i+1] = exp(input[i+1]);
     }
     printf("max arg = %lf, exp = %le\n",input[n-1],truth[n-1]);
 
