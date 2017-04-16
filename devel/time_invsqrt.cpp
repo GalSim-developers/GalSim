@@ -110,7 +110,7 @@ double time_loop(long n, float* input, float* output, void (*func)(float*,float*
     return t;
 }
 
-double max_err(long n, float* val, float* truth, bool rel_err=false)
+double max_err(long n, float* val, double* truth, bool rel_err=false)
 {
     double max = 0.;
     long imax = 0;
@@ -127,7 +127,8 @@ void time_sqrt()
 {
     // We'll be using this as invsqrt((1+k^2)^3), so arg >= 1
     long n = 100000;
-    float input[n], truth[n], r1[n], r2[n], r3[n], r4[n], r5[n], r6[n], r7[n], r8[n], r9[n];
+    float input[n], r1[n], r2[n], r3[n], r4[n], r5[n], r6[n], r7[n], r8[n], r9[n];
+    double truth[n];
 
     for (long i=0; i<n; ++i) {
         input[i] = 1.0 + i/100.;
@@ -192,7 +193,8 @@ void fmath_exp_ps(float* x, float* y)
 void time_exp()
 {
     long n = 10000;
-    float input[n], truth[n], e1[n], e2[n], e3[n], e4[n];
+    float input[n], e1[n], e2[n], e3[n], e4[n];
+    double truth[n];
 
     for (long i=0; i<n; i+=2) {
         input[i] = -i/200.;
