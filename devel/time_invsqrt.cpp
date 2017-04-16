@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <xmmintrin.h>
 #include <sys/time.h>
+#include "../include/galsim/fmath/fmath.hpp"
 
 
 void sse_rsqrt(float* x, float* y)
@@ -109,17 +110,20 @@ double time_loop(long n, float* input, float* output, void (*func)(float*,float*
     return t;
 }
 
-double max_err(long n, float* val, float* truth)
+double max_err(long n, float* val, float* truth, bool rel_err=false)
 {
     double max = 0.;
+    long imax = 0;
     for (long i=0; i<n; ++i) {
         double err = fabs(val[i] - truth[i]);
-        if (err > max) max = err;
+        if (rel_err) err /= fabs(truth[i]);
+        if (err > max) { max = err; imax = i; }
     }
+    //printf("max at i=%ld: val=%lf, truth=%lf\n",imax,val[imax],truth[imax]);
     return max;
 }
 
-int main()
+void time_sqrt()
 {
     // We'll be using this as invsqrt((1+k^2)^3), so arg >= 1
     long n = 100000;
@@ -160,5 +164,60 @@ int main()
     printf("sse4 rsqrt:   %g msec, max error = %g\n", t7*1.e3, err7);
     printf("sse4 1 nr:    %g msec, max error = %g\n", t8*1.e3, err8);
     printf("sse4 invsqrt: %g msec, max error = %g\n", t9*1.e3, err9);
+}
 
+void std_exp(float* x, float* y)
+{
+    *y = exp(*x);
+}
+
+void fmath_exp(float* x, float* y)
+{
+    *y = fmath::exp(*x);
+}
+
+void fmath_expd(float* x, float* y)
+{
+    *y = fmath::expd(*x);
+}
+
+void fmath_exp_ps(float* x, float* y)
+{
+    __m128 x4 = _mm_loadu_ps(x);
+    __m128 y4 = fmath::exp_ps(x4);
+    _mm_storeu_ps(y, y4);
+}
+
+
+void time_exp()
+{
+    long n = 5000;
+    float input[n], truth[n], e1[n], e2[n], e3[n], e4[n];
+
+    for (long i=0; i<n; ++i) {
+        input[i] = i/100.;
+        truth[i] = exp(input[i]);
+    }
+    printf("max arg = %lf, exp = %le\n",input[n-1],truth[n-1]);
+
+    double t1 = time_loop(n, input, e1, &std_exp, 1);
+    double t2 = time_loop(n, input, e2, &fmath_exp, 1);
+    double t3 = time_loop(n, input, e3, &fmath_expd, 1);
+    double t4 = time_loop(n, input, e4, &fmath_exp_ps, 4);
+
+    double err1 = max_err(n, e1, truth, true);
+    double err2 = max_err(n, e2, truth, true);
+    double err3 = max_err(n, e3, truth, true);
+    double err4 = max_err(n, e4, truth, true);
+
+    printf("std::exp      %g msec, max error = %g\n", t1*1.e3, err1);
+    printf("fmath::exp    %g msec, max error = %g\n", t2*1.e3, err2);
+    printf("fmath::expd   %g msec, max error = %g\n", t3*1.e3, err3);
+    printf("fmath::exp_ps %g msec, max error = %g\n", t4*1.e3, err4);
+}
+
+int main()
+{
+    //time_sqrt();
+    time_exp();
 }
