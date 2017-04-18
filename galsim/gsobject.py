@@ -211,6 +211,10 @@ class GSObject(object):
             raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = sbp
 
+    @galsim.utilities.lazy_property
+    def noise(self):
+        return None
+
     # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
     @property
     def separable(self): return True
@@ -621,11 +625,7 @@ class GSObject(object):
         if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, galsim.SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
-        new_obj = galsim.Transform(self, flux_ratio=flux_ratio)
-
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
-            new_obj.noise = self.noise * flux_ratio**2
-        return new_obj
+        return galsim.Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
@@ -647,11 +647,7 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale)
-        return new_obj
+        return galsim.Transform(self, jac=[scale, 0., 0., scale])
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given `scale` factor, while preserving
@@ -667,11 +663,7 @@ class GSObject(object):
         @returns the dilated object.
         """
         # equivalent to self.expand(scale) * (1./scale**2)
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale) * scale**-4
-        return new_obj
+        return galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -720,11 +712,7 @@ class GSObject(object):
             raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
             shear = galsim.Shear(**kwargs)
-        new_obj = galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.shear(shear)
-        return new_obj
+        return galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
 
     def lens(self, g1, g2, mu):
         """Create a version of the current object with both a lensing shear and magnification
@@ -757,11 +745,7 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
-        new_obj = galsim.Transform(self, jac=[c, -s, s, c])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.rotate(theta)
-        return new_obj
+        return galsim.Transform(self, jac=[c, -s, s, c])
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -789,10 +773,7 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
-        return new_obj
+        return galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
@@ -826,11 +807,7 @@ class GSObject(object):
         @returns the shifted object.
         """
         offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        new_obj = galsim.Transform(self, offset=offset)
-
-        if hasattr(self,'noise'):
-            new_obj.noise = self.noise
-        return new_obj
+        return galsim.Transform(self, offset=offset)
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()

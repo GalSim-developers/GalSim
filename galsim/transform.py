@@ -147,6 +147,20 @@ class Transformation(galsim.GSObject):
         """
         return self.SBProfile.getFluxScaling()
 
+    @galsim.utilities.lazy_property
+    def noise(self):
+        if self.original.noise is None:
+            return None
+        else:
+            jac = self.SBProfile.getJac()
+            flux_ratio = self.SBProfile.getFluxScaling()
+            return galsim.correlatednoise._BaseCorrelatedNoise(
+                    self.original.noise.rng,
+                    galsim._Transform(self.original.noise._profile,
+                                      jac[0], jac[1], jac[2], jac[3],
+                                      flux_ratio=flux_ratio**2),
+                    self.original.noise.wcs)
+
     @property
     def original(self): return self._original
     @property

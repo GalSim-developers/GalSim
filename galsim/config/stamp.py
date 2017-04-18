@@ -673,7 +673,7 @@ class StampBuilder(object):
         """
         # If the object has a noise attribute, then check if we need to do anything with it.
         current_var = 0.  # Default if not overwritten
-        if prof is not None and hasattr(prof,'noise'):
+        if prof is not None and prof.noise is not None:
             if 'image' in base and 'noise' in base['image']:
                 noise = base['image']['noise']
                 if 'whiten' in noise:
@@ -896,4 +896,3 @@ def RegisterStampType(stamp_type, builder):
     valid_stamp_types[stamp_type] = builder
 
 RegisterStampType('Basic', StampBuilder())
-
