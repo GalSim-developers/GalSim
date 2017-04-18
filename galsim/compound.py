@@ -1045,7 +1045,7 @@ _galsim.SBFourierSqrt.__repr__ = lambda self: \
         'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()
 
 
-class RandomWalk(Sum):
+class RandomWalk(galsim.GSObject):
     """
 
     A class for generating a set of point sources distributed using a random
@@ -1159,7 +1159,6 @@ class RandomWalk(Sum):
         hlr=np.median(r)
 
         return hlr
-
 
     @property
     def input_half_light_radius(self):
@@ -1301,7 +1300,3 @@ class RandomWalk(Sum):
             gsparams=repr(self._input_gsparams),
         )
         return rep
-
-    def _prepareDraw(self):
-        # RandomWalk never wraps a PhaseScreenPSF, so no need to prepare anything.
-        pass
