@@ -15,11 +15,11 @@ API Changes
 - Added restrictions to `ChromaticObject`s and `SED`s consistent with
   dimensional analysis.  E.g., only `ChromaticObject`s with dimensionful SEDs
   can be drawn. (#789)
-- Changed `drawKImage` to return a single ImageC instance rather than two
+- Changed `drawKImage` to return a single ImageCD instance rather than two
   ImageD instances (for real and imag parts).  The old syntax of
   `re, im = obj.drawKImage(...)` will still work, but it will raise a
   deprecation warning. (#799)
-- Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
+- Changed `InterpolatedKImage` to take an ImageCD rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
 - Dynamic PhaseScreenPSFs now require an explicit start time and time step.
@@ -102,8 +102,9 @@ New Features
 - Allow selection of random galaxies from a RealGalaxyCatalog or COSMOSCatalog
   in a way that accounts for any selection effects in catalog creation, using
   the 'weight' entries in the catalog. (#787)
-- Added possibility of using `dtype=complex` for Images, the shorthand alias
-  for which is called ImageC. (#799)
+- Added possibility of using `dtype=complex` or `numpy.complex128` for Images,
+  the shorthand alias for which is ImageCD. Also `dtype=numpy.complex64` is
+  allowed, the alias for which is ImageCF. (#799, #873)
 - Added `maxSB()` method to GSObjects to return an estimate of the maximum
   surface brightness.  For analytic profiles, it returns the correct value,
   but for compound objects (convolutions in particular), it cannot know the
