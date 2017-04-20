@@ -175,7 +175,12 @@ def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
     """
     ud = galsim.UniformDeviate(rng)
     max_flux = float(max_flux)
-    return galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+    if (max_flux <= 0):
+        raise ValueError("max_flux must be positive")
+    photons = galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+    if image.scale != 1.:
+        photons.scaleXY(image.scale)
+    return photons
 
 PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
 

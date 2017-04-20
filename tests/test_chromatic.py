@@ -119,7 +119,7 @@ def test_draw_add_commutativity():
     # final profile
     final = galsim.Convolve([GS_gal, PSF])
     GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
-    GS_kimage = galsim.ImageC(stamp_size, stamp_size, scale=pixel_scale)
+    GS_kimage = galsim.ImageCD(stamp_size, stamp_size, scale=pixel_scale)
     t2 = time.time()
     GS_image = final.drawImage(image=GS_image)
     GS_kimage = final.drawKImage(image=GS_kimage)
@@ -161,7 +161,7 @@ def test_draw_add_commutativity():
     # final profile
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
-    chromatic_kimage = galsim.ImageC(stamp_size, stamp_size, scale=pixel_scale)
+    chromatic_kimage = galsim.ImageCD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
     integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
@@ -1133,7 +1133,7 @@ def test_analytic_integrator():
     gal1 = galsim.Gaussian(fwhm=1.0) * sed1
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
-    kimage1 = galsim.ImageC(32, 32, scale=0.2)
+    kimage1 = galsim.ImageCD(32, 32, scale=0.2)
     assert len(band1.wave_list) == 0
     assert len(sed1.wave_list) == 0
     final1.drawImage(band1, image=image1)
@@ -1150,7 +1150,7 @@ def test_analytic_integrator():
     gal2 = galsim.Gaussian(fwhm=1.0) * sed2
     final2 = galsim.Convolve(gal2, psf)
     image2 = galsim.ImageD(32, 32, scale=0.2)
-    kimage2 = galsim.ImageC(32, 32, scale=0.2)
+    kimage2 = galsim.ImageCD(32, 32, scale=0.2)
     assert len(band2.wave_list) == 0
     assert len(sed2.wave_list) != 0
     final2.drawImage(band1, image=image2)
@@ -1162,7 +1162,7 @@ def test_analytic_integrator():
     gal3 = galsim.Gaussian(fwhm=1.0) * sed3
     final3 = galsim.Convolve(gal3, psf)
     image3 = galsim.ImageD(32, 32, scale=0.2)
-    kimage3 = galsim.ImageC(32, 32, scale=0.2)
+    kimage3 = galsim.ImageCD(32, 32, scale=0.2)
     assert len(band3.wave_list) != 0
     assert len(sed3.wave_list) == 0
     final3.drawImage(band3, image=image3)

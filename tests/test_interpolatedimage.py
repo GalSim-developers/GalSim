@@ -1028,7 +1028,7 @@ def test_kroundtrip():
     # Check that we can construct an interpolatedKImage without a wcs.
     kim_c = a.drawKImage(scale=1)
     c = galsim.InterpolatedKImage(kim_c)
-    d = galsim.InterpolatedKImage(galsim.ImageC(kim_c.array))
+    d = galsim.InterpolatedKImage(galsim.ImageCD(kim_c.array))
     assert c == d, "Failed to construct InterpolatedKImage without wcs."
 
     # Try some (slightly larger maxk) non-even kimages:

@@ -671,7 +671,7 @@ class _BaseCorrelatedNoise(object):
         If `scale` is not set, and `image` has no `wcs` attribute, then this will use the
         wcs of the CorrelatedNoise object, which must be a `PixelScale`.
 
-        @param image        If provided, this will be the ImageC onto which to draw the k-space
+        @param image        If provided, this will be the Image onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
                             created.  If `image` is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
@@ -1570,7 +1570,7 @@ class CovarianceSpectrum(object):
                 s = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk).array
                 pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
                           (2 if i != j else 1)).real
-        pk = galsim.ImageC(pkout + 0j, scale=stepk)  # imag part should be zero
+        pk = galsim.ImageCD(pkout + 0j, scale=stepk)  # imag part should be zero
         iki = galsim.InterpolatedKImage(pk)
         iki *= wcs.pixelArea()**2  # determined this empirically
         return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)

@@ -22,11 +22,11 @@ API Changes
 - Added restrictions to `ChromaticObject`s and `SED`s consistent with
   dimensional analysis.  E.g., only `ChromaticObject`s with dimensionful SEDs
   can be drawn. (#789)
-- Changed `drawKImage` to return a single ImageC instance rather than two
+- Changed `drawKImage` to return a single ImageCD instance rather than two
   ImageD instances (for real and imag parts).  The old syntax of
   `re, im = obj.drawKImage(...)` will still work, but it will raise a
   deprecation warning. (#799)
-- Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
+- Changed `InterpolatedKImage` to take an ImageCD rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
 - Dynamic PhaseScreenPSFs now require an explicit start time and time step.
@@ -37,6 +37,8 @@ API Changes
 - Some of the backend (but nonetheless public API) methods of PhaseScreen and
   PhaseScreenList have changed.  See the docstrings of these classes for
   the new API if you have been using these methods. (#824)
+- Switched galsim.Image(image) to make a copy of the image rather than a view.
+  If you want a view, you should use the more intuitive image.view().  (#873)
 
 
 Dependency Changes
@@ -53,6 +55,7 @@ Bug Fixes
   using the config functionality. (#792)
 - Fixed some handling of images with undefined bounds. (#799)
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
+- Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
 
 
 Deprecated Features
@@ -113,8 +116,9 @@ New Features
 - Allow selection of random galaxies from a RealGalaxyCatalog or COSMOSCatalog
   in a way that accounts for any selection effects in catalog creation, using
   the 'weight' entries in the catalog. (#787)
-- Added possibility of using `dtype=complex` for Images, the shorthand alias
-  for which is called ImageC. (#799)
+- Added possibility of using `dtype=complex` or `numpy.complex128` for Images,
+  the shorthand alias for which is ImageCD. Also `dtype=numpy.complex64` is
+  allowed, the alias for which is ImageCF. (#799, #873)
 - Added `maxSB()` method to GSObjects to return an estimate of the maximum
   surface brightness.  For analytic profiles, it returns the correct value,
   but for compound objects (convolutions in particular), it cannot know the
@@ -155,6 +159,16 @@ New Features
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
   are generally somewhat faster than the numpy functions. (#840)
+- Added some variants of normal functions and methods with a leading underscore.
+  These variants skip the normal sanity checks of the input parameters and
+  often have more limited options for the input arguments.  Some examples:
+  `_Image`, `_Shear`, `_BoundsI`, `_Transform`, `obj._shear`, `obj._shift`,
+  `obj._drawKImage`, `image._view`, `image._shift`.  These are appropriate
+  for advanced users who are optimizing a tight loop and find that the normal
+  Python checks are taking a significant amount of time. (#840, #873)
+- Added `recenter` option to drawKImage to optionally not recenter the input
+  image at (0,0).  The default `recenter=True` is consistent with how this
+  function has worked in previous versions. (#873)
 
 
 New config features

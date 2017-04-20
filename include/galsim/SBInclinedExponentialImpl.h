@@ -82,10 +82,12 @@ namespace galsim {
         double getScaleHeight() const { return _h0; }
 
         // Overrides for better efficiency
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -106,6 +108,23 @@ namespace galsim {
         double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
         double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         double _stepk;   ///< Sampling in k space necessary to avoid folding.
+
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
 
         // Copy constructor and op= are undefined.
         SBInclinedExponentialImpl(const SBInclinedExponentialImpl& rhs);

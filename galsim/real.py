@@ -1218,7 +1218,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             # xscale = 2*np.pi/(nx*img.scale)
             # yscale = 2*np.pi/(ny*img.scale)
             # tmpwcs = galsim.JacobianWCS(yscale, 0.0, 0.0, xscale)
-            # tmp = galsim.ImageC(pk+0j, wcs=tmpwcs)
+            # tmp = galsim.ImageCD(pk+0j, wcs=tmpwcs)
             # iki = galsim.InterpolatedKImage(tmp)
             # pk = iki.drawKImage(nx=nkx, ny=nky, scale=stepk)
             # pks[i] = pk.array.real * nx * ny
@@ -1275,12 +1275,12 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageC(coef[i], scale=stepk)))
+            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageCD(coef[i], scale=stepk)))
 
         Sigma_dict = {}
         for i in range(NSED):
             for j in range(i, NSED):
-                obj = galsim.InterpolatedKImage(galsim.ImageC(Sigma[i, j], scale=stepk))
+                obj = galsim.InterpolatedKImage(galsim.ImageCD(Sigma[i, j], scale=stepk))
                 obj /= (imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 

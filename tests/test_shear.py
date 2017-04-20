@@ -166,6 +166,8 @@ def test_shear_initialization():
         # initialize with a complex number g1 + 1j * g2
         s = galsim.Shear(g1[ind] + 1j * g2[ind])
         all_shear_vals(s, ind)
+        s = galsim._Shear(g1[ind] + 1j * g2[ind])
+        all_shear_vals(s, ind)
         # which should also be the value of s.shear
         s2 = galsim.Shear(s.shear)
         all_shear_vals(s2, ind)

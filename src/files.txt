@@ -33,3 +33,4 @@ Version.cpp
 Polygon.cpp
 Silicon.cpp
 RealGalaxy.cpp
+WCS.cpp

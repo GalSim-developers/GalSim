@@ -98,6 +98,8 @@ namespace galsim {
         _is_correlated(true)
     {
         double totalFlux = image.sumElements();
+        dbg<<"totalFlux = "<<totalFlux<<std::endl;
+        dbg<<"maxFlux = "<<maxFlux<<std::endl;
         int N = image.getNRow() * image.getNCol() + totalFlux / maxFlux;
         dbg<<"image size = "<<image.getNRow() * image.getNCol()<<std::endl;
         dbg<<"count from photons = "<<totalFlux / maxFlux<<std::endl;

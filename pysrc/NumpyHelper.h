@@ -59,6 +59,8 @@ template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT3
 //template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
+template <> struct NumPyTraits<std::complex<float> >
+{ static int getCode() { return NPY_COMPLEX64; } };
 template <> struct NumPyTraits<std::complex<double> >
 { static int getCode() { return NPY_COMPLEX128; } };
 

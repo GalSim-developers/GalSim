@@ -198,15 +198,15 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     if ysize: config['stamp_ysize'] = ysize
     if image_pos is not None and world_pos is None:
         # Calculate and save the position relative to the image center
-        world_pos = config['wcs'].toWorld(image_pos)
-
-        # Wherever we use the world position, we expect a Euclidean position, not a
-        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-        # image center.
-        if isinstance(world_pos, galsim.CelestialCoord):
-            # Then project this position relative to the image center.
+        if config['wcs'].isCelestial():
+            # Wherever we use the world position, we expect a Euclidean position, not a
+            # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+            # image center.
             world_center = config['wcs'].toWorld(config['image_center'])
-            world_pos = world_center.project(world_pos, projection='gnomonic')
+            world_pos = config['wcs'].toWorld(image_pos, project_center=world_center,
+                                              projection='gnomonic')
+        else:
+            world_pos = config['wcs'].toWorld(image_pos)
 
     elif world_pos is not None and image_pos is None:
         # Calculate and save the position relative to the image center
