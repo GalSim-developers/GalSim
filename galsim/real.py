@@ -1169,8 +1169,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # corresponds to the input images being rectangular but non-square.  Finally, we'll use the
         # same trick that InterpolatedImage uses to improve accuracy, namely, increase the Fourier-
         # space resolution a factor of `pad_factor`.
-        nimg = max(img.array.shape)
-        stepk = np.min([2*np.pi/(img.scale*nimg)/pad_factor for img in imgs])
+        stepk = np.min([2*np.pi/(img.scale*max(img.array.shape))/pad_factor for img in imgs])
         nkx = nky = 2*int(np.floor(maxk/stepk))
 
         # Create Fourier-space kimages of effective PSFs
