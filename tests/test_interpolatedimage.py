@@ -1089,23 +1089,6 @@ def test_kroundtrip():
     np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
                                          "Convolution of InterpolatedKImage drawn incorrectly.")
 
-    # Try non-PixelScale wcs.
-    wcs = galsim.JacobianWCS(0.11, -0.04, 0.02, 0.08)
-    a = final
-    kimage = a.drawKImage(wcs=wcs)
-    b = galsim.InterpolatedKImage(kimage)
-
-    for kx, ky in zip(KXVALS, KYVALS):
-        np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
-            err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
-                     .format(kx, ky)))
-
-    img_a = a.drawImage()
-    img_b = b.drawImage(img_a.copy())
-    np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
-                                         "InterpolatedKImage image drawn incorrectly.")
-
-
 @timer
 def test_multihdu_readin():
     """Test the ability to read in from a file with multiple FITS extensions.

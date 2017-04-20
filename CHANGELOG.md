@@ -87,8 +87,6 @@ New Features
 - Updated packaged bandpasses and SEDs and associated download scripts (#640)
 - Added HST bandpasses covering AEGIS and CANDELS surveys (#640)
 - Added `drawKImage` method for `ChromaticObject` and `CorrelatedNoise` (#640)
-- Added support for `wcs` keyword to `GSObject.drawKImage` (#640)
-- Added support for `InterpolatedKImage` with non-PixelScale wcs (#640)
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models
   the repulsion of incoming electrons by the electrons already accumulated on

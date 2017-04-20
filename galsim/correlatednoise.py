@@ -659,7 +659,7 @@ class _BaseCorrelatedNoise(object):
             image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
             add_to_image=add_to_image, use_true_center=False, wmult=wmult)
 
-    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None,
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False):
         """A method for drawing profiles storing correlation functions (i.e., power spectra) in
         Fourier space.
@@ -668,8 +668,8 @@ class _BaseCorrelatedNoise(object):
         automatically set to unity and cannot be change.  Also, not all the normal parameters of the
         GSObject method are available.
 
-        If `scale` is not set, and `re` and `im` have no `wcs` attributes, then this will use the
-        wcs of the CorrelatedNoise object.
+        If `scale` is not set, and `image` has no `wcs` attribute, then this will use the
+        wcs of the CorrelatedNoise object, which must be a `PixelScale`.
 
         @param image        If provided, this will be the ImageC onto which to draw the k-space
                             image.  If `image` is None, then an automatically-sized image will be
@@ -687,7 +687,6 @@ class _BaseCorrelatedNoise(object):
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
-        @param wcs          The wcs. [default: None]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
@@ -696,8 +695,7 @@ class _BaseCorrelatedNoise(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         return self._profile.drawKImage(
-                image=image, nx=nx, ny=ny, bounds=bounds, scale=scale, wcs=wcs,
-                add_to_image=add_to_image)
+                image=image, nx=nx, ny=ny, bounds=bounds, scale=scale, add_to_image=add_to_image)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),

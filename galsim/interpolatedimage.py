@@ -716,14 +716,11 @@ class InterpolatedKImage(GSObject):
             if not kimage.iscomplex:
                 raise ValueError("Supplied kimage is not an ImageC")
 
-        self._kimage = kimage = kimage.copy()
+        # Make sure wcs is a PixelScale.
+        if kimage.wcs is not None and not kimage.wcs.isPixelScale():
+            raise ValueError("kimage wcs must be PixelScale or None.")
 
-        # Need to check kimage for wcs?
-        if kimage.wcs is not None:
-            wcs = kimage.wcs
-        else:
-            wcs = galsim.PixelScale(1.0)
-            kimage.wcs = wcs
+        self._kimage = kimage.copy()
 
         # Check for Hermitian symmetry properties of kimage
         shape = kimage.array.shape
@@ -740,16 +737,23 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
-            stepk = wcs.minLinearScale()
+            stepk = kimage.scale
         else:
-            if stepk < wcs.minLinearScale():
+            if stepk < kimage.scale:
                 import warnings
                 warnings.warn(
-                    "Provided stepk is smaller than kimage.scale; "
-                    "overriding with wcs.minLinearScale.")
-                stepk = wcs.minLinearScale()
+                    "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
+                stepk = kimage.scale
+
+        # Default to dk=1
+        if stepk is None:
+            stepk = 1.
+            self._kimage.scale = 1.
 
         self._stepk = stepk
+
+        stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
+
         self._gsparams = gsparams
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
@@ -759,20 +763,19 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        self._sbiki = galsim._galsim.SBInterpolatedKImage(
-                self._kimage.image, self._stepk/wcs.minLinearScale(), self.k_interpolant, gsparams)
-
-        inv_wcs = wcs.local().inverse().jacobian()
-        transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
-        prof = transform_wcs.toWorld(GSObject(self._sbiki))
-        prof = galsim._galsim.SBAdd([prof.SBProfile])
+        prof = _galsim.SBInterpolatedKImage(
+                self._kimage.image, stepk_image, self.k_interpolant, gsparams)
+        if kimage.wcs is not None:
+            prof = _galsim.SBTransform(prof, 1./kimage.scale, 0., 0., 1./kimage.scale,
+                                       galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+        prof = _galsim.SBAdd([prof])
 
         GSObject.__init__(self, prof)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
                 np.array_equal(self._kimage.array, other._kimage.array) and
-                self._kimage.wcs.local() == other._kimage.wcs.local() and
+                self._kimage.scale == other._kimage.scale and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
                 self._gsparams == other._gsparams)

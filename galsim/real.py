@@ -1169,21 +1169,16 @@ class ChromaticRealGalaxy(ChromaticSum):
         # corresponds to the input images being rectangular but non-square.  Finally, we'll use the
         # same trick that InterpolatedImage uses to improve accuracy, namely, increase the Fourier-
         # space resolution a factor of `pad_factor`.
-        x_stepk = np.min([2*np.pi/(img.scale*img.array.shape[1])/pad_factor for img in imgs])
-        y_stepk = np.min([2*np.pi/(img.scale*img.array.shape[0])/pad_factor for img in imgs])
-        nkx = 2*int(np.floor(maxk/x_stepk))
-        nky = 2*int(np.floor(maxk/y_stepk))
-
-        nkx = nky = max(nkx, nky)
-        x_stepk = y_stepk = min(x_stepk, y_stepk)
-        wcs = galsim.JacobianWCS(x_stepk, 0.0, 0.0, y_stepk)
+        nimg = max(img.array.shape)
+        stepk = np.min([2*np.pi/(img.scale*nimg)/pad_factor for img in imgs])
+        nkx = nky = 2*int(np.floor(maxk/stepk))
 
         # Create Fourier-space kimages of effective PSFs
         PSF_eff_kimgs = np.empty((Nim, NSED, nky, nkx), dtype=np.complex128)
         for i, (img, band, PSF) in enumerate(zip(imgs, bands, PSFs)):
             for j, sed in enumerate(self.SEDs):
                 # assume that PSF already includes pixel, so don't convolve one in again.
-                PSF_eff_kimgs[i, j] = (PSF * sed).drawKImage(band, nx=nkx, ny=nky, wcs=wcs).array
+                PSF_eff_kimgs[i, j] = (PSF * sed).drawKImage(band, nx=nkx, ny=nky, scale=stepk).array
 
         # Get Fourier-space representations of input imgs.
         kimgs = np.empty((Nim, nky, nkx), dtype=np.complex128)
@@ -1191,7 +1186,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Option 1): Use GalSim to Fourier transform
         for i, img in enumerate(imgs):
             ii = galsim.InterpolatedImage(img)
-            kimgs[i] = ii.drawKImage(nx=nkx, ny=nky, wcs=wcs).array
+            kimgs[i] = ii.drawKImage(nx=nkx, ny=nky, scale=stepk).array
 
         # Commented-out code below is out-of-date
         # Option 2) Using numpy to Fourier transform
@@ -1210,7 +1205,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         for i, (img, xi) in enumerate(zip(imgs, xis)):
 
             # Option 1) Using GalSim to Fourier transform
-            pks[i] = xi.drawKImage(nx=nkx, ny=nky, wcs=wcs).array.real / xi.wcs.pixelArea()
+            pks[i] = xi.drawKImage(nx=nkx, ny=nky, scale=stepk).array.real / xi.wcs.pixelArea()
             ny, nx = img.array.shape
             pks[i] *= nx * ny
 
@@ -1225,7 +1220,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             # tmpwcs = galsim.JacobianWCS(yscale, 0.0, 0.0, xscale)
             # tmp = galsim.ImageC(pk+0j, wcs=tmpwcs)
             # iki = galsim.InterpolatedKImage(tmp)
-            # pk = iki.drawKImage(nx=nkx, ny=nky, wcs=wcs)
+            # pk = iki.drawKImage(nx=nkx, ny=nky, scale=stepk)
             # pks[i] = pk.array.real * nx * ny
 
         w = 1./np.sqrt(pks)
@@ -1280,12 +1275,12 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageC(coef[i], wcs=wcs)))
+            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageC(coef[i], scale=stepk)))
 
         Sigma_dict = {}
         for i in range(NSED):
             for j in range(i, NSED):
-                obj = galsim.InterpolatedKImage(galsim.ImageC(Sigma[i, j], wcs=wcs))
+                obj = galsim.InterpolatedKImage(galsim.ImageC(Sigma[i, j], scale=stepk))
                 obj /= (imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 

@@ -1824,7 +1824,7 @@ class GSObject(object):
         ud = galsim.UniformDeviate(rng)
         return self.SBProfile.shoot(int(n_photons), ud)
 
-    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None,
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
@@ -1832,6 +1832,10 @@ class GSObject(object):
         Normalization is always such that image(0,0) = flux.  Unlike the real-space drawImage()
         function, the (0,0) point will always be one of the actual pixel values.  For even-sized
         images, it will be 1/2 pixel above and to the right of the true center of the image.
+
+        Another difference from  drawImage() is that a wcs other than a simple pixel scale is not
+        allowed.  There is no `wcs` parameter here, and if the images have a non-trivial wcs (and
+        you don't override it with the `scale` parameter), a TypeError will be raised.
 
         Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
         transform of the surface brightness profile.
@@ -1852,7 +1856,6 @@ class GSObject(object):
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
-        @param wcs          The wcs. [default: None]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
@@ -1901,35 +1904,37 @@ class GSObject(object):
         if image is not None and image.array.dtype != np.complex128:
             raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
 
-        # Determine wcs, but use stepK() as default instead of nyquistScale().
-        wcs = self._determine_wcs(scale, wcs, image, default_wcs=galsim.PixelScale(self.stepK()))
-        # Only accept uniformWCSes.
-        if not wcs.isUniform():
-            raise ValueError("Uniform WCS required by drawKImage")
+        # Possibly get the scale from image.
+        if image is not None and scale is None:
+            # Grab the scale to use from the image.
+            # This will raise a TypeError if image.wcs is not a PixelScale
+            scale = image.scale
 
-        local_wcs = wcs.local()
+        # The input scale (via scale or image.scale) is really a dk value, so call it that for
+        # clarity here, since we also need the real-space pixel scale, which we will call dx.
+        if scale is None or scale <= 0:
+            dk = self.stepK()
+        else:
+            dk = float(scale)
+        if image is not None and image.bounds.isDefined():
+            dx = np.pi/( max(image.array.shape) // 2 * dk )
+        elif scale is None or scale <= 0:
+            dx = self.nyquistScale()
+        else:
+            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
+            # by a factor of (dk/stepk)
+            dx = self.nyquistScale() * dk / self.stepK()
 
-        # For a simple PixelScale Fourier-domain WCS, Mike had previously figured out how to
-        # transform self into another profile that could be directly used with _setup_image to setup
-        # the re and im images.  I (Josh) had trouble figuring out how to generalize this to more
-        # complicated Fourier WCSes though, so here we just compute a good image size directly and
-        # feed that to _setup_image as an optional arg.
-        Nd = wmult * 2 * self.maxK() / local_wcs.minLinearScale()
-        N = int(np.ceil(Nd * 1.-1e-12))  # Slop to prevent extra pixels due to roundoff error
-        N += (N % 2)  # Round up to multiple of 2
-        image = self._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
-                                  True, N, wmult)
+        # If the profile needs to be constructed from scratch, the _setup_image function will
+        # do that, but only if the profile is in image coordinates for the real space image.
+        # So make that profile.
+        real_prof = galsim.PixelScale(dx).toImage(self)
+        if image is None: dtype = np.complex128
+        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
+                                       odd=True, wmult=wmult)
 
-        # Set the image wcs of to use the Fourier-domain wcs.
-        image.wcs = wcs
-
-        # Now, for drawing the k-space image, we need the profile to be in the image coordinates
-        # that correspond to having unit-sized pixels in k space.  This is apparently somewhat
-        # complicated, but empirically I've determined that a JacobianWCS with transposed
-        # and inverted transformation matrix works.
-        inv_wcs = local_wcs.inverse().jacobian()
-        transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
-        prof = transform_wcs.toImage(self)
+        # Set the wcs of the images to use the dk scale size
+        image.scale = dk
 
         if re is not None or im is not None: # pragma: no cover
             # Make sure the input re and im images get all the right attributes to match
@@ -1948,7 +1953,7 @@ class GSObject(object):
         # Making views of the images lets us change the centers without messing up the originals.
         image.setCenter(0,0)
 
-        prof.SBProfile.drawK(image.image.view(), 1.0)
+        self.SBProfile.drawK(image.image.view(), dk)
 
         if gain is not None:  # pragma: no cover
             image /= gain
