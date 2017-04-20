@@ -205,18 +205,19 @@ def main(argv):
                     val = gd()
                     ellip = math.fabs(val)
 
+                # Make a new copy of the galaxy with an applied e1/e2-type distortion
+                # by specifying the ellipticity and a real-space position angle
+                ellip_gal = gal.shear(e=ellip, beta=beta)
+
                 first_in_pair = False
             else:
-                # Use the previous ellip and beta + 90 degrees
-                beta += 90 * galsim.degrees
+                # Use the previous ellip_gal profile and rotate it by 90 degrees
+                ellip_gal = ellip_gal.rotate(90 * galsim.degrees)
+
                 first_in_pair = True
 
-            # Make a new copy of the galaxy with an applied e1/e2-type distortion
-            # by specifying the ellipticity and a real-space position angle
-            this_gal = gal.shear(e=ellip, beta=beta)
-
             # Apply the gravitational reduced shear by specifying g1/g2
-            this_gal = this_gal.shear(g1=gal_g1, g2=gal_g2)
+            this_gal = ellip_gal.shear(g1=gal_g1, g2=gal_g2)
 
             # Apply a random shift_radius:
             rsq = 2 * shift_radius_sq

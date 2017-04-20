@@ -93,14 +93,14 @@ version = __version__
 # First some basic building blocks that don't usually depend on anything else
 from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD, _BoundsI
-from .shear import Shear
+from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI, _Image
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
 
 # PhotonArray
 from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles

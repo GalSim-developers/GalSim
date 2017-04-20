@@ -1311,7 +1311,33 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             pv2 = np.dot(xm.T , np.dot(pv, ym))
             return pv2
 
-    def _radec(self, x, y):
+    # Override the normal version from CelestialWCS to be slightly more efficient.
+    def _posToWorld(self, image_pos, project_center=None, projection='gnomonic'):
+        x = image_pos.x - self.x0
+        y = image_pos.y - self.y0
+
+        if project_center is None:
+            ra, dec = self._radec(x,y)
+            return galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+        else:
+            if project_center == self.center and projection == self.projection:
+                # Then just stop after finding the position in the tangent plane.
+                u, v = self._uv(x,y)
+                #print('u,v = ',u,v)
+                #print('deproject = ',self.center.deproject_rad(u, v, projection=self.projection))
+                #print('reproject = ',self.center.deproject_rad(u, v, projection=self.projection))
+                #ra, dec = self._radec(x,y)
+                #coord = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+                #print('ra,dec = ',ra,dec)
+                #print('project = ',project_center.project(coord
+                return galsim.PositionD(u,v)
+            else:
+                ra, dec = self._radec(x,y)
+                coord = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+                return project_center.project(coord, projection=projection)
+
+    def _uv(self, x, y):
+        # Most of the work for _radec.  But stop at (u,v).
 
         # Start with (x,y) = the image position
         p1 = np.array( [ np.atleast_1d(x), np.atleast_1d(y) ] )
@@ -1363,18 +1389,23 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         u = -p2[0] * factor
         v = p2[1] * factor
 
-        # Finally convert from (u,v) to (ra, dec) using the appropriate projection.
-        ra, dec = self.center.deproject_rad(u, v, projection=self.projection)
-
         try:
             len(x)
             # If the inputs were numpy arrays, return the same
-            return ra, dec
+            return u, v
         except:
             # Otherwise return scalars
-            assert len(ra) == 1
-            assert len(dec) == 1
-            return ra[0], dec[0]
+            assert len(u) == 1
+            assert len(v) == 1
+            return u[0], v[0]
+
+    def _radec(self, x, y):
+
+        # Get the position in the tangent plane
+        u,v = self._uv(x,y)
+
+        # Finally convert from (u,v) to (ra, dec) using the appropriate projection.
+        return self.center.deproject_rad(u, v, projection=self.projection)
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.

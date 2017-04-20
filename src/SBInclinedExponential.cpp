@@ -249,8 +249,9 @@ namespace galsim {
         return _flux * kValueHelper(kx,ky);
     }
 
+    template <typename T>
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, int izero,
         double ky0, double dky, int jzero) const
     {
@@ -264,7 +265,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -281,8 +282,9 @@ namespace galsim {
         }
     }
 
+    template <typename T>
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, double dkxy,
         double ky0, double dky, double dkyx) const
     {
@@ -291,7 +293,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
