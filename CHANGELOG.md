@@ -15,11 +15,11 @@ API Changes
 - Added restrictions to `ChromaticObject`s and `SED`s consistent with
   dimensional analysis.  E.g., only `ChromaticObject`s with dimensionful SEDs
   can be drawn. (#789)
-- Changed `drawKImage` to return a single ImageC instance rather than two
+- Changed `drawKImage` to return a single ImageCD instance rather than two
   ImageD instances (for real and imag parts).  The old syntax of
   `re, im = obj.drawKImage(...)` will still work, but it will raise a
   deprecation warning. (#799)
-- Changed `InterpolatedKImage` to take an ImageC rather than two ImageD
+- Changed `InterpolatedKImage` to take an ImageCD rather than two ImageD
   instances. The old syntax will work, but it will raise a deprecation
   warning. (#799)
 - Dynamic PhaseScreenPSFs now require an explicit start time and time step.
@@ -34,6 +34,8 @@ API Changes
   config-layer functions.  If you have been using custom config modules,
   there may be slight changes to your code required.  See the doc strings of
   these functions for more information. (#865)
+- Switched galsim.Image(image) to make a copy of the image rather than a view.
+  If you want a view, you should use the more intuitive image.view().  (#873)
 
 
 Dependency Changes
@@ -51,6 +53,7 @@ Bug Fixes
 - Fixed some handling of images with undefined bounds. (#799)
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
 - Fixed minor bug in shear == implementation. (#865)
+- Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
 
 
 Deprecated Features
@@ -71,7 +74,7 @@ Deprecated Features
   returned image by gain, which will have the same effect and probably
   be clearer in your own code about what you meant. (#799)
 - Deprecated ability to create multiple PhaseScreenPSFs with single call
-  to makePSF, since it's now just as efficient to call makePSF multiple
+  to makePSF, since it is now just as efficient to call makePSF multiple
   times. (#824)
 
 
@@ -79,6 +82,14 @@ New Features
 ------------
 
 - Added support for reading in of unsigned int Images (#715)
+- Added a new Sensor class hierarchy, including SiliconSensor, which models
+  the repulsion of incoming electrons by the electrons already accumulated on
+  the sensor.  This effect is known as the "brighter-fatter effect", since it
+  means that brighter objects are a bit larger than dimmer but otherwise-
+  identical objects. (#722)
+- Added `save_photons` option to `drawImage` to output the photons that were
+  shot when photon shooting (if applicable). (#722)
+- Added image.bin and image.subsample methods. (#722)
 - Added ability to specify optical aberrations in terms of annular Zernike
   coefficients.  (#771)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
@@ -96,8 +107,9 @@ New Features
 - Allow selection of random galaxies from a RealGalaxyCatalog or COSMOSCatalog
   in a way that accounts for any selection effects in catalog creation, using
   the 'weight' entries in the catalog. (#787)
-- Added possibility of using `dtype=complex` for Images, the shorthand alias
-  for which is called ImageC. (#799)
+- Added possibility of using `dtype=complex` or `numpy.complex128` for Images,
+  the shorthand alias for which is ImageCD. Also `dtype=numpy.complex64` is
+  allowed, the alias for which is ImageCF. (#799, #873)
 - Added `maxSB()` method to GSObjects to return an estimate of the maximum
   surface brightness.  For analytic profiles, it returns the correct value,
   but for compound objects (convolutions in particular), it cannot know the
@@ -138,6 +150,13 @@ New Features
   replacements for np.fft functions, but using the C-layer FFTW package.
   Our functions have more restrictions on the input arrays, but when valid
   are generally somewhat faster than the numpy functions. (#840)
+- Added some variants of normal functions and methods with a leading underscore.
+  These variants skip the normal sanity checks of the input parameters and
+  often have more limited options for the input arguments.  Some examples:
+  `_Image`, `_Shear`, `_BoundsI`, `_Transform`, `obj._shear`, `obj._shift`,
+  `obj._drawKImage`, `image._view`, `image._shift`.  These are appropriate
+  for advanced users who are optimizing a tight loop and find that the normal
+  Python checks are taking a significant amount of time. (#840, #873)
 - Added a hook to the WCS classes to allow them to vary with color, although
   most of our current WCS classes are not able to use this feature.  The only
   one that can is UVFunction, which may now optionally have a color term
@@ -148,6 +167,9 @@ New Features
   a CelestialCoord with `coord.get_xyz()`.  Also make a CelestialCoord from
   (x,y,z) using `CeletialCoord.from_xyz(x,y,z)`. (#865)
 - Added an optional `center` argument for `Angle.wrap()`. (#865)
+- Added `recenter` option to drawKImage to optionally not recenter the input
+  image at (0,0).  The default `recenter=True` is consistent with how this
+  function has worked in previous versions. (#873)
 
 
 New config features

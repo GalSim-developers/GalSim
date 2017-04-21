@@ -214,20 +214,25 @@ class BaseWCS(object):
         else:
             return self.posToWorld(arg, **kwargs)
 
-    def posToWorld(self, image_pos, color=None):
+    def posToWorld(self, image_pos, color=None, **kwargs):
         """Convert a position from image coordinates to world coordinates.
 
         This is equivalent to `wcs.toWorld(image_pos)`.
 
-        @param image_pos        The image coordinate position
+        @param image_pos        The position in image coordinates
         @param color            For color-dependent WCS's, the color term to use. [default: None]
+        @param project_center   (Only valid for CelestialWCS) A CelestialCoord to use for
+                                projecting the result onto a tangent plane world system rather
+                                than returning a CelestialCoord. [default: None]
+        @param projection       If project_center != None, the kind of projection to use.  See
+                                CelestialCoord.project for the valid options. [default: 'gnomonic']
         """
         if color is None: color = self._color
         if isinstance(image_pos, galsim.PositionI):
             image_pos = galsim.PositionD(image_pos.x, image_pos.y)
         elif not isinstance(image_pos, galsim.PositionD):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        return self._posToWorld(image_pos, color=color)
+        return self._posToWorld(image_pos, color=color, **kwargs)
 
     def profileToWorld(self, image_profile, image_pos=None, world_pos=None, color=None):
         """Convert a profile from image coordinates to world coordinates.
@@ -805,8 +810,6 @@ class EuclideanWCS(BaseWCS):
         # Calculate the Jacobian using finite differences for the derivatives.
         x0 = image_pos.x - self.x0
         y0 = image_pos.y - self.y0
-        u0 = self._u(x0,y0,color)
-        v0 = self._v(x0,y0,color)
 
         # Use dx,dy = 1 pixel for numerical derivatives
         dx = 1
@@ -1045,11 +1048,15 @@ class CelestialWCS(BaseWCS):
 
 
     # Simple.  Just call _radec.
-    def _posToWorld(self, image_pos, color):
+    def _posToWorld(self, image_pos, color, project_center=None, projection='gnomonic'):
         x = image_pos.x - self.x0
         y = image_pos.y - self.y0
         ra, dec = self._radec(x,y,color)
-        return galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+        coord = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+        if project_center is None:
+            return coord
+        else:
+            return project_center.project(coord, projection=projection)
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos, color):
@@ -1246,22 +1253,22 @@ class ShearWCS(LocalWCS):
     def _u(self, x, y, color=None):
         u = x * (1.-self._g1) - y * self._g2
         u *= self._gfactor * self._scale
-        return u;
+        return u
 
     def _v(self, x, y, color=None):
         v = y * (1.+self._g1) - x * self._g2
         v *= self._gfactor * self._scale
-        return v;
+        return v
 
     def _x(self, u, v, color=None):
         x = u * (1.+self._g1) + v * self._g2
         x *= self._gfactor / self._scale
-        return x;
+        return x
 
     def _y(self, u, v, color=None):
         y = v * (1.-self._g1) + u * self._g2
         y *= self._gfactor / self._scale
-        return y;
+        return y
 
     def _profileToWorld(self, image_profile):
         return image_profile.dilate(self._scale).shear(-self.shear)
@@ -1304,7 +1311,7 @@ class ShearWCS(LocalWCS):
         scale = header["GS_SCALE"]
         g1 = header["GS_G1"]
         g2 = header["GS_G2"]
-        return ShearWCS(scale, galsim.Shear(g1,g2))
+        return ShearWCS(scale, galsim.Shear(g1=g1, g2=g2))
 
     def _newOrigin(self, origin, world_origin):
         return OffsetShearWCS(self._scale, self._shear, origin, world_origin)
@@ -2021,7 +2028,7 @@ def _readFuncFromHeader(letter, header):
         import cPickle as pickle
     except ImportError:
         import pickle
-    import types, marshal, base64, types
+    import types, marshal, base64
     if 'GS_'+letter+'_STR' in header:
         # Read in a regular string
         n = header["GS_" + letter + "_N"]

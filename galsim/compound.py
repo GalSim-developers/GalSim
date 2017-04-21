@@ -213,7 +213,7 @@ class Sum(galsim.GSObject):
             if i < len(self.obj_list)-1:
                 # otherwise, allocate a randomized fraction of the remaining photons to summand.
                 bd = galsim.BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
-                thisN = bd()
+                thisN = int(bd())
             if thisN > 0:
                 thisPA = obj.shoot(thisN, ud)
                 # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton

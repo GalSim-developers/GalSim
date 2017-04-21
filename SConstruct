@@ -296,6 +296,66 @@ def ErrorExit(*args, **kwargs):
     Exit(1)
 
 
+def TrySSEFlags(env, flags):
+    """Try some options for the sse flags.  Take the first in the list that works.
+    """
+    sse_source_file = """
+    #include <complex>
+    #include "xmmintrin.h"
+
+#ifdef __SSE2__
+    std::complex<double> dot(int n, std::complex<double>* A, std::complex<double> *B)
+    {
+        std::complex<double> sum(0);
+        int n_2 = (n>>1);
+        if (n_2) {
+            union { __m128d xm; double xd[2]; } xsum;
+            xsum.xm = _mm_set1_pd(0.);
+            __m128d xsum2 = _mm_set1_pd(0.);
+            const std::complex<double>* B1 = B+1;
+            do {
+                const __m128d& xA = *(const __m128d*)(A);
+                const __m128d& xB1 = *(const __m128d*)(B);
+                const __m128d& xB2 = *(const __m128d*)(B1);
+                A += 2; B += 2; B1 += 2;
+                __m128d xA1 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(0,0));
+                __m128d xA2 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(1,1));
+                __m128d x1 = _mm_mul_pd(xA1,xB1);
+                __m128d x2 = _mm_mul_pd(xA2,xB2);
+                xsum.xm = _mm_add_pd(xsum.xm,x1);
+                xsum2 = _mm_add_pd(xsum2,x2);
+            } while (--n_2);
+            xsum.xm = _mm_add_pd(xsum.xm,xsum2);
+            sum += std::complex<double>(xsum.xd[0],xsum.xd[1]);
+        }
+        return sum;
+    }
+#endif
+    float dot(float* a, float *b)
+    {
+        __m128 xA = _mm_load_ps(a);
+        __m128 xB = _mm_load_ps(b);
+        union { __m128 xm; float xf[4]; } res;
+        res.xm = _mm_mul_ps(xA,xB);
+        return res.xf[0] + res.xf[1] + res.xf[2] + res.xf[3];
+    }
+"""
+    if len(flags) == 0: return
+
+    orig_flags = env['CCFLAGS']
+    config = env.Configure()
+    found = False
+    for flag in flags:
+        config.env.Replace(CCFLAGS=orig_flags + [flag])
+        found = config.TryCompile(sse_source_file,'.cpp')
+        if found:
+            print 'Using SSE with flag',flag
+            env = config.Finish()
+            return
+    print 'None of the possible SSE flags worked.'
+    config.env.Replace(CCFLAGS=orig_flags)
+    env = config.Finish()
+
 
 def BasicCCFlags(env):
     """
@@ -318,8 +378,10 @@ def BasicCCFlags(env):
         env.AppendUnique(LIBS='pthread')
 
     if env['FLAGS'] == '':
+        sse_flags = []
         if compiler == 'g++':
             env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-msse2', '-msse']
             env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
@@ -333,7 +395,8 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'clang++':
-            env.Replace(CCFLAGS=['-O2'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-msse2', '-msse']
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -343,7 +406,8 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2','-msse2'])
+            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            sse_flags = ['-msse2', '-msse']
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
             if env['WITH_PROF']:
@@ -381,6 +445,7 @@ def BasicCCFlags(env):
         else:
             print '\nWARNING: Unknown compiler.  You should set FLAGS directly.\n'
             env.Replace(CCFLAGS=[])
+        TrySSEFlags(env, sse_flags)
 
     else :
         # If flags are specified as an option use them:

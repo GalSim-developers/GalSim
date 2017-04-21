@@ -285,6 +285,7 @@ def test_wfirst_detectors():
     # So start by making a fairly simple image.
     obj = galsim.Gaussian(sigma=3.*galsim.wfirst.pixel_scale, flux=1.e5)
     im = obj.drawImage(scale=galsim.wfirst.pixel_scale)
+    im.replaceNegative(0.)
 
     # Make copies that we transform using both sets of routines, and check for consistency.
     # First we do nonlinearity:

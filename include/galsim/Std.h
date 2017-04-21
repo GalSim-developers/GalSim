@@ -50,6 +50,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// Check if ptr is aligned on 128 bit boundary
+inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
+
 // Convenient debugging.
 // Use as a normal C++ stream:
 // dbg << "Here x = "<<x<<" and y = "<<y<<std::endl;

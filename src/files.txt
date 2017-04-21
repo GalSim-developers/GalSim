@@ -30,3 +30,6 @@ Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
 Version.cpp
+Polygon.cpp
+Silicon.cpp
+WCS.cpp

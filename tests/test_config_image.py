@@ -1386,7 +1386,7 @@ def test_index_key():
                 shear = galsim.Shear(g1=shear_g1, g2=shear_g2)
                 gal = gal.shear(ellip).shear(shear)
                 print(n,i,k,flux,hlr,ellip._g,shear._g)
-                final = galsim.Convolve(gal, psf)
+                final = galsim.Convolve(psf, gal)
                 final.drawImage(stamp)
 
             if __name__ == '__main__':
