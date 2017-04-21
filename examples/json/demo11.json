@@ -40,7 +40,6 @@
         "index" : { "type" : "RandomBinomial", "N" : 1, "p" : 0.3 }
     },
     "noise_pad_size" : 11.3,
-    "index" : { "type" : "Random" },
     "shear" : { "type" : "PowerSpectrumShear" },
     "magnification" : { "type" : "PowerSpectrumMagnification" },
     "rotation" : { "type" : "Random" },
@@ -82,9 +81,11 @@
         }
     },
 
-    "draw_method" : "no_pixel",
-
     "nproc" : -1
+},
+
+"stamp": {
+    "draw_method" : "no_pixel"
 },
 
 "input" : {
