@@ -97,6 +97,8 @@ def main(argv):
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
     exp_time = 300                    # exposing for 300 seconds.
+    center_ra = 19.3*galsim.hours     # The RA, Dec of the center of the image on the sky
+    center_dec = -33.1*galsim.degrees
 
     # The catalog returns objects that are appropriate for HST in 1 second exposures.  So for our
     # telescope we scale up by the relative area and exposure time.  Note that what is important is
@@ -218,7 +220,7 @@ def main(argv):
     # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
     # that plane onto the sky using a given point as the tangent point.  The tangent
     # point should be given as a CelestialCoord.
-    sky_center = galsim.CelestialCoord(ra=19.3*galsim.hours, dec=-33.1*galsim.degrees)
+    sky_center = galsim.CelestialCoord(ra=center_ra, dec=center_dec)
 
     # The third parameter, units, defaults to arcsec, but we make it explicit here.
     # It sets the angular units of the (u,v) intermediate coordinate system.
@@ -235,8 +237,8 @@ def main(argv):
         # Note that for this to come out close to a square shape, we need to account for the
         # cos(dec) part of the metric: ds^2 = dr^2 + r^2 d(dec)^2 + r^2 cos^2(dec) d(ra)^2
         # So need to calculate dec first.
-        dec = sky_center.dec + (ud()-0.5) * image_size_arcsec * galsim.arcsec
-        ra = sky_center.ra + (ud()-0.5) * image_size_arcsec / math.cos(dec.rad()) * galsim.arcsec
+        dec = center_dec + (ud()-0.5) * image_size_arcsec * galsim.arcsec
+        ra = center_ra + (ud()-0.5) * image_size_arcsec / math.cos(dec.rad()) * galsim.arcsec
         world_pos = galsim.CelestialCoord(ra,dec)
 
         # We will need the image position as well, so use the wcs to get that
@@ -398,8 +400,8 @@ def main(argv):
     # that ds9 reports.  ds9 always uses (1,1) for the lower left pixel, so the pixel coordinates
     # of these pixels are different by 1, but you can check that the RA and Dec values are
     # the same as what GalSim calculates.
-    ra_str = sky_center.ra.hms()
-    dec_str = sky_center.dec.dms()
+    ra_str = center_ra.hms()
+    dec_str = center_dec.dms()
     logger.info('Center of image    is at RA %sh %sm %ss, DEC %sd %sm %ss',
                 ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
     for (x,y) in [ (0,0), (0,image_size-1), (image_size-1,0), (image_size-1,image_size-1) ]:
