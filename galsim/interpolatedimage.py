@@ -764,14 +764,18 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        prof = _galsim.SBInterpolatedKImage(
+        sbiki = _galsim.SBInterpolatedKImage(
                 self._kimage.image, stepk_image, self.k_interpolant, gsparams)
-        if kimage.wcs is not None:
-            prof = _galsim.SBTransform(prof, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                       galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
-        prof = _galsim.SBAdd([prof])
+        self._sbiki = sbiki
 
-        GSObject.__init__(self, prof)
+        if kimage.wcs is not None:
+            sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
+                                      galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+        else:
+            sbp = sbiki
+        sbp = _galsim.SBAdd([sbp])
+
+        GSObject.__init__(self, sbp)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
@@ -822,7 +826,7 @@ _galsim.SBInterpolatedKImage.__getinitargs__ = lambda self: (
         self._getKData(), self.stepK(), self.maxK(), self.getKInterp(), self.getGSParams())
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
+        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r)'
         %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())

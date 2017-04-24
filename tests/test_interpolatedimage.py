@@ -1003,6 +1003,7 @@ def test_kroundtrip():
 
     # Check picklability
     do_pickle(b)
+    do_pickle(b._sbiki)
     do_pickle(b, lambda x: x.drawImage())
     do_pickle(b.SBProfile)
     do_pickle(b.SBProfile, lambda x: repr(x))
