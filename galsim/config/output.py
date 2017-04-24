@@ -127,10 +127,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         if proc is None: s0 = ''
         else: s0 = '%s: '%proc
         logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)
-        logger.error('%s',tr)
         if except_abort:
+            logger.debug('%s',tr)
             logger.error('File %s not written.',file_name)
         else:
+            logger.warning('%s',tr)
             logger.error('File %s not written! Continuing on...',file_name)
 
     # Convert to the tasks structure we need for MultiProcess

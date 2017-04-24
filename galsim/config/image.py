@@ -80,7 +80,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         else: s0 = '%s: '%proc
         image_num = jobs[k]['image_num']
         logger.error(s0 + 'Exception caught when building image %d', image_num)
-        logger.warning('%s',tr)
+        logger.debug('%s',tr)
         logger.error('Aborting the rest of this file')
 
     # Convert to the tasks structure we need for MultiProcess
