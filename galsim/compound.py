@@ -1300,3 +1300,14 @@ class RandomWalk(galsim.GSObject):
             gsparams=repr(self._input_gsparams),
         )
         return rep
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.RandomWalk) and
+                self._npoints == other._npoints and
+                self._half_light_radius == other._half_light_radius and
+                self._flux == other._flux and
+                self._input_gsparams == other._input_gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.RandomWalk", self._npoints, self._half_light_radius, self._flux,
+                     self._input_gsparams))

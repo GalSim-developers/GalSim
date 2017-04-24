@@ -54,6 +54,16 @@ def test_randwalk_defaults():
     pts=rw.points
     assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
 
+    # Run some basic tests of correctness
+    psf = galsim.Gaussian(sigma=0.8)
+    conv = galsim.Convolve(rw, psf)
+    check_basic(conv, "RandomWalk")
+    im = galsim.ImageD(64,64, scale=0.5)
+    do_shoot(conv, im, "RandomWalk")
+    do_kvalue(conv, im, "RandomWalk")
+    do_pickle(rw)
+    do_pickle(conv)
+
 
 @timer
 def test_randwalk_valid_inputs():
