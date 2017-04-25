@@ -755,7 +755,7 @@ def test_retry_io():
 
     # Now make a copy of Fits and ExtraWeight using this writer.
     class FlakyFits(galsim.config.OutputBuilder):
-        def writeFile(self, data, file_name):
+        def writeFile(self, data, file_name, config, base, logger):
             flaky_writer.writeFile(data, file_name)
     galsim.config.RegisterOutputType('FlakyFits', FlakyFits())
 

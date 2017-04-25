@@ -159,7 +159,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         logger.warning('Done building files')
 
 
-output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
+output_ignore = [ 'nproc', 'skip', 'noclobber', 'retry_io' ]
 
 def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """
@@ -241,7 +241,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     else:
         ntries = 1
 
-    args = (data, file_name)
+    args = (data, file_name, output, config, logger)
     RetryIO(builder.writeFile, args, ntries, file_name, logger)
     logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
@@ -470,6 +470,7 @@ class OutputBuilder(object):
         """
         # There are no extra parameters to get, so just check that there are no invalid parameters
         # in the config dict.
+        ignore += [ 'file_name', 'dir', 'nfiles' ]
         galsim.config.CheckAllParams(config, ignore=ignore)
 
         image = galsim.config.BuildImage(base, image_num, obj_num, logger=logger)
@@ -503,13 +504,16 @@ class OutputBuilder(object):
         """
         return 1
 
-    def writeFile(self, data, file_name):
+    def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
 
         @param data             The data to write.  Usually a list of images returned by
                                 buildImages, but possibly with extra HDUs tacked onto the end
                                 from the extra output items.
         @param file_name        The file_name to write to.
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param logger           If given, a logger object to log progress.
         """
         galsim.fits.writeMulti(data,file_name)
 

@@ -440,6 +440,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                 raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
         req = { 'nobjects' : int , 'nstamps_per_object' : int }
+        ignore += [ 'file_name', 'dir', 'nfiles' ]
         params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req)[0]
 
         nobjects = params['nobjects']
@@ -473,7 +474,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
 
         return obj_list
 
-    def writeFile(self, data, file_name):
+    def writeFile(self, data, file_name, config, base, logger):
         WriteMEDS(data, file_name)
 
     def getNImages(self, config, base, file_num):
