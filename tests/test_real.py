@@ -86,6 +86,7 @@ def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    assert len(rgc) == rgc.getNObjects() == rgc.nobjects == len(rgc.cat)
     rg = galsim.RealGalaxy(rgc, index=ind_fake)
     # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
     # or when trying to specify the galaxy too many ways
