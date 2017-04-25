@@ -1624,7 +1624,7 @@ def test_pyastwcs():
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
                       'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX' ]
     else:
-        test_tags = [ 'ZPX', 'SIP' ]
+        test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV' ]
 
     dir = 'fits_files'
     for tag in test_tags:
@@ -1766,6 +1766,14 @@ def test_fitswcs():
         # These should always work, since GSFitsWCS will work on them.  So this
         # mostly just tests the basic interface of the FitsWCS function.
         test_tags = [ 'TAN', 'TPV' ]
+        try:
+            import starlink.Ast
+            # Useful also to test one that GSFitsWCS doesn't work on.  This works on Travis at
+            # least, and helps to cover some of the FitsWCS functionality where the first try
+            # isn't successful.
+            test_tags.append('HPX')
+        except:
+            pass
 
     dir = 'fits_files'
 
