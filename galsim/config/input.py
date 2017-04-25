@@ -160,7 +160,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
-                        else:
+                        else:  # pragma: no cover
                             raise
 
                     if safe_only and not safe:
@@ -410,10 +410,6 @@ def RegisterInputConnectedType(input_type, type_name):
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.
-RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
-RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
-
-
 
 # Now define the value generators connected to the catalog and dict input types.
 def _GenerateFromCatalog(config, base, value_type):
@@ -448,7 +444,6 @@ def _GenerateFromCatalog(config, base, value_type):
     #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))
     return val, safe
 
-
 def _GenerateFromDict(config, base, value_type):
     """@brief Return a value read from an input dict.
     """
@@ -467,4 +462,8 @@ def _GenerateFromDict(config, base, value_type):
 # Register these as valid value types
 from .value import RegisterValueType
 RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ], input_type='catalog')
+RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
+RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
 RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ], input_type='dict')
+# Note: Doing the above in different orders for catalog and dict is intentional.  It makes sure
+# we test that this works for users no matter which order they do their registering.
