@@ -1941,7 +1941,7 @@ class GSObject(object):
         return self.SBProfile.shoot(int(n_photons), ud)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, recenter=True,
+                   add_to_image=False, recenter=True, setup_only=False,
                    dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
@@ -2055,6 +2055,10 @@ class GSObject(object):
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
                                            odd=True, wmult=wmult)
 
+        # Can't both recenter a provided image and add to it.
+        if recenter and image.center() != galsim.PositionI(0,0) and add_to_image:
+            raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
+
         # Set the center to 0,0 if appropriate
         if recenter and image.center() != galsim.PositionI(0,0):
             image._shift(-image.center())
@@ -2075,6 +2079,9 @@ class GSObject(object):
             im.scale = image.scale
             re.setOrigin(image.origin())
             im.setOrigin(image.origin())
+
+        if setup_only:
+            return image
 
         self.SBProfile.drawK(image.image.view(), dk, add_to_image)
 

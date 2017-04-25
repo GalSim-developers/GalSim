@@ -455,7 +455,7 @@ class ChromaticObject(object):
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
-        image = prof0.drawKImage(image=image, **kwargs)
+        image = prof0.drawKImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list

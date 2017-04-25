@@ -1219,21 +1219,29 @@ def test_separable_ChromaticSum():
     # 1) check that 2 summands with same SED make a separable sum.
     cgal1 = mono_gal1 * bulge_SED + mono_gal2 * bulge_SED
     img1 = galsim.ImageD(32, 32, scale=0.2)
+    kimg1 = galsim.ImageCD(32, 32, scale=0.5)
     if not cgal1.separable:
         raise AssertionError("failed to identify separable ChromaticSum")
 
     # check that drawing the profile works as expected
     final1 = galsim.Convolve(cgal1, psf)
     final1.drawImage(bandpass, image=img1)
+    final1.drawKImage(bandpass, image=kimg1)
 
     img1b = img1.copy()
+    kimg1b = kimg1.copy()
     component1 = galsim.Convolve(mono_gal1*bulge_SED, psf)
     component1.drawImage(bandpass, image=img1b)
+    component1.drawKImage(bandpass, image=kimg1b)
+
     component2 = galsim.Convolve(mono_gal2*bulge_SED, psf)
     component2.drawImage(bandpass, image=img1b, add_to_image=True)
+    component2.drawKImage(bandpass, image=kimg1b, add_to_image=True)
 
     np.testing.assert_array_almost_equal(img1.array, img1b.array, 5,
                                          "separable ChromaticSum not correctly drawn")
+    np.testing.assert_array_almost_equal(kimg1.array, kimg1b.array, 5,
+                                         "separable ChromaticSum not correctly k-drawn")
     do_pickle(final1)
 
     # 2) Check flux scaling
@@ -1564,7 +1572,6 @@ def test_interpolated_ChromaticObject():
 def test_ChromaticOpticalPSF():
     """Test the ChromaticOpticalPSF functionality."""
     import time
-    t1 = time.time()
 
     # For ChromaticOpticalPSF, exact evaluation is too slow for routine unit tests.  So, for
     # this unit test, we use an interpolated version only.  The tests of
@@ -1789,17 +1796,16 @@ def test_chromatic_image_setup():
     # tested in other scripts above anyway, so just focus on possibilities related to known previous
     # failures here; specifically, drawing a convolution of two inseparable profiles while
     # specifying `nx`, `ny`, and `scale` as keywords.
-    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass)
-    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
+    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
     bds = galsim.BoundsI(1, 32, 1, 32)
-    img3 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
-    np.testing.assert_array_equal(img2.array.shape, (32, 32),
+    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
+    np.testing.assert_array_equal(img.array.shape, (32, 32),
                                   "Got wrong size output image using nx=, ny= keywords.")
-    np.testing.assert_array_equal(img3.array.shape, (32, 32),
+    np.testing.assert_array_equal(img2.array.shape, (32, 32),
                                   "Got wrong size output image using bounds= keyword.")
-    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
+    np.testing.assert_almost_equal(img.scale, 0.2, 9,
                                    "Got wrong output image scale using nx=, ny= keywords.")
-    np.testing.assert_almost_equal(img3.scale, 0.2, 9,
+    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
                                    "Got wrong output image scale using bounds= keyword.")
 
 
