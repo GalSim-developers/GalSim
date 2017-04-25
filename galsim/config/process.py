@@ -746,22 +746,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
                        unexpected)
         logger.warning("These fields are not (directly) processed by the config processing.")
 
-    # Make config['output'] exist if it doesn't yet.
-    if 'output' not in config:
-        config['output'] = {}
-    output = config['output']
-    if not isinstance(output, dict):
-        raise AttributeError("config.output is not a dict.")
-
-    # We need to know how many objects we'll need for each file (and each image within each file)
-    # to get the indexing correct for any sequence items.  (e.g. random_seed)
-    # If we use multiple processors and let the regular sequencing happen,
-    # it will get screwed up by the multi-processing potentially happening out of order.
-    # Start with the number of files.
-    if 'nfiles' in output:
-        nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
-    else:
-        nfiles = 1
+    # Determine how many files we will be processing in total.
+    # Usually, this is just output.nfiles, but different output types may define this differently.
+    nfiles = galsim.config.output.GetNFiles(config)
     logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:

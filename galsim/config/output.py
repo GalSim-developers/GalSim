@@ -250,6 +250,21 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     return file_name, t2-t1
 
+def GetNFiles(config):
+    """
+    Get the number of files that will be made, based on the information in the config dict.
+
+    @param config           The configuration dict.
+
+    @returns the number of files
+    """
+    output = config.get('output',{})
+    output_type = output.get('type','Fits')
+    if output_type not in valid_output_types:
+        raise AttributeError("Invalid output.type=%s."%output_type)
+    return valid_output_types[output_type].getNFiles(output, config)
+
+
 def GetNImagesForFile(config, file_num):
     """
     Get the number of images that will be made for the file number file_num, based on the
@@ -459,6 +474,21 @@ class OutputBuilder(object):
 
         image = galsim.config.BuildImage(base, image_num, obj_num, logger=logger)
         return [ image ]
+
+    def getNFiles(self, config, base):
+        """Returns the number of files to be built.
+
+        In the base class, this is just output.nfiles.
+
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+
+        @returns the number of files to build.
+        """
+        if 'nfiles' in config:
+            return galsim.config.ParseValue(config, 'nfiles', base, int)[0]
+        else:
+            return 1
 
     def getNImages(self, config, base, file_num):
         """Returns the number of images to be built.
