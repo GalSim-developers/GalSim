@@ -648,48 +648,60 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-def ProcessTemplate(config, logger=None):
+def ProcessTemplate(config, base, logger=None):
     """If the config dict has a 'template' item, read in the appropriate file and
     make any requested updates.
 
     @param config           The configuration dict.
+    @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     """
     logger = LoggerWrapper(logger)
     if 'template' in config:
         template_string = config.pop('template')
         logger.debug("Processing template specified as %s",template_string)
+
+        # Parse the template string
         if ':' in template_string:
             config_file, field = template_string.split(':')
         else:
-            config_file = template_string
-            field = None
-        all_config = ReadConfig(config_file, logger=logger)
-        if len(all_config) != 1:
-            raise RuntimeError("Template config file %s is not allowed to have multiple documents.",
-                               config_file)
+            config_file, field = template_string, None
+
+        # Read the config file if appropriate
+        if config_file != '':
+            template = ReadConfig(config_file, logger=logger)[0]
+        else:
+            template = base
+
+        # Pull out the specified field, if any
+        if field is not None:
+            template = GetFromConfig(template, field)
+
         # Copy over the template config into this one.
         new_params = config.copy()  # N.B. Already popped config['template'].
         config.clear()
-        if field is None:
-            config.update(all_config[0])
-        else:
-            config.update(GetFromConfig(all_config[0],field))
+        config.update(template)
 
         # Update the config with the requested changes
         UpdateConfig(config, new_params)
 
 
-def ProcessAllTemplates(config, logger=None):
+def ProcessAllTemplates(config, logger=None, base=None):
     """Check through the full config dict and process any fields that have a 'template' item.
 
     @param config           The configuration dict.
+    @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     """
-    ProcessTemplate(config, logger)
+    if base is None: base = config
+    ProcessTemplate(config, base, logger)
     for (key, field) in config.items():
         if isinstance(field, dict):
-            ProcessAllTemplates(field, logger)
+            ProcessAllTemplates(field, logger, base)
+        elif isinstance(field, list):
+            for item in field:
+                if isinstance(item, dict):
+                    ProcessAllTemplates(item, logger, base)
 
 # This is the main script to process everything in the configuration dict.
 def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=False):

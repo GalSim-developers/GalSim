@@ -1519,6 +1519,68 @@ def test_multirng():
         np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
 
+@timer
+def test_template():
+    """Test various uses of the template keyword
+    """
+    # Use the multirng.yaml config file from the above test as a convenient template source
+    config = {
+        # This copies everything, but we'll override a few things
+        "template" : "config_input/multirng.yaml",
+
+        # Specific fields can be overridden
+        "output" : { "file_name" : "test_template.fits" },
+
+        # Can override non-top-level fields
+        "gal.shear" : { "type" : "E1E2", "e1" : 0.2, "e2" : 0 },
+
+        # Including within a list
+        "input.power_spectrum.1.grid_spacing" : 2,
+
+        # Can add new fields to an existing dict
+        "gal.magnify" : { "type" : "PowerSpectrumMagnification", "num" : 1 },
+
+        # Can use specific fields from the template file rather than the whole thing using :
+        "gal.ellip" : { "template" : "config_input/multirng.yaml:psf.ellip" },
+
+        # Using a zero-length string deletes an item
+        "gal.half_light_radius" : "",
+        "gal.scale_radius" : 1.6,
+
+        # Check that template items work inside a list.
+        "psf" : {
+            "type" : "List",
+            "items" : [
+                { "template" : "config_input/multirng.yaml:psf" },
+                { "type" : "Gaussian", "sigma" : 0.3 },
+                # Omitting the file name before : means use the current config file instead.
+                { "template" : ":psf.items.1", "sigma" : 0.4 },
+            ]
+        }
+    }
+    config2 = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
+
+    galsim.config.ProcessAllTemplates(config)
+
+    assert config['image'] == config2['image']
+    assert config['output'] != config2['output']
+    assert config['output'] == { "file_name" : "test_template.fits" }
+
+    assert config['gal']['type'] == 'Exponential'
+    assert config['gal']['flux'] == 100
+    assert config['gal']['shear'] == { "type" : "E1E2", "e1" : 0.2, "e2" : 0 }
+    assert config['gal']['magnify'] == { "type" : "PowerSpectrumMagnification", "num" : 1 }
+    assert config['gal']['ellip'] == { "type" : "PowerSpectrumShear", "num" : 0 }
+    assert 'half_light_radius' not in config['gal']
+    assert config['gal']['scale_radius'] == 1.6
+
+    assert config['psf']['type'] == 'List'
+    assert config['psf']['items'][0] == { "type": "Moffat", "beta": 2, "fwhm": 0.9,
+                                          "ellip": { "type" : "PowerSpectrumShear", "num" : 0 } }
+    assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
+    assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
+
+
 if __name__ == "__main__":
     test_single()
     test_positions()
@@ -1533,3 +1595,4 @@ if __name__ == "__main__":
     test_wcs()
     test_index_key()
     test_multirng()
+    test_template()
