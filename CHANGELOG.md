@@ -30,6 +30,8 @@ API Changes
 - Some of the backend (but nonetheless public API) methods of PhaseScreen and
   PhaseScreenList have changed.  See the docstrings of these classes for
   the new API if you have been using these methods. (#824)
+- Changed behaviour of the `preload` option in RealGalaxyCatalog and 
+  COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
 
 
 Dependency Changes
