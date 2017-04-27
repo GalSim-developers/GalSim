@@ -134,6 +134,8 @@ namespace {
                      "Set the total flux to a new value")
                 .def("scaleFlux", &PhotonArray::scaleFlux, (bp::arg("scale")),
                      "Scale the total flux by a given factor")
+                .def("scaleXY", &PhotonArray::scaleXY, (bp::arg("scale")),
+                     "Scale the photon positions (x,y) a given factor")
                 .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
                      "Assign the contents of another PhotonArray to this one starting at istart.")
                 .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),

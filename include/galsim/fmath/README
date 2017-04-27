@@ -1,0 +1,8 @@
+The code in this directory is from https://github.com/herumi/fmath
+
+It includes code for exp (and log for float32) that is much faster than the regular
+std library exp function.
+
+The only file here that we actually use is fmath.hpp, but we include the entire directory
+to make sure we give full credit and provide full documentation.  Plus it's only 300K for
+everything, so it doesn't add much to the size of the repo.

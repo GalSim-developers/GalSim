@@ -1157,7 +1157,7 @@ def test_dep_wmult():
     #   - create a new image that is wmult times larger in each direction.
     #   - return the new image
     #   - set the scale to obj2.nyquistScale()
-    im6 = check_dep(obj.drawImage, wmult=4.)
+    im6 = check_dep(obj.drawImage, wmult=3.)
     np.testing.assert_almost_equal(im6.scale, nyq_scale, 9,
                                    "obj.drawImage(wmult) produced image with wrong scale")
     # Can assert accuracy to 4 decimal places now, since we're capturing much more
@@ -1166,7 +1166,7 @@ def test_dep_wmult():
                                    "obj.drawImage(wmult) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
                                    "Measured wrong scale after obj.drawImage(wmult)")
-    assert im6.bounds == galsim.BoundsI(1,220,1,220),(
+    assert im6.bounds == galsim.BoundsI(1,166,1,166),(
             "obj.drawImage(wmult) produced image with wrong bounds")
 
     # Test if we provide an image argument and wmult.  It should:

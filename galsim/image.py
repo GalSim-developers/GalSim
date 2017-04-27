@@ -231,7 +231,6 @@ class Image(with_metaclass(MetaImage, object)):
         float : np.float64,      # if using dtype=int or float or complex
         complex : np.complex128,
         np.int64 : np.int32,          # Not equivalent, but will convert
-        np.complex64 : np.complex128  # Not equivalent, but will convert
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
     # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
@@ -281,6 +280,8 @@ class Image(with_metaclass(MetaImage, object)):
             else:
                 ncol = kwargs.pop('ncol',None)
                 nrow = kwargs.pop('nrow',None)
+                xmin = kwargs.pop('xmin',1)
+                ymin = kwargs.pop('ymin',1)
 
         # Pop off the other valid kwargs:
         dtype = kwargs.pop('dtype', None)
@@ -371,7 +372,7 @@ class Image(with_metaclass(MetaImage, object)):
                         #      im2 = ImageD(im)
                         self.image = _galsim.ImageAlloc[dtype](image)
                     else:
-                        self.image = image
+                        self.image = _galsim.ImageAlloc[im_dtype](image)
                     break
             if self.image is None:
                 # Then never found the dtype above:
@@ -660,7 +661,7 @@ class Image(with_metaclass(MetaImage, object)):
         the most negative value.  For example,
 
             >>> N = 100
-            >>> im_full = galsim.ImageC(bounds=galsim.BoundsI(0,N/2,-N/2,N/2), scale=dk)
+            >>> im_full = galsim.ImageCD(bounds=galsim.BoundsI(0,N/2,-N/2,N/2), scale=dk)
             >>> # ... fill with im[i,j] = FT(kx=i*dk, ky=j*dk)
             >>> N2 = 64
             >>> im_wrap = im_full.wrap(galsim.BoundsI(0,N/2,-N2/2,N2/2-1, hermitian='x')
@@ -759,7 +760,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         return _Image(target_ar, target_bounds, target_wcs)
 
-    def subsample(self, nx, ny):
+    def subsample(self, nx, ny, dtype=None):
         """Subdivide the image pixels into nx x ny sub-pixels.
 
         This returns a new image that is a subsampled version of the current image.
@@ -774,6 +775,8 @@ class Image(with_metaclass(MetaImage, object)):
 
         @param nx       The number of sub-pixels in the x direction for each original pixel.
         @param ny       The number of sub-pixels in the y direction for each original pixel.
+        @param dtype    Optionally provide a dtype for the return image. [default: None, which
+                        means to use the same dtype as the original image]
 
         @returns a new Image
         """
@@ -784,6 +787,7 @@ class Image(with_metaclass(MetaImage, object)):
         flux_factor = nx * ny
 
         target_ar = np.repeat(np.repeat(self.array, ny, axis=0), nx, axis=1)
+        target_ar = target_ar.astype(dtype, copy=False)  # Cute. This is a no op if dtype=None
         target_ar /= flux_factor
 
         if self.wcs is None or not self.wcs.isUniform():
@@ -814,10 +818,11 @@ class Image(with_metaclass(MetaImage, object)):
         Note: the image will be padded with zeros as needed to make an image with bounds that
         look like BoundsI(-N/2, N/2-1, -N/2, N/2-1).
 
-        The input image must have a PixelScale wcs.  The output image will be complex (an ImageC
-        instance) and its scale will be 2pi / (N dx), where dx is the scale of the input image.
+        The input image must have a PixelScale wcs.  The output image will be complex (an ImageCF
+        or ImageCD instance) and its scale will be 2pi / (N dx), where dx is the scale of the input
+        image.
 
-        @returns an ImageC instance with the k-space image.
+        @returns an Image instance with the k-space image.
         """
         if self.wcs is None:
             raise ValueError("calculate_fft requires that the scale be set.")
@@ -850,7 +855,7 @@ class Image(with_metaclass(MetaImage, object)):
     def calculate_inverse_fft(self):
         """Performs an inverse FFT of an Image in k-space to produce a real-space Image.
 
-        The starting image is typically an ImageC, although if the Fourier function is real valued,
+        The starting image is typically an ImageCD, although if the Fourier function is real valued,
         then you could get away with using an ImageD or ImageF.
 
         The image is assumed to be Hermitian.  In fact, only the portion with x >= 0 needs to
@@ -911,7 +916,7 @@ class Image(with_metaclass(MetaImage, object)):
 
     def __iter__(self):
         if self.iscomplex:
-            # To enable the syntax re, im = obj.drawKImage(...), we let ImageC be iterable,
+            # To enable the syntax re, im = obj.drawKImage(...), we let ImageCD be iterable,
             # but give a deprecation warning if people use it.
             from galsim.deprecated import depr
             depr('re, im = imagec', 1.5, 're = imagec.real; im = imagec.imag')
@@ -959,9 +964,11 @@ class Image(with_metaclass(MetaImage, object)):
             return galsim.Image(wcs=wcs, dtype=self.dtype)
 
         if make_const:
-            ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
+            array = self.array.view()
+            array.flags.writeable = False
+            ret = _Image(array, self.bounds, wcs)
         else:
-            ret = Image(image=self.image.view(), wcs=wcs)
+            ret = _Image(self.array, self.bounds, wcs)
 
         if origin is not None:
             ret.setOrigin(origin)
@@ -973,12 +980,7 @@ class Image(with_metaclass(MetaImage, object)):
     def _view(self):
         """Equivalent to im.view(), but without some of the sanity checks and extra options.
         """
-        ret = Image.__new__(Image)
-        ret.image = self.image.view()
-        ret._array = self._array
-        ret.dtype = self.dtype
-        ret.wcs = self.wcs
-        return ret
+        return _Image(self.array.view(), self.bounds, self.wcs)
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
@@ -999,6 +1001,10 @@ class Image(with_metaclass(MetaImage, object)):
         self._shift(delta)
 
     def _shift(self, delta):
+        """Equivalent to im.shift(delta), but without some of the sanity checks and extra options.
+
+        @param delta    The amount to shift.  Must be a galsim.PositionI instance.
+        """
         # The parse_pos_args function is a bit slow, so go directly to this point when we
         # call shift from setCenter or setOrigin.
         if delta.x != 0 or delta.y != 0:
@@ -1210,6 +1216,16 @@ class Image(with_metaclass(MetaImage, object)):
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
         self.image.invertSelf()
+
+    def replaceNegative(self, replace_value=0):
+        """Replace any negative values currently in the image with 0 (or some other value).
+
+        Sometimes FFT drawing can result in tiny negative values, which may be undesirable for
+        some purposes.  This method replaces those values with 0 or some other value if desired.
+
+        @param replace_value    The value with which to replace any negative pixels. [default: 0]
+        """
+        self.array[self.array<0] = replace_value
 
     def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
         """Returns the half-light radius of a drawn object.
@@ -1456,7 +1472,13 @@ def ImageD(*args, **kwargs):
     kwargs['dtype'] = np.float64
     return Image(*args, **kwargs)
 
-def ImageC(*args, **kwargs):
+def ImageCF(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.complex64)
+    """
+    kwargs['dtype'] = np.complex64
+    return Image(*args, **kwargs)
+
+def ImageCD(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.complex128)
     """
     kwargs['dtype'] = np.complex128
@@ -1856,7 +1878,9 @@ galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%
         self.bounds, self.array)
 galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
         self.bounds, self.array)
-galsim._galsim.ImageAllocC.__repr__ = lambda self: 'galsim._galsim.ImageAllocC(%r,%r)'%(
+galsim._galsim.ImageAllocCF.__repr__ = lambda self: 'galsim._galsim.ImageAllocCF(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocCD.__repr__ = lambda self: 'galsim._galsim.ImageAllocCD(%r,%r)'%(
         self.bounds, self.array)
 
 galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
@@ -1871,7 +1895,9 @@ galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,
         self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
-galsim._galsim.ImageViewC.__repr__ = lambda self: 'galsim._galsim.ImageViewC(%r,%r,%r)'%(
+galsim._galsim.ImageViewCF.__repr__ = lambda self: 'galsim._galsim.ImageViewCF(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewCD.__repr__ = lambda self: 'galsim._galsim.ImageViewCD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 
 galsim._galsim.ConstImageViewUS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUS(%r,%r,%r)'%(
@@ -1886,5 +1912,7 @@ galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImag
         self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
-galsim._galsim.ConstImageViewC.__repr__ = lambda self: 'galsim._galsim.ConstImageViewC(%r,%r,%r)'%(
+galsim._galsim.ConstImageViewCF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewCF(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewCD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewCD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)

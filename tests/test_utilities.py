@@ -257,7 +257,7 @@ def test_interleaveImages():
     g = galsim.Gaussian(sigma=3.7,flux=1000.*n*n)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     gal.drawImage(image=im,method='no_pixel',offset=galsim.PositionD(0.0,0.0),scale=1.*scale/n)
-    np.testing.assert_array_equal(img.array,im.array,
+    np.testing.assert_almost_equal(img.array,im.array, 6,
         err_msg="Interleaved Gaussian images do not match")
 
     assert im.wcs == img.wcs
@@ -377,7 +377,7 @@ def test_interleaveImages():
     scale = im_list[0].scale
     gal.drawImage(image=im,scale=1.*scale/n,method='no_pixel')
 
-    np.testing.assert_array_equal(im.array, img.array,
+    np.testing.assert_almost_equal(im.array, img.array, 12,
                                   err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
 

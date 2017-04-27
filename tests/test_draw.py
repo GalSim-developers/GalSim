@@ -45,7 +45,6 @@ def CalculateScale(im):
         T = complex
     else:
         T = float
-    a = im.array.astype(T)
     flux = im.array.astype(T).sum()
     mx = (x * im.array.astype(T)).sum() / flux
     my = (y * im.array.astype(T)).sum() / flux
@@ -239,7 +238,7 @@ def test_drawImage():
     #   - set the scale
     ny = 100  # Make it non-square
     im10 = obj.drawImage(nx=nx, ny=ny, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny, nx),
                                    "obj.drawImage(nx,ny,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
@@ -253,7 +252,7 @@ def test_drawImage():
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx+1), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx+1),
                                    "obj.drawImage(nx,ny,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(nx,ny,scale) produced image with wrong scale")
@@ -271,7 +270,7 @@ def test_drawImage():
     #   - create a new image with the right size
     #   - set the scale to obj2.nyquistScale()
     im10 = obj.drawImage(nx=nx, ny=ny)
-    np.testing.assert_almost_equal(im10.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny, nx),
                                    "obj.drawImage(nx,ny) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
@@ -285,7 +284,7 @@ def test_drawImage():
 
     # Repeat with odd nx,ny
     im10 = obj.drawImage(nx=nx+1, ny=ny+1)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx+1), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx+1),
                                    "obj.drawImage(nx,ny) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(nx,ny) produced image with wrong scale")
@@ -311,7 +310,7 @@ def test_drawImage():
     #   - set the scale
     bounds = galsim.BoundsI(1,nx,1,ny+1)
     im10 = obj.drawImage(bounds=bounds, scale=scale)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx),
                                    "obj.drawImage(bounds,scale) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, scale, 9,
                                    "obj.drawImage(bounds,scale) produced image with wrong scale")
@@ -328,7 +327,7 @@ def test_drawImage():
     #   - set the scale to obj2.nyquistScale()
     bounds = galsim.BoundsI(1,nx,1,ny+1)
     im10 = obj.drawImage(bounds=bounds)
-    np.testing.assert_almost_equal(im10.array.shape, (ny+1, nx), 9,
+    np.testing.assert_equal(im10.array.shape, (ny+1, nx),
                                    "obj.drawImage(bounds) produced image with wrong size")
     np.testing.assert_almost_equal(im10.scale, nyq_scale, 9,
                                    "obj.drawImage(bounds) produced image with wrong scale")
@@ -499,7 +498,7 @@ def test_drawKImage():
                                    "Measured wrong scale after obj.drawKImage()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0));
+    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0))
     np.testing.assert_almost_equal(im1(0,0), test_flux, 2,
                                    "obj.drawKImage() produced image with wrong flux")
     # Imaginary component should all be 0.
@@ -511,7 +510,7 @@ def test_drawKImage():
     #   - also return that image
     #   - set the scale to obj.stepK()
     #   - zero out any existing data
-    im3 = galsim.ImageC(1149,1149)
+    im3 = galsim.ImageCD(1149,1149)
     im4 = obj.drawKImage(im3)
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(im3) produced image with wrong scale")
@@ -531,7 +530,7 @@ def test_drawKImage():
     #   - resize the provided image
     #   - also return that image
     #   - set the scale to obj.stepK()
-    im5 = galsim.ImageC()
+    im5 = galsim.ImageCD()
     obj.drawKImage(im5)
     np.testing.assert_almost_equal(im5.scale, stepk, 9,
                                    "obj.drawKImage(im5) produced image with wrong scale")
@@ -566,7 +565,7 @@ def test_drawKImage():
     #   - write to the existing image
     #   - use the image's scale
     nx = 401
-    im9 = galsim.ImageC(nx,nx, scale=scale)
+    im9 = galsim.ImageCD(nx,nx, scale=scale)
     obj.drawKImage(im9)
     np.testing.assert_almost_equal(im9.scale, scale, 9,
                                    "obj.drawKImage(im9) produced image with wrong scale")
@@ -663,8 +662,8 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, scale, 9,
             "obj.drawKImage(nx,ny,scale) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(nx,ny,scale) produced image with wrong shape")
 
     # Test if we provide nx, ny, and no scale.  It should:
@@ -674,9 +673,21 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, stepk, 9,
             "obj.drawKImage(nx,ny) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(nx,ny) produced image with wrong shape")
+
+    # Test if we provide bounds and no scale.  It should:
+    #   - create a new image with the right size
+    #   - set the scale to obj.stepK()
+    bounds = galsim.BoundsI(1,nx,1,ny)
+    im4 = obj.drawKImage(bounds=bounds)
+    np.testing.assert_almost_equal(
+            im4.scale, stepk, 9,
+            "obj.drawKImage(bounds) produced image with wrong scale")
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
+            "obj.drawKImage(bounds) produced image with wrong shape")
 
     # Test if we provide bounds and scale.  It should:
     #   - create a new image with the right size
@@ -686,22 +697,38 @@ def test_drawKImage():
     np.testing.assert_almost_equal(
             im4.scale, scale, 9,
             "obj.drawKImage(bounds,scale) produced image with wrong scale")
-    np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
+    np.testing.assert_equal(
+            im4.array.shape, (ny, nx),
             "obj.drawKImage(bounds,scale) produced image with wrong shape")
 
+    # Test recenter = False option
+    bounds6 = galsim.BoundsI(0, nx//3, 0, ny//4)
+    im6 = obj.drawKImage(bounds=bounds6, scale=scale, recenter=False)
+    np.testing.assert_equal(
+            im6.bounds, bounds6,
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong bounds")
+    np.testing.assert_almost_equal(
+            im6.scale, scale, 9,
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong scale")
+    np.testing.assert_equal(
+            im6.array.shape, (ny//4+1, nx//3+1),
+            "obj.drawKImage(bounds,scale,recenter=False) produced image with wrong shape")
+    np.testing.assert_almost_equal(
+            im6.array, im4[bounds6].array, 9,
+            "obj.drawKImage(recenter=False) produced different values than recenter=True")
 
-    # Test if we provide bounds and scale.  It should:
-    #   - create a new image with the right size
-    #   - set the scale to obj.stepK()
-    bounds = galsim.BoundsI(1,nx,1,ny)
-    im4 = obj.drawKImage(bounds=bounds)
+    # Test recenter = False option
+    im6.setZero()
+    obj.drawKImage(im6, recenter=False)
     np.testing.assert_almost_equal(
-            im4.scale, stepk, 9,
-            "obj.drawKImage(bounds) produced image with wrong scale")
+            im6.scale, scale, 9,
+            "obj.drawKImage(image,recenter=False) produced image with wrong scale")
+    np.testing.assert_equal(
+            im6.array.shape, (ny//4+1, nx//3+1),
+            "obj.drawKImage(image,recenter=False) produced image with wrong shape")
     np.testing.assert_almost_equal(
-            im4.array.shape, (ny, nx), 9,
-            "obj.drawKImage(bounds) produced image with wrong shape")
+            im6.array, im4[bounds6].array, 9,
+            "obj.drawKImage(image,rcenter=False) produced different values than recenter=True")
 
 
 @timer
@@ -727,7 +754,7 @@ def test_drawKImage_Gaussian():
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
-    kimage_test = galsim.ImageC(test_imsize, test_imsize)
+    kimage_test = galsim.ImageCD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different scale (reasonably matched for size)
     for scale_test in (0.03 / test_sigma, 0.4 / test_sigma):
@@ -769,7 +796,7 @@ def test_drawKImage_Exponential_Moffat():
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
-    kimage_test = galsim.ImageC(test_imsize, test_imsize)
+    kimage_test = galsim.ImageCD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different scale (reasonably matched for size)
     for scale_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
@@ -960,17 +987,19 @@ def test_shoot():
     # 100,000 and then was left with 1, but rounding errors (since it is a double, not an int)
     # was 1 - epsilon, and it ended up in a place where it shouldn't have been able to get to
     # in exact arithmetic.  We had an assert there which blew up in a not very nice way.
-    obj =  galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
+    obj = galsim.Gaussian(sigma=0.2398318) + 0.1*galsim.Gaussian(sigma=0.47966352)
     obj = obj.withFlux(100001)
     image1 = galsim.ImageF(32,32, init_value=100)
     rng = galsim.BaseDeviate(1234)
-    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng)
+    obj.drawImage(image1, method='phot', poisson_flux=False, add_to_image=True, rng=rng,
+                  maxN=100000)
 
     # The test here is really just that it doesn't crash.
     # But let's do something to check correctness.
     image2 = galsim.ImageF(32,32)
     rng = galsim.BaseDeviate(1234)
-    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng)
+    obj.drawImage(image2, method='phot', poisson_flux=False, add_to_image=False, rng=rng,
+                  maxN=100000)
     image2 += 100
     np.testing.assert_almost_equal(image2.array, image1.array, decimal=12)
 
@@ -1043,59 +1072,59 @@ def test_fft():
     # And run it for all input types to make sure they all work.
     types = [np.int16, np.int32, np.float32, np.float64, np.complex128, int, float, complex]
     for dt in types:
-        xim = galsim.Image([ [0,1,2,1],
-                             [1,2,3,2],
-                             [2,3,4,2],
-                             [1,2,3,3] ],
+        xim = galsim.Image([ [0,2,4,2],
+                             [2,4,6,4],
+                             [4,6,8,4],
+                             [2,4,6,6] ],
                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
         kim = xim.calculate_fft()
         xim2 = kim.calculate_inverse_fft()
         np.testing.assert_almost_equal(xim.array, xim2.array)
 
         # Now the other way, starting with a (real) k-space image.
-        kim = galsim.Image([ [2,1,0],
-                             [3,2,1],
-                             [4,3,2],
-                             [3,2,1] ],
+        kim = galsim.Image([ [4,2,0],
+                             [6,4,2],
+                             [8,6,4],
+                             [6,4,2] ],
                            xmin=0, ymin=-2, dtype=dt, scale=0.1)
         xim = kim.calculate_inverse_fft()
         kim2 = xim.calculate_fft()
         np.testing.assert_almost_equal(kim.array, kim2.array)
 
         # Test starting with a larger image that gets wrapped.
-        kim3 = galsim.Image([ [0,0.5,1,0.5,0],
-                              [0.5,2,3,2,0.5],
-                              [1,3,4,3,1],
-                              [0.5,2,3,2,0.5],
-                              [0,0.5,1,0.5,0] ],
-                            xmin=0, ymin=-2, dtype=dt, scale=0.1)
-        xim = kim.calculate_inverse_fft()
+        kim3 = galsim.Image([ [0,1,2,1,0],
+                              [1,4,6,4,1],
+                              [2,6,8,6,2],
+                              [1,4,6,4,1],
+                              [0,1,2,1,0] ],
+                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
+        xim = kim3.calculate_inverse_fft()
         kim2 = xim.calculate_fft()
         np.testing.assert_almost_equal(kim.array, kim2.array)
 
         # Test padding X Image with zeros
         xim = galsim.Image([ [0,0,0,0],
-                             [1,2,3,0],
-                             [2,3,4,0],
+                             [2,4,6,0],
+                             [4,6,8,0],
                              [0,0,0,0] ],
                            xmin=-2, ymin=-2, dtype=dt, scale=0.1)
-        xim2 = galsim.Image([ [1,2,3],
-                              [2,3,4] ],
+        xim2 = galsim.Image([ [2,4,6],
+                              [4,6,8] ],
                             xmin=-2, ymin=-1, dtype=dt, scale=0.1)
         kim = xim.calculate_fft()
         kim2 = xim2.calculate_fft()
         np.testing.assert_almost_equal(kim.array, kim2.array)
 
         # Test padding K Image with zeros
-        kim = galsim.Image([ [2,1,0],
-                             [3,2,0],
-                             [4,3,0],
-                             [3,2,0] ],
+        kim = galsim.Image([ [4,2,0],
+                             [6,4,0],
+                             [8,6,0],
+                             [6,4,0] ],
                            xmin=0, ymin=-2, dtype=dt, scale=0.1)
-        kim2 = galsim.Image([ [3,2],
-                              [4,3],
-                              [3,2],
-                              [2,1] ],
+        kim2 = galsim.Image([ [6,4],
+                              [8,6],
+                              [6,4],
+                              [4,2] ],
                            xmin=0, ymin=-1, dtype=dt, scale=0.1)
         xim = kim.calculate_inverse_fft()
         xim2 = kim2.calculate_inverse_fft()
@@ -1107,7 +1136,6 @@ def test_fft():
     N = 1162  # NB. It is useful to have this come out not a multiple of 4, since some of the
               #     calculation needs to be different when N/2 is odd.
     nyq_scale = obj.nyquistScale()
-    stepk = obj.stepK()
 
     # If we inverse_fft the above automatic image, it should match the automatic real image
     # for method = 'sb' and use_true_center=False.
@@ -1172,13 +1200,13 @@ def test_np_fft():
         input_list.append(xim.array)
 
     for N in [2,4,8,10]:
-        xim = galsim.ImageC(N,N)
+        xim = galsim.ImageCD(N,N)
         xim.real.addNoise(noise)
         xim.imag.addNoise(noise)
         input_list.append(xim.array)
 
     for Nx,Ny in [ (2,4), (4,2), (10,6), (6,10) ]:
-        xim = galsim.ImageC(Nx,Ny)
+        xim = galsim.ImageCD(Nx,Ny)
         xim.real.addNoise(noise)
         xim.imag.addNoise(noise)
         input_list.append(xim.array)
@@ -1332,6 +1360,126 @@ def test_np_fft():
     except ImportError:
         pass
 
+@timer
+def test_types():
+    """Test drawing onto image types other than float32, float64.
+    """
+
+    # Methods test drawReal, drawFFT, drawPhot respectively
+    for method in ['no_pixel', 'fft', 'phot']:
+        if method == 'phot':
+            rng = galsim.BaseDeviate(1234)
+        else:
+            rng = None
+        obj = galsim.Exponential(flux=177, scale_radius=2)
+        ref_im = obj.drawImage(method=method, dtype=float, rng=rng)
+
+        for dt in [ np.float32, np.float64, np.int16, np.int32, np.uint16, np.uint32,
+                    np.complex128, np.complex64 ]:
+            if method == 'phot': rng.reset(1234)
+            print('Checking',method,'with dt =', dt)
+            im = obj.drawImage(method=method, dtype=dt, rng=rng)
+            np.testing.assert_equal(im.scale, ref_im.scale,
+                                    "wrong scale when drawing onto dt=%s"%dt)
+            np.testing.assert_equal(im.bounds, ref_im.bounds,
+                                    "wrong bounds when drawing onto dt=%s"%dt)
+            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt), 6,
+                                           "wrong array when drawing onto dt=%s"%dt)
+
+            if method == 'phot':
+                rng.reset(1234)
+            obj.drawImage(im, method=method, add_to_image=True, rng=rng)
+            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt) * 2, 6,
+                                           "wrong array when adding to image with dt=%s"%dt)
+
+@timer
+def test_direct_scale():
+    """Test the explicit functions with scale != 1
+
+    The default behavior is to change the profile to image coordinates, and draw that onto an
+    image with scale=1.  But the three direct functions allow the image to have a non-unit
+    pixel scale.  (Not more complicated wcs though.)
+
+    This test checks that the results are equivalent between the two calls.
+    """
+
+    scale = 0.35
+    rng = galsim.BaseDeviate(1234)
+    obj = galsim.Exponential(flux=177, scale_radius=2)
+    obj_with_pixel = galsim.Convolve(obj, galsim.Pixel(scale))
+    obj_sb = obj / scale**2
+
+    # Make these odd, so we don't have to deal with the centering offset stuff.
+    im1 = galsim.ImageD(65, 65, scale=scale)
+    im2 = galsim.ImageD(65, 65, scale=scale)
+    im2.setCenter(0,0)
+
+    # One possibe use of the specific functions is to not automatically recenter on 0,0.
+    # So make sure they work properly if 0,0 is not the center
+    im3 = galsim.ImageD(32, 32, scale=scale)  # origin is (1,1)
+
+    obj.drawImage(im1, method='no_pixel')
+    obj.drawReal(im2)
+    obj.drawReal(im3)
+    print('no_pixel: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                   "drawReal made different image than method='no_pixel'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when off-center")
+
+    obj.drawImage(im1, method='sb')
+    obj_sb.drawReal(im2)
+    obj_sb.drawReal(im3)
+    print('sb: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                   "drawReal made different image than method='sb'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when off-center")
+
+    obj.drawImage(im1, method='fft')
+    obj_with_pixel.drawFFT(im2)
+    obj_with_pixel.drawFFT(im3)
+    print('fft: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                   "drawFFT made different image than method='fft'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawFFT made different image when off-center")
+
+    obj.drawImage(im1, method='real_space')
+    obj_with_pixel.drawReal(im2)
+    obj_with_pixel.drawReal(im3)
+    print('real_space: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    # I'm not sure why this one comes out a bit less precisely equal.  But 12 digits is still
+    # plenty accurate enough.
+    np.testing.assert_almost_equal(im1.array, im2.array, 12,
+                                   "drawReal made different image than method='real_space'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 14,
+                                   "drawReal made different image when off-center")
+
+    obj.drawImage(im1, method='phot', rng=rng.duplicate())
+    obj.drawPhot(im2, rng=rng.duplicate())
+    obj.drawPhot(im3, rng=rng.duplicate())
+    print('phot: max diff = ',np.max(np.abs(im1.array - im2.array)))
+    np.testing.assert_almost_equal(im1.array, im2.array, 15,
+                                   "drawPhot made different image than method='phot'")
+    np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
+                                   "drawPhot made different image when off-center")
+
+    # Check images with invalid wcs raise ValueError
+    im4 = galsim.ImageD(65, 65)
+    im5 = galsim.ImageD(65, 65, wcs=galsim.JacobianWCS(0.4,0.1,-0.1,0.5))
+    try:
+        np.testing.assert_raises(ValueError, obj.drawReal, im4)
+        np.testing.assert_raises(ValueError, obj.drawReal, im5)
+        np.testing.assert_raises(ValueError, obj.drawFFT, im4)
+        np.testing.assert_raises(ValueError, obj.drawFFT, im5)
+        np.testing.assert_raises(ValueError, obj.drawPhot, im4)
+        np.testing.assert_raises(ValueError, obj.drawPhot, im5)
+        # Also some other errors from drawPhot
+        np.testing.assert_raises(ValueError, obj.drawPhot, im2, n_photons=-20)
+        np.testing.assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
+    except ImportError:
+        pass
 
 if __name__ == "__main__":
     test_drawImage()
@@ -1344,3 +1492,5 @@ if __name__ == "__main__":
     test_fft()
     test_np_fft()
     test_shoot()
+    test_types()
+    test_direct_scale()
