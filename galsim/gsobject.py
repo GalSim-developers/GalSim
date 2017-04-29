@@ -840,7 +840,7 @@ class GSObject(object):
         return new_obj
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, N=None, wmult=1.):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=1.):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -865,8 +865,7 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                if N is None:
-                    N = self.getGoodImageSize(1.0/wmult)
+                N = self.getGoodImageSize(1.0/wmult)
                 if odd: N += 1
                 image = galsim.Image(N, N, dtype=dtype)
 
@@ -875,8 +874,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            if N is None:
-                N = self.getGoodImageSize(1.0/wmult)
+            N = self.getGoodImageSize(1.0/wmult)
             if odd: N += 1
             bounds = galsim._BoundsI(1,N,1,N)
             image.resize(bounds)
