@@ -229,6 +229,13 @@ def test_pickle_crg():
     do_pickle(crg)
     do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
 
+    # Check that missing band raises ValueError
+    orig_band = f606w_cat.band
+    f606w_cat.band = 'eggs'
+    np.testing.assert_raises(ValueError, f606w_cat.getBandpass)
+    f606w_cat.band = orig_band
+    f606w_cat.getBandpass()
+
 
 @timer
 def test_crg_roundtrip():
