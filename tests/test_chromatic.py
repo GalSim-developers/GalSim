@@ -1475,6 +1475,16 @@ def test_interpolated_ChromaticObject():
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
 
+    # Check that InterpolatedChromaticObject.drawImage works.  Need an exact object with
+    # an SED for this to work.
+    exact_psf *= bulge_SED
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
+    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
+    im_interp = interp_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=3,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
+
     # Check that we can render an image with chromatic transformations directly, and with
     # interpolation.  Use a ChromaticAtmosphere just because that's easily transformed.
     atm_fwhm = 0.7
