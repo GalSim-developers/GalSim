@@ -230,6 +230,8 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
     all_obj_diff(gals)
+    for gal in gals:
+        do_pickle(gal)
 
 @timer
 def test_noise():

@@ -2096,7 +2096,8 @@ class ChromaticDeconvolution(ChromaticObject):
         return hash(("galsim.ChromaticDeconvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticDeconvolution(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticDeconvolution(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticDeconvolution(%s)'%self.obj
@@ -2150,7 +2151,8 @@ class ChromaticAutoConvolution(ChromaticObject):
         return hash(("galsim.ChromaticAutoConvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoConvolution(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticAutoConvolution(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticAutoConvolution(%s)'%self.obj
@@ -2205,7 +2207,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return hash(("galsim.ChromaticAutoCorrelation", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoCorrelation(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticAutoCorrelation(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticAutoCorrelation(%s)'%self.obj
@@ -2262,7 +2265,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def __repr__(self):
-        return 'galsim.ChromaticFourierSqrtProfile(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticFourierSqrtProfile(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticFourierSqrtProfile(%s)'%self.obj

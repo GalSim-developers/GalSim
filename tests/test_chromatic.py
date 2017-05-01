@@ -1834,76 +1834,96 @@ def test_chromatic_invariant():
     # ChromaticAtmosphere
     chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees)
     check_chromatic_invariant(chrom_atm)
+    do_pickle(chrom_atm)
 
     # ChromaticTransformation formed from __mul__
     chrom = gsobj * bulge_SED
     check_chromatic_invariant(chrom)
+    do_pickle(chrom)
 
     # ChromaticOpticalPSF
     chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2)
     check_chromatic_invariant(chrom_opt)
+    do_pickle(chrom_opt)
 
     # ChromaticAiry
     chrom_airy = galsim.ChromaticAiry(lam=500.0, diam=3.0)
     check_chromatic_invariant(chrom_airy)
+    do_pickle(chrom_airy)
 
     # Now start testing compound objects...
     # ChromaticSum
     chrom_sum_noSED = chrom_airy + chrom_opt
     check_chromatic_invariant(chrom_sum_noSED)
+    # TODO: Seems like this should be picklable. Probably anything that doesn't include
+    #       unpicklable user input should be picklable.
+    #       e.g. autoconv2 has no hope.  But there are a few do_pickle calls that are commented
+    #       out that we should probably try to make work.  A job for another day, though...
+    #do_pickle(chrom_sum_noSED)
 
     chrom_sum_SED = chrom + chrom  # also separable
     check_chromatic_invariant(chrom_sum_SED)
+    do_pickle(chrom_sum_SED)
     assert chrom_sum_SED.separable
 
     gsobj2 = galsim.Kolmogorov(fwhm=0.7)
     chrom2 = gsobj2 * disk_SED
     chrom_sum_SED2 = chrom + chrom2
     check_chromatic_invariant(chrom_sum_SED2)
+    do_pickle(chrom_sum_SED2)
     assert not chrom_sum_SED2.separable
 
     # ChromaticConvolution
     conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
     check_chromatic_invariant(conv1)
+    do_pickle(conv1)
 
     conv2 = galsim.Convolve(chrom_airy, chrom_opt)  # Non-SEDed
     check_chromatic_invariant(conv2)
+    do_pickle(conv2)
 
     # ChromaticDeconvolution
     deconv = galsim.Deconvolve(chrom_airy)
     check_chromatic_invariant(deconv)
+    #do_pickle(deconv)
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
     check_chromatic_invariant(autoconv1)
     autoconv2 = galsim.AutoConvolve(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autoconv2)
+    do_pickle(autoconv1)
 
     # ChromaticAutoCorrelation
     autocorr1 = galsim.AutoCorrelate(chrom_airy)
     check_chromatic_invariant(autocorr1)
     autocorr2 = galsim.AutoCorrelate(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autocorr2)
+    do_pickle(autocorr1)
 
     # ChromaticFourierSqrt
     four1 = galsim.FourierSqrt(chrom_airy)
     check_chromatic_invariant(four1)
     four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
+    #do_pickle(four1)
 
     # And a few transforms too...
     # ChromaticTransformation
     sheared_chrom = chrom.shear(g1=0.1)
     check_chromatic_invariant(sheared_chrom)
+    do_pickle(sheared_chrom)
 
     scaled_chrom = 2 * chrom
     check_chromatic_invariant(scaled_chrom)
+    do_pickle(scaled_chrom)
 
     complex_scaled_chrom = chrom * (lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_scaled_chrom)
 
     chrom_added_SED = chrom_airy * bulge_SED
     check_chromatic_invariant(chrom_added_SED)
+    do_pickle(chrom_added_SED)
 
     complex_expanded_chrom = chrom.expand(lambda w: (w/500.0)**0.1)
     check_chromatic_invariant(complex_expanded_chrom)
@@ -1922,6 +1942,7 @@ def test_chromatic_invariant():
     # ChromaticInterpolatedObject
     chrom_interp = chrom_airy.interpolate(waves=[400.0, 500.0, 600.0])
     check_chromatic_invariant(chrom_interp)
+    do_pickle(chrom_interp)
 
 
 @timer
