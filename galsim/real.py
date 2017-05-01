@@ -1032,12 +1032,8 @@ class ChromaticRealGalaxy(ChromaticSum):
     There are no additional methods for ChromaticRealGalaxy beyond the usual ChromaticObject
     methods.
     """
-    def __init__(self, real_galaxy_catalogs=None, SEDs=None, index=None, id=None, random=False,
-                 rng=None, k_interpolant=None, maxk=None, pad_factor=4., normalize_area=False,
-                 gsparams=None, logger=None,
-                 _imgs=None, _bands=None, _xis=None, _PSFs=None):  # hidden args
-        import numpy as np
-
+    def __init__(self, real_galaxy_catalogs=None, index=None, id=None, random=False, rng=None,
+                 gsparams=None, logger=None, **kwargs):
         if rng is None:
             self.rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
@@ -1048,70 +1044,70 @@ class ChromaticRealGalaxy(ChromaticSum):
         self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
                                           # results in the same object.
 
-        if _imgs is not None:  # pragma: no cover
-            # Special (undocumented) way to build a ChromaticRealGalaxy without needing the crg
-            # catalog directly by providing the things we need from it.
-            imgs, bands, xis, PSFs = _imgs, _bands, _xis, _PSFs
-            if not hasattr(PSFs, '__iter__'):
-                PSFs = [PSFs]*len(imgs)
+        if real_galaxy_catalogs is None:
+            raise ValueError("No RealGalaxyCatalog(s) specified!")
 
-            use_index = 0  # For the logger statements below.
-            if logger:
-                logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
-                             use_index)
-            self.catalog_files = None
+        # Get the index to use in the catalog
+        if index is not None:
+            if id is not None or random:
+                raise AttributeError('Too many methods for selecting a galaxy!')
+            use_index = index
+        elif id is not None:
+            if random:
+                raise AttributeError('Too many methods for selecting a galaxy!')
+            use_index = real_galaxy_catalogs[0].getIndexForID(id)
+        elif random:
+            uniform_deviate = galsim.UniformDeviate(self.rng)
+            use_index = int(real_galaxy_catalogs[0].nobjects * uniform_deviate())
         else:
-            if real_galaxy_catalogs is None:
-                raise ValueError("No RealGalaxyCatalog(s) specified!")
+            raise AttributeError('No method specified for selecting a galaxy!')
+        if logger:
+            logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
+                         use_index)
+        self.index = use_index
 
-            # Get the index to use in the catalog
-            if index is not None:
-                if id is not None or random:
-                    raise AttributeError('Too many methods for selecting a galaxy!')
-                use_index = index
-            elif id is not None:
-                if random:
-                    raise AttributeError('Too many methods for selecting a galaxy!')
-                use_index = real_galaxy_catalogs[0].getIndexForID(id)
-            elif random:
-                uniform_deviate = galsim.UniformDeviate(self.rng)
-                use_index = int(real_galaxy_catalogs[0].nobjects * uniform_deviate())
-            else:
-                raise AttributeError('No method specified for selecting a galaxy!')
-            if logger:
-                logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
-                             use_index)
-            self.index = use_index
+        # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
+        imgs = [rgc.getGalImage(use_index) for rgc in real_galaxy_catalogs]
+        if logger:
+            logger.debug('ChromaticRealGalaxy %d: Got gal_image', use_index)
 
-            # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-            imgs = [rgc.getGalImage(use_index) for rgc in real_galaxy_catalogs]
-            if logger:
-                logger.debug('ChromaticRealGalaxy %d: Got gal_image', use_index)
+        PSFs = [rgc.getPSF(use_index) for rgc in real_galaxy_catalogs]
+        if logger:
+            logger.debug('ChromaticRealGalaxy %d: Got psf', use_index)
 
-            PSFs = [rgc.getPSF(use_index) for rgc in real_galaxy_catalogs]
-            if logger:
-                logger.debug('ChromaticRealGalaxy %d: Got psf', use_index)
+        bands = [rgc.getBandpass() for rgc in real_galaxy_catalogs]
 
-            bands = [rgc.getBandpass() for rgc in real_galaxy_catalogs]
+        xis = []
+        for rgc in real_galaxy_catalogs:
+            noise_image, pixel_scale, var = rgc.getNoiseProperties(use_index)
+            # Make sure xi image is odd-sized.
+            if noise_image.array.shape[0] % 2 == 0: #pragma: no branch
+                bds = noise_image.bounds
+                new_bds = galsim.BoundsI(bds.xmin+1, bds.xmax, bds.ymin+1, bds.ymax)
+                noise_image = noise_image[new_bds]
+            ii = galsim.InterpolatedImage(noise_image, normalization='sb',
+                                          calculate_stepk=False, calculate_maxk=False,
+                                          x_interpolant='linear', gsparams=gsparams)
+            xi = galsim.correlatednoise._BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
+            xi = xi.withVariance(var)
+            xis.append(xi)
+        if logger:
+            logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)
+        self.catalog_files = [rgc.getFileName() for rgc in real_galaxy_catalogs]
 
-            xis = []
-            for rgc in real_galaxy_catalogs:
-                noise_image, pixel_scale, var = rgc.getNoiseProperties(use_index)
-                # Make sure xi image is odd-sized.
-                if noise_image.array.shape[0] % 2 == 0: #pragma: no branch
-                    bds = noise_image.bounds
-                    new_bds = galsim.BoundsI(bds.xmin+1, bds.xmax, bds.ymin+1, bds.ymax)
-                    noise_image = noise_image[new_bds]
-                ii = galsim.InterpolatedImage(noise_image, normalization='sb',
-                                              calculate_stepk=False, calculate_maxk=False,
-                                              x_interpolant='linear', gsparams=gsparams)
-                xi = galsim.correlatednoise._BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
-                xi = xi.withVariance(var)
-                xis.append(xi)
-            if logger:
-                logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)
-            self.catalog_files = [rgc.getFileName() for rgc in real_galaxy_catalogs]
+        self._initialize(imgs, bands, xis, PSFs, gsparams=gsparams, **kwargs)
 
+    @classmethod
+    def makeFromImages(cls, imgs, bands, xis, PSFs, **kwargs):
+        if not hasattr(PSFs, '__iter__'):
+            PSFs = [PSFs]*len(imgs)
+        obj = cls.__new__(cls)
+        obj._initialize(imgs, bands, xis, PSFs, **kwargs)
+        return obj
+
+    def _initialize(self, imgs, bands, xis, PSFs,
+                    SEDs=None, k_interpolant=None, maxk=None, pad_factor=4., normalize_area=False,
+                    gsparams=None):
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
         self.SEDs = SEDs
