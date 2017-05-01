@@ -978,7 +978,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 except Exception as e:
                     import traceback
                     tr = traceback.format_exc()
-                    if except_func is not None:
+                    if except_func is not None: # pragma: no branch
                         except_func(logger, None, k, e, tr)
                     if except_abort or isinstance(e,KeyboardInterrupt):
                         raise
