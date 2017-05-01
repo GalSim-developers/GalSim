@@ -22,6 +22,14 @@ exclude_lines =
     # Don't complain about missing debug-only code:
     logger.debug
 
+    # Don't complain if tests don't hit defensive checks of user input
+    raise NotImplementedError
+    raise ValueError
+    raise RuntimeError
+    raise TypeError
+    raise AttributeError
+    raise IOError
+
     # Don't complain about not hitting warning code
     if suppress_warnings is False:
     import warnings
