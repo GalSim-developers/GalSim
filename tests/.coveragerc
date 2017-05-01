@@ -20,21 +20,7 @@ exclude_lines =
     pragma: no cover
 
     # Don't complain about missing debug-only code:
-    def __repr__
-    if self\.debug
     logger.debug
-
-    # Don't complain if tests don't hit defensive checks of user input
-    raise AssertionError
-    raise NotImplementedError
-    raise ValueError
-    raise RuntimeError
-    raise TypeError
-    raise AttributeError
-    raise IndexError
-    raise IOError
-    raise KeyError
-    raise MemoryError
 
     # Don't complain about not hitting warning code
     if suppress_warnings is False:
