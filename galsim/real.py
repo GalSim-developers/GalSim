@@ -1098,7 +1098,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             for rgc in real_galaxy_catalogs:
                 noise_image, pixel_scale, var = rgc.getNoiseProperties(use_index)
                 # Make sure xi image is odd-sized.
-                if noise_image.array.shape[0] % 2 == 0:
+                if noise_image.array.shape[0] % 2 == 0: #pragma: no branch
                     bds = noise_image.bounds
                     new_bds = galsim.BoundsI(bds.xmin+1, bds.xmax, bds.ymin+1, bds.ymax)
                     noise_image = noise_image[new_bds]
