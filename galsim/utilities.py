@@ -1370,7 +1370,7 @@ class lazy_property(object):
 
     def __get__(self, obj, cls):
         if obj is None:
-            return None
+            return self
         value = self.fget(obj)
         setattr(obj, self.func_name, value)
         return value
