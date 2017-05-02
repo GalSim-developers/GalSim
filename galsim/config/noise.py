@@ -148,7 +148,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     builder.addNoiseVariance(noise, config, im, include_obj_var, logger)
     config['index_key'] = orig_index_key
 
-def GetSky(config, base):
+def GetSky(config, base, logger=None):
     """Parse the sky information and return either a float value for the sky level per pixel
     or an image, as needed.
 
@@ -156,19 +156,29 @@ def GetSky(config, base):
     base['image_pos'] to determine what size image to return (stamp or full).  If there is
     a current image_pos, then we are doing a stamp.  Otherwise a full image.
     """
+    logger = galsim.config.LoggerWrapper(logger)
     if 'sky_level' in config:
         if 'sky_level_pixel' in config:
             raise AttributeError("Cannot specify both sky_level and sky_level_pixel")
         sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
+        logger.debug('image %d, obj %d: sky_level = %f',
+                     base.get('image_num',0),base.get('obj_num',0), sky_level)
         wcs = base['wcs']
         if wcs.isUniform():
-            return sky_level * wcs.pixelArea()
+            sky_level_pixel = sky_level * wcs.pixelArea()
+            logger.debug('image %d, obj %d: Uniform: sky_level_pixel = %f',
+                         base.get('image_num',0),base.get('obj_num',0), sky_level_pixel)
+            return sky_level_pixel
         else:
             # This calculation is non-trivial, so store this in case we need it again.
             tag = (id(base), base['file_num'], base['image_num'])
             if config.get('_current_sky_tag',None) == tag:
+                logger.debug('image %d, obj %d: Using saved sky image',
+                             base.get('image_num',0),base.get('obj_num',0))
                 return config['_current_sky']
             else:
+                logger.debug('image %d, obj %d: Non-uniform wcs.  Making sky image',
+                             base.get('image_num',0),base.get('obj_num',0))
                 bounds = base['current_noise_image'].bounds
                 sky = galsim.Image(bounds, wcs=wcs)
                 wcs.makeSkyImage(sky, sky_level)
@@ -177,6 +187,8 @@ def GetSky(config, base):
                 return sky
     elif 'sky_level_pixel' in config:
         sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
+        logger.debug('image %d, obj %d: sky_level_pixel = %f',
+                     base.get('image_num',0),base.get('obj_num',0), sky_level_pixel)
         return sky_level_pixel
     else:
         return 0.
@@ -292,8 +304,8 @@ class PoissonNoiseBuilder(NoiseBuilder):
     def addNoise(self, config, base, im, rng, current_var, draw_method, logger):
 
         # Get how much extra sky to assume from the image.noise attribute.
-        sky = GetSky(base['image'], base)
-        extra_sky = GetSky(config, base)
+        sky = GetSky(base['image'], base, logger)
+        extra_sky = GetSky(config, base, logger)
         total_sky = sky + extra_sky # for the return value
         if isinstance(total_sky, galsim.Image):
             var = np.mean(total_sky.array)
@@ -388,8 +400,8 @@ class CCDNoiseBuilder(NoiseBuilder):
         gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
         # Get how much extra sky to assume from the image.noise attribute.
-        sky = GetSky(base['image'], base)
-        extra_sky = GetSky(config, base)
+        sky = GetSky(base['image'], base, logger)
+        extra_sky = GetSky(config, base, logger)
         total_sky = sky + extra_sky # for the return value
         if isinstance(total_sky, galsim.Image):
             var = np.mean(total_sky.array) + read_noise_var

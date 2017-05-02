@@ -535,6 +535,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         alt_kwargs = dict([(k,str(kwargs[k]) if isinstance(kwargs[k],galsim.Image) else kwargs[k])
                            for k in kwargs])
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
+        logger.debug('obj %d: prof = %s',base.get('obj_num',0),prof)
     try:
         image = prof.drawImage(**kwargs)
     except Exception as e: # pragma: no cover
