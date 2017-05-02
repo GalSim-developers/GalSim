@@ -990,6 +990,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     return results
 
 
+valid_index_keys = [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]
+
 def GetIndex(config, base, is_sequence=False):
     """Return the index to use for the current object or parameter and the index_key.
 
@@ -1001,7 +1003,7 @@ def GetIndex(config, base, is_sequence=False):
     """
     if 'index_key' in config:
         index_key = config['index_key']
-        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
+        if index_key not in valid_index_keys:
             raise AttributeError("Invalid index_key=%s."%index_key)
     else:
         index_key = base.get('index_key','obj_num')
