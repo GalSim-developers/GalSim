@@ -1886,6 +1886,7 @@ def test_chromatic_invariant():
     deconv = galsim.Deconvolve(chrom_airy)
     check_chromatic_invariant(deconv)
     #do_pickle(deconv)
+    repr(deconv) # gratuitous coverage of repr until do_pickle works.
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
@@ -1907,6 +1908,7 @@ def test_chromatic_invariant():
     four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
     #do_pickle(four1)
+    repr(four1) # gratuitous coverage of repr until do_pickle works.
 
     # And a few transforms too...
     # ChromaticTransformation
