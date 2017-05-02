@@ -144,12 +144,12 @@ class PowerSpectrumLoader(InputLoader):
 
         if 'index' in config:
             index = galsim.config.ParseValue(config, 'index', base, int)[0]
-            current_index = config.get('current_index',None)
+            current_index = config.get('current_setup_index',None)
             if index == current_index:
                 logger.info('image %d: power spectrum grid is already current',
                             base.get('image_num',0))
                 return
-            config['current_index'] = index
+            config['current_setup_index'] = index
 
         rng = galsim.config.GetRNG(config, base, logger, 'PowerSpectrum')
 
