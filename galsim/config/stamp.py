@@ -406,7 +406,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                                 "Rejected an object %d times. If this is expected, "%ntries+
                                 "you should specify a larger stamp.retry_failures.")
 
-            galsim.config.ProcessExtraOutputsForStamp(config, logger)
+            galsim.config.ProcessExtraOutputsForStamp(config, skip, logger)
 
             # We always need to do the whiten step here in the stamp processing
             if not skip:

@@ -37,8 +37,8 @@ class WeightBuilder(ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
-        if base['do_noise_in_stamps']:
+    def processStamp(self, obj_num, skip, config, base, logger):
+        if not skip and base['do_noise_in_stamps']:
             weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
             if 'include_obj_var' in config:
                 include_obj_var = galsim.config.ParseValue(

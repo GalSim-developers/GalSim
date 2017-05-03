@@ -69,7 +69,10 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
     a TiledImage, since you wouldn't typically want the PSF images to overlap.  But it just
     follows whatever pattern of stamp locations the main image has.
     """
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, skip, config, base, logger):
+        # Don't make psf image if regular image was skipped.
+        if skip: return
+
         # If this doesn't exist, an appropriate exception will be raised.
         psf = base['psf']['current_val']
         draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)

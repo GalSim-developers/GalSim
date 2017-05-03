@@ -108,7 +108,7 @@ def SetupExtraOutputsForImage(config, logger=None):
             field = config['output'][key]
             builder.setupImage(field, config, logger)
 
-def ProcessExtraOutputsForStamp(config, logger=None):
+def ProcessExtraOutputsForStamp(config, skip, logger=None):
     """Run the appropriate processing code for any extra output items that need to do something
     at the end of building each object.
 
@@ -116,6 +116,7 @@ def ProcessExtraOutputsForStamp(config, logger=None):
     and noise are added.
 
     @param config       The configuration dict.
+    @param skip         Was the drawing of this object skipped?
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
@@ -123,7 +124,7 @@ def ProcessExtraOutputsForStamp(config, logger=None):
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             builder = config['extra_builder'][key]
             field = config['output'][key]
-            builder.processStamp(obj_num, field, config, logger)
+            builder.processStamp(obj_num, skip, field, config, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -334,7 +335,7 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, skip, config, base, logger):
         """Perform any necessary processing at the end of each stamp construction.
 
         This function will be called after each stamp is built, but before the noise is added,
@@ -345,6 +346,7 @@ class ExtraOutputBuilder(object):
         is safe, even if multiprocessing is being used.
 
         @param obj_num      The object number
+        @param skip         Was the drawing of this object skipped?
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
