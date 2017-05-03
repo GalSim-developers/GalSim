@@ -261,7 +261,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
                 'wmult', 'n_photons', 'max_extra_noise', 'poisson_flux',
-                'reject', 'min_flux_frac', 'min_snr', 'max_snr']
+                'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
@@ -333,24 +333,30 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 gsparams = galsim.config.UpdateGSParams(
                     gsparams, stamp['gsparams'], config)
 
-            skip = False
-            try :
-                psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
-                                                  logger=logger)[0]
-                prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
-            except galsim.config.gsobject.SkipThisObject as e:
-                logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+            # Note: Skip is different from Reject.
+            #       Skip means we return None for this stamp image and continue on.
+            #       Reject means we retry this object using the same obj_num.
+            #       This has implications for the total number of objects as well as
+            #       things like ring tests that rely on objects being made in pairs.
+            #
+            #       Skip is also different from prof = None.
+            #       If prof is None, then the user indicated that no object should be
+            #       drawn on this stamp, but that a noise image is still desired.
+            if 'skip' in stamp:
+                skip = galsim.config.ParseValue(stamp, 'skip', config, bool)[0]
                 logger.info('Skipping object %d',obj_num)
-                skip = True
-                # Note: Skip is different from Reject.
-                #       Skip means we return None for this stamp image and continue on.
-                #       Reject means we retry this object using the same obj_num.
-                #       This has implications for the total number of objects as well as
-                #       things like ring tests that rely on objects being made in pairs.
-                #
-                #       Skip is also different from prof = None.
-                #       If prof is None, then the user indicated that no object should be
-                #       drawn on this stamp, but that a noise image is still desired.
+            else:
+                skip = False
+
+            if not skip:
+                try :
+                    psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
+                                                    logger=logger)[0]
+                    prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
+                except galsim.config.gsobject.SkipThisObject as e:
+                    logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+                    logger.info('Skipping object %d',obj_num)
+                    skip = True
 
             im = builder.makeStamp(stamp, config, xsize, ysize, logger)
 

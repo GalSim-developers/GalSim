@@ -199,3 +199,7 @@ New config features
   (#865)
 - Skip drawing objects whose postage stamps will end up completely off the
   main image currently being worked on. (#865)
+- Added skip option in stamp field, which works the same as the skip parameter
+  in gal or psf fields. (#865)
+- Added ':field' syntax for templates, which use the current dict as the base
+  rather than reading from another file (with 'file:field'). (#865)

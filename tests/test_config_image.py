@@ -288,6 +288,7 @@ def test_reject():
                 'radius' : { 'type' : 'Random', 'min' : 0, 'max': 20 },
                 'inner_radius' : { 'type' : 'Random', 'min' : 0, 'max': 10 },
             },
+            'skip' : '$obj_num == 9',
         },
         'gal' : {
             'type' : 'Convolve',
@@ -340,7 +341,7 @@ def test_reject():
     # For this particular config, only 6 of them are real images.  The others were skipped.
     # The skipped ones are present in the list, but their flux is 0
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
-    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 1341]
+    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
     # Check for a few of the logging outputs that explain why things were rejected.
