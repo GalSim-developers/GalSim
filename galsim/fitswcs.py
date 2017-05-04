@@ -1282,74 +1282,67 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             pv2 = np.dot(xm.T , np.dot(pv, ym))
             return pv2
 
+    def _apply_pv(self, u, v):
+        # Do this in C++ layer for speed.
+        galsim._galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data,
+                               self.pv.ctypes.data)
+        return u, v
+
+    def _apply_ab(self, x, y):
+        # Do this in C++ layer for speed.
+        dx = x.copy()
+        dy = y.copy()
+        galsim._galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
+                               self.ab.ctypes.data)
+        return x+dx, y+dy
+
+    def _apply_cd(self, x, y):
+        # Do this in C++ layer for speed.
+        galsim._galsim.ApplyCD(len(x), x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
+        return x, y
+
     def _uv(self, x, y):
         # Most of the work for _radec.  But stop at (u,v).
 
-        # Start with (x,y) = the image position
-        p1 = np.array( [ np.atleast_1d(x), np.atleast_1d(y) ] )
+        # Start with (u,v) = the image position
+        x = np.atleast_1d(x)
+        y = np.atleast_1d(y)
 
-        p1 -= self.crpix[:,np.newaxis]
+        x -= self.crpix[0]
+        y -= self.crpix[1]
 
         if self.ab is not None:
-            xx = p1[0]
-            yy = p1[1]
-            ones = np.ones(xx.shape)
-            order = len(self.ab[0])-1
-            xpow = np.array([ ones for i in range(order+1) ])
-            xpow[1] = xx
-            for i in range(2,order+1): xpow[i] = xpow[i-1] * xx
-            ypow = np.array([ ones for i in range(order+1) ])
-            ypow[1] = yy
-            for i in range(2,order+1): ypow[i] = ypow[i-1] * yy
-            # See below for the explanation of this calculation
-            temp = np.dot(self.ab, ypow)
-            p1 += np.sum(xpow * temp, axis=1)
+            x, y = self._apply_ab(x, y)
 
         # This converts to (u,v) in the tangent plane
-        p2 = np.dot(self.cd, p1)
+        # Expanding this out is a bit faster than using np.dot for 2x2 matrix.
+        u, v = self._apply_cd(x, y)
 
         if self.pv is not None:
-            # Now we apply the distortion terms
-            u = p2[0]
-            v = p2[1]
-            usq = u*u
-            vsq = v*v
-            ones = np.ones(u.shape)
-            upow = np.array([ ones, u, usq, usq*u ])
-            vpow = np.array([ ones, v, vsq, vsq*v ])
-            # If we only have one input position, then p2 is
-            #     p2[0] = upowT . pv[0] . vpow
-            #     p2[1] = upowT . pv[1] . vpow
-            # using matrix products, which are effected with the numpy.dot function.
-            # When there are multiple inputs, then upow and vpow are each 4xN matrices.
-            # The values we want are the diagonal of the matrix you would get from the
-            # above formulae.  So we use the fact that
-            #     diag(AT . B) = sum_rows(A * B)
-            temp = np.dot(self.pv, vpow)
-            p2 = np.sum(upow * temp, axis=1)
+            u, v = self._apply_pv(u, v)
 
         # Convert (u,v) from degrees to arcsec
         # Also, the FITS standard defines u,v backwards relative to our standard.
         # They have +u increasing to the east, not west.  Hence the - for u.
         factor = 1. * galsim.degrees / galsim.arcsec
-        u = -p2[0] * factor
-        v = p2[1] * factor
-
-        try:
-            len(x)
-            # If the inputs were numpy arrays, return the same
-            return u, v
-        except TypeError:
-            # Otherwise return scalars
-            assert len(u) == 1
-            assert len(v) == 1
-            return u[0], v[0]
+        u *= -factor
+        v *= factor
+        return u, v
 
     def _radec(self, x, y, color=None):
         # Get the position in the tangent plane
-        u,v = self._uv(x,y)
+        u, v = self._uv(x, y)
         # Then convert from (u,v) to (ra, dec) using the appropriate projection.
-        return self.center.deproject_rad(u, v, projection=self.projection)
+        ra, dec = self.center.deproject_rad(u, v, projection=self.projection)
+        try:
+            len(x)
+            # If the inputs were numpy arrays, return the same
+            return ra, dec
+        except TypeError:
+            # Otherwise return scalars
+            assert len(ra) == 1
+            assert len(dec) == 1
+            return ra[0], dec[0]
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
@@ -1357,9 +1350,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     def _invert_ab(self, x, y):
         # Do this in C++ layer for speed.
-        order = len(self.ab[0])-1
         abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        return galsim._galsim.InvertAB(x, y, self.ab.ctypes.data, order, abp_data)
+        return galsim._galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
