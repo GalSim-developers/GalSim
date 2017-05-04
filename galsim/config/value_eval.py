@@ -51,12 +51,16 @@ def _GenerateFromEval(config, base, value_type):
     # These will be the variables to use for evaluating the eval statement.
     # Start with the current locals and globals, and add extra items to them.
     ldict = locals().copy()
-    gdict = globals().copy()
-    # We allow the following modules to be used in the eval string:
-    exec_('import math', gdict)
-    exec_('import numpy', gdict)
-    exec_('import numpy as np', gdict)
-    exec_('import os', gdict)
+    if 'eval_gdict' not in base:
+        gdict = globals().copy()
+        # We allow the following modules to be used in the eval string:
+        exec_('import math', gdict)
+        exec_('import numpy', gdict)
+        exec_('import numpy as np', gdict)
+        exec_('import os', gdict)
+        base['eval_gdict'] = gdict
+    else:
+        gdict = base['eval_gdict']
 
     #print('Start Eval')
     req = { 'str' : str }

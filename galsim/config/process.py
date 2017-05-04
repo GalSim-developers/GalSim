@@ -736,8 +736,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(job,njobs))
 
     # First thing to do is deep copy the input config to make sure we don't modify the original.
-    import copy
-    config = copy.deepcopy(config)
+    config = CopyConfig(config)
 
     # Process any template specifications in the dict.
     ProcessAllTemplates(config, logger)
