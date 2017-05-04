@@ -231,8 +231,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     # Go back to file_num as the default index_key.
     config['index_key'] = 'file_num'
 
-    if builder.canAddHdus():
-        data = galsim.config.AddExtraOutputHDUs(config,data,logger)
+    data = builder.addExtraOutputHDUs(config, data, logger)
 
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(output,'retry_io',config,int)[0]
@@ -245,7 +244,8 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     RetryIO(builder.writeFile, args, ntries, file_name, logger)
     logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
-    galsim.config.WriteExtraOutputs(config,data,logger)
+    builder.writeExtraOutputs(config, data, logger)
+
     t2 = time.time()
 
     return file_name, t2-t1
@@ -504,6 +504,26 @@ class OutputBuilder(object):
         """
         return 1
 
+    def canAddHdus(self):
+        """Returns whether it is permissible to add extra HDUs to the end of the data list.
+
+        In the base class, this returns True.
+        """
+        return True
+
+    def addExtraOutputHDUs(self, config, data, logger):
+        """If appropriate, add any extra output items that go into HDUs to the data list.
+
+        @param config           The configuration dict for the output field.
+        @param data             The data to write.  Usually a list of images.
+        @param logger           If given, a logger object to log progress.
+
+        @returns data (possibly updated with additional items)
+        """
+        if self.canAddHdus():
+            data = galsim.config.AddExtraOutputHDUs(config, data, logger)
+        return data
+
     def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
 
@@ -517,12 +537,14 @@ class OutputBuilder(object):
         """
         galsim.fits.writeMulti(data,file_name)
 
-    def canAddHdus(self):
-        """Returns whether it is permissible to add extra HDUs to the end of the data list.
+    def writeExtraOutputs(self, config, data, logger):
+        """If appropriate, write any extra output items that write their own files.
 
-        In the base class, this returns True.
+        @param config           The configuration dict for the output field.
+        @param data             The data to write.  Usually a list of images.
+        @param logger           If given, a logger object to log progress.
         """
-        return True
+        galsim.config.WriteExtraOutputs(config, data, logger)
 
 
 def RegisterOutputType(output_type, builder):
