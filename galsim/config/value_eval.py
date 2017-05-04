@@ -63,26 +63,22 @@ def _GenerateFromEval(config, base, value_type):
         gdict = base['eval_gdict']
 
     #print('Start Eval')
-    req = { 'str' : str }
     opt = {}
-    ignore = galsim.config.standard_ignore  # in value.py
+    ignore = ['str'] + galsim.config.standard_ignore  # in value.py
     for key in config.keys():
-        if key not in (ignore + list(req)):
+        if key not in ignore:
             opt[key] = _type_by_letter(key)
     #print('opt = ',opt)
     #print('base has ',base.keys())
     #print('config = ',config)
 
-    if str(config['str'])[0] == '@':
-        # The ParseValue function can get confused if the first character is an @, but the
-        # whole string isn't a Current item.  e.g. @image.pixel_scale * @image.stamp_size.
-        # So if config['str'] is a string, just get it.  Otherwise, try parsing the dict.
-        string = config['str']
-        params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+['str'])
-    else:
-        params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
-        #print('params = ',params)
-        string = params['str']
+    # The ParseValue function can get confused if the first character is an @, but the
+    # whole string isn't a Current item.  e.g. @image.pixel_scale * @image.stamp_size.
+    # So just get config['str'] directly, and parse the rest of the config dict.
+    if 'str' not in config:
+        raise AttributeError("Attribute str is required for type = %s"%(config['type']))
+    string = config['str']
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+['str'])
     #print('string = ',string)
 
     # Parse any "Current" items indicated with an @ sign.
