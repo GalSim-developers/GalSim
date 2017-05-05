@@ -587,7 +587,7 @@ def ParseWorldPos(config, param_name, base, logger):
     except (ValueError, AttributeError) as e:
         try:
             return galsim.config.ParseValue(config, param_name, base, galsim.CelestialCoord)[0]
-        except (ValueError, AttributeError) as e2:
+        except (ValueError, AttributeError) as e2: # pragma: no cover
             # If neither one works, report both errors and raise the second
             logger.debug("Parsing %s as PositionD, caught error %s",param_name,e)
             logger.debug("Parsing %s as CelestialCoord, caught error %s",param_name,e2)

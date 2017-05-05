@@ -205,6 +205,6 @@ New config features
   rather than reading from another file (with 'file:field'). (#865)
 - No longer tries to process extra output items for stamps that are skipped.
   This is normally better, since the extra output processing probably depends
-  on the stamp processing having been completed.  But it is customizable in
-  the `processStamp` method of ExtraOutputBuilders, so you can override this
-  behavior in your custom modules if you prefer. (#865)
+  on the stamp processing having been completed.  But it is customizable via
+  the `processSkippedStamp` method of ExtraOutputBuilders, so you can override
+  this behavior in your custom modules if you prefer. (#865)

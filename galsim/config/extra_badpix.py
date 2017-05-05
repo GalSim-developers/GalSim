@@ -31,10 +31,10 @@ class BadPixBuilder(ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, skip, config, base, logger):
+    def processStamp(self, obj_num, config, base, logger):
         # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
         # these features should be marked in the badpix mask.  For now though, all pixels = 0.
-        if not skip and base['do_noise_in_stamps']:
+        if base['do_noise_in_stamps']:
             badpix_im = galsim.ImageS(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
             self.scratch[obj_num] = badpix_im
 

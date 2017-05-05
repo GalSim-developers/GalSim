@@ -69,6 +69,17 @@ def SetupExtraOutput(config, logger=None):
     if 'extra_builder' not in config:
         config['extra_builder'] = {}
 
+    # Keep track of any skipped obj_nums, since usually need to treat them differently.
+    # Note: it would be slightly nicer to use a set here, but there isn't a pre-defined
+    # multiprocessing.managers.SetProxy type, so we just use a dict like a set by giving
+    # each item the value None.
+    if 'skipped_obj_nums' in config:
+        config['skipped_obj_nums'].clear()
+    elif use_manager:
+        config['skipped_obj_nums'] = config['output_manager'].dict()
+    else:
+        config['skipped_obj_nums'] = dict()
+
     for key in all_keys:
         logger.debug('file %d: Setup output item %s',file_num,key)
 
@@ -124,7 +135,11 @@ def ProcessExtraOutputsForStamp(config, skip, logger=None):
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             builder = config['extra_builder'][key]
             field = config['output'][key]
-            builder.processStamp(obj_num, skip, field, config, logger)
+            if skip:
+                config['skipped_obj_nums'][obj_num] = None
+                builder.processSkippedStamp(obj_num, field, config, logger)
+            else:
+                builder.processStamp(obj_num, field, config, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -148,6 +163,9 @@ def ProcessExtraOutputsForImage(config, logger=None):
                 for i in range(k):
                     start_obj_num += nobj[i]
                 obj_nums = range(start_obj_num, start_obj_num+nobj[k])
+                # Omit skipped obj_nums
+                skipped = config['skipped_obj_nums']
+                obj_nums = [ n for n in obj_nums if n not in skipped ]
             builder = config['extra_builder'][key]
             field = config['output'][key]
             index = config['image_num'] - config['start_image_num']
@@ -335,7 +353,7 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-    def processStamp(self, obj_num, skip, config, base, logger):
+    def processStamp(self, obj_num, config, base, logger):
         """Perform any necessary processing at the end of each stamp construction.
 
         This function will be called after each stamp is built, but before the noise is added,
@@ -346,12 +364,26 @@ class ExtraOutputBuilder(object):
         is safe, even if multiprocessing is being used.
 
         @param obj_num      The object number
-        @param skip         Was the drawing of this object skipped?
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
         pass  # pragma: no cover  (all our ExtraBuilders override this function.)
+
+    def processSkippedStamp(self, obj_num, config, base, logger):
+        """Perform any necessary processing for stamps that were skipped in the normal processing.
+
+        This function will be called for stamps that are not built because they were skipped
+        for some reason.  Normally, you would also want not want to do anything for the extra
+        outputs in these cases, but in case some module needs to do something in these cases
+        as well, this method can be overridden.
+
+        @param obj_num      The object number
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
 
     def processImage(self, index, obj_nums, config, base, logger):
         """Perform any necessary processing at the end of each image construction.

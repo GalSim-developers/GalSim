@@ -563,12 +563,8 @@ def test_extra_psf():
         stamp = final.drawImage(scale=0.4, nx=25, ny=25, offset=(offset_x+dx,offset_y+dy))
         stamp.setCenter(ix,iy)
         b = im.bounds & stamp.bounds
-        if not b.isDefined():
-            print('bounds for gal %d are off the main image'%k)
-            assert not os.path.isfile('output/test_gal_%d.fits'%k)
-            assert not os.path.isfile('output/test_psf_%d.fits'%k)
-            continue
-        im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_gal_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -576,7 +572,8 @@ def test_extra_psf():
         im.setZero()
         stamp = psf.drawImage(scale=0.4, nx=25, ny=25, offset=(dx,dy))
         stamp.setCenter(ix,iy)
-        im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -596,8 +593,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if not b.isDefined(): continue
-        im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -638,8 +635,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if not b.isDefined(): continue
-        im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output_psf/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 

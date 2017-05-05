@@ -51,10 +51,7 @@ class TruthBuilder(ExtraOutputBuilder):
             self.warned = True
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, skip, config, base, logger):
-        # Don't include in truth catalog if drawing was skipped.
-        if skip: return
-
+    def processStamp(self, obj_num, config, base, logger):
         cols = config['columns']
         row = []
         types = []
