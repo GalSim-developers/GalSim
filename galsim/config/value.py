@@ -17,6 +17,7 @@
 #
 from __future__ import print_function
 
+from past.builtins import basestring
 import sys
 import galsim
 
@@ -52,7 +53,7 @@ def ParseValue(config, key, base, value_type):
     #print('nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0))
 
     # If param is a unicode or bytes, convert to a normal str object.
-    if str(param) == param:
+    if isinstance(param,basestring):
         param = str(param)
 
     # Check for some special markup:
