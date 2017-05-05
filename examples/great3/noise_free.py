@@ -27,7 +27,7 @@ class NoiseFreeBuilder(galsim.config.ExtraOutputBuilder):
     """
 
     # The function to call at the end of building each stamp
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, skip, config, base, logger):
         if base['do_noise_in_stamps']:
             noise_free_im = base['current_stamp'].copy()
             self.scratch[obj_num] = noise_free_im

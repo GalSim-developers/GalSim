@@ -276,7 +276,7 @@ galsim.config.RegisterStampType('BlendSet', BlendSetBuilder())
 
 class DeblendBuilder(galsim.config.ExtraOutputBuilder):
 
-    def processStamp(self, obj_num, config, base, logger):
+    def processStamp(self, obj_num, skip, config, base, logger):
         """Save the stamps of just the neighbor fluxes.  We'll subtract them from the full image
         at the end.
         """
