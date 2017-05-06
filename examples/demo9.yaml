@@ -238,9 +238,12 @@ image :
     # In this case we use world_pos to place each object in sky coordinates relative to
     # the center of the image (option a for world_pos above).  We use RandomCircle with an inner
     # radius to avoid placing galaxies too close to the halo center where the lensing is not weak.
+    # The outer radius is 21 arcsec, which is large enough to cover all the way to the corners,
+    # although it means occasionally an object will be skipped because its postage stamp falls
+    # completely off the edge of the image.
     world_pos :
         type : RandomCircle
-        radius : 12       # arcsec
+        radius : 21       # arcsec
         inner_radius : 3  # arcsec
 
     # Note: the default option if we didn't specify either image_pos or world_pos (described as
