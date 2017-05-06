@@ -361,10 +361,10 @@ def test_crg_roundtrip_larger_target_psf():
     f814w_image = galsim.Convolve(f814w_PSF, gal).drawImage(f814w, nx=192, ny=192, scale=0.03)
 
     crg = galsim.ChromaticRealGalaxy.makeFromImages(
-            imgs=[f606w_image, f814w_image],
+            images=[f606w_image, f814w_image],
             bands=[f606w, f814w],
-            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
             PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
             SEDs=[bulge_SED, disk_SED])
 
     test_image = galsim.Convolve(crg, LSSTPSF).drawImage(LSST_i, nx=24, ny=24, scale=0.2)

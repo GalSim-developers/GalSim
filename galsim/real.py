@@ -919,26 +919,30 @@ class ChromaticRealGalaxy(ChromaticSum):
     decomposition can be thought of as a constrained chromatic deconvolution of the multi-band
     images by the associated PSFs, similar in spirit to RealGalaxy.
 
-    This class uses catalogs describing galaxies in some training data (for more details, see the
-    RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
-    simulations based on those galaxies.  Also included in the class is additional information that
-    might be needed to make or interpret the simulations, e.g., the noise properties of the training
-    data.
-
     Because ChromaticRealGalaxy involves an InterpolatedKImage, `method = 'phot'` is unavailable for
     the drawImage() function.
 
     Initialization
     --------------
 
-        >>> crg = galsim.ChromaticRealGalaxy(real_galaxy_catalogs, SEDs=None, index=None, id=None,
-        ...                                  random=False, rng=None, k_interpolant=None, maxk=None,
-        ...                                  flux=None, gsparams=None)
+    Fundamentally, the required inputs for this class are (1) a series of high resolution input
+    `Image`s of a single galaxy in different bands, (2) the `Bandpass`es corresponding to those
+    images, (3) the PSFs of those images as either `GSObject`s or `ChromaticObject`s, and (4) the
+    noise properties of the input images as instances of either `CorrelatedNoise` or
+    `UncorrelatedNoise`.  If you want to specify these inputs directly, that is possible via
+    the `.makeFromImages` factory method of this class:
 
-    This initializes `crg` by solving for the spatial components corresponding to each asserted SED,
-    and combining these into a `ChromaticSum` object.  Note that there are multiple keywords for
-    choosing a galaxy; exactly one must be set.  In the future we may add more such options, e.g.,
-    to choose at random but accounting for the non-constant weight factors (probabilities for
+        >>> crg = galsim.ChromaticRealGalaxy.makeFromImages(imgs, bands, PSFs, xis, ...)
+
+    Alternatively, you may create a ChromaticRealGalaxy via a list of `RealGalaxyCatalog`s that
+    correspond to a set of galaxies observed in different bands:
+
+        >>> crg = galsim.ChromaticRealGalaxy(real_galaxy_catalogs, index=0, ...)
+
+    The above will use the 1st object in the catalogs, which should be the same galaxy, just
+    observed in different bands.  Note that there are multiple keywords for choosing a galaxy from
+    a catalog; exactly one must be set.  In the future we may add more such options, e.g., to
+    choose at random but accounting for the non-constant weight factors (probabilities for
     objects to make it into the training sample).
 
     The flux normalization of the returned object will by default match the original data, scaled to
@@ -956,9 +960,9 @@ class ChromaticRealGalaxy(ChromaticSum):
     you are using a different unit for other things (the PSF, WCS, etc.), then you should dilate the
     resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
 
-    Noise from the original catalog images is propagated by this class, though certain restrictions
-    apply to when and how that noise is made available.  The propagated noise depends on which
-    Bandpass the ChromaticRealGalaxy is being imaged through, so the noise is only available after
+    Noise from the original images is propagated by this class, though certain restrictions apply
+    to when and how that noise is made available.  The propagated noise depends on which Bandpass
+    the ChromaticRealGalaxy is being imaged through, so the noise is only available after
     the `drawImage(bandpass, ...)` method has been called.  Also, since ChromaticRealGalaxy will
     only produce reasonable images when convolved with a (suitably wide) PSF, the noise attribute is
     attached to the `ChromaticConvolution` (or `ChromaticTransformation` of the
@@ -986,10 +990,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                             galaxies, and in the same order, just imaged through different filters.
                             Note that the number of catalogs must be equal to or larger than the
                             number of SEDs.
-    @param SEDs             The list of `SED`s to use when representing real galaxies as sums of
-                            separable profiles.  The number of SEDs must be equal to or smaller than
-                            the number of catalogs.  [default: len(real_galaxy_catalogs) SEDs
-                            polynomial in wavelength.]
     @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
                             `random` is required.]
     @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
@@ -1001,6 +1001,11 @@ class ChromaticRealGalaxy(ChromaticSum):
                             field when padding.  This user-input random number generator takes
                             precedence over any stored within a user-input CorrelatedNoise instance
                             (see `noise_pad` parameter below).  [default: None]
+    @param SEDs             An optional list of `SED`s to use when representing real galaxies as
+                            sums of separable profiles.  By default, len(real_galaxy_catalogs) SEDs
+                            that are polynomials in wavelength will be used.  Note that the number
+                            of SEDs must be equal to or smaller than the number of catalogs.
+                            [default: see above]
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -1098,11 +1103,58 @@ class ChromaticRealGalaxy(ChromaticSum):
         self._initialize(imgs, bands, xis, PSFs, gsparams=gsparams, **kwargs)
 
     @classmethod
-    def makeFromImages(cls, imgs, bands, xis, PSFs, **kwargs):
+    def makeFromImages(cls, images, bands, PSFs, xis, **kwargs):
+        """Create a ChromaticRealGalaxy directly from images, bandpasses, PSFs, and noise
+        descriptions.  See the ChromaticRealGalaxy docstring for more information.
+
+        @param images           An iterable of high resolution `Images` of a galaxy through
+                                different bandpasses.
+        @param bands            An iterable of `Bandpass`es corresponding to the input images.
+        @param PSFs             Either an iterable of `GSObject`s or `ChromaticObject`s indicating
+                                the PSFs of the different input images, or potentially a single
+                                `GSObject` or `ChromaticObject` that will be used as the PSF for
+                                all images.
+        @param xis              An iterable of either `CorrelatedNoise` or `UncorrelatedNoise`
+                                objects characterizing the noise in the input images.
+        @param SEDs             An optional list of `SED`s to use when representing real galaxies
+                                as sums of separable profiles.  By default, len(images) SEDs that
+                                are polynomials in wavelength will be used.  Note that the number
+                                of SEDs must be equal to or smaller than the number of catalogs.
+                                [default: see above]
+        @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                                interpolant should be used.  Options are 'nearest', 'sinc',
+                                'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                                integer order to use.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.  [default:
+                                galsim.Quintic()]
+        @param maxk             Optional maxk argument.  If you know you will be convolving the
+                                resulting `ChromaticRealGalaxy` with a "fat" PSF in a subsequent
+                                step, then it can be more efficient to limit the range of Fourier
+                                modes used when solving for the sum of separable profiles below.
+                                [default: None]
+        @param pad_factor       Factor by which to internally oversample the Fourier-space images
+                                that represent the ChromaticRealGalaxy (equivalent to zero-padding
+                                the real-space profiles).  We strongly recommend leaving this
+                                parameter at its default value; see text in Realgalaxy docstring
+                                for details.  [default: 4]
+        @param normalize_area   By default, the flux of the returned object is normalized such that
+                                drawing with exptime=1 and area=1 (the `drawImage` defaults)
+                                simulates an image with the appropriate number of counts for a 1
+                                second HST exposure.  Setting this keyword to True will instead
+                                normalize the returned object such that to simulate a 1 second HST
+                                exposure, you must use drawImage with exptime=1 and
+                                area=45238.93416 (the HST collecting area in cm^2).
+                                [default: False]
+        @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                                details. [default: None]
+        @param logger           A logger object for output of progress statements if the user wants
+                                them.  [default: None]
+
+        """
         if not hasattr(PSFs, '__iter__'):
-            PSFs = [PSFs]*len(imgs)
+            PSFs = [PSFs]*len(images)
         obj = cls.__new__(cls)
-        obj._initialize(imgs, bands, xis, PSFs, **kwargs)
+        obj._initialize(images, bands, xis, PSFs, **kwargs)
         return obj
 
     def _initialize(self, imgs, bands, xis, PSFs,
