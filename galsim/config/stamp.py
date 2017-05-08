@@ -582,16 +582,16 @@ def ParseWorldPos(config, param_name, base, logger):
 
     @returns either a CelestialCoord or a PositionD instance.
     """
-    try:
-        return galsim.config.ParseValue(config, param_name, base, galsim.PositionD)[0]
-    except (ValueError, AttributeError) as e:
-        try:
-            return galsim.config.ParseValue(config, param_name, base, galsim.CelestialCoord)[0]
-        except (ValueError, AttributeError) as e2: # pragma: no cover
-            # If neither one works, report both errors and raise the second
-            logger.debug("Parsing %s as PositionD, caught error %s",param_name,e)
-            logger.debug("Parsing %s as CelestialCoord, caught error %s",param_name,e2)
-            raise
+    param = config[param_name]
+    if isinstance(param, dict):
+        value_type = galsim.config.value.valid_value_types[param.get('type','XY')][1][0]
+        if value_type not in [galsim.PositionD, galsim.CelestialCoord]:
+            raise AttributeError('Invalid type %s for %s',param.get('type',None),param_name)
+        return galsim.config.ParseValue(config, param_name, base, value_type)[0]
+    else:
+        value_type = (galsim.CelestialCoord if type(param) == galsim.CelestialCoord
+                      else galsim.PositionD)
+        return galsim.config.ParseValue(config, param_name, base, value_type)[0]
 
 class StampBuilder(object):
     """A base class for building stamp images of individual objects.
