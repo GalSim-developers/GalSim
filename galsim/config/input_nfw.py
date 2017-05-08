@@ -49,7 +49,7 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
-    redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
+    redshift = galsim.config.GetCurrentValue('redshift', base['gal'], float, base)
 
     # There aren't any parameters for this, so just make sure num is the only (optional)
     # one present.
@@ -86,7 +86,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
-    redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
+    redshift = galsim.config.GetCurrentValue('redshift', base['gal'], float, base)
 
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]

@@ -75,7 +75,7 @@ def AddNoise(config, im, current_var=0., logger=None):
 
     # This makes sure draw_method is properly copied over and given a default value.
     galsim.config.stamp.SetupConfigObjNum(config, config.get('obj_num',0), logger)
-    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',config,str)
+    draw_method = galsim.config.GetCurrentValue('draw_method', config['stamp'], str, config)
 
     builder = valid_noise_types[noise_type]
     config['index_key'] = 'image_num'

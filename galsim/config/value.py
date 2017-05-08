@@ -167,93 +167,66 @@ def ParseValue(config, key, base, value_type):
 
     return val, safe
 
-def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
+
+def GetCurrentValue(key, config, value_type=None, base=None):
     """@brief Get the current value of another config item given the key name.
 
-    @param key          The key value in the dict to get the current value of.
+    @param key          The (extended) key value in the dict to get the current value of.
     @param config       The config dict from which to get the key.
     @param value_type   The value_type expected.  [default: None, which means it won't check
                         that the value is the right type.]
     @param base         The base config dict.  [default: None, which means use base=config]
-    @param return_safe  If True, also return the current_safe value: (value, safe).
 
-    @returns the current value (or value, safe if return_safe = True)
+    @returns the current value
     """
     #print('GetCurrent %s.  value_type = %s'%(key,value_type))
     if base is None:
         base = config
 
-    # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-    # Make a list of keys
-    chain = key.split('.')
-    d = config
+    # True here means keep track of whether there is a non-standard index_key for this field.
+    if '.' in key:
+        config, key, index_key = galsim.config.ParseExtendedKey(config, key, True)
 
-    use_index_key = None
+        # If there is a non-standard index_key, set the 'index_key' in that field appropriately.
+        if (index_key is not None and isinstance(config[key],dict) and
+                'index_key' not in config[key]):
+            #print('Set d[k] index_key to ',index_key)
+            config[key]['index_key'] = index_key
 
-    while len(chain):
-        k = chain.pop(0)
-        #print('k = ',k)
+    val, safe = EvaluateCurrentValue(key, config, base, value_type)
+    return val
 
-        # Try to convert to an integer:
-        try: k = int(k)
-        except ValueError: pass
+def EvaluateCurrentValue(key, config, base, value_type=None):
+    """Helper function to evaluate the current value at config[key] where key is no longer
+    an extended key, and config is the local dict where it is relevant.
 
-        if chain:
-            # If there are more keys, just set d to the next in the chain.
-            try:
-                d = d[k]
-            except (TypeError, KeyError):  # pragma: no cover
-                # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
-                # KeyError for the case where d is a dict, but k is not a valid key.
-                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
-
-            # One subtlety here.  Normally the normal tree traversal will keep track of the index
-            # key so that all lower levels inherit an index_key specification at a higher level.
-            # This can circumvent that, so we need to do it here as well.  The easiest way to
-            # handle it is to watch for an index_key specification along our chain, and if there
-            # is one, set that in the final dict.
-            if isinstance(d,dict) and 'index_key' in d:
-                use_index_key = d['index_key']
-                #print('Set use_index_key = ',use_index_key)
+    @param key          The key value in the dict to get the current value of.
+    @param config       The config dict from which to get the key.
+    @param base         The base config dict.
+    @param value_type   The value_type expected.  [default: None, which means it won't check
+                        that the value is the right type.]
+    """
+    if not isinstance(config[key], dict):
+        if value_type is not None or (isinstance(config[key],str) and config[key][0] in ['@','$']):
+            # This will work fine to evaluate the current value, but will also
+            # compute it if necessary
+            #print('Not dict. Parse value normally')
+            return ParseValue(config, key, base, value_type)
         else:
-            try:
-                dk = d[k]
-            except (TypeError, KeyError):  # pragma: no cover
-                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
-
-            if not isinstance(d[k], dict):
-                if value_type is not None or (isinstance(d[k],str) and d[k][0] in ['@','$']):
-                    # This will work fine to evaluate the current value, but will also
-                    # compute it if necessary
-                    #print('Not dict. Parse value normally')
-                    val, safe = ParseValue(d, k, base, value_type)
-                else:
-                    # If we are not given the value_type, and it's not a dict, then the
-                    # item is probably just some value already.
-                    #print('Not dict, no value_type.  Assume %s is ok.'%d[k])
-                    val = d[k]
-                    safe = True
-            else:
-                if use_index_key is not None and 'index_key' not in d[k]:
-                    #print('Set d[k] index_key to ',use_index_key)
-                    d[k]['index_key'] = use_index_key
-                if value_type is None and 'current_val' in d[k]:
-                    # If there is already a current_val, use it.
-                    #print('Dict with current_val.  Use it: ',d[k]['current_val'])
-                    val = d[k]['current_val']
-                    safe = d[k]['current_safe']
-                else:
-                    # Otherwise, parse the value for this key
-                    #print('Parse value normally')
-                    val, safe = ParseValue(d, k, base, value_type)
-            #print(base.get('obj_num',''),'Current key = %s, value = %s'%(key,val))
-            if return_safe:
-                return val, safe
-            else:
-                return val
-
-    raise ValueError("Invalid key in GetCurrentValue = %s"%key)
-
+            # If we are not given the value_type, and it's not a dict, then the
+            # item is probably just some value already.
+            # (Unless it is a base item, in which case, it is not safe.)
+            #print('Not dict, no value_type.  Assume %s is ok.'%d[k])
+            return config[key], (config != base)
+    else:
+        if value_type is None and 'current_val' in config[key]:
+            # If there is already a current_val, use it.
+            #print('Dict with current_val.  Use it: ',d[k]['current_val'])
+            return config[key]['current_val'], config[key]['current_safe']
+        else:
+            # Otherwise, parse the value for this key
+            #print('Parse value normally')
+            return ParseValue(config, key, base, value_type)
 
 def SetDefaultIndex(config, num):
     """
@@ -706,8 +679,15 @@ def _GenerateFromCurrent(config, base, value_type):
     req = { 'key' : str }
     params, safe = GetAllParams(config, base, req=req)
     key = params['key']
+
+    d, k, index_key = galsim.config.ParseExtendedKey(base, key, True)
+
+    if index_key is not None and isinstance(d[k],dict) and 'index_key' not in d[k]:
+        #print('Set d[k] index_key to ',index_key)
+        d[k]['index_key'] = index_key
+
     try:
-        return GetCurrentValue(key, base, value_type, return_safe=True)
+        return EvaluateCurrentValue(k, d, base, value_type)
     except ValueError: # pragma: no cover
         raise ValueError("Invalid key = %s given for type=Current"%key)
 
