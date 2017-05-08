@@ -337,7 +337,8 @@ output :
         # ext specifies the text to go after the number, if desired.
         # The extension is usually set to a reasonable default.
         # For output.file_name, the default is '.fits'.
-        # For an input ASCII catalog, the default is '.asc'.
+        # Similarly for "extra" output fields like badpix or weight if those are written to a
+        # separate file (rather than just another hdu as in this example).
         # For anything else (e.g. dir below) the default is '' (no extension)
         #ext : '.fits'
 
