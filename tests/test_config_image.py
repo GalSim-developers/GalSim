@@ -1073,12 +1073,14 @@ def test_njobs():
             },
         },
     }
+    config1 = galsim.config.CopyConfig(config)
 
     logger = logging.getLogger('test_njobs')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     galsim.config.Process(config, logger=logger)
 
     # Repeat with 2 jobs
+    config = galsim.config.CopyConfig(config1)
     config['output']['file_name']['root'] = 'test_two_jobs_'
     galsim.config.Process(config, njobs=2, job=1, logger=logger)
     galsim.config.Process(config, njobs=2, job=2, logger=logger)

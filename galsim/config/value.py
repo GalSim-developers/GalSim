@@ -240,13 +240,13 @@ def SetDefaultIndex(config, num):
         config['index'] = {
             'type' : 'Sequence',
             'nitems' : num,
-            'default' : True,
+            'default' : num
         }
     elif ( isinstance(config['index'],dict)
            and 'type' in config['index'] ):
         index = config['index']
 
-        if 'default' in index: return
+        if index.get('default',-1) == num: return
         elif '_get' in index: del index['_get']
 
         type_name = index['type']
@@ -254,25 +254,25 @@ def SetDefaultIndex(config, num):
              and 'nitems' in index
              and 'default' in index ):
             index['nitems'] = num
-            index['default'] = True
+            index['default'] = num
         elif ( type_name == 'Sequence'
                and 'nitems' not in index
                and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
                and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
-            index['default'] = True
+            index['default'] = num
         elif ( type_name == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) )
                and ('last' not in index or 'default' in index) ):
             index['last'] = 0
-            index['default'] = True
+            index['default'] = num
         elif ( type_name == 'Random'
                and ('min' not in index or 'default' in index)
                and ('max' not in index or 'default' in index) ):
             index['min'] = 0
             index['max'] = num-1
-            index['default'] = True
+            index['default'] = num
 
 
 def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
