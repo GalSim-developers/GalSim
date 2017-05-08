@@ -190,15 +190,12 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in connected_types[key]:
                         galsim.config.RemoveCurrent(config, type=value_type)
-                        logger.debug('file %d: Cleared current_vals for items with type %s',
+                        logger.debug('file %d: Cleared current vals for items with type %s',
                                      file_num,value_type)
                     # Also put these in the normal "current" location, so this can be used
                     # e.g. as @input.catalog in an Eval statement.
-                    field['current_val'] = input_obj
-                    field['current_safe'] = safe
-                    field['current_value_type'] = None
-                    field['current_index'] = config.get('file_num',None)
-                    field['current_index_key'] = 'file_num'
+                    field['current'] = (input_obj, safe, None, config.get('file_num',None),
+                                        'file_num')
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()

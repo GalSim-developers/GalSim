@@ -168,7 +168,7 @@ def test_float_value():
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
         config['obj_num'] = k  # The Random type doesn't use obj_num, but this keeps it
-                               # from thinking current_val is still current.
+                               # from thinking "current" value is still current.
         ran1 = galsim.config.ParseValue(config,'ran1',config, float)[0]
         np.testing.assert_almost_equal(ran1, rng() * 2.5 + 0.5)
 

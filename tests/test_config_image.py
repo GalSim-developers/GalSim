@@ -694,7 +694,7 @@ def test_scattered():
     }
     for convention in [ 0, 1 ]:
         for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
-            # Deep copy to make sure we don't have any "current_val" caches present.
+            # Deep copy to make sure we don't have any "current" caches present.
             config = copy.deepcopy(base_config)
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
@@ -1273,11 +1273,11 @@ def test_wcs():
             np.testing.assert_almost_equal(wcs.toImage(p).x, ref.toImage(p).x)
             np.testing.assert_almost_equal(wcs.toImage(p).y, ref.toImage(p).y)
 
-    # If we build something again with the same index, it should get the current_Val
+    # If we build something again with the same index, it should get the current value
     wcs = galsim.config.BuildWCS(config['image'], 'shear2', config)
     ref = reference['shear2']
     assert wcs == ref
-    assert wcs is config['image']['shear2']['current_val']
+    assert wcs is config['image']['shear2']['current'][0]
 
     # Finally, check the default if there is no wcs or pixel_scale item
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
@@ -1406,33 +1406,33 @@ def test_index_key():
                                           "index_key parsing failed for BuildImage")
 
     # Check that current values get removed properly for various options to RemoveCurrent
-    assert 'current_val' in config1['psf']
-    assert 'current_val' in config1['psf']['items'][1]
-    assert config1['psf']['items'][1]['current_safe']
-    assert 'current_val' in config1['gal']
-    assert 'current_val' in config1['gal']['ellip']
-    assert 'current_val' in config1['gal']['shear']
+    assert 'current' in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert config1['psf']['items'][1]['current'][1]  # Index 1 in current is "safe"
+    assert 'current' in config1['gal']
+    assert 'current' in config1['gal']['ellip']
+    assert 'current' in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True, index_key='obj_num')
-    assert 'current_val' in config1['psf']
-    assert 'current_val' in config1['psf']['items'][1]
-    assert 'current_val' not in config1['gal']
-    assert 'current_val' in config1['gal']['ellip']
-    assert 'current_val' not in config1['gal']['shear']
+    assert 'current' in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1, keep_safe=True)
-    assert 'current_val' not in config1['psf']
-    assert 'current_val' in config1['psf']['items'][1]
-    assert 'current_val' not in config1['gal']
-    assert 'current_val' not in config1['gal']['ellip']
-    assert 'current_val' not in config1['gal']['shear']
+    assert 'current' not in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
 
     galsim.config.RemoveCurrent(config1)
-    assert 'current_val' not in config1['psf']
-    assert 'current_val' not in config1['psf']['items'][1]
-    assert 'current_val' not in config1['gal']
-    assert 'current_val' not in config1['gal']['ellip']
-    assert 'current_val' not in config1['gal']['shear']
+    assert 'current' not in config1['psf']
+    assert 'current' not in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
 
 
 @timer

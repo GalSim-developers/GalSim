@@ -440,7 +440,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 import traceback
                 tr = traceback.format_exc()
                 logger.debug('obj %d: Traceback = %s',obj_num,tr)
-                # Need to remove the "current_val"s from the config dict.  Otherwise,
+                # Need to remove the "current"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
                 builder.reset(config, logger)
                 continue

@@ -36,9 +36,7 @@ valid_value_types = {}
 
 # Standard keys to ignore while parsing values:
 standard_ignore = [
-    'type',
-    'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
-    'index_key', 'repeat', 'rng_num', '_gen_fn', '_get',
+    'type', 'current', 'index_key', 'repeat', 'rng_num', '_gen_fn', '_get',
     '#' # When we read in json files, there represent comments
 ]
 
@@ -65,20 +63,21 @@ def ParseValue(config, key, base, value_type):
         if '_gen_fn' in param:
             generate_func = param['_gen_fn']
 
-            if 'current_val' in param:
+            if 'current' in param:
+                cval, csafe, cvalue_type, cindex, cindex_key = param['current']
                 if 'repeat' in param:
                     repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
-                    use_current = (param['current_index']//repeat == index//repeat)
+                    use_current = (cindex//repeat == index//repeat)
                 else:
-                    use_current = (param['current_index'] == index)
+                    use_current = (cindex == index)
                 if use_current:
-                    if (value_type is not None and param['current_value_type'] is not None and
-                            param['current_value_type'] != value_type):
+                    if (value_type is not None and cvalue_type is not None and
+                            cvalue_type != value_type):
                         raise ValueError(
                             "Attempt to parse %s multiple times with different value types:"%key +
-                            " %s and %s"%(value_type, param['current_value_type']))
-                    #print(index,'Using current value of ',key,' = ',param['current_val'])
-                    return param['current_val'], param['current_safe']
+                            " %s and %s"%(value_type, cvalue_type))
+                    #print(index,'Using current value of ',key,' = ',param['current'][0])
+                    return cval, csafe
         else:
             # Only need to check this the first time.
             if 'type' not in param:
@@ -118,11 +117,7 @@ def ParseValue(config, key, base, value_type):
             val = value_type(val)
 
         # Save the current value for possible use by the Current type
-        param['current_val'] = val
-        param['current_safe'] = safe
-        param['current_value_type'] = value_type
-        param['current_index'] = index
-        param['current_index_key'] = index_key
+        param['current'] = (val, safe, value_type, index, index_key)
         #print(key,' = ',val)
 
         return val, safe
@@ -221,10 +216,10 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
             #print('Not dict, no value_type.  Assume %s is ok.'%d[k])
             return config[key], (config != base)
     else:
-        if value_type is None and 'current_val' in config[key]:
-            # If there is already a current_val, use it.
-            #print('Dict with current_val.  Use it: ',d[k]['current_val'])
-            return config[key]['current_val'], config[key]['current_safe']
+        if value_type is None and 'current' in config[key]:
+            # If there is already a current val, use it.
+            #print('Dict with current.  Use it: ',d[k]['current'][0])
+            return config[key]['current'][:2]
         else:
             # Otherwise, parse the value for this key
             #print('Parse value normally')

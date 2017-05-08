@@ -97,27 +97,28 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             raise SkipThisObject()
 
     # Check if we can use the current cached object
-    if ('current_val' in param and
-            (param['current_safe'] or param['current_index']//repeat == index//repeat)):
-        # If logging, explain why we are using the current object.
-        if logger:
-            if param['current_safe']:
-                logger.debug('obj %d: current is safe',base.get('obj_num',0))
-            elif repeat > 1:
-                logger.debug('obj %d: repeat = %d, index = %d, use current object',
-                             base.get('obj_num',0),repeat,index)
-            else:
-                logger.debug('obj %d: This object is already current', base.get('obj_num',0))
+    if 'current' in param:
+        # NB. "current" tuple is (obj, safe, None, index, index_type)
+        cobj, csafe, cvalue_type, cindex, cindex_type = param['current']
+        if csafe or cindex//repeat == index//repeat:
+            # If logging, explain why we are using the current object.
+            if logger:
+                if csafe:
+                    logger.debug('obj %d: current is safe',base.get('obj_num',0))
+                elif repeat > 1:
+                    logger.debug('obj %d: repeat = %d, index = %d, use current object',
+                                base.get('obj_num',0),repeat,index)
+                else:
+                    logger.debug('obj %d: This object is already current', base.get('obj_num',0))
 
-        return param['current_val'], param['current_safe']
+            return cobj, csafe
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift',
         'gsparams', 'skip',
-        'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
-        'index_key', 'repeat'
+        'current', 'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -185,11 +186,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
 
-    param['current_val'] = gsobject
-    param['current_safe'] = safe
-    param['current_value_type'] = None
-    param['current_index'] = index
-    param['current_index_key'] = index_key
+    param['current'] = gsobject, safe, None, index, index_key
 
     return gsobject, safe
 

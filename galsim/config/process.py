@@ -222,7 +222,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
 
 def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     """
-    Remove any "current values" stored in the config dict at any level.
+    Remove any "current" values stored in the config dict at any level.
 
     @param config       The configuration dict.
     @param keep_safe    Should current values that are marked as safe be preserved?
@@ -252,17 +252,14 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
         index_key = None
 
     # Delete the current_val at this level, if any
-    if ( 'current_val' in config
-          and not (keep_safe and config['current_safe'])
-          and (type is None or ('type' in config and config['type'] == type))
-          and (index_key is None or config['current_index_key'].startswith(index_key)) ):
-        del config['current_val']
-        del config['current_safe']
-        del config['current_index']
-        del config['current_value_type']
-        return True
-    else:
-        return force
+    if 'current' in config:
+        cval, csafe, ctype, cindex, cindex_key = config['current']
+        if (not (keep_safe and csafe)
+                and (type is None or ('type' in config and config['type'] == type))
+                and (index_key is None or cindex_key.startswith(index_key))):
+            del config['current']
+            return True
+    return force
 
 top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
                     'eval_variables', 'root', 'modules', 'profile']
@@ -288,7 +285,7 @@ def CopyConfig(config):
     # Make sure the input_manager isn't in the copy
     config1.pop('input_manager',None)
 
-    # Now deepcopy all the regular config fields to make sure things like current_val don't
+    # Now deepcopy all the regular config fields to make sure things like current don't
     # get clobbered by two processes writing to the same dict.  Also the rngs.
     for field in top_level_fields + rng_fields:
         if field in config:

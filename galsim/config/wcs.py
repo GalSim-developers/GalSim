@@ -67,9 +67,11 @@ def BuildWCS(config, key, base, logger=None):
     _, orig_index_key = galsim.config.GetIndex(param, base)
     base['index_key'] = 'image_num'
     index, _ = galsim.config.GetIndex(param, base)
-    if 'current_val' in param and param['current_index'] == index:
-        logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
-        return param['current_val']
+    if 'current' in param:
+        cwcs, csafe, cvalue_type, cindex, cindex_key = param['current']
+        if cindex == index:
+            logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
+            return cwcs
 
     # Special case: origin == center means to use image_center for the wcs origin
     if 'origin' in param and param['origin'] == 'center':
@@ -83,11 +85,7 @@ def BuildWCS(config, key, base, logger=None):
     wcs = builder.buildWCS(param, base, logger)
     logger.debug('image %d: wcs = %s', base.get('image_num',0), wcs)
 
-    param['current_val'] = wcs
-    param['current_safe'] = False
-    param['current_value_type'] = None
-    param['current_index'] = index
-    param['current_index_key'] = 'image_num'
+    param['current'] = wcs, False, None, index, 'image_num'
     base['index_key'] = orig_index_key
 
     return wcs

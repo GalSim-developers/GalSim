@@ -71,7 +71,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
     """
     def processStamp(self, obj_num, config, base, logger):
         # If this doesn't exist, an appropriate exception will be raised.
-        psf = base['psf']['current_val']
+        psf = base['psf']['current'][0]
         draw_method = galsim.config.GetCurrentValue('draw_method', base['stamp'], str, base)
         bounds = base['current_stamp'].bounds
 
