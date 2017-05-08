@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from past.builtins import basestring
 import galsim
 
 # The truth extra output type builds an OutputCatalog with truth information about each of the
@@ -57,15 +58,13 @@ class TruthBuilder(ExtraOutputBuilder):
         types = []
         for name in cols:
             key = cols[name]
-            # Handle the possibility of unicode.  In particular, this happens with JSON files.
-            if str(key) == key: key = str(key)
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.
                 # Caveat: We don't know the value_type here, so we give None.  This allows
                 # only a limited subset of the parsing.  Usually enough for truth items, but
                 # not fully featured.
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
-            elif not isinstance(key,str):
+            elif not isinstance(key,basestring):
                 # The item can just be a constant value.
                 value = key
             elif key[0] == '$':
@@ -73,9 +72,11 @@ class TruthBuilder(ExtraOutputBuilder):
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
             elif key[0] == '@':
                 # Pop off an initial @ if there is one.
-                value = galsim.config.GetCurrentValue(key[1:], base)
+                value = galsim.config.GetCurrentValue(str(key[1:]), base)
             else:
-                value = galsim.config.GetCurrentValue(key, base)
+                # str(key) handles the possibility of unicode.  In particular, this happens with
+                # JSON files.
+                value = galsim.config.GetCurrentValue(str(key), base)
             row.append(value)
             types.append(type(value))
         if 'types' not in self.scratch:
