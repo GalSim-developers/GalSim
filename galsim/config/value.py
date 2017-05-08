@@ -38,7 +38,7 @@ valid_value_types = {}
 standard_ignore = [
     'type',
     'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
-    'index_key', 'repeat', 'rng_num',
+    'index_key', 'repeat', 'rng_num', '_gen_fn', '_get',
     '#' # When we read in json files, there represent comments
 ]
 
@@ -52,94 +52,54 @@ def ParseValue(config, key, base, value_type):
     #print('param = ',param)
     #print('nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0))
 
-    # If param is a unicode or bytes, convert to a normal str object.
-    if isinstance(param,basestring):
-        param = str(param)
-
-    # Check for some special markup:
-    if isinstance(param, str) and param[0] == '$':
-        param = { 'type' : 'Eval', 'str' : param[1:] }
-    if isinstance(param, str) and param[0] == '@':
-        param = { 'type' : 'Current', 'key' : param[1:] }
-
-    # Check what index key we want to use for this value.
     if isinstance(param, dict):
-        is_seq = param.get('type',None) == 'Sequence'
-        index, index_key = galsim.config.GetIndex(param, base, is_seq)
-        #print('index, index_key = ',index,index_key)
 
-        if index is None:
-            # This is probably something artificial where we aren't keeping track of indices.
-            # In this case, always make a new value.
-            index = config.get('current_index',0) + 1
-
-        # Get this for use below.  Not repeating is equivalent to repeat = 1
-        if 'repeat' in param:
-            repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
-        else:
-            repeat = 1
-
-    # First see if we can assign by param by a direct constant value
-    if value_type is not None and isinstance(param, value_type):
-        #print(key,' = ',param)
-        val,safe = param, True
-    elif not isinstance(param, dict):
-        if param is None:
-            val = param  # None is allowed for all types.  If invalid it will give an error later.
-        elif value_type is galsim.Angle:
-            # Angle is a special case.  Angles are specified with a final string to
-            # declare what unit to use.
-            val = _GetAngleValue(param)
-        elif value_type is bool:
-            # For bool, we allow a few special string conversions
-            val = _GetBoolValue(param)
-        elif value_type is galsim.PositionD:
-            # For PositionD, we allow a string of x,y
-            val = _GetPositionValue(param)
-        elif value_type is None:
-            # If no value_type is given, just return whatever we have in the dict and hope
-            # for the best.
-            val = param
-        else:
-            # Make sure strings are converted to float (or other type) if necessary.
-            # In particular things like 1.e6 aren't converted to float automatically
-            # by the yaml reader. (Although I think this is a bug.)
-            val = value_type(param)
-        # Save the converted type for next time.
-        config[key] = val
-        #print(key,' = ',val)
-        safe = True
-    elif 'type' not in param:
-        raise AttributeError(
-            "%s.type attribute required in config for non-constant parameter %s."%(key,key))
-    elif 'current_val' in param and param['current_index']//repeat == index//repeat:
-        if (value_type is not None and param['current_value_type'] is not None and
-                param['current_value_type'] != value_type):
-            raise ValueError(
-                "Attempt to parse %s multiple times with different value types:"%key +
-                " %s and %s"%(value_type, param['current_value_type']))
-        #print(index,'Using current value of ',key,' = ',param['current_val'])
-        val,safe = param['current_val'], param['current_safe']
-    else:
-        # Otherwise, we need to generate the value according to its type
-        # (See valid_value_types defined at the top of the file.)
-
-        type_name = param['type']
+        type_name = param.get('type',None)
         #print('type = ',type_name)
         #print(param['type'], value_type)
 
-        # First check if the value_type is valid.
-        if type_name not in valid_value_types:
-            raise AttributeError(
-                "Unrecognized type = %s specified for parameter %s"%(type_name,key))
+        # Check what index key we want to use for this value.
+        index, index_key = galsim.config.GetIndex(param, base, is_sequence=(type_name=='Sequence'))
+        #print('index, index_key = ',index,index_key)
 
-        # Get the generating function and the list of valid types for it.
-        generate_func, valid_types = valid_value_types[type_name]
+        if '_gen_fn' in param:
+            generate_func = param['_gen_fn']
 
-        if value_type not in valid_types:
-            raise AttributeError(
-                "Invalid value_type = %s specified for parameter %s with type = %s."%(
-                    value_type, key, type_name))
+            if 'current_val' in param:
+                if 'repeat' in param:
+                    repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+                    use_current = (param['current_index']//repeat == index//repeat)
+                else:
+                    use_current = (param['current_index'] == index)
+                if use_current:
+                    if (value_type is not None and param['current_value_type'] is not None and
+                            param['current_value_type'] != value_type):
+                        raise ValueError(
+                            "Attempt to parse %s multiple times with different value types:"%key +
+                            " %s and %s"%(value_type, param['current_value_type']))
+                    #print(index,'Using current value of ',key,' = ',param['current_val'])
+                    return param['current_val'], param['current_safe']
+        else:
+            # Only need to check this the first time.
+            if 'type' not in param:
+                raise AttributeError(
+                    "%s.type attribute required in config for non-constant parameter %s."%(key,key))
+
+            # Check if the value_type is valid.
+            # (See valid_value_types defined at the top of the file.)
+            if type_name not in valid_value_types:
+                raise AttributeError(
+                    "Unrecognized type = %s specified for parameter %s"%(type_name,key))
+
+            # Get the generating function and the list of valid types for it.
+            generate_func, valid_types = valid_value_types[type_name]
+
+            if value_type not in valid_types:
+                raise AttributeError(
+                    "Invalid value_type = %s specified for parameter %s with type = %s."%(
+                        value_type, key, type_name))
+
+            param['_gen_fn'] = generate_func
 
         #print('generate_func = ',generate_func)
         val_safe = generate_func(param, base, value_type)
@@ -154,7 +114,7 @@ def ParseValue(config, key, base, value_type):
             safe = False
 
         # Make sure we really got the right type back.  (Just in case...)
-        if val is not None and value_type is not None and not isinstance(val,value_type):
+        if value_type is not None and not isinstance(val,value_type) and val is not None:
             val = value_type(val)
 
         # Save the current value for possible use by the Current type
@@ -165,7 +125,49 @@ def ParseValue(config, key, base, value_type):
         param['current_index_key'] = index_key
         #print(key,' = ',val)
 
-    return val, safe
+        return val, safe
+
+    else: # Not a dict
+
+        # Check for some special markup and convert them to normal dicts.
+        if isinstance(param, basestring):
+            if param[0] == '$':
+                param = { 'type' : 'Eval', 'str' : str(param[1:]) }
+                config[key] = param
+                return ParseValue(config, key, base, value_type)
+            if param[0] == '@':
+                param = { 'type' : 'Current', 'key' : str(param[1:]) }
+                config[key] = param
+                return ParseValue(config, key, base, value_type)
+
+        # First see if we can assign by param by a direct constant value
+        if value_type is None or isinstance(param, value_type):
+            #print(key,' = ',param)
+            return param, True
+        else:
+            if value_type is galsim.Angle:
+                # Angle is a special case.  Angles are specified with a final string to
+                # declare what unit to use.
+                val = _GetAngleValue(param)
+            elif value_type is bool:
+                # For bool, we allow a few special string conversions
+                val = _GetBoolValue(param)
+            elif value_type is galsim.PositionD:
+                # For PositionD, we allow a string of x,y
+                val = _GetPositionValue(param)
+            elif value_type is None or param is None:
+                # If no value_type is given, just return whatever we have in the dict and hope
+                # for the best.
+                val = param
+            else:
+                # Make sure strings are converted to float (or other type) if necessary.
+                # In particular things like 1.e6 aren't converted to float automatically
+                # by the yaml reader. (Although I think this is a bug.)
+                val = value_type(param)
+            #print(key,' = ',val)
+            # Save the converted type for next time.
+            config[key] = val
+            return val, True
 
 
 def GetCurrentValue(key, config, value_type=None, base=None):
@@ -248,6 +250,10 @@ def SetDefaultIndex(config, num):
     elif ( isinstance(config['index'],dict)
            and 'type' in config['index'] ):
         index = config['index']
+
+        if 'default' in index: return
+        elif '_get' in index: del index['_get']
+
         type_name = index['type']
         if ( type_name == 'Sequence'
              and 'nitems' in index
@@ -279,6 +285,8 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
 
     @returns a dict, get, with get[key] = value_type for all keys to get.
     """
+    if '_get' in config: return config['_get']
+
     get = {}
     valid_keys = list(req) + list(opt)
     # Check required items:
@@ -326,6 +334,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         if key not in valid_keys and not key.startswith('_'):
             raise AttributeError("Unexpected attribute %s found"%(key))
 
+    config['_get'] = get
     return get
 
 
@@ -530,8 +539,7 @@ def _GenerateFromSequence(config, base, value_type):
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
     index, index_key = galsim.config.GetIndex(kwargs, base, is_sequence=True)
-    if index is None:
-        raise ValueError("The base config dict does not have index_key set correctly.")
+    #print('in GenFromSequence: index = ',index,index_key)
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -551,11 +559,15 @@ def _GenerateFromSequence(config, base, value_type):
     else:
         if last is not None:
             nitems = (last - first)//step + 1
+    #print('nitems = ',nitems)
+    #print('repeat = ',repeat)
 
     index = index // repeat
+    #print('index => ',index)
 
     if nitems is not None and nitems > 0:
         index = index % nitems
+        #print('index => ',index)
 
     value = first + index*step
     #print(base[index_key],'Sequence index = %s + %d*%s = %s'%(first,index,step,value))
@@ -676,15 +688,22 @@ def _GenerateFromSum(config, base, value_type):
 def _GenerateFromCurrent(config, base, value_type):
     """@brief Get the current value of another config item.
     """
-    req = { 'key' : str }
-    params, safe = GetAllParams(config, base, req=req)
-    key = params['key']
+    if '_k' in config:
+        k = config['_k']
+        d = config['_d']
+    else:
+        req = { 'key' : str }
+        params, safe = GetAllParams(config, base, req=req, ignore=['_k','_d'])
+        key = params['key']
+        #print('GetCurrent %s.  value_type = %s'%(key,value_type))
 
-    d, k, index_key = galsim.config.ParseExtendedKey(base, key, True)
+        d, k, index_key = galsim.config.ParseExtendedKey(base, key, True)
 
-    if index_key is not None and isinstance(d[k],dict) and 'index_key' not in d[k]:
-        #print('Set d[k] index_key to ',index_key)
-        d[k]['index_key'] = index_key
+        if index_key is not None and isinstance(d[k],dict) and 'index_key' not in d[k]:
+            #print('Set d[k] index_key to ',index_key)
+            d[k]['index_key'] = index_key
+        config['_k'] = k
+        config['_d'] = d
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)

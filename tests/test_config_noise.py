@@ -85,6 +85,7 @@ def test_gaussian():
     # Gaussian noise can also be given the variance directly, rather than sigma
     galsim.config.RemoveCurrent(config)
     del config['image']['noise']['sigma']
+    del config['image']['noise']['_get']
     config['image']['noise']['variance'] = var
     im1c = galsim.config.BuildImage(config)
     np.testing.assert_equal(im1c.array, im1a.array)
@@ -357,6 +358,7 @@ def test_ccdnoise_phot():
     # Some slightly different code paths if rn = 0 or gain = 1:
     del config['image']['noise']['gain']
     del config['image']['noise']['read_noise']
+    del config['image']['noise']['_get']
     rng.seed(1234 + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
     im2a.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_pixel)))
@@ -400,6 +402,7 @@ def test_ccdnoise_phot():
     galsim.config.RemoveCurrent(config)
     config['image']['noise']['gain'] = gain
     config['image']['noise']['read_noise'] = rn
+    del config['image']['noise']['_get']
     rng.seed(1234+1)
     im4a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
     wcs.makeSkyImage(sky_im, sky)

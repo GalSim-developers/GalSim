@@ -57,6 +57,7 @@ class TruthBuilder(ExtraOutputBuilder):
         row = []
         types = []
         for name in cols:
+            if name[0] == '_': continue
             key = cols[name]
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.

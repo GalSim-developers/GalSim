@@ -66,6 +66,7 @@ def test_fits():
     logger = logging.getLogger('test_fits')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
+    config1 = galsim.config.CopyConfig(config)
 
     im1_list = []
     nfiles = 6
@@ -82,7 +83,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1.array)
 
     # Build all files at once
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFiles(nfiles, config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -90,7 +91,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
     # Can also use Process to do this
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.Process(config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -99,21 +100,21 @@ def test_fits():
 
     # For the first file, you don't need the file_num.
     os.remove('output_fits/test_fits_0.fits')
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
     # nproc < 0 should automatically determine nproc from ncpu
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'ncpu = ' in cl.output
 
     # nproc > njobs should drop back to nproc = njobs
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = 10
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
@@ -121,9 +122,9 @@ def test_fits():
     # Check that profile outputs something appropriate for multithreading.
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
+    config = galsim.config.CopyConfig(config1)
     config['profile'] = True
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
@@ -135,9 +136,9 @@ def test_fits():
 
     # If there is no output field, the default behavior is to write to root.fits.
     os.remove('output_fits/test_fits_0.fits')
+    config = galsim.config.CopyConfig(config1)
     del config['output']
     config['root'] = 'output_fits/test_fits_0'
-    galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)

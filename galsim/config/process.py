@@ -240,6 +240,7 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     # Recurse to lower levels, if any
     force = False  # If lower levels removed anything, then force removal at this level as well.
     for key in config:
+        if key[0] == '_': continue  # These are our own implementation details, not the normal dict.
         if isinstance(config[key],list):
             for item in config[key]:
                 force = RemoveCurrent(item, keep_safe, type, index_key) or force
@@ -463,7 +464,8 @@ def PropagateIndexKeyRNGNum(config, index_key, rng_num):
     elif rng_num is not None:
         config['rng_num'] = rng_num
 
-    for field in config.values():
+    for key, field in config.items():
+        if key[0] == '_': continue
         PropagateIndexKeyRNGNum(field, index_key, rng_num)
 
 
@@ -1022,7 +1024,7 @@ def GetIndex(config, base, is_sequence=False):
         index = base.get('obj_num',0) - base.get('start_obj_num',0)
         index_key = 'obj_num'
     else:
-        index = base.get(index_key,None)
+        index = base.get(index_key,0)
 
     return index, index_key
 

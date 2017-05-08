@@ -361,6 +361,7 @@ def test_float_value():
     # Or set a different maximum
     galsim.config.RemoveCurrent(config)
     config['nfw']['max_mu'] = 3000.
+    del config['nfw']['_get']
     config['world_pos'] = galsim.PositionD(0.1,0.3)
     nfw3 = galsim.config.ParseValue(config,'nfw',config, float)[0]
     np.testing.assert_almost_equal(nfw3, nfw_halo.getMagnification((0.1,0.3), gal_z))
