@@ -41,7 +41,8 @@ def test_randwalk_defaults():
     # try constructing with mostly defaults
     npoints=100
     hlr = 8.0
-    rw=galsim.RandomWalk(npoints, hlr)
+    rng = galsim.BaseDeviate(1234)
+    rw=galsim.RandomWalk(npoints, hlr, rng=rng)
 
     assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\

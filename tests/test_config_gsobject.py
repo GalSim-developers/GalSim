@@ -880,7 +880,7 @@ def test_cosmosgalaxy():
         # Use defaults for gal_type (parametric, since we used the actual catalog and not the
         # parametric one) and select a random galaxy using internal routines.
         'gal1' : { 'type' : 'COSMOSGalaxy' },
-        }
+    }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
@@ -1062,7 +1062,7 @@ def test_add():
             ],
             'flux' : 170.
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1201,7 +1201,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 2 },
             ]
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
