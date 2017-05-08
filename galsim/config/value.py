@@ -20,6 +20,7 @@ from __future__ import print_function
 from past.builtins import basestring
 import sys
 import galsim
+import weakref
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
 # parsing functionality along with generators for most of the simple value types.
@@ -698,7 +699,8 @@ def _GenerateFromCurrent(config, base, value_type):
             #print('Set d[k] index_key to ',index_key)
             d[k]['index_key'] = index_key
         config['_k'] = k
-        config['_d'] = d
+        # Use a weakref to help break cycles that might occur otherwise.
+        config['_d'] = weakref.proxy(d)
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
