@@ -20,7 +20,6 @@ from __future__ import print_function
 from past.builtins import basestring
 import sys
 import galsim
-import weakref
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
 # parsing functionality along with generators for most of the simple value types.
@@ -680,16 +679,14 @@ def _GenerateFromSum(config, base, value_type):
 
     return sum, safe
 
-
 def _GenerateFromCurrent(config, base, value_type):
     """@brief Get the current value of another config item.
     """
-    if '_k' in config:
-        k = config['_k']
-        d = config['_d']
+    if '_kd' in config:
+        k, d = config['_kd']
     else:
         req = { 'key' : str }
-        params, safe = GetAllParams(config, base, req=req, ignore=['_k','_d'])
+        params, safe = GetAllParams(config, base, req=req, ignore=['_kd'])
         key = params['key']
         #print('GetCurrent %s.  value_type = %s'%(key,value_type))
 
@@ -698,9 +695,7 @@ def _GenerateFromCurrent(config, base, value_type):
         if index_key is not None and isinstance(d[k],dict) and 'index_key' not in d[k]:
             #print('Set d[k] index_key to ',index_key)
             d[k]['index_key'] = index_key
-        config['_k'] = k
-        # Use a weakref to help break cycles that might occur otherwise.
-        config['_d'] = weakref.proxy(d)
+        config['_kd'] = k,d
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
