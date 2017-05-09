@@ -58,7 +58,7 @@ def BuildStamps(nobjects, config, obj_num=0,
     @returns the tuple (images, current_vars).  Both are lists.
     """
     logger = galsim.config.LoggerWrapper(logger)
-    logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
+    logger.debug('image %d: BuildStamps nobjects = %d: obj = %d',
                  config.get('image_num',0),nobjects,obj_num)
 
     # Figure out how many processes we will use for building the stamps:

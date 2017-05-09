@@ -141,7 +141,7 @@ def _GenerateFromEval(config, base, value_type):
                 config['_fn'] = fn
         except KeyboardInterrupt:
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise ValueError("Unable to evaluate string %r as a %s\n"%(string,value_type) + str(e))
  
     # Always need to evaluate any parameters to pass to the function
@@ -164,7 +164,7 @@ def _GenerateFromEval(config, base, value_type):
         return val, safe
     except KeyboardInterrupt:
         raise
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         raise ValueError("Unable to evaluate string %r as a %s\n"%(config['str'],value_type) +
                          str(e))
 

@@ -194,8 +194,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                                      file_num,value_type)
                     # Also put these in the normal "current" location, so this can be used
                     # e.g. as @input.catalog in an Eval statement.
-                    field['current'] = (input_obj, safe, None, config.get('file_num',None),
-                                        'file_num')
+                    field['current'] = (input_obj, safe, None, file_num, 'file_num')
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -254,7 +253,7 @@ def ProcessInputNObjects(config, logger=None):
                     kwargs['_nobjects_only'] = True
                     input_obj = loader.init_func(**kwargs)
                 logger.debug('file %d: Found nobjects = %d for %s',
-                             config['file_num'],input_obj.getNObjects(),key)
+                             config.get('file_num',0),input_obj.getNObjects(),key)
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
