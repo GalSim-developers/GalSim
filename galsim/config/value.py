@@ -124,45 +124,52 @@ def ParseValue(config, key, base, value_type):
 
     else: # Not a dict
 
-        # Check for some special markup and convert them to normal dicts.
+        # Check for some special markup on string items and convert them to normal dicts.
         if isinstance(param, basestring):
             if param[0] == '$':
-                param = { 'type' : 'Eval', 'str' : str(param[1:]) }
-                config[key] = param
+                config[key] = { 'type': 'Eval', 'str': str(param[1:]) }
                 return ParseValue(config, key, base, value_type)
             if param[0] == '@':
-                param = { 'type' : 'Current', 'key' : str(param[1:]) }
-                config[key] = param
+                config[key] = { 'type': 'Current', 'key': str(param[1:]) }
                 return ParseValue(config, key, base, value_type)
 
-        # First see if we can assign by param by a direct constant value
+        # See if it's already the right kind of object, in which case we can just return it.
         if value_type is None or isinstance(param, value_type):
             #print(key,' = ',param)
             return param, True
+
+        # Convert lists to dicts with type=List
+        if isinstance(param, list) and value_type is not list:
+            config[key] = { 'type': 'List', 'items': param }
+            return ParseValue(config, key, base, value_type)
+
+        # The rest of these are special processing options for specific value_types:
+        if value_type is galsim.Angle:
+            # Angle is a special case.  Angles are specified with a final string to
+            # declare what unit to use.
+            val = _GetAngleValue(param)
+        elif value_type is bool:
+            # For bool, we allow a few special string conversions
+            val = _GetBoolValue(param)
+        elif value_type is galsim.PositionD:
+            # For PositionD, we allow a string of x,y
+            val = _GetPositionValue(param)
+        elif value_type is None or param is None:
+            # If no value_type is given, just return whatever we have in the dict and hope
+            # for the best.
+            val = param
         else:
-            if value_type is galsim.Angle:
-                # Angle is a special case.  Angles are specified with a final string to
-                # declare what unit to use.
-                val = _GetAngleValue(param)
-            elif value_type is bool:
-                # For bool, we allow a few special string conversions
-                val = _GetBoolValue(param)
-            elif value_type is galsim.PositionD:
-                # For PositionD, we allow a string of x,y
-                val = _GetPositionValue(param)
-            elif value_type is None or param is None:
-                # If no value_type is given, just return whatever we have in the dict and hope
-                # for the best.
-                val = param
-            else:
-                # Make sure strings are converted to float (or other type) if necessary.
-                # In particular things like 1.e6 aren't converted to float automatically
-                # by the yaml reader. (Although I think this is a bug.)
-                val = value_type(param)
-            #print(key,' = ',val)
-            # Save the converted type for next time.
-            config[key] = val
-            return val, True
+            # If none of the above worked, just try a normal value_type initialization.
+            # This makes sure strings are converted to float (or other type) if necessary.
+            # In particular things like 1.e6 aren't converted to float automatically
+            # by the yaml reader. (Although I think this is a bug.)
+            val = value_type(param)
+        #print(key,' = ',val)
+
+        # Save the converted type for next time so it will hit the first if statement here
+        # instead of recalculating the value.
+        config[key] = val
+        return val, True
 
 
 def GetCurrentValue(key, config, value_type=None, base=None):

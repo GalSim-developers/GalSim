@@ -1117,8 +1117,10 @@ def test_wcs():
             'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
         },
         'scale5' : galsim.PixelScale(0.49),
-        'scale6' : "$galsim.PixelScale(0.56)",
-        'scale7' : "@image.scale6",
+        'scale6' : '$galsim.PixelScale(0.56)',
+        'scale7' : '@image.scale6',
+        'scale8' : { 'type': 'Eval', 'str': 'galsim.PixelScale(0.56)' },
+        'scale9' : { 'type': 'Current', 'key': 'image.scale6' },
         'shear1' : {
             'type' : 'Shear',
             'scale' : 0.43,

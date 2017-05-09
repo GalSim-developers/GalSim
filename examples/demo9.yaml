@@ -46,6 +46,7 @@
 # - str type : FormattedStr (format, items)
 # - pos type : RandomCircle (..., inner_radius)
 # - value type : Sequence (..., nitems)
+# - value type : List as a simple list
 # - output : nproc
 # - output : weight
 # - output : badpix
@@ -501,9 +502,15 @@ output :
 
     # It is possible to skip particular output files if you want.
     # This example is a bit contrived for the sake of the example.  It skips every 6th file.
-    skip :
-        type : List
-        items : [ 0, 0, 0, 0, 0, 1 ]
+    # Also, this is a shorthand notation for
+    #
+    #     skip :
+    #         type : List
+    #         items : [ 0, 0, 0, 0, 0, 1 ]
+    #
+    # For simple lists where you don't need to do anything special with the indexing, repeat, etc.
+    # then you can just write it this way.
+    skip: [ 0, 0, 0, 0, 0, 1 ]
 
 ---
 
