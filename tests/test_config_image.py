@@ -1223,6 +1223,8 @@ def test_wcs():
         'scale5' : galsim.PixelScale(0.49),
         'scale6' : galsim.PixelScale(0.56),
         'scale7' : galsim.PixelScale(0.56),
+        'scale8' : galsim.PixelScale(0.56),
+        'scale9' : galsim.PixelScale(0.56),
         'shear1' : galsim.ShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3)),
         'shear2' : galsim.OffsetShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3),
                                          origin=galsim.PositionD(32,24),
