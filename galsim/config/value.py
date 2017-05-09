@@ -249,28 +249,25 @@ def SetDefaultIndex(config, num):
             'nitems' : num,
             'default' : num
         }
-    elif ( isinstance(config['index'],dict)
-           and 'type' in config['index'] ):
+    elif isinstance(config['index'],dict) and 'type' in config['index']:
         index = config['index']
 
         if index.get('default',-1) == num: return
-        elif '_get' in index: del index['_get']
+        if '_get' in index: del index['_get']
 
         type_name = index['type']
-        if ( type_name == 'Sequence'
-             and 'nitems' in index
-             and 'default' in index ):
+        if type_name == 'Sequence' and 'nitems' in index and 'default' in index:
             index['nitems'] = num
             index['default'] = num
-        elif ( type_name == 'Sequence'
-               and 'nitems' not in index
-               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
-               and ('last' not in index or 'default' in index) ):
+        elif (type_name == 'Sequence'
+              and 'nitems' not in index
+              and index.get('step',1) > 0
+              and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
             index['default'] = num
         elif ( type_name == 'Sequence'
                and 'nitems' not in index
-               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) )
+               and index.get('step',1) < 0
                and ('last' not in index or 'default' in index) ):
             index['last'] = 0
             index['default'] = num

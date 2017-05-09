@@ -1585,6 +1585,70 @@ def test_template():
     assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
     assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
 
+@timer
+def test_variable_cat_size():
+    """Test that some automatic nitems calculations work with variable input catalog sizes
+    """
+    config = {
+        'gal': {
+            'type': 'Gaussian',
+            'half_light_radius': { 'type': 'Catalog', 'col': 0 },
+            'shear': {
+                'type': 'G1G2',
+                'g1': { 'type': 'Catalog', 'col': 1 },
+                'g2': { 'type': 'Catalog', 'col': 2 }
+            },
+            'flux': 1.7
+        },
+        'stamp': {
+            'size': 33   # Use odd to avoid all the even-sized image centering complications
+        },
+        'image': {
+            'type': 'Scattered',
+            'size': 256,
+            'image_pos': {
+                'type': 'XY',
+                'x': { 'type': 'Catalog', 'col': 3 },
+                'y': { 'type': 'Catalog', 'col': 4 }
+            }
+        },
+        'input': {
+            'catalog': {
+                'dir': 'config_input',
+                'file_name': [ 'cat_3.txt', 'cat_5.txt' ]
+            }
+        }
+    }
+
+    logger = logging.getLogger('test_single')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    #logger.setLevel(logging.DEBUG)
+    cfg_images = []
+    galsim.config.SetupConfigFileNum(config, 0, 0, 0)
+    galsim.config.ProcessInput(config, logger=logger)
+    cfg_images.append(galsim.config.BuildImage(config, 0, 0, logger=logger))
+    galsim.config.SetupConfigFileNum(config, 1, 1, 3)
+    galsim.config.ProcessInput(config, logger=logger)
+    cfg_images.append(galsim.config.BuildImage(config, 1, 3, logger=logger))
+
+    # Build by hand to compare
+    ref_images = []
+    for cat_name in ['cat_3.txt', 'cat_5.txt']:
+        cat = np.genfromtxt(os.path.join('config_input',cat_name), names=True, skip_header=1)
+        im = galsim.ImageF(256,256,scale=1)
+        for row in cat:
+            gal = galsim.Gaussian(half_light_radius=row['hlr'], flux=1.7)
+            gal = gal.shear(g1=row['e1'], g2=row['e2'])
+            stamp = galsim.ImageF(33,33,scale=1)
+            gal.drawImage(stamp)
+            stamp.setCenter(row['x'],row['y'])
+            im[stamp.bounds] += stamp
+        ref_images.append(im)
+
+    np.testing.assert_array_equal(cfg_images[0], ref_images[0])
+    np.testing.assert_array_equal(cfg_images[1], ref_images[1])
+
+
 
 if __name__ == "__main__":
     test_single()
@@ -1601,3 +1665,4 @@ if __name__ == "__main__":
     test_index_key()
     test_multirng()
     test_template()
+    test_variable_cat_size()
