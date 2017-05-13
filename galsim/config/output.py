@@ -295,6 +295,7 @@ def GetNObjForFile(config, file_num, image_num):
     """
     nimages = GetNImagesForFile(config, file_num)
     nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    config['image_num'] = image_num  # Make sure this is set back to current image num.
     return nobj
 
 
