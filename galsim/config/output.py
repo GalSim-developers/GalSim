@@ -424,11 +424,6 @@ class OutputBuilder(object):
 
         @param config           The configuration dict for the output type.
         @param base             The base configuration dict.
-        @param image_num        The current image_num.
-        @param obj_num          The current obj_num.
-        @param ignore           A list of parameters that are allowed to be in config['output']
-                                that we can ignore here.  i.e. it won't be an error if these
-                                parameters are present.
         @param logger           If given, a logger object to log progress.
 
         @returns the filename to build.
