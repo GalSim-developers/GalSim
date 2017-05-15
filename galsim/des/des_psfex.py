@@ -116,7 +116,7 @@ class DES_PSFEx(object):
         if image_file_name:
             if wcs is not None:
                 raise AttributeError("Cannot provide both image_file_name and wcs")
-            self.wcs = galsim.GSFitsWCS(image_file_name)
+            self.wcs = galsim.FitsWCS(image_file_name)
         elif wcs:
             self.wcs = wcs
         else:
