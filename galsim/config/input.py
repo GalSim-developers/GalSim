@@ -205,7 +205,7 @@ def SetupInput(config, logger=None):
     """Process the input field if it hasn't been processed yet.
 
     This is mostly useful if the user isn't running through the full processing and just starting
-    at BuidlImage say.  This will make sure the input objects are set up in the way that they
+    at BuildImage say.  This will make sure the input objects are set up in the way that they
     normally would have been by the first level of processing in a `galsim config_file` run.
     """
     if 'input_objs' not in config:

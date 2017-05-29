@@ -84,7 +84,7 @@ def BuildWCS(config, key, base, logger=None):
 
     if wcs_type not in valid_wcs_types:
         raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
-    logger.debug('image %d: Buiding wcs type %s', base.get('image_num',0), wcs_type)
+    logger.debug('image %d: Building wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
     wcs = builder.buildWCS(param, base, logger)
     logger.debug('image %d: wcs = %s', base.get('image_num',0), wcs)
