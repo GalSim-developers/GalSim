@@ -195,7 +195,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
         # Send the warning to the logger, rather than raising a normal warning.
         # The warning here would typically be that the position is out of range of where the
         # power spectrum is defined.  So if we do get this and the position is not on the image,
-        # we probably don't care.  In that case, just log it as debug, now warn.
+        # we probably don't care.  In that case, just log it as debug, not warn.
         log_level = (logging.WARNING if 'current_image' in base and
                                         base['current_image'].getOuterBounds().includes(pos)
                      else logging.DEBUG)
