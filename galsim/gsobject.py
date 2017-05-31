@@ -653,10 +653,9 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        # Check for illegal operation on DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be expanded/dilated/magnified"+
-                                " by themselves. A convolution should be carried out first.")
+        # Expanding a Delta Function should not change it's size or flux
+        if isinstance(self, galsim.DeltaFunction): return self
+        
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
 
         if hasattr(self, 'noise'):
@@ -676,10 +675,9 @@ class GSObject(object):
 
         @returns the dilated object.
         """
-        # Check for illegal operation on DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be expanded/dilated/magnified"+
-                                " by themselves. A convolution should be carried out first.")
+        # Dilating a Delta Function should not change it's size or flux
+        if isinstance(self, galsim.DeltaFunction): return self
+        
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
         # equivalent to self.expand(scale) * (1./scale**2)
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
@@ -725,10 +723,8 @@ class GSObject(object):
 
         @returns the sheared object.
         """
-        # Check for illegal operation on DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be sheared."+
-                                " A convolution should be carried out first.")
+        # Shearing a Delta Function should not change it's size or flux
+        if isinstance(self, galsim.DeltaFunction): return self
  
         if len(args) == 1:
             if kwargs:
@@ -788,10 +784,8 @@ class GSObject(object):
 
         @returns the rotated object.
         """
-        # Check for illegal operation on DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be rotated."+
-                                " A convolution should be carried out first.")
+        # Rotating a Delta Function should not change it's size or flux
+        if isinstance(self, galsim.DeltaFunction): return self
                                 
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -828,10 +822,9 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        # Check for illegal operation on DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be transformed."+
-                                " A convolution should be carried out first.")
+        # Transforming a Delta Function should not change it's size or flux
+        if isinstance(self, galsim.DeltaFunction): return self
+        
         new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
         if hasattr(self, 'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
