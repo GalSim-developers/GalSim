@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -496,13 +496,7 @@ class PowerSpectrum(object):
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
-        # Make a GaussianDeviate if necessary
-        if rng is None:
-            gd = galsim.GaussianDeviate()
-        elif isinstance(rng, galsim.BaseDeviate):
-            gd = galsim.GaussianDeviate(rng)
-        else:
-            raise TypeError("The rng provided to buildGrid is not a BaseDeviate")
+        gd = galsim.GaussianDeviate(rng)
 
         # Check that the interpolant is valid.
         if interpolant is None:

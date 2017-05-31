@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -308,6 +308,7 @@ def test_SED_atRedshift():
     """
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bolo_flux = a.calculateFlux(bandpass=None)
+    print('bolo_flux = ',bolo_flux)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
@@ -315,13 +316,18 @@ def test_SED_atRedshift():
         e = b.thin(rel_err=1.e-5)  # effectively tests that wave_list is handled correctly.
                                    # (Issue #520)
         for w in [350, 500, 650]:
-            np.testing.assert_almost_equal(a(w), b(w*(1.0+z1)), 10,
+            print('a(w) = ',a(w))
+            print('b(w(1+z)) = ',b(w*(1.+z1)))
+            print('c(w(1+z)) = ',c(w*(1.+z1)))
+            print('d(w(1+z)) = ',d(w*(1.+z2)))
+            print('e(w(1+z)) = ',e(w*(1.+z1)))
+            np.testing.assert_almost_equal(a(w)/bolo_flux, b(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), c(w*(1.0+z1)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, c(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, d(w*(1.0+z2))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal((a(w)-e(w*(1.0+z1)))/bolo_flux, 0., 5,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
 
 
@@ -607,7 +613,7 @@ def test_SED_sampleWavelength():
                                    "to the nearest integer.")
 
     def create_cdfs(sed,out,nbins=100):
-        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,100000,retstep=True)
         centers = bins[:-1] + step/2.
         cdf = np.cumsum(sed(centers)*step)
         cdf /= cdf.max()

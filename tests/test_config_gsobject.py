@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -520,6 +520,127 @@ def test_devaucouleurs():
     except ImportError:
         print('The assert_raises tests require nose')
 
+@timer
+def test_inclined_exponential():
+    """Test various ways to build an InclinedExponential
+    """
+    config = {
+        'gal1' : { 'type' : 'InclinedExponential' , 'inclination' : 0.1 * galsim.radians,
+                   'half_light_radius' : 2 },
+        'gal2' : { 'type' : 'InclinedExponential' , 'inclination' : 21 * galsim.degrees,
+                   'scale_radius' : 0.7, 'flux' : 100 },
+        'gal3' : { 'type' : 'InclinedExponential' , 'inclination' : 0.3 * galsim.radians,
+                   'scale_radius' : 0.35, 'scale_height' : 0.23, 'flux' : 1.e6,
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
+                 },
+        'gal4' : { 'type' : 'InclinedExponential' , 'inclination' : 0.7 * galsim.radians,
+                   'half_light_radius' : 1, 'scale_h_over_r' : 0.2, 'flux' : 50,
+                   'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
+                   'rotate' : 12 * galsim.degrees,
+                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' :-1.2 }
+                 },
+        'gal5' : { 'type' : 'InclinedExponential' , 'inclination' : 0.7 * galsim.radians,
+                   'half_light_radius' : 1, 'flux' : 50,
+                   'gsparams' : { 'minimum_fft_size' : 256 }
+                 },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.InclinedExponential(inclination=0.1 * galsim.radians, half_light_radius=2)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.InclinedExponential(inclination=21 * galsim.degrees, scale_radius=0.7, flux=100)
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.InclinedExponential(inclination=0.3 * galsim.radians, scale_radius=0.35,
+                                  scale_height=0.23, flux=1.e6)
+    gal3b = gal3b.shear(q=0.6, beta=0.39 * galsim.radians)
+    gsobject_compare(gal3a, gal3b)
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1,
+                                  scale_h_over_r=0.2, flux=50)
+    gal4b = gal4b.dilate(3).shear(e1=0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.lens(0.03, -0.05, 1.03).shift(dx=0.7, dy=-1.2)
+    gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(minimum_fft_size=256)
+    gal5b = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.InclinedExponential(inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
+        np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
+                                 conv=galsim.Gaussian(sigma=1))
+
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+@timer
+def test_inclined_sersic():
+    """Test various ways to build an InclinedSersic
+    """
+    config = {
+        'gal1' : { 'type' : 'InclinedSersic' , 'n' : 1.2, 'inclination' : 0.1 * galsim.radians,
+                   'half_light_radius' : 2 },
+        'gal2' : { 'type' : 'InclinedSersic' , 'n' : 3.5, 'inclination' : 21 * galsim.degrees,
+                   'scale_radius' : 0.007, 'flux' : 100 },
+        'gal3' : { 'type' : 'InclinedSersic' , 'n' : 2.2, 'inclination' : 0.3 * galsim.radians,
+                   'scale_radius' : 0.35, 'scale_height' : 0.23, 'flux' : 1.e6,
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians }
+                 },
+        'gal4' : { 'type' : 'InclinedSersic' , 'n' : 0.7, 'inclination' : 0.7 * galsim.radians,
+                   'half_light_radius' : 1, 'scale_h_over_r' : 0.2, 'flux' : 50,
+                   'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
+                   'rotate' : 12 * galsim.degrees,
+                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' :-1.2 }
+                 },
+        'gal5' : { 'type' : 'InclinedSersic' , 'n' : 0.7, 'inclination' : 0.7 * galsim.radians,
+                   'half_light_radius' : 1, 'flux' : 50,
+                   'gsparams' : { 'minimum_fft_size' : 256 }
+                 },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    gal1b = galsim.InclinedSersic(n=1.2, inclination=0.1 * galsim.radians, half_light_radius=2)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    gal2b = galsim.InclinedSersic(n=3.5, inclination=21 * galsim.degrees, scale_radius=0.007, flux=100)
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    gal3b = galsim.InclinedSersic(n=2.2, inclination=0.3 * galsim.radians, scale_radius=0.35,
+                                  scale_height=0.23, flux=1.e6)
+    gal3b = gal3b.shear(q=0.6, beta=0.39 * galsim.radians)
+    gsobject_compare(gal3a, gal3b)
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    gal4b = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1,
+                                  scale_h_over_r=0.2, flux=50)
+    gal4b = gal4b.dilate(3).shear(e1=0.3).rotate(12 * galsim.degrees)
+    gal4b = gal4b.lens(0.03, -0.05, 1.03).shift(dx=0.7, dy=-1.2)
+    gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(minimum_fft_size=256)
+    gal5b = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.InclinedSersic(n=0.7, inclination=0.7 * galsim.radians, half_light_radius=1, flux=50)
+        np.testing.assert_raises(AssertionError, gsobject_compare, gal5a, gal5c,
+                                 conv=galsim.Gaussian(sigma=1))
+
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 @timer
 def test_pixel():
@@ -1319,6 +1440,8 @@ if __name__ == "__main__":
     test_exponential()
     test_sersic()
     test_devaucouleurs()
+    test_inclined_exponential()
+    test_inclined_sersic()
     test_pixel()
     test_realgalaxy()
     test_cosmosgalaxy()

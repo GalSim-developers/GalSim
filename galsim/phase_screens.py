@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,7 +32,7 @@ class AtmosphericScreen(object):
                          the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so while the code will
                          still run with a small screen, this may introduce artifacts into PSFs or
-                         PSF correlations functions.  Also note that screen_size may be tweaked by
+                         PSF correlation functions.  Also note that screen_size may be tweaked by
                          the initializer to ensure `screen_size` is a multiple of `screen_scale`.
     @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
                          the Fried parameter is usually sufficiently small, but users should test
@@ -40,8 +40,6 @@ class AtmosphericScreen(object):
                          [default: r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.03]
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [default: 0.2]
@@ -55,7 +53,13 @@ class AtmosphericScreen(object):
                          is then the amount of turbulence freshly generated in each step.  Setting
                          alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
                          from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
+                         PSFs with non-frozen-flow atmospheres.  If `alpha` != 1.0, then it is
+                         required that a `time_step` is also specified.  [default: 1.0]
+    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
+                         from the time interval used to integrate the PSF over time, which is set
+                         by the `time_step` keyword argument to `PhaseScreenPSF` or
+                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
+                         that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
 
@@ -68,10 +72,14 @@ class AtmosphericScreen(object):
     Published in Proceedings Volume 9148: Adaptive Optics Systems IV
     September 2014
     """
-    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None,
-                 _orig_rng=None, _tab2d=None, _psi=None, _screen=None, _origin=None):
+    def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None):
 
+        if (alpha != 1.0 and time_step is None):
+            raise ValueError("No time_step provided when alpha != 1.0")
+        if (alpha == 1.0 and time_step is not None):
+            raise ValueError("Setting AtmosphericScreen time_step prohibited when alpha == 1.0.  "
+                             "Did you mean to set time_step in makePSF or PhaseScreenPSF?")
         if screen_scale is None:
             # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
             screen_scale = r0_500
@@ -87,48 +95,39 @@ class AtmosphericScreen(object):
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
+        self._time = 0.0
 
         if rng is None:
             rng = galsim.BaseDeviate()
 
-        # Should only be using private constructor variables when reconstituting from
-        # eval(repr(obj)).
-        if _orig_rng is not None:
-            self.orig_rng = _orig_rng
-            self.rng = rng
-            self.tab2d = _tab2d
-            # Last two might get quickly deleted if alpha==1, but that's okay.
-            self.psi = _psi
-            self.screen = _screen
-            self.origin = _origin
-        else:
-            self.orig_rng = rng
-            self._init_psi()
-            self.reset()
+        self._orig_rng = rng.duplicate()
+        self.dynamic = True
+        self.reversible = self.alpha == 1.0
 
+        self._init_psi()
+        self._reset()
         # Free some RAM for frozen-flow screen.
-        if self.alpha == 1.0:
-            del self.psi, self.screen
+        if self.reversible:
+            del self._psi, self._screen
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        s = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, r0_500=%r, L0=%r, " +
-             "vx=%r, vy=%r, alpha=%r, rng=%r, _origin=array(%r), _orig_rng=%r, _tab2d=%r") % (
-                self.screen_size, self.screen_scale, self.altitude, self.time_step, self.r0_500,
-                self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
-                self.tab2d)
-        if self.alpha != 1.0:
-            s += ", _screen=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
-            s += ", _psi=array(%r, dtype=%s)" % (self.screen.tolist(), self.screen.dtype)
-        s += ")"
-        return s
+        return ("galsim.AtmosphericScreen(%r, %r, altitude=%r, r0_500=%r, L0=%r, " +
+                "vx=%r, vy=%r, alpha=%r, time_step=%r, rng=%r)") % (
+                        self.screen_size, self.screen_scale, self.altitude, self.r0_500, self.L0,
+                        self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
 
+    # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
+    # object as immutable under the python data model.  The requirements for hashability are that
+    # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
+    # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
+    # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
+    # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
+    # computational convenience, and don't "define" the object and are not even strictly necessary
+    # for its implementation.
     def __eq__(self, other):
-        # This is a bit draconian since two phase screens with different `time_step`s but otherwise
-        # equivalent attributes at least start out equal.  However, I like the idea of comparing
-        # rng, orig_rng, and time_step better than comparing self.tab2d, so I'm going with that.
         return (isinstance(other, galsim.AtmosphericScreen) and
                 self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
@@ -138,22 +137,25 @@ class AtmosphericScreen(object):
                 self.vx == other.vx and
                 self.vy == other.vy and
                 self.alpha == other.alpha and
-                self.orig_rng == other.orig_rng and
-                self.rng == other.rng and
                 self.time_step == other.time_step and
-                np.array_equal(self.origin, other.origin))
+                self._orig_rng == other._orig_rng)
 
-    # No hash since this is a mutable class
-    __hash__ = None
+    def __hash__(self):
+        if not hasattr(self, '_hash'):
+            self._hash = hash((
+                    "galsim.AtmosphericScreen", self.screen_size, self.screen_scale, self.altitude,
+                    self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.time_step,
+                    repr(self._orig_rng.serialize())))
+        return self._hash
 
     def __ne__(self, other): return not self == other
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
-    # It nearly impossible to figure this out from a single source, but it can be derived from a
+    # It's nearly impossible to figure this out from a single source, but it can be derived from a
     # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
     # sure like to work alone... )
-    kolmogorov_constant = np.sqrt(0.00058)
+    _kolmogorov_constant = np.sqrt(0.00058)
 
     def _init_psi(self):
         """Assemble 2D von Karman sqrt power spectrum.
@@ -163,44 +165,53 @@ class AtmosphericScreen(object):
 
         L0_inv = 1./self.L0 if self.L0 is not None else 0.0
         old_settings = np.seterr(all='ignore')
-        self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                    self.npix * np.sqrt(np.sqrt(2.0)))
+        self._psi = (1./self.screen_size*self._kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
+                     (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
+                     self.npix * np.sqrt(np.sqrt(2.0)))
         np.seterr(**old_settings)
-        self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
-        self.psi[0, 0] = 0.0
+        self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
+        self._psi[0, 0] = 0.0
 
     def _random_screen(self):
-        """Generate a random phase screen with power spectrum given by self.psi**2"""
+        """Generate a random phase screen with power spectrum given by self._psi**2"""
         gd = galsim.GaussianDeviate(self.rng)
-        noise = galsim.utilities.rand_arr(self.psi.shape, gd)
-        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self.psi).real
+        noise = galsim.utilities.rand_arr(self._psi.shape, gd)
+        return galsim.fft.ifft2(galsim.fft.fft2(noise)*self._psi).real
 
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
-        # moving the screen with the wind.
-        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
-        # "Boil" the atmsopheric screen if alpha not 1.
-        if self.alpha != 1.0:
-            self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
+    def _seek(self, t):
+        """Set layer's internal clock to time t."""
+        if t == self._time:
+            return
+        if not self.reversible:
+            # Can't reverse, so reset and move forward.
+            if t < self._time:
+                if t < 0.0:
+                    raise ValueError("Can't rewind irreversible screen to t < 0.0")
+                self._reset()
+            # Find number of boiling updates we need to perform.
+            previous_update_number = int(self._time // self.time_step)
+            final_update_number = int(t // self.time_step)
+            n_updates = final_update_number - previous_update_number
+            if n_updates > 0:
+                for _ in range(n_updates):
+                    self._screen *= self.alpha
+                    self._screen += np.sqrt(1.-self.alpha**2) * self._random_screen()
+                self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen,
+                                                   edge_mode='wrap')
+        self._time = float(t)
 
-    def advance_by(self, dt):
-        """Advance phase screen by specified amount of time.
+    def _reset(self):
+        """Reset phase screen back to time=0."""
+        self.rng = self._orig_rng.duplicate()
+        self._time = 0.0
 
-        @param dt  Amount of time in seconds by which to update the screen.
-        @returns   The actual amount of time updated, which will differ from `dt` when `dt` is not a
-                   multiple of self.time_step.
-        """
-        if dt < 0:
-            raise ValueError("Cannot advance phase screen backwards in time.")
-        _nstep = int(np.round(dt/self.time_step))
-        if _nstep == 0:
-            _nstep = 1
-        for i in range(_nstep):
-            self.advance()
-        return _nstep*self.time_step  # return the time *actually* advanced
+        # Only need to reset/create tab2d if not frozen or doesn't already exist
+        if not self.reversible or not hasattr(self, '_tab2d'):
+            self._screen = self._random_screen()
+            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
+                                   endpoint=False)
+            self._ys = self._xs
+            self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -218,40 +229,111 @@ class AtmosphericScreen(object):
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param compact  If true, then only return wavefront for illuminated pixels in a
-                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
-                        return wavefront as a 2d array for the full Aperture pupil plane.
-                        [default: True]
-        @returns        Wavefront lag or lead in nanometers over aperture.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Array of wavefront lag or lead in nanometers.
         """
-        if compact:
-            u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+
+        from numbers import Real
+        if isinstance(t, Real):
+            tmp = np.empty_like(u)
+            tmp.fill(t)
+            t = tmp
         else:
-            u, v = aper.u, aper.v
-        return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta[0].tan(),
-                          v + self.origin[1] + 1000*self.altitude*theta[1].tan())
+            t = np.array(t, dtype=float)
+            if t.shape != u.shape:
+                raise ValueError("t.shape must match u.shape if t is not a scalar")
 
-    def reset(self):
-        """Reset phase screen back to time=0."""
-        self.rng = self.orig_rng.duplicate()
-        self.origin = np.array([0.0, 0.0])
+        if self.reversible:
+            return self._wavefront(u, v, t, theta)
+        else:
+            out = np.empty_like(u, dtype=float)
+            tmin = np.min(t)
+            tmax = np.max(t)
+            tt = (tmin // self.time_step) * self.time_step
+            while tt <= tmax:
+                self._seek(tt)
+                here = ((tt <= t) & (t < tt+self.time_step))
+                out[here] = self._wavefront(u[here], v[here], t[here], theta)
+                tt += self.time_step
+            return out
 
-        # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
-            self.screen = self._random_screen()
-            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
-                                   endpoint=False)
-            self._ys = self._xs
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
+    def _wavefront(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking and no boiling updates.
+        if t is None:
+            t = self._time
+        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
+        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
+        return self._tab2d(u, v)
+
+    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Compute gradient of wavefront due to atmospheric phase screen.
+
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
+                        iterable.  If scalar, then the size will be broadcast up to match that of
+                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
+        """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+
+        from numbers import Real
+        if isinstance(t, Real):
+            tmp = np.empty_like(u)
+            tmp.fill(t)
+            t = tmp
+        else:
+            t = np.array(t, dtype=float)
+            if t.shape != u.shape:
+                raise ValueError("t.shape must match u.shape if t is not a scalar")
+
+        if self.reversible:
+            return self._wavefront_gradient(u, v, t, theta)
+        else:
+            dwdu = np.empty_like(u, dtype=np.float64)
+            dwdv = np.empty_like(u, dtype=np.float64)
+            tmin = np.min(t)
+            tmax = np.max(t)
+            tt = (tmin // self.time_step) * self.time_step
+            while tt <= tmax:
+                self._seek(tt)
+                here = ((tt <= t) & (t < tt+self.time_step))
+                dwdu[here], dwdv[here] = self._wavefront_gradient(u[here], v[here], t[here], theta)
+                tt += self.time_step
+            return dwdu, dwdv
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking and no boiling updates.
+        u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
+        v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
+        return self._tab2d.gradient(u, v)
 
 
 def Atmosphere(screen_size, rng=None, **kwargs):
@@ -265,8 +347,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     which can then be used to evaluate PSFs through various columns of atmosphere at different field
     angles.
 
-    The atmospheric screens currently available both produce turbulence that follows a von Karman
-    power spectrum.  Specifically, the phase power spectrum in each screen can be written
+    The atmospheric screens currently available represent turbulence following a von Karman power
+    spectrum.  Specifically, the phase power spectrum in each screen can be written
 
     psi(nu) = 0.023 r0^(-5/3) (nu^2 + 1/L0^2)^(11/6)
 
@@ -280,39 +362,50 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
-    (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
-    you want to use the same value for each layer, then you can just specify the argument as a
-    scalar and the function will automatically broadcast it into a list with length equal to the
-    longest found keyword argument list.  Note that it is an error to specify keywords with lists of
-    different lengths (unless only one of them has length > 1).
+    (works for all arguments except `rng`).  If, for any of these keyword arguments, you want to use
+    the same value for each layer, then you can just specify the argument as a scalar and the
+    function will automatically broadcast it into a list with length equal to the longest found
+    keyword argument list.  Note that it is an error to specify keywords with lists of different
+    lengths (unless only one of them has length > 1).
 
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
     Providing `r0_500` as a scalar or single-element list will result in broadcasting such that the
-    effective Fried parameter for the whole set of layers equals the input argument.
+    effective Fried parameter for the whole set of layers equals the input argument.  You can weight
+    the contribution of each layer with the `r0_weights` keyword.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
-    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3 minutes to run on
+    for their study of atmospheric PSFs for LSST.  Note this code takes about ~2 minutes to run on
     a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
         >>> altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-        >>> r0_500_effective = 0.16  # m
+        >>> r0_500 = 0.16  # m
         >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
-        >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
         >>> speed = np.random.uniform(0, 20, size=6)  # m/s
         >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
         >>> npix = 8192
-        >>> screen_scale = r0_500_effective
-        >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
+        >>> screen_scale = r0_500
+        >>> atm = galsim.Atmosphere(r0_500=r0_500, r0_weights=weights,
+                                    screen_size=screen_scale*npix,
                                     altitude=altitude, L0=25.0, speed=speed,
                                     direction=direction, screen_scale=screen_scale)
 
-    Once the atmosphere is constructed, a 15-sec exposure length monochromatic PSF at 700nm (using
-    an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default settings) takes about
-    7 minutes to generate on a fast laptop.
+    Once the atmosphere is constructed, a 15-sec exposure length, 5ms time step, monochromatic PSF
+    at 700nm (using an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default
+    settings) takes about 7 minutes to draw on a fast laptop.
 
-        >>> psf = atm.makePSF(lam=700.0, exptime=15.0, diam=8.4, obscuration=0.6)
+        >>> psf = atm.makePSF(lam=700.0, exptime=15.0, time_step=0.005, diam=8.4, obscuration=0.6)
+        >>> img1 = psf.drawImage()  # ~7 min
+
+    The same psf, if drawn using photon-shooting on the same laptop, will generate photons at a rate
+    of about 1 million per second.
+
+        >>> img2 = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=1e6)  # ~1 sec.
+
+    Note that the Fourier-based calculation compute time will scale linearly with exposure time,
+    while the photon-shooting calculation compute time will scale linearly with the number of
+    photons being shot.
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
@@ -322,15 +415,20 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [default: 0.2]
+    @param r0_weights    Weights for splitting up the contribution of r0_500 between different
+                         layers.  Note that this keyword is only allowed if r0_500 is either a
+                         scalar or a single-element list.  [default: None]
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so the code will run
                          with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         or PSF correlation functions. Note that screen_size may be tweaked by the
                          initializer to ensure screen_size is a multiple of screen_scale.
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [default: 0.03]
+    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
+                         parameter is usually sufficiently small, but users should test the effects
+                         of this parameter to ensure robust results.
+                         [default: same as each screen's r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
@@ -338,21 +436,25 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          for a power spectrum without an outer scale.  [default: 25.0]
     @param speed         Wind speed in meters/second.  [default: 0.0]
     @param direction     Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
-    @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
-                         1-alpha is then the amount of turbulence freshly generated in each step.
-                         [default: 1.0]
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results.
-                         [default: same as each screen's r0_500]
+    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
+                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
+                         is then the amount of turbulence freshly generated in each step.  Setting
+                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
+                         from frozen-flow atmospheres may be significantly faster than computing
+                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
+    @param time_step     Time interval between phase boiling updates.  Note that this is distinct
+                         from the time interval used when integrating the PSF over time, which is
+                         set by the `time_step` keyword argument to `PhaseScreenPSF` or
+                         `PhaseScreenList.makePSF`.  If `time_step` is not None, then it is required
+                         that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
     kwargs['screen_size'] = galsim.utilities.listify(screen_size)
 
-    # Set default r0_500 here, so that by default it gets broadcasted below such that the
-    # _total_ r0_500 from _all_ screens is 0.2 m.
+    # Set default r0_500 here; it will get broadcasted below such that the _total_ r0_500 from _all_
+    # screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
     kwargs['r0_500'] = galsim.utilities.listify(kwargs['r0_500'])
@@ -373,13 +475,19 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     # Broadcast r0_500 here, since logical combination of indiv layers' r0s is complex:
     if len(kwargs['r0_500']) == 1:
-        kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
+        r0_weights = np.array(kwargs.pop('r0_weights', [1.]*nmax), dtype=float)
+        r0_weights /= np.sum(r0_weights)
+        r0_500 = kwargs['r0_500'][0]
+        kwargs['r0_500'] = [r0_500 * w**(-3./5) for w in r0_weights]
+        # kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
+    elif 'r0_weights' in kwargs:
+        raise ValueError("Cannot use r0_weights if r0_500 is specified as a list.")
 
     if rng is None:
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
-    return galsim.PhaseScreenList(AtmosphericScreen(**kw)
-                                  for kw in galsim.utilities.lod_to_dol(kwargs, nmax))
+    return galsim.PhaseScreenList([AtmosphericScreen(**kw)
+                                   for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
 
 
 # Some utilities for working with Zernike polynomials
@@ -429,7 +537,7 @@ def _noll_to_zern(j):
     return _noll_n[j], _noll_m[j]
 
 def _zern_norm(n, m):
-    """Normalization coefficient for zernike (n, m).
+    r"""Normalization coefficient for zernike (n, m).
 
     Defined such that \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi if n1==n2 and m1==m2 else 0.0
     """
@@ -611,6 +719,7 @@ class OpticalScreen(object):
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
+    @param diam             Diameter of pupil in meters.
     @param tip              Tip aberration in units of reference wavelength.  [default: 0]
     @param tilt             Tilt aberration in units of reference wavelength.  [default: 0]
     @param defocus          Defocus in units of reference wavelength. [default: 0]
@@ -642,9 +751,10 @@ class OpticalScreen(object):
     @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
     """
-    def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
-                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, annular_zernike=False,
-                 obscuration=0.0, lam_0=500.0):
+    def __init__(self, diam, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0,
+                 coma2=0.0, trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None,
+                 annular_zernike=False, obscuration=0.0, lam_0=500.0):
+        self.diam = diam
         if aberrations is None:
             aberrations = np.zeros(12)
             aberrations[2] = tip
@@ -688,12 +798,17 @@ class OpticalScreen(object):
 
         noll_coef = _noll_coef_array(jmax, self.obscuration, self.annular_zernike)
         self.coef_array = np.dot(noll_coef, self.aberrations[1:])
+        # Convert from unit disk coefficients to full aperture (diam != 2) coefficients.
+        self.coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+
+        self.dynamic = False
+        self.reversible = True
 
     def __str__(self):
-        return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
+        return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)
 
     def __repr__(self):
-        s = "galsim.OpticalScreen(lam_0=%r" % self.lam_0
+        s = "galsim.OpticalScreen(diam=%r, lam_0=%r" % (self.diam, self.lam_0)
         if any(self.aberrations):
             s += ", aberrations=%r"%self.aberrations
         if self.annular_zernike:
@@ -704,6 +819,7 @@ class OpticalScreen(object):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.OpticalScreen)
+                and self.diam == other.diam
                 and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
                 and self.annular_zernike == other.annular_zernike)
 
@@ -711,7 +827,8 @@ class OpticalScreen(object):
 
     # This screen is immutable, so make a hash for it.
     def __hash__(self):
-        return hash(("galsim.AtmosphericScreen", tuple((self.aberrations*self.lam_0).ravel())))
+        return hash(("galsim.OpticalScreen", self.diam, self.obscuration, self.annular_zernike,
+                     tuple((self.aberrations*self.lam_0).ravel())))
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -733,25 +850,56 @@ class OpticalScreen(object):
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
+    def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal converging Gaussian reference spherical wave.
+        ideal plane wave.
 
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
-                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-        @param compact  If true, then only return wavefront for illuminated pixels in a
-                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
-                        return wavefront as a 2d array for the full Aperture pupil plane.
-                        [default: True]
-        @returns        Wavefront lag or lead in nanometers over aperture.
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Ignored for OpticalScreen.
+        @param theta    Ignored for OpticalScreen.
+        @returns        Array of wavefront lag or lead in nanometers.
         """
-        # ignore theta
-        if compact:
-            r = aper.rho[aper.illuminated]
-        else:
-            r = aper.rho
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+        return self._wavefront(u, v, t, theta)
+
+    def _wavefront(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
+        # Note, this phase screen is actually independent of time and theta.
+        r = u + 1j*v
         rsqr = np.abs(r)**2
         return horner2d(rsqr, r, self.coef_array).real * self.lam_0
+
+    def wavefront_gradient(self, u, v, t=None, theta=None):
+        """ Compute gradient of wavefront due to atmospheric phase screen.
+
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Ignored for OpticalScreen.
+        @param theta    Ignored for OpticalScreen.
+        @returns        Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
+        """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+        return self._wavefront_gradient(u, v, t, theta)
+
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
+        # Note, this phase screen is actually independent of time and theta.
+        du = dv = 0.01*self.diam
+        w0 = self._wavefront(u, v, t, theta)
+        gradu = (self._wavefront(u+du, v, t, theta) - w0) / du
+        gradv = (self._wavefront(u, v+dv, t, theta) - w0) / dv
+        return gradu, gradv

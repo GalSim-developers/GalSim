@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -127,11 +127,11 @@ namespace galsim {
             if (!sbp.isAnalyticX() && _real_space)
                 throw SBError("Real-space SBConvolve requires members to be analytic in x");
             _plist.push_back(sbp);
+            _x0 += sbp.centroid().x;
+            _y0 += sbp.centroid().y;
+            _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
+            _fluxProduct *= sbp.getFlux();
         }
-        _x0 += sbp.centroid().x;
-        _y0 += sbp.centroid().y;
-        _isStillAxisymmetric = _isStillAxisymmetric && sbp.isAxisymmetric();
-        _fluxProduct *= sbp.getFlux();
     }
 
     double SBConvolve::SBConvolveImpl::maxK() const
@@ -193,7 +193,8 @@ namespace galsim {
         return kv;
     }
 
-    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -204,7 +205,7 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 im *= im2;
@@ -212,7 +213,8 @@ namespace galsim {
         }
     }
 
-    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -223,7 +225,7 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 im *= im2;
@@ -334,7 +336,8 @@ namespace galsim {
     struct Square
     { T operator()(T x) { return x*x; } };
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                         double kx0, double dkx, int izero,
                                                         double ky0, double dky, int jzero) const
     {
@@ -342,10 +345,11 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
-        transform_pixel(im, Square<std::complex<double> >());
+        transform_pixel(im, Square<std::complex<T> >());
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                         double kx0, double dkx, double dkxy,
                                                         double ky0, double dky, double dkyx) const
     {
@@ -353,7 +357,7 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
-        transform_pixel(im, Square<std::complex<double> >());
+        transform_pixel(im, Square<std::complex<T> >());
     }
 
     double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const
@@ -436,7 +440,8 @@ namespace galsim {
     struct AbsSquare
     { T operator()(T x) { return std::norm(x); } };
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<T> > im,
                                                           double kx0, double dkx, int izero,
                                                           double ky0, double dky, int jzero) const
     {
@@ -444,10 +449,11 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
-        transform_pixel(im, AbsSquare<std::complex<double> >());
+        transform_pixel(im, AbsSquare<std::complex<T> >());
     }
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<T> > im,
                                                           double kx0, double dkx, double dkxy,
                                                           double ky0, double dky, double dkyx) const
     {
@@ -455,7 +461,7 @@ namespace galsim {
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
-        transform_pixel(im, AbsSquare<std::complex<double> >());
+        transform_pixel(im, AbsSquare<std::complex<T> >());
     }
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const

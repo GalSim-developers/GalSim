@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -610,7 +610,8 @@ class InterpolatedKImage(GSObject):
     >>> a = returns_a_GSObject()
     >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
-    The input `kimage` must have dtype=numpy.complex128, which is also known as an ImageC object.
+    The input `kimage` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
+    known as ImageCF and ImageCD objects respectively.
     The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case `kimage.scale` is
     used for the `stepk` value unless overridden by the `stepk` initialization argument.
 
@@ -714,7 +715,7 @@ class InterpolatedKImage(GSObject):
             if real_kimage is not None or imag_kimage is not None:
                 raise ValueError("Cannot provide both kimage and real_kimage/imag_kimage")
             if not kimage.iscomplex:
-                raise ValueError("Supplied kimage is not an ImageC")
+                raise ValueError("Supplied kimage is not complex")
 
         # Make sure wcs is a PixelScale.
         if kimage.wcs is not None and not kimage.wcs.isPixelScale():
@@ -812,7 +813,7 @@ def _SBIKI_getinitargs(self):
 _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
+    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
     %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())

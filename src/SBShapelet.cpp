@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -143,7 +143,8 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
 
-    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<T> im,
                                                 double x0, double dx, int izero,
                                                 double y0, double dy, int jzero) const
     {
@@ -152,7 +153,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -177,7 +178,8 @@ namespace galsim {
         }
     }
 
-    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBShapelet::SBShapeletImpl::fillXImage(ImageView<T> im,
                                                 double x0, double dx, double dxy,
                                                 double y0, double dy, double dyx) const
     {
@@ -186,7 +188,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -218,7 +220,8 @@ namespace galsim {
         }
     }
 
-    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -227,7 +230,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -252,7 +255,8 @@ namespace galsim {
         }
      }
 
-    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -261,7 +265,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 

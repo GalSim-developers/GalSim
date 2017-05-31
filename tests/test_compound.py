@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -132,6 +132,7 @@ def test_convolve():
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
+    do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
     gsobject_compare(single, psf)
@@ -589,6 +590,7 @@ def test_add():
     gsobject_compare(single, gauss1)
     check_basic(single, "`sum' of 1 Gaussian")
     do_pickle(single)
+    do_shoot(single, myImg, "Single Sum")
 
     single = galsim.Add([gauss1])
     gsobject_compare(single, gauss1)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -126,34 +126,36 @@ class Transformation(galsim.GSObject):
         sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
                                   gsparams)
         galsim.GSObject.__init__(self, sbt)
+
+        self._jac = np.asarray(sbt.getJac())
+        self._offset = sbt.getOffset()
+        self._flux_ratio = sbt.getFluxScaling()
         self._gsparams = gsparams
 
     def getJac(self):
         """Return the Jacobian of the transformation.
         """
-        return self.SBProfile.getJac()
+        return self._jac
 
     def getOffset(self):
         """Return the offset of the transformation.
         """
-        return self.SBProfile.getOffset()
+        return self._offset
 
     def getFluxRatio(self):
         """Return the flux ratio of the transformation.
         """
-        return self.SBProfile.getFluxScaling()
+        return self._flux_ratio
 
     @property
     def original(self): return self._original
     @property
-    def jac(self): return np.asarray(self.getJac()).reshape(2,2)
+    def jac(self): return self._jac.reshape(2,2)
     @property
-    def offset(self): return self.getOffset()
+    def offset(self): return self._offset
     @property
-    def flux_ratio(self): return self.getFluxRatio()
+    def flux_ratio(self): return self._flux_ratio
 
-    # There's really no good way to check that two callables are equal, except if they literally
-    # point to the same object.  So we'll just check for that for _jac, _offset, and _flux_ratio.
     def __eq__(self, other):
         return (isinstance(other, galsim.Transformation) and
                 self.original == other.original and
@@ -163,16 +165,16 @@ class Transformation(galsim.GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()), self.offset.x,
+        return hash(("galsim.Transformation", self.original, tuple(self._jac), self.offset.x,
                      self.offset.y, self.flux_ratio, self.gsparams))
 
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, self.jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
+            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
 
     def __str__(self):
         s = str(self.original)
-        dudx, dudy, dvdx, dvdy = self.jac.ravel()
+        dudx, dudy, dvdx, dvdy = self._jac
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # Figure out the shear/rotate/dilate calls that are equivalent.
             jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
@@ -209,6 +211,54 @@ class Transformation(galsim.GSObject):
             s += ' * %s'%self.flux_ratio
         return s
 
+    def _prepareDraw(self):
+        self._original._prepareDraw()
+        dudx, dudy, dvdx, dvdy = self.getJac()
+        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
+                                                    dudx, dudy, dvdx, dvdy,
+                                                    self.getOffset(), self.getFluxRatio(),
+                                                    self._gsparams)
+
+    def _fwd_ident(self, x, y):
+        return x, y
+
+    def _fwd_diag(self, x, y):
+        return self._jac[0] * x, self._jac[3] * y
+
+    def _fwd_normal(self, x, y):
+        return self._jac[0] * x + self._jac[1] * y, self._jac[2] * x + self._jac[3] * y
+
+    def shoot(self, n_photons, rng=None):
+        """Shoot photons into a PhotonArray.
+
+        @param n_photons    The number of photons to use for photon shooting.
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @returns PhotonArray.
+        """
+        # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
+        if np.array_equal(self._jac[1:3], (0,0)):
+            if np.array_equal(self._jac[::3], (1,1)):   # jac is (1,0,0,1)
+                fwd = self._fwd_ident
+                det = 1
+            else:                                       # jac is (a,0,0,b)
+                fwd = self._fwd_diag
+                det = self._jac[0] * self._jac[3]
+        else:                                           # Fully general case
+            fwd = self._fwd_normal
+            det = self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2]
+
+        ud = galsim.UniformDeviate(rng)
+        photon_array = self.original.shoot(n_photons, ud)
+
+        newx, newy = fwd(photon_array.x,photon_array.y)
+        photon_array.x = newx + self.offset.x
+        photon_array.y = newy + self.offset.y
+        photon_array.scaleFlux(det*self.flux_ratio)
+        return photon_array
+
     def __getstate__(self):
         # While the SBProfile should be picklable, it is better to reconstruct it from the
         # original object, which will pickle better.  The SBProfile is only picklable via its
@@ -216,9 +266,6 @@ class Transformation(galsim.GSObject):
         # SBInterpolatedImage.
         d = self.__dict__.copy()
         del d['SBProfile']
-        d['_jac'] = self.jac
-        d['_offset'] = self.offset
-        d['_flux_ratio'] = self.flux_ratio
         return d
 
     def __setstate__(self, d):
@@ -238,11 +285,13 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     else:
         ret._original = obj
     sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                gsparams)
+                              gsparams)
     galsim.GSObject.__init__(ret, sbt)
+    ret._jac = np.asarray(sbt.getJac())
+    ret._offset = sbt.getOffset()
+    ret._flux_ratio = sbt.getFluxScaling()
     ret._gsparams = gsparams
     return ret
-
 
 def SBTransform_init(self):
     obj = self.getObj()

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -99,9 +99,15 @@ namespace galsim {
             // but it's easier to do that than write out the full class_ type.
             wrapper
                 .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("dx")),
+                     (double (SBProfile::*)(ImageView<U>, double, bool) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("dx"), bp::arg("add")),
                      "Draw in-place and return the summed flux.");
+            wrapper
+                .def("drawK",
+                     (void (SBProfile::*)(ImageView<std::complex<U> >, double, bool) const)
+                     &SBProfile::drawK,
+                     (bp::arg("image"), bp::arg("dk"), bp::arg("add")),
+                     "Draw k-space image.");
         }
 
         static void wrap() {
@@ -180,10 +186,6 @@ namespace galsim {
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);
-            pySBProfile.def(
-                "drawK",
-                (void (SBProfile::*)(ImageView<std::complex<double> >, double) const)&SBProfile::drawK,
-                (bp::arg("image"), bp::arg("dk")), "Draw k-space image.");
         }
 
     };

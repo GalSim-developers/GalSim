@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -266,6 +266,7 @@ struct PyImage {
         WrapHelper<T,int32_t>::wrapImageAllocTemplates(pyImageAlloc);
         WrapHelper<T,uint16_t>::wrapImageAllocTemplates(pyImageAlloc);
         WrapHelper<T,uint32_t>::wrapImageAllocTemplates(pyImageAlloc);
+        WrapHelper<T,std::complex<float> >::wrapImageAllocTemplates(pyImageAlloc);
         WrapHelper<T,std::complex<double> >::wrapImageAllocTemplates(pyImageAlloc);
 
         return pyImageAlloc;
@@ -312,6 +313,7 @@ struct PyImage {
         WrapHelper<T,int32_t>::wrapImageViewTemplates(pyImageView);
         WrapHelper<T,uint16_t>::wrapImageViewTemplates(pyImageView);
         WrapHelper<T,uint32_t>::wrapImageViewTemplates(pyImageView);
+        WrapHelper<T,std::complex<float> >::wrapImageViewTemplates(pyImageView);
         WrapHelper<T,std::complex<double> >::wrapImageViewTemplates(pyImageView);
 
         return pyImageView;
@@ -358,8 +360,10 @@ void pyExportImage() {
     pyImageAllocDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageAlloc("I");
     pyImageAllocDict[GetNumPyType<float>()] = PyImage<float>::wrapImageAlloc("F");
     pyImageAllocDict[GetNumPyType<double>()] = PyImage<double>::wrapImageAlloc("D");
+    pyImageAllocDict[GetNumPyType<std::complex<float> >()] =
+        PyImage<std::complex<float> >::wrapImageAlloc("CF");
     pyImageAllocDict[GetNumPyType<std::complex<double> >()] =
-        PyImage<std::complex<double> >::wrapImageAlloc("C");
+        PyImage<std::complex<double> >::wrapImageAlloc("CD");
 
     bp::dict pyConstImageViewDict;
 
@@ -369,8 +373,10 @@ void pyExportImage() {
     pyConstImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
     pyConstImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
     pyConstImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
+    pyConstImageViewDict[GetNumPyType<std::complex<float> >()] =
+        PyImage<std::complex<float> >::wrapConstImageView("CF");
     pyConstImageViewDict[GetNumPyType<std::complex<double> >()] =
-        PyImage<std::complex<double> >::wrapConstImageView("C");
+        PyImage<std::complex<double> >::wrapConstImageView("CD");
 
     bp::dict pyImageViewDict;
 
@@ -380,8 +386,10 @@ void pyExportImage() {
     pyImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
     pyImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapImageView("F");
     pyImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapImageView("D");
+    pyImageViewDict[GetNumPyType<std::complex<float> >()] =
+        PyImage<std::complex<float> >::wrapImageView("CF");
     pyImageViewDict[GetNumPyType<std::complex<double> >()] =
-        PyImage<std::complex<double> >::wrapImageView("C");
+        PyImage<std::complex<double> >::wrapImageView("CD");
 
     bp::scope scope;  // a default constructed scope represents the module we're creating
     scope.attr("ImageAlloc") = pyImageAllocDict;

@@ -21,6 +21,7 @@ SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
+SBInclinedSersic.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp
@@ -30,3 +31,5 @@ Interpolant.cpp
 CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp
+Silicon.cpp
+WCS.cpp

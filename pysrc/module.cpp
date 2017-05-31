@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -57,6 +57,7 @@ namespace galsim {
     void pyExportSBInterpolatedKImage();
     void pyExportSBKolmogorov();
     void pyExportSBInclinedExponential();
+    void pyExportSBInclinedSersic();
     void pyExportRandom();
     void pyExportNoise();
     void pyExportTable();
@@ -65,6 +66,8 @@ namespace galsim {
     void pyExportCorrelationFunction();
     void pyExportCDModel();
     void pyExportSBDeltaFunction();
+    void pyExportSilicon();
+    void pyExportWCS();
 
     namespace hsm {
         void pyExportHSM();
@@ -104,6 +107,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBInterpolatedKImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportSBInclinedExponential();
+    galsim::pyExportSBInclinedSersic();
     galsim::pyExportRandom();
     galsim::pyExportNoise();
     galsim::pyExportInterpolant();
@@ -115,4 +119,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportTable2D();
     galsim::bessel::pyExportBessel();
     galsim::pyExportSBDeltaFunction();
+    galsim::pyExportSilicon();
+    galsim::pyExportWCS();
 }

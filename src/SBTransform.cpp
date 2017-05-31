@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,6 +22,7 @@
 #include "TMV.h"
 #include "SBTransform.h"
 #include "SBTransformImpl.h"
+#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE include.
 
 namespace galsim {
 
@@ -521,7 +522,127 @@ namespace galsim {
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(fluxScaling , -k.x*cen.x-k.y*cen.y); }
 
-    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+    // A helper class for doing the inner loops in the below fill*Image functions.
+    // This lets us do type-specific optimizations on just this portion.
+    // First the normal (legible) version that we use if there is no SSE support.
+    template <typename T>
+    struct InnerLoopHelper
+    {
+        static inline void phaseloop_1d(std::complex<T>*& ptr, const std::complex<T>* kxit,
+                                        int m, const std::complex<T>& kyflux)
+        {
+            for (; m; --m)
+                *ptr++ *= *kxit++ * kyflux;
+        }
+    };
+
+#ifdef __SSE__
+    template <>
+    struct InnerLoopHelper<float>
+    {
+        static inline void phaseloop_1d(std::complex<float>*& ptr, const std::complex<float>* kxit,
+                                        int m, const std::complex<float>& kyflux)
+        {
+            // First get to an aligned value
+            for (; m && !IsAligned(ptr); --m)
+                *ptr++ *= *kxit++ * kyflux;
+
+            int m2 = m>>1;
+            int ma = m2<<1;
+            m -= ma;
+
+            // Do 2 at a time as far as possible
+            if (m2) {
+                const float kyfr = kyflux.real();
+                const float kyfi = kyflux.imag();
+                const __m128 mkyfr = _mm_set1_ps(kyfr);
+                const __m128 mkyfi = _mm_set_ps(kyfi, -kyfi, kyfi, -kyfi);
+                const __m128 mzero = _mm_setzero_ps();
+                const __m128 mneg = _mm_set_ps(1, -1, 1, -1);
+                do {
+                    // Separate out calculation into components
+                    // z = u * v
+                    // zr = ur * vr - ui * vi
+                    // zi = ur * vi + ui * vr
+                    // Do this twice, since we have two complex products
+                    __m128 mkx = _mm_loadu_ps(reinterpret_cast<const float*>(kxit));
+                    kxit += 2;
+                    __m128 mp = _mm_load_ps(reinterpret_cast<float*>(ptr));
+                    // For now, u is kyf, v is kx, z* are temporaries
+                    __m128 mvir = _mm_shuffle_ps(mkx, mkx, _MM_SHUFFLE(2,3,0,1));  // (vi, vr)
+                    __m128 mz1 = _mm_mul_ps(mkyfr, mkx);  // (ur * vr, ur * vi)
+                    __m128 mz2 = _mm_mul_ps(mkyfi, mvir);  // (-ui * vi, ui * vr)
+                    __m128 mz = _mm_add_ps(mz1, mz2);    // (ur vr - ui vi, ur vi + ui vr)
+                    // Repeat taking z as u and p as v
+                    mvir = _mm_shuffle_ps(mp, mp, _MM_SHUFFLE(2,3,0,1));  // (vi, vr)
+                    __m128 mur = _mm_shuffle_ps(mz, mz, _MM_SHUFFLE(2,2,0,0));  // (ur, ur)
+                    __m128 mui = _mm_shuffle_ps(mz, mz, _MM_SHUFFLE(3,3,1,1));  // (ui, ui)
+                    mui = _mm_mul_ps(mneg, mui); // (-ui, ui)
+                    mz1 = _mm_mul_ps(mur, mp);  // (ur * vr, ur * vi)
+                    mz2 = _mm_mul_ps(mui, mvir);  // (-ui * vi, ui * vr)
+                    mz = _mm_add_ps(mz1, mz2);    // (ur vr - ui vi, ur vi + ui vr)
+                    _mm_store_ps(reinterpret_cast<float*>(ptr), mz);
+                    ptr += 2;
+                } while (--m2);
+            }
+
+            // Finally finish up the last one, if any
+            if (m) {
+                *ptr++ *= *kxit++ * kyflux;
+            }
+        }
+    };
+#endif
+#ifdef __SSE2__
+    template <>
+    struct InnerLoopHelper<double>
+    {
+        static inline void phaseloop_1d(std::complex<double>*& ptr,
+                                        const std::complex<double>* kxit,
+                                        int m, const std::complex<double>& kyflux)
+        {
+            // If not aligned, do the normal loop.  (Should be rare.)
+            if (!IsAligned(ptr)) {
+                for (; m; --m)
+                    *ptr++ *= *kxit++ * kyflux;
+                return;
+            }
+
+            const double kyfr = kyflux.real();
+            const double kyfi = kyflux.imag();
+            const __m128d mkyfr = _mm_set1_pd(kyfr);
+            const __m128d mkyfi = _mm_set_pd(kyfi, -kyfi);
+            const __m128d mzero = _mm_setzero_pd();
+            const __m128d mneg = _mm_set_pd(1, -1);
+            for (; m; --m) {
+                // Separate out calculation into components
+                // z = u * v
+                // zr = ur * vr - ui * vi
+                // zi = ur * vi + ui * vr
+                // Do this twice, since we have two complex products
+                __m128d mkx = _mm_loadu_pd(reinterpret_cast<const double*>(kxit++));
+                __m128d mp = _mm_load_pd(reinterpret_cast<double*>(ptr));
+                // For now, u is kyf, v is kx, z* are temporaries
+                __m128d mvir = _mm_shuffle_pd(mkx, mkx, _MM_SHUFFLE2(0,1));  // (vi, vr)
+                __m128d mz1 = _mm_mul_pd(mkyfr, mkx);  // (ur * vr, ur * vi)
+                __m128d mz2 = _mm_mul_pd(mkyfi, mvir);  // (-ui * vi, ui * vr)
+                __m128d mz = _mm_add_pd(mz1, mz2);    // (ur vr - ui vi, ur vi + ui vr)
+                // Repeat taking z as u and p as v
+                mvir = _mm_shuffle_pd(mp, mp, _MM_SHUFFLE2(0,1));  // (vi, vr)
+                __m128d mur = _mm_shuffle_pd(mz, mz, _MM_SHUFFLE2(0,0));  // (ur, ur)
+                __m128d mui = _mm_shuffle_pd(mz, mz, _MM_SHUFFLE2(1,1));  // (ui, ui)
+                mui = _mm_mul_pd(mneg, mui); // (-ui, ui)
+                mz1 = _mm_mul_pd(mur, mp);  // (ur * vr, ur * vi)
+                mz2 = _mm_mul_pd(mui, mvir);  // (-ui * vi, ui * vr)
+                mz = _mm_add_pd(mz1, mz2);    // (ur vr - ui vi, ur vi + ui vr)
+                _mm_store_pd(reinterpret_cast<double*>(ptr++), mz);
+            }
+        }
+    };
+#endif
+
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<T> im,
                                                   double x0, double dx, int izero,
                                                   double y0, double dy, int jzero) const
     {
@@ -576,10 +697,11 @@ namespace galsim {
         }
 
         // Apply flux scaling
-        im *= _ampScaling;
+        im *= T(_ampScaling);
     }
 
-    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<T> im,
                                                   double x0, double dx, double dxy,
                                                   double y0, double dy, double dyx) const
     {
@@ -608,10 +730,36 @@ namespace galsim {
         GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
 
         // Apply flux scaling
-        im *= _ampScaling;
+        im *= T(_ampScaling);
     }
 
-    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+    // A helper function for filKImage below.
+    // Probably not worth specializing using SSE, since not much time spent in this.
+    template <typename T>
+    inline void fillphase_1d(std::complex<T>* kit, int m, T k, T dk)
+    {
+#if 0
+        // Original, more legible code
+        for (; m; --m, k+=dk)
+            *kit++ = std::polar(T(1), -k);
+#else
+        // Implement by repeated multiplications by polar(1, -dk), rather than computing
+        // the polar form each time. (slow trig!)
+        // This is mildly unstable, so guard the magnitude by multiplying by
+        // 1/|z|.  Since z ~= 1, 1/|z| is very nearly = |z|^2^-1/2 ~= 1.5 - 0.5|z|^2.
+        std::complex<T> kpol = std::polar(T(1), -k);
+        std::complex<T> dkpol = std::polar(T(1), -dk);
+        *kit++ = kpol;
+        for (--m; m; --m) {
+            kpol = kpol * dkpol;
+            kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
+            *kit++ = kpol;
+        }
+#endif
+    }
+
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<T> > im,
                                                   double kx0, double dkx, int izero,
                                                   double ky0, double dky, int jzero) const
     {
@@ -645,37 +793,41 @@ namespace galsim {
         // Apply phases
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _fluxScaling;
+            im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
             // In this case, the terms are separable, so only need to make kx and ky phases
             // separately.
             const int m = im.getNCol();
-            const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            int n = im.getNRow();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
-            std::vector<std::complex<double> > phase_kx(m);
-            std::vector<std::complex<double> > phase_ky(n);
-            typedef std::vector<std::complex<double> >::iterator It;
-            It kxit = phase_kx.begin();
-            It kyit = phase_ky.begin();
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = std::polar(_fluxScaling, -kx0*_cen.x);
-            // Only use _fluxScaling on one of them!
-            for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = std::polar(1., -ky0*_cen.y);
+            kx0 *= _cen.x;
+            dkx *= _cen.x;
+            ky0 *= _cen.y;
+            dky *= _cen.y;
 
-            kyit = phase_ky.begin();
-            for (int j=0; j<n; ++j,ptr+=skip,++kyit) {
-                kxit = phase_kx.begin();
-                for (int i=0; i<m; ++i)
-                    *ptr++ *= *kxit++ * *kyit;
+            // Use the stack rather than the heap for these, since a bit faster and small
+            // enough that they should fit without any problem.
+            T xphase_kx[2*m];
+            T xphase_ky[2*n];
+            std::complex<T>* phase_kx = reinterpret_cast<std::complex<T>*>(xphase_kx);
+            std::complex<T>* phase_ky = reinterpret_cast<std::complex<T>*>(xphase_ky);
+
+            fillphase_1d<T>(phase_kx, m, kx0, dkx);
+            fillphase_1d<T>(phase_ky, n, ky0, dky);
+
+            for (; n; --n, ptr+=skip, ++phase_ky) {
+                InnerLoopHelper<T>::phaseloop_1d(ptr, phase_kx, m, T(_fluxScaling) * *phase_ky);
             }
         }
     }
 
-    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<T> > im,
                                                   double kx0, double dkx, double dkxy,
                                                   double ky0, double dky, double dkyx) const
     {
@@ -709,12 +861,12 @@ namespace galsim {
         // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= _fluxScaling;
+            im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -725,11 +877,32 @@ namespace galsim {
             dky *= _cen.y;
             dkyx *= _cen.y;
 
-            for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
-                double kx = kx0;
-                double ky = ky0;
-                for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
-                    *ptr++ *= std::polar(_fluxScaling, -kx-ky);
+            // Only ever use these as sum of kx + ky, so add them together now.
+            T k0 = kx0 + ky0;
+            T dk0 = dkxy + dky;
+            T dk1 = dkx + dkyx;
+
+            for (int j=n; j; --j, k0+=dk0, ptr+=skip) {
+                T k = k0;
+#if 0
+                // Original, more legible code
+                for (int i=m; i; --i, k+=dk1) {
+                    *ptr++ *= std::polar(T(_fluxScaling), -k);
+                }
+#else
+                // See comments above in fillphase_1d for what's going on here.
+                // MJ: Could consider putting this in the InnerLoop struct above and write
+                // specialized SSE versions, since native complex multiplication is terribly slow.
+                // But this use case is very rare, so probably not worth it.
+                std::complex<T> kpol = std::polar(T(1), -k);
+                std::complex<T> dkpol = std::polar(T(1), -dk1);
+                *ptr++ *= _fluxScaling * kpol;
+                for (int i=m-1; i; --i) {
+                    kpol = kpol * dkpol;
+                    kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
+                    *ptr++ *= _fluxScaling * kpol;
+                }
+#endif
             }
         }
     }
