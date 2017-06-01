@@ -77,7 +77,7 @@ namespace galsim {
 
     double SBDeltaFunction::SBDeltaFunctionImpl::xValue(const Position<double>& p) const
     {
-        return (p.x == 0 && p.y == 0) ? (_flux) : 0.;
+        return (p.x == 0 && p.y == 0) ? (std::numeric_limits<double>::max()) : 0.;
     }
 
     std::complex<double> 
@@ -86,21 +86,7 @@ namespace galsim {
         std::complex<double> result(_flux,0);
         return result;
     }
-    
-    void SBDeltaFunction::SBDeltaFunctionImpl::getXRange(double& xmin, double& xmax, 
-                                                         std::vector<double>& splits) const
-    {
-        xmin = -std::numeric_limits<double>::epsilon(); 
-        xmax = std::numeric_limits<double>::epsilon();
-    }
-
-    void SBDeltaFunction::SBDeltaFunctionImpl::getYRange(double& ymin, double& ymax, 
-                                                         std::vector<double>& splits) const
-    {
-        ymin = -std::numeric_limits<double>::epsilon(); 
-        ymax = std::numeric_limits<double>::epsilon();
-    }
-            
+ 
     boost::shared_ptr<PhotonArray> SBDeltaFunction::SBDeltaFunctionImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Delta Function shoot: N = "<<N<<std::endl;

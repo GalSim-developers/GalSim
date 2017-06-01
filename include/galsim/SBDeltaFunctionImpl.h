@@ -36,8 +36,8 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return true; }
-        bool isAnalyticX() const { return true; }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
         double maxK() const;
@@ -46,7 +46,7 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
-        double maxSB() const { return _flux; }
+        double maxSB() const { return std::numeric_limits<double>::max(); }
         
         /**
          * @brief Shoot photons through this SBDeltaFunction.
@@ -60,15 +60,11 @@ namespace galsim {
          * @returns PhotonArray containing all the photons' info.
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const;
         
         std::string serialize() const;
 
     private:
-        double _flux; ///< Flux of the Surface Brightness Profile.
+        double _flux;
 
         // Copy constructor and op= are undefined.
         SBDeltaFunctionImpl(const SBDeltaFunctionImpl& rhs);
