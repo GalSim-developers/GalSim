@@ -653,9 +653,6 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        # Expanding a Delta Function should not change it's size or flux
-        if isinstance(self, galsim.DeltaFunction): return self
-
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
 
         if hasattr(self, 'noise'):
@@ -675,10 +672,6 @@ class GSObject(object):
 
         @returns the dilated object.
         """
-        # Dilating a Delta Function should not change it's size or flux
-        if isinstance(self, galsim.DeltaFunction): return self
-
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
         # equivalent to self.expand(scale) * (1./scale**2)
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
@@ -723,9 +716,6 @@ class GSObject(object):
 
         @returns the sheared object.
         """
-        # Shearing a Delta Function should not change it's size or flux
-        if isinstance(self, galsim.DeltaFunction): return self
-
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
@@ -784,9 +774,6 @@ class GSObject(object):
 
         @returns the rotated object.
         """
-        # Rotating a Delta Function should not change it's size or flux
-        if isinstance(self, galsim.DeltaFunction): return self
-
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
@@ -822,9 +809,6 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        # Transforming a Delta Function should not change it's size or flux
-        if isinstance(self, galsim.DeltaFunction): return self
-
         new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
         if hasattr(self, 'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
@@ -1358,11 +1342,6 @@ class GSObject(object):
 
         @returns the drawn Image.
         """
-        # Check for attemped drawing of unconvolved DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be drawn by themselves."+
-                              " A convolution should be carried out before drawing.")
-
         # Check for obsolete parameters
         if dx is not None and scale is None: # pragma: no cover
             from .deprecated import depr
@@ -2031,11 +2010,6 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        # Check for attemped drawing of unconvolved DeltaFunction
-        if isinstance(self, galsim.DeltaFunction):
-            raise AttributeError("DeltaFunctions are not allowed to be drawn by themselves."+
-                              " A convolution should be carried out before drawing.")
-
         if isinstance(image,galsim.Image) and isinstance(nx,galsim.Image):
             # If the user calls drawK(re,im), then give the proper deprecation below.
             re = image

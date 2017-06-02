@@ -2439,63 +2439,52 @@ def test_deltaFunction():
     # Check construction with no arguments gives expected result
     delta = galsim.DeltaFunction()
     np.testing.assert_almost_equal(delta.flux, 1.0)
+    check_basic(delta, "DeltaFunction")
+    do_pickle(delta)
 
     # Check with default_params
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
-    try:
-        np.testing.assert_raises(AttributeError, delta.drawImage)
-    except ImportError:
-        pass
+    np.testing.assert_almost_equal(delta.flux, 1.0)
 
-    delta = galsim.DeltaFunction(flux=1)
-    try:
-        np.testing.assert_raises(AttributeError, delta.drawKImage)
-    except ImportError:
-        pass
-
-    # Delta function should never be drawn by itself without convolution
-    delta = galsim.DeltaFunction(flux=1)
-    try:
-        np.testing.assert_raises(AttributeError, delta.drawImage)
-    except ImportError:
-        pass
+    delta = galsim.DeltaFunction(flux=test_flux)
+    np.testing.assert_almost_equal(delta.flux, test_flux)
+    check_basic(delta, "DeltaFunction")
+    do_pickle(delta)
+    do_pickle(delta.SBProfile, lambda x: (x.getFlux(), x.getGSParams()))
+    do_pickle(delta.SBProfile)
 
     # Test operations with no-ops on DeltaFunction
-    delta = galsim.DeltaFunction(flux=1)
-    delta_exp = delta.expand(2.0)
-    np.testing.assert_almost_equal(delta_exp.flux, 1.0)
-
-    delta = galsim.DeltaFunction(flux=1)
     delta_shr = delta.shear(g1=0.3, g2=0.1)
-    np.testing.assert_almost_equal(delta_shr.flux, 1.0)
+    np.testing.assert_almost_equal(delta_shr.flux, test_flux)
 
-    delta = galsim.DeltaFunction(flux=1)
     delta_dil = delta.dilate(2.0)
-    np.testing.assert_almost_equal(delta_dil.flux, 1.0)
+    np.testing.assert_almost_equal(delta_dil.flux, test_flux)
 
-    delta = galsim.DeltaFunction(flux=1)
-    delta_mag = delta.magnify(2.0)
-    np.testing.assert_almost_equal(delta_mag.flux, 1.0)
-
-    delta = galsim.DeltaFunction(flux=1)
-    delta_tfm = delta.transform(dudx=1.0, dudy=0.0, dvdx=0.0, dvdy=1.0)
-    np.testing.assert_almost_equal(delta_tfm.flux, 1.0)
-
-    delta = galsim.DeltaFunction(flux=1)
     delta_rot = delta.rotate(45 * galsim.radians)
-    np.testing.assert_almost_equal(delta_rot.flux, 1.0)
+    np.testing.assert_almost_equal(delta_rot.flux, test_flux)
+
+    delta_tfm = delta.transform(dudx=1.25, dudy=0., dvdx=0., dvdy=0.8)
+    np.testing.assert_almost_equal(delta_tfm.flux, test_flux)
+
+    delta_shift = delta.shift(1.,2.)
+    np.testing.assert_almost_equal(delta_shift.flux, test_flux)
+
+    # These aren't no ops, since they do in fact alter the flux.
+    delta_exp = delta.expand(2.0)
+    np.testing.assert_almost_equal(delta_exp.flux, test_flux * 4)
+
+    delta_mag = delta.magnify(2.0)
+    np.testing.assert_almost_equal(delta_mag.flux, test_flux * 2)
+
+    delta_tfm = delta.transform(dudx=1.4, dudy=0.2, dvdx=0.4, dvdy=1.2)
+    np.testing.assert_almost_equal(delta_tfm.flux, test_flux * (1.4*1.2-0.2*0.4))
 
     # Test simple translation of DeltaFunction
-    delta = galsim.DeltaFunction(flux = test_flux)
-    delta2 = delta.shift(1.,2.)      # Shft the object in real space.
+    delta2 = delta.shift(1.,2.)
     offcen = galsim.PositionD(1, 2)
     np.testing.assert_equal(delta2.centroid(), offcen)
     assert delta2.xValue(offcen) > 1.e10
     np.testing.assert_almost_equal(delta2.xValue(galsim.PositionD(0,0)), 0)
-
-    # Use non-unity values.
-    delta = galsim.DeltaFunction()
-    check_basic(delta, "DeltaFunction")
 
     # Test photon shooting.
     gauss = galsim.Gaussian(sigma = 1.0)
@@ -2505,13 +2494,6 @@ def test_deltaFunction():
 
     # Test kvalues
     do_kvalue(delta_conv,myImg,"Delta Function")
-
-    # Check picklability
-    delta = galsim.DeltaFunction(flux=test_flux)
-    do_pickle(delta.SBProfile, lambda x: (x.getFlux(), x.getGSParams()))
-    do_pickle(delta)
-    do_pickle(delta.SBProfile)
-    do_pickle(galsim.DeltaFunction())
 
 
 @timer
@@ -2610,10 +2592,6 @@ def test_deltaFunction_convolution():
     # Test that no-ops on gaussians dont affect convolution
     gauss = galsim.Gaussian(sigma = 1.0)
 
-    delta_exp = delta.expand(2.0)
-    delta_conv = galsim.Convolve(gauss,delta_exp)
-    np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-
     delta_shr = delta.shear(g1=0.3, g2=0.1)
     delta_conv = galsim.Convolve(gauss,delta_shr)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
@@ -2622,11 +2600,7 @@ def test_deltaFunction_convolution():
     delta_conv = galsim.Convolve(gauss,delta_dil)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
 
-    delta_mag = delta.magnify(2.0)
-    delta_conv = galsim.Convolve(gauss,delta_mag)
-    np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-
-    delta_tfm = delta.transform(dudx=1.0, dudy=0.0, dvdx=0.0, dvdy=1.0)
+    delta_tfm = delta.transform(dudx=1.25, dudy=0.0, dvdx=0.0, dvdy=0.8)
     delta_conv = galsim.Convolve(gauss,delta_tfm)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
 
