@@ -9,7 +9,10 @@ python:
     - 2.7
     - 3.4
     - 3.5
-    - 3.6
+    #- 3.6  # disabled until Travis fixes their issue #4990
+            # https://github.com/travis-ci/travis-ci/issues/4990
+            # i.e. has python 3.6 pre-installed.  Otherwise it can time out from having to install
+            # all the python 3.6 stuff from scratch.
 
 compiler:
     - g++
