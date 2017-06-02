@@ -1441,7 +1441,7 @@ class DeltaFunction(GSObject):
     # _takes_rng indicates whether the constructor should be given the current rng.
     _req_params = {}
     _opt_params = { "flux" : float }
-    _single_params = [ {} ]
+    _single_params = []
     _takes_rng = False
 
     def __init__(self, flux=1., gsparams=None):
