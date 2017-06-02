@@ -1470,6 +1470,5 @@ class DeltaFunction(GSObject):
 _galsim.SBDeltaFunction.__getinitargs__ = lambda self: (
         self.getFlux(), self.getGSParams())
 _galsim.SBDeltaFunction.__getstate__ = lambda self: None
-_galsim.SBDeltaFunction.__setstate__ = lambda self, state: 1
 _galsim.SBDeltaFunction.__repr__ = lambda self: \
         'galsim._galsim.SBDeltaFunction(%r, %r)'%self.__getinitargs__()
