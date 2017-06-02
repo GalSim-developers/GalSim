@@ -208,12 +208,8 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        if logger:
-            logger.warning('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
-                           base['obj_num'],g1,g2) + 'Using shear = 0.')
-        else:
-            warnings.warn('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
-                          base['obj_num'],g1,g2) + 'Using shear = 0.')
+        logger.warning('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
+                       base['obj_num'],g1,g2) + 'Using shear = 0.')
         shear = galsim.Shear(g1=0,g2=0)
 
     logger.debug('obj %d: PowerSpectrum shear = %s',base['obj_num'],shear)
@@ -248,12 +244,8 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             "Invalid max_mu=%f (must be > 0) for type = PowerSpectrumMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
-        if logger:
-            logger.warning('obj %d: Warning: PowerSpectrum mu = %f means strong lensing. '%(
-                           base['obj_num'],mu) + 'Using mu=%f'%max_mu)
-        else:
-            warnings.warn('obj %d: Warning: PowerSpectrum mu = %f means strong lensing. '%(
-                          base['obj_num'],mu) + 'Using mu=%f'%max_mu)
+        logger.warning('obj %d: Warning: PowerSpectrum mu = %f means strong lensing. '%(
+                       base['obj_num'],mu) + 'Using mu=%f'%max_mu)
         mu = max_mu
 
     logger.debug('obj %d: PowerSpectrum mu = %s',base['obj_num'],mu)

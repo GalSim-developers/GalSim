@@ -339,17 +339,6 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     config['world_pos'] = galsim.PositionD(0.1,0.3)
     print("strong lensing mag = ",nfw_halo.getMagnification((0.1,0.3), gal_z))
-    galsim.config.SetupInputsForImage(config, None)
-    try:
-        nfw2 = np.testing.assert_warns(
-                UserWarning, galsim.config.ParseValue, config, 'nfw', config, float)[0]
-    except ImportError:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            nfw2 = galsim.config.ParseValue(config,'nfw',config, float)[0]
-    np.testing.assert_almost_equal(nfw2, 25.)
-
-    # If there is a logger, then the warning shows up there.
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
@@ -370,17 +359,6 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     config['world_pos'] = galsim.PositionD(0.1,0.2)
     print("very strong lensing mag = ",nfw_halo.getMagnification((0.1,0.2), gal_z))
-    galsim.config.SetupInputsForImage(config)
-    try:
-        nfw4 = np.testing.assert_warns(
-                UserWarning, galsim.config.ParseValue, config, 'nfw', config, float)[0]
-    except ImportError:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            nfw4 = galsim.config.ParseValue(config,'nfw',config, float)[0]
-    np.testing.assert_almost_equal(nfw4, 3000.)
-
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
         nfw4 = galsim.config.ParseValue(config, 'nfw', config, float)[0]
@@ -405,14 +383,10 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     del config['input_objs']
     config['input']['power_spectrum']['e_power_function'] = '500 * np.exp(-k**0.2)'
-    galsim.config.SetupInputsForImage(config, None)
-    try:
-        ps2a = np.testing.assert_warns(
-                UserWarning, galsim.config.ParseValue, config, 'ps', config, float)[0]
-    except ImportError:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+        ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
+    assert 'PowerSpectrum mu = -3.643856 means strong lensing. Using mu=25.000000' in cl.output
     np.testing.assert_almost_equal(ps2a, 25.)
 
     galsim.config.RemoveCurrent(config)
@@ -1196,18 +1170,6 @@ def test_shear_value():
     galsim.config.RemoveCurrent(config)
     config['world_pos'] = galsim.PositionD(0.1,0.2)
     print("strong lensing shear = ",nfw_halo.getShear((0.1,0.2), gal_z))
-    try:
-        nfw2a = np.testing.assert_warns(
-                UserWarning, galsim.config.ParseValue, config, 'nfw', config, galsim.Shear)[0]
-    except ImportError:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            nfw2a = galsim.config.ParseValue(config,'nfw',config, galsim.Shear)[0]
-    nfw2b = nfw_halo.getShear((0.1,0.2), gal_z)
-    np.testing.assert_almost_equal(nfw2a.g1, 0)
-    np.testing.assert_almost_equal(nfw2a.g2, 0)
-
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
         nfw2a = galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)[0]
@@ -1242,22 +1204,11 @@ def test_shear_value():
     galsim.config.SetupInputsForImage(config, None)
     ps2b = ps.getShear((0.1,0.2))
     print("ps shear= ",ps2b)
-    try:
-        ps2a = np.testing.assert_warns(
-                UserWarning, galsim.config.ParseValue, config, 'ps', config, galsim.Shear)[0]
-    except ImportError:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            ps2a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal((ps2a.g1, ps2a.g2), (0,0))
-
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
-        galsim.config.SetupInputsForImage(config, cl.logger)
-        ps2b = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
-    print(cl.output)
-    assert "Warning: PowerSpectrum shear (g1=-1.626101, g2=0.287082) is invalid." in cl.output
-    np.testing.assert_almost_equal((ps2b.g1, ps2b.g2), (0,0))
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+        ps2a = galsim.config.ParseValue(config,'ps',config, galsim.Shear)[0]
+    assert 'PowerSpectrum shear (g1=-1.626101, g2=0.287082) is invalid. Using shear = 0.' in cl.output
+    np.testing.assert_almost_equal((ps2a.g1, ps2a.g2), (0,0))
 
     # Out of bounds results in shear = 0, and a warning.
     galsim.config.RemoveCurrent(config)
