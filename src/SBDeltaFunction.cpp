@@ -60,7 +60,7 @@ namespace galsim {
 
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBDeltaFunction::SBDeltaFunctionImpl::maxK() const
-    { 
+    {
         // This is essentially infinite since the delta function
         // is constant over k space
         return std::numeric_limits<double>::max();
@@ -80,25 +80,25 @@ namespace galsim {
         return (p.x == 0 && p.y == 0) ? (std::numeric_limits<double>::max()) : 0.;
     }
 
-    std::complex<double> 
+    std::complex<double>
     SBDeltaFunction::SBDeltaFunctionImpl::kValue(const Position<double>& k) const
     {
         std::complex<double> result(_flux,0);
         return result;
     }
- 
+
     boost::shared_ptr<PhotonArray> SBDeltaFunction::SBDeltaFunctionImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Delta Function shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        
+
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
             result->setPhoton(i, 0.0, 0.0, fluxPerPhoton);
         }
         dbg<<"Realized flux = "<<result->getTotalFlux()<<std::endl;
-        
+
         return result;
     }
 }

@@ -47,7 +47,7 @@ namespace galsim {
 
         double getFlux() const { return _flux; }
         double maxSB() const { return std::numeric_limits<double>::max(); }
-        
+
         /**
          * @brief Shoot photons through this SBDeltaFunction.
          *
@@ -60,7 +60,7 @@ namespace galsim {
          * @returns PhotonArray containing all the photons' info.
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-        
+
         std::string serialize() const;
 
     private:

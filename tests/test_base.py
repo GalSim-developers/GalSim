@@ -2439,7 +2439,7 @@ def test_deltaFunction():
     # Check construction with no arguments gives expected result
     delta = galsim.DeltaFunction()
     np.testing.assert_almost_equal(delta.flux, 1.0)
-    
+
     # Check with default_params
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
     try:
@@ -2452,7 +2452,7 @@ def test_deltaFunction():
         np.testing.assert_raises(AttributeError, delta.drawKImage)
     except ImportError:
         pass
-    
+
     # Delta function should never be drawn by itself without convolution
     delta = galsim.DeltaFunction(flux=1)
     try:
@@ -2496,7 +2496,7 @@ def test_deltaFunction():
     # Use non-unity values.
     delta = galsim.DeltaFunction()
     check_basic(delta, "DeltaFunction")
-    
+
     # Test photon shooting.
     gauss = galsim.Gaussian(sigma = 1.0)
     delta_conv = galsim.Convolve(gauss,delta)
@@ -2505,7 +2505,7 @@ def test_deltaFunction():
 
     # Test kvalues
     do_kvalue(delta_conv,myImg,"Delta Function")
-    
+
     # Check picklability
     delta = galsim.DeltaFunction(flux=test_flux)
     do_pickle(delta.SBProfile, lambda x: (x.getFlux(), x.getGSParams()))
@@ -2606,35 +2606,35 @@ def test_deltaFunction_convolution():
     delta2 = galsim.DeltaFunction(flux=3.0)
     delta_delta = galsim.Convolve(delta,delta2)
     np.testing.assert_almost_equal(delta_delta.getFlux(),6.0)
-    
+
     # Test that no-ops on gaussians dont affect convolution
     gauss = galsim.Gaussian(sigma = 1.0)
-    
+
     delta_exp = delta.expand(2.0)
     delta_conv = galsim.Convolve(gauss,delta_exp)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
+
     delta_shr = delta.shear(g1=0.3, g2=0.1)
     delta_conv = galsim.Convolve(gauss,delta_shr)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
+
     delta_dil = delta.dilate(2.0)
     delta_conv = galsim.Convolve(gauss,delta_dil)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
+
     delta_mag = delta.magnify(2.0)
     delta_conv = galsim.Convolve(gauss,delta_mag)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
+
     delta_tfm = delta.transform(dudx=1.0, dudy=0.0, dvdx=0.0, dvdy=1.0)
     delta_conv = galsim.Convolve(gauss,delta_tfm)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
+
     delta_rot = delta.rotate(45 * galsim.radians)
     delta_conv = galsim.Convolve(gauss,delta_rot)
     np.testing.assert_almost_equal(delta_conv.getFlux(),2.0)
-    
-    
+
+
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""

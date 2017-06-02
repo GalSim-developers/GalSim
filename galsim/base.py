@@ -1412,11 +1412,11 @@ _galsim.SBSpergel.__getinitargs__ = lambda self: (
 _galsim.SBSpergel.__getstate__ = lambda self: None
 _galsim.SBSpergel.__repr__ = lambda self: \
         'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%self.__getinitargs__()
-        
+
 class DeltaFunction(GSObject):
     """A class describing a DeltaFunction surface brightness profile.
 
-    The DeltaFunction surface brightness profile is characterized by a single property, 
+    The DeltaFunction surface brightness profile is characterized by a single property,
     its `flux'.
 
     Initialization
@@ -1446,7 +1446,7 @@ class DeltaFunction(GSObject):
 
     def __init__(self, flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBDeltaFunction(flux, gsparams))
-        self._gsparams = gsparams        
+        self._gsparams = gsparams
 
     def __eq__(self, other):
         return (isinstance(other, galsim.DeltaFunction) and

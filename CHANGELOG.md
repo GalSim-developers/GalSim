@@ -76,7 +76,7 @@ Deprecated Features
 New Features
 ------------
 
-- Added new surface brightness profile, 'DeltaFunction'. This represents a 
+- Added new surface brightness profile, 'DeltaFunction'. This represents a
   point source with a a flux value.
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models

@@ -655,7 +655,7 @@ class GSObject(object):
         """
         # Expanding a Delta Function should not change it's size or flux
         if isinstance(self, galsim.DeltaFunction): return self
-        
+
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
 
         if hasattr(self, 'noise'):
@@ -677,7 +677,7 @@ class GSObject(object):
         """
         # Dilating a Delta Function should not change it's size or flux
         if isinstance(self, galsim.DeltaFunction): return self
-        
+
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
         # equivalent to self.expand(scale) * (1./scale**2)
         new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
@@ -725,7 +725,7 @@ class GSObject(object):
         """
         # Shearing a Delta Function should not change it's size or flux
         if isinstance(self, galsim.DeltaFunction): return self
- 
+
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
@@ -786,7 +786,7 @@ class GSObject(object):
         """
         # Rotating a Delta Function should not change it's size or flux
         if isinstance(self, galsim.DeltaFunction): return self
-                                
+
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
@@ -824,7 +824,7 @@ class GSObject(object):
         """
         # Transforming a Delta Function should not change it's size or flux
         if isinstance(self, galsim.DeltaFunction): return self
-        
+
         new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
         if hasattr(self, 'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)

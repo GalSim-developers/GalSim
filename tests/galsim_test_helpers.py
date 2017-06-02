@@ -87,7 +87,7 @@ def convertToShear(e1,e2):
 
 def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     """Test drawImage using sb method.
-    """       
+    """
     #print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
     image = prof.drawImage(method='sb', scale=scale, use_true_center=False)
     image.setCenter(0,0)
@@ -126,7 +126,7 @@ def check_basic_k(prof, name):
     # We can't draw unconvovled DeltaFunctions
     if name == "DeltaFunction" or name == "Rotated DeltaFunction":
         prof = galsim.Convolve(prof, galsim.Gaussian(sigma=1.));
-        
+
     print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
     if prof.maxK()/prof.stepK() > 2000.:
         # Don't try to draw huge images!
