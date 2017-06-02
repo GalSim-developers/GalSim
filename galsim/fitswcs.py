@@ -1305,8 +1305,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # Most of the work for _radec.  But stop at (u,v).
 
         # Start with (u,v) = the image position
-        x = np.atleast_1d(x)
-        y = np.atleast_1d(y)
+        x = np.ascontiguousarray(x)
+        y = np.ascontiguousarray(y)
 
         x -= self.crpix[0]
         y -= self.crpix[1]
