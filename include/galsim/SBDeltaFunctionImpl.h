@@ -25,6 +25,10 @@
 
 namespace galsim {
 
+    // Not quite as high as std::numeric_limits<double>::max() == 1.8e308 so math with this
+    // doesn't easily turn into inf.
+    const double MOCK_INF = 1.e300;
+
     class SBDeltaFunction::SBDeltaFunctionImpl : public SBProfileImpl
     {
     public:
@@ -46,7 +50,7 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
-        double maxSB() const { return std::numeric_limits<double>::max(); }
+        double maxSB() const { return MOCK_INF; }
 
         /**
          * @brief Shoot photons through this SBDeltaFunction.

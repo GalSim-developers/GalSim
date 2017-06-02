@@ -63,7 +63,7 @@ namespace galsim {
     {
         // This is essentially infinite since the delta function
         // is constant over k space
-        return std::numeric_limits<double>::max();
+        return MOCK_INF;
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -72,12 +72,12 @@ namespace galsim {
     {
         // This is essentially infinite since the delta function
         // is constant over k space
-        return std::numeric_limits<double>::max();
+        return MOCK_INF;
     }
 
     double SBDeltaFunction::SBDeltaFunctionImpl::xValue(const Position<double>& p) const
     {
-        return (p.x == 0 && p.y == 0) ? (std::numeric_limits<double>::max()) : 0.;
+        return (p.x == 0 && p.y == 0) ? MOCK_INF : 0.;
     }
 
     std::complex<double>
