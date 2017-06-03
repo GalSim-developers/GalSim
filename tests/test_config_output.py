@@ -277,11 +277,27 @@ def test_datacube():
     # DataCubes cannot include weight (or any other) extra outputs as additional hdus.
     # It should raise an exception if you try.
     config['output']['weight'] = { 'hdu' : 1 }
+    config['output']['badpix'] = { 'file_name' : 'output/test_datacube_bp.fits' }
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
     try:
         np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
     except ImportError:
         pass
+
+    # But if both weight and badpix are files, then it should work.
+    config['output']['weight'] = { 'file_name' : 'output/test_datacube_wt.fits' }
+    galsim.config.BuildFile(config)
+    im5_list = galsim.fits.readCube('output/test_datacube.fits')
+    assert len(im5_list) == 3
+    for k in range(3):
+        rng = galsim.UniformDeviate(1234 + k + 1)
+        rng.discard(1)
+        im1_list[k].addNoise(galsim.GaussianNoise(sigma=0.1**0.5, rng=rng))
+        np.testing.assert_array_equal(im5_list[k].array, im1_list[k].array)
+    im5_wt = galsim.fits.read('output/test_datacube_wt.fits')
+    im5_bp = galsim.fits.read('output/test_datacube_bp.fits')
+    np.testing.assert_array_equal(im5_wt.array, 10)
+    np.testing.assert_array_equal(im5_bp.array, 0)
 
 
 @timer
