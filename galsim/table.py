@@ -102,7 +102,7 @@ class LookupTable(object):
                 import pandas
                 try:
                     # version >= 0.20
-                    from pandas.io.parser import CParserError
+                    from pandas.io.common import CParserError
                 except ImportError:
                     # version < 0.20
                     from pandas.parser import CParserError
