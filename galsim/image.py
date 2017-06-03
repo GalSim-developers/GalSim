@@ -513,7 +513,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         @returns a BoundsD instance
         """
-        return galsim.BoundsD(self.xmin-0.5, self.xmin+0.5, self.ymin-0.5, self.ymin+0.5)
+        return galsim.BoundsD(self.xmin-0.5, self.xmax+0.5, self.ymin-0.5, self.ymax+0.5)
 
     # real, imag for everything, even real images.
     @property
