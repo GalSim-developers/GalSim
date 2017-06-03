@@ -160,7 +160,8 @@ New Features
 - Added a hook to the WCS classes to allow them to vary with color, although
   most of our current WCS classes are not able to use this feature.  The only
   one that can is UVFunction, which may now optionally have a color term
-  if you set `uses_color=True`. (#865)
+  if you set `uses_color=True`.  (Note however that there is not yet a
+  mechanism to assign colors to objects in the config parser.) (#865)
 - Added optional `variance` parameter to PowerSpectrum.buildGrid to
   renormalize the variance of the returned shear values. (#865)
 - Added ability to get position (x,y,z) on the unit sphere corresponding to
