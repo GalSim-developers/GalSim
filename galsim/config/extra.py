@@ -290,6 +290,20 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
     return main_data + hdulist
 
+def CheckNoExtraOutputHDUs(config, output_type, logger=None):
+    """Check that none of the extra output objects want to add to the HDU list.
+
+    Raises an exception if one of them has an hdu field.
+    """
+    logger = galsim.config.LoggerWrapper(logger)
+    output = config['output']
+    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+        field = output[key]
+        if 'hdu' in field:
+            hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
+            logger.error("Extra output %s requesting to write to hdu %d", key, hdu)
+            raise AttributeError("Output type %s cannot add extra images as HDUs"%output_type)
+
 
 def GetFinalExtraOutput(key, config, main_data, logger=None):
     """Get the finalized output object for the given extra output key

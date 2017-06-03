@@ -518,6 +518,8 @@ class OutputBuilder(object):
         """
         if self.canAddHdus():
             data = galsim.config.AddExtraOutputHDUs(config, data, logger)
+        else:
+            galsim.config.CheckNoExtraOutputHDUs(config, config['output']['type'], logger)
         return data
 
     def writeFile(self, data, file_name, config, base, logger):

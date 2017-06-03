@@ -274,6 +274,15 @@ def test_datacube():
     for k in range(3):
         np.testing.assert_array_equal(im4_list[k].array, im1_list[k].array)
 
+    # DataCubes cannot include weight (or any other) extra outputs as additional hdus.
+    # It should raise an exception if you try.
+    config['output']['weight'] = { 'hdu' : 1 }
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
+    try:
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+    except ImportError:
+        pass
+
 
 @timer
 def test_skip():
