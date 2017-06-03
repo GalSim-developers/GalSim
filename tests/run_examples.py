@@ -413,7 +413,7 @@ def test_psf_wf_movie():
     try:
         psf_wf_movie.make_movie(Args)
         # Just checks that this runs, not the value of the output.
-    except FileNotFoundError as e:
+    except OSError as e:
         print(e)
         print('skipping test of psf_wf_movie.make_movie')
 
@@ -451,7 +451,7 @@ def test_fft_vs_geom_movie():
     try:
         fft_vs_geom_movie.make_movie(Args)
         # Just checks that this runs, not the value of the outputs.
-    except FileNotFoundError as e:
+    except OSError as e:
         print(e)
         print('skipping test of fft_vs_geom_movie.make_movie')
 
