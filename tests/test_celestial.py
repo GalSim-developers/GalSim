@@ -64,13 +64,16 @@ def test_angle():
     numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
 
     # Check wrapping with non-default center
-    numpy.testing.assert_almost_equal(theta6.wrap(pi).rad(), theta1.rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(2*pi).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(3*pi).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-pi).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-2*pi).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.wrap(27).rad(), theta1.wrap(27).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.wrap(-127).rad(), theta1.wrap(-127).rad(), decimal=12)
+    pi_rad = pi * galsim.radians
+    numpy.testing.assert_almost_equal(theta6.wrap(pi_rad).rad(), theta1.rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(2*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(3*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-2*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.wrap(27*galsim.radians).rad(),
+                                      theta1.wrap(27*galsim.radians).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.wrap(-127*galsim.radians).rad(),
+                                      theta1.wrap(-127*galsim.radians).rad(), decimal=12)
 
     # Make a new AngleUnit as described in the AngleUnit docs
     gradians = galsim.AngleUnit(2. * numpy.pi / 400.)

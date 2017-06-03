@@ -177,7 +177,7 @@ If you want to wrap to a different range than [-pi, pi), you can set the `center
 to be the desired center of the the range.  e.g. for return values to fall in [0, 2pi),
 you would call
 
-    >>> theta = theta.wrap(center=math.pi)
+    >>> theta = theta.wrap(center=math.pi * galsim.radians)
 
 @param center   The center point of the wrapped range. [default: 0]
 
