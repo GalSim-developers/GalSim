@@ -37,6 +37,8 @@ def _type_by_letter(key):
         return galsim.Angle
     elif key[0] == 'p':
         return galsim.PositionD
+    elif key[0] == 'c':
+        return galsim.CelestialCoord
     elif key[0] == 'g':
         return galsim.Shear
     elif key[0] == 'x':

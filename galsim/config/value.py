@@ -749,9 +749,11 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
 
 
 RegisterValueType('List', _GenerateFromList,
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ])
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
+                galsim.CelestialCoord ])
 RegisterValueType('Current', _GenerateFromCurrent,
-                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])
+                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
+                   galsim.CelestialCoord, None ])
 RegisterValueType('Sum', _GenerateFromSum,
              [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
