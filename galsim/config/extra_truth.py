@@ -93,7 +93,9 @@ class TruthBuilder(ExtraOutputBuilder):
     def finalize(self, config, base, main_data, logger):
         # Make the OutputCatalog
         cols = config['columns']
-        types = self.scratch.pop('types')
+        # Note: Provide a default here, because if all items were skipped it would otherwise
+        # lead to a KeyError.
+        types = self.scratch.pop('types', [float] * len(cols))
         self.cat = galsim.OutputCatalog(names=cols.keys(), types=types)
 
         # Add all the rows in order to the OutputCatalog
