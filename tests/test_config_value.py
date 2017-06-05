@@ -1352,7 +1352,7 @@ def test_eval():
         'eval17' : '$np.exp(-@psf.sigma**2 / @eval_variables.itwo)',
         # A couple more to cover the other various letter prefixes.
         'eval18' : { 'type' : 'Eval', 'str' : 'np.exp(-eval(half) * theta.rad()**lit_two)' },
-        'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad()' },
+        'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad())' },
 
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),
@@ -1368,7 +1368,7 @@ def test_eval():
     }
 
     true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
-    for i in range(1,19):
+    for i in range(1,20):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
         print('i = ',i, 'val = ',test_val,true_val)
         np.testing.assert_almost_equal(test_val, true_val)
