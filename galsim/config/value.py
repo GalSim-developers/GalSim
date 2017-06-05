@@ -187,15 +187,8 @@ def GetCurrentValue(key, config, value_type=None, base=None):
     if base is None:
         base = config
 
-    # True here means keep track of whether there is a non-standard index_key for this field.
     if '.' in key:
-        config, key, index_key = galsim.config.ParseExtendedKey(config, key, True)
-
-        # If there is a non-standard index_key, set the 'index_key' in that field appropriately.
-        if (index_key is not None and isinstance(config[key],dict) and
-                'index_key' not in config[key]):
-            #print('Set d[k] index_key to ',index_key)
-            config[key]['index_key'] = index_key
+        config, key = galsim.config.ParseExtendedKey(config, key)
 
     val, safe = EvaluateCurrentValue(key, config, base, value_type)
     return val
@@ -694,11 +687,7 @@ def _GenerateFromCurrent(config, base, value_type):
         key = params['key']
         #print('GetCurrent %s.  value_type = %s'%(key,value_type))
 
-        d, k, index_key = galsim.config.ParseExtendedKey(base, key, True)
-
-        if index_key is not None and isinstance(d[k],dict) and 'index_key' not in d[k]:
-            #print('Set d[k] index_key to ',index_key)
-            d[k]['index_key'] = index_key
+        d, k = galsim.config.ParseExtendedKey(base, key)
         config['_kd'] = k,d
 
     try:

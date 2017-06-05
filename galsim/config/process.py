@@ -566,7 +566,7 @@ def ImportModules(config):
                     exec('import '+module)
 
 
-def ParseExtendedKey(config, key, return_index_key=False):
+def ParseExtendedKey(config, key):
     """Traverse all but the last item in an extended key and return the resulting config, key.
 
     If key is an extended key like gal.items.0.ellip.e, then this will return the tuple.
@@ -576,13 +576,11 @@ def ParseExtendedKey(config, key, return_index_key=False):
 
     @param config       The configuration dict.
     @param key          The possibly extended key.
-    @param return_index_key     Whether to also return the index_key implied by the traversal.
 
     @returns the equivalent (config, key) where key is now a regular non-extended key.
     """
     # This is basically identical to the code for Dict.get(key) in catalog.py.
     chain = key.split('.')
-    use_index_key = None
     while True:
         d = config
         k = chain.pop(0)
@@ -595,12 +593,7 @@ def ParseExtendedKey(config, key, return_index_key=False):
             # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
             # KeyError for the case where d is a dict, but k is not a valid key.
             raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
-        if return_index_key and isinstance(d,dict) and 'index_key' in d:
-            use_index_key = d['index_key']
-    if return_index_key:
-        return d, k, use_index_key
-    else:
-        return d, k
+    return d, k
 
 def GetFromConfig(config, key):
     """Get the value for the (possibly extended) key from a config dict.
