@@ -77,7 +77,7 @@ New Features
 ------------
 
 - Added new surface brightness profile, 'DeltaFunction'. This represents a
-  point source with a a flux value.
+  point source with a flux value.
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models
   the repulsion of incoming electrons by the electrons already accumulated on
