@@ -42,13 +42,14 @@ prog_version = "0.4"
 # projected onto the sky. Note that the origin is at the center of the payload axes, on the
 # telescope boresight, not centered on the FPA.  Since the SCAs are 1-indexed, these arrays have a
 # non-used entry with index 0.  i.e., the maximum SCA is 18, and its value is in sca_xc_mm[18].
-# Units are mm.
+# Units are mm.  The ordering of SCAs was swapped between cycle 5 and 6, with 1<->2, 4<->5,
+# etc. swapping their y positions.  TODO: update pic on wiki page to reflect this.
 sca_xc_mm = np.array([0., -21.690, -21.690, -21.690, -65.070, -65.070, -65.070, -108.450, -108.450,
                       -108.450,  21.690,  21.690,  21.690,  65.070,  65.070,  65.070, 108.450,
                       108.450, 108.450])
-sca_yc_mm = np.array([0., 199.250, 149.824, 242.630, 188.250, 138.824, 231.630, 164.923, 115.498,
-                      208.304, 199.250, 149.824, 242.630, 188.250, 138.824, 231.630, 164.923,
-                      115.498, 208.304])
+sca_yc_mm = np.array([0., 149.824, 199.250, 242.630, 138.824, 188.250, 231.630, 115.498, 164.923,
+                      208.304, 149.824, 199.250, 242.630, 138.824, 188.250, 231.630, 115.498, 
+                      164.923, 208.304])
 # Nominal center of FPA in this coordinate frame, in mm and as an angle.
 fpa_xc_mm = 0.0
 fpa_yc_mm = 199.250
@@ -61,9 +62,10 @@ yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
 # testing.
 sca_rot = np.zeros_like(sca_xc_mm)
 
-# Rotation of focal plane axes relative to payload axes: positive CCW rotation of the f2 axis
-# relative to -Y_pl, and of f1 relative to +X_pl.
-theta_fpa = 32.5*galsim.degrees
+# Rotation of focal plane axes relative to payload axes: this is expressed as a CCW rotation of the
+# f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In cycle 5, this was around +30 degrees,
+# but in cycle 6 there is a 90 degrees CCW rotation with respect to that.
+theta_fpa = -60.0*galsim.degrees
 
 # File with SIP coefficients.
 sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_422.txt')
