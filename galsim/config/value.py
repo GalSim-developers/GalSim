@@ -692,8 +692,8 @@ def _GenerateFromCurrent(config, base, value_type):
 
     try:
         return EvaluateCurrentValue(k, d, base, value_type)
-    except ValueError: # pragma: no cover
-        raise ValueError("Invalid key = %s given for type=Current"%key)
+    except ValueError as e: # pragma: no cover
+        raise ValueError("%s\nError generating Current value wth key = %s"%(e,key))
 
 
 def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
