@@ -293,10 +293,11 @@ def GetNObjForFile(config, file_num, image_num):
 
     @returns a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
     """
-    nimages = GetNImagesForFile(config, file_num)
-    nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    config['image_num'] = image_num  # Make sure this is set back to current image num.
-    return nobj
+    output = config.get('output',{})
+    output_type = output.get('type','Fits')
+    if output_type not in valid_output_types:
+        raise AttributeError("Invalid output.type=%s."%output_type)
+    return valid_output_types[output_type].getNObjPerImage(output, config, file_num, image_num)
 
 
 def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
@@ -499,6 +500,24 @@ class OutputBuilder(object):
         @returns the number of images to build.
         """
         return 1
+
+    def getNObjPerImage(self, config, base, file_num, image_num):
+        """
+        Get the number of objects that will be made for each image built as part of the file
+        file_num, which starts at image number image_num, based on the information in the config
+        dict.
+
+        @param config           The configuration dict.
+        @param base             The base configuration dict.
+        @param file_num         The current file number.
+        @param image_num        The current image number (the first one for this file).
+
+        @returns a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
+        """
+        nimages = self.getNImages(config, base, file_num)
+        nobj = [ galsim.config.GetNObjForImage(base, image_num+j) for j in range(nimages) ]
+        base['image_num'] = image_num  # Make sure this is set back to current image num.
+        return nobj
 
     def canAddHdus(self):
         """Returns whether it is permissible to add extra HDUs to the end of the data list.
