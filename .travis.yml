@@ -107,5 +107,5 @@ after_success:
     - codecov
 
 before_cache:
-    - rm -rf $HOME/.cache/pip/log
-    - rm -rf $HOME/.cache/pip/http
+    - rm -rfv $HOME/.cache/pip/log
+    - rm -rfv $HOME/.cache/pip/http
