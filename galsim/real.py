@@ -550,7 +550,7 @@ class RealGalaxyCatalog(object):
                 self.loaded_files[file_name] = f
                 # Access all the data from all hdus to force PyFits to read the data
                 for hdu in f:
-                    hdu.data;
+                    hdu.data
 
     def _getFile(self, file_name):
         from multiprocessing import Lock
