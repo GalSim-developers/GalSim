@@ -56,6 +56,7 @@ namespace galsim {
          * @brief Shoot photons through this SBDeltaFunction.
          *
          * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
