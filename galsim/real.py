@@ -578,8 +578,7 @@ class RealGalaxyCatalog(object):
         """Preload the files into memory.
 
         There are memory implications to this, so we don't do this by default.  However, it can be
-        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
-        stored in the same file as different HDUs.
+        a big speedup if memory isn't an issue.
         """
         from galsim._pyfits import pyfits
         if self.logger:
@@ -597,7 +596,11 @@ class RealGalaxyCatalog(object):
                 # when memmap = True.  Anyway, I don't know what the performance implications
                 # are (since I couldn't finish the run with the default memmap=True), but I
                 # don't think there is much impact either way with memory mapping in our case.
-                self.loaded_files[file_name] = pyfits.open(file_name,memmap=False)
+                f = pyfits.open(file_name,memmap=False)
+                self.loaded_files[file_name] = f
+                # Access all the data from all hdus to force PyFits to read the data
+                for hdu in f:
+                    hdu.data
 
     def _getFile(self, file_name):
         from galsim._pyfits import pyfits
