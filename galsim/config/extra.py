@@ -388,9 +388,9 @@ class ExtraOutputBuilder(object):
         """Perform any necessary processing for stamps that were skipped in the normal processing.
 
         This function will be called for stamps that are not built because they were skipped
-        for some reason.  Normally, you would also want not want to do anything for the extra
-        outputs in these cases, but in case some module needs to do something in these cases
-        as well, this method can be overridden.
+        for some reason.  Normally, you would not want to do anything for the extra outputs in
+        these cases, but in case some module needs to do something in these cases as well, this
+        method can be overridden.
 
         @param obj_num      The object number
         @param config       The configuration field for this output object.
@@ -503,4 +503,3 @@ def RegisterExtraOutput(key, builder):
     valid_extra_outputs[key] = builder
 
 # Nothing is registered here.  The appropriate items are registered in extra_*.py.
-
