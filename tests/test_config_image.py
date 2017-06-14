@@ -23,6 +23,7 @@ import sys
 import logging
 import math
 import re
+import warnings
 
 from galsim_test_helpers import *
 
@@ -1505,7 +1506,10 @@ def test_multirng():
             u = rngb() * 50. - 25.
             v = rngb() * 50. - 25.
             world_pos = galsim.PositionD(u,v)
-            psf_g1, psf_g2 = psf_ps.getShear(world_pos)
+            with warnings.catch_warnings(record=True) as w:
+                psf_g1, psf_g2 = psf_ps.getShear(world_pos)
+            if len(w) > 0:
+                assert not psf_ps.bounds.includes(world_pos)
             psf = galsim.Moffat(fwhm=0.9, beta=2).shear(g1=psf_g1, g2=psf_g2)
             gal_g1, gal_g2 = gal_ps.getShear(world_pos)
             gal = galsim.Exponential(half_light_radius=1.3, flux=100).shear(g1=gal_g1, g2=gal_g2)
