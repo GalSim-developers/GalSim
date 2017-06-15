@@ -432,7 +432,7 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, flux=1.1),
             galsim.RealGalaxy(rgc, index=0, flux_rescale=1.2),
-            galsim.RealGalaxy(rgc, index=0, normalize_area=True),
+            galsim.RealGalaxy(rgc, index=0, area_norm=2),
             galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
@@ -467,8 +467,8 @@ def test_noise():
 
 
 @timer
-def test_normalize_area():
-    """Check that normalize_area works as expected"""
+def test_area_norm():
+    """Check that area_norm works as expected"""
     f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
     f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
 
@@ -477,7 +477,7 @@ def test_normalize_area():
     rng = galsim.BaseDeviate(5772)
     crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate())
     crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate(),
-                                      normalize_area=True)
+                                      area_norm=galsim.real.HST_area)
     assert crg1 != crg2
     LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
     obj1 = galsim.Convolve(crg1, psf)
@@ -491,7 +491,7 @@ def test_normalize_area():
             obj2.noise.getVariance() * galsim.real.HST_area**2)
 
     rg1 = galsim.RealGalaxy(f606w_cat, index=1)
-    rg2 = galsim.RealGalaxy(f606w_cat, index=1, normalize_area=True)
+    rg2 = galsim.RealGalaxy(f606w_cat, index=1, area_norm=galsim.real.HST_area)
     assert rg1 != rg2
     obj1 = galsim.Convolve(rg1, psf)
     obj2 = galsim.Convolve(rg2, psf)
@@ -610,5 +610,5 @@ if __name__ == "__main__":
     test_crg_roundtrip_larger_target_psf()
     test_ne()
     test_noise()
-    test_normalize_area()
+    test_area_norm()
     test_crg_noise_draw_transform_commutativity()

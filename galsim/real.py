@@ -95,7 +95,7 @@ class RealGalaxy(GSObject):
     comments.
 
     If you don't set a flux, the flux of the returned object will be the flux of the original
-    HST data, scaled to correspond to a 1 second HST exposure (though see the `normalize_area`
+    HST data, scaled to correspond to a 1 second HST exposure (though see the `area_norm`
     parameter below, and also caveats related to using the `flux` parameter).  If you want a flux
     appropriate for a longer exposure, or for a telescope with a different collecting area than HST,
     you can either renormalize the object with the `flux_rescale` parameter, or by using the
@@ -151,13 +151,15 @@ class RealGalaxy(GSObject):
                             should make sure that the padded image is larger than the postage
                             stamp onto which you are drawing this object.
                             [default: None]
-    @param normalize_area   By default, the flux of the returned object is normalized such that
-                            drawing with exptime=1 and area=1 (the `drawImage` defaults) simulates
-                            an image with the appropriate number of counts for a 1 second HST
-                            exposure.  Setting this keyword to True will instead normalize the
-                            returned object such that to simulate a 1 second HST exposure, you must
-                            use drawImage with exptime=1 and area=45238.93416 (the HST collecting
-                            area in cm^2).  [default: False]
+    @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
+                            When area_norm=1 (the default), drawing with `drawImage` keywords
+                            exptime=1 and area=1 will simulate an image with the appropriate number
+                            of counts for a 1 second exposure with the original telescope/camera
+                            (e.g., with HST when using the COSMOS catalog).  If you would rather
+                            explicitly specify the collecting area of the telescope when using
+                            `drawImage` with a `RealGalaxy`, then you should set area_norm equal to
+                            the collecting area of the source catalog telescope when creating the
+                            `RealGalaxy` (e.g., area_norm=45238.93416 for HST). [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
@@ -175,14 +177,14 @@ class RealGalaxy(GSObject):
                     "flux_rescale" : float ,
                     "pad_factor" : float,
                     "noise_pad_size" : float,
-                    "normalize_area" : bool
+                    "area_norm" : float
                   }
     _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
-                 pad_factor=4, noise_pad_size=0, normalize_area=False, gsparams=None, logger=None):
+                 pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None, logger=None):
 
 
         if rng is None:
@@ -271,7 +273,7 @@ class RealGalaxy(GSObject):
         self._noise_pad_size = noise_pad_size
         self._flux = flux
         self._flux_rescale = flux_rescale
-        self._normalize_area = normalize_area
+        self._area_norm = area_norm
         self._gsparams = gsparams
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
@@ -301,11 +303,10 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made original_gal',use_index)
 
         # Only alter normalization if a change is requested
-        if flux is not None or flux_rescale is not None or normalize_area:
+        if flux is not None or flux_rescale is not None or area_norm != 1:
             if flux_rescale is None:
-                flux_rescale = 1
-            if normalize_area:
-                flux_rescale /= HST_area
+                flux_rescale = 1.0
+            flux_rescale /= area_norm
             if flux is not None:
                 flux_rescale *= flux/self.original_gal.getFlux()
             self.original_gal *= flux_rescale
@@ -355,14 +356,14 @@ class RealGalaxy(GSObject):
                 self._noise_pad_size == other._noise_pad_size and
                 self._flux == other._flux and
                 self._flux_rescale == other._flux_rescale and
-                self._normalize_area == other._normalize_area and
+                self._area_norm == other._area_norm and
                 self._rng == other._rng and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
         return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
                      self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
-                     self._flux_rescale, self._normalize_area, self._rng.serialize(), self._gsparams))
+                     self._flux_rescale, self._area_norm, self._rng.serialize(), self._gsparams))
 
     def __repr__(self):
         s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
@@ -378,8 +379,8 @@ class RealGalaxy(GSObject):
             s += 'flux=%r, '%self._flux
         if self._flux_rescale is not None:
             s += 'flux_rescale=%r, '%self._flux_rescale
-        if self._normalize_area:
-            s += 'normalize_area=True, '
+        if self._area_norm != 1:
+            s += 'area_norm=%r, '%self._area_norm
         s += 'rng=%r, '%self._rng
         s += 'gsparams=%r)'%self._gsparams
         return s
@@ -966,7 +967,7 @@ class ChromaticRealGalaxy(ChromaticSum):
     objects to make it into the training sample).
 
     The flux normalization of the returned object will by default match the original data, scaled to
-    correspond to a 1 second HST exposure (though see the `normalize_area` parameter).  If you want
+    correspond to a 1 second HST exposure (though see the `area_norm` parameter).  If you want
     a flux appropriate for a longer exposure or telescope with different collecting area, you can
     use the `ChromaticObject` method `withScaledFlux` on the returned object, or use the `exptime`
     and `area` keywords to `drawImage`.  Note that while you can also use the `ChromaticObject`
@@ -1040,13 +1041,16 @@ class ChromaticRealGalaxy(ChromaticSum):
                             real-space profiles).  We strongly recommend leaving this parameter
                             at its default value; see text in Realgalaxy docstring for details.
                             [default: 4]
-    @param normalize_area   By default, the flux of the returned object is normalized such that
-                            drawing with exptime=1 and area=1 (the `drawImage` defaults) simulates
-                            an image with the appropriate number of counts for a 1 second HST
-                            exposure.  Setting this keyword to True will instead normalize the
-                            returned object such that to simulate a 1 second HST exposure, you must
-                            use drawImage with exptime=1 and area=45238.93416 (the HST collecting
-                            area in cm^2).  [default: False]
+    @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
+                            When area_norm=1 (the default), drawing with `drawImage` keywords
+                            exptime=1 and area=1 will simulate an image with the appropriate number
+                            of counts for a 1 second exposure with the original telescope/camera
+                            (e.g., with HST when using the COSMOS catalog).  If you would rather
+                            explicitly specify the collecting area of the telescope when using
+                            `drawImage` with a `ChromaticRealGalaxy`, then you should set area_norm
+                            equal to the collecting area of the source catalog telescope when
+                            creating the `ChromaticRealGalaxy` (e.g., area_norm=45238.93416 for
+                            HST). [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
@@ -1157,14 +1161,16 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 the real-space profiles).  We strongly recommend leaving this
                                 parameter at its default value; see text in Realgalaxy docstring
                                 for details.  [default: 4]
-        @param normalize_area   By default, the flux of the returned object is normalized such that
-                                drawing with exptime=1 and area=1 (the `drawImage` defaults)
-                                simulates an image with the appropriate number of counts for a 1
-                                second HST exposure.  Setting this keyword to True will instead
-                                normalize the returned object such that to simulate a 1 second HST
-                                exposure, you must use drawImage with exptime=1 and
-                                area=45238.93416 (the HST collecting area in cm^2).
-                                [default: False]
+        @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
+                                When area_norm=1 (the default), drawing with `drawImage` keywords
+                                exptime=1 and area=1 will simulate an image with the appropriate
+                                number of counts for a 1 second exposure with the original
+                                telescope/camera (e.g., with HST when using the COSMOS catalog).  If
+                                you would rather explicitly specify the collecting area of the
+                                telescope when using `drawImage` with a `ChromaticRealGalaxy`, then
+                                you should set area_norm equal to the collecting area of the source
+                                catalog telescope when creating the `ChromaticRealGalaxy` (e.g.,
+                                area_norm=45238.93416 for HST). [default: 1]
         @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                                 details. [default: None]
         @param logger           A logger object for output of progress statements if the user wants
@@ -1178,13 +1184,13 @@ class ChromaticRealGalaxy(ChromaticSum):
         return obj
 
     def _initialize(self, imgs, bands, xis, PSFs,
-                    SEDs=None, k_interpolant=None, maxk=None, pad_factor=4., normalize_area=False,
+                    SEDs=None, k_interpolant=None, maxk=None, pad_factor=4., area_norm=1.0,
                     gsparams=None):
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
         self.SEDs = SEDs
 
-        self._normalize_area = normalize_area
+        self._area_norm = area_norm
         self._k_interpolant = k_interpolant
         self._gsparams = gsparams
 
@@ -1195,9 +1201,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         assert Nim == len(PSFs)
         assert Nim >= NSED
 
-        if normalize_area:
-            imgs = [img/HST_area for img in imgs]
-            xis = [xi/HST_area/HST_area for xi in xis]
+        if area_norm != 1.0:
+            imgs = [img/area_norm for img in imgs]
+            xis = [xi/area_norm**2 for xi in xis]
 
         # Need to sample three different types of objects on the same Fourier grid: the input
         # effective PSFs, the input images, and the input correlation-functions/power-spectra.
@@ -1314,20 +1320,20 @@ class ChromaticRealGalaxy(ChromaticSum):
                 self.SEDs == other.SEDs and
                 self._k_interpolant == other._k_interpolant and
                 self._rng == other._rng and
-                self._normalize_area == other._normalize_area and
+                self._area_norm == other._area_norm and
                 self._gsparams == other._gsparams)
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         return hash(("galsim.ChromaticRealGalaxy", tuple(self.catalog_files), self.index,
                      tuple(self.SEDs), self._k_interpolant, self._rng.serialize(),
-                     self._normalize_area, self._gsparams))
+                     self._area_norm, self._gsparams))
 
     def __str__(self):
         return "galsim.ChromaticRealGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
 
     def __repr__(self):
         return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
-                "normalize_area=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
+                "area_norm=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
                                                    self._rng, self._k_interpolant,
-                                                   self._normalize_area, self._gsparams))
+                                                   self._area_norm, self._gsparams))
