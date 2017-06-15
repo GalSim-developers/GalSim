@@ -424,9 +424,16 @@ def test_crg_roundtrip_larger_target_psf():
 def test_ne():
     """ Check that inequality works as expected."""
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=1)
+    covspec1 = crg1.covspec
+    covspec2 = crg2.covspec
+
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
 
-    gals = [galsim.RealGalaxy(rgc, index=0),
+    objs = [galsim.RealGalaxy(rgc, index=0),
             galsim.RealGalaxy(rgc, index=1),
             galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
@@ -435,8 +442,12 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, area_norm=2),
             galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
-            galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
-    all_obj_diff(gals)
+            galsim.RealGalaxy(rgc, index=0, gsparams=gsp),
+            crg1,
+            crg2,
+            covspec1,
+            covspec2]
+    all_obj_diff(objs)
 
 
 @timer
@@ -692,14 +703,14 @@ def test_crg_noise():
 
 
 if __name__ == "__main__":
-    test_real_galaxy_ideal()
-    test_real_galaxy_saved()
-    test_real_galaxy_makeFromImage()
-    test_pickle_crg()
-    test_crg_roundtrip()
-    test_crg_roundtrip_larger_target_psf()
+    # test_real_galaxy_ideal()
+    # test_real_galaxy_saved()
+    # test_real_galaxy_makeFromImage()
+    # test_pickle_crg()
+    # test_crg_roundtrip()
+    # test_crg_roundtrip_larger_target_psf()
     test_ne()
-    test_noise()
-    test_area_norm()
-    test_crg_noise_draw_transform_commutativity()
-    test_crg_noise()
+    # test_noise()
+    # test_area_norm()
+    # test_crg_noise_draw_transform_commutativity()
+    # test_crg_noise()
