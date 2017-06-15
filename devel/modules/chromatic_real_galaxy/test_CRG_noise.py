@@ -68,8 +68,8 @@ def test_CRG_noise(args):
     crgs = []
     with ProgressBar(len(img_sets)) as bar:
         for imgs in img_sets:
-            crgs.append(galsim.ChromaticRealGalaxy(_imgs=imgs, _bands=bands, SEDs=SEDs,
-                                                   _xis=in_xis, _PSFs=in_PSF, maxk=maxk))
+            crgs.append(galsim.ChromaticRealGalaxy.makeFromImages(
+                    imgs, bands, in_PSF, in_xis, SEDs=SEDs, maxk=maxk))
             bar.update()
 
     print("Convolving by output PSF")
