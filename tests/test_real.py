@@ -601,6 +601,96 @@ def test_crg_noise_draw_transform_commutativity():
             draw_transform_img.array,
             transform_draw_img.array)
 
+
+@timer
+def check_crg_noise(n_sed, n_im, n_trial, tol):
+    print("Checking CRG noise for")
+    print("n_sed = {}".format(n_sed))
+    print("n_im = {}".format(n_im))
+    print("n_trial = {}".format(n_trial))
+    print("Constructing chromatic PSFs")
+    in_PSF = galsim.ChromaticAiry(lam=700., diam=2.4)
+    out_PSF = galsim.ChromaticAiry(lam=700., diam=0.6)
+
+    print("Constructing filters and SEDs")
+    waves = np.arange(550.0, 900.1, 10.0)
+    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'),
+                              wave_type='nm')
+    split_points = np.linspace(550.0, 900.0, n_im+1, endpoint=True)
+    bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
+             for blim, rlim in zip(split_points[:-1], split_points[1:])]
+
+    maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxK(),
+                out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
+
+    SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
+                       flux_type='fphotons', wave_type='nm').withFlux(1.0, visband)
+            for i in range(n_sed)]
+
+    print("Constructing input noise correlation functions")
+    rng = galsim.BaseDeviate(57721)
+    in_xis = [galsim.getCOSMOSNoise(cosmos_scale=0.03, rng=rng)
+              .dilate(1 + i * 0.05)
+              .rotate(5 * i * galsim.degrees)
+              for i in range(n_im)]
+
+    print("Creating noise images")
+    img_sets = []
+    for i in range(n_trial):
+        imgs = []
+        for xi in in_xis:
+            img = galsim.Image(128, 128, scale=0.03)
+            img.addNoise(xi)
+            imgs.append(img)
+        img_sets.append(imgs)
+
+    print("Constructing `ChromaticRealGalaxy`s")
+    crgs = []
+    for imgs in img_sets:
+        crgs.append(galsim.ChromaticRealGalaxy.makeFromImages(
+                imgs, bands, in_PSF, in_xis, SEDs=SEDs, maxk=maxk))
+
+    print("Convolving by output PSF")
+    objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
+
+    print("Drawing through output filter")
+    out_imgs = [obj.drawImage(visband, nx=30, ny=30, scale=0.1)
+                for obj in objs]
+
+    noise = objs[0].noise
+
+    print("Measuring images' correlation functions")
+    xi_obs = galsim.correlatednoise.CorrelatedNoise(out_imgs[0])
+    for img in out_imgs[1:]:
+        xi_obs += galsim.correlatednoise.CorrelatedNoise(img)
+    xi_obs /= n_trial
+    xi_obs_img = galsim.Image(30, 30, scale=0.1)
+    xi_obs.drawImage(xi_obs_img)
+    noise_img = galsim.Image(30, 30, scale=0.1)
+    noise.drawImage(noise_img)
+
+    print("Predicted/Observed variance:", noise.getVariance()/xi_obs.getVariance())
+    print("Predicted/Observed xlag-1 covariance:", noise_img.array[14, 15]/xi_obs_img.array[14, 15])
+    print("Predicted/Observed ylag-1 covariance:", noise_img.array[15, 14]/xi_obs_img.array[15, 14])
+    # Just test that the covariances for nearest neighbor pixels are accurate.
+    np.testing.assert_allclose(
+            noise_img.array[14:17, 14:17], xi_obs_img.array[14:17, 14:17],
+            rtol=0, atol=noise.getVariance()*tol)
+
+
+@timer
+def test_crg_noise():
+    """Verify that we can propagate the noise covariance by actually measuring the covariance of
+    some pure noise fields put through ChromaticRealGalaxy.
+    """
+    if __name__ == '__main__':
+        check_crg_noise(2, 2, 50, tol=0.03)
+        check_crg_noise(2, 3, 25, tol=0.03)
+        check_crg_noise(3, 3, 25, tol=0.03)
+    else:
+        check_crg_noise(2, 2, 10, tol=0.05)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
@@ -612,3 +702,4 @@ if __name__ == "__main__":
     test_noise()
     test_area_norm()
     test_crg_noise_draw_transform_commutativity()
+    test_crg_noise()
