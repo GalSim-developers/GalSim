@@ -153,7 +153,7 @@ def test_wavelength_sampler():
     assert np.min(photon_array.wavelength) > bandpass.blue_limit
     assert np.max(photon_array.wavelength) < bandpass.red_limit
 
-    # This is a regression test
+    # This is a regression test based on the value at commit 134a119
     np.testing.assert_almost_equal(np.mean(photon_array.wavelength), 622.755128, decimal=3)
 
     # If we use a flat SED (in photons/nm), then the mean sampled wavelength should very closely
