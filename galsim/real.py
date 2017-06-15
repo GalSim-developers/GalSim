@@ -205,6 +205,7 @@ class RealGalaxy(GSObject):
             if logger:
                 logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
             self.catalog_file = None
+            self.catalog = ''
         else:
             # Get the index to use in the catalog
             if index is not None:
@@ -247,6 +248,7 @@ class RealGalaxy(GSObject):
             if logger:
                 logger.debug('RealGalaxy %d: Got noise_image',use_index)
             self.catalog_file = real_galaxy_catalog.getFileName()
+            self.catalog = real_galaxy_catalog
 
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
@@ -261,7 +263,6 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # Save any other relevant information as instance attributes
-        self.catalog = real_galaxy_catalog
         self.index = use_index
         self.pixel_scale = float(pixel_scale)
         self._x_interpolant = x_interpolant
@@ -323,6 +324,22 @@ class RealGalaxy(GSObject):
         self.noise = self.noise.convolvedWith(psf_inv, gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
+
+    @classmethod
+    def makeFromImage(cls, image, PSF, xi, **kwargs):
+        """Create a RealGalaxy directly from image, PSF, and noise description.
+
+        @param image  `Image` of the galaxy you want to simulate.
+        @param PSF    `GSObject` representing the PSF of the galaxy image.  Note that this PSF
+                      should include the response of the pixel convolution.
+        @param xi     `CorrelatedNoise` or `UncorrelatedNoise` object characterizing the noise in
+                      the input image.
+        """
+        noise_image = xi.drawImage()
+        pixel_scale = noise_image.scale
+        var = xi.getVariance()
+        psf_image = PSF.drawImage(method='no_pixel')
+        return RealGalaxy((image, psf_image, noise_image, pixel_scale, var))
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "

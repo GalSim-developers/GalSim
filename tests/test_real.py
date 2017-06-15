@@ -172,6 +172,34 @@ def test_real_galaxy_ideal():
 
 
 @timer
+def test_real_galaxy_makeFromImage():
+    """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
+    # read in faked Gaussian RealGalaxy from file
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_fake)
+
+    gal_image = rg.gal_image
+    psf = rg.original_psf
+    xi = rg.noise
+    rg_2 = galsim.RealGalaxy.makeFromImage(gal_image, psf, xi)
+
+    check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
+    do_pickle(rg_2, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+                                x.original_psf.flux, x.original_gal.flux, x.flux ])
+    do_pickle(rg_2, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg_2)
+
+    # See if we get reasonably consistent results for rg and rg_2
+    psf = galsim.Kolmogorov(fwhm=0.6)
+    obj1 = galsim.Convolve(psf, rg)
+    obj2 = galsim.Convolve(psf, rg_2)
+    im1 = obj1.drawImage(scale=0.2, nx=12, ny=12)
+    im2 = obj2.drawImage(image=im1.copy())
+    atol = obj1.getFlux()*3e-5
+    np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=atol)
+
+
+@timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
     # read in real RealGalaxy from file
@@ -576,6 +604,7 @@ def test_crg_noise_draw_transform_commutativity():
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
+    test_real_galaxy_makeFromImage()
     test_pickle_crg()
     test_crg_roundtrip()
     test_crg_roundtrip_larger_target_psf()
