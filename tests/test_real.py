@@ -448,8 +448,18 @@ def test_ne():
             covspec1,
             covspec2]
     all_obj_diff(objs)
-    for obj in objs:
+    for obj in objs[:-4]:
         do_pickle(obj)
+
+    # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather
+    # large, so the eval(repr) checks take a long time.
+    # Therefore, run them from command line, but not from nosetests.
+    if __name__ == '__main__':
+        do_pickle(crg1)
+        do_pickle(covspec1)
+    else:
+        do_pickle(crg1, irreprable=True)
+        do_pickle(covspec1, irreprable=True)
 
 @timer
 def test_noise():
@@ -614,7 +624,6 @@ def test_crg_noise_draw_transform_commutativity():
             transform_draw_img.array)
 
 
-@timer
 def check_crg_noise(n_sed, n_im, n_trial, tol):
     print("Checking CRG noise for")
     print("n_sed = {}".format(n_sed))
