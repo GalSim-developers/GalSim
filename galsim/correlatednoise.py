@@ -1589,3 +1589,8 @@ class CovarianceSpectrum(object):
 
     def __repr__(self):
         return "galsim.CovarianceSpectrum(%r, %r)" % (self.Sigma, self.SEDs)
+
+    def __str__(self):
+        sigma_str = '{' + ', '.join([':'.join((str(k),str(v))) for k,v in self.Sigma.items()]) + '}'
+        seds_str = '[' + ', '.join([str(s) for s in self.SEDs]) + ']'
+        return "galsim.CovarianceSpectrum(%s, %s)" % (sigma_str, seds_str)
