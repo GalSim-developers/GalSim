@@ -184,7 +184,7 @@ class Bandpass(object):
         for test_wave in test_waves:
             try:
                 self._tp(test_wave)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave) +
                     "Caught error: {0}".format(e))

@@ -1581,7 +1581,7 @@ class GSObject(object):
 
         if Nk > self.gsparams.maximum_fft_size:
             raise RuntimeError(
-                "drawFFT requires an FFT that is too large: %s."%Nk +
+                "drawFFT requires an FFT that is too large: %s. "%Nk +
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
         bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
@@ -2136,6 +2136,7 @@ def SBProfile_setstate(self, state):
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
 # Quick and dirty.  Just check serializations are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
+_galsim.SBProfile.__eq__ = lambda self, other: (
+    isinstance(other,_galsim.SBProfile) and self.serialize() == other.serialize())
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())

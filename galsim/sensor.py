@@ -202,7 +202,7 @@ class SiliconSensor(Sensor):
         for k in config:
             try:
                 config[k] = eval(config[k])
-            except:
+            except (SyntaxError, NameError):
                 pass
         return config
 

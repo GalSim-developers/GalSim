@@ -448,7 +448,8 @@ def test_ne():
             covspec1,
             covspec2]
     all_obj_diff(objs)
-
+    for obj in objs:
+        do_pickle(obj)
 
 @timer
 def test_noise():

@@ -92,6 +92,9 @@ namespace galsim {
     const AngleUnit arcmin(M_PI/60./180.); ///< constant with units of arcminutes
     const AngleUnit arcsec(M_PI/3600./180.); ///< constant with units of arcseconds
 
+    // Defined below after we define the Angle class
+    inline Angle operator*(double val, AngleUnit unit);
+
     /**
      *  @brief A class representing an Angle
      *
@@ -188,13 +191,14 @@ namespace galsim {
         friend std::ostream& operator<<(std::ostream& os, Angle theta)
         { os << theta._val; return os; }
 
-        /// Wraps this angle to the range (-pi, pi]
-        Angle wrap() {
+        /// Wraps this angle to the range (c-pi, c+pi]
+        Angle wrap(Angle center=0.*radians)
+        {
             const double TWOPI = 2.*M_PI;
-            double new_val = std::fmod(_val, TWOPI); // now in range (-TWOPI, TWOPI)
+            double new_val = std::fmod(_val-center.rad(), TWOPI); // now in range (-TWOPI, TWOPI)
             if (new_val <= -M_PI) new_val += TWOPI;
             if (new_val > M_PI) new_val -= TWOPI;
-            return Angle(new_val, radians);
+            return Angle(new_val+center.rad(), radians);
         }
 
         double sin() const { return std::sin(_val); }

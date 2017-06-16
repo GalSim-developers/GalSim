@@ -777,8 +777,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
-    # The convolution here
+    gal6b = galsim.RealGalaxy(real_cat, index=5).original_gal
     gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['obj_num'] = 6
@@ -790,7 +789,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index=0)
+    gal8b = galsim.RealGalaxy(real_cat, index=7)
     gsobject_compare(gal8a, gal8b, conv=conv)
 
 @timer
@@ -881,7 +880,7 @@ def test_cosmosgalaxy():
         # Use defaults for gal_type (parametric, since we used the actual catalog and not the
         # parametric one) and select a random galaxy using internal routines.
         'gal1' : { 'type' : 'COSMOSGalaxy' },
-        }
+    }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
@@ -1063,7 +1062,7 @@ def test_add():
             ],
             'flux' : 170.
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1202,7 +1201,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 2 },
             ]
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)

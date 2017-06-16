@@ -263,10 +263,10 @@ class Transformation(galsim.GSObject):
                 det = 1
             else:                                       # jac is (a,0,0,b)
                 fwd = self._fwd_diag
-                det = self._jac[0] * self._jac[3]
+                det = abs(self._jac[0] * self._jac[3])
         else:                                           # Fully general case
             fwd = self._fwd_normal
-            det = self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2]
+            det = abs(self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2])
 
         ud = galsim.UniformDeviate(rng)
         photon_array = self.original.shoot(n_photons, ud)

@@ -506,6 +506,15 @@ class Image(with_metaclass(MetaImage, object)):
     def getYMax(self): return self.image.getYMax()
     def getBounds(self): return self.image.getBounds()
 
+    def getOuterBounds(self):
+        """Get the bounds of the outer edge of the pixels.
+
+        Equivalent to galsim.BoundsD(im.xmin-0.5, im.xmax+0.5, im.ymin-0.5, im.ymax+0.5)
+
+        @returns a BoundsD instance
+        """
+        return galsim.BoundsD(self.xmin-0.5, self.xmax+0.5, self.ymin-0.5, self.ymax+0.5)
+
     # real, imag for everything, even real images.
     @property
     def real(self):
@@ -559,7 +568,7 @@ class Image(with_metaclass(MetaImage, object)):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         try:
             self.image.resize(bounds)
-        except:
+        except AttributeError:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
         self._array = self.image.array

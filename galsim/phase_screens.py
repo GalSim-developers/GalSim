@@ -671,44 +671,6 @@ def __annular_zern_rho_coefs(n, m, eps):
     return out
 _annular_zern_rho_coefs = galsim.utilities.LRU_Cache(__annular_zern_rho_coefs)
 
-def horner(x, coef):
-    """Evaluate univariate polynomial using Horner's method.
-
-    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
-    A + x(B + x(C + x(D)))
-
-    @param x     Where to evaluate polynomial.
-    @param coef  Polynomial coefficients of increasing powers of x.
-    @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
-    """
-    coef = np.trim_zeros(coef, trim='b')
-    result = np.zeros_like(x, dtype=np.complex128)
-    if len(coef) == 0: return result
-    result += coef[-1]
-    for c in coef[-2::-1]:
-        result *= x
-        if c != 0: result += c
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
-    return result
-
-def horner2d(x, y, coefs):
-    """Evaluate bivariate polynomial using nested Horner's method.
-
-    @param x      Where to evaluate polynomial (first covariate).  Must be same shape as y.
-    @param y      Where to evaluate polynomial (second covariate).  Must be same shape as x.
-    @param coefs  2D array-like of coefficients in increasing powers of x and y.
-                  The first axis corresponds to increasing the power of y, and the second to
-                  increasing the power of x.
-    @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
-    """
-    result = horner(y, coefs[-1])
-    for coef in coefs[-2::-1]:
-        result *= x
-        result += horner(y, coef)
-    # Useful when working on this... (Numpy method is much slower, btw.)
-    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
-    return result
-
 
 class OpticalScreen(object):
     """
@@ -875,7 +837,7 @@ class OpticalScreen(object):
         # Note, this phase screen is actually independent of time and theta.
         r = u + 1j*v
         rsqr = np.abs(r)**2
-        return horner2d(rsqr, r, self.coef_array).real * self.lam_0
+        return galsim.utilities.horner2d(rsqr, r, self.coef_array, dtype=complex).real * self.lam_0
 
     def wavefront_gradient(self, u, v, t=None, theta=None):
         """ Compute gradient of wavefront due to atmospheric phase screen.

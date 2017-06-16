@@ -67,7 +67,7 @@ class RingBuilder(StampBuilder):
 
         # Now go on and do the base class setup.
         ignore = ignore + list(req) + list(opt)
-        return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
+        return super(RingBuilder, self).setup(config, base, xsize, ysize, ignore, logger)
 
     def buildProfile(self, config, base, psf, gsparams, logger):
         """
@@ -134,7 +134,7 @@ class RingBuilder(StampBuilder):
         """
         index = galsim.config.ParseValue(config, 'index', base, int)[0]
         if index == 0:
-            return super(self.__class__,self).reject(config, base, prof, psf, image, logger)
+            return super(RingBuilder,self).reject(config, base, prof, psf, image, logger)
         else:
             return False
 
