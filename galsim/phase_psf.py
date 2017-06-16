@@ -691,7 +691,7 @@ class PhaseScreenList(object):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
     def __eq__(self, other):
-        return self._layers == other._layers
+        return isinstance(other,PhaseScreenList) and self._layers == other._layers
 
     def __ne__(self, other): return not self == other
 
@@ -1115,7 +1115,8 @@ class PhaseScreenPSF(GSObject):
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
-        return (self._screen_list == other._screen_list and
+        return (isinstance(other, PhaseScreenPSF) and
+                self._screen_list == other._screen_list and
                 self.lam == other.lam and
                 self.aper == other.aper and
                 self.t0 == other.t0 and

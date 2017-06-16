@@ -30,6 +30,10 @@ API Changes
 - Some of the backend (but nonetheless public API) methods of PhaseScreen and
   PhaseScreenList have changed.  See the docstrings of these classes for
   the new API if you have been using these methods. (#824)
+- Slightly changed the signatures of some back-end, but nonetheless public,
+  config-layer functions.  If you have been using custom config modules,
+  there may be slight changes to your code required.  See the doc strings of
+  these functions for more information. (#865)
 - Switched galsim.Image(image) to make a copy of the image rather than a view.
   If you want a view, you should use the more intuitive image.view().  (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and 
@@ -50,6 +54,7 @@ Bug Fixes
   using the config functionality. (#792)
 - Fixed some handling of images with undefined bounds. (#799)
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
+- Fixed minor bug in shear == implementation. (#865)
 - Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
 
 
@@ -154,6 +159,17 @@ New Features
   `obj._drawKImage`, `image._view`, `image._shift`.  These are appropriate
   for advanced users who are optimizing a tight loop and find that the normal
   Python checks are taking a significant amount of time. (#840, #873)
+- Added a hook to the WCS classes to allow them to vary with color, although
+  most of our current WCS classes are not able to use this feature.  The only
+  one that can is UVFunction, which may now optionally have a color term
+  if you set `uses_color=True`.  (Note however that there is not yet a
+  mechanism to assign colors to objects in the config parser.) (#865)
+- Added optional `variance` parameter to PowerSpectrum.buildGrid to
+  renormalize the variance of the returned shear values. (#865)
+- Added ability to get position (x,y,z) on the unit sphere corresponding to
+  a CelestialCoord with `coord.get_xyz()`.  Also make a CelestialCoord from
+  (x,y,z) using `CeletialCoord.from_xyz(x,y,z)`. (#865)
+- Added an optional `center` argument for `Angle.wrap()`. (#865)
 - Added `recenter` option to drawKImage to optionally not recenter the input
   image at (0,0).  The default `recenter=True` is consistent with how this
   function has worked in previous versions. (#873)
@@ -178,3 +194,20 @@ New config features
   has an error, rather than just reporting the exception and continuing on
   (which is still the default behavior). (#820)
 - Added optional probability parameter 'p' for Random bool values. (#820)
+- Added ability to specify world_pos in celestial coordinates (#865)
+- Added the ability to have multiple rngs with different update sequences
+  (e.g. to have some random galaxy properties repeat for the corresponding
+  galaxies on multiple images).  (#865)
+- Added ngrid, center, variance, index options to power_spectrum input field.
+  (#865)
+- Skip drawing objects whose postage stamps will end up completely off the
+  main image currently being worked on. (#865)
+- Added skip option in stamp field, which works the same as the skip parameter
+  in gal or psf fields. (#865)
+- Added ':field' syntax for templates, which use the current dict as the base
+  rather than reading from another file (with 'file:field'). (#865)
+- No longer tries to process extra output items for stamps that are skipped.
+  This is normally better, since the extra output processing probably depends
+  on the stamp processing having been completed.  But it is customizable via
+  the `processSkippedStamp` method of ExtraOutputBuilders, so you can override
+  this behavior in your custom modules if you prefer. (#865)

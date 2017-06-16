@@ -331,7 +331,7 @@ class InterpolatedImage(GSObject):
         # Check that the given noise_pad is valid:
         try:
             noise_pad = float(noise_pad)
-        except:
+        except (TypeError, ValueError):
             pass
         if isinstance(noise_pad, float):
             if noise_pad < 0.:
