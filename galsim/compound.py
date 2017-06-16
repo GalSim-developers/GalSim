@@ -136,6 +136,15 @@ class Sum(galsim.GSObject):
                 raise TypeError("Single input argument must be a GSObject or list of them.")
         # else args is already the list of objects
 
+        # Consolidate args for Sums of Sums...
+        new_args = []
+        for a in args:
+            if isinstance(a, Sum):
+                new_args.extend(a._obj_list)
+            else:
+                new_args.append(a)
+        args = new_args
+
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
