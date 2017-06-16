@@ -815,6 +815,23 @@ class InterpolatedKImage(GSObject):
         self.__dict__ = d
         self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self._gsparams)
 
+
+def _InterpolatedKImage(kimage, k_interpolant, gsparams):
+    """Approximately equivalent to InterpolatedKImage, but with fewer options and no sanity checks.
+    """
+    ret = InterpolatedKImage.__new__(InterpolatedKImage)
+    ret._kimage = kimage.copy()
+    ret._stepk = kimage.scale
+    ret._gsparams = gsparams
+    ret.k_interpolant = k_interpolant
+    ret._sbiki = _galsim.SBInterpolatedKImage(
+            ret._kimage.image, 1.0, ret.k_interpolant, gsparams)
+    sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
+                              galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+    ret.SBProfile = _galsim.SBAdd([sbp])
+    return ret
+
+
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), self.getPadFactor(),
         self.stepK(), self.maxK(), self.getGSParams())

@@ -1180,6 +1180,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         if not hasattr(PSFs, '__iter__'):
             PSFs = [PSFs]*len(images)
         obj = cls.__new__(cls)
+        obj.index = None
+        obj.catalog_files = None
         obj._initialize(images, bands, xis, PSFs, **kwargs)
         return obj
 
@@ -1189,6 +1191,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
         self.SEDs = SEDs
+
+        if k_interpolant is None:
+            k_interpolant = galsim.Quintic(tol=1e-4)
 
         self._area_norm = area_norm
         self._k_interpolant = k_interpolant
@@ -1286,12 +1291,18 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim.InterpolatedKImage(galsim.ImageCD(coef[i], scale=stepk)))
+            objlist.append(sed * galsim._InterpolatedKImage(
+                    galsim.ImageCD(coef[i], scale=stepk),
+                    k_interpolant=self._k_interpolant,
+                    gsparams=self._gsparams))
 
         Sigma_dict = {}
         for i in range(NSED):
             for j in range(i, NSED):
-                obj = galsim.InterpolatedKImage(galsim.ImageCD(Sigma[i, j], scale=stepk))
+                obj = galsim._InterpolatedKImage(
+                        galsim.ImageCD(Sigma[i, j], scale=stepk),
+                        k_interpolant=self._k_interpolant,
+                        gsparams=self._gsparams)
                 obj /= (imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 
