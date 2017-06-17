@@ -435,7 +435,7 @@ class Convolution(galsim.GSObject):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.
         _noise = None
-        for obj in self._obj_list:
+        for i, obj in enumerate(self._obj_list):
             if obj.noise is not None:
                 if _noise is not None:
                     import warnings
@@ -443,7 +443,7 @@ class Convolution(galsim.GSObject):
                                   "multiple objects have noise attribute")
                     break
                 _noise = obj.noise
-                others = [ obj2 for obj2 in self._obj_list if obj2 is not obj ]
+                others = [ obj2 for k, obj2 in enumerate(self._obj_list) if k != i ]
                 assert len(others) > 0
                 if len(others) == 1:
                     _noise = _noise.convolvedWith(others[0])

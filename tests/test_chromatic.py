@@ -1134,10 +1134,12 @@ def test_analytic_integrator():
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
     kimage1 = galsim.ImageCD(32, 32, scale=0.2)
+    kimage1.setCenter(0,0)  # Necessary when adding to image
     assert len(band1.wave_list) == 0
     assert len(sed1.wave_list) == 0
-    final1.drawImage(band1, image=image1)
-    final1.drawKImage(band1, image=kimage1)
+    # Gratuitously use add_to_image=True so we test that branch.  Initial image is 0.
+    final1.drawImage(band1, image=image1, add_to_image=True)
+    final1.drawKImage(band1, image=kimage1, add_to_image=True)
 
     # try making the SED sampled
     band2 = band1

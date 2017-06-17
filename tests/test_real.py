@@ -512,6 +512,14 @@ def test_area_norm():
             obj1.noise.getVariance(),
             obj2.noise.getVariance() * galsim.real.HST_area**2)
 
+    # area_norm is equivalant to an overall scaling
+    crg3 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate())
+    crg3 /= galsim.real.HST_area
+    obj3 = galsim.Convolve(crg3, psf)
+    im3 = obj3.drawImage(LSST_i, exptime=1, area=galsim.real.HST_area)
+    np.testing.assert_array_almost_equal(im3.array, im2.array)
+    np.testing.assert_almost_equal(obj3.noise.getVariance(), obj2.noise.getVariance())
+
     rg1 = galsim.RealGalaxy(f606w_cat, index=1)
     rg2 = galsim.RealGalaxy(f606w_cat, index=1, area_norm=galsim.real.HST_area)
     assert rg1 != rg2
@@ -524,6 +532,15 @@ def test_area_norm():
     np.testing.assert_almost_equal(
             obj1.noise.getVariance(),
             obj2.noise.getVariance() * galsim.real.HST_area**2)
+
+    # area_norm is equivalant to an overall scaling
+    rg3 = galsim.RealGalaxy(f606w_cat, index=1)
+    rg3 /= galsim.real.HST_area
+    obj3 = galsim.Convolve(rg3, psf)
+    im3 = obj3.drawImage(exptime=1, area=galsim.real.HST_area)
+    np.testing.assert_array_almost_equal(im3.array, im2.array)
+    np.testing.assert_almost_equal(obj3.noise.getVariance(), obj2.noise.getVariance())
+
 
 
 @timer
