@@ -445,10 +445,11 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp),
             crg1,
             crg2,
+            galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, k_interpolant='Linear'),
             covspec1,
             covspec2]
     all_obj_diff(objs)
-    for obj in objs[:-4]:
+    for obj in objs[:-5]:
         do_pickle(obj)
 
     # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather

@@ -1194,6 +1194,8 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         if k_interpolant is None:
             k_interpolant = galsim.Quintic(tol=1e-4)
+        else:
+            k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         self._area_norm = area_norm
         self._k_interpolant = k_interpolant
