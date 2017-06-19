@@ -1,3 +1,4 @@
+from __future__ import print_function
 # vim: set filetype=python :
 
 import SCons
@@ -39,26 +40,26 @@ def run_tests(target, source, env):
 
     # We only run nosetests if we found nosetests in the path.
     if env['NOSETESTS']:
-        print 'Using nosetests from: ',env['NOSETESTS']
+        print('Using nosetests from: ',env['NOSETESTS'])
         cmd = env['NOSETESTS']
         # Account for SIP on El Capitan
         cmd = PrependLibraryPaths(cmd,env)
         if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
             cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
-            print 'nosetests is version %s... running tests in parallel with %d jobs'%(
-                    env['NOSETESTSVERSION'],env.GetOption('num_jobs'))
+            print('nosetests is version %s... running tests in parallel with %d jobs'%(
+                    env['NOSETESTSVERSION'],env.GetOption('num_jobs')))
             if 'BAD_BLAS' in env:
-                print
-                print 'WARNING: There is a good chance this will not work given that you seem'
-                print '         to be using a TMV installation that calls the Apple BLAS'
-                print '         library with OSX >= 10.7.  See the above warning about this.'
-                print
-            print 'If you have trouble with the parallel test run, you may disable it by typing:'
-            print '    scons tests -j1'
+                print()
+                print('WARNING: There is a good chance this will not work given that you seem')
+                print('         to be using a TMV installation that calls the Apple BLAS')
+                print('         library with OSX >= 10.7.  See the above warning about this.')
+                print()
+            print('If you have trouble with the parallel test run, you may disable it by typing:')
+            print('    scons tests -j1')
         else:
-            print 'nosetests is version %s'%env['NOSETESTSVERSION']
+            print('nosetests is version %s'%env['NOSETESTSVERSION'])
         cmd += ' test*.py'
-        print '\nStarting python tests...'
+        print('\nStarting python tests...')
         log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
         log.write('Nosetests command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
@@ -88,40 +89,40 @@ def run_tests(target, source, env):
     
         ret = py_proc.returncode
         if ret < 0:
-            print 'Nosetests terminated by signal ',-ret
+            print('Nosetests terminated by signal ',-ret)
         elif ret > 0:
-            print 'Nosetests returned error code ',ret
+            print('Nosetests returned error code ',ret)
             # Check if we are timing out from parallel jobs
             import re
             timed_out = re.search("TimedOutException", total_buf)
             if timed_out:
-                print
-                print 'WARNING: Some of these errors are TimedOutExceptions.'
-                print '         This usually indicates that you are running too many jobs in '
-                print '         parallel.  For example, you may have other jobs running on some of'
-                print '         the CPUs, which are slowing down the tests, or SCons may be '
-                print '         incorrectly detecting the number of CPUs to be more than you'
-                print '         actually have.'
-                print
-                print '         The solution is usually to run the tests with fewer jobs.'
-                print '         e.g. To use 4 jobs, write "scons -j4 tests".'
+                print()
+                print('WARNING: Some of these errors are TimedOutExceptions.')
+                print('         This usually indicates that you are running too many jobs in ')
+                print('         parallel.  For example, you may have other jobs running on some of')
+                print('         the CPUs, which are slowing down the tests, or SCons may be ')
+                print('         incorrectly detecting the number of CPUs to be more than you')
+                print('         actually have.')
+                print()
+                print('         The solution is usually to run the tests with fewer jobs.')
+                print('         e.g. To use 4 jobs, write "scons -j4 tests".')
         else:
-            print 'Nosetests finished successfully.'
+            print('Nosetests finished successfully.')
         if ret != 0:
             env.Exit(ret)
     else:
-        print
-        print 'WARNING: Could not find nosetests in path.'
-        print '         The cpp test programs will be compiled and run,'
-        print '         but you will have to run the python tests manually.'
-        print '         To do so, type: '
-        print '             cd tests '
-        print '             run_all_tests '
-        print '         If this doesn\'t end with an error, then the tests all passed.'
+        print()
+        print('WARNING: Could not find nosetests in path.')
+        print('         The cpp test programs will be compiled and run,')
+        print('         but you will have to run the python tests manually.')
+        print('         To do so, type: ')
+        print('             cd tests ')
+        print('             run_all_tests ')
+        print('         If this doesn\'t end with an error, then the tests all passed.')
 
     # Always run cpp tests
     if True:
-        print '\nStarting cpp tests...'
+        print('\nStarting cpp tests...')
         cmd = str(source[0])
         cmd = PrependLibraryPaths(cmd,env)
         cpp_proc = subprocess.Popen(
@@ -142,14 +143,14 @@ def run_tests(target, source, env):
 
         ret = cpp_proc.returncode
         if ret < 0:
-            print 'test_main terminated by signal ',-ret
+            print('test_main terminated by signal ',-ret)
         elif ret > 0:
-            print 'test_main returned error code ',ret
+            print('test_main returned error code ',ret)
         else:
-            print 'test_main finished successfully.'
+            print('test_main finished successfully.')
         if ret != 0:
             env.Exit(ret)
-    print
+    print()
 
 test_builder = Builder( action = run_tests )
 env1.Append(BUILDERS = {'RunTests' : test_builder} )
