@@ -44,6 +44,7 @@ class MultiFitsBuilder(OutputBuilder):
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
         req = { 'nimages' : int }
+        ignore += [ 'file_name', 'dir', 'nfiles' ]
         galsim.config.CheckAllParams(config, ignore=ignore, req=req)
 
         return galsim.config.BuildImages(nimages, base, image_num, obj_num, logger=logger)

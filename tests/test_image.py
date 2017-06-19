@@ -126,6 +126,7 @@ def test_Image_basic():
         assert im1.getYMax() == nrow
         assert im1.getBounds() == bounds
         assert im1.bounds == bounds
+        assert im1.getOuterBounds() == galsim.BoundsD(0.5, ncol+0.5, 0.5, nrow+0.5)
 
         # Same thing if ncol,nrow are kwargs.  Also can give init_value
         im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, init_value=23)
@@ -140,11 +141,13 @@ def test_Image_basic():
         assert im1a.getYMin() == 7
         assert im1a.getYMax() == nrow+6
         assert im1a.bounds == galsim.BoundsI(4,ncol+3,7,nrow+6)
+        assert im1a.getOuterBounds() == galsim.BoundsD(3.5, ncol+3.5, 6.5, nrow+6.5)
         assert im1b.getXMin() == 0
         assert im1b.getXMax() == ncol-1
         assert im1b.getYMin() == 0
         assert im1b.getYMax() == nrow-1
         assert im1b.bounds == galsim.BoundsI(0,ncol-1,0,nrow-1)
+        assert im1b.getOuterBounds() == galsim.BoundsD(-0.5, ncol-0.5, -0.5, nrow-0.5)
 
         # Also test alternate name of image type: ImageD, ImageF, etc.
         image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD

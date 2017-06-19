@@ -82,7 +82,6 @@ namespace {
                                   "vertex_data"))))
                 .enable_pickling()
                 ;
-            bp::register_ptr_to_python< boost::shared_ptr<Silicon> >();
             wrapTemplates<double>(pySilicon);
             wrapTemplates<float>(pySilicon);
         }

@@ -341,6 +341,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     #print('func(obj2) = ',repr(f2))
     assert f1 == f2
 
+    # Check that == works properly if the other thing isn't the same type.
+    assert f1 != object()
+    assert object() != f1
+
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
     if isinstance(obj1, Hashable):

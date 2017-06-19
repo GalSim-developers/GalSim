@@ -1,0 +1,5 @@
+# input catalog for test_variable_cat_size
+# hlr      e1    e2    x     y
+1.234    0.13   0.09  171    39
+2.345    0.08  -0.04   77   100
+3.456   -0.02   0.06  181   139
