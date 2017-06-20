@@ -90,6 +90,8 @@ Deprecated Features
 New Features
 ------------
 
+- Added new surface brightness profile, 'DeltaFunction'. This represents a
+  point source with a flux value. (#533)
 - Added `ChromaticRealGalaxy`, which can use multi-band HST-images to model
   realistic galaxies, including color gradients (#640)
 - Added `CovarianceSpectrum` to propagate noise through

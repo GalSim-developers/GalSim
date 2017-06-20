@@ -1209,6 +1209,14 @@ def test_wcs():
             'ra' : '19.3 hours',
             'dec' : '-33.1 degrees',
         },
+        'list' : {
+            'type' : 'List',
+            'items' : [
+                galsim.PixelScale(0.12),
+                { 'type': 'PixelScale', 'scale' : 0.23 },
+                { 'type': 'PixelScale', 'scale' : '0.34' }
+            ]
+        },
         # This needs to be done after 'scale2', so call it zref to make sure it happens
         # alphabetically after scale2 in a sorted list.
         'zref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
@@ -1258,6 +1266,7 @@ def test_wcs():
         'tan2' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21),
                                world_origin=galsim.CelestialCoord(19.3*galsim.hours,
                                                                   -33.1*galsim.degrees)),
+        'list' : galsim.PixelScale(0.12),
         'zref' : galsim.PixelScale(0.43).withOrigin(galsim.PositionD(22,33)),
     }
 
@@ -1285,6 +1294,14 @@ def test_wcs():
     ref = reference['shear2']
     assert wcs == ref
     assert wcs is config['image']['shear2']['current'][0]
+
+    # List should return different wcs when indexed differently.
+    config['image_num'] = 1
+    wcs = galsim.config.BuildWCS(config['image'], 'list', config)
+    assert wcs == galsim.PixelScale(0.23)
+    config['image_num'] = 2
+    wcs = galsim.config.BuildWCS(config['image'], 'list', config)
+    assert wcs == galsim.PixelScale(0.34)
 
     # Finally, check the default if there is no wcs or pixel_scale item
     wcs = galsim.config.BuildWCS(config, 'wcs', config)

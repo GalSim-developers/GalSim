@@ -43,6 +43,7 @@ impact of each detector effect separately) they take up a bit over 2G.
 
 New features introduced in this demo:
 - image.quantize()
+- obj = galsim.DeltaFunction(flux)
 - Routines to include WFIRST-specific detector effects:
   - galsim.wfirst.addReciprocityFailure(image)
   - galsim.wfirst.applyNonlinearity(image)
@@ -247,8 +248,8 @@ def main(argv):
         # a real image, one would have to choose SEDs for stars and convolve with a star that has a
         # reasonable SED, but we just draw with a flat SED for this demo.
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
-        # Approximate a point source.
-        point = galsim.Gaussian(sigma=1.e-8, flux=1.)
+        # Generate a point source.
+        point = galsim.DeltaFunction(flux=1.)
         # Use a flat SED here, but could use something else.  A stellar SED for instance.
         # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
         star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,filter_)  # Give it unit flux in this filter.

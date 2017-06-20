@@ -127,6 +127,9 @@ def check_basic_k(prof, name):
     if prof.maxK()/prof.stepK() > 2000.:
         # Don't try to draw huge images!
         kimage = prof.drawKImage(nx=2000,ny=2000)
+    elif prof.maxK()/prof.stepK() < 12.:
+        # or extremely small ones.
+        kimage = prof.drawKImage(nx=12,ny=12)
     else:
         kimage = prof.drawKImage()
     kimage.setCenter(0,0)

@@ -11,6 +11,7 @@ SBFourierSqrt.cpp
 SBTransform.cpp
 SBBox.cpp
 SBGaussian.cpp
+SBDeltaFunction.cpp
 SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp

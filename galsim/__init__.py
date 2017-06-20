@@ -116,7 +116,7 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise,
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
-from .base import Exponential, Sersic, DeVaucouleurs, Spergel
+from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
