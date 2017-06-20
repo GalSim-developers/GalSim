@@ -41,15 +41,15 @@ def BuildWCS(config, key, base, logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
 
-    if key not in config:
+    try:
+        param = config[key]
+    except KeyError:
         # Default if no wcs is to use PixelScale
         if 'pixel_scale' in config:
             scale = galsim.config.ParseValue(config, 'pixel_scale', base, float)[0]
         else:
             scale = 1.0
         return galsim.PixelScale(scale)
-
-    param = config[key]
 
     # Check for direct value, else get the wcs type
     if isinstance(param, galsim.BaseWCS):
@@ -237,6 +237,25 @@ class TanWCSBuilder(WCSBuilder):
 
         return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 
+class ListWCSBuilder(WCSBuilder):
+    """Select a wcs from a list
+    """
+    def buildWCS(self, config, base, logger):
+        req = { 'items' : list }
+        opt = { 'index' : int }
+        # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
+        galsim.config.CheckAllParams(config, req=req, opt=opt)
+        items = config['items']
+        if not isinstance(items,list):
+            raise AttributeError("items entry for type=List is not a list.")
+
+        # Setup the indexing sequence if it hasn't been specified using the length of items.
+        galsim.config.SetDefaultIndex(config, len(items))
+        index, safe = galsim.config.ParseValue(config, 'index', base, int)
+
+        if index < 0 or index >= len(items):
+            raise AttributeError("index %d out of bounds for wcs type=List"%index)
+        return BuildWCS(items, index, base)
 
 def RegisterWCSType(wcs_type, builder, input_type=None):
     """Register a wcs type for use by the config apparatus.
@@ -266,4 +285,4 @@ RegisterWCSType('UVFunction', SimpleWCSBuilder(galsim.UVFunction))
 RegisterWCSType('RaDecFunction', SimpleWCSBuilder(galsim.RaDecFunction))
 RegisterWCSType('Fits', SimpleWCSBuilder(galsim.FitsWCS))
 RegisterWCSType('Tan', TanWCSBuilder())
-
+RegisterWCSType('List', ListWCSBuilder())
