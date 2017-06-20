@@ -52,7 +52,8 @@ def test_gaussian():
                    'magnify' : 0.93,
                    'shear' : galsim.Shear(g1=-0.15, g2=0.2)
                  },
-    }
+        'gal6' : { 'type' : 'DeltaFunction' , 'flux' : 72.5 },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.Gaussian(sigma = 2)
@@ -77,6 +78,13 @@ def test_gaussian():
     gal5b = galsim.Gaussian(sigma = 1.5, flux = 72.5)
     gal5b = gal5b.rotate(-34 * galsim.degrees).lens(-0.15, 0.2, 0.93)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.DeltaFunction(flux = 72.5)
+    gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=0.01))
+    # DeltaFunction is functionally equivalent to an extremely narrow Gaussian.
+    gal6c = galsim.Gaussian(sigma = 1.e-10, flux = 72.5)
+    gsobject_compare(gal6a, gal6c, conv=galsim.Gaussian(sigma=0.01))
 
 
 @timer
