@@ -113,8 +113,8 @@ namespace galsim {
         _inclination(inclination),
         _flux(flux),
         _trunc(trunc),
-        _trunc_sq(trunc*trunc),
         _cosi(std::abs(inclination.cos())),
+        _trunc_sq(trunc*trunc),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc

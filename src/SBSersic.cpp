@@ -375,8 +375,8 @@ namespace galsim {
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
         _gamma2n(boost::math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _kderiv2(0.), _kderiv4(0.),
-        _ft(Table<double,double>::spline)
+        _ft(Table<double,double>::spline),
+        _kderiv2(0.), _kderiv4(0.)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
         dbg<<"trunc = "<<_trunc<<std::endl;
