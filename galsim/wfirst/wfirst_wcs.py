@@ -52,7 +52,7 @@ sca_yc_mm = np.array([0., 149.824, 199.250, 242.630, 138.824, 188.250, 231.630, 
                       164.923, 208.304])
 # Nominal center of FPA in this coordinate frame, in mm and as an angle.
 fpa_xc_mm = 0.0
-fpa_yc_mm = 199.250
+fpa_yc_mm = 161.447
 xc_fpa = np.arctan(fpa_xc_mm/focal_length)*galsim.radians
 yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
 
