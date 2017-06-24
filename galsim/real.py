@@ -188,13 +188,10 @@ class RealGalaxy(GSObject):
 
 
         if rng is None:
-            self.rng = galsim.BaseDeviate()
+            rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
             raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
-        else:
-            self.rng = rng
-        self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
-                                          # results in the same object.
+        self.rng = rng
 
         if flux is not None and flux_rescale is not None:
             raise TypeError("Cannot supply a flux and a flux rescaling factor!")
@@ -357,13 +354,12 @@ class RealGalaxy(GSObject):
                 self._flux == other._flux and
                 self._flux_rescale == other._flux_rescale and
                 self._area_norm == other._area_norm and
-                self._rng == other._rng and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
         return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
                      self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
-                     self._flux_rescale, self._area_norm, self._rng.serialize(), self._gsparams))
+                     self._flux_rescale, self._area_norm, self._gsparams))
 
     def __repr__(self):
         s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
@@ -381,7 +377,7 @@ class RealGalaxy(GSObject):
             s += 'flux_rescale=%r, '%self._flux_rescale
         if self._area_norm != 1:
             s += 'area_norm=%r, '%self._area_norm
-        s += 'rng=%r, '%self._rng
+        s += 'rng=%r, '%self.rng
         s += 'gsparams=%r)'%self._gsparams
         return s
 
@@ -1064,14 +1060,11 @@ class ChromaticRealGalaxy(ChromaticSum):
     def __init__(self, real_galaxy_catalogs=None, index=None, id=None, random=False, rng=None,
                  gsparams=None, logger=None, **kwargs):
         if rng is None:
-            self.rng = galsim.BaseDeviate()
+            rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
             raise TypeError("The rng provided to ChromaticRealGalaxy constructor "
                             "is not a BaseDeviate")
-        else:
-            self.rng = rng
-        self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
-                                          # results in the same object.
+        self.rng = rng
 
         if real_galaxy_catalogs is None:
             raise ValueError("No RealGalaxyCatalog(s) specified!")
@@ -1332,21 +1325,18 @@ class ChromaticRealGalaxy(ChromaticSum):
                 self.index == other.index and
                 self.SEDs == other.SEDs and
                 self._k_interpolant == other._k_interpolant and
-                self._rng == other._rng and
                 self._area_norm == other._area_norm and
                 self._gsparams == other._gsparams)
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         return hash(("galsim.ChromaticRealGalaxy", tuple(self.catalog_files), self.index,
-                     tuple(self.SEDs), self._k_interpolant, self._rng.serialize(),
-                     self._area_norm, self._gsparams))
+                     tuple(self.SEDs), self._k_interpolant, self._area_norm, self._gsparams))
 
     def __str__(self):
         return "galsim.ChromaticRealGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
 
     def __repr__(self):
-        return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
+        return ("galsim.ChromaticRealGalaxy(%r, SEDs=%r, index=%r, k_interpolant=%r, "
                 "area_norm=%r, gsparams=%r)"%(self.catalog_files, self.SEDs, self.index,
-                                                   self._rng, self._k_interpolant,
-                                                   self._area_norm, self._gsparams))
+                                              self._k_interpolant, self._area_norm, self._gsparams))
