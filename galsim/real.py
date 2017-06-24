@@ -1037,6 +1037,12 @@ class ChromaticRealGalaxy(ChromaticSum):
                             real-space profiles).  We strongly recommend leaving this parameter
                             at its default value; see text in Realgalaxy docstring for details.
                             [default: 4]
+    @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
+                            with the noise specified in the real galaxy catalog. This is
+                            important if you are planning to whiten the resulting image.  You
+                            should make sure that the padded image is larger than the postage
+                            stamp onto which you are drawing this object.
+                            [default: None]
     @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
                             When area_norm=1 (the default), drawing with `drawImage` keywords
                             exptime=1 and area=1 will simulate an image with the appropriate number
@@ -1154,6 +1160,12 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 the real-space profiles).  We strongly recommend leaving this
                                 parameter at its default value; see text in Realgalaxy docstring
                                 for details.  [default: 4]
+        @param noise_pad_size   If provided, the image will be padded out to this size (in arcsec)
+                                with the noise specified in the real galaxy catalog. This is
+                                important if you are planning to whiten the resulting image.  You
+                                should make sure that the padded image is larger than the postage
+                                stamp onto which you are drawing this object.
+                                [default: None]
         @param area_norm        Area in cm^2 by which to normalize the flux of the returned object.
                                 When area_norm=1 (the default), drawing with `drawImage` keywords
                                 exptime=1 and area=1 will simulate an image with the appropriate
@@ -1175,12 +1187,13 @@ class ChromaticRealGalaxy(ChromaticSum):
         obj = cls.__new__(cls)
         obj.index = None
         obj.catalog_files = None
+        obj.rng = kwargs.pop('rng', galsim.BaseDeviate())
         obj._initialize(images, bands, xis, PSFs, **kwargs)
         return obj
 
     def _initialize(self, imgs, bands, xis, PSFs,
                     SEDs=None, k_interpolant=None, maxk=None, pad_factor=4., area_norm=1.0,
-                    gsparams=None):
+                    noise_pad_size=0, gsparams=None):
         if SEDs is None:
             SEDs = self._poly_SEDs(bands)
         self.SEDs = SEDs
@@ -1254,8 +1267,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Get Fourier-space representations of input imgs.
         kimgs = np.empty((Nim, nk, nk), dtype=np.complex128)
 
-        for i, img in enumerate(imgs):
-            ii = galsim.InterpolatedImage(img)
+        for i, (img, xi) in enumerate(zip(imgs, xis)):
+            ii = galsim.InterpolatedImage(img, noise_pad_size=noise_pad_size, noise_pad=xi,
+                    rng=self.rng, pad_factor=pad_factor)
             kimgs[i] = ii.drawKImage(nx=nk, ny=nk, scale=stepk).array
 
         # Setup input noise power spectra

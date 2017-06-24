@@ -730,6 +730,41 @@ def test_crg_noise():
         check_crg_noise(2, 2, 10, tol=0.05)
 
 
+@timer
+def test_crg_noise_pad():
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    # If we don't use noise_pad_size, then when we draw an image larger than the original postage
+    # stamp, it gets padded with (nearly) zeros.  We can check this by measuring the variance around
+    # the edge of the image (so away from the galaxy light).
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    psf = galsim.Gaussian(fwhm=0.4)
+    obj = galsim.Convolve(crg, psf)
+    bandpass = f606w_cat.getBandpass()
+    img = obj.drawImage(bandpass, nx=24, ny=24, scale=0.2)
+
+    x = np.arange(24)
+    x, y = np.meshgrid(x, x)
+    edge = (x < 4) | (x > 19) | (y < 4) | (y > 19)
+    print(np.var(img.array[edge]))
+    edgevar = np.var(img.array[edge])
+    np.testing.assert_allclose(edgevar, 0.0, rtol=0, atol=1e-11)
+
+    # If we turn up noise_pad_size though, then the variance of the edge should match the variance
+    # computed via CRG
+    rng = galsim.BaseDeviate(577)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, rng=rng, noise_pad_size=4)
+    obj = galsim.Convolve(crg, psf)
+    img = obj.drawImage(bandpass, nx=24, ny=24, scale=0.2)
+    edgevar = np.var(img.array[edge])
+    print("expected variance: ", obj.noise.getVariance())
+    print("edge variance: ", edgevar)
+    # Not super accurate, but since we only have a handful of correlated pixels to use, that
+    # may be expected.  More detailed tests of noise in test_crg_noise() show better accuracy.
+    np.testing.assert_allclose(obj.noise.getVariance(), edgevar, atol=0, rtol=0.3)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
@@ -742,3 +777,4 @@ if __name__ == "__main__":
     test_area_norm()
     test_crg_noise_draw_transform_commutativity()
     test_crg_noise()
+    test_crg_noise_pad()
