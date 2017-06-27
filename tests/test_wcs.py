@@ -1897,6 +1897,95 @@ def test_compateq():
     assert not galsim.wcs.compatible(affine,uv2)
     assert not galsim.wcs.compatible(affine,uv3)
 
+@timer
+def test_coadd():
+    """
+    This mostly serves as an example of how to treat the WCSs properly when using
+    galsim.InterpolatedImages to make a coadd.  Not exactly what this class was designed
+    for, but since people have used it that way, it's useful to have a working example.
+    """
+    # Make three "observations" of an object on images with different WCSs.
+
+    # Three different local jacobaians.  (Even different relative flips to make the differences
+    # more obvious than just the relative rotations and distortions.)
+    jac = [
+        (0.26, 0.05, -0.08, 0.24),  # Normal orientation
+        (0.25, -0.02, 0.01, -0.24), # Flipped on y axis (e2 -> -e2)
+        (0.03, 0.27, 0.29, 0.07)    # Flipped on x=y axis (e1 -> -e1)
+        ]
+
+    # Three different centroid positions
+    pos = [
+        (123.23, 743.12),
+        (772.11, 444.61),
+        (921.37, 382.82)
+        ]
+
+    # All the same sky position
+    sky_pos = galsim.CelestialCoord(5 * galsim.hours, -25 * galsim.degrees)
+
+    # Calculate the appropriate bounds to use
+    N = 32
+    bounds = [ galsim.BoundsI(int(p[0])-N/2+1, int(p[0])+N/2,
+                              int(p[1])-N/2+1, int(p[1])+N/2) for p in pos ]
+
+    # Calculate the offset from the center
+    offset = [ galsim.PositionD(*p) - b.trueCenter() for (p,b) in zip(pos,bounds) ]
+
+    # Construct the WCSs
+    wcs = [ galsim.TanWCS(affine=galsim.AffineTransform(*j, origin=galsim.PositionD(*p)),
+                          world_origin=sky_pos) for (j,p) in zip(jac,pos) ]
+
+    # All the same galaxy profile.  (NB: I'm ignoring the PSF here.)
+    gal = galsim.Exponential(half_light_radius=1.3, flux=456).shear(g1=0.4,g2=0.3)
+
+    # Draw the images
+    # NB: no_pixel here just so it's easier to check the shear values at the end without having
+    #     to account for the dilution by the pixel convolution.
+    images = [ gal.drawImage(image=galsim.Image(b, wcs=w), offset=o, method='no_pixel')
+               for (b,w,o) in zip(bounds,wcs,offset) ]
+
+    # Measured moments should have very different shears, and accurate centers
+    mom0 = images[0].FindAdaptiveMom()
+    print('im0: observed_shape = ',mom0.observed_shape,'  center = ',mom0.moments_centroid)
+    assert mom0.observed_shape.e1 > 0
+    assert mom0.observed_shape.e2 > 0
+    np.testing.assert_almost_equal(mom0.moments_centroid.x, pos[0][0], decimal=1)
+    np.testing.assert_almost_equal(mom0.moments_centroid.y, pos[0][1], decimal=1)
+
+    mom1 = images[1].FindAdaptiveMom()
+    print('im1: observed_shape = ',mom1.observed_shape,'  center = ',mom1.moments_centroid)
+    assert mom1.observed_shape.e1 > 0
+    assert mom1.observed_shape.e2 < 0
+    np.testing.assert_almost_equal(mom1.moments_centroid.x, pos[1][0], decimal=1)
+    np.testing.assert_almost_equal(mom1.moments_centroid.y, pos[1][1], decimal=1)
+
+    mom2 = images[2].FindAdaptiveMom()
+    print('im2: observed_shape = ',mom2.observed_shape,'  center = ',mom2.moments_centroid)
+    assert mom2.observed_shape.e1 < 0
+    assert mom2.observed_shape.e2 > 0
+    np.testing.assert_almost_equal(mom2.moments_centroid.x, pos[2][0], decimal=1)
+    np.testing.assert_almost_equal(mom2.moments_centroid.y, pos[2][1], decimal=1)
+
+    # Make an empty image for the coadd
+    coadd_image = galsim.Image(48,48, scale=0.2)
+
+    for p, im in zip(pos,images):
+        # Make sure we tell the profile where we think the center of the object is on the image.
+        offset = galsim.PositionD(*p) - im.trueCenter()
+        interp = galsim.InterpolatedImage(im, offset=offset)
+        # Here the no_pixel is required.  The InterpolatedImage already has pixels so we
+        # don't want to convovle by a pixel response again.
+        interp.drawImage(coadd_image, add_to_image=True, method='no_pixel')
+
+    mom = coadd_image.FindAdaptiveMom()
+    print('coadd: observed_shape = ',mom.observed_shape,'  center = ',mom.moments_centroid)
+    np.testing.assert_almost_equal(mom.observed_shape.g1, 0.4, decimal=2)
+    np.testing.assert_almost_equal(mom.observed_shape.g2, 0.3, decimal=2)
+    np.testing.assert_almost_equal(mom.moments_centroid.x, 24.5, decimal=2)
+    np.testing.assert_almost_equal(mom.moments_centroid.y, 24.5, decimal=2)
+
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
@@ -1910,3 +1999,4 @@ if __name__ == "__main__":
     test_fitswcs()
     test_scamp()
     test_compateq()
+    test_coadd()
