@@ -110,14 +110,14 @@ from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from .random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from .noise import DeviateNoise, VariableGaussianNoise
-from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
+from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise, CovarianceSpectrum
 
 # GSObject
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
-from .real import RealGalaxy, RealGalaxyCatalog, simReal
+from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
@@ -125,7 +125,7 @@ from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from .interpolatedimage import InterpolatedImage, InterpolatedKImage
+from .interpolatedimage import InterpolatedImage, InterpolatedKImage, _InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile

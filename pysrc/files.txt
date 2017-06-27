@@ -32,4 +32,5 @@ CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp
 Silicon.cpp
+RealGalaxy.cpp
 WCS.cpp

@@ -207,15 +207,14 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& kimage, double dk, double stepk,
+            const BaseImage<T>& kimage, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data,
-            double dk, double stepk, double maxk,
+            double stepk, double maxk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         ~SBInterpolatedKImageImpl();
@@ -239,6 +238,7 @@ namespace galsim {
         // a table.  We do not currently implement xValue for real-space interpolation.
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
+        void setCentroid() const;
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
         double maxSB() const;
@@ -250,8 +250,6 @@ namespace galsim {
         // Additional subclass methods
 
         ConstImageView<double> getKData() const;
-        double dK() const {return _dk;}
-        bool cenIsSet() const {return _cenIsSet;}
 
     protected:
 
@@ -265,9 +263,6 @@ namespace galsim {
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;
-
-        double _dk; ///< Pitch of stored KTable
-        mutable bool _cenIsSet;
 
         std::string serialize() const;
 

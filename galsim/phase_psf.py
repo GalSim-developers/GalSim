@@ -1095,7 +1095,7 @@ class PhaseScreenPSF(GSObject):
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
-        GSObject.__init__(self, dummy_obj)
+        GSObject.__init__(self, dummy_obj.SBProfile)
 
         self._screen_list._delayCalculation(self)
 
@@ -1207,7 +1207,7 @@ class PhaseScreenPSF(GSObject):
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
 
-        GSObject.__init__(self, self.ii)
+        GSObject.__init__(self, self.ii.SBProfile)
 
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
@@ -1239,7 +1239,7 @@ class PhaseScreenPSF(GSObject):
                                            _serialize_stepk=self._serialize_stepk,
                                            _serialize_maxk=self._serialize_maxk,
                                            gsparams=self._gsparams)
-        GSObject.__init__(self, self.ii)
+        GSObject.__init__(self, self.ii.SBProfile)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -1588,7 +1588,7 @@ class OpticalPSF(GSObject):
                                           ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-        GSObject.__init__(self, self._psf)
+        GSObject.__init__(self, self._psf.SBProfile)
 
     def getFlux(self):
         return self._flux
@@ -1666,7 +1666,7 @@ class OpticalPSF(GSObject):
                                           _force_stepk=self._force_stepk,
                                           ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-        GSObject.__init__(self, self._psf)
+        GSObject.__init__(self, self._psf.SBProfile)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.

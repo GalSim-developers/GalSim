@@ -67,6 +67,7 @@ namespace galsim {
     void pyExportCorrelationFunction();
     void pyExportCDModel();
     void pyExportSilicon();
+    void pyExportRealGalaxy();
     void pyExportWCS();
 
     namespace hsm {
@@ -120,5 +121,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportTable2D();
     galsim::bessel::pyExportBessel();
     galsim::pyExportSilicon();
+    galsim::pyExportRealGalaxy();
     galsim::pyExportWCS();
 }

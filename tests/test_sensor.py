@@ -319,7 +319,7 @@ def test_silicon_fft():
     im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
 
     rng = galsim.BaseDeviate(5678)
-    silicon = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)    
+    silicon = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
     simple = galsim.Sensor()
 
     obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
@@ -393,8 +393,8 @@ def test_sensor_wavelengths_and_angles():
     print('Starting test_wavelengths_and_angles')
     sys.stdout.flush()
 
-    bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    sedpath = os.path.abspath(os.path.join(path, "../share/"))
+    bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+    sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
     sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
 
     # Add the directions (not currently working?? seems to work - CL)
@@ -414,7 +414,7 @@ def test_sensor_wavelengths_and_angles():
         rng3 = galsim.BaseDeviate(1234)
         sampler = galsim.WavelengthSampler(sed, bandpass, rng3)
         rng4 = galsim.BaseDeviate(5678)
-        silicon = galsim.SiliconSensor(rng=rng4, diffusion_factor=0.0)    
+        silicon = galsim.SiliconSensor(rng=rng4, diffusion_factor=0.0)
 
         # We'll draw the same object using SiliconSensor
         im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon, no wavelengths

@@ -495,7 +495,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     """
     if bps is None:
         # load a filter
-        bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+        bppath = os.path.join(galsim.meta_data.share_dir, 'bandpasses')
         bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
                     .truncate(relative_throughput=1e-3)
                     .thin(rel_err=1e-3))

@@ -58,8 +58,12 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
 
         # Don't transform ChromaticSum object, better to just transform the arguments.
         if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
-            return galsim.ChromaticSum(
+            new_obj = galsim.ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
+            if hasattr(obj, 'covspec'):
+                dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
+                new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
+            return new_obj
 
         # If we are just flux scaling, then a Convolution can do that to the first element.
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
@@ -146,6 +150,20 @@ class Transformation(galsim.GSObject):
         """Return the flux ratio of the transformation.
         """
         return self._flux_ratio
+
+    @galsim.utilities.lazy_property
+    def noise(self):
+        if self.original.noise is None:
+            return None
+        else:
+            jac = self.SBProfile.getJac()
+            flux_ratio = self.SBProfile.getFluxScaling()
+            return galsim.correlatednoise._BaseCorrelatedNoise(
+                    self.original.noise.rng,
+                    galsim._Transform(self.original.noise._profile,
+                                      jac[0], jac[1], jac[2], jac[3],
+                                      flux_ratio=flux_ratio**2),
+                    self.original.noise.wcs)
 
     @property
     def original(self): return self._original

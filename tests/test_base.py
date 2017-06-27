@@ -140,7 +140,7 @@ def test_gaussian():
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
-    do_pickle(galsim.GSObject(gauss), irreprable=True)
+    do_pickle(galsim.GSObject(gauss.SBProfile), irreprable=True)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -150,6 +150,11 @@ def test_gaussian():
         np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
     except ImportError:
         pass
+
+    # Finally, test the noise property for things that don't have any noise set.
+    assert gauss.noise is None
+    # And accessing the attribute from the class should indicate that it is a lazyproperty
+    assert 'lazy_property' in str(galsim.GSObject.noise)
 
 
 @timer

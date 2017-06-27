@@ -20,15 +20,15 @@ from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
 try:
     import galsim
 except ImportError:
     import sys
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 # from pylab import *
 # def plotme(image):
@@ -59,15 +59,9 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
-            .truncate(relative_throughput=1e-3)
-            .thin(rel_err=1e-3))
-bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm')
-              .truncate(relative_throughput=1e-3)
-              .thin(rel_err=1e-3))
-bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm')
-              .truncate(relative_throughput=1e-3)
-              .thin(rel_err=1e-3))
+bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm'))
+bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm'))
+bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm'))
 
 # load some spectra
 bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
@@ -125,20 +119,13 @@ def test_draw_add_commutativity():
     # final profile
     final = galsim.Convolve([GS_gal, PSF])
     GS_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    GS_kimage = galsim.ImageCD(stamp_size, stamp_size, scale=pixel_scale)
     t2 = time.time()
     GS_image = final.drawImage(image=GS_image)
+    GS_kimage = final.drawKImage(image=GS_kimage)
     t3 = time.time()
-    print('GS_object.drawImage() took {0} seconds.'.format(t3-t2))
+    print('GS_object drawImage, drawKImage took {0} seconds.'.format(t3-t2))
     # plotme(GS_image)
-
-    # As an aside, check for appropriate tests of 'integrator' argument.
-    try:
-        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
-                                 integrator='midp') # minor misspelling
-        np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
-                                 integrator=galsim.integ.midpt)
-    except ImportError:
-        print('The assert_raises tests require nose')
 
     #------------------------------------------------------------------------------
     # Use galsim.chromatic to generate chromaticity.  Internally, this module draws
@@ -174,6 +161,7 @@ def test_draw_add_commutativity():
     # final profile
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF])
     chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
+    chromatic_kimage = galsim.ImageCD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
     integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
@@ -185,17 +173,39 @@ def test_draw_add_commutativity():
     #     implementation, so those had to be switched as well.
     galsim.ChromaticObject.drawImage(chromatic_final, bandpass, image=chromatic_image,
                                      integrator=integrator)
+    galsim.ChromaticObject.drawKImage(chromatic_final, bandpass, image=chromatic_kimage,
+                                      integrator=integrator)
     t5 = time.time()
-    print('ChromaticObject.drawImage() took {0} seconds.'.format(t5-t4))
+    print('ChromaticObject drawImage, drawKImage took {0} seconds.'.format(t5-t4))
     # plotme(chromatic_image)
 
-    peak1 = chromatic_image.array.max()
-
+    peak = chromatic_image.array.max()
     printval(GS_image, chromatic_image)
     np.testing.assert_array_almost_equal(
-        chromatic_image.array/peak1, GS_image.array/peak1, 6,
+        chromatic_image.array/peak, GS_image.array/peak, 6,
         err_msg="Directly computed chromatic image disagrees with image created using "
                 +"galsim.chromatic")
+
+    kpeak = chromatic_kimage.array.real.max()
+    np.testing.assert_array_almost_equal(
+        chromatic_kimage.array/kpeak, GS_kimage.array/kpeak, 6,
+        err_msg="Directly computed chromatic kimage disagrees with kimage created using "
+                +"galsim.chromatic")
+
+    # As an aside, check for appropriate tests of 'integrator' argument.
+    try:
+        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                                 integrator='midp') # minor misspelling
+        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                                 integrator=galsim.integ.midpt)
+        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                                 integrator=galsim.integ.midpt)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
 
 
 @timer
@@ -234,8 +244,10 @@ def test_ChromaticConvolution_InterpolatedImage():
     print('Flux when integrating first, convolving second: {0}'.format(II_flux))
     print('Flux when convolving first, integrating second: {0}'.format(D_flux))
     printval(II_image, D_image)
+    # This used to work with decimal=5, but is apparently sensitive to the particular details of the
+    # bandpass thinning used.  decimal=4 is still good though.
     np.testing.assert_array_almost_equal(
-        II_image.array, D_image.array, 5,
+        II_image.array, D_image.array, 4,
         err_msg="ChromaticConvolution draw not equivalent to regular draw")
 
     # Check flux scaling
@@ -1112,7 +1124,8 @@ def test_analytic_integrator():
     """Test that the analytic (i.e., not sampled) versions of SEDs and Bandpasses produce the
     same results as the sampled versions.
     """
-    psf = galsim.Moffat(fwhm=1.0, beta=2.7)
+    # Make sure to use something non-separable so the ImageIntegrators actually get triggered.
+    psf = galsim.ChromaticObject(galsim.Moffat(fwhm=1.0, beta=2.7)).dilate(lambda w:(w/500)**1.1)
 
     # pure analytic
     band1 = galsim.Bandpass('1', 'nm', blue_limit=500, red_limit=750)
@@ -1120,9 +1133,13 @@ def test_analytic_integrator():
     gal1 = galsim.Gaussian(fwhm=1.0) * sed1
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
+    kimage1 = galsim.ImageCD(32, 32, scale=0.2)
+    kimage1.setCenter(0,0)  # Necessary when adding to image
     assert len(band1.wave_list) == 0
     assert len(sed1.wave_list) == 0
-    final1.drawImage(band1, image=image1)
+    # Gratuitously use add_to_image=True so we test that branch.  Initial image is 0.
+    final1.drawImage(band1, image=image1, add_to_image=True)
+    final1.drawKImage(band1, image=kimage1, add_to_image=True)
 
     # try making the SED sampled
     band2 = band1
@@ -1135,9 +1152,11 @@ def test_analytic_integrator():
     gal2 = galsim.Gaussian(fwhm=1.0) * sed2
     final2 = galsim.Convolve(gal2, psf)
     image2 = galsim.ImageD(32, 32, scale=0.2)
+    kimage2 = galsim.ImageCD(32, 32, scale=0.2)
     assert len(band2.wave_list) == 0
     assert len(sed2.wave_list) != 0
     final2.drawImage(band1, image=image2)
+    final2.drawKImage(band1, image=kimage2)
 
     # try making the Bandpass sampled
     sed3 = sed1
@@ -1145,15 +1164,22 @@ def test_analytic_integrator():
     gal3 = galsim.Gaussian(fwhm=1.0) * sed3
     final3 = galsim.Convolve(gal3, psf)
     image3 = galsim.ImageD(32, 32, scale=0.2)
+    kimage3 = galsim.ImageCD(32, 32, scale=0.2)
     assert len(band3.wave_list) != 0
     assert len(sed3.wave_list) == 0
     final3.drawImage(band3, image=image3)
+    final3.drawKImage(band3, image=kimage3)
 
     printval(image1, image2)
     np.testing.assert_array_almost_equal(image1.array, image2.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
     printval(image1, image3)
     np.testing.assert_array_almost_equal(image1.array, image3.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+
+    np.testing.assert_array_almost_equal(kimage1.array, kimage2.array, 5,
+                                         "Analytic integrator doesn't match sample integrator")
+    np.testing.assert_array_almost_equal(kimage1.array, kimage3.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
 
 
@@ -1195,21 +1221,29 @@ def test_separable_ChromaticSum():
     # 1) check that 2 summands with same SED make a separable sum.
     cgal1 = mono_gal1 * bulge_SED + mono_gal2 * bulge_SED
     img1 = galsim.ImageD(32, 32, scale=0.2)
+    kimg1 = galsim.ImageCD(32, 32, scale=0.5)
     if not cgal1.separable:
         raise AssertionError("failed to identify separable ChromaticSum")
 
     # check that drawing the profile works as expected
     final1 = galsim.Convolve(cgal1, psf)
     final1.drawImage(bandpass, image=img1)
+    final1.drawKImage(bandpass, image=kimg1)
 
     img1b = img1.copy()
+    kimg1b = kimg1.copy()
     component1 = galsim.Convolve(mono_gal1*bulge_SED, psf)
     component1.drawImage(bandpass, image=img1b)
+    component1.drawKImage(bandpass, image=kimg1b)
+
     component2 = galsim.Convolve(mono_gal2*bulge_SED, psf)
     component2.drawImage(bandpass, image=img1b, add_to_image=True)
+    component2.drawKImage(bandpass, image=kimg1b, add_to_image=True)
 
     np.testing.assert_array_almost_equal(img1.array, img1b.array, 5,
                                          "separable ChromaticSum not correctly drawn")
+    np.testing.assert_array_almost_equal(kimg1.array, kimg1b.array, 5,
+                                         "separable ChromaticSum not correctly k-drawn")
     do_pickle(final1)
 
     # 2) Check flux scaling
@@ -1370,6 +1404,14 @@ def test_interpolated_ChromaticObject():
         im_interp.array, im_exact.array, decimal=4,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
+    # Check kimage with midpoint rule too, also non-default.
+    kscale = 2*np.pi/(scale*40)
+    kim_exact = exact_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40)
+    kim_interp = interp_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40, integrator='midpoint')
+    np.testing.assert_allclose(
+        kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
+
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.deinterpolated
     other_obj = galsim.Convolve(star, other_psf)
@@ -1434,6 +1476,16 @@ def test_interpolated_ChromaticObject():
         im_interp.array, im_exact.array, decimal=3,
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
+
+    # Check that InterpolatedChromaticObject.drawImage works.  Need an exact object with
+    # an SED for this to work.
+    exact_psf *= bulge_SED
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
+    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
+    im_interp = interp_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=3,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
 
     # Check that we can render an image with chromatic transformations directly, and with
     # interpolation.  Use a ChromaticAtmosphere just because that's easily transformed.
@@ -1532,7 +1584,6 @@ def test_interpolated_ChromaticObject():
 def test_ChromaticOpticalPSF():
     """Test the ChromaticOpticalPSF functionality."""
     import time
-    t1 = time.time()
 
     # For ChromaticOpticalPSF, exact evaluation is too slow for routine unit tests.  So, for
     # this unit test, we use an interpolated version only.  The tests of
@@ -1609,12 +1660,12 @@ def test_ChromaticOpticalPSF():
     t7 = time.time()
     print("Time to draw InterpolatedChromaticObject: {0}s".format(t7-t6))
     printval(im_r, im_r_ref)
-    np.testing.assert_almost_equal(
-        im_r.array.sum()/im_r_ref.array.sum(), 1.0, decimal=3,
-        err_msg='Interpolated ChromaticOpticalPSF total flux disagrees with reference in r band')
-    np.testing.assert_almost_equal(
-        im_r.array.max()/im_r_ref.array.max(), 1.0, decimal=3,
-        err_msg='Interpolated ChromaticOpticalPSF peak flux disagrees with reference in r band')
+    # Check that arrays agree to within 1e-4 of integrated flux
+    np.testing.assert_allclose(im_r.array, im_r_ref.array, atol=1e-4*im_r_ref.array.sum())
+    # Check sums to 1e-3 of sum
+    np.testing.assert_allclose(im_r.array.sum(), im_r_ref.array.sum(), atol=1e-3*im_r.array.sum())
+    # Check peak to 1e-3 of peak
+    np.testing.assert_allclose(im_r.array.max(), im_r_ref.array.max(), atol=1e-3*im_r.array.max())
 
     im_r_ref /= im_r_ref.array.max()
     im_r /= im_r.array.max()
@@ -1757,17 +1808,16 @@ def test_chromatic_image_setup():
     # tested in other scripts above anyway, so just focus on possibilities related to known previous
     # failures here; specifically, drawing a convolution of two inseparable profiles while
     # specifying `nx`, `ny`, and `scale` as keywords.
-    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass)
-    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
+    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
     bds = galsim.BoundsI(1, 32, 1, 32)
-    img3 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
-    np.testing.assert_array_equal(img2.array.shape, (32, 32),
+    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
+    np.testing.assert_array_equal(img.array.shape, (32, 32),
                                   "Got wrong size output image using nx=, ny= keywords.")
-    np.testing.assert_array_equal(img3.array.shape, (32, 32),
+    np.testing.assert_array_equal(img2.array.shape, (32, 32),
                                   "Got wrong size output image using bounds= keyword.")
-    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
+    np.testing.assert_almost_equal(img.scale, 0.2, 9,
                                    "Got wrong output image scale using nx=, ny= keywords.")
-    np.testing.assert_almost_equal(img3.scale, 0.2, 9,
+    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
                                    "Got wrong output image scale using bounds= keyword.")
 
 

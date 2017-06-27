@@ -30,9 +30,8 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 
 @timer
@@ -335,8 +334,7 @@ def test_SED_atRedshift():
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
-    a = galsim.SED(os.path.join(sedpath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
-                   flux_type='flambda')
+    a = galsim.SED('CWW_Scd_ext.sed', wave_type='nanometers', flux_type='flambda')
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
         w1 = b.wave_list[0]
@@ -503,8 +501,9 @@ def test_SED_calculateMagnitude():
     # http://www.astronomy.ohio-state.edu/~martini/usefuldata.html
     # Almost certainly, the LSST filters and the filters used on this website are not perfect
     # matches, but should give some idea of the expected conversion between Vega magnitudes and AB
-    # magnitudes.  The results are consistent to 0.1 magnitudes, which is encouraging, but the true
-    # accuracy of the get/set magnitude algorithms is probably much better than this.
+    # magnitudes.  Except for u-band, the results are consistent to 0.1 magnitudes, which is
+    # encouraging, but the true accuracy of the get/set magnitude algorithms is probably much better
+    # than this.
     ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
     filter_names = 'ugrizy'
     sed = sed.atRedshift(0.0)
@@ -516,8 +515,8 @@ def test_SED_calculateMagnitude():
                          .withZeropoint('vega'))
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
-        assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
-
+        thresh = 0.3 if filter_name == 'u' else 0.1
+        assert (abs((AB_mag - vega_mag) - conversion) < thresh)
 
 @timer
 def test_SED_calculateDCRMomentShifts():

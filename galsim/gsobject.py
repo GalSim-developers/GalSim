@@ -206,16 +206,14 @@ class GSObject(object):
                   'range_division_for_extrema' : int,
                   'small_fraction_of_flux' : float
                 }
-    def __init__(self, obj):
-        # This guarantees that all GSObjects have an SBProfile
-        if isinstance(obj, GSObject):
-            self.SBProfile = obj.SBProfile
-            if hasattr(obj,'noise'):
-                self.noise = obj.noise
-        elif isinstance(obj, _galsim.SBProfile):
-            self.SBProfile = obj
-        else:
-            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
+    def __init__(self, sbp):
+        if not isinstance(sbp, _galsim.SBProfile):
+            raise TypeError("GSObject must be initialized with an SBProfile!")
+        self.SBProfile = sbp
+
+    @galsim.utilities.lazy_property
+    def noise(self):
+        return None
 
     # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
     @property
@@ -627,11 +625,7 @@ class GSObject(object):
         if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, galsim.SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
-        new_obj = galsim.Transform(self, flux_ratio=flux_ratio)
-
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
-            new_obj.noise = self.noise * flux_ratio**2
-        return new_obj
+        return galsim.Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
@@ -653,11 +647,7 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale)
-        return new_obj
+        return galsim.Transform(self, jac=[scale, 0., 0., scale])
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given `scale` factor, while preserving
@@ -673,11 +663,7 @@ class GSObject(object):
         @returns the dilated object.
         """
         # equivalent to self.expand(scale) * (1./scale**2)
-        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.expand(scale) * scale**-4
-        return new_obj
+        return galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -726,11 +712,7 @@ class GSObject(object):
             raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
             shear = galsim.Shear(**kwargs)
-        new_obj = galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.shear(shear)
-        return new_obj
+        return galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
 
     def _shear(self, shear):
         """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
@@ -777,11 +759,7 @@ class GSObject(object):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
-        new_obj = galsim.Transform(self, jac=[c, -s, s, c])
-
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.rotate(theta)
-        return new_obj
+        return galsim.Transform(self, jac=[c, -s, s, c])
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -809,10 +787,7 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
-        if hasattr(self, 'noise'):
-            new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
-        return new_obj
+        return galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
@@ -848,11 +823,7 @@ class GSObject(object):
         @returns the shifted object.
         """
         offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        new_obj = galsim.Transform(self, offset=offset)
-
-        if hasattr(self,'noise'):
-            new_obj.noise = self.noise
-        return new_obj
+        return galsim.Transform(self, offset=offset)
 
     def _shift(self, offset):
         """Equivalent to self.shift(shift), but without the overhead of sanity checks or option
@@ -1967,9 +1938,8 @@ class GSObject(object):
         ud = galsim.UniformDeviate(rng)
         return self.SBProfile.shoot(int(n_photons), ud)
 
-
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, recenter=True,
+                   add_to_image=False, recenter=True, setup_only=False,
                    dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
@@ -2083,6 +2053,10 @@ class GSObject(object):
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype,
                                            odd=True, wmult=wmult)
 
+        # Can't both recenter a provided image and add to it.
+        if recenter and image.center() != galsim.PositionI(0,0) and add_to_image:
+            raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
+
         # Set the center to 0,0 if appropriate
         if recenter and image.center() != galsim.PositionI(0,0):
             image._shift(-image.center())
@@ -2103,6 +2077,9 @@ class GSObject(object):
             im.scale = image.scale
             re.setOrigin(image.origin())
             im.setOrigin(image.origin())
+
+        if setup_only:
+            return image
 
         self.SBProfile.drawK(image.image.view(), dk, add_to_image)
 

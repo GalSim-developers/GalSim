@@ -136,24 +136,36 @@ class Sum(galsim.GSObject):
                 raise TypeError("Single input argument must be a GSObject or list of them.")
         # else args is already the list of objects
 
+        # Consolidate args for Sums of Sums...
+        new_args = []
+        for a in args:
+            if isinstance(a, Sum):
+                new_args.extend(a._obj_list)
+            else:
+                new_args.append(a)
+        args = new_args
+
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
-        # If any of the objects have a noise attribute, then we propagate the sum of the
-        # noises (they add like variances) to the final sum.
-        noise = None
         for obj in args:
             if not isinstance(obj, galsim.GSObject):
                 raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
-            if hasattr(obj,'noise') and obj.noise is not None:
-                if noise is None:
-                    noise = obj.noise
-                else:
-                    noise += obj.noise
         SBList = [obj.SBProfile for obj in args]
         galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
-        if noise is not None:
-            self.noise = noise
+
+    @galsim.utilities.lazy_property
+    def noise(self):
+        # If any of the objects have a noise attribute, then we propagate the sum of the
+        # noises (they add like variances) to the final sum.
+        _noise = None
+        for obj in self._obj_list:
+            if obj.noise is not None:
+                if _noise is None:
+                    _noise = obj.noise
+                else:
+                    _noise += obj.noise
+        return _noise
 
     @property
     def obj_list(self): return self._obj_list
@@ -417,24 +429,6 @@ class Convolution(galsim.GSObject):
                         real_space = False
                         break
 
-        # If one of the objects has a noise attribute, then we convolve it by the others.
-        # More than one is not allowed.
-        noise = None
-        for obj in args:
-            if hasattr(obj,'noise') and obj.noise is not None:
-                if noise is not None:
-                    import warnings
-                    warnings.warn("Unable to propagate noise in galsim.Convolution when multiple "+
-                                  "objects have noise attribute")
-                    break
-                noise = obj.noise
-                others = [ obj2 for obj2 in args if obj2 is not obj ]
-                assert len(others) > 0
-                if len(others) == 1:
-                    noise = noise.convolvedWith(others[0])
-                else:
-                    noise = noise.convolvedWith(galsim.Convolve(others))
-
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
         self._real_space = real_space
@@ -444,8 +438,27 @@ class Convolution(galsim.GSObject):
         SBList = [ obj.SBProfile for obj in args ]
         sbp = galsim._galsim.SBConvolve(SBList, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if noise is not None:
-            self.noise = noise
+
+    @galsim.utilities.lazy_property
+    def noise(self):
+        # If one of the objects has a noise attribute, then we convolve it by the others.
+        # More than one is not allowed.
+        _noise = None
+        for i, obj in enumerate(self._obj_list):
+            if obj.noise is not None:
+                if _noise is not None:
+                    import warnings
+                    warnings.warn("Unable to propagate noise in galsim.Convolution when "
+                                  "multiple objects have noise attribute")
+                    break
+                _noise = obj.noise
+                others = [ obj2 for k, obj2 in enumerate(self._obj_list) if k != i ]
+                assert len(others) > 0
+                if len(others) == 1:
+                    _noise = _noise.convolvedWith(others[0])
+                else:
+                    _noise = _noise.convolvedWith(galsim.Convolve(others))
+        return _noise
 
     @property
     def obj_list(self): return self._obj_list
@@ -577,7 +590,7 @@ class Deconvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise') and obj.noise is not None:
+        if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
 
@@ -706,7 +719,7 @@ class AutoConvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise') and obj.noise is not None:
+        if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
@@ -865,7 +878,7 @@ class AutoCorrelation(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise') and obj.noise is not None:
+        if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
 
@@ -1005,7 +1018,7 @@ class FourierSqrtProfile(galsim.GSObject):
 
         sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise') and obj.noise is not None:
+        if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
 
@@ -1144,8 +1157,8 @@ class RandomWalk(galsim.GSObject):
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
 
-        gsobj = galsim._galsim.SBAdd(self._gaussians, gsparams)
-        galsim.GSObject.__init__(self, gsobj)
+        sbp = galsim._galsim.SBAdd(self._gaussians, gsparams)
+        galsim.GSObject.__init__(self, sbp)
 
     def calculateHLR(self):
         """

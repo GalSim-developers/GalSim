@@ -11,6 +11,8 @@ install_subdir = 'share/galsim'
 
 files = glob.glob('*')     # Everything
 files.remove('SConscript') # except this file.
+sed_files = glob.glob('SEDs/*')
+bp_files = glob.glob('bandpasses/*')
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']
@@ -19,7 +21,7 @@ else:
     install_dir = Dir('#.').abspath
     share_dir = Dir('#share').abspath
 
-# Write file share_dir.py to have the correct 
+# Write file share_dir.py to have the correct
 meta_data_file = os.path.join('..','galsim','meta_data.py')
 try:
     f = open(meta_data_file,'w')
@@ -40,8 +42,10 @@ f.close()
 
 if 'install' in COMMAND_LINE_TARGETS:
     RunInstall(env, files, install_subdir)
+    RunInstall(env, sed_files, install_subdir+'/SEDs')
+    RunInstall(env, bp_files, install_subdir+'/bandpasses')
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     RunUninstall(env, files, install_subdir)
-
-
+    RunUninstall(env, sed_files, install_subdir+'/SEDs')
+    RunUninstall(env, bp_files, install_subdir+'/bandpasses')
