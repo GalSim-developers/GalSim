@@ -154,16 +154,17 @@ class SED(object):
         # Finish re-evaluating __init__() here.
         if _wave_list is not None:
             self.wave_list = _wave_list
-            self.blue_limit = _blue_limit
-            self.red_limit = _red_limit
+            # Cast numpy.float to python float for more consistent reprs
+            self.blue_limit = None if _blue_limit is None else float(_blue_limit)
+            self.red_limit = None if _blue_limit is None else float(_red_limit)
             return
 
         if isinstance(self._spec, galsim.LookupTable):
             self.wave_list = ((self._spec.getArgs() * self.wave_type)
                               .to(units.nm, units.spectral()).value)
             self.wave_list *= (1.0 + self.redshift)
-            self.blue_limit = np.min(self.wave_list)
-            self.red_limit = np.max(self.wave_list)
+            self.blue_limit = float(np.min(self.wave_list))
+            self.red_limit = float(np.max(self.wave_list))
         else:
             self.blue_limit = None
             self.red_limit = None
