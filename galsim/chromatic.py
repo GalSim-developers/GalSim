@@ -1757,9 +1757,10 @@ class ChromaticSum(ChromaticObject):
         # impossible to identify if two SEDs are proportional (or even equal) unless they point to
         # the same memory, so we just accept this limitation.
 
-        # Each input summand will either end up in norm_dict if it's separable, or in self.objlist
-        # if it's inseparable.
-        SED_dict = {}
+        # Each input summand will either end up in SED_dict if it's separable, or in self.objlist
+        # if it's inseparable.  Use an OrderedDict to ensure deterministic results.
+        from collections import OrderedDict
+        SED_dict = OrderedDict()
         self.objlist = []
         for obj in args:
             if obj.separable:
