@@ -407,8 +407,7 @@ def BasicCCFlags(env):
             else:
                 env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-std=c++98','-fno-strict-aliasing'])
-            sse_flags = ['-msse2', '-msse']
+            env.Append(CCFLAGS=['-std=c++98'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
