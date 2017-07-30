@@ -22,6 +22,7 @@ import numpy as np
 from galsim_test_helpers import timer, do_pickle, all_obj_diff
 import sys
 from astropy import units
+from astropy import constants
 
 try:
     import galsim
@@ -38,8 +39,8 @@ sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 def test_SED_basic():
     """Basic tests of SED functionality
     """
-    c = 2.99792458e17  # speed of light in nm/s
-    h = 6.62606957e-27 # Planck's constant in erg seconds
+    c = constants.c.to('nm / s').value # speed of light
+    h = constants.h.to('erg s').value # Plank's constant
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
