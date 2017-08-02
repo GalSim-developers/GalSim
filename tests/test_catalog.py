@@ -88,7 +88,7 @@ def test_basic_dict():
     try:
         import yaml
     except ImportError as e:
-        # Raise a warning so this message shows up when doing nosetests (or scons tests).
+        # Raise a warning so this message shows up when doing pytest (or scons tests).
         import warnings
         warnings.warn("Unable to import yaml.  Skipping yaml tests")
         print("Caught ",e)

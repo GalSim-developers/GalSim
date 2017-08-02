@@ -33,21 +33,21 @@ obj_list = env1.StaticObject(cpp_list)
 cpp_test_name = os.path.join('#bin','test_main')
 cpp_test = env1.Program( cpp_test_name , ['test_main.cpp' , obj_list] )
 
-# Define an action for running nosetests, storing the output in a log file
+# Define an action for running pytest, storing the output in a log file
 def run_tests(target, source, env):
 
     log = open(str(target[0]),'w')
 
-    # We only run nosetests if we found nosetests in the path.
-    if env['NOSETESTS']:
-        print('Using nosetests from: ',env['NOSETESTS'])
-        cmd = env['NOSETESTS']
+    # We only run pytest if we found pytest in the path.
+    if env['PYTEST']:
+        print('Using pytest from: ',env['PYTEST'])
+        cmd = env['PYTEST']
         # Account for SIP on El Capitan
         cmd = PrependLibraryPaths(cmd,env)
-        if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
-            cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
-            print('nosetests is version %s... running tests in parallel with %d jobs'%(
-                    env['NOSETESTSVERSION'],env.GetOption('num_jobs')))
+        if env.GetOption('num_jobs') > 1:
+            cmd += ' -n=%d --timeout=60'%(env.GetOption('num_jobs'))
+            print('pytest is version %s... running tests in parallel with %d jobs'%(
+                    env['PYTESTVERSION'], env.GetOption('num_jobs')))
             if 'BAD_BLAS' in env:
                 print()
                 print('WARNING: There is a good chance this will not work given that you seem')
@@ -57,11 +57,11 @@ def run_tests(target, source, env):
             print('If you have trouble with the parallel test run, you may disable it by typing:')
             print('    scons tests -j1')
         else:
-            print('nosetests is version %s'%env['NOSETESTSVERSION'])
+            print('pytest is version %s'%env['PYTEST'])
         cmd += ' test*.py'
         print('\nStarting python tests...')
-        log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
-        log.write('Nosetests command is:\n' + cmd + '\n')
+        log.write('pytest version is: ' + env['PYTEST'] + '\n')
+        log.write('pytests command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
             ['bash', '-c', cmd],
             cwd='tests',
@@ -71,10 +71,10 @@ def run_tests(target, source, env):
 
         # Keep track of the complete output so we can search it for TimedOutException.
         total_buf = ''
-    
+
         # This bit mimics the actions of the Unix tee command.
         # It writes to both stdout and the log file.
-        while py_proc.poll() == None:
+        while py_proc.poll() is None:
             buf = os.read(py_proc.stdout.fileno(),1)
             sys.stdout.write(buf)
             sys.stdout.flush()
@@ -86,12 +86,12 @@ def run_tests(target, source, env):
         sys.stdout.write(buf)
         sys.stdout.flush()
         log.write(buf)
-    
+
         ret = py_proc.returncode
         if ret < 0:
-            print('Nosetests terminated by signal ',-ret)
+            print('pytest terminated by signal ',-ret)
         elif ret > 0:
-            print('Nosetests returned error code ',ret)
+            print('pytest returned error code ',ret)
             # Check if we are timing out from parallel jobs
             import re
             timed_out = re.search("TimedOutException", total_buf)
@@ -107,12 +107,12 @@ def run_tests(target, source, env):
                 print('         The solution is usually to run the tests with fewer jobs.')
                 print('         e.g. To use 4 jobs, write "scons -j4 tests".')
         else:
-            print('Nosetests finished successfully.')
+            print('pytest finished successfully.')
         if ret != 0:
             env.Exit(ret)
     else:
         print()
-        print('WARNING: Could not find nosetests in path.')
+        print('WARNING: Could not find pytest in path.')
         print('         The cpp test programs will be compiled and run,')
         print('         but you will have to run the python tests manually.')
         print('         To do so, type: ')
@@ -130,8 +130,8 @@ def run_tests(target, source, env):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False)
-        
-        while cpp_proc.poll() == None:
+
+        while cpp_proc.poll() is None:
             buf = os.read(cpp_proc.stdout.fileno(),1)
             sys.stdout.write(buf)
             sys.stdout.flush()
@@ -168,5 +168,3 @@ Depends(test_script , py_files)
 AlwaysBuild(test_script)
 
 env1.Alias(target='tests', source=test_script)
-
-

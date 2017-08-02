@@ -117,7 +117,7 @@ opts.Add(PathVariable('LD_LIBRARY_PATH',
          'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 
-opts.Add('NOSETESTS','Name of nosetests executable','')
+opts.Add('PYTEST','Name of pytest executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
@@ -669,17 +669,14 @@ def GetCompilerVersion(env):
     env['CXXVERSION'] = version
     env['CXXVERSION_NUMERICAL'] = float(vnum)
 
-def GetNosetestsVersion(env):
-    """Determine the version of nosetests
-    """
+def GetPytestVersion(env):
+    """Determine the version of pytest"""
     import subprocess
-    cmd = env['NOSETESTS'] + ' --version 2>&1'
-    p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
-    line = p.stdout.readlines()[0]
-    version = line.split()[2]
-    print('nosetests version:',version)
-    env['NOSETESTSVERSION'] = version
-
+    cmd = 'pytest --version 2>&1'
+    p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
+    line = p.stdout.readlines()[0].decode()
+    version = line.split()[4].replace(',', '')
+    env['PYTESTVERSION'] = version
 
 def ExpandPath(path):
     p=os.path.expanduser(path)
@@ -1890,7 +1887,7 @@ int main()
             print('WARNING: The Apple BLAS library has been found not to be thread safe on')
             print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
             print('         just multiple threads in the same process.)  The symptom is that')
-            print('         `scons tests` may hang when running nosetests using multiple')
+            print('         `scons tests` may hang when running pytest using multiple')
             print('         processes.')
             if xcode_version is None:
                 # If we couldn't run xcodebuild, then don't give any more information about this.
@@ -2151,14 +2148,14 @@ if not GetOption('help'):
         subdirs += ['examples']
 
     if 'tests' in COMMAND_LINE_TARGETS:
-        if env['NOSETESTS'] == '':
-            nosetests = which('nosetests')
-            if nosetests is None:
-                env['NOSETESTS'] = None
+        if env['PYTEST'] == '':
+            pytest = which('pytest')
+            if pytest is None:
+                env['PYTEST'] = None
             else:
-                env['NOSETESTS'] = nosetests
-        if env['NOSETESTS']:
-            GetNosetestsVersion(env)
+                env['PYTEST'] = pytest
+            if env['PYTEST']:
+                GetPytestVersion(env)                
         subdirs += ['tests']
 
     if env['WITH_UPS']:

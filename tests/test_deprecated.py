@@ -38,7 +38,7 @@ test_scale = [1.8, 0.05, 0.002, 0.002]
 test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
 test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
 if __name__ == "__main__":
-    # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
+    # If doing a pytest run, we don't actually need to do all 4 sersic n values.
     # Two should be enough to notice if there is a problem, and the full list will be tested
     # when running python test_base.py to try to diagnose the problem.
     test_sersic_n = [1.5, -4]
