@@ -1294,8 +1294,13 @@ class ChromaticRealGalaxy(ChromaticSum):
             NSED, Nim, nk, nk)
 
         # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
-        coef = np.moveaxis(coef, (0,1,2), (1,2,0))
-        Sigma = np.moveaxis(Sigma, (0,1,2,3), (2,3,0,1))
+        try:
+            coef = np.moveaxis(coef, (0,1,2), (1,2,0))
+            Sigma = np.moveaxis(Sigma, (0,1,2,3), (2,3,0,1))
+        except AttributeError:  # pragma: no cover (numpy < 1.11)
+            # I think this prob less efficient, so only use the workaround for old numpy versions
+            coef = np.swapaxes(np.swapaxes(coef,1,2), 0,1)
+            Sigma = np.swapaxes(np.swapaxes(Sigma, 0,2), 1,3)
 
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
