@@ -61,7 +61,7 @@ def run_tests(target, source, env):
         cmd += ' test*.py'
         print('\nStarting python tests...')
         log.write('pytest version is: ' + env['PYTEST'] + '\n')
-        log.write('pytests command is:\n' + cmd + '\n')
+        log.write('pytest command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
             ['bash', '-c', cmd],
             cwd='tests',

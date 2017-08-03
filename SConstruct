@@ -672,7 +672,7 @@ def GetCompilerVersion(env):
 def GetPytestVersion(env):
     """Determine the version of pytest"""
     import subprocess
-    cmd = 'pytest --version 2>&1'
+    cmd = env['PYTEST'] + ' --version 2>&1'
     p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
     line = p.stdout.readlines()[0].decode()
     version = line.split()[4].replace(',', '')
@@ -2155,7 +2155,7 @@ if not GetOption('help'):
             else:
                 env['PYTEST'] = pytest
             if env['PYTEST']:
-                GetPytestVersion(env)                
+                GetPytestVersion(env)
         subdirs += ['tests']
 
     if env['WITH_UPS']:
