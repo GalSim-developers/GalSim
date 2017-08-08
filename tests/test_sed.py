@@ -40,7 +40,7 @@ def test_SED_basic():
     """Basic tests of SED functionality
     """
     c = constants.c.to('nm / s').value # speed of light
-    h = constants.h.to('erg s').value # Plank's constant
+    h = constants.h.to('erg s').value # Planck's constant
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
