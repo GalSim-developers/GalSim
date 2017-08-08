@@ -2151,11 +2151,13 @@ if not GetOption('help'):
         if env['PYTEST'] == '':
             pytest = which('pytest')
             if pytest is None:
+                pytest = which('py.test')
+            if pytest is None:
                 env['PYTEST'] = None
             else:
                 env['PYTEST'] = pytest
-            if env['PYTEST']:
-                GetPytestVersion(env)
+        if env['PYTEST']:
+            GetPytestVersion(env)
         subdirs += ['tests']
 
     if env['WITH_UPS']:
