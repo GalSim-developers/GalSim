@@ -1294,8 +1294,8 @@ class ChromaticRealGalaxy(ChromaticSum):
             NSED, Nim, nk, nk)
 
         # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
-        coef = np.moveaxis(coef, (0,1,2), (1,2,0))
-        Sigma = np.moveaxis(Sigma, (0,1,2,3), (2,3,0,1))
+        coef = np.transpose(coef, (2,0,1))
+        Sigma = np.transpose(Sigma, (2,3,0,1))
 
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
