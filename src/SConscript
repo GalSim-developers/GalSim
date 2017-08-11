@@ -8,8 +8,8 @@ try:
     sys.path = [GetBuildPath('#galsim')] + sys.path
     from _version import __version__ as version
     from _version import __version_info__ as version_info
-    sys.path.nada()
-except:
+except Exception as e:
+    print('Caught exception: ',e)
     # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
     # In this case, we need to be a little trickier.
     vfilename = os.path.join(GetBuildPath('#galsim'),'_version.py')
