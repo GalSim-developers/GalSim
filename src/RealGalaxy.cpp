@@ -77,7 +77,6 @@ namespace galsim
         */
 
         int npix = nkx * nky;
-        int npsf = nsed * nband;
         int nsedsq = nsed * nsed;
         tmv::Matrix<std::complex<double> > A(nband, nsed);
         tmv::Vector<std::complex<double> > b(nband);

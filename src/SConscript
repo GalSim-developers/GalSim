@@ -12,7 +12,8 @@ try:
 except:
     # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
     # In this case, we need to be a little trickier.
-    execfile(os.path.join(GetBuildPath('#galsim'),'_version.py'))
+    vfilename = os.path.join(GetBuildPath('#galsim'),'_version.py')
+    exec(compile(open(vfilename, "rb").read(), vfilename, 'exec'))
     version = __version__
     version_info = __version_info__
 

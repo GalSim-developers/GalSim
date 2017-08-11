@@ -184,7 +184,7 @@ def ErrorExit(*args, **kwargs):
 
     import shutil
 
-    out = open("gs_error.txt","wb")
+    out = open("gs_error.txt","w")
 
     # Start with the error message to output both to the screen and to gs_error.txt:
     print()
@@ -213,7 +213,7 @@ def ErrorExit(*args, **kwargs):
     # Next put the full config.log in there.
     out.write('The full config.log file is:\n')
     out.write('==================\n')
-    shutil.copyfileobj(open("config.log","rb"),out)
+    shutil.copyfileobj(open("config.log","r"),out)
     out.write('==================\n\n')
 
     # It is sometimes helpful to see the output of the scons executables.
@@ -223,7 +223,7 @@ def ErrorExit(*args, **kwargs):
         cmd = ("ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
                "| grep -v '\.o' | grep -v '\_mod'")
         p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        conftest_list = p.stdout.readlines()
+        conftest_list = [l.decode() for l in p.stdout.readlines()]
         for conftest in conftest_list:
             conftest = conftest.strip()
             if os.access(conftest, os.X_OK):
@@ -233,7 +233,7 @@ def ErrorExit(*args, **kwargs):
             cmd = PrependLibraryPaths(cmd,env)
             p = subprocess.Popen(['bash -c ' + cmd], stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, shell=True)
-            conftest_out = p.stdout.readlines()
+            conftest_out = [l.decode() for l in p.stdout.readlines()]
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
 
@@ -246,7 +246,7 @@ def ErrorExit(*args, **kwargs):
                     cmd = 'ldd ' + conftest
                 p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                      shell=True)
-                otool_out = p.stdout.readlines()
+                otool_out = [l.decode() for l in p.stdout.readlines()]
                 out.write('Output of the command %s is:\n'%cmd)
                 out.write(''.join(otool_out) + '\n')
             else:
@@ -259,7 +259,7 @@ def ErrorExit(*args, **kwargs):
                         cmd = 'ldd ' + os.path.join(conftest_mod, 'check_*.so')
                     p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                          shell=True)
-                    mod_out = p.stdout.readlines()
+                    mod_out = [l.decode() for l in p.stdout.readlines()]
                     out.write('Output of the command %s is:\n'%cmd)
                     out.write(''.join(mod_out) + '\n')
     except Exception as e:
@@ -625,7 +625,7 @@ def GetCompilerVersion(env):
         cmd = compiler + ' ' + versionflag + ' 2>&1'
         import subprocess
         p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
-        lines = p.stdout.readlines()
+        lines = [l.decode() for l in p.stdout.readlines()]
 
         # Check if g++ is a symlink for something else:
         if compilertype is 'g++':
@@ -882,7 +882,7 @@ def AltTryRun(config, text, extension):
         ok = sconf.BuildNodes(node)
     if ok:
         # For successful execution, also return the output contents
-        outputStr = output.get_contents()
+        outputStr = output.get_text_contents()
         return 1, outputStr.strip()
     else:
         return 0, ""
@@ -1147,7 +1147,7 @@ def TryScript(config,text,pname):
 
     if ok:
         # For successful execution, also return the output contents
-        outputStr = output.get_contents()
+        outputStr = output.get_text_contents()
         return 1, outputStr.strip()
     else:
         return 0, ""
@@ -1876,7 +1876,7 @@ int main()
         major, minor = GetMacVersion()
         try:
             p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
-            xcode_version = p.stdout.readlines()[0].split()[1]
+            xcode_version = p.stdout.readlines()[0].decode().split()[1]
             print('XCode version is',xcode_version)
         except:
             # Don't require the user to have xcode installed.
@@ -2047,7 +2047,7 @@ def BuildExecutableScript(target, source, env):
     for i in range(len(source)):
         f = open(str(target[i]), "w")
         f.write( '#!' + env['PYTHON'] + '\n' )
-        f.write(source[i].get_contents())
+        f.write(source[i].get_text_contents())
         f.close()
         os.chmod(str(target[i]),0o775)
 
@@ -2120,7 +2120,7 @@ if not GetOption('help'):
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
             cmd += "print(distutils.sysconfig.get_python_lib(prefix='%s'))\""%(env['PREFIX'])
             p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
-            env['PYPREFIX'] = p.stdout.read().strip()
+            env['PYPREFIX'] = p.stdout.read().decode().strip()
             print('Using PYPREFIX generated from PREFIX = ',env['PYPREFIX'])
         else:
             # On Macs, the regular python lib is usually writable, so it works fine for
@@ -2128,7 +2128,7 @@ if not GetOption('help'):
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
             cmd += "print(distutils.sysconfig.get_python_lib())\""
             p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
-            env['PYPREFIX'] = p.stdout.read().strip()
+            env['PYPREFIX'] = p.stdout.read().decode().strip()
             print('Using default PYPREFIX = ',env['PYPREFIX'])
 
     # Set up the configuration
