@@ -1592,8 +1592,8 @@ def test_ChromaticOpticalPSF():
 
     # First, compare the interpolated result with saved, exact results.
     # Note that if the saved results file cannot be found, then this function will (slowly)
-    # generate the exact image.  Note that this may need to be done outside of nosetests to avoid
-    # the default nose time limit.
+    # generate the exact image.  Note that this may need to be done outside of pytest to avoid
+    # the default pytest time limit.
 
     # Note that exact results will have to be regenerated if any of the bandpasses or other
     # parameters defined here are changed.  Because of the parameters chosen here, there is a lot of

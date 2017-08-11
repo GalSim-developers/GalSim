@@ -50,7 +50,7 @@ if __name__ != "__main__":
     # Some of the classes we test here are not terribly fast.  WcsToolsWCS in particular.
     # So reduce the number of tests.  Keep the hardest ones, since the easier ones are mostly
     # useful as diagnostics when there are problems.  So they will get run when doing
-    # python test_wcs.py.  But not during a nosetests run.
+    # python test_wcs.py.  But not during a pytest run.
     near_x_list = near_x_list[-2:]
     near_y_list = near_y_list[-2:]
     far_x_list = far_x_list[-2:]
@@ -158,7 +158,7 @@ all_tags = references.keys()
 
 
 def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
-    # I would call this do_wcs_pos_tests, but nosetests takes any function with test
+    # I would call this do_wcs_pos_tests, but pytest takes any function with test
     # _anywhere_ in the name an tries to run it.  So make sure the name doesn't
     # have 'test' in it.  There are a bunch of other do* functions that work similarly.
 

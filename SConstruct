@@ -67,6 +67,7 @@ opts.Add('LINKFLAGS','Additional flags to use when linking','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', False))
+opts.Add(BoolVariable('COVER','Compile with c++ coverage support', False))
 opts.Add('PYTHON','Name of python executable','')
 
 opts.Add(PathVariable('PREFIX','prefix for installation',
@@ -116,7 +117,7 @@ opts.Add(PathVariable('LD_LIBRARY_PATH',
          'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 
-opts.Add('NOSETESTS','Name of nosetests executable','')
+opts.Add('PYTEST','Name of pytest executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
@@ -381,9 +382,13 @@ def BasicCCFlags(env):
     if env['FLAGS'] == '':
         sse_flags = []
         if compiler == 'g++':
-            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            if env['COVER']:
+                env.Replace(CCFLAGS=['-O1','-coverage'])
+                env.Append(LINKFLAGS=['-fprofile-arcs','-ftest-coverage'])
+            else:
+                env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-fno-strict-aliasing'])
+            env.Append(CCFLAGS=['-std=c++98','-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
             #env.Append(CCFLAGS=['-ftree-vectorize'])
@@ -396,8 +401,13 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'clang++':
-            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            if env['COVER']:
+                env.Replace(CCFLAGS=['-O1','-coverage'])
+                env.Append(LINKFLAGS=['-fprofile-arcs','-ftest-coverage'])
+            else:
+                env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
+            env.Append(CCFLAGS=['-std=c++98'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -659,17 +669,14 @@ def GetCompilerVersion(env):
     env['CXXVERSION'] = version
     env['CXXVERSION_NUMERICAL'] = float(vnum)
 
-def GetNosetestsVersion(env):
-    """Determine the version of nosetests
-    """
+def GetPytestVersion(env):
+    """Determine the version of pytest"""
     import subprocess
-    cmd = env['NOSETESTS'] + ' --version 2>&1'
-    p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+    cmd = env['PYTEST'] + ' --version 2>&1'
+    p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
     line = p.stdout.readlines()[0].decode()
-    version = line.split()[2]
-    print('nosetests version:',version)
-    env['NOSETESTSVERSION'] = version
-
+    version = line.split()[4].replace(',', '')
+    env['PYTESTVERSION'] = version
 
 def ExpandPath(path):
     p=os.path.expanduser(path)
@@ -850,15 +857,15 @@ def AltTryRun(config, text, extension):
     #ok, out = config.TryRun(text,'.cpp')
     # The above line works on most systems, but on El Capitan, Apple decided to
     # strip out the DYLD_LIBRARY_PATH from any system call.  So the above won't
-    # be able to find the right runtime libraries that are in their 
+    # be able to find the right runtime libraries that are in their
     # DYLD_LIBRARY_PATH.  The next few lines are a copy of the SCons TryRun
     # implementation, but then adding the DYLD_LIBRARY_PATH to the environment
     # on the command line.
     ok = config.TryLink(text, '.cpp')
-    if ok: 
-        prog = config.lastTarget 
+    if ok:
+        prog = config.lastTarget
         try:
-            pname = prog.get_internal_path() 
+            pname = prog.get_internal_path()
         except:
             pname = prog.get_abspath()
         try:
@@ -869,10 +876,10 @@ def AltTryRun(config, text, extension):
             sconf = config.sconf
         except:
             sconf = config
-        output = sconf.confdir.File(os.path.basename(pname)+'.out') 
+        output = sconf.confdir.File(os.path.basename(pname)+'.out')
         pname = PrependLibraryPaths(pname, sconf.env)
-        node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
-        ok = sconf.BuildNodes(node) 
+        node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ])
+        ok = sconf.BuildNodes(node)
     if ok:
         # For successful execution, also return the output contents
         outputStr = output.get_text_contents()
@@ -1061,7 +1068,7 @@ int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
     boost_version = int(boost_version.strip())
     print('Boost version is %d.%d.%d' % (
             boost_version / 100000, boost_version / 100 % 1000, boost_version % 100))
-    
+
     return 1
 
 
@@ -1132,10 +1139,10 @@ def TryScript(config,text,pname):
     #node = config.env.Command(output, source, pname + " < $SOURCE >& $TARGET")
     # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
     pname = PrependLibraryPaths(pname, config.sconf.env)
-    node = config.env.Command(output, source, 
+    node = config.env.Command(output, source,
             [[ 'bash', '-c', pname, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]])
     ok = config.sconf.BuildNodes(node)
- 
+
     config.sconf.env['SPAWN'] = save_spawn
 
     if ok:
@@ -1375,24 +1382,24 @@ PyMODINIT_FUNC initcheck_python(void)
         py_libdirs.append(os.path.join(py_libdir,'python'+py_version,'config'))
     source_file7 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBDEST'))"
     result, py_libdir = TryScript(config,source_file7,python)
-    if result and py_libdir not in py_libdirs: 
+    if result and py_libdir not in py_libdirs:
         py_libdirs.append(py_libdir)
     source_file8 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBP'))"
     result, py_libdir = TryScript(config,source_file8,python)
-    if result and py_libdir not in py_libdirs: 
+    if result and py_libdir not in py_libdirs:
         py_libdirs.append(py_libdir)
     source_file8 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBPL'))"
     result, py_libdir = TryScript(config,source_file8,python)
-    if result and py_libdir not in py_libdirs: 
+    if result and py_libdir not in py_libdirs:
         py_libdirs.append(py_libdir)
 
-    # We can also try to get the location from the name of the executable.  Typically the 
+    # We can also try to get the location from the name of the executable.  Typically the
     # python executable is called PREFIX/bin/python and the corresponding library is
     # PREFIX/lib/python2.7/config/libpython2.7.a.  So try stripping off the bin/python part
     # and add lib/python2.7/config.
     py_root = os.path.split(os.path.split(python)[0])[0]
     py_libdir = os.path.join(py_root,'lib','python'+py_version,'config')
-    if py_libdir not in py_libdirs: 
+    if py_libdir not in py_libdirs:
         py_libdirs.append(py_libdir)
 
     # Look in each of these directories for a valid library file to link to:
@@ -1712,7 +1719,7 @@ except:
         print("""
 WARNING: There seems to be a mismatch between this C++ compiler and the one
          that was used to build either python or boost.python (or both).
-         This might be ok, but if you get a linking error in the subsequent 
+         This might be ok, but if you get a linking error in the subsequent
          build, it is possible  that you will need to rebuild boost with the
          same compiler (and sometimes version) that you are using here.
 """)
@@ -1880,7 +1887,7 @@ int main()
             print('WARNING: The Apple BLAS library has been found not to be thread safe on')
             print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
             print('         just multiple threads in the same process.)  The symptom is that')
-            print('         `scons tests` may hang when running nosetests using multiple')
+            print('         `scons tests` may hang when running pytest using multiple')
             print('         processes.')
             if xcode_version is None:
                 # If we couldn't run xcodebuild, then don't give any more information about this.
@@ -2141,14 +2148,16 @@ if not GetOption('help'):
         subdirs += ['examples']
 
     if 'tests' in COMMAND_LINE_TARGETS:
-        if env['NOSETESTS'] == '':
-            nosetests = which('nosetests')
-            if nosetests is None:
-                env['NOSETESTS'] = None
+        if env['PYTEST'] == '':
+            pytest = which('pytest')
+            if pytest is None:
+                pytest = which('py.test')
+            if pytest is None:
+                env['PYTEST'] = None
             else:
-                env['NOSETESTS'] = nosetests
-        if env['NOSETESTS']:
-            GetNosetestsVersion(env)
+                env['PYTEST'] = pytest
+        if env['PYTEST']:
+            GetPytestVersion(env)
         subdirs += ['tests']
 
     if env['WITH_UPS']:

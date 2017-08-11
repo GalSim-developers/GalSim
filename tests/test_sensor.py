@@ -407,7 +407,7 @@ def test_sensor_wavelengths_and_angles():
     if __name__ == "__main__":
         bands = ['r', 'i', 'z', 'y']
     else:
-        bands = ['i'] # Only test the i band for nosetests
+        bands = ['i'] # Only test the i band for pytest
 
     for band in bands:
         bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_%s.dat'%band), 'nm').thin()

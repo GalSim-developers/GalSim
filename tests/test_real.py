@@ -454,7 +454,7 @@ def test_ne():
 
     # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather
     # large, so the eval(repr) checks take a long time.
-    # Therefore, run them from command line, but not from nosetests.
+    # Therefore, run them from command line, but not from pytest.
     if __name__ == '__main__':
         do_pickle(crg1)
         do_pickle(covspec1)

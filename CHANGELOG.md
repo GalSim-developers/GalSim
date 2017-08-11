@@ -43,13 +43,14 @@ API Changes
   these functions for more information. (#865)
 - Switched galsim.Image(image) to make a copy of the image rather than a view.
   If you want a view, you should use the more intuitive image.view().  (#873)
-- Changed behaviour of the `preload` option in RealGalaxyCatalog and 
+- Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
 
 
 Dependency Changes
 ------------------
 - Added `astropy` as a required dependency for chromatic functionality. (#789)
+- Switched `scons tests` test runner from `nosetests` to `pytest`. (#892)
 
 
 Bug Fixes
