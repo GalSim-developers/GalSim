@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -184,7 +184,7 @@ class Bandpass(object):
         for test_wave in test_waves:
             try:
                 self._tp(test_wave)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave) +
                     "Caught error: {0}".format(e))
@@ -197,9 +197,9 @@ class Bandpass(object):
         if self._tp is not None:
             pass
         elif isinstance(self._orig_tp, basestring):
-            import os
-            if os.path.isfile(self._orig_tp):
-                self._tp = galsim.LookupTable(file=self._orig_tp, interpolant='linear')
+            isfile, filename = galsim.utilities.check_share_file(self._orig_tp, 'bandpasses')
+            if isfile:
+                self._tp = galsim.LookupTable(file=filename, interpolant='linear')
             else:
                 # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if self.red_limit is not None:
@@ -395,7 +395,7 @@ class Bandpass(object):
             elif zeropoint.upper()=='VEGA':
                 # Use vega spectrum for SED
                 import os
-                vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
+                vegafile = os.path.join(galsim.meta_data.share_dir, "SEDs", "vega.txt")
                 sed = galsim.SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))

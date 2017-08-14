@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,7 +32,7 @@ def get_random_chipnum(ud, bad_ccds):
 
 class DES_SlowLocalWCSBuilder(galsim.config.WCSBuilder):
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build a local WCS from the given location in a DES focal plane, given a directory
         with the image files.  By default, it will pick a random chipnum and image position,
         but these can be optionally specified.
@@ -144,7 +144,7 @@ class DES_FullFieldWCS(object):
 
 class DES_LocalWCSBuilder(galsim.config.WCSBuilder):
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build a local WCS from the given location in a DES focal plane.
 
         This function is used in conjunction with the des_wcs input field, which loads all the

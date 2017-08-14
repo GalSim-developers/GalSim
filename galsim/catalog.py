@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,6 +22,7 @@ Routines for controlling catalog input/output with GalSim.
 from future.utils import iteritems, iterkeys, itervalues
 from builtins import zip
 import galsim
+import os
 import numpy as np
 
 class Catalog(object):
@@ -548,7 +549,7 @@ class OutputCatalog(object):
         @param file_name    The name of the file to write to.
         """
         tbhdu = self.writeFitsHdu()
-        tbhdu.writeto(file_name, clobber=True)
+        galsim.fits.writeFile(file_name, tbhdu)
 
     def writeFitsHdu(self):
         """Write catalog to a FITS hdu.
@@ -577,7 +578,7 @@ class OutputCatalog(object):
         # Depending on the version of pyfits, one of these should work:
         try:
             tbhdu = pyfits.BinTableHDU.from_columns(cols)
-        except:  # pragma: no cover
+        except AttributeError:  # pragma: no cover
             tbhdu = pyfits.new_table(cols)
         return tbhdu
 

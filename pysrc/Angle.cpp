@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -70,7 +70,7 @@ struct PyAngle {
             .def(bp::init<double, AngleUnit>(bp::args("val","unit")))
             .def(bp::init<const Angle&>(bp::args("rhs")))
             .def("rad", &Angle::rad)
-            .def("wrap", &Angle::wrap)
+            .def("wrap", &Angle::wrap, bp::arg("center")=0.*radians)
             .def("sin", &Angle::sin)
             .def("cos", &Angle::cos)
             .def("tan", &Angle::tan)

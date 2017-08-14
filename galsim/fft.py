@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -85,7 +85,7 @@ def fft2(a, shift_in=False, shift_out=False):
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
-        xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
+        xim = galsim._galsim.ConstImageViewCD(a, -No2, -Mo2)
         kar = xim.cfft(shift_in=shift_in, shift_out=shift_out).array
     else:
         a = a.astype(np.float64, copy=False)
@@ -164,7 +164,7 @@ def ifft2(a, shift_in=False, shift_out=False):
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
-        xim = galsim._galsim.ConstImageViewC(a, -No2, -Mo2)
+        xim = galsim._galsim.ConstImageViewCD(a, -No2, -Mo2)
     else:
         a = a.astype(np.float64, copy=False)
         xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
@@ -267,7 +267,7 @@ def irfft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     a = a.astype(np.complex128, copy=False)
-    kim = galsim._galsim.ConstImageViewC(a, 0, -Mo2)
+    kim = galsim._galsim.ConstImageViewCD(a, 0, -Mo2)
     return kim.irfft(shift_in=shift_in, shift_out=shift_out).array
 
 

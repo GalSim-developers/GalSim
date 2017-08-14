@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -189,10 +189,6 @@ namespace galsim {
         k += _halfNd;
         return int(k-_Nd*std::floor(k*_invNd)) - _No2;
     }
-
-    template <typename T>
-    inline bool IsAligned(const T* p)
-    { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
 
     template <bool yn>
     struct Maybe // true

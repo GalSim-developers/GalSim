@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -31,8 +31,15 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    struct PyPhotonArray {
+    template <typename T>
+    boost::shared_ptr<PhotonArray> MakePhotonsFromImage(
+        const BaseImage<T>& image, double maxFlux, UniformDeviate ud)
+    {
+        return boost::shared_ptr<PhotonArray>(new PhotonArray(image,maxFlux,ud));
+    }
 
+
+    struct PyPhotonArray {
         template <typename U, typename W>
         static void wrapTemplates(W & wrapper) {
             wrapper
@@ -41,6 +48,10 @@ namespace {
                      (bp::arg("image")),
                      "Add flux of photons to an image by binning into pixels.")
                 ;
+            bp::def("MakePhotonsFromImage",
+                (boost::shared_ptr<PhotonArray> (*)(const BaseImage<U>&, double, UniformDeviate))
+                &MakePhotonsFromImage<U>,
+                bp::args("image", "maxFlux", "ud"));
         }
 
         static bp::object GetXArray(PhotonArray& phot)
@@ -123,8 +134,14 @@ namespace {
                      "Set the total flux to a new value")
                 .def("scaleFlux", &PhotonArray::scaleFlux, (bp::arg("scale")),
                      "Scale the total flux by a given factor")
+                .def("scaleXY", &PhotonArray::scaleXY, (bp::arg("scale")),
+                     "Scale the photon positions (x,y) a given factor")
                 .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
                      "Assign the contents of another PhotonArray to this one starting at istart.")
+                .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
+                     "Convolve this PhotonArray with another")
+                .def("setCorrelated", &PhotonArray::setCorrelated, (bp::arg("new_val")),
+                     "Declare that the photons in this array are correlated.")
                 .enable_pickling()
                 ;
             bp::register_ptr_to_python< boost::shared_ptr<PhotonArray> >();

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -116,7 +116,7 @@ class DES_PSFEx(object):
         if image_file_name:
             if wcs is not None:
                 raise AttributeError("Cannot provide both image_file_name and wcs")
-            self.wcs = galsim.GSFitsWCS(image_file_name)
+            self.wcs = galsim.FitsWCS(image_file_name)
         elif wcs:
             self.wcs = wcs
         else:

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,7 +21,6 @@ import numpy as np
 import os
 import sys
 import logging
-import io
 
 path, filename = os.path.split(__file__)
 try:
@@ -58,14 +57,16 @@ def printval(image1, image2):
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
     print("Maximum image value: ", np.max(image1.array), np.max(image2.array))
     print("Peak location: ", image1.array.argmax(), image2.array.argmax())
+
+    fmt = "      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}"
+
+    mom1 = galsim.utilities.unweighted_moments(image1)
     print("Moments Mx, My, Mxx, Myy, Mxy for new array: ")
-    getmoments(image1)
+    print(fmt.format(mom1['Mx'], mom1['My'], mom1['Mxx'], mom1['Myy'], mom1['Mxy']))
+
+    mom2 = galsim.utilities.unweighted_moments(image2)
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
-    getmoments(image2)
-    #xcen = image2.array.shape[0]/2
-    #ycen = image2.array.shape[1]/2
-    #print("new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4])
-    #print("saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4])
+    print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
     if False:
         import matplotlib.pylab as plt
@@ -74,23 +75,6 @@ def printval(image1, image2):
         ax1.imshow(image1.array)
         ax2.imshow(image2.array)
         plt.show()
-
-def getmoments(image):
-    #print('shape = ',image.array.shape)
-    #print('bounds = ',image.bounds)
-    a = image.array.astype(float) # Use float for better accuracy calculations.
-                                  # This matters more for numpy version <= 1.7
-    xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + image.getXMin(),
-                               np.arange(image.array.shape[0]) + image.getYMin())
-    mx = np.sum(xgrid * a) / np.sum(a)
-    my = np.sum(ygrid * a) / np.sum(a)
-    mxx = np.sum(((xgrid-mx)**2) * a) / np.sum(a)
-    myy = np.sum(((ygrid-my)**2) * a) / np.sum(a)
-    mxy = np.sum((xgrid-mx) * (ygrid-my) * a) / np.sum(a)
-
-    print('      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
-            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy))
-    return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
     # Convert a distortion (e1,e2) to a shear (g1,g2)
@@ -143,6 +127,9 @@ def check_basic_k(prof, name):
     if prof.maxK()/prof.stepK() > 2000.:
         # Don't try to draw huge images!
         kimage = prof.drawKImage(nx=2000,ny=2000)
+    elif prof.maxK()/prof.stepK() < 12.:
+        # or extremely small ones.
+        kimage = prof.drawKImage(nx=12,ny=12)
     else:
         kimage = prof.drawKImage()
     kimage.setCenter(0,0)
@@ -202,6 +189,13 @@ def do_shoot(prof, img, name):
     test_flux = 1.8
 
     print('Start do_shoot')
+    # Verify that shoot with rng=None runs
+    prof.shoot(100, rng=None)
+    # And also verify 0, 1, or 2 photons.
+    prof.shoot(0)
+    prof.shoot(1)
+    prof.shoot(2)
+
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
@@ -221,7 +215,7 @@ def do_shoot(prof, img, name):
         nphot = flux_tot / flux_max / photon_shoot_accuracy**2
     elif flux_max < 0.1:
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max;
+        scale = 0.1 / flux_max
         print('scale = ',scale)
         prof *= scale
         img *= scale
@@ -324,7 +318,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         import pickle
     import copy
     # In case the repr uses these:
-    from numpy import array, uint16, uint32, int16, int32, float32, float64, ndarray
+    from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
 
     try:
@@ -334,7 +328,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             irreprable = True
     except:
         import pyfits
-    print('Try pickling ',obj1)
+    print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
     obj2 = pickle.loads(pickle.dumps(obj1))
@@ -346,6 +340,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     #print('func(obj1) = ',repr(f1))
     #print('func(obj2) = ',repr(f2))
     assert f1 == f2
+
+    # Check that == works properly if the other thing isn't the same type.
+    assert f1 != object()
+    assert object() != f1
 
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
@@ -383,7 +381,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
-        with galsim.utilities.printoptions(precision=18, threshold=1e6):
+        with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
         f5 = func(obj5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
@@ -435,14 +433,16 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             # Special case: can't change size of LVector or PhotonArray without changing array
             if classname in ['LVector', 'PhotonArray'] and i == 0:
                 continue
-            with galsim.utilities.printoptions(precision=18, threshold=1e6):
+            with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
                     if classname in galsim._galsim.__dict__:
-                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim._galsim.' + classname + repr(tuple(newargs))
                     else:
-                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                        eval_str = 'galsim.' + classname + repr(tuple(newargs))
+                    obj6 = eval(eval_str)
                 except Exception as e:
-                    print('e = ',e)
+                    print('caught exception: ',e)
+                    print('eval_str = ',eval_str)
                     raise TypeError("{0} not `eval`able!".format(
                             classname + repr(tuple(newargs))))
                 else:
@@ -495,7 +495,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     """
     if bps is None:
         # load a filter
-        bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+        bppath = os.path.join(galsim.meta_data.share_dir, 'bandpasses')
         bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
                     .truncate(relative_throughput=1e-3)
                     .thin(rel_err=1e-3))
@@ -545,7 +545,6 @@ def timer(f):
     @functools.wraps(f)
     def f2(*args, **kwargs):
         import time
-        import inspect
         t0 = time.time()
         result = f(*args, **kwargs)
         t1 = time.time()
@@ -590,6 +589,3 @@ class CaptureLog(object):
         self.handler.flush()
         self.output = self.stream.getvalue().strip()
         self.handler.close()
-
-
-

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,52 +28,86 @@ import logging
 valid_wcs_types = {}
 
 
-def BuildWCS(config):
-    """Read the wcs parameters from the config dict and return a constructed wcs object.
+def BuildWCS(config, key, base, logger=None):
+    """Read the wcs parameters from config[key] and return a constructed wcs object.
+
+    @param config       A dict with the configuration information. (usually base['image'])
+    @param key          The key name in config indicating which object to build.
+    @param base         The base dict of the configuration.
+    @param logger       Optionally, provide a logger for logging debug statements. [default: None]
+
+    @returns a BaseWCS instance
     """
-    image = config['image']
+    logger = galsim.config.LoggerWrapper(logger)
+    logger.debug('image %d: Start BuildWCS key = %s',base.get('image_num',0),key)
 
-    # If there is a wcs field, read it and update the wcs variable.
-    if 'wcs' in image:
-        image_wcs = image['wcs']
-        if 'type' in image_wcs:
-            wcs_type = image_wcs['type']
-        else:
-            wcs_type = 'PixelScale'
-
-        # Special case: origin == center means to use image_center for the wcs origin
-        if 'origin' in image_wcs and image_wcs['origin'] == 'center':
-            origin = config['image_center']
-            image_wcs['origin'] = origin
-
-        if wcs_type not in valid_wcs_types:
-            raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
-
-        builder = valid_wcs_types[wcs_type]
-        wcs = builder.buildWCS(image_wcs, config)
-
-    else:
+    try:
+        param = config[key]
+    except KeyError:
         # Default if no wcs is to use PixelScale
-        if 'pixel_scale' in image:
-            scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
+        if 'pixel_scale' in config:
+            scale = galsim.config.ParseValue(config, 'pixel_scale', base, float)[0]
         else:
             scale = 1.0
-        wcs = galsim.PixelScale(scale)
+        return galsim.PixelScale(scale)
+
+    # Check for direct value, else get the wcs type
+    if isinstance(param, galsim.BaseWCS):
+        return param
+    elif param == str(param) and (param[0] == '$' or param[0] == '@'):
+        return galsim.config.ParseValue(config, key, base, None)[0]
+    elif not isinstance(param, dict):
+        raise ValueError("wcs must be either a BaseWCS or a dict")
+    elif 'type' in param:
+        wcs_type = param['type']
+    else:
+        wcs_type = 'PixelScale'
+
+    # For these two, just do the usual ParseValue function.
+    if wcs_type in ['Eval', 'Current']:
+        return galsim.config.ParseValue(config, key, base, None)[0]
+
+    # Check if we can use the current cached object
+    _, orig_index_key = galsim.config.GetIndex(param, base)
+    base['index_key'] = 'image_num'
+    index, _ = galsim.config.GetIndex(param, base)
+    if 'current' in param:
+        cwcs, csafe, cvalue_type, cindex, cindex_key = param['current']
+        if cindex == index:
+            logger.debug('image %d: The wcs object is already current', base.get('image_num',0))
+            return cwcs
+
+    # Special case: origin == center means to use image_center for the wcs origin
+    if 'origin' in param and param['origin'] == 'center':
+        origin = base['image_center']
+        param['origin'] = origin
+
+    if wcs_type not in valid_wcs_types:
+        raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
+    logger.debug('image %d: Building wcs type %s', base.get('image_num',0), wcs_type)
+    builder = valid_wcs_types[wcs_type]
+    wcs = builder.buildWCS(param, base, logger)
+    logger.debug('image %d: wcs = %s', base.get('image_num',0), wcs)
+
+    param['current'] = wcs, False, None, index, 'image_num'
+    base['index_key'] = orig_index_key
 
     return wcs
+
 
 class WCSBuilder(object):
     """A base class for building WCS objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.
     """
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict.
 
         Note: Sub-classes must override this function with a real implementation.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -124,14 +158,15 @@ class SimpleWCSBuilder(WCSBuilder):
 
         # This would be weird, but might as well check...
         if build_func._takes_rng: # pragma: no cover
-            kwargs['rng'] = galsim.config.check_for_rng(base, None, build_func.__name__)
+            kwargs['rng'] = galsim.config.GetRNG(config, base)
         return kwargs
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -147,12 +182,13 @@ class OriginWCSBuilder(SimpleWCSBuilder):
         self.init_func = init_func
         self.origin_init_func = origin_init_func
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the WCS based on the specifications in the config dict, using the appropriate
         type depending on whether an origin is provided.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -172,11 +208,12 @@ class TanWCSBuilder(WCSBuilder):
     """
     def __init__(self): pass
 
-    def buildWCS(self, config, base):
+    def buildWCS(self, config, base, logger):
         """Build the TanWCS based on the specifications in the config dict.
 
         @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
+        @param logger           If provided, a logger for logging debug statements.
 
         @returns the constructed WCS object.
         """
@@ -200,6 +237,25 @@ class TanWCSBuilder(WCSBuilder):
 
         return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 
+class ListWCSBuilder(WCSBuilder):
+    """Select a wcs from a list
+    """
+    def buildWCS(self, config, base, logger):
+        req = { 'items' : list }
+        opt = { 'index' : int }
+        # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
+        galsim.config.CheckAllParams(config, req=req, opt=opt)
+        items = config['items']
+        if not isinstance(items,list):
+            raise AttributeError("items entry for type=List is not a list.")
+
+        # Setup the indexing sequence if it hasn't been specified using the length of items.
+        galsim.config.SetDefaultIndex(config, len(items))
+        index, safe = galsim.config.ParseValue(config, 'index', base, int)
+
+        if index < 0 or index >= len(items):
+            raise AttributeError("index %d out of bounds for wcs type=List"%index)
+        return BuildWCS(items, index, base)
 
 def RegisterWCSType(wcs_type, builder, input_type=None):
     """Register a wcs type for use by the config apparatus.
@@ -229,4 +285,4 @@ RegisterWCSType('UVFunction', SimpleWCSBuilder(galsim.UVFunction))
 RegisterWCSType('RaDecFunction', SimpleWCSBuilder(galsim.RaDecFunction))
 RegisterWCSType('Fits', SimpleWCSBuilder(galsim.FitsWCS))
 RegisterWCSType('Tan', TanWCSBuilder())
-
+RegisterWCSType('List', ListWCSBuilder())

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,7 +34,7 @@ namespace galsim {
         int covdim = idim * jdim;
         tmv::SymMatrix<double,
             tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
-        ImageAlloc<double> cov = ImageAlloc<double>(covdim, covdim, 0.);
+        ImageAlloc<double> cov = ImageAlloc<double>(covdim, covdim);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and
                                        // start from 1!!

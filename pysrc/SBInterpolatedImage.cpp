@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -77,30 +77,22 @@ namespace galsim {
             );
             pySBInterpolatedKImage
                 .def(bp::init<const BaseImage<double> &,
-                              double, double, double,
-                              boost::shared_ptr<Interpolant>,
-                              double, double, bool,
-                              boost::shared_ptr<GSParams> >(
-                                  (bp::arg("data"),
-                                   bp::arg("dk"),
-                                   bp::arg("stepk"),
-                                   bp::arg("maxk"),
-                                   bp::arg("kInterp"),
-                                   bp::arg("xcen"),
-                                   bp::arg("ycen"),
-                                   bp::arg("cenIsSet"),
-                                   bp::arg("gsparams")=bp::object())
-                     ))
-                .def("getKInterp", &SBInterpolatedKImage::getKInterp)
-                .def("dK", &SBInterpolatedKImage::dK)
-                .def("_cenIsSet", &SBInterpolatedKImage::cenIsSet)
-                .def("_getKData", &SBInterpolatedKImage::getKData)
-                .def(bp::init<const BaseImage<std::complex<double> > &,
                               double, double,
                               boost::shared_ptr<Interpolant>,
                               boost::shared_ptr<GSParams> >(
+                                  (bp::arg("data"),
+                                   bp::arg("stepk"),
+                                   bp::arg("maxk"),
+                                   bp::arg("kInterp"),
+                                   bp::arg("gsparams")=bp::object())
+                     ))
+                .def("getKInterp", &SBInterpolatedKImage::getKInterp)
+                .def("_getKData", &SBInterpolatedKImage::getKData)
+                .def(bp::init<const BaseImage<std::complex<double> > &,
+                              double,
+                              boost::shared_ptr<Interpolant>,
+                              boost::shared_ptr<GSParams> >(
                                   (bp::arg("kimage"),
-                                   bp::arg("dk"),
                                    bp::arg("stepk"),
                                    bp::arg("kInterp"),
                                    bp::arg("gsparams")=bp::object())

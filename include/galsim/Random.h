@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -234,7 +234,7 @@ namespace galsim {
          *
          * This is invalid for a BaseDeviate object that is not a derived class.
          * However, we don't make it pure virtual, since we want to be able to make
-         * BaseDeviate objects a direct way to define a common seed for other Deviates.
+         * BaseDeviate objects as a direct way to define a common seed for other Deviates.
          */
         double operator()() { return _val(); }
 
@@ -251,9 +251,7 @@ namespace galsim {
 
         boost::shared_ptr<rng_type> _rng;
 
-        // This is the virtual function that is actually overridden.  This is because
-        // some derived classes prefer to return an int.  (e.g. Binom, Poisson)
-        // So this provides the interface that returns a double.
+        // This is the virtual function that is actually overridden.
         virtual double _val()
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
@@ -307,19 +305,12 @@ namespace galsim {
         { return UniformDeviate(serialize()); }
 
         /**
-         * @brief Draw a new random number from the distribution
-         *
-         * @return A uniform deviate in the interval [0.,1.)
-         */
-        double operator()() { return _urd(*this->_rng); }
-
-        /**
          * @brief Clear the internal cache
          */
         void clearCache() { _urd.reset(); }
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _urd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -379,13 +370,6 @@ namespace galsim {
         { return GaussianDeviate(serialize(),getMean(),getSigma()); }
 
         /**
-         * @brief Draw a new random number from the distribution
-         *
-         * @return A Gaussian deviate with current mean and sigma
-         */
-        double operator()() { return _normal(*this->_rng); }
-
-        /**
          * @brief Get current distribution mean
          *
          * @return Mean of distribution
@@ -425,7 +409,7 @@ namespace galsim {
         void clearCache() { _normal.reset(); }
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _normal(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -483,13 +467,6 @@ namespace galsim {
         { return BinomialDeviate(serialize(),getN(),getP()); }
 
         /**
-         * @brief Draw a new random number from the distribution
-         *
-         * @return A binomial deviate with current N and p
-         */
-        int operator()() { return _bd(*this->_rng); }
-
-        /**
          * @brief Report current value of N
          *
          * @return Current value of N
@@ -527,7 +504,7 @@ namespace galsim {
         void clearCache() { _bd.reset(); }
 
     protected:
-        double _val() { return double(operator()()); }
+        double _val() { return _bd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -552,7 +529,9 @@ namespace galsim {
          * @param[in] lseed Seed to use
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(long lseed, double mean) : BaseDeviate(lseed), _pd(mean) {}
+        PoissonDeviate(long lseed, double mean) :
+            BaseDeviate(lseed), _getValue(&PoissonDeviate::getPDValue)
+        { setMean(mean); }
 
         /**
          * @brief Construct a new Poisson-distributed RNG, sharing the random number
@@ -561,17 +540,22 @@ namespace galsim {
          * @param[in] rhs   Other deviate with which to share the RNG
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(const BaseDeviate& rhs, double mean) : BaseDeviate(rhs), _pd(mean) {}
+        PoissonDeviate(const BaseDeviate& rhs, double mean) :
+            BaseDeviate(rhs), _getValue(&PoissonDeviate::getPDValue)
+        { setMean(mean); }
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        PoissonDeviate(const PoissonDeviate& rhs) : BaseDeviate(rhs), _pd(rhs._pd) {}
+        PoissonDeviate(const PoissonDeviate& rhs) :
+            BaseDeviate(rhs), _getValue(rhs._getValue), _pd(rhs._pd), _gd(rhs._gd) {}
 
         /// @brief Construct a new PoissonDeviate from a serialization string
-        PoissonDeviate(const std::string& str, double mean) : BaseDeviate(str), _pd(mean) {}
+        PoissonDeviate(const std::string& str, double mean) :
+            BaseDeviate(str), _getValue(&PoissonDeviate::getPDValue)
+        { setMean(mean); }
 
         /**
          * @brief Construct a duplicate of this PoissonDeviate object.
@@ -580,13 +564,6 @@ namespace galsim {
          */
         PoissonDeviate duplicate()
         { return PoissonDeviate(serialize(),getMean()); }
-
-        /**
-         * @brief Draw a new random number from the distribution
-         *
-         * @return A Poisson deviate with current mean
-         */
-        int operator()() { return _pd(*this->_rng); }
 
         /**
          * @brief Report current distribution mean
@@ -600,21 +577,28 @@ namespace galsim {
          *
          * @param[in] mean New mean value
          */
-        void setMean(double mean) {
-            _pd.param(boost::random::poisson_distribution<>::param_type(mean));
-        }
+        void setMean(double mean);
 
         /**
          * @brief Clear the internal cache
          */
-        void clearCache() { _pd.reset(); }
+        void clearCache() { _pd.reset(); if (_gd) _gd->reset(); }
 
     protected:
-        double _val() { return double(operator()()); }
+        double _val();
+
+        double (PoissonDeviate::*_getValue)(); // A variable equal to either getPDValue (normal)
+                                               // or getGDValue (if mean > 2^30)
+
         std::string make_repr(bool incl_seed);
+
+        double getPDValue();
+        double getGDValue();
+
 
     private:
         boost::random::poisson_distribution<> _pd;
+        boost::shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
     /**
@@ -676,13 +660,6 @@ namespace galsim {
         { return WeibullDeviate(serialize(),getA(),getB()); }
 
         /**
-         * @brief Draw a new random number from the distribution.
-         *
-         * @return A Weibull deviate with current shape k and scale lam.
-         */
-        double operator()() { return _weibull(*this->_rng); }
-
-        /**
          * @brief Get current distribution shape parameter a.
          *
          * @return Shape parameter a of distribution.
@@ -722,7 +699,7 @@ namespace galsim {
         void clearCache() { _weibull.reset(); }
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _weibull(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -786,13 +763,6 @@ namespace galsim {
         { return GammaDeviate(serialize(),getK(),getTheta()); }
 
         /**
-         * @brief Draw a new random number from the distribution.
-         *
-         * @return A Gamma deviate with current shape k and scale theta.
-         */
-        double operator()() { return _gamma(*this->_rng); }
-
-        /**
          * @brief Get current distribution shape parameter k.
          *
          * @return Shape parameter k of distribution.
@@ -832,7 +802,7 @@ namespace galsim {
         void clearCache() { _gamma.reset(); }
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _gamma(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -893,13 +863,6 @@ namespace galsim {
         { return Chi2Deviate(serialize(),getN()); }
 
         /**
-         * @brief Draw a new random number from the distribution.
-         *
-         * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
-         */
-        double operator()() { return _chi_squared(*this->_rng); }
-
-        /**
          * @brief Get current distribution degrees-of-freedom parameter n.
          *
          * @return Degrees-of-freedom parameter n of distribution.
@@ -922,7 +885,7 @@ namespace galsim {
         void clearCache() { _chi_squared.reset(); }
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _chi_squared(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:

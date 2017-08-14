@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -50,7 +50,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
         ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
-    kwargs['rng'] = galsim.config.check_for_rng(base, logger, param_name)
+    kwargs['rng'] = galsim.config.GetRNG(config, base, logger, param_name)
 
     if 'index' in kwargs:
         index = kwargs['index']

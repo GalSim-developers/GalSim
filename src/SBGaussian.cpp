@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,6 +21,7 @@
 
 #include "SBGaussian.h"
 #include "SBGaussianImpl.h"
+#include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
@@ -107,7 +108,7 @@ namespace galsim {
     double SBGaussian::SBGaussianImpl::xValue(const Position<double>& p) const
     {
         double rsq = p.x*p.x + p.y*p.y;
-        return _norm * std::exp( -0.5 * rsq * _inv_sigma_sq );
+        return _norm * fmath::expd( -0.5 * rsq * _inv_sigma_sq );
     }
 
     std::complex<double> SBGaussian::SBGaussianImpl::kValue(const Position<double>& k) const
@@ -118,11 +119,12 @@ namespace galsim {
         } else if (ksq < _ksq_min) {
             return _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
         } else {
-            return _flux * std::exp(-0.5*ksq);
+            return _flux * fmath::expd(-0.5*ksq);
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<T> im,
                                                 double x0, double dx, int izero,
                                                 double y0, double dy, int jzero) const
     {
@@ -136,7 +138,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            double* ptr = im.getData();
+            T* ptr = im.getData();
             const int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -152,13 +154,13 @@ namespace galsim {
             std::vector<double> gauss_y(n);
             typedef std::vector<double>::iterator It;
             It xit = gauss_x.begin();
-            for (int i=0; i<m; ++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+            for (int i=0; i<m; ++i,x0+=dx) *xit++ = fmath::expd(-0.5 * x0*x0);
 
             if ((x0 == y0) && (dx == dy) && (m==n)) {
                 gauss_y = gauss_x;
             } else {
                 It yit = gauss_y.begin();
-                for (int j=0; j<n; ++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+                for (int j=0; j<n; ++j,y0+=dy) *yit++ = fmath::expd(-0.5 * y0*y0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -168,7 +170,8 @@ namespace galsim {
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBGaussian::SBGaussianImpl::fillXImage(ImageView<T> im,
                                                 double x0, double dx, double dxy,
                                                 double y0, double dy, double dyx) const
     {
@@ -177,7 +180,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -192,11 +195,12 @@ namespace galsim {
             double x = x0;
             double y = y0;
             for (int i=0; i<m; ++i,x+=dx,y+=dyx)
-                *ptr++ = _norm * std::exp( -0.5 * (x*x + y*y) );
+                *ptr++ = _norm * fmath::expd( -0.5 * (x*x + y*y) );
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -210,7 +214,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -227,13 +231,13 @@ namespace galsim {
             typedef std::vector<double>::iterator It;
             It kxit = gauss_kx.begin();
 
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = exp(-0.5 * kx0*kx0);
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = fmath::expd(-0.5 * kx0*kx0);
 
             if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
                 gauss_ky = gauss_kx;
             } else {
                 It kyit = gauss_ky.begin();
-                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = exp(-0.5 * ky0*ky0);
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = fmath::expd(-0.5 * ky0*ky0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -243,7 +247,8 @@ namespace galsim {
         }
     }
 
-    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBGaussian::SBGaussianImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -252,7 +257,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -273,7 +278,7 @@ namespace galsim {
                 } else if (ksq < _ksq_min) {
                     *ptr++ = _flux * (1. - 0.5*ksq*(1. - 0.25*ksq));
                 } else {
-                    *ptr++ =  _flux * std::exp(-0.5*ksq);
+                    *ptr++ =  _flux * fmath::expd(-0.5*ksq);
                 }
             }
         }

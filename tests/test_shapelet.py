@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -278,7 +278,8 @@ def test_shapelet_adjustments():
     np.testing.assert_equal(ref_shapelet.getNM(5,1), (bvec[19],bvec[20]))
 
     # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
-    gsref_shapelet = galsim.GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
+    # Make it opaque to the Shapelet versions
+    gsref_shapelet = galsim.GSObject(ref_shapelet.SBProfile)  
     gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     shapelet.withFlux(23.).drawImage(im, method='no_pixel')
