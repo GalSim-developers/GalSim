@@ -153,10 +153,10 @@ class InclinedSersic(GSObject):
         if not isinstance(inclination, galsim.Angle):
             raise TypeError("Input inclination should be an Angle")
 
-        GSObject.__init__(self, _galsim.SBInclinedSersic(n, inclination, scale_radius, half_light_radius,
-                                                         scale_height, scale_h_over_r, flux, trunc, flux_untruncated,
-                                                         gsparams))
-        self._flux_untruncated = flux_untruncated
+        GSObject.__init__(self, _galsim.SBInclinedSersic(
+                n, inclination.rad(), scale_radius, half_light_radius,
+                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, gsparams))
+        self._inclination = inclination
         self._gsparams = gsparams
 
     def getN(self):
@@ -167,7 +167,7 @@ class InclinedSersic(GSObject):
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
         """
-        return self.SBProfile.getInclination()
+        return self._inclination
 
     def getScaleRadius(self):
         """Return the scale radius for this profile.
@@ -198,7 +198,7 @@ class InclinedSersic(GSObject):
     @property
     def n(self): return self.getN()
     @property
-    def inclination(self): return self.getInclination()
+    def inclination(self): return self._inclination
     @property
     def scale_radius(self): return self.getScaleRadius()
     @property

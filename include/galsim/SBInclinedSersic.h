@@ -65,8 +65,8 @@ namespace galsim {
          * @brief Constructor.
          *
          * @param[in] n                 Sersic index.
-         * @param[in] inclination       Inclination of the disk relative to line of sight, where
-         *                              0 = face-on and pi/2 = edge-on.
+         * @param[in] inclination       Inclination of the disk relative to line of sight,
+         *                              in radians, where 0 = face-on and pi/2 = edge-on.
          * @param[in] size              Size specification.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
@@ -83,7 +83,7 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedSersic(double n, Angle inclination, double size, RadiusType rType,
+        SBInclinedSersic(double n, double inclination, double size, RadiusType rType,
                  double height, HeightType hType, double flux,
                  double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
@@ -97,7 +97,7 @@ namespace galsim {
         double getN() const;
 
         /// @brief Returns the inclination angle of the profile as an Angle instance
-        Angle getInclination() const;
+        double getInclination() const;
 
         /// @brief Returns the scale radius r0 of the Sersic profile.
         double getScaleRadius() const;

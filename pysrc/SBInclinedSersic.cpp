@@ -23,7 +23,6 @@
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 
-#include "Angle.h"
 #include "SBInclinedSersic.h"
 #include "RadiusHelper.h"
 
@@ -35,7 +34,8 @@ namespace galsim {
     {
 
         static SBInclinedSersic* construct(
-            double n, Angle inclination, const bp::object & scale_radius, const bp::object & half_light_radius,
+            double n, double inclination, const bp::object & scale_radius,
+            const bp::object & half_light_radius,
             const bp::object & scale_height, const bp::object & scale_h_over_r,
             double flux, double trunc, bool flux_untruncated,
             boost::shared_ptr<GSParams> gsparams)
@@ -71,7 +71,8 @@ namespace galsim {
                 hType = SBInclinedSersic::SCALE_HEIGHT;
             }
 
-            return new SBInclinedSersic(n, inclination, s, rType, h, hType, flux, trunc, flux_untruncated, gsparams);
+            return new SBInclinedSersic(n, inclination, s, rType, h, hType, flux, trunc,
+                                        flux_untruncated, gsparams);
         }
 
         static void wrap()

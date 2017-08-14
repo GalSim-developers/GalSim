@@ -32,7 +32,7 @@ namespace galsim {
     class SBInclinedSersic::SBInclinedSersicImpl : public SBProfileImpl
     {
     public:
-        SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
+        SBInclinedSersicImpl(double n, double inclination, double size, RadiusType rType,
                 double height, HeightType hType, double flux,
                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
@@ -65,7 +65,7 @@ namespace galsim {
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }
         /// @brief Returns the inclination angle
-        Angle getInclination() const { return _inclination; }
+        double getInclination() const { return _inclination; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
@@ -89,7 +89,7 @@ namespace galsim {
 
     private:
         double _n;       ///< Sersic index.
-        Angle _inclination; ///< Inclination angle
+        double _inclination; ///< Inclination angle
         double _flux;    ///< Actual flux (may differ from that specified at the constructor).
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
