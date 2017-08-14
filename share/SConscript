@@ -1,6 +1,7 @@
 # vim: set filetype=python :
 
 import os
+import glob
 
 Import('env')
 RunInstall = env['_RunInstall']
@@ -8,14 +9,10 @@ RunUninstall = env['_RunUninstall']
 
 install_subdir = 'share/galsim'
 
-files = [ 'vega.txt', 'acs_I_unrot_sci_20_cf.fits', 'afta_throughput.txt', 'wfirst_sky_backgrounds.txt',
-      'WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz', 'sip_422.txt', 'wfc_F814W.dat.gz',
-      'CWW_E_ext.sed', 'CWW_Sbc_ext.sed', 'CWW_Scd_ext.sed', 'CWW_Im_ext.sed',
-      'CWW_E_ext_more.sed', 'CWW_Sbc_ext_more.sed', 'CWW_Scd_ext_more.sed', 'CWW_Im_ext_more.sed' ]
-
-for N in range(1, 19):
-    str_N = '%02d'%N
-    files.append('AFTA_C5_WFC_Zernike_Data_150717_SCA'+str_N+'.txt')
+files = glob.glob('*')     # Everything
+files.remove('SConscript') # except this file.
+sed_files = glob.glob('SEDs/*')
+bp_files = glob.glob('bandpasses/*')
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']
@@ -24,7 +21,7 @@ else:
     install_dir = Dir('#.').abspath
     share_dir = Dir('#share').abspath
 
-# Write file share_dir.py to have the correct 
+# Write file share_dir.py to have the correct
 meta_data_file = os.path.join('..','galsim','meta_data.py')
 try:
     f = open(meta_data_file,'w')
@@ -45,8 +42,10 @@ f.close()
 
 if 'install' in COMMAND_LINE_TARGETS:
     RunInstall(env, files, install_subdir)
+    RunInstall(env, sed_files, install_subdir+'/SEDs')
+    RunInstall(env, bp_files, install_subdir+'/bandpasses')
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     RunUninstall(env, files, install_subdir)
-
-
+    RunUninstall(env, sed_files, install_subdir+'/SEDs')
+    RunUninstall(env, bp_files, install_subdir+'/bandpasses')

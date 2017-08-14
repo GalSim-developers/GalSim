@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,6 +72,28 @@ class CelestialCoord(object):
             raise ValueError("dec must be between -90 deg and +90 deg.")
         self._dec = dec
         self._x = None  # Indicate that x,y,z are not set yet.
+
+    def get_xyz(self):
+        """Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).
+
+        @returns a tuple (x,y,z)
+        """
+        self._set_aux()
+        return self._x, self._y, self._z
+
+    @classmethod
+    def from_xyz(cls, x, y, z):
+        """Construct a CelestialCoord from a given (x,y,z) position in three dimensions.
+
+        The 3D (x,y,z) position does not need to fall on the unit sphere.
+
+        @returns a CelestialCoord instance
+        """
+        ret = cls.__new__(cls)
+        ret._ra = np.arctan2(y, x) * galsim.radians
+        ret._dec = np.arctan2(z, np.sqrt(x*x + y*y)) * galsim.radians
+        ret._x = None
+        return ret
 
     @property
     def ra(self): return self._ra
@@ -260,34 +282,46 @@ class CelestialCoord(object):
         # where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
 
         # cos(dra) = cos(ra-ra0) = cos(ra0) cos(ra) + sin(ra0) sin(ra)
-        cosdra = self._cosra * cosra + self._sinra * sinra
+        cosdra = self._cosra * cosra
+        cosdra += self._sinra * sinra
 
         # sin(dra) = -sin(ra - ra0)
         # Note: - sign here is to make +x correspond to -ra,
         #       so x increases for decreasing ra.
         #       East is to the left on the sky!
         # sin(dra) = -cos(ra0) sin(ra) + sin(ra0) cos(ra)
-        sindra = -self._cosra * sinra + self._sinra * cosra
+        sindra = self._sinra * cosra
+        sindra -= self._cosra * sinra
 
         # Calculate k according to which projection we are using
-        cosc = self._sindec * sindec + self._cosdec * cosdec * cosdra
+        cosc = cosdec * cosdra
+        cosc *= self._cosdec
+        cosc += self._sindec * sindec
         if projection[0] == 'l':
             k = np.sqrt( 2. / (1.+cosc) )
         elif projection[0] == 's':
             k = 2. / (1. + cosc)
         elif projection[0] == 'g':
             k = 1. / cosc
+        elif cosc == 1.:
+            k = 1.
         else:
             c = np.arccos(cosc)
             k = c / np.sin(c)
 
-        u = k * cosdec * sindra
-        v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
+        # u = k * cosdec * sindra
+        # v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
+        # (Save k multiplication for later when we also multiply by factor.)
+        u = cosdec * sindra
+        v = cosdec * cosdra
+        v *= -self._sindec
+        v += self._cosdec * sindec
 
         # Convert to arcsec
         factor = galsim.radians / galsim.arcsec
-        u *= factor
-        v *= factor
+        k *= factor
+        u *= k
+        v *= k
 
         return u, v
 
@@ -343,8 +377,8 @@ class CelestialCoord(object):
 
         # Convert from arcsec to radians
         factor = galsim.arcsec / galsim.radians
-        u = u * factor
-        v = v * factor
+        u *= factor
+        v *= factor
 
         # Note that we can rewrite the formulae as:
         #
@@ -354,7 +388,8 @@ class CelestialCoord(object):
         # which means we only need cos(c) and sin(c)/r.  For most of the projections,
         # this saves us from having to take sqrt(rsq).
 
-        rsq = u*u + v*v
+        rsq = u*u
+        rsq += v*v
         if projection[0] == 'l':
             # c = 2 * arcsin(r/2)
             # Some trig manipulations reveal:
@@ -380,11 +415,19 @@ class CelestialCoord(object):
             sinc_over_r = np.sinc(r/np.pi)
 
         # Compute sindec, tandra
+        # Note: more efficient to use numpy op= as much as possible to avoid temporary arrays.
         self._set_aux()
-        sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec
+        # sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec
+        sindec = v * sinc_over_r
+        sindec *= self._cosdec
+        sindec += cosc * self._sindec
         # Remember the - sign so +dra is -u.  East is left.
-        tandra_num = -u * sinc_over_r
-        tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
+        tandra_num = u * sinc_over_r
+        tandra_num *= -1.
+        # tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
+        tandra_denom = v * sinc_over_r
+        tandra_denom *= -self._sindec
+        tandra_denom += cosc * self._cosdec
 
         dec = np.arcsin(sindec)
         ra = self.ra.rad() + np.arctan2(tandra_num, tandra_denom)
@@ -462,13 +505,16 @@ class CelestialCoord(object):
             r = np.sqrt(rsq)
             if r == 0.:
                 c = s = 1
+                dcdu = -u
+                dcdv = -v
+                dsdu = dsdv = 0
             else:
                 c = np.cos(r)
                 s = np.sin(r)/r
-            dcdu = -s*u
-            dcdv = -s*v
-            dsdu = (c-s)*u/rsq
-            dsdv = (c-s)*v/rsq
+                dcdu = -s*u
+                dcdv = -s*v
+                dsdu = (c-s)*u/rsq
+                dsdv = (c-s)*v/rsq
 
         self._set_aux()
         s0 = self._sindec

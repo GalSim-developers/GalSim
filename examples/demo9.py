@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -46,6 +46,7 @@ New features introduced in this demo:
 - image_pos = wcs.toImage(pos)
 - image.invertSelf()
 - truth_cat = galsim.OutputCatalog(names, types)
+- bounds.isDefined()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -279,9 +280,10 @@ def main(argv):
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
             # in order to avoid placing galaxies too close to the halo center where the lensing
-            # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 12 arcsec,
-            # which takes us essentially to the edge of the image.
-            radius = 12
+            # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 21 arcsec,
+            # which is large enough to cover all the way to the corners, although we'll need
+            # to watch out for galaxies that are fully off the edge of the image.
+            radius = 21
             inner_radius = 3
             max_rsq = radius**2
             min_rsq = inner_radius**2
@@ -418,6 +420,11 @@ def main(argv):
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds
+            # If there is no overlap, then the intersection comes out as not defined, which we
+            # can check with bounds.isDefined().
+            if not bounds.isDefined():
+                logger.info("object %d is fully off the edge of the image.  Skipping this one.", k)
+                continue
             full_image[bounds] += stamp[bounds]
 
             # Also draw the PSF

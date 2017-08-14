@@ -29,7 +29,7 @@ installation of GalSim requires the following dependencies. This dependency list
 includes a canonical version number that is known to work. In most cases, other
 recent versions will also work:
 
-- Python (2.7, 3.4, 3.5)
+- Python (2.7, 3.4, 3.5, 3.6)
 - SCons (2.1.0)
 - NumPy (1.11)
 - Astropy (1.1.1)
@@ -41,7 +41,7 @@ recent versions will also work:
 A few optional dependencies provide additional functionality, but GalSim can
 otherwise be compiled and used without them.  Basic WCS functionality is native
 to GalSim, but for users with more complicated WCS needs, we recommend
-installing starlink-pyast. Astropy's WCS package is also supported, but note
+installing starlink-pyast. Thee Astropy WCS package is also supported, but note
 that it requires scipy as an additional dependency.  To use yaml for config
 parsing, the pyyaml module is needed.  Faster text file parsing for reading in
 bandpasses and SEDs can be enabled if you have the pandas module (but the code
@@ -59,13 +59,13 @@ dependencies can be installed via fink, for users with Macs.
 Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.
 
-i) Python (2.6, 2.7, 3.4, or 3.5 series), with some additional modules installed
+i) Python (2.7, 3.4, 3.5, or 3.6 series), with some additional modules installed
 --------------------------------------------------------------------------------
 
 The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
-Currently GalSim supports Python versions 2.6, 2.7, 3.4, and 3.5.  It is likely
+Currently GalSim supports Python versions 2.7, 3.4, 3.5, and 3.6.  It is likely
 that other Python 3.x versions are compatible, but these two are the only ones
 actively tested.
 
@@ -132,7 +132,7 @@ The GalSim package also requires
   too, then you can use the galsim.AstropyWCS class.
 
 * Optional dependency: Astropy Units package.  This is now required for
-  GalSim chromatic functionality, but can be omitted if you're not using
+  GalSim chromatic functionality, but can be omitted if you are not using
   this part of GalSim.
 
 * Optional dependency: Pandas.  This has a very fast function for reading ASCII
@@ -194,7 +194,7 @@ many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-nosetests; see Section 2 below) was the Enthought Python Distribution (EPD; see
+pytest; see Section 2 below) was the Enthought Python Distribution (EPD; see
 https://enthought.com/products/canopy/academic/ for the academic download
 instructions).
 
@@ -493,17 +493,17 @@ You can run our test suite by typing
     scons tests
 
 This should compile the test suite and run it. The tests of our C++ library
-will always be run, but we use `nosetests` for our Python test suite, so that
-will only be run if `nosetests` is present on your system.  We do not require
+will always be run, but we use `pytest` for our Python test suite, so that
+will only be run if `pytest` is present on your system.  We do not require
 this as a dependency, since you can still do everything with the GalSim library
 without this.  But it is required for a complete run of the test suite.
 
-To install `nosetests`, you can also use easy_install as described in Section 1
-above (see also http://nose.readthedocs.org/en/latest/). Many third party-
+To install `pytest`, you can also use easy_install as described in Section 1
+above (see also https://docs.pytest.org/en/latest/). Many third party-
 maintained Python distributions, such as the Enthought Python Distribution,
-include `nosetests`.
+include `pytest`.
 
-Note: if your system does not have `nosetests` installed, and you do not want to
+Note: if your system does not have `pytest` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
 have passed.
@@ -614,15 +614,15 @@ you able to install GalSim using the master branch with:
 
 from within the repository base directory.
 
-To run the unit tests, you will also need nosetests, which you can also get from
+To run the unit tests, you will also need pytest, which you can also get from
 fink:
 
-    fink install nose-py27
-    scons tests NOSETESTS=/sw/bin/nosetests
+    fink install pytest-py27
+    scons tests PYTEST=/sw/bin/pytest
 
 If you want to use the system Python, or some other version, then the fink
 Python installations will not work.  You will need to manually install
-NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
+NumPy, PyFITS, PyYAML and pytest, for example using easy_install, with your
 chosen Python.
 
 For the system Python, you can use fink for Boost, but you will want a
@@ -877,11 +877,11 @@ You can list these options from the command line with
 
 ### Miscellaneous flags ###
 
-* `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
+* `PYTEST` (pytest) specifies which version of pytest you want to use
    for running the unit tests.  If you specified a non-default Python, then
-   there is a possibility that the standard nosetests executable in your path
+   there is a possibility that the standard pytest executable in your path
    will not work (since it might be for a different version of Python).  In
-   that case, specify the correct nosetests here.
+   that case, specify the correct pytest here.
 
 * `CACHE_LIB` (True) specifies whether to cache the results of the library
    checks.  While you are working one getting the prerequisites installed

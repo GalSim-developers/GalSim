@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,7 +34,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
 
     This is used by both BlendBuilder and BlendSetBuilder.
     """
-    # Build the neighbors first, so the final "current_val" for gal is the main galaxy.
+    # Build the neighbors first, so the final "current" value for gal is the main galaxy.
     n_neighbors = galsim.config.ParseValue(config, 'n_neighbors', base, int)[0]
     min_sep = galsim.config.ParseValue(config, 'min_sep', base, float)[0]
     max_sep = galsim.config.ParseValue(config, 'max_sep', base, float)[0]
@@ -43,7 +43,7 @@ def BuildBlendProfiles(self, config, base, psf, gsparams, logger):
     for i in range(n_neighbors):
         gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
         self.neighbor_gals.append(gal)
-        # Remove the current_val stuff from base['gal'] so we don't get the same galaxy
+        # Remove the current stuff from base['gal'] so we don't get the same galaxy
         # each time.
         galsim.config.RemoveCurrent(base['gal'], keep_safe=True)
 

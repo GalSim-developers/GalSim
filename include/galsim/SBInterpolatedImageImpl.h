@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -46,13 +46,16 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& p) const;
 
         // Only the izero, jzero one can be improved, so override that one.
-        void fillXImage(ImageView<double> im,
+        template <typename T>
+        void fillXImage(ImageView<T> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -167,6 +170,31 @@ namespace galsim {
 
     private:
 
+        void doFillXImage(ImageView<double> im,
+                          double x0, double dx, int izero,
+                          double y0, double dy, int jzero) const
+        { fillXImage(im,x0,dx,izero,y0,dy,jzero); }
+        void doFillXImage(ImageView<float> im,
+                          double x0, double dx, int izero,
+                          double y0, double dy, int jzero) const
+        { fillXImage(im,x0,dx,izero,y0,dy,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
         void operator=(const SBInterpolatedImageImpl& rhs);
@@ -179,15 +207,14 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& kimage, double dk, double stepk,
+            const BaseImage<T>& kimage, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data,
-            double dk, double stepk, double maxk,
+            double stepk, double maxk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         ~SBInterpolatedKImageImpl();
@@ -211,6 +238,7 @@ namespace galsim {
         // a table.  We do not currently implement xValue for real-space interpolation.
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
+        void setCentroid() const;
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
         double maxSB() const;
@@ -222,8 +250,6 @@ namespace galsim {
         // Additional subclass methods
 
         ConstImageView<double> getKData() const;
-        double dK() const {return _dk;}
-        bool cenIsSet() const {return _cenIsSet;}
 
     protected:
 
@@ -237,9 +263,6 @@ namespace galsim {
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;
-
-        double _dk; ///< Pitch of stored KTable
-        mutable bool _cenIsSet;
 
         std::string serialize() const;
 

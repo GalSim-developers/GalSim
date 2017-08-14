@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -85,6 +85,7 @@ def test_gaussian():
     # Gaussian noise can also be given the variance directly, rather than sigma
     galsim.config.RemoveCurrent(config)
     del config['image']['noise']['sigma']
+    del config['image']['noise']['_get']
     config['image']['noise']['variance'] = var
     im1c = galsim.config.BuildImage(config)
     np.testing.assert_equal(im1c.array, im1a.array)
@@ -254,7 +255,7 @@ def test_ccdnoise():
     # without any real noise there yet.
     image2.fill(0)
     rng.reset(124)
-    config['rng'] = rng
+    config['image_num_rng'] = rng
     galsim.config.AddNoise(config, image2, current_var=1.e-20, logger=logger)
 
     print('with negligible current_var: ',np.mean(image2.array),np.var(image2.array))
@@ -357,6 +358,7 @@ def test_ccdnoise_phot():
     # Some slightly different code paths if rn = 0 or gain = 1:
     del config['image']['noise']['gain']
     del config['image']['noise']['read_noise']
+    del config['image']['noise']['_get']
     rng.seed(1234 + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
     im2a.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_pixel)))
@@ -400,6 +402,7 @@ def test_ccdnoise_phot():
     galsim.config.RemoveCurrent(config)
     config['image']['noise']['gain'] = gain
     config['image']['noise']['read_noise'] = rn
+    del config['image']['noise']['_get']
     rng.seed(1234+1)
     im4a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
     wcs.makeSkyImage(sky_im, sky)

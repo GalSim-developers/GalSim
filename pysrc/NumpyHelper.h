@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -59,6 +59,8 @@ template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT3
 //template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
 template <> struct NumPyTraits<float> { static int getCode() { return NPY_FLOAT32; } };
 template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT64; } };
+template <> struct NumPyTraits<std::complex<float> >
+{ static int getCode() { return NPY_COMPLEX64; } };
 template <> struct NumPyTraits<std::complex<double> >
 { static int getCode() { return NPY_COMPLEX128; } };
 
@@ -259,7 +261,9 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
         bp::throw_error_already_set();
     }
     if (GetNumpyArrayNDim(array.ptr()) != ndim) {
-        PyErr_SetString(PyExc_ValueError, "numpy.ndarray argument has must be 2-d");
+        std::ostringstream oss;
+        oss<<"numpy.ndarray argument must be "<<ndim<<"-d"<<"\n";
+        PyErr_SetString(PyExc_ValueError, oss.str().c_str());
         bp::throw_error_already_set();
     }
     if (!isConst && !(GetNumpyArrayFlags(array.ptr()) & NPY_ARRAY_WRITEABLE)) {

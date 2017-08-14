@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,6 +39,8 @@ def test_nonlinearity_basic():
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
+    im.replaceNegative()  # For default float32 image, some values are -1.e-11, which messes
+                          # up below tests that need I>=0.
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -177,6 +179,9 @@ def test_recipfail_basic():
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
+    im.replaceNegative(1.e-11)  # For default float32 image, some values are -1.e-11, which messes
+                                # up below tests that need I>0.  They can't even handle I=0, so use
+                                # a slightly positive value instead.
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 

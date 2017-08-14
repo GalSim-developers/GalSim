@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -993,6 +993,8 @@ def test_stepk_maxk():
 
 @timer
 def test_kroundtrip():
+    """ Test that GSObjects `a` and `b` are the same when b = InterpolatedKImage(a.drawKImage)
+    """
     import warnings
 
     a = final
@@ -1001,6 +1003,7 @@ def test_kroundtrip():
 
     # Check picklability
     do_pickle(b)
+    do_pickle(b._sbiki)
     do_pickle(b, lambda x: x.drawImage())
     do_pickle(b.SBProfile)
     do_pickle(b.SBProfile, lambda x: repr(x))
@@ -1022,6 +1025,12 @@ def test_kroundtrip():
     # This is the one that matters though; fails at 6th decimal
     np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5,
                                          "InterpolatedKImage image drawn incorrectly.")
+
+    # Check that we can construct an interpolatedKImage without a wcs.
+    kim_c = a.drawKImage(scale=1)
+    c = galsim.InterpolatedKImage(kim_c)
+    d = galsim.InterpolatedKImage(galsim.ImageCD(kim_c.array))
+    assert c == d, "Failed to construct InterpolatedKImage without wcs."
 
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
@@ -1080,7 +1089,6 @@ def test_kroundtrip():
     # Fails at 6th decimal.
     np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
                                          "Convolution of InterpolatedKImage drawn incorrectly.")
-
 
 @timer
 def test_multihdu_readin():

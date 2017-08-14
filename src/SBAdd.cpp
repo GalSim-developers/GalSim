@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -125,7 +125,8 @@ namespace galsim {
         return kv;
     }
 
-    void SBAdd::SBAddImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBAdd::SBAddImpl::fillXImage(ImageView<T> im,
                                       double x0, double dx, int izero,
                                       double y0, double dy, int jzero) const
     {
@@ -136,16 +137,16 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillXImage(im,x0,dx,izero,y0,dy,jzero);
         if (++pptr != _plist.end()) {
-            ImageAlloc<double> im2(im.getBounds());
+            ImageAlloc<T> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,izero,y0,dy,jzero);
                 im += im2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBAdd::SBAddImpl::fillXImage(ImageView<T> im,
                                       double x0, double dx, double dxy,
                                       double y0, double dy, double dyx) const
     {
@@ -156,16 +157,16 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillXImage(im,x0,dx,dxy,y0,dy,dyx);
         if (++pptr != _plist.end()) {
-            ImageAlloc<double> im2(im.getBounds());
+            ImageAlloc<T> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,dxy,y0,dy,dyx);
                 im += im2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<T> > im,
                                       double kx0, double dkx, int izero,
                                       double ky0, double dky, int jzero) const
     {
@@ -176,16 +177,16 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 im += im2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<T> > im,
                                       double kx0, double dkx, double dkxy,
                                       double ky0, double dky, double dkyx) const
     {
@@ -196,9 +197,8 @@ namespace galsim {
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
-            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            ImageAlloc<std::complex<T> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                im2.setZero();
                 GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 im += im2;
             }

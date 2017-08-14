@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,6 +29,7 @@ import numpy as np
 import galsim
 import galsim.config
 import sys
+import os
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -85,7 +86,7 @@ class MultiExposureObject(object):
                 raise ValueError('Array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('Array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != images[0].array.shape:
                 raise ValueError('Images must all be the same shape')
 
@@ -112,7 +113,7 @@ class MultiExposureObject(object):
                 raise ValueError('PSF array shape %s is invalid.  Must be square'%(str(s)))
             if s[0] not in BOX_SIZES:
                 raise ValueError('PSF array shape %s is invalid.  Size must be in %s'%(
-                        str(box_size),str(BOX_SIZES)))
+                        str(s),str(BOX_SIZES)))
             if i > 0 and s != psf[0].array.shape:
                 raise ValueError('PSF images must all be the same shape')
 
@@ -331,7 +332,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         object_data = pyfits.BinTableHDU.from_columns(cols)
         object_data.name = 'object_data'
-    except:  # pragma: no cover
+    except AttributeError:  # pragma: no cover
         object_data = pyfits.new_table(pyfits.ColDefs(cols))
         object_data.update_ext_name('object_data')
 
@@ -356,7 +357,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
         image_info.name = 'image_info'
-    except:  # pragma: no cover
+    except AttributeError:  # pragma: no cover
         image_info = pyfits.new_table(pyfits.ColDefs(cols))
         image_info.update_ext_name('image_info')
 
@@ -388,7 +389,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         metadata = pyfits.BinTableHDU.from_columns(cols)
         metadata.name = 'metadata'
-    except:  # pragma: no cover
+    except AttributeError:  # pragma: no cover
         metadata = pyfits.new_table(pyfits.ColDefs(cols))
         metadata.update_ext_name('metadata')
 
@@ -409,7 +410,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         seg_cutouts,
         psf_cutouts
     ])
-    hdu_list.writeto(file_name,clobber=clobber)
+    galsim.fits.writeFile(file_name, hdu_list)
 
 
 # Make the class that will
@@ -439,6 +440,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                 raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
         req = { 'nobjects' : int , 'nstamps_per_object' : int }
+        ignore += [ 'file_name', 'dir', 'nfiles' ]
         params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req)[0]
 
         nobjects = params['nobjects']
@@ -472,7 +474,7 @@ class MEDSBuilder(galsim.config.OutputBuilder):
 
         return obj_list
 
-    def writeFile(self, data, file_name):
+    def writeFile(self, data, file_name, config, base, logger):
         WriteMEDS(data, file_name)
 
     def getNImages(self, config, base, file_num):

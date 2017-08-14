@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -710,13 +710,15 @@ def test_Zernike_orthonormality():
     diam = 4.0
     pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
     aper = galsim.Aperture(diam=diam, pad_factor=pad_factor)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
     area = np.pi*(diam/2)**2
     for j1 in range(1, jmax+1):
-        screen1 = galsim.OpticalScreen(aberrations=[0]*(j1+1)+[1])
-        wf1 = screen1.wavefront(aper) / 500.0  # nm -> waves
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1])
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
-            screen2 = galsim.OpticalScreen(aberrations=[0]*(j2+1)+[1])
-            wf2 = screen2.wavefront(aper) / 500.0
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1])
+            wf2 = screen2.wavefront(u, v) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -730,21 +732,23 @@ def test_Zernike_orthonormality():
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
 
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
 
     # Repeat for Annular Zernikes
     jmax = 14  # Going up to 14 annular Zernikes takes about ~1 sec on my laptop
     obscuration = 0.3
     aper = galsim.Aperture(diam=diam, pad_factor=pad_factor, obscuration=obscuration)
+    u = aper.u[aper.illuminated]
+    v = aper.v[aper.illuminated]
     area = np.pi*(diam/2)**2*(1 - obscuration**2)
     for j1 in range(1, jmax+1):
-        screen1 = galsim.OpticalScreen(aberrations=[0]*(j1+1)+[1], obscuration=obscuration,
-                                       annular_zernike=True)
-        wf1 = screen1.wavefront(aper) / 500.0  # nm -> waves
+        screen1 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j1+1)+[1],
+                                       obscuration=obscuration, annular_zernike=True)
+        wf1 = screen1.wavefront(u, v) / 500.0  # nm -> waves
         for j2 in range(j1, jmax+1):
-            screen2 = galsim.OpticalScreen(aberrations=[0]*(j2+1)+[1], obscuration=obscuration,
-                                           annular_zernike=True)
-            wf2 = screen2.wavefront(aper) / 500.0
+            screen2 = galsim.OpticalScreen(diam=diam, aberrations=[0]*(j2+1)+[1],
+                                           obscuration=obscuration, annular_zernike=True)
+            wf2 = screen2.wavefront(u, v) / 500.0
             integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
             if j1 == j2:
                 # Only passes at ~1% level because of pixelization.
@@ -757,7 +761,7 @@ def test_Zernike_orthonormality():
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
     do_pickle(screen1)
-    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+    do_pickle(screen1, lambda x: tuple(x.wavefront(u, v)))
 
 
 @timer
@@ -946,6 +950,52 @@ def test_noll():
         np.testing.assert_array_equal(coefs,true_coefs)
 
 
+@timer
+def test_geometric_shoot():
+    """Test that geometric photon shooting is reasonably consistent with Fourier optics."""
+    jmax = 20
+    bd = galsim.BaseDeviate(11111111)
+    u = galsim.UniformDeviate(bd)
+
+    lam = 500.0
+    diam = 4.0
+
+    for i in range(4):  # Do a few random tests.  Takes about 1 sec.
+        aberrations = [0]+[u()*0.1 for i in range(jmax)]
+        opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
+                                    geometric_shooting=True)
+
+        # Use really good seeing, so that the optics contribution actually matters.
+        psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
+        im_shoot = psf.drawImage(nx=32, ny=32, scale=0.2, method='phot', n_photons=100000, rng=u)
+        im_fft = psf.drawImage(nx=32, ny=32, scale=0.2)
+
+        printval(im_fft, im_shoot)
+        shoot_moments = galsim.hsm.FindAdaptiveMom(im_shoot)
+        fft_moments = galsim.hsm.FindAdaptiveMom(im_fft)
+
+        # 40th of a pixel centroid tolerance.
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.x, fft_moments.moments_centroid.x, rtol=0, atol=0.025,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.moments_centroid.y, fft_moments.moments_centroid.y, rtol=0, atol=0.025,
+            err_msg="")
+        # 1% size tolerance
+        np.testing.assert_allclose(
+            shoot_moments.moments_sigma, fft_moments.moments_sigma, rtol=0.01, atol=0,
+            err_msg="")
+        # Not amazing ellipticity consistency at the moment.  0.01 tolerance.
+        print(fft_moments.observed_shape)
+        print(shoot_moments.observed_shape)
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g1, fft_moments.observed_shape.g1, rtol=0, atol=0.01,
+            err_msg="")
+        np.testing.assert_allclose(
+            shoot_moments.observed_shape.g2, fft_moments.observed_shape.g2, rtol=0, atol=0.01,
+            err_msg="")
+
+
 if __name__ == "__main__":
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
@@ -962,3 +1012,4 @@ if __name__ == "__main__":
     test_stepk_maxk_iipad()
     test_ne()
     test_noll()
+    test_geometric_shoot()

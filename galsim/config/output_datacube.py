@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -49,6 +49,7 @@ class DataCubeBuilder(OutputBuilder):
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
         req = { 'nimages' : int }
+        ignore += [ 'file_name', 'dir', 'nfiles' ]
         galsim.config.CheckAllParams(config, ignore=ignore, req=req)
 
         # All images need to be the same size for a data cube.
@@ -97,13 +98,16 @@ class DataCubeBuilder(OutputBuilder):
             raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
         return galsim.config.ParseValue(config,'nimages',base,int)[0]
 
-    def writeFile(self, data, file_name):
+    def writeFile(self, data, file_name, config, base, logger):
         """Write the data to a file.
 
         @param data             The data to write.  Usually a list of images returned by
                                 buildImages, but possibly with extra HDUs tacked onto the end
                                 from the extra output items.
         @param file_name        The file_name to write to.
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param logger           If given, a logger object to log progress.
         """
         galsim.fits.writeCube(data,file_name)
 

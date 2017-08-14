@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -191,7 +191,7 @@ namespace galsim {
          *
          * This is invalid for a BaseDeviate object that is not a derived class.
          * However, we don't make it pure virtual, since we want to be able to make
-         * BaseDeviate objects a direct way to define a common seed for other Deviates.
+         * BaseDeviate objects as a direct way to define a common seed for other Deviates.
          */
         double operator()() { return _val(); }
 
@@ -217,9 +217,7 @@ namespace galsim {
         struct BaseDeviateImpl;
         boost::shared_ptr<BaseDeviateImpl> _impl;
 
-        // This is the virtual function that is actually overridden.  This is because
-        // some derived classes prefer to return an int.  (e.g. Binom, Poisson)
-        // So this provides the interface that returns a double.
+        // This is the virtual function that is actually overridden.
         virtual double _val()
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
@@ -285,7 +283,7 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _urd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -395,7 +393,7 @@ namespace galsim {
         void generateFromVariance(int N, double* data);
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _normal(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -494,7 +492,7 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return double(operator()()); }
+        double _val() { return _bd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -584,10 +582,17 @@ namespace galsim {
          */
         void generateFromExpectation(int N, double* data);
 
-
     protected:
-        double _val() { return double(operator()()); }
+        double _val();
+
+        double (PoissonDeviate::*_getValue)(); // A variable equal to either getPDValue (normal)
+                                               // or getGDValue (if mean > 2^30)
+
         std::string make_repr(bool incl_seed);
+
+        double getPDValue();
+        double getGDValue();
+
 
     private:
         struct PoissonDeviateImpl;
@@ -692,7 +697,7 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _weibull(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -796,7 +801,7 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _gamma(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -885,7 +890,7 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return operator()(); }
+        double _val() { return _chi_squared(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:

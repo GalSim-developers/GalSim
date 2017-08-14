@@ -1,0 +1,60 @@
+
+psf:
+    index_key: file_num
+    type: Convolve
+    items:
+        -
+            type: Kolmogorov
+            fwhm: { type: Random, min: 0.9, max: 1.1 }
+            ellip:
+                type: EBeta
+                e: { type: Sequence, first: 0.2, step: 0.05 }
+                beta: { type: Random }
+        -
+            type: Airy
+            lam: 700
+            diam: 4
+
+gal:
+    type: Exponential
+    half_light_radius:
+        index_key: image_num
+        type: Sequence
+        first: 0.5
+        step: 0.5
+        nitems: 3
+    ellip:
+        index_key: image_num
+        type: E1E2
+        e1: { index_key: file_num, type: Random, min: -0.2, max: 0.2 }
+        e2: { type: Random, min: -0.2, max: 0.2 }
+    flux:
+        type: Sequence
+        first: 100
+        step: 100
+        nitems: 9
+    shear:
+        type: G1G2
+        g1: { type: Random, min: -0.02, max: 0.02 }
+        g2: { index_key: image_num, type: Random, min: -0.02, max: 0.02 }
+
+stamp:
+    reject: { type: RandomBinomial, p: 0.2 }
+
+image:
+    type: Tiled
+    stamp_size: 32
+    nx_tiles: 3
+    ny_tiles: 3
+    random_seed: 12345
+    pixel_scale: 0.3
+
+output:
+    type: MultiFits
+    nfiles: 3
+    nimages: 3
+    dir: output
+    file_name:
+        type: NumberedFile
+        root: index_key   # index_keyXX.fits
+        digits: 2

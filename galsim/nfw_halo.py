@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -171,10 +171,10 @@ class NFWHalo(object):
         self.rs = R200/self.c
 
         # convert scale radius in arcsec
-        dl = self.cosmo.Da(self.z)*3000.; # in Mpc/h
+        dl = self.cosmo.Da(self.z)*3000. # in Mpc/h
         scale = self.rs / dl
-        arcsec2rad = 1./206265;
-        self.rs_arcsec = scale/arcsec2rad;
+        arcsec2rad = 1./206265
+        self.rs_arcsec = scale/arcsec2rad
 
     def __repr__(self):
         s = "galsim.NFWHalo(mass=%r, conc=%r, redshift=%r"%(self.M, self.c, self.z)
@@ -502,5 +502,3 @@ class NFWHalo(object):
             return g1[0], g2[0], mu[0]
         else:
             return g1.tolist(), g2.tolist(), m.tolist()
-
-

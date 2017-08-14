@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -88,7 +88,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     rng = None
     if 'index' not in kwargs:
-        rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+        rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
         kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
 
         # Make sure this process gives consistent results regardless of the number of processes
@@ -102,7 +102,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     # point assume that kwargs['gal_type'] exists.
     if kwargs['gal_type'] == 'real':
         if rng is None:
-            rng = galsim.config.check_for_rng(base, logger, 'COSMOSGalaxy')
+            rng = galsim.config.GetRNG(config, base, logger, 'COSMOSGalaxy')
         kwargs['rng'] = rng
 
     # NB. Even though index is officially optional, it will always be present, either because it was

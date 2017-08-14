@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -92,7 +92,7 @@ def test_smallshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss = gauss.shear(myShear)
+    gauss = gauss._shear(myShear)
     gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -147,7 +147,7 @@ def test_largeshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with default_params disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    devauc = devauc.shear(myShear)
+    devauc = devauc._shear(myShear)
     devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -203,7 +203,7 @@ def test_rotate():
             err_msg="Using GSObject rotate with default_params disagrees with expected "
             "result")
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
+    gal = gal._shear(myShear).rotate(45.0 * galsim.degrees)
     gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -909,6 +909,75 @@ def test_ne():
             galsim.Transform(gal1, gsparams=gsp)]
     all_obj_diff(objs)
 
+@timer
+def test_compound():
+    """Check that transformations of transformations work the same whether they are compounded
+    automatically or not.
+    """
+    gal1 = galsim.Gaussian(fwhm=1.7, flux=2.3)
+    gal2 = gal1.shear(g1=0.21, g2=0.12).rotate(33 * galsim.degrees).shift(0.1,0.4) * 11.
+    gal3 = gal2.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    # These should have compounded automatically into a single transformation
+    print('gal3 = ',gal3)
+    print('gal3.original = ',gal3.original)
+    assert gal3.original == gal1
+
+    gal4 = gal2 + 0. * gal1  # Equivalent to gal2, but the sum kills the automatic compounding.
+    gal5 = gal4.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    print('gal5 = ',gal5)
+    print('gal5.original = ',gal5.original)
+    assert gal5.original != gal1
+    assert gal5.original == gal4
+
+    # Despite that, the gal3 and gal5 should draw the same in both real and k-space
+    im3_d = galsim.ImageD(8,8)
+    im5_d = galsim.ImageD(8,8)
+    im3_f = galsim.ImageF(8,8)
+    im5_f = galsim.ImageF(8,8)
+    im3_cd = galsim.ImageCD(8,8)
+    im5_cd = galsim.ImageCD(8,8)
+    im3_cf = galsim.ImageCF(8,8)
+    im5_cf = galsim.ImageCF(8,8)
+
+    # Note: these are not equal.  gal5 lost track of the overall transformation and thinks it
+    # needs a bit larger maxk, smaller stepk.  ~10% different.
+    print('gal3.stepK = ',gal3.stepK())
+    print('gal5.stepK = ',gal5.stepK())
+    print('gal3.maxK = ',gal3.maxK())
+    print('gal5.maxK = ',gal5.maxK())
+
+    gal3.drawImage(image=im3_d, method='sb', scale=0.2)
+    gal5.drawImage(image=im5_d, method='sb', scale=0.2)
+    np.testing.assert_almost_equal(im3_d[1,1], gal3.xValue(-0.7,-0.7), decimal=12)
+    np.testing.assert_almost_equal(im5_d[1,1], gal3.xValue(-0.7,-0.7), decimal=12)
+    np.testing.assert_almost_equal(im3_d.array[0,0], gal3.xValue(-0.7,-0.7), decimal=12)
+    np.testing.assert_almost_equal(im5_d.array[0,0], gal3.xValue(-0.7,-0.7), decimal=12)
+    np.testing.assert_array_almost_equal(im3_d.array, im5_d.array, decimal=12)
+
+    gal3.drawImage(image=im3_f, method='sb', scale=0.2)
+    gal5.drawImage(image=im5_f, method='sb', scale=0.2)
+    np.testing.assert_almost_equal(im3_f[1,1], gal3.xValue(-0.7,-0.7), decimal=4)
+    np.testing.assert_almost_equal(im5_f[1,1], gal3.xValue(-0.7,-0.7), decimal=4)
+    np.testing.assert_almost_equal(im3_f.array, im5_f.array, decimal=4)
+    np.testing.assert_almost_equal(im3_f.array, im3_d.array, decimal=4)
+    np.testing.assert_almost_equal(im5_f.array, im5_d.array, decimal=4)
+
+    gal3.drawKImage(image=im3_cd, scale=0.5)
+    gal5.drawKImage(image=im5_cd, scale=0.5)
+    np.testing.assert_almost_equal(im3_cd[-4,-4], gal3.kValue(-2.,-2.), decimal=12)
+    np.testing.assert_almost_equal(im5_cd[-4,-4], gal3.kValue(-2.,-2.), decimal=12)
+    np.testing.assert_almost_equal(im3_cd.array[0,0], gal3.kValue(-2.,-2.), decimal=12)
+    np.testing.assert_almost_equal(im5_cd.array[0,0], gal3.kValue(-2.,-2.), decimal=12)
+    np.testing.assert_array_almost_equal(im3_cd.array, im5_cd.array, decimal=12)
+
+    gal3.drawKImage(image=im3_cf, scale=0.5)
+    gal5.drawKImage(image=im5_cf, scale=0.5)
+    np.testing.assert_almost_equal(im3_cf[-4,-4], gal3.kValue(-2.,-2.), decimal=3)
+    np.testing.assert_almost_equal(im5_cf[-4,-4], gal3.kValue(-2.,-2.), decimal=3)
+    np.testing.assert_array_almost_equal(im3_cf.array, im5_cf.array, decimal=3)
+    np.testing.assert_array_almost_equal(im3_cf.array, im3_cd.array, decimal=3)
+    np.testing.assert_array_almost_equal(im5_cf.array, im5_cd.array, decimal=3)
+
 
 if __name__ == "__main__":
     test_smallshear()
@@ -922,3 +991,4 @@ if __name__ == "__main__":
     test_integer_shift_photon()
     test_flip()
     test_ne()
+    test_compound()

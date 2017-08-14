@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,14 +26,13 @@ def HSM_Shape_Measure(config, base, value_type):
     params, safe = galsim.config.GetAllParams(config, base, req=req)
 
     obj_key = config['obj']
-    obj, safe1 = galsim.config.GetCurrentValue(obj_key, base, value_type, return_safe=True)
-    safe = safe and safe1
+    obj = galsim.config.GetCurrentValue(obj_key, base)
 
     im = obj.drawImage()
     try:
         shape = im.FindAdaptiveMom().observed_shape
     except Exception as e:
         shape = galsim.Shear(-99 - 99j)
-    return shape, safe
+    return shape, False
 
 galsim.config.RegisterValueType('HSM_Shape_Measure', HSM_Shape_Measure, [ galsim.Shear ])

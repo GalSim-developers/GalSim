@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -48,6 +48,7 @@
 # - Power spectrum shears and magnifications for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
 # - Writing a compressed FITS image (using Rice compression).
+# - Using $ as shorthand for Eval type.
 #
 
 # Sometimes there are variables that you want to use in multiple Eval commands.
@@ -80,12 +81,24 @@ eval_variables :
     fexp_time : &exp_time 300
 
     # image_size = size in pixels
-    # size in degrees = 2048 pixels * 0.2 arcsec/pixel / 3600 arcsec/deg = 0.114 deg
     fimage_size : &image_size 2048
 
     # nobjects = number of objects per image
     # corresponds to 8 gal / arcmin^2
     inobjects : &nobjects 288
+
+    # We also introduce here a shorthand notation for Eval types.  Whenever you just need
+    # to evaluate a string, but don't need to define any extra variables here, you can
+    # just use a string with a $ as the first character.  So the following is equivalent to:
+    #
+    # fsize_degrees:
+    #     type : Eval
+    #     str : "image_size * pixel_scale / 3600"
+    #
+    # For simple evaluations, this often makes the config file more readable.
+    # This is a calculation of the size of the image in degrees, which we'll use below.
+    # size in degrees = 2048 pixels * 0.2 arcsec/pixel / 3600 arcsec/deg = 0.114 deg
+    fsize_degrees : '$image_size * pixel_scale / 3600'
 
 
 # Define the PSF profile
@@ -174,8 +187,7 @@ gal :
         # second exposures.  The COSMOS galaxies have their flux set to be appropriate for HST
         # (a 2.4 m telescope with a linear obscuration factor of 0.33) with 1 second exposures.
         # So the flux should be scaled by (4**2/(2.4*(1-0.33**2))) * 300
-        type : Eval
-        str : "(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
+        "$(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
 
 
 # Define some other information about the images
@@ -196,18 +208,6 @@ image :
     # If index_convention is 1 or 'Fortran' or 'FITS', then the lower-left pixel is (1,1).
     # The default is 1.
     index_convention : 0
-
-    # In demo9, we said that you can specify either image_pos or world_pos to place
-    # each postage stamp on the full image.  If you don't specify either one, then the
-    # default is random x and y within the full image.
-    #
-    # image_pos :
-    #     type : XY
-    #     x : { type : Random , min : 0 , max : xsize-1 }
-    #     y : { type : Random , min : 0 , max : ysize-1 }
-    #
-    # Note: if image_convention were 1 as is the default, then these would instead be
-    #     min : 1 , max : {x,y}size
 
 
     # Add Gaussian noise.  When using the whitening feature, the whitening process will end
@@ -255,10 +255,10 @@ image :
     wcs :
         type : Tan
         # theta and pixel_scale are defined in eval_variables, so we can use them here.
-        dudx : { type : Eval, str : 'math.cos(theta.rad()) * pixel_scale' }
-        dudy : { type : Eval, str : '-math.sin(theta.rad()) * pixel_scale' }
-        dvdx : { type : Eval, str : 'math.sin(theta.rad()) * pixel_scale' }
-        dvdy : { type : Eval, str : 'math.cos(theta.rad()) * pixel_scale' }
+        dudx : '$ math.cos(theta.rad()) * pixel_scale'
+        dudy : '$ -math.sin(theta.rad()) * pixel_scale'
+        dvdx : '$ math.sin(theta.rad()) * pixel_scale'
+        dvdy : '$ math.cos(theta.rad()) * pixel_scale'
 
         # This is the default, but we put it in anyway to make it explicit.
         # It sets the angular units of the (u,v) intermediate coordinate system.
@@ -270,6 +270,34 @@ image :
         # These are the celestial coordinates of (u,v) = (0,0).
         ra : 19.3 hours
         dec : -33.1 degrees
+
+    # When the WCS is a transformation from pixels to sky coordinates (ie. RA, Dec), then one
+    # may specify the world_pos in terms of RA, Dec.  We call this a CelestialCoord, and this
+    # kind of WCS is called a CelestialWCS.  Typically, one would get these values from some
+    # sort of simulation that generated real sky positions for the objects, but in this case
+    # we place them randomly near the central point of the TAN projection of the wcs.
+    #
+    # We also introduce another shorthand notation.  The @ sign takes the current value of some
+    # other location in the config dict.  You can use this either at the start of a string, which
+    # works just like the Current type introduced in demo10, or within an Eval type, which would
+    # be like defining a temporary variable that just grabbed the current value from another
+    # place in the dict.  Here we grab the ra and dec from the wcs field above as the center of
+    # the current field of view.
+    world_pos:
+        type: RADec
+        ra:
+            # Note: in this case we can't use the $ notation, because we want to define a new
+            # variable to use within the eval string.  But if we were able to use the $ notation,
+            # it would still be allowed to use @ value in the string as we do here.
+            type: Eval
+            # Range of RA = RA_center +- image_size / cos(Dec)
+            str: "@image.wcs.ra + dtheta / math.cos((@image.world_pos.dec).rad()) * galsim.degrees"
+            fdtheta: { type: Random, min: '$-size_degrees/2.', max: '$size_degrees/2.' }
+        dec:
+            type: Eval
+            # Range of Dec = Dec_center +- image_size
+            str: "@image.wcs.dec + dtheta * galsim.degrees"
+            fdtheta: { type: Random, min: '$-size_degrees/2.', max: '$size_degrees/2.' }
 
     random_seed : 24783923
 

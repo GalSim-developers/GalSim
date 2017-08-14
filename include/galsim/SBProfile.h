@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -70,13 +70,13 @@ namespace galsim {
      * 2-dimensional image plane, with real and/or Fourier-domain models of a wide variety of galaxy
      * shapes, point-spread functions (PSFs), and their convolutions.  There are several
      * realizations of the SBProfile classes: There are the "atomic" classes that represent specific
-     * analytic profiles: (SBGaussian, SBSersic, SBAiry, SBExponential, SBBox, SBDeVaucouleurs and
-     * SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of pixel values and a
-     * chosen interpolation scheme between pixel centers.  SBTransform represents any affine
-     * transformation (shear, magnification, rotation, translation, and/or flux rescaling) of any
-     * other SBProfile. SBAdd represents the sum of any number of SBProfiles.  SBConvolve represents
-     * the convolution of any number of SBProfiles, and SBDeconvolve is the deconvolution of one
-     * SBProfile with another.
+     * analytic profiles: (SBDeltaFunction, SBGaussian, SBSersic, SBAiry, SBExponential, SBBox,
+     * SBDeVaucouleurs and SBMoffat). SBInterpolatedImage represents a pattern defined by a grid of
+     * pixel values and a chosen interpolation scheme between pixel centers.  SBTransform represents
+     * any affine transformation (shear, magnification, rotation, translation, and/or flux
+     * rescaling) of any other SBProfile. SBAdd represents the sum of any number of SBProfiles.
+     * SBConvolve represents the convolution of any number of SBProfiles, and SBDeconvolve is the
+     * deconvolution of one SBProfile with another.
      *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
      * knows what is needed to prevent aliasing or truncation of itself when drawn.  The classes
@@ -350,11 +350,12 @@ namespace galsim {
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in]        dx, the pixel scale
+         * @param[in]        add to the existing image? (true) or just assign it? (false)
          *
          * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double dx) const;
+        double draw(ImageView<T> image, double dx, bool add) const;
 
         /**
          * @brief Draw an image of the SBProfile in k space.
@@ -364,9 +365,10 @@ namespace galsim {
          *
          * @param[in,out]    image in k space (must be an ImageViewC)
          * @param[in]        dk, the step size in k space
+         * @param[in]        add to the existing image? (true) or just assign it? (false)
          */
         template <typename T>
-        void drawK(ImageView<std::complex<T> > image, double dk) const;
+        void drawK(ImageView<std::complex<T> > image, double dk, bool add) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
