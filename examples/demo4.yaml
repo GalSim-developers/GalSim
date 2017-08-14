@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -111,36 +111,34 @@ gal :
         # smooth disk and knots of star formation, modeled as point sources
         # distributed via a random walk
         #
-        # note the knots get the same hlr as the smooth disk, and get sheared
+        # Note the knots get the same hlr as the smooth disk, and get sheared
         # by the same ellipticity, but the knots will themselves have
-        # additional shape noise
+        # additional shape noise.
         #
         # To simulate a nice irregular (all the flux is in knots) we find ~100
         # is a minimum number needed, but we will just use 10 here to make the
         # demo run fast.
         #
-        # see demo11.yaml for examples of how to specify variable relative to
-        # one another rather than hard coding them
-
-        - 
-            type : Exponential
-            half_light_radius : { type : Catalog , col : 5 }
+        # See demo11.yaml for examples of how to specify variables relative to
+        # one another rather than hard coding them.
+        -  # disk
+            type : Sum
+            items :
+                -  # smooth component
+                    type : Exponential
+                    half_light_radius : { type : Catalog , col : 5 }
+                    flux : 0.18
+                -  # knots
+                    type : RandomWalk
+                    npoints: 10
+                    half_light_radius : { type : Catalog , col : 5 }
+                    flux : 0.42
             ellip : 
                 type : E1E2 
                 e1 : { type : Catalog , col : 6 }  
                 e2 : { type : Catalog , col : 7 }
-            flux : 0.18
-        - 
-            type : RandomWalk
-            npoints: 10
-            half_light_radius : { type : Catalog , col : 5 }
-            ellip : 
-                type : E1E2 
-                e1 : { type : Catalog , col : 6 }  
-                e2 : { type : Catalog , col : 7 }
-            flux : 0.42
 
-        -
+        - # bulge
             type : DeVaucouleurs
             half_light_radius : { type : Catalog , col : 8 }
             ellip : 

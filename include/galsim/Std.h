@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -59,6 +59,9 @@ inline void sincos(double val, double& sint, double& cost) {
     sint = std::sin(val);
 #endif
 }
+
+// Check if ptr is aligned on 128 bit boundary
+inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
 
 // Convenient debugging.
 // Use as a normal C++ stream:

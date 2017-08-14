@@ -10,6 +10,10 @@ python:
     - 2.7
     - 3.4
     - 3.5
+    #- 3.6  # disabled until Travis fixes their issue #4990
+            # https://github.com/travis-ci/travis-ci/issues/4990
+            # i.e. has python 3.6 pre-installed.  Otherwise it can time out from having to install
+            # all the python 3.6 stuff from scratch.
 
 compiler:
     - g++
@@ -17,7 +21,7 @@ compiler:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
+    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran ffmpeg
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
@@ -74,7 +78,7 @@ install:
     # code, despite that not being a dependency.
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
     # if it's not in the cache yet.
-    - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
+    - travis_wait 30 pip install numpy astropy future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.0 scipy pandas coverage
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install simplejson ordereddict; fi
 
 script:
@@ -86,6 +90,8 @@ script:
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
+    # If galsim_download_cosmos.py changed, then run it.
+    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'bin/galsim_download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
@@ -105,5 +111,5 @@ after_success:
     - codecov
 
 before_cache:
-    - rm -rf $HOME/.cache/pip/log
-    - rm -rf $HOME/.cache/pip/http
+    - rm -rfv $HOME/.cache/pip/log
+    - rm -rfv $HOME/.cache/pip/http

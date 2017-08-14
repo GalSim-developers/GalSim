@@ -10,6 +10,9 @@ omit =
     # These are mostly still tested, but we don't really care if the tests are complete.
     *deprecated/*
 
+    # This is a utility for tracking down OSErrors.  Don't include in coverage.
+    fds_test.py
+
 # Without this, coverage misses anything that is only run in multiprocessing mode.
 concurrency = multiprocessing
 
@@ -20,12 +23,9 @@ exclude_lines =
     pragma: no cover
 
     # Don't complain about missing debug-only code:
-    def __repr__
-    if self\.debug
     logger.debug
 
     # Don't complain if tests don't hit defensive checks of user input
-    raise AssertionError
     raise NotImplementedError
     raise ValueError
     raise RuntimeError
@@ -34,7 +34,6 @@ exclude_lines =
     raise IndexError
     raise IOError
     raise KeyError
-    raise MemoryError
 
     # Don't complain about not hitting warning code
     if suppress_warnings is False:
@@ -54,7 +53,3 @@ exclude_lines =
     # Or code for special cases of older versions of things.
     except ImportError
     if .*pyfits_version
-
-    # These are usually for dealing with bad user input, so skip them too.
-    except Exception
-

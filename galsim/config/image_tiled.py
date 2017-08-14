@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -112,6 +112,7 @@ class TiledImageBuilder(ImageBuilder):
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
+        base['current_image'] = full_image
 
         nobjects = self.nx_tiles * self.ny_tiles
 
@@ -129,7 +130,7 @@ class TiledImageBuilder(ImageBuilder):
         elif order.startswith('rand'):
             ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
             iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
-            rng = galsim.config.check_for_rng(base, logger, 'TiledImage, order = '+order)
+            rng = galsim.config.GetRNG(config, base, logger, 'TiledImage, order = '+order)
             galsim.random.permute(rng, ix_list, iy_list)
         else:
             raise ValueError("Invalid order.  Must be row, column, or random")
@@ -213,6 +214,7 @@ class TiledImageBuilder(ImageBuilder):
 
         @returns the number of objects
         """
+        orig_index_key = base.get('index_key',None)
         base['index_key'] = 'image_num'
         base['image_num'] = image_num
 
@@ -221,6 +223,7 @@ class TiledImageBuilder(ImageBuilder):
                 "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
         nx = galsim.config.ParseValue(config,'nx_tiles',base,int)[0]
         ny = galsim.config.ParseValue(config,'ny_tiles',base,int)[0]
+        base['index_key'] = orig_index_key
         return nx*ny
 
 # Register this as a valid image type

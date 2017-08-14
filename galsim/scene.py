@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -118,7 +118,7 @@ class COSMOSCatalog(object):
     @param use_real         Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
-                            spent on I/O when initializing the COSMOSCatalog, and if the real
+                            spent on I/O when initializing the COSMOSCatalog. If the real
                             catalog is not available for some reason, it will still be possible to
                             make parametric images.
     @param exclusion_level  Level of additional cuts to make on the galaxies based on the quality
@@ -394,7 +394,7 @@ class COSMOSCatalog(object):
     def getNTot(self) : return len(self.param_cat)
 
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                   deep=False, sersic_prec=0.05, rng=None, gsparams=None):
+                   deep=False, sersic_prec=0.05, rng=None, n_random=None, gsparams=None):
         """
         Routine to construct GSObjects corresponding to the catalog entry with a particular index
         or indices.
@@ -435,11 +435,14 @@ class COSMOSCatalog(object):
         @param index            Index of the desired galaxy in the catalog for which a GSObject
                                 should be constructed.  You may also provide a list or array of
                                 indices, in which case a list of objects is returned. If None,
-                                then a single galaxy is chosen at random.  [default: None]
+                                then a random galaxy (or more: see n_random kwarg) is chosen,
+                                correcting for catalog-level selection effects if weights are
+                                available. [default: None]
         @param gal_type         Either 'real' or 'parametric'.  This determines which kind of
                                 galaxy model is made. [If catalog was loaded with `use_real=False`,
                                 then this defaults to 'parametric', and in fact 'real' is
-                                not allowed.]
+                                not allowed.  If catalog was loaded with `use_real=True`, then
+                                this defaults to 'real'.]
         @param chromatic        Make this a chromatic object, or not?  [default: False]
         @param noise_pad_size   For realistic galaxies, the size of region to pad with noise,
                                 in arcsec.  [default: 5, an arbitrary, but not completely
@@ -459,6 +462,8 @@ class COSMOSCatalog(object):
         @param rng              A random number generator to use for selecting a random galaxy
                                 (may be any kind of BaseDeviate or None) and to use in generating
                                 any noise field when padding.  [default: None]
+        @param n_random         The number of random galaxies to build, if 'index' is None.
+                                [default: 1]
         @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                                 details. [default: None]
 
@@ -470,6 +475,9 @@ class COSMOSCatalog(object):
                 gal_type = 'parametric'
             elif gal_type != 'parametric':
                 raise ValueError("Only 'parametric' galaxy type is allowed when use_real == False")
+        else:
+            if gal_type is None:
+                gal_type = 'real'
 
         if gal_type not in ['real', 'parametric']:
             raise ValueError("Invalid galaxy type %r"%gal_type)
@@ -485,9 +493,14 @@ class COSMOSCatalog(object):
             elif not isinstance(rng, galsim.BaseDeviate):
                 raise TypeError("The rng provided to makeGalaxy is not a BaseDeviate")
 
+        # Select random indices if necessary (no index given).
         if index is None:
-            ud = galsim.UniformDeviate(rng)
-            index = int(self.nobjects * ud())
+            if n_random is None: n_random = 1
+            index = self.selectRandomIndex(n_random, rng=rng)
+        else:
+            if n_random is not None:
+                import warnings
+                warnings.warn("Ignoring input n_random, since indices were specified!")
 
         if hasattr(index, '__iter__'):
             indices = index
@@ -549,6 +562,48 @@ class COSMOSCatalog(object):
         else:
             return gal_list[0]
 
+    def selectRandomIndex(self, n_random=1, rng=None, _n_rng_calls=False):
+        """
+        Routine to select random indices out of the catalog.  This routine does a weighted random
+        selection with replacement (i.e., there is no guarantee of uniqueness of the selected
+        indices).  Weighting uses the weight factors available in the catalog, if any; these weights
+        are typically meant to remove any selection effects in the catalog creation process.
+
+        @param n_random     Number of random indices to return. [default: 1]
+        @param rng          A random number generator to use for selecting a random galaxy
+                            (may be any kind of BaseDeviate or None). [default: None]
+        @returns A single index if n_random==1 or a NumPy array containing the randomly-selected
+        indices if n_random>1.
+        """
+        # Set up the random number generator.
+        if rng is None:
+            rng = galsim.BaseDeviate()
+
+        if hasattr(self, 'real_cat') and hasattr(self.real_cat, 'weight'):
+            use_weights = self.real_cat.weight[self.orig_index]
+        else:
+            import warnings
+            warnings.warn('Selecting random object without correcting for catalog-level '
+                          'selection effects.  This correction requires the existence of '
+                          'real catalog with valid weights in addition to parametric one.')
+            use_weights = None
+
+        # By default, get the number of RNG calls.  We then decide whether or not to return them
+        # based on _n_rng_calls.
+        index, n_rng_calls = galsim.utilities.rand_with_replacement(
+                n_random, self.nobjects, rng, use_weights, _n_rng_calls=True)
+
+        if n_random>1:
+            if _n_rng_calls:
+                return index, n_rng_calls
+            else:
+                return index
+        else:
+            if _n_rng_calls:
+                return index[0], n_rng_calls
+            else:
+                return index[0]
+
     def _makeReal(self, indices, noise_pad_size, rng, gsparams):
         return [ galsim.RealGalaxy(self.real_cat, index=self.orig_index[i],
                                    noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams)
@@ -568,8 +623,8 @@ class COSMOSCatalog(object):
                 # exposure, we use this zeropoint directly.
                 zp = 25.94
                 self._bandpass = galsim.Bandpass(
-                    os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
-                    wave_type='ang').thin().withZeropoint(zp)
+                    os.path.join(galsim.meta_data.share_dir, 'bandpasses', 'ACS_wfc_F814W.dat'),
+                    wave_type='nm').withZeropoint(zp)
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
 
@@ -578,13 +633,16 @@ class COSMOSCatalog(object):
                 # too seriously.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_E_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_Scd_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs',
+                                            'CWW_Sbc_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda')]
 
         gal_list = []
@@ -776,8 +834,8 @@ class COSMOSCatalog(object):
         # Used by COSMOSGalaxy to circumvent making the RealGalaxy here and potentially having
         # to pickle the result.  These raw materials should be smaller, so quicker to pickle.
         orig_index = self.orig_index[index]
-        gal_image = self.real_cat.getGal(orig_index)
-        psf_image = self.real_cat.getPSF(orig_index)
+        gal_image = self.real_cat.getGalImage(orig_index)
+        psf_image = self.real_cat.getPSFImage(orig_index)
         noise_image, pixel_scale, var = self.real_cat.getNoiseProperties(orig_index)
         return (gal_image, psf_image, noise_image, pixel_scale, var)
 
@@ -862,6 +920,7 @@ class COSMOSCatalog(object):
                                "noise_pad_size" : float,
                                "deep" : bool,
                                "sersic_prec": float,
+                               "n_random": int
                              }
     makeGalaxy._single_params = []
     makeGalaxy._takes_rng = True

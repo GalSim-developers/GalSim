@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -310,7 +310,9 @@ namespace galsim {
         }
         dbg<<"Total of "<<_pt.size()<<" intervals\n";
         // Build the ProbabilityTree
-        _pt.buildTree();
+        double thresh = std::numeric_limits<double>::epsilon() * totalAbsoluteFlux;
+        dbg<<"thresh = "<<thresh<<std::endl;
+        _pt.buildTree(thresh);
     }
 
     boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const

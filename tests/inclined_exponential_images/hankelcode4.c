@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,7 +20,7 @@
 // Testbed code for fast generation of galaxy model surface brightness distributions
 //
 // Lance Miller June/July/August 2016
-// Bryan Gillis August 2016
+// Bryan Gillis August/December 2016
 
 // library dependencies:
 //     cfitsio
@@ -38,16 +38,14 @@
 // set the image domain oversampling - must match the PSF oversampling
 int oversampling = 5;
 
-int makecirculargalaxy(double sersic, double rfiducial, int modeldim, double *f)
+int makecirculargalaxy(double sersic_n, double rfiducial, double trunc_factor, int modeldim, double *f)
 {
   // make an oversampled galaxy model
-  double rmax, xx, yy, r;
+  double xx, yy, r;
   int cen, x, y, os, p, ox, oy, xs, ys;
 
   // galaxy parameters
   cen = modeldim/2;
-  // rmax = 4.5;
-  rmax = 20;
 
   // image domain oversampling (only for this model generation) - not the same as oversampling in the rest of the code
   os = 5;
@@ -72,9 +70,9 @@ int makecirculargalaxy(double sersic, double rfiducial, int modeldim, double *f)
                 {
                   xx = x + (0.5+(double)ox)/(double)os - 0.5 - cen;
                   r = sqrt( pow(yy,2) + pow(xx,2) )/rfiducial;
-                  if (r < rmax)
+                  if (r < trunc_factor)
                     {
-                      r = pow( r, (1./sersic) );
+                      r = pow( r, (1./sersic_n) );
                       f[p] += exp(-r)/(os*os);
                     }
                 }
@@ -513,23 +511,27 @@ int main(int argc, char * argv[])
   // the GenerateModel function
 
   // Check we have enough cline-args
-  if(argc!=6)
+  if(argc!=8)
   {
 	  printf("This program must be run with file command-line arguments:");
-	  printf("eg. ./Inclined_Exponential_Profile <i> <R> <h> <p> <output_name>");
+	  printf("eg. ./Inclined_Exponential_Profile <n> <i> <R> <h> <t> <p> <output_name>");
       fflush(stdout);
 	  return 1;
   }
 
-  double inc_angle = strtod(argv[1], NULL);
-  double scale_radius = strtod(argv[2], NULL);
-  double scale_height = strtod(argv[3], NULL);
-  double pos_angle = strtod(argv[4], NULL);
-  char * output_name = argv[5];
+  double sersic_n = strtod(argv[1], NULL);
+  double inc_angle = strtod(argv[2], NULL);
+  double scale_radius = strtod(argv[3], NULL);
+  double scale_height = strtod(argv[4], NULL);
+  double trunc_factor = strtod(argv[5], NULL);
+  double pos_angle = strtod(argv[6], NULL);
+  char * output_name = argv[7];
 
+  printf("Sersic Index: %1.1f\n",sersic_n);
   printf("Inclination angle: %1.4f\n",inc_angle);
   printf("Scale radius: %3.2f\n",scale_radius);
   printf("Scale height: %3.2f\n",scale_height);
+  printf("Truncation factor: %3.2f\n",trunc_factor);
   printf("Position angle: %1.4f\n",pos_angle);
   fflush(stdout);
 
@@ -550,7 +552,6 @@ int main(int argc, char * argv[])
   // that we wish to simulate
   int mdim, hmdim, nsersic;
   double *model;
-  double sersic;
   fftw_complex *modelft;
   fftw_plan bigmodel;
   // set the dimension of the large input circular galaxy.  Note that this must be a large
@@ -570,10 +571,8 @@ int main(int argc, char * argv[])
     {
       // allocate memory for this model FT
       rmodelft[i] = (float*)calloc(hmdim, sizeof(float));
-      // define the sersic index value (as set here, will be 1 or 2)
-      sersic = 1. + (double)i;
       // make a large circular galaxy profile
-      makecirculargalaxy(sersic, rfiducial, mdim, model);
+      makecirculargalaxy(sersic_n, rfiducial, trunc_factor, mdim, model);
       // FFT
       fftw_execute(bigmodel);
       // convert FT complex to float Hankel and store with separate index for each model component
@@ -601,7 +600,7 @@ int main(int argc, char * argv[])
   // to optimise the speed for small galaxy model generation
 
   int idim, odim, hdim;
-  odim = 64; // output galaxy array size: this value could be chosen to match the output model galaxy size
+  odim = 2*(int)(32.*scale_radius/2.0*pow(sersic_n,2)) ;
   idim = odim*oversampling;  // size of oversampled galaxy image
   hdim = 1 + idim/2;  // x-axis dimension of FFTW hermitian array
 

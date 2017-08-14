@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,7 +40,7 @@ valid_input_types = {}
 connected_types = {}
 
 
-def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
+def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -55,7 +55,6 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     config['input']['catalog'] (if any).
 
     @param config           The configuration dict to process
-    @param file_num         The file number being worked on currently [default: 0]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_scope_only  If True, only process the input items that are marked as being
                             possibly relevant for file- and image-level items. [default: False]
@@ -63,12 +62,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             are not going to change every file, so it can be made once and
                             used by multiple processes if appropriate. [default: False]
     """
-    logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    logger.debug('file %d: Start ProcessInput',file_num)
-    # Process the input field (read any necessary input files)
     if 'input' in config:
+        logger = galsim.config.LoggerWrapper(logger)
+        file_num = config.get('file_num',0)
+        logger.debug('file %d: Start ProcessInput',file_num)
+
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
 
@@ -162,7 +160,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
-                        else:
+                        else:  # pragma: no cover
                             raise
 
                     if safe_only and not safe:
@@ -192,12 +190,29 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in connected_types[key]:
                         galsim.config.RemoveCurrent(config, type=value_type)
-                        logger.debug('file %d: Cleared current_vals for items with type %s',
+                        logger.debug('file %d: Cleared current vals for items with type %s',
                                      file_num,value_type)
+                    # Also put these in the normal "current" location, so this can be used
+                    # e.g. as @input.catalog in an Eval statement.
+                    field['current'] = (input_obj, safe, None, file_num, 'file_num')
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
+
+
+def SetupInput(config, logger=None):
+    """Process the input field if it hasn't been processed yet.
+
+    This is mostly useful if the user isn't running through the full processing and just starting
+    at BuildImage say.  This will make sure the input objects are set up in the way that they
+    normally would have been by the first level of processing in a `galsim config_file` run.
+    """
+    if 'input_objs' not in config:
+        orig_index_key = config.get('index_key',None)
+        config['index_key'] = 'file_num'
+        ProcessInput(config, logger=logger)
+        config['index_key'] = orig_index_key
 
 
 def ProcessInputNObjects(config, logger=None):
@@ -222,9 +237,8 @@ def ProcessInputNObjects(config, logger=None):
     @returns the number of objects to use.
     """
     logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
     if 'input' in config:
-        if 'input_objs' not in config: ProcessInput(config)
+        SetupInput(config, logger=logger)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
@@ -239,20 +253,20 @@ def ProcessInputNObjects(config, logger=None):
                     kwargs['_nobjects_only'] = True
                     input_obj = loader.init_func(**kwargs)
                 logger.debug('file %d: Found nobjects = %d for %s',
-                             config['file_num'],input_obj.getNObjects(),key)
+                             config.get('file_num',0),input_obj.getNObjects(),key)
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
 
 
-def SetupInputsForImage(config, logger):
+def SetupInputsForImage(config, logger=None):
     """Do any necessary setup of the input items at the start of an image.
 
     @param config       The configuration dict to process
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
-        if 'input_objs' not in config: ProcessInput(config)
+        SetupInput(config, logger=logger)
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
@@ -357,7 +371,7 @@ class InputLoader(object):
         single = self.init_func._single_params
         kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
         if self.init_func._takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
-            rng = galsim.config.check_for_rng(base, logger, 'input ' + self.init_func.__name__)
+            rng = galsim.config.GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
         return kwargs, safe
@@ -399,10 +413,6 @@ def RegisterInputConnectedType(input_type, type_name):
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.
-RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
-RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
-
-
 
 # Now define the value generators connected to the catalog and dict input types.
 def _GenerateFromCatalog(config, base, value_type):
@@ -437,7 +447,6 @@ def _GenerateFromCatalog(config, base, value_type):
     #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))
     return val, safe
 
-
 def _GenerateFromDict(config, base, value_type):
     """@brief Return a value read from an input dict.
     """
@@ -456,4 +465,8 @@ def _GenerateFromDict(config, base, value_type):
 # Register these as valid value types
 from .value import RegisterValueType
 RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ], input_type='catalog')
+RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
+RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
 RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ], input_type='dict')
+# Note: Doing the above in different orders for catalog and dict is intentional.  It makes sure
+# we test that this works for users no matter which order they do their registering.

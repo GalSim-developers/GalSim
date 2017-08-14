@@ -1,0 +1,38 @@
+# LSST g-band total throughput at airmass 1.2
+# File taken from https://raw.githubusercontent.com/lsst/throughputs/master/baseline/total_g.dat
+#
+#  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+#  with fast_search=False.
+#
+# Wavelength(nm)  Throughput(0-1)
+     386.30       0.00000
+     391.70       0.02021
+     395.40       0.05176
+     398.40       0.08033
+     402.60       0.12431
+     404.50       0.14556
+     413.00       0.24741
+     413.90       0.25486
+     415.90       0.27078
+     418.00       0.27697
+     429.50       0.30882
+     437.40       0.32800
+     450.00       0.35424
+     459.50       0.36844
+     471.00       0.38153
+     487.50       0.39438
+     496.40       0.39786
+     508.90       0.40117
+     510.50       0.40225
+     520.10       0.40577
+     525.00       0.40648
+     526.00       0.40578
+     537.40       0.40737
+     537.80       0.40458
+     540.70       0.38172
+     541.30       0.37606
+     550.10       0.23530
+     562.20       0.03950
+     562.50       0.03705
+     563.70       0.02718
+     567.00       0.00000

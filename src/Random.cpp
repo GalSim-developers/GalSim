@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -204,6 +204,43 @@ namespace galsim {
         if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "n="<<getN()<<")";
         return oss.str();
+    }
+
+    void PoissonDeviate::setMean(double mean)
+    {
+        // Near 2**31, the boost poisson rng can wrap around to negative integers, which
+        // is bad.  But this high, the Gaussian approximation is extremely accurate, so
+        // just use that.
+        const double MAX_POISSON = 1<<30;
+
+        if (mean == getMean()) return;
+        _pd.param(boost::random::poisson_distribution<>::param_type(mean));
+        if (mean > MAX_POISSON) {
+            if (!_gd) {
+                _gd.reset(new boost::random::normal_distribution<>(mean, std::sqrt(mean)));
+            } else {
+                _gd->param(boost::random::normal_distribution<>::param_type(mean, std::sqrt(mean)));
+            }
+            _getValue = &PoissonDeviate::getGDValue;
+        } else {
+            _gd.reset();
+            _getValue = &PoissonDeviate::getPDValue;
+        }
+    }
+
+    double PoissonDeviate::_val()
+    {
+        return (this->*_getValue)();
+    }
+
+    double PoissonDeviate::getPDValue()
+    {
+        return _pd(*this->_rng);
+    }
+
+    double PoissonDeviate::getGDValue()
+    {
+        return (*_gd)(*this->_rng);
     }
 
 }

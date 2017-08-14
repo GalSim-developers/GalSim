@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -59,36 +59,31 @@ time $bin/galsim -v2 demo10.yaml || exit
 time $python demo11.py || exit
 time $bin/galsim -v2 demo11.yaml || exit
 
-# These don't have yaml versions, but at least make sure they run to completion properly.
-time $python demo12.py || exit
-
-time $python demo13.py || exit
-
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
 # Don't check demo1, since it doesn't use a deterministic seed.
 # If you add an initial seed in both places, then you can uncomment
 # the next line and it should work.
-#./check_diff.py output/demo1.fits output_yaml/demo1.fits
+#$python check_diff.py output/demo1.fits output_yaml/demo1.fits
 
 # demo2:
-./check_diff.py output/demo2.fits output_yaml/demo2.fits
+$python check_diff.py output/demo2.fits output_yaml/demo2.fits
 
 # demo3:
-./check_diff.py output/demo3.fits output_yaml/demo3.fits
-./check_diff.py output/demo3_epsf.fits output_yaml/demo3_epsf.fits
+$python check_diff.py output/demo3.fits output_yaml/demo3.fits
+$python check_diff.py output/demo3_epsf.fits output_yaml/demo3_epsf.fits
 
 # demo4:
-./check_diff.py output/multi.fits output_yaml/multi.fits
+$python check_diff.py output/multi.fits output_yaml/multi.fits
 
 # demo5:
-./check_diff.py output/g08_psf.fits output_yaml/g08_psf.fits
-./check_diff.py output/g08_gal.fits output_yaml/g08_gal.fits
+$python check_diff.py output/g08_psf.fits output_yaml/g08_psf.fits
+$python check_diff.py output/g08_gal.fits output_yaml/g08_gal.fits
 
 # demo6:
-./check_diff.py output/psf_real.fits output_yaml/psf_real.fits
-./check_diff.py output/cube_real.fits output_yaml/cube_real.fits
+$python check_diff.py output/psf_real.fits output_yaml/psf_real.fits
+$python check_diff.py output/cube_real.fits output_yaml/cube_real.fits
 
 # demo7:
 # Note; the raw .gz files include the filename in them.
@@ -96,11 +91,11 @@ echo 'Checking diffs: (No output means success)'
 # So unzip them first before running diff.
 gunzip output/cube_phot.fits.gz
 gunzip output_yaml/cube_phot.fits.gz
-./check_diff.py output/cube_phot.fits output_yaml/cube_phot.fits
+$python check_diff.py output/cube_phot.fits output_yaml/cube_phot.fits
 
 # demo8:
-./check_diff.py output/bpd_single.fits output_yaml/bpd_single.fits
-./check_diff.py output/bpd_multi.fits output_yaml/bpd_multi.fits
+$python check_diff.py output/bpd_single.fits output_yaml/bpd_single.fits
+$python check_diff.py output/bpd_multi.fits output_yaml/bpd_multi.fits
 
 # demo9:
 for dir_num in {1..4}
@@ -109,14 +104,14 @@ do
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
         truth_name=nfw$dir_num/truth000$file_num.dat
-        ./check_diff.py output/$file_name output_yaml/$file_name
-        ./check_diff.py output/$truth_name output_yaml/$truth_name
+        $python check_diff.py output/$file_name output_yaml/$file_name
+        $python check_diff.py output/$truth_name output_yaml/$truth_name
     done
 done
 
 # demo10:
-./check_diff.py output/power_spectrum.fits output_yaml/power_spectrum.fits
+$python check_diff.py output/power_spectrum.fits output_yaml/power_spectrum.fits
 
 # demo11:
-./check_diff.py output/tabulated_power_spectrum.fits.fz output_yaml/tabulated_power_spectrum.fits.fz
+$python check_diff.py output/tabulated_power_spectrum.fits.fz output_yaml/tabulated_power_spectrum.fits.fz
 

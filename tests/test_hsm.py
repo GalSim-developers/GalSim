@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -596,8 +596,10 @@ def test_hsmparams_nodefault():
     g = galsim.Gaussian(fwhm=20.)
     g = g.shear(g1=0.5)
     obj = galsim.Convolve(g, p)
-    im = obj.drawImage(scale=1., method='no_pixel')
-    psf_im = p.drawImage(scale=1., method='no_pixel')
+    # HSM allows a slop of 1.e-8 on nsig_rg, which means that default float32 images don't
+    # actually end up with different result when using nsig_rg=0. rather than 3.
+    im = obj.drawImage(scale=1., method='no_pixel', dtype=float)
+    psf_im = p.drawImage(scale=1., method='no_pixel', dtype=float)
     test_t1 = time.time()
     g_res = galsim.hsm.EstimateShear(im, psf_im)
     test_t2 = time.time()

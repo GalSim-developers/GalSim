@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,6 +55,24 @@ namespace galsim {
         explicit PhotonArray(int N);
 
         /**
+         * @brief Turn an image into an array of photons
+         *
+         * The flux in each non-zero pixel will be turned into 1 or more photons according
+         * to the maxFlux parameter which sets an upper limit for the absolute value of the
+         * flux of any photon.  Pixels with abs values > maxFlux will spawn multiple photons.
+         *
+         * The positions of the photons will be random within the area of each pixel.
+         * TODO: This corresponds to the Nearest interpolant.  Consider implementing other
+         * interpolation options here.
+         *
+         * @param image     The image to use for the photon fluxes and positions.
+         * @param maxFlux   The maximum flux that any photon should have.
+         * @param ud        A UniformDeviate in case we need to shuffle.
+         */
+        template <class T>
+        PhotonArray(const BaseImage<T>& image, double maxFlux, UniformDeviate ud);
+
+        /**
          * @brief Accessor for array size
          *
          * @returns Array size
@@ -75,8 +93,8 @@ namespace galsim {
          * @{
          * @brief Return whether the optional arrays are allocated
          */
-        bool hasAllocatedAngles();
-        bool hasAllocatedWavelengths();
+        bool hasAllocatedAngles() const;
+        bool hasAllocatedWavelengths() const;
         /**
          * @}
          */

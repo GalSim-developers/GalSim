@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1066,7 +1066,6 @@ def test_uncorrelated_noise_tracking():
     print('new_int_im.noise = ',new_int_im.noise)
     new_int_im = galsim.Convolve(new_int_im, orig_object)
     print('new_int_im.noise => ',new_int_im.noise)
-    new_int_im = galsim.GSObject(new_int_im)  # A copy made this way should copy the noise attr.
     final_noise = new_int_im.noise
 
     # Now, make a correlated noise object directly based on a realization of the original
@@ -1089,6 +1088,17 @@ def test_uncorrelated_noise_tracking():
     np.testing.assert_almost_equal(
             final_noise.getVariance(), new_cn.getVariance(), decimal=3,
             err_msg='Failure in tracking noise properties through operations')
+
+    # Convolving two objects with noise works fine, but accessing the resulting noise attribute
+    # leads to a warning.
+    conv_obj = galsim.Convolve(int_im, int_im)
+    try:
+        noise = np.testing.assert_warns(UserWarning, getattr, conv_obj, 'noise')
+    except ImportError:
+        noise = conv_obj.noise
+    # The noise should be correlated, not just the original UncorrelatedNoise
+    assert isinstance(noise, galsim.correlatednoise._BaseCorrelatedNoise)
+    assert not isinstance(noise, galsim.UncorrelatedNoise)
 
 
 @timer
@@ -1191,6 +1201,30 @@ def test_cosmos_wcs():
         do_pickle(cn_test)
 
 
+@timer
+def test_covariance_spectrum():
+    """Just do some pickling tests of CovarianceSpectrum."""
+    bd = galsim.BaseDeviate(rseed)
+    Sigma = {}
+    for i in range(2):
+        for j in range(2):
+            if i > j: continue
+            Sigma[(i, j)] = galsim.Gaussian(fwhm=1)  # anything with a drawKImage will do...
+    SEDs = [galsim.SED('1', 'nm', 'fphotons'), galsim.SED('wave', 'nm', 'fphotons')]
+    covspec = galsim.CovarianceSpectrum(Sigma, SEDs)
+
+    do_pickle(covspec)
+
+    wcs = galsim.PixelScale(0.1)
+    psf = galsim.Gaussian(fwhm=1)
+    bp = galsim.Bandpass('1', 'nm', blue_limit=500.0, red_limit=600.0)
+    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+
+    covspec = covspec.transform(1.1, 0.2, 0.1, 0.9)
+    do_pickle(covspec)
+    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+
+
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
@@ -1212,3 +1246,4 @@ if __name__ == "__main__":
     test_uncorrelated_noise_tracking()
     test_variance_changes()
     test_cosmos_wcs()
+    test_covariance_spectrum()

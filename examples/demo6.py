@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,7 +39,7 @@ New features introduced in this demo:
 
 - real_cat = galsim.RealGalaxyCatalog(file_name, dir)
 - obj = galsim.Gaussian(fwhm, flux)
-- obj = galsim.RealGalaxy(real_cat, index)
+- obj = galsim.RealGalaxy(real_cat, index, flux)
 - obj = obj.rotate(theta)
 - obj = obj.magnify(mu)
 - image += background
@@ -51,7 +51,6 @@ New features introduced in this demo:
 import sys
 import os
 import math
-import numpy
 import logging
 import time
 import galsim
@@ -131,12 +130,9 @@ def main(argv):
         # Initialize the random number generator we will be using.
         rng = galsim.UniformDeviate(random_seed+k+1)
 
-        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
+        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k, flux=gal_flux)
         logger.debug('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
-
-        # Set the flux
-        gal = gal.withFlux(gal_flux)
 
         # Rotate by a random angle
         theta = 2.*math.pi * rng() * galsim.radians

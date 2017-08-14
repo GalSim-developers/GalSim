@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,8 +29,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 
 
 @timer
@@ -225,8 +224,9 @@ def test_Bandpass_div():
 def test_Bandpass_wave_type():
     """Check that `wave_type='ang'` works in Bandpass.__init__
     """
+    # Also check with and without explicit directory
     a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='nm')
-    a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
+    a1 = galsim.Bandpass('LSST_r.dat', wave_type='ang')
 
     np.testing.assert_approx_equal(a0.red_limit, a1.red_limit*10,
                                    err_msg="Bandpass.red_limit doesn't respect wave_type")
@@ -324,7 +324,7 @@ def test_zp():
     bp_tr = bp.truncate(red_limit = 600.)
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit red_limit"
-    bp_tr = bp.truncate(blue_limit = 500.)
+    bp_tr = bp.truncate(blue_limit = 550.)
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit blue_limit"
 

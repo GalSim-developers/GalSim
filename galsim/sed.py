@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,6 +23,7 @@ from past.builtins import basestring
 import numpy as np
 
 import galsim
+
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -153,16 +154,17 @@ class SED(object):
         # Finish re-evaluating __init__() here.
         if _wave_list is not None:
             self.wave_list = _wave_list
-            self.blue_limit = _blue_limit
-            self.red_limit = _red_limit
+            # Cast numpy.float to python float for more consistent reprs
+            self.blue_limit = None if _blue_limit is None else float(_blue_limit)
+            self.red_limit = None if _blue_limit is None else float(_red_limit)
             return
 
         if isinstance(self._spec, galsim.LookupTable):
             self.wave_list = ((self._spec.getArgs() * self.wave_type)
                               .to(units.nm, units.spectral()).value)
             self.wave_list *= (1.0 + self.redshift)
-            self.blue_limit = np.min(self.wave_list)
-            self.red_limit = np.max(self.wave_list)
+            self.blue_limit = float(np.min(self.wave_list))
+            self.red_limit = float(np.max(self.wave_list))
         else:
             self.blue_limit = None
             self.red_limit = None
@@ -180,9 +182,9 @@ class SED(object):
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, basestring):
-            import os
-            if os.path.isfile(self._orig_spec):
-                self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
+            isfile, filename = galsim.utilities.check_share_file(self._orig_spec, 'SEDs')
+            if isfile:
+                self._spec = galsim.LookupTable(file=filename, interpolant='linear')
             else:
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which

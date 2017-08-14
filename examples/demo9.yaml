@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -46,6 +46,7 @@
 # - str type : FormattedStr (format, items)
 # - pos type : RandomCircle (..., inner_radius)
 # - value type : Sequence (..., nitems)
+# - value type : List as a simple list
 # - output : nproc
 # - output : weight
 # - output : badpix
@@ -221,23 +222,42 @@ image :
     # for larger objects, and smaller for smaller ones.  So this is usually the way to go.
 
 
-    # There are two ways to specify the location of each postage stamp on the full image.
-    # You may specify:
+    # There are four ways to specify the location of each postage stamp on the full image for
+    # the Scattered image type. You may specify:
+    #
     #   image_pos = the position in pixels on the full image
-    #   world_pos = the position in arcsec (or whatever sky units you are using) in world
-    #               coordinates
+    #   world_pos = (a) the position in arcsec (or whatever sky units you are using) relative
+    #                   to the center of the image
+    #               (b) the celestial coordinates on the sky (i.e. RA, Dec).  This option requires
+    #                   that the WCS of the image be a CelestialWCS (cf. demo11)
+    #   (neither) = let the objects be placed randomly anywhere on the image
     #
     # The difference between these and gal.shift is that gal.shift moves the object with
     # respect to the center of the postage stamp, while these set the position of the
     # postage stamp on the larger full image.
     #
     # In this case we use world_pos to place each object in sky coordinates relative to
-    # the center of the image.  We use RandomCircle with an inner radius to avoid placing
-    # galaxies too close to the halo center where the lensing is not weak.
+    # the center of the image (option a for world_pos above).  We use RandomCircle with an inner
+    # radius to avoid placing galaxies too close to the halo center where the lensing is not weak.
+    # The outer radius is 21 arcsec, which is large enough to cover all the way to the corners,
+    # although it means occasionally an object will be skipped because its postage stamp falls
+    # completely off the edge of the image.
     world_pos :
         type : RandomCircle
-        radius : 12       # arcsec
+        radius : 21       # arcsec
         inner_radius : 3  # arcsec
+
+    # Note: the default option if we didn't specify either image_pos or world_pos (described as
+    # neither above) would be equivalent to the following:
+    #
+    # image_pos :
+    #     type : XY
+    #     x : { type : Random , min : 1 , max : xsize }
+    #     y : { type : Random , min : 1 , max : ysize }
+    #
+    # where xsize and ysize are whatever values are used for the size of the image.  In this case,
+    # both are equal to 512, set by the image.size parameter above.
+
 
     # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
     # and v(x,y) functions.  We use a simple cubic radial function to create a
@@ -318,7 +338,8 @@ output :
         # ext specifies the text to go after the number, if desired.
         # The extension is usually set to a reasonable default.
         # For output.file_name, the default is '.fits'.
-        # For an input ASCII catalog, the default is '.asc'.
+        # Similarly for "extra" output fields like badpix or weight if those are written to a
+        # separate file (rather than just another hdu as in this example).
         # For anything else (e.g. dir below) the default is '' (no extension)
         #ext : '.fits'
 
@@ -481,9 +502,15 @@ output :
 
     # It is possible to skip particular output files if you want.
     # This example is a bit contrived for the sake of the example.  It skips every 6th file.
-    skip :
-        type : List
-        items : [ 0, 0, 0, 0, 0, 1 ]
+    # Also, this is a shorthand notation for
+    #
+    #     skip :
+    #         type : List
+    #         items : [ 0, 0, 0, 0, 0, 1 ]
+    #
+    # For simple lists where you don't need to do anything special with the indexing, repeat, etc.
+    # then you can just write it this way.
+    skip: [ 0, 0, 0, 0, 0, 1 ]
 
 ---
 

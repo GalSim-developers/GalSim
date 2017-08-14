@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,8 +30,12 @@
 #include "integ/Int.h"
 #include "Solve.h"
 #include "bessel/Roots.h"
+#include "fmath/fmath.hpp"
 
 namespace galsim {
+
+    inline double fast_pow(double x, double y)
+    { return fmath::expd(y * std::log(x)); }
 
     SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
                        double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
@@ -181,7 +185,8 @@ namespace galsim {
         return _flux * _info->kValue(ksq);
     }
 
-    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
     {
@@ -205,7 +210,7 @@ namespace galsim {
             // By a lot, I mean ~0.5%, which is enough to care about.
             if (izero != 0 && jzero != 0) {
                 // NB: _info->xValue(0) = 1
-                double* ptr = im.getData() + jzero*im.getStride() + izero;
+                T* ptr = im.getData() + jzero*im.getStride() + izero;
                 *ptr = _xnorm;
             }
 #endif
@@ -213,7 +218,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            double* ptr = im.getData();
+            T* ptr = im.getData();
             const int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -231,7 +236,8 @@ namespace galsim {
         }
     }
 
-    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<T> im,
                                             double x0, double dx, double dxy,
                                             double y0, double dy, double dyx) const
     {
@@ -240,7 +246,7 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         const int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -296,10 +302,10 @@ namespace galsim {
             dbg<<"xValue(0) = "<<_info->xValue(0.)<<std::endl;
 #endif
         }
-
     }
 
-    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -313,7 +319,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -331,7 +337,8 @@ namespace galsim {
         }
     }
 
-    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBSersic::SBSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -340,7 +347,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
@@ -368,7 +375,8 @@ namespace galsim {
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
         _gamma2n(boost::math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _ft(Table<double,double>::spline)
+        _ft(Table<double,double>::spline),
+        _kderiv2(0.), _kderiv4(0.)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
         dbg<<"trunc = "<<_trunc<<std::endl;
@@ -411,7 +419,7 @@ namespace galsim {
             // Calculate the flux of a truncated profile (relative to the integral for
             // an untruncated profile).
             if (_truncated) {
-                double z = std::pow(_trunc, 1./_n);
+                double z = fast_pow(_trunc, 1./_n);
                 // integrate from 0. to _trunc
                 double gamma2nz = boost::math::tgamma_lower(2.*_n, z);
                 _flux = gamma2nz / _gamma2n;  // _flux < 1
@@ -429,7 +437,7 @@ namespace galsim {
     double SersicInfo::xValue(double rsq) const
     {
         if (_truncated && rsq > _trunc_sq) return 0.;
-        else return std::exp(-std::pow(rsq,_inv2n));
+        else return fmath::expd(-fast_pow(rsq,_inv2n));
     }
 
     double SersicInfo::kValue(double ksq) const
@@ -454,7 +462,7 @@ namespace galsim {
         SersicHankel(double invn, double k): _invn(invn), _k(k) {}
 
         double operator()(double r) const
-        { return r*std::exp(-std::pow(r, _invn))*j0(_k*r); }
+        { return r*fmath::expd(-fast_pow(r, _invn))*j0(_k*r); }
 
     private:
         double _invn;
@@ -532,7 +540,7 @@ namespace galsim {
         _maxk = kmin; // Just in case we break on the first iteration.
         bool found_maxk = false;
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
-            double k = std::exp(logk);
+            double k = fmath::expd(logk);
             double ksq = k*k;
             SersicHankel I(_invn, k);
 
@@ -581,7 +589,7 @@ namespace galsim {
 
             // Update the terms needed for the high-k approximation
             if (int(fit_vals.size()) == n_fit) {
-                double k_back = std::exp(logk - n_fit*dlogk);
+                double k_back = fmath::expd(logk - n_fit*dlogk);
                 double f_back = fit_vals.back();
                 fit_vals.pop_back();
                 double inv_k = 1./k;
@@ -602,7 +610,7 @@ namespace galsim {
         }
         // If didn't find a good approximation for large k, just use the largest k we put in
         // in the table.  (Need to use some approximation after this anyway!)
-        if (_ksq_max <= 0.) _ksq_max = std::exp(2. * _ft.argMax());
+        if (_ksq_max <= 0.) _ksq_max = fmath::expd(2. * _ft.argMax());
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
         xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
 
@@ -610,7 +618,7 @@ namespace galsim {
             // This is the last value that didn't satisfy the requirement, so just go to
             // the next value.
             xdbg<<"maxk with val > "<<_gsparams->maxk_threshold<<" = "<<_maxk<<std::endl;
-            _maxk *= exp(dlogk);
+            _maxk *= fmath::expd(dlogk);
             xdbg<<"maxk -> "<<_maxk<<std::endl;
         } else {
             // Then we never did find a value of k such that f(k) < maxk_threshold
@@ -844,7 +852,7 @@ namespace galsim {
     {
     public:
         SersicRadialFunction(double invn): _invn(invn) {}
-        double operator()(double r) const { return std::exp(-std::pow(r,_invn)); }
+        double operator()(double r) const { return fmath::expd(-fast_pow(r,_invn)); }
     private:
         double _invn;
     };

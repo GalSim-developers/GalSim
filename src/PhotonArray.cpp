@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,15 +55,64 @@ namespace galsim {
         }
     }
 
-    bool PhotonArray::hasAllocatedAngles()
+    bool PhotonArray::hasAllocatedAngles() const
     {
         // dydz should always be in sync, so not need to check it.
         return _dxdz.size() == size();
     }
 
-    bool PhotonArray::hasAllocatedWavelengths()
+    bool PhotonArray::hasAllocatedWavelengths() const
     {
         return _wavelength.size() == size();
+    }
+
+    template <typename T>
+    struct AddImagePhotons
+    {
+        AddImagePhotons(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vf,
+                        double maxFlux, UniformDeviate ud) :
+            _vx(vx), _vy(vy), _vf(vf), _maxFlux(maxFlux), _ud(ud) {}
+
+        void operator()(T flux, int i, int j)
+        {
+            int N = (flux <= _maxFlux) ? 1 : int(std::ceil(flux / _maxFlux));
+            double fluxPer = double(flux) / N;
+            for (int k=0; k<N; ++k) {
+                double x = i + _ud() - 0.5;
+                double y = j + _ud() - 0.5;
+                _vx.push_back(x);
+                _vy.push_back(y);
+                _vf.push_back(fluxPer);
+            }
+        }
+
+        std::vector<double>& _vx;
+        std::vector<double>& _vy;
+        std::vector<double>& _vf;
+        const double _maxFlux;
+        UniformDeviate _ud;
+    };
+
+    template <class T>
+    PhotonArray::PhotonArray(const BaseImage<T>& image, double maxFlux, UniformDeviate ud) :
+        _is_correlated(true)
+    {
+        double totalFlux = image.sumElements();
+        dbg<<"totalFlux = "<<totalFlux<<std::endl;
+        dbg<<"maxFlux = "<<maxFlux<<std::endl;
+        int N = image.getNRow() * image.getNCol() + totalFlux / maxFlux;
+        dbg<<"image size = "<<image.getNRow() * image.getNCol()<<std::endl;
+        dbg<<"count from photons = "<<totalFlux / maxFlux<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
+        // This goes a bit over what we actually need, but not by much.  Worth it to save
+        // on the vector reallocations.
+        _x.reserve(N);
+        _y.reserve(N);
+        _flux.reserve(N);
+        dbg<<"bounds = "<<image.getBounds()<<std::endl;
+        AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, ud);
+        for_each_pixel_ij(image, adder);
+        dbg<<"Done: size = "<<_x.size()<<std::endl;
     }
 
     double PhotonArray::getTotalFlux() const
@@ -187,68 +236,30 @@ namespace galsim {
     template <class T>
     double PhotonArray::addTo(ImageView<T> target) const
     {
+        dbg<<"Start addTo\n";
         Bounds<int> b = target.getBounds();
-
+        dbg<<"bounds = "<<b<<std::endl;
         if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
 
-        // Factor to turn flux into surface brightness in an Image pixel
-        dbg<<"In PhotonArray::addTo\n";
-        dbg<<"bounds = "<<b<<std::endl;
-
         double addedFlux = 0.;
-#ifdef DEBUGLOGGING
-        double totalFlux = 0.;
-        double lostFlux = 0.;
-        int nx = target.getXMax()-target.getXMin()+1;
-        int ny = target.getYMax()-target.getYMin()+1;
-        std::vector<std::vector<double> > posFlux(nx,std::vector<double>(ny,0.));
-        std::vector<std::vector<double> > negFlux(nx,std::vector<double>(ny,0.));
-#endif
         for (int i=0; i<int(size()); i++) {
             int ix = int(floor(_x[i] + 0.5));
             int iy = int(floor(_y[i] + 0.5));
-#ifdef DEBUGLOGGING
-            totalFlux += _flux[i];
-            xdbg<<"  photon: ("<<_x[i]<<','<<_y[i]<<")  f = "<<_flux[i]<<std::endl;
-#endif
             if (b.includes(ix,iy)) {
-#ifdef DEBUGLOGGING
-                if (_flux[i] > 0.) posFlux[ix-target.getXMin()][iy-target.getXMin()] += _flux[i];
-                else negFlux[ix-target.getXMin()][iy-target.getXMin()] -= _flux[i];
-#endif
                 target(ix,iy) += _flux[i];
                 addedFlux += _flux[i];
-            } else {
-#ifdef DEBUGLOGGING
-                xdbg<<"lost flux at ix = "<<ix<<", iy = "<<iy<<" with flux = "<<_flux[i]<<std::endl;
-                lostFlux += _flux[i];
-#endif
             }
         }
-#ifdef DEBUGLOGGING
-        dbg<<"totalFlux = "<<totalFlux<<std::endl;
-        dbg<<"addedlFlux = "<<addedFlux<<std::endl;
-        dbg<<"lostFlux = "<<lostFlux<<std::endl;
-        for(int ix=0;ix<nx;++ix) {
-            for(int iy=0;iy<ny;++iy) {
-                double pos = posFlux[ix][iy];
-                double neg = negFlux[ix][iy];
-                double tot = pos + neg;
-                if (tot > 0.) {
-                    xdbg<<"eta("<<ix+target.getXMin()<<','<<iy+target.getXMin()<<") = "<<
-                        neg<<" / "<<tot<<" = "<<neg/tot<<std::endl;
-                }
-            }
-        }
-#endif
-
         return addedFlux;
     }
 
     // instantiate template functions for expected image types
     template double PhotonArray::addTo(ImageView<float> image) const;
     template double PhotonArray::addTo(ImageView<double> image) const;
-
+    template PhotonArray::PhotonArray(const BaseImage<float>& image, double maxFlux,
+                                      UniformDeviate ud);
+    template PhotonArray::PhotonArray(const BaseImage<double>& image, double maxFlux,
+                                      UniformDeviate ud);
 }

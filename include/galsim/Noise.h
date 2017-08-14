@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -288,22 +288,14 @@ namespace galsim {
         class NoiseAdder
         {
         public:
-            NoiseAdder(PoissonDeviate& pd, GaussianDeviate& gd, double max) :
-                _pd(pd), _gd(gd), _max(max) {}
+            NoiseAdder(PoissonDeviate& pd) : _pd(pd) {}
             T operator()(const T& pix) {
                 if (pix <= 0.) return pix;
-                if (pix < _max) {
-                    _pd.setMean(pix);
-                    return T(_pd());
-                } else {
-                    _gd.setSigma(sqrt(pix));
-                    return T(pix + _gd());
-                }
+                _pd.setMean(pix);
+                return T(_pd());
             }
         private:
             PoissonDeviate& _pd;
-            GaussianDeviate& _gd;
-            const double _max;
         };
 
         /**
@@ -312,16 +304,10 @@ namespace galsim {
         template <typename T>
         void applyToView(ImageView<T> data)
         {
-            // Above this many e's, assume Poisson distribution == Gaussian
-            // The Gaussian deviate is about 20% faster than Poisson, and for high N
-            // they are virtually identical.
-            const double MAX_POISSON=1.e5;
-
             data += T(_sky_level);
 
             PoissonDeviate pd(*_rng, 1.); // will reset the mean for each pixel below.
-            GaussianDeviate gd(*_rng, 0., 1.);
-            NoiseAdder<T> adder(pd, gd, MAX_POISSON);
+            NoiseAdder<T> adder(pd);
             transform_pixel(data, adder);
 
             data -= T(_sky_level);
@@ -460,25 +446,18 @@ namespace galsim {
         class SkyNoiseAdder
         {
         public:
-            SkyNoiseAdder(PoissonDeviate& pd, GaussianDeviate& gd, double gain, double max) :
-                _pd(pd), _gd(gd), _gain(gain), _max(max) {}
+            SkyNoiseAdder(PoissonDeviate& pd, double gain) :
+                _pd(pd), _gain(gain) {}
             T operator()(const T& pix)
             {
                 if (pix <= 0.) return pix;
                 double elec = pix * _gain;
-                if (elec < _max) {
-                    _pd.setMean(elec);
-                    return T(_pd() / _gain);
-                } else {
-                    _gd.setSigma(sqrt(elec)/_gain);
-                    return T(elec + _gd());
-                }
+                _pd.setMean(elec);
+                return T(_pd() / _gain);
             }
         private:
             PoissonDeviate& _pd;
-            GaussianDeviate& _gd;
             const double _gain;
-            const double _max;
         };
 
         template <typename T>
@@ -501,18 +480,12 @@ namespace galsim {
         template <typename T>
         void applyToView(ImageView<T> data)
         {
-            // Above this many e's, assume Poisson distribution == Gaussian
-            // The Gaussian deviate is about 20% faster than Poisson, and for high N
-            // they are virtually identical.
-            const double MAX_POISSON=1.e5;
-
             data += T(_sky_level);
 
             // Add the Poisson noise first:
             if (_gain > 0.) {
                 PoissonDeviate pd(*_rng, 1.); // will reset the mean for each pixel below.
-                GaussianDeviate gd(*_rng, 0., 1.);
-                SkyNoiseAdder<T> adder(pd, gd, _gain, MAX_POISSON);
+                SkyNoiseAdder<T> adder(pd, _gain);
                 transform_pixel(data, adder);
             }
 

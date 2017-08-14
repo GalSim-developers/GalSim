@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -77,7 +77,9 @@ del Class    # cleanup public namespace
 # Force the input args to PositionI to be `int` (correctly handles elements of int arrays)
 _orig_PositionI_init = PositionI.__init__
 def _new_PositionI_init(self, *args, **kwargs):
-    if len(args) == 2 and len(kwargs) == 0:
+    if len(args) == 0 and len(kwargs) == 0:
+        _orig_PositionI_init(self)
+    elif len(args) == 2 and len(kwargs) == 0:
         if any([a != int(a) for a in args]):
             raise ValueError("PositionI must be initialized with integer values")
         _orig_PositionI_init(self, *[int(a) for a in args])
@@ -88,4 +90,3 @@ def _new_PositionI_init(self, *args, **kwargs):
             raise ValueError("PositionI must be initialized with integer values")
         _orig_PositionI_init(self, int(x), int(y), **kwargs)
 PositionI.__init__ = _new_PositionI_init
-
