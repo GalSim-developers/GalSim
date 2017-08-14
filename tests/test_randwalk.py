@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -41,7 +41,8 @@ def test_randwalk_defaults():
     # try constructing with mostly defaults
     npoints=100
     hlr = 8.0
-    rw=galsim.RandomWalk(npoints, hlr)
+    rng = galsim.BaseDeviate(1234)
+    rw=galsim.RandomWalk(npoints, hlr, rng=rng)
 
     assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
@@ -53,6 +54,16 @@ def test_randwalk_defaults():
 
     pts=rw.points
     assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
+
+    # Run some basic tests of correctness
+    psf = galsim.Gaussian(sigma=0.8)
+    conv = galsim.Convolve(rw, psf)
+    check_basic(conv, "RandomWalk")
+    im = galsim.ImageD(64,64, scale=0.5)
+    do_shoot(conv, im, "RandomWalk")
+    do_kvalue(conv, im, "RandomWalk")
+    do_pickle(rw)
+    do_pickle(conv)
 
 
 @timer

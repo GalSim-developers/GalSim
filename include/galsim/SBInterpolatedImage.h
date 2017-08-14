@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -142,7 +142,6 @@ namespace galsim {
          * image.
          *
          * @param[in] kimage      Input Fourier-space Image (ImageC).
-         * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
@@ -150,22 +149,21 @@ namespace galsim {
          */
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& kimage, double dk, double stepk,
+            const BaseImage<T>& kimage, double stepk,
             boost::shared_ptr<Interpolant> kInterp, const GSParamsPtr& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
         template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& kimage, double dk, double stepk,
+            const BaseImage<T>& kimage, double stepk,
             boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // @brief Serialization constructor.
         // Note this is *not* a template since getKData only returns doubles.
         SBInterpolatedKImage(
             const BaseImage<double>& data,
-            double dk, double stepk, double maxk,
+            double stepk, double maxk,
             boost::shared_ptr<Interpolant> kInterp,
-            double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
@@ -177,8 +175,6 @@ namespace galsim {
         boost::shared_ptr<Interpolant> getKInterp() const;
 
         ConstImageView<double> getKData() const;
-        double dK() const;
-        bool cenIsSet() const;
 
     protected:
 

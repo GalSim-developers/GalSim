@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -63,6 +63,18 @@ def test_angle():
     assert abs(theta7.rad() - theta1.rad()) > 6.
     numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
 
+    # Check wrapping with non-default center
+    pi_rad = pi * galsim.radians
+    numpy.testing.assert_almost_equal(theta6.wrap(pi_rad).rad(), theta1.rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(2*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(3*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-2*pi_rad).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.wrap(27*galsim.radians).rad(),
+                                      theta1.wrap(27*galsim.radians).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta7.wrap(-127*galsim.radians).rad(),
+                                      theta1.wrap(-127*galsim.radians).rad(), decimal=12)
+
     # Make a new AngleUnit as described in the AngleUnit docs
     gradians = galsim.AngleUnit(2. * numpy.pi / 400.)
     theta8 = 50 * gradians
@@ -118,11 +130,33 @@ def test_celestialcoord_basic():
     numpy.testing.assert_almost_equal(c2.distanceTo(c3).rad(), 0., decimal=12)
     numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad(), 0., decimal=12)
 
+    x, y, z = c1.get_xyz()
+    print('c1 is at x,y,z = ',x,y,z)
+    np.testing.assert_equal((x,y,z), (1,0,0))
+    assert c1 == galsim.CelestialCoord.from_xyz(x,y,z)
+
+    x, y, z = c2.get_xyz()
+    print('c2 is at x,y,z = ',x,y,z)
+    assert c2 == galsim.CelestialCoord.from_xyz(x,y,z)
+
+    # 0,0,0 shouldn't die at least, although the return value is a bit arbitrary.
+    c5 = galsim.CelestialCoord.from_xyz(0,0,0)
+    print('0,0,0 returns coord ',c5)
+
     # Check picklability
     do_pickle(c1)
     do_pickle(c2)
     do_pickle(c3)
     do_pickle(c4)
+    do_pickle(c5)
+
+    assert c1 == galsim.CelestialCoord(ra=0.*galsim.degrees, dec=0.*galsim.degrees)
+    assert c2 == galsim.CelestialCoord(ra=165.*galsim.degrees, dec=-37.*galsim.degrees)
+    assert c1 != c2
+    assert c1 != c3
+    assert c1 != c4
+    # Depending on numerical rounding of the ra calculations, c2 may or may not come out
+    # as equal to c3, c4, so don't check these pairings.
 
 
 @timer
@@ -285,6 +319,13 @@ def test_projection():
     # The lambert is supposed to preserve area
     #
 
+    # First the trivial case
+    p0 = center.project(center, projection='lambert')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='lambert')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='lambert'), (1,0,0,1))
+
     pA = center.project(cA, projection='lambert')
     pB = center.project(cB, projection='lambert')
     pC = center.project(cC, projection='lambert')
@@ -329,6 +370,13 @@ def test_projection():
     #
     # The stereographic is supposed to preserve angles
     #
+
+    # First the trivial case
+    p0 = center.project(center, projection='stereographic')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='stereographic')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='stereographic'), (1,0,0,1))
 
     pA = center.project(cA, projection='stereographic')
     pB = center.project(cB, projection='stereographic')
@@ -378,6 +426,13 @@ def test_projection():
     # I don't actually have any tests of that though...
     #
 
+    # First the trivial case
+    p0 = center.project(center, projection='gnomonic')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='gnomonic')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='gnomonic'), (1,0,0,1))
+
     pA = center.project(cA, projection='gnomonic')
     pB = center.project(cB, projection='gnomonic')
     pC = center.project(cC, projection='gnomonic')
@@ -420,6 +475,13 @@ def test_projection():
     #
     # The postel is supposed to preserve distance from the center
     #
+
+    # First the trivial case
+    p0 = center.project(center, projection='postel')
+    assert p0 == galsim.PositionD(0,0)
+    c0 = center.deproject(p0, projection='postel')
+    assert c0 == center
+    np.testing.assert_almost_equal(center.deproject_jac(0,0, projection='postel'), (1,0,0,1))
 
     pA = center.project(cA, projection='postel')
     pB = center.project(cB, projection='postel')
@@ -478,6 +540,12 @@ def test_precess():
     # back at the original epoch should leave the coord unchanged.
     orig = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
 
+    # First the trivial case of no precession.
+    c0 = orig.precess(2000., 2000.)
+    numpy.testing.assert_almost_equal(c0.ra.rad(), orig.ra.rad())
+    numpy.testing.assert_almost_equal(c0.dec.rad(), orig.dec.rad())
+
+    # Now to 1950 and back (via 1900).
     c1 = orig.precess(2000., 1950.)
     c2 = c1.precess(1950., 1900.)
     c3 = c2.precess(1900., 2000.)

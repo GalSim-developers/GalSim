@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,6 +26,7 @@ import math
 import yaml
 import json
 import re
+import glob
 
 from galsim_test_helpers import *
 
@@ -65,6 +66,7 @@ def test_fits():
     logger = logging.getLogger('test_fits')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
+    config1 = galsim.config.CopyConfig(config)
 
     im1_list = []
     nfiles = 6
@@ -81,7 +83,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1.array)
 
     # Build all files at once
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFiles(nfiles, config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -89,7 +91,7 @@ def test_fits():
         np.testing.assert_array_equal(im2.array, im1_list[k].array)
 
     # Can also use Process to do this
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.Process(config)
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
@@ -98,21 +100,21 @@ def test_fits():
 
     # For the first file, you don't need the file_num.
     os.remove('output_fits/test_fits_0.fits')
-    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CopyConfig(config1)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
     # nproc < 0 should automatically determine nproc from ncpu
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'ncpu = ' in cl.output
 
     # nproc > njobs should drop back to nproc = njobs
+    config = galsim.config.CopyConfig(config1)
     config['output']['nproc'] = 10
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
@@ -120,9 +122,9 @@ def test_fits():
     # Check that profile outputs something appropriate for multithreading.
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
+    config = galsim.config.CopyConfig(config1)
     config['profile'] = True
     config['output']['nproc'] = -1
-    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
@@ -134,9 +136,9 @@ def test_fits():
 
     # If there is no output field, the default behavior is to write to root.fits.
     os.remove('output_fits/test_fits_0.fits')
+    config = galsim.config.CopyConfig(config1)
     del config['output']
     config['root'] = 'output_fits/test_fits_0'
-    galsim.config.RemoveCurrent(config)
     galsim.config.BuildFile(config)
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
@@ -271,6 +273,31 @@ def test_datacube():
     assert len(im4_list) == 3
     for k in range(3):
         np.testing.assert_array_equal(im4_list[k].array, im1_list[k].array)
+
+    # DataCubes cannot include weight (or any other) extra outputs as additional hdus.
+    # It should raise an exception if you try.
+    config['output']['weight'] = { 'hdu' : 1 }
+    config['output']['badpix'] = { 'file_name' : 'output/test_datacube_bp.fits' }
+    config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
+    try:
+        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
+    except ImportError:
+        pass
+
+    # But if both weight and badpix are files, then it should work.
+    config['output']['weight'] = { 'file_name' : 'output/test_datacube_wt.fits' }
+    galsim.config.BuildFile(config)
+    im5_list = galsim.fits.readCube('output/test_datacube.fits')
+    assert len(im5_list) == 3
+    for k in range(3):
+        rng = galsim.UniformDeviate(1234 + k + 1)
+        rng.discard(1)
+        im1_list[k].addNoise(galsim.GaussianNoise(sigma=0.1**0.5, rng=rng))
+        np.testing.assert_array_equal(im5_list[k].array, im1_list[k].array)
+    im5_wt = galsim.fits.read('output/test_datacube_wt.fits')
+    im5_bp = galsim.fits.read('output/test_datacube_bp.fits')
+    np.testing.assert_array_equal(im5_wt.array, 10)
+    np.testing.assert_array_equal(im5_bp.array, 0)
 
 
 @timer
@@ -518,6 +545,8 @@ def test_extra_psf():
         },
     }
 
+    for f in glob.glob('output/test_psf_*.fits'): os.remove(f)
+    for f in glob.glob('output/test_gal_*.fits'): os.remove(f)
     galsim.config.Process(config)
 
     gal_center = []
@@ -560,9 +589,7 @@ def test_extra_psf():
         stamp = final.drawImage(scale=0.4, nx=25, ny=25, offset=(offset_x+dx,offset_y+dy))
         stamp.setCenter(ix,iy)
         b = im.bounds & stamp.bounds
-        if not b.isDefined():
-            print('bounds for psf %d are off the main image'%k)
-        else:
+        if b.isDefined():
             im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_gal_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
@@ -571,7 +598,8 @@ def test_extra_psf():
         im.setZero()
         stamp = psf.drawImage(scale=0.4, nx=25, ny=25, offset=(dx,dy))
         stamp.setCenter(ix,iy)
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -591,7 +619,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -632,7 +661,8 @@ def test_extra_psf():
         stamp.setCenter(ix,iy)
         im = galsim.ImageF(64,64)
         b = im.bounds & stamp.bounds
-        if b.isDefined(): im[b] = stamp[b]
+        if b.isDefined():
+            im[b] = stamp[b]
         im2 = galsim.fits.read('output_psf/test_psf_%d.fits'%k)
         np.testing.assert_almost_equal(im2.array, im.array)
 
@@ -743,24 +773,25 @@ def test_retry_io():
     """
     # Make a class that mimics writeMulti, except that it fails about 1/3 of the time.
     class FlakyWriter(object):
-        def __init__(self, rng): self.ud = galsim.UniformDeviate(rng)
+        def __init__(self, rng):
+            self.ud = galsim.UniformDeviate(rng)
         def writeFile(self, *args, **kwargs):
             p = self.ud()
             if p < 0.33:
                 raise IOError("p = %f"%p)
             else:
                 galsim.fits.writeMulti(*args, **kwargs)
-    flaky_rng = galsim.BaseDeviate(1234)
-    flaky_writer = FlakyWriter(flaky_rng)
 
     # Now make a copy of Fits and ExtraWeight using this writer.
     class FlakyFits(galsim.config.OutputBuilder):
-        def writeFile(self, data, file_name):
+        def writeFile(self, data, file_name, config, base, logger):
+            flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(data, file_name)
     galsim.config.RegisterOutputType('FlakyFits', FlakyFits())
 
     class FlakyWeight(galsim.config.extra_weight.WeightBuilder):
         def writeFile(self, file_name, config, base, logger):
+            flaky_writer = FlakyWriter(galsim.config.GetRNG(config,base))
             flaky_writer.writeFile(self.final_data, file_name)
     galsim.config.RegisterExtraOutput('flaky_weight', FlakyWeight())
 
@@ -815,31 +846,37 @@ def test_retry_io():
         np.testing.assert_array_equal(wt1.array, wt2.array)
 
     # Without retry_io, it will fail, but keep going
-    flaky_rng.seed(1234)
     del config['output']['retry_io']
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
+    assert "Exception caught for file 0 = output/test_flaky_fits_0.fits" in cl.output
     assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-    assert "File output/test_flaky_fits_1.fits not written! Continuing on..." in cl.output
-    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
-    assert "file 3: Wrote FlakyFits to file 'output/test_flaky_fits_3.fits'" in cl.output
-    assert "file 3: Wrote flaky_weight to 'output/test_flaky_wt_3.fits'" in cl.output
+    assert "file 1: Wrote FlakyFits to file 'output/test_flaky_fits_1.fits'" in cl.output
+    assert "File 1 = output/test_flaky_fits_1.fits" in cl.output
+    assert "File 2 = output/test_flaky_fits_2.fits" in cl.output
     assert "File 3 = output/test_flaky_fits_3.fits" in cl.output
+    assert "File 4 = output/test_flaky_fits_4.fits" in cl.output
+    assert "Exception caught for file 5 = output/test_flaky_fits_5.fits" in cl.output
+    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
 
     # Also works in nproc > 1 mode
-    # However, because the flaky_writer's rng gets pickled, it's not the same result as
-    # what we get in the single processing case.  Different files fail.
     config['output']['nproc'] = 2
+    galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
-    assert re.search("Process-.: File 0 = output/test_flaky_fits_0.fits", cl.output)
-    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
-    assert re.search("Process-.: Exception caught for file 2 = output/test_flaky_fits_2.fits",
+    assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
                      cl.output)
-    assert "File output/test_flaky_fits_2.fits not written! Continuing on..." in cl.output
+    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
+    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
+    assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
+    assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
+    assert re.search("Process-.: File 4 = output/test_flaky_fits_4.fits", cl.output)
+    assert re.search("Process-.: Exception caught for file 5 = output/test_flaky_fits_5.fits",
+                     cl.output)
+    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
 
     # But with except_abort = True, it will stop after the first failure
     del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
@@ -847,10 +884,9 @@ def test_retry_io():
         try:
             galsim.config.Process(config, logger=cl.logger, except_abort=True)
         except IOError as e:
-            assert str(e) == "p = 0.093326"
+            assert str(e) == "p = 0.126989"
     #print(cl.output)
-    assert "File 0 = output/test_flaky_fits_0.fits" in cl.output
-    assert "File output/test_flaky_fits_1.fits not written." in cl.output
+    assert "File output/test_flaky_fits_0.fits not written." in cl.output
 
 
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -80,7 +80,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         else: s0 = '%s: '%proc
         image_num = jobs[k]['image_num']
         logger.error(s0 + 'Exception caught when building image %d', image_num)
-        logger.warning('%s',tr)
+        logger.debug('%s',tr)
         logger.error('Aborting the rest of this file')
 
     # Convert to the tasks structure we need for MultiProcess
@@ -96,7 +96,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
 
     return images
 
-def SetupConfigImageNum(config, image_num, obj_num):
+def SetupConfigImageNum(config, image_num, obj_num, logger=None):
     """Do the basic setup of the config dict at the image processing level.
 
     Includes:
@@ -110,7 +110,9 @@ def SetupConfigImageNum(config, image_num, obj_num):
     @param config           The configuration dict.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'image_num'
@@ -131,9 +133,16 @@ def SetupConfigImageNum(config, image_num, obj_num):
     if image_type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%image_type)
 
+    # In case this hasn't been done yet.
+    galsim.config.SetupInput(config, logger)
+
+    # Build the rng to use at the image level.
+    seed = galsim.config.SetupConfigRNG(config, logger=logger)
+    logger.debug('image %d: seed = %d',image_num,seed)
 
 
-def SetupConfigImageSize(config, xsize, ysize):
+
+def SetupConfigImageSize(config, xsize, ysize, logger=None):
     """Do some further setup of the config dict at the image processing level based on
     the provided image size.
 
@@ -148,7 +157,9 @@ def SetupConfigImageSize(config, xsize, ysize):
     @param config       The configuration dict.
     @param xsize        The size of the image in the x-dimension.
     @param ysize        The size of the image in the y-dimension.
+    @param logger       If given, a logger object to log progress. [default: None]
     """
+    logger = galsim.config.LoggerWrapper(logger)
     config['image_xsize'] = xsize
     config['image_ysize'] = ysize
 
@@ -167,7 +178,7 @@ def SetupConfigImageSize(config, xsize, ysize):
     config['image_bounds'] = galsim.BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
 
     # Build the wcs
-    wcs = galsim.config.BuildWCS(config)
+    wcs = galsim.config.BuildWCS(config['image'], 'wcs', config, logger)
     config['wcs'] = wcs
 
     # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The
@@ -198,15 +209,11 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Setup basic things in the top-level config dict that we will need.
-    SetupConfigImageNum(config,image_num,obj_num)
+    SetupConfigImageNum(config, image_num, obj_num, logger)
 
     cfg_image = config['image']  # Use cfg_image to avoid name confusion with the actual image
                                  # we will build later.
     image_type = cfg_image['type']
-
-    # Build the rng to use at the image level.
-    seed = galsim.config.SetupConfigRNG(config)
-    logger.debug('image %d: seed = %d',image_num,seed)
 
     # Do the necessary initial setup for this image type.
     builder = valid_image_types[image_type]
@@ -214,16 +221,16 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
     # do some basic calculations
-    SetupConfigImageSize(config,xsize,ysize)
+    SetupConfigImageSize(config, xsize, ysize, logger)
     logger.debug('image %d: image_size = %d, %d',image_num,xsize,ysize)
     logger.debug('image %d: image_origin = %s',image_num,config['image_origin'])
     logger.debug('image %d: image_center = %s',image_num,config['image_center'])
 
     # Sometimes an input field needs to do something special at the start of an image.
-    galsim.config.SetupInputsForImage(config,logger)
+    galsim.config.SetupInputsForImage(config, logger)
 
     # Likewise for the extra output items.
-    galsim.config.SetupExtraOutputsForImage(config,logger)
+    galsim.config.SetupExtraOutputsForImage(config, logger)
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
@@ -247,8 +254,6 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Go back to using image_num for any indexing.
     config['index_key'] = 'image_num'
-    # And put the right rng into config['rng'] for use by the AddNoise function.
-    config['rng'] = config['image_num_rng']
 
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)
@@ -411,6 +416,10 @@ class ImageBuilder(object):
         xsize = base['image_xsize']
         ysize = base['image_ysize']
         logger.debug('image %d: Single Image: size = %s, %s',image_num,xsize,ysize)
+
+        # In case there was one set from before, we don't want to confuse the stamp builder
+        # thinking that this is the full image onto which we are drawing this object.
+        base['current_image'] = None
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -230,16 +230,17 @@ namespace galsim {
     // Most derived classes override these functions, since there are usually (at least minor)
     // efficiency gains from doing so.  But in some cases, these straightforward impleentations
     // are perfectly fine.
-    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
-                                              double x0, double dx, int izero,
-                                              double y0, double dy, int jzero) const
+    template <typename T>
+    void SBProfile::SBProfileImpl::defaultFillXImage(ImageView<T> im,
+                                                     double x0, double dx, int izero,
+                                                     double y0, double dy, int jzero) const
     {
         dbg<<"SBProfile fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
@@ -249,16 +250,17 @@ namespace galsim {
         }
     }
 
-    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
-                                              double x0, double dx, double dxy,
-                                              double y0, double dy, double dyx) const
+    template <typename T>
+    void SBProfile::SBProfileImpl::defaultFillXImage(ImageView<T> im,
+                                                     double x0, double dx, double dxy,
+                                                     double y0, double dy, double dyx) const
     {
         dbg<<"SBProfile fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        double* ptr = im.getData();
+        T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
@@ -269,16 +271,17 @@ namespace galsim {
         }
     }
 
-    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
-                                              double kx0, double dkx, int izero,
-                                              double ky0, double dky, int jzero) const
+    template <typename T>
+    void SBProfile::SBProfileImpl::defaultFillKImage(ImageView<std::complex<T> > im,
+                                                     double kx0, double dkx, int izero,
+                                                     double ky0, double dky, int jzero) const
     {
         dbg<<"SBProfile fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
@@ -288,16 +291,17 @@ namespace galsim {
         }
     }
 
-    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
-                                              double kx0, double dkx, double dkxy,
-                                              double ky0, double dky, double dkyx) const
+    template <typename T>
+    void SBProfile::SBProfileImpl::defaultFillKImage(ImageView<std::complex<T> > im,
+                                                     double kx0, double dkx, double dkxy,
+                                                     double ky0, double dky, double dkyx) const
     {
         dbg<<"SBProfile fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
@@ -309,40 +313,61 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::draw(ImageView<T> image, double dx) const
+    double SBProfile::draw(ImageView<T> image, double dx, bool add) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
-        const int xmin = image.getXMin();
-        const int ymin = image.getYMin();
+
         const int m = image.getNCol();
         const int n = image.getNRow();
+        const int xmin = image.getXMin();
+        const int ymin = image.getYMin();
+        const int izero = xmin < 0 ? -xmin : 0;
+        const int jzero = ymin < 0 ? -ymin : 0;
 
-        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        ImageAlloc<double> im2(image.getBounds(), 0.);
-        _pimpl->fillXImage(im2, xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
-
-        double total_flux = im2.sumElements();
-        image += im2;
-        return total_flux;
+        if (add) {
+            ImageAlloc<T> im2(image.getBounds());
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) im2 *= dx*dx;
+            image += im2;
+            return im2.sumElements();
+        } else if (image.getStep() != 1) {
+            ImageAlloc<T> im2(image.getBounds());
+            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) im2 *= dx*dx;
+            image = im2;
+            return im2.sumElements();
+        } else {
+            _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
+            if (dx != 1.) image *= dx*dx;
+            return image.sumElements();
+        }
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk, bool add) const
     {
         dbg<<"Start drawK: \n";
-        typedef std::complex<T> CT;
         assert(_pimpl.get());
 
         const int m = image.getNCol();
         const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
+        const int izero = xmin < 0 ? -xmin : 0;
+        const int jzero = ymin < 0 ? -ymin : 0;
 
-        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        ImageAlloc<std::complex<double> > im2(image.getBounds(), 0.);
-        _pimpl->fillKImage(im2, xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
-        image += im2;
+        if (add) {
+            ImageAlloc<std::complex<T> > im2(image.getBounds());
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
+            image += im2;
+        } else if (image.getStep() != 1) {
+            ImageAlloc<std::complex<T> > im2(image.getBounds());
+            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
+            image = im2;
+        } else {
+            _pimpl->fillKImage(image.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
+        }
     }
 
     // The type of T (real or complex) determines whether the call-back is to
@@ -389,7 +414,7 @@ namespace galsim {
         const int n2 = n - n1 - 1;
 
         // Make a smaller single-quadrant image and fill that the normal way.
-        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1,0.);
+        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1);
         QuadrantHelper<T>::fill(prof, q.view(), m1==0?x0:0., dx, n1==0?y0:0., dy);
 
         // Use those values to fill the original image.
@@ -408,7 +433,8 @@ namespace galsim {
         }
         xdbg<<"Done copying quadrants"<<std::endl;
     }
-    void SBProfile::SBProfileImpl::fillXImageQuadrant(ImageView<double> im,
+    template <typename T>
+    void SBProfile::SBProfileImpl::fillXImageQuadrant(ImageView<T> im,
                                                       double x0, double dx, int nx1,
                                                       double y0, double dy, int ny1) const
     {
@@ -416,7 +442,8 @@ namespace galsim {
         assert(nx1 != 0 || ny1 != 0);
         FillQuadrant(*this,im,x0,dx,nx1,y0,dy,ny1);
     }
-    void SBProfile::SBProfileImpl::fillKImageQuadrant(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBProfile::SBProfileImpl::fillKImageQuadrant(ImageView<std::complex<T> > im,
                                                       double kx0, double dkx, int nkx1,
                                                       double ky0, double dky, int nky1) const
     {
@@ -425,10 +452,133 @@ namespace galsim {
         FillQuadrant(*this,im,kx0,dkx,nkx1,ky0,dky,nky1);
     }
 
+    void GetKValueRange1d(int& i1, int& i2, int m, double kmax, double ksqmax,
+                          double kx0, double dkx, double ky, double& kysq)
+    {
+        if (std::abs(ky) >= kmax) { i1 = i2 = m; return; }
+        kysq = ky*ky;
+        // Most of the time, there is no region to skip, so only bother with this
+        // calculation if either end is large enough.
+        double dsq = ksqmax - kysq;
+        if (kx0*kx0 > dsq || (kx0+m*dkx)*(kx0+m*dkx) > dsq) {
+            // first and last i are where
+            //   (kx0 + dkx*i)^2 + kysq = ksqmax
+            double d = sqrt(dsq);
+            i1 = int(ceil((-kx0 - d) / dkx));
+            i2 = int(floor((-kx0 + d) / dkx));
+            if (i1 > i2) std::swap(i1,i2);
+            ++i2;
+            if (i2 <= 0 || i1 >= m) { i1 = i2 = m; return; }
+            if (i1 < 0) i1 = 0;
+            if (i2 > m) i2 = m;
+        } else {
+            i1 = 0;
+            i2 = m;
+        }
+    }
+
+    void GetKValueRange2d(int& i1, int& i2, int m, double kmax, double ksqmax,
+                          double kx0, double dkx, double ky0, double dky)
+    {
+#ifdef DEBUGLOGGING
+        xdbg<<"GetKValueRange: kx0, ky0 = "<<kx0<<','<<ky0<<"  kmax = "<<kmax<<std::endl;
+        xdbg<<"   "<<std::abs(kx0)<<"  "<<std::abs(kx0+m*dkx)<<"   "<<
+            std::abs(ky0)<<"  "<<std::abs(ky0+m+dky)<<std::endl;
+#endif
+        // Most of the time, there is no region to skip, so only bother with this calculation
+        // if at least one of the extreme values of kx or ky is > kmax.
+        if (std::abs(kx0) > kmax || std::abs(kx0+m*dkx) > kmax ||
+            std::abs(ky0) > kmax || std::abs(ky0+m+dky) > kmax) {
+            double ky0sq = ky0*ky0;
+            // first and last i are where
+            //   (kx0 + i*dkx)^2 + (ky0 + i*dkyx)^2 = ksq_max
+            //   (dkx^2 + dky^2) i^2 + 2 (dkx kx0 + dky ky0) i + (kx0^2 + ky0^2 - ksqmax) = 0
+            double a = dkx*dkx + dky*dky;
+            double b = dkx*kx0 + dky*ky0;
+            double c = kx0*kx0 + ky0*ky0 - ksqmax;
+            double d = b*b-a*c;
+            xdbg<<"d = "<<d<<std::endl;
+            if (d <= 0.) { i1 = i2 = m; return; }
+            d = sqrt(d);
+            i1 = int(ceil((-b - d) / a));
+            i2 = int(floor((-b + d) / a));
+#ifdef DEBUGLOGGING
+            xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
+            double ksq = (kx0+i1*dkx)*(kx0+i1*dkx) + (ky0+i1*dky)*(ky0+i1*dky);
+            xdbg<<"k at i1 = "<<sqrt(ksq)<<std::endl;
+            assert(ksq <= ksqmax);
+            ksq = (kx0+i2*dkx)*(kx0+i2*dkx) + (ky0+i2*dky)*(ky0+i2*dky);
+            xdbg<<"k at i2 = "<<sqrt(ksq)<<std::endl;
+            assert(ksq <= ksqmax);
+            ksq = (kx0+(i1-1)*dkx)*(kx0+(i1-1)*dkx) + (ky0+(i1-1)*dky)*(ky0+(i1-1)*dky);
+            xdbg<<"k at i1-1 = "<<sqrt(ksq)<<std::endl;
+            assert(ksq > ksqmax);
+            ksq = (kx0+(i2+1)*dkx)*(kx0+(i2+1)*dkx) + (ky0+(i2+1)*dky)*(ky0+(i2+1)*dky);
+            xdbg<<"k at i2+1 = "<<sqrt(ksq)<<std::endl;
+            assert(ksq > ksqmax);
+#endif
+            if (i1 > i2) std::swap(i1,i2);
+            ++i2;
+            if (i2 <= 0 || i1 >= m) { i1 = i2 = m; return; }
+            if (i1 < 0) i1 = 0;
+            if (i2 > m) i2 = m;
+#ifdef DEBUGLOGGING
+            xdbg<<"i1,i2 => "<<i1<<','<<i2<<std::endl;
+            ksq = (kx0+i1*dkx)*(kx0+i1*dkx) + (ky0+i1*dky)*(ky0+i1*dky);
+            xdbg<<"k at i1 = "<<sqrt(ksq)<<std::endl;
+            ksq = (kx0+i2*dkx)*(kx0+i2*dkx) + (ky0+i2*dky)*(ky0+i2*dky);
+            xdbg<<"k at i2 = "<<sqrt(ksq)<<std::endl;
+#endif
+        } else {
+            i1 = 0;
+            i2 = m;
+        }
+    }
+
     // instantiate template functions for expected image types
-    template double SBProfile::draw(ImageView<float> image, double dx) const;
-    template double SBProfile::draw(ImageView<double> image, double dx) const;
+    template double SBProfile::draw(ImageView<float> image, double dx, bool add) const;
+    template double SBProfile::draw(ImageView<double> image, double dx, bool add) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk,
+                                   bool add) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk,
+                                   bool add) const;
 
+    template void SBProfile::SBProfileImpl::defaultFillXImage(
+        ImageView<double> im,
+        double x0, double dx, int izero, double y0, double dy, int jzero) const;
+    template void SBProfile::SBProfileImpl::defaultFillXImage(
+        ImageView<float> im,
+        double x0, double dx, int izero, double y0, double dy, int jzero) const;
+    template void SBProfile::SBProfileImpl::defaultFillXImage(
+        ImageView<double> im,
+        double x0, double dx, double dxy, double y0, double dy, double dyx) const;
+    template void SBProfile::SBProfileImpl::defaultFillXImage(
+        ImageView<float> im,
+        double x0, double dx, double dxy, double y0, double dy, double dyx) const;
+    template void SBProfile::SBProfileImpl::defaultFillKImage(
+        ImageView<std::complex<double> > im,
+        double kx0, double dkx, int izero, double ky0, double dky, int jzero) const;
+    template void SBProfile::SBProfileImpl::defaultFillKImage(
+        ImageView<std::complex<float> > im,
+        double kx0, double dkx, int izero, double ky0, double dky, int jzero) const;
+    template void SBProfile::SBProfileImpl::defaultFillKImage(
+        ImageView<std::complex<double> > im,
+        double kx0, double dkx, double dkxy, double ky0, double dky, double dkyx) const;
+    template void SBProfile::SBProfileImpl::defaultFillKImage(
+        ImageView<std::complex<float> > im,
+        double kx0, double dkx, double dkxy, double ky0, double dky, double dkyx) const;
+
+    template void SBProfile::SBProfileImpl::fillXImageQuadrant(
+        ImageView<double> im,
+        double x0, double dx, int nx1, double y0, double dy, int ny1) const;
+    template void SBProfile::SBProfileImpl::fillXImageQuadrant(
+        ImageView<float> im,
+        double x0, double dx, int nx1, double y0, double dy, int ny1) const;
+    template void SBProfile::SBProfileImpl::fillKImageQuadrant(
+        ImageView<std::complex<double> > im,
+        double kx0, double dkx, int nkx1, double ky0, double dky, int nky1) const;
+    template void SBProfile::SBProfileImpl::fillKImageQuadrant(
+        ImageView<std::complex<float> > im,
+        double kx0, double dkx, int nkx1, double ky0, double dky, int nky1) const;
 }

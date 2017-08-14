@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -63,6 +63,12 @@ class Shear(object):
     `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible
     to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e.
     galsim.Shear().
+
+    In addition, for use cases where extreme efficiency is required, you can skip all the
+    normal sanity checks and branches in the regular Shear constructor by using a leading
+    underscore with the complex shear (g1 + 1j * g2).
+
+        >>> s = galsim._Shear(0.05 + 0.03j)  # Equivalent to galsim.Shear(g1=0.05, g2=0.03)
 
     Since we have defined a Shear as a transformation that preserves area, this means that it is not
     a precise description of what happens during the process of weak lensing.  The coordinate
@@ -297,16 +303,16 @@ class Shear(object):
             return 0.5 + absetasq*((-1./24.) + absetasq*(1./240.))
 
     # define all the various operators on Shear objects
-    def __neg__(self): return Shear(-self._g)
+    def __neg__(self): return _Shear(-self._g)
 
     # order of operations: shear by other._shear, then by self._shear
     def __add__(self, other):
-        return Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
+        return _Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
 
     # order of operations: shear by -other._shear, then by self._shear
     def __sub__(self, other): return self + (-other)
 
-    def __eq__(self, other): return self._g == other._g
+    def __eq__(self, other): return isinstance(other, Shear) and self._g == other._g
     def __ne__(self, other): return not self.__eq__(other)
 
     def getMatrix(self):
@@ -353,3 +359,15 @@ class Shear(object):
         return 'galsim.Shear(g1=%s,g2=%s)'%(self.g1,self.g2)
 
     def __hash__(self): return hash(self._g)
+
+def _Shear(g):
+    """Equivalent to Shear(shear), but without the overhead of the normal sanity checks and other
+    options for how to specify the shear.
+
+    @param g        The complex shear g1 + 1j * g2.
+
+    @returns a galsim.Shear instance
+    """
+    ret = Shear.__new__(Shear)
+    ret._g = g
+    return ret

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -78,7 +78,8 @@ namespace galsim {
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, int izero,
                                                     double ky0, double dky, int jzero) const
     {
@@ -90,28 +91,31 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx) {
                 double ksq = kx*kx + kysq;
-                if (ksq > _maxksq) *ptr = 0.;
+                if (ksq > _maxksq) *ptr++ = T(0);
                 else {
                     double abs_kval = std::abs(*ptr);
                     if (abs_kval < _min_acc_kval)
-                        *ptr = 1./_min_acc_kval;
-                    else
-                        *ptr = 1./(*ptr);
+                        *ptr++ = 1./_min_acc_kval;
+                    else {
+                        std::complex<T> val = *ptr;
+                        *ptr++ = 1./(val);
+                    }
                 }
             }
         }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<T> > im,
                                                     double kx0, double dkx, double dkxy,
                                                     double ky0, double dky, double dkyx) const
     {
@@ -123,22 +127,24 @@ namespace galsim {
         // Now invert the values, but be careful about not amplifying noise too much.
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,++ptr) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
                 double ksq = kx*kx + ky*ky;
-                if (ksq > _maxksq) *ptr = 0.;
+                if (ksq > _maxksq) *ptr++ = 0.;
                 else {
                     double abs_kval = std::abs(*ptr);
                     if (abs_kval < _min_acc_kval)
-                        *ptr = 1./_min_acc_kval;
-                    else
-                        *ptr = 1./(*ptr);
+                        *ptr++ = 1./_min_acc_kval;
+                    else {
+                        std::complex<T> val = *ptr;
+                        *ptr++ = 1./(val);
+                    }
                 }
             }
         }

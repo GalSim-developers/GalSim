@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -173,6 +173,15 @@ If you want your angles to be wrapped to [-pi,pi) radians, you can do this by ca
 This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.
 
+If you want to wrap to a different range than [-pi, pi), you can set the `center` argument
+to be the desired center of the the range.  e.g. for return values to fall in [0, 2pi),
+you would call
+
+    >>> theta = theta.wrap(center=math.pi * galsim.radians)
+
+@param center   The center point of the wrapped range. [default: 0]
+
+@returns the equivalent angle within the range [center-pi, center+pi)
 """
 
 Angle.__str__ = lambda self: str(self.rad()) + ' radians'

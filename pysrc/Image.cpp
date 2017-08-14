@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -111,7 +111,8 @@ namespace galsim {
         PyImage<int32_t>::wrapBaseImage("I");
         PyImage<float>::wrapBaseImage("F");
         PyImage<double>::wrapBaseImage("D");
-        PyImage<std::complex<double> >::wrapBaseImage("C");
+        PyImage<std::complex<double> >::wrapBaseImage("CD");
+        PyImage<std::complex<float> >::wrapBaseImage("CF");
 
         bp::dict pyConstImageViewDict;
 
@@ -121,7 +122,8 @@ namespace galsim {
         pyConstImageViewDict["I"] = PyImage<int32_t>::wrapConstImageView("I");
         pyConstImageViewDict["F"] = PyImage<float>::wrapConstImageView("F");
         pyConstImageViewDict["D"] = PyImage<double>::wrapConstImageView("D");
-        pyConstImageViewDict["C"] = PyImage<std::complex<double> >::wrapConstImageView("C");
+        pyConstImageViewDict["CD"] = PyImage<std::complex<double> >::wrapConstImageView("CD");
+        pyConstImageViewDict["CF"] = PyImage<std::complex<float> >::wrapConstImageView("CF");
 
         bp::dict pyImageViewDict;
 
@@ -131,7 +133,8 @@ namespace galsim {
         pyImageViewDict["I"] = PyImage<int32_t>::wrapImageView("I");
         pyImageViewDict["F"] = PyImage<float>::wrapImageView("F");
         pyImageViewDict["D"] = PyImage<double>::wrapImageView("D");
-        pyImageViewDict["C"] = PyImage<std::complex<double> >::wrapImageView("C");
+        pyImageViewDict["CD"] = PyImage<std::complex<double> >::wrapImageView("CD");
+        pyImageViewDict["CF"] = PyImage<std::complex<float> >::wrapImageView("CF");
 
         bp::scope scope;  // a default constructed scope represents the module we're creating
         scope.attr("ConstImageView") = pyConstImageViewDict;

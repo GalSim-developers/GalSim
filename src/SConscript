@@ -1,3 +1,4 @@
+from __future__ import print_function
 # vim: set filetype=python :
 
 import os, sys
@@ -7,11 +8,12 @@ try:
     sys.path = [GetBuildPath('#galsim')] + sys.path
     from _version import __version__ as version
     from _version import __version_info__ as version_info
-    sys.path.nada()
-except:
+except Exception as e:
+    print('Caught exception: ',e)
     # If SCons is using an old python (2.4 is relatively common still), then the above may fail.
     # In this case, we need to be a little trickier.
-    execfile(os.path.join(GetBuildPath('#galsim'),'_version.py'))
+    vfilename = os.path.join(GetBuildPath('#galsim'),'_version.py')
+    exec(compile(open(vfilename, "rb").read(), vfilename, 'exec'))
     version = __version__
     version_info = __version_info__
 
@@ -82,7 +84,7 @@ for d in subdirs:
         lib_files += [os.path.join(d,f)]
 
 if env1['MEM_TEST']:
-    print 'Using mmgr.cpp'
+    print('Using mmgr.cpp')
     # put mmgr.cpp first, so its static variable is the first one registered.
     # otherwise the memory leak reports a bunch of static variables being leaks.
     lib_files.insert(0, 'mmgr.cpp')
@@ -90,7 +92,7 @@ if env1['MEM_TEST']:
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
 
-print 'GalSim version ',version
+print('GalSim version ',version)
 
 # Make sure the version tuple has 3 elements.
 if len(version_info) == 2:
@@ -153,7 +155,7 @@ elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3
 
             static_lib_name = os.path.join(dir,'lib' + lib + '.a')
             if os.path.isfile(static_lib_name) and os.access(static_lib_name, os.R_OK):
-                print 'Found static library: ',static_lib_name
+                print('Found static library: ',static_lib_name)
                 new_libs += [ File(static_lib_name) ]
                 found = True
                 break

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -205,6 +205,8 @@ class _ReadFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
+                except KeyboardInterrupt:
+                    raise
                 except: # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
@@ -214,6 +216,8 @@ class _ReadFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(file)
+                except KeyboardInterrupt:
+                    raise
                 except: # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
@@ -364,6 +368,8 @@ class _WriteFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
+                except KeyboardInterrupt:
+                    raise
                 except:  # pragma: no cover
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
@@ -372,6 +378,8 @@ class _WriteFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(hdu_list, file)
+                except KeyboardInterrupt:
+                    raise
                 except:  # pragma: no cover
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]

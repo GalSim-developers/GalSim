@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,6 +22,7 @@ import numpy as np
 from galsim_test_helpers import timer, do_pickle, all_obj_diff
 import sys
 from astropy import units
+from astropy import constants
 
 try:
     import galsim
@@ -30,17 +31,16 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 
 @timer
 def test_SED_basic():
     """Basic tests of SED functionality
     """
-    c = 2.99792458e17  # speed of light in nm/s
-    h = 6.62606957e-27 # Planck's constant in erg seconds
+    c = constants.c.to('nm / s').value # speed of light
+    h = constants.h.to('erg s').value # Planck's constant
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
@@ -308,6 +308,7 @@ def test_SED_atRedshift():
     """
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bolo_flux = a.calculateFlux(bandpass=None)
+    print('bolo_flux = ',bolo_flux)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
@@ -315,13 +316,18 @@ def test_SED_atRedshift():
         e = b.thin(rel_err=1.e-5)  # effectively tests that wave_list is handled correctly.
                                    # (Issue #520)
         for w in [350, 500, 650]:
-            np.testing.assert_almost_equal(a(w), b(w*(1.0+z1)), 10,
+            print('a(w) = ',a(w))
+            print('b(w(1+z)) = ',b(w*(1.+z1)))
+            print('c(w(1+z)) = ',c(w*(1.+z1)))
+            print('d(w(1+z)) = ',d(w*(1.+z2)))
+            print('e(w(1+z)) = ',e(w*(1.+z1)))
+            np.testing.assert_almost_equal(a(w)/bolo_flux, b(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), c(w*(1.0+z1)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, c(w*(1.0+z1))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal(a(w), d(w*(1.0+z2)), 10,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, d(w*(1.0+z2))/bolo_flux, 15,
                                            err_msg="error redshifting SED")
-            np.testing.assert_almost_equal((a(w)-e(w*(1.0+z1)))/bolo_flux, 0., 5,
+            np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
 
 
@@ -329,8 +335,7 @@ def test_SED_atRedshift():
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
-    a = galsim.SED(os.path.join(sedpath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
-                   flux_type='flambda')
+    a = galsim.SED('CWW_Scd_ext.sed', wave_type='nanometers', flux_type='flambda')
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
         w1 = b.wave_list[0]
@@ -497,8 +502,9 @@ def test_SED_calculateMagnitude():
     # http://www.astronomy.ohio-state.edu/~martini/usefuldata.html
     # Almost certainly, the LSST filters and the filters used on this website are not perfect
     # matches, but should give some idea of the expected conversion between Vega magnitudes and AB
-    # magnitudes.  The results are consistent to 0.1 magnitudes, which is encouraging, but the true
-    # accuracy of the get/set magnitude algorithms is probably much better than this.
+    # magnitudes.  Except for u-band, the results are consistent to 0.1 magnitudes, which is
+    # encouraging, but the true accuracy of the get/set magnitude algorithms is probably much better
+    # than this.
     ugrizy_vega_ab_conversions = [0.91, -0.08, 0.16, 0.37, 0.54, 0.634]
     filter_names = 'ugrizy'
     sed = sed.atRedshift(0.0)
@@ -510,8 +516,8 @@ def test_SED_calculateMagnitude():
                          .withZeropoint('vega'))
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
-        assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
-
+        thresh = 0.3 if filter_name == 'u' else 0.1
+        assert (abs((AB_mag - vega_mag) - conversion) < thresh)
 
 @timer
 def test_SED_calculateDCRMomentShifts():
@@ -607,7 +613,7 @@ def test_SED_sampleWavelength():
                                    "to the nearest integer.")
 
     def create_cdfs(sed,out,nbins=100):
-        bins,step = np.linspace(sed.blue_limit,sed.red_limit,1e5,retstep=True)
+        bins,step = np.linspace(sed.blue_limit,sed.red_limit,100000,retstep=True)
         centers = bins[:-1] + step/2.
         cdf = np.cumsum(sed(centers)*step)
         cdf /= cdf.max()

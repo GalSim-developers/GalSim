@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,18 +32,18 @@ import inspect
 valid_extra_outputs = {}
 
 
-def SetupExtraOutput(config, file_num=0, logger=None):
+def SetupExtraOutput(config, logger=None):
     """
     Set up the extra output items as necessary, including building Managers for the work
     space so they can work safely in multi-processing mode.  Each builder will be placed in
     config['extra_builder'][key] where key is the key in galsim.config.valid_extra_outputs.
 
     @param config       The configuration dict.
-    @param file_num     The file number being worked on currently. [default: 0]
     @param logger       If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
     output = config['output']
+    file_num = config.get('file_num',0)
 
     # We'll iterate through this list of keys a few times
     all_keys = [ k for k in valid_extra_outputs.keys() if k in output ]
@@ -68,6 +68,17 @@ def SetupExtraOutput(config, file_num=0, logger=None):
 
     if 'extra_builder' not in config:
         config['extra_builder'] = {}
+
+    # Keep track of any skipped obj_nums, since usually need to treat them differently.
+    # Note: it would be slightly nicer to use a set here, but there isn't a pre-defined
+    # multiprocessing.managers.SetProxy type, so we just use a dict like a set by giving
+    # each item the value None.
+    if '_skipped_obj_nums' in config:
+        config['_skipped_obj_nums'].clear()
+    elif use_manager:
+        config['_skipped_obj_nums'] = config['output_manager'].dict()
+    else:
+        config['_skipped_obj_nums'] = dict()
 
     for key in all_keys:
         logger.debug('file %d: Setup output item %s',file_num,key)
@@ -108,7 +119,7 @@ def SetupExtraOutputsForImage(config, logger=None):
             field = config['output'][key]
             builder.setupImage(field, config, logger)
 
-def ProcessExtraOutputsForStamp(config, logger=None):
+def ProcessExtraOutputsForStamp(config, skip, logger=None):
     """Run the appropriate processing code for any extra output items that need to do something
     at the end of building each object.
 
@@ -116,6 +127,7 @@ def ProcessExtraOutputsForStamp(config, logger=None):
     and noise are added.
 
     @param config       The configuration dict.
+    @param skip         Was the drawing of this object skipped?
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
@@ -123,7 +135,11 @@ def ProcessExtraOutputsForStamp(config, logger=None):
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             builder = config['extra_builder'][key]
             field = config['output'][key]
-            builder.processStamp(obj_num, field, config, logger)
+            if skip:
+                config['_skipped_obj_nums'][obj_num] = None
+                builder.processSkippedStamp(obj_num, field, config, logger)
+            else:
+                builder.processStamp(obj_num, field, config, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -147,6 +163,9 @@ def ProcessExtraOutputsForImage(config, logger=None):
                 for i in range(k):
                     start_obj_num += nobj[i]
                 obj_nums = range(start_obj_num, start_obj_num+nobj[k])
+                # Omit skipped obj_nums
+                skipped = config['_skipped_obj_nums']
+                obj_nums = [ n for n in obj_nums if n not in skipped ]
             builder = config['extra_builder'][key]
             field = config['output'][key]
             index = config['image_num'] - config['start_image_num']
@@ -163,7 +182,6 @@ def WriteExtraOutputs(config, main_data, logger=None):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     logger = galsim.config.LoggerWrapper(logger)
-    config['index_key'] = 'file_num'
     output = config['output']
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -244,7 +262,6 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
 
     @returns data with additional hdus added
     """
-    config['index_key'] = 'file_num'
     output = config['output']
     hdus = {}
     for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
@@ -272,6 +289,20 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
     # Turn hdus into a list (in order)
     hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
     return main_data + hdulist
+
+def CheckNoExtraOutputHDUs(config, output_type, logger=None):
+    """Check that none of the extra output objects want to add to the HDU list.
+
+    Raises an exception if one of them has an hdu field.
+    """
+    logger = galsim.config.LoggerWrapper(logger)
+    output = config['output']
+    for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+        field = output[key]
+        if 'hdu' in field:
+            hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
+            logger.error("Extra output %s requesting to write to hdu %d", key, hdu)
+            raise AttributeError("Output type %s cannot add extra images as HDUs"%output_type)
 
 
 def GetFinalExtraOutput(key, config, main_data, logger=None):
@@ -352,6 +383,21 @@ class ExtraOutputBuilder(object):
         @param logger       If given, a logger object to log progress. [default: None]
         """
         pass  # pragma: no cover  (all our ExtraBuilders override this function.)
+
+    def processSkippedStamp(self, obj_num, config, base, logger):
+        """Perform any necessary processing for stamps that were skipped in the normal processing.
+
+        This function will be called for stamps that are not built because they were skipped
+        for some reason.  Normally, you would not want to do anything for the extra outputs in
+        these cases, but in case some module needs to do something in these cases as well, this
+        method can be overridden.
+
+        @param obj_num      The object number
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
 
     def processImage(self, index, obj_nums, config, base, logger):
         """Perform any necessary processing at the end of each image construction.
@@ -457,4 +503,3 @@ def RegisterExtraOutput(key, builder):
     valid_extra_outputs[key] = builder
 
 # Nothing is registered here.  The appropriate items are registered in extra_*.py.
-

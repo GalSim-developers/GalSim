@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -224,10 +224,13 @@ namespace galsim {
         // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
         double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
         // The relationship for inclinations in between these is not linear.
-        // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for
-        // the interpolation.  It's accurate to ~10-20% for moderate values of h0/r0.
+        // Empirically, it is vaguely linearish in ln(maxsb) vs. sqrt(cosi), so we use that for
+        // the interpolation.
         double sc = sqrt(std::abs(_cosi));
-        maxsb *= (_h0 * sc + _r0 * (1.-sc)) / _h0;
+        maxsb *= std::exp(std::log(_r0/_h0) * (1.-sc));
+
+        // Err on the side of overestimating by multiplying by conservative_factor,
+        // which was found to work for the worst-case scenario
         return std::abs(maxsb);
     }
 
@@ -246,8 +249,9 @@ namespace galsim {
         return _flux * kValueHelper(kx,ky);
     }
 
+    template <typename T>
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, int izero,
         double ky0, double dky, int jzero) const
     {
@@ -261,7 +265,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -278,8 +282,9 @@ namespace galsim {
         }
     }
 
+    template <typename T>
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
-        ImageView<std::complex<double> > im,
+        ImageView<std::complex<T> > im,
         double kx0, double dkx, double dkxy,
         double ky0, double dky, double dkyx) const
     {
@@ -288,7 +293,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 

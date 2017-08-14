@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,6 +29,19 @@
 
 namespace galsim {
 
+    // Some templates to permit Position<int> + Position<double> -> Position<double> and related.
+    template<class T, class T2> struct Promotion {};
+    template<typename T> struct Promotion<T, T> {typedef T type;};
+    template<> struct Promotion<double, int> {typedef double type;};
+    template<> struct Promotion<int, double> {typedef double type;};
+
+    // Need separate template for augmented assignment...
+    template<class T, class T2> struct SelfPromotion {};
+    template<typename T> struct SelfPromotion<T, T> {typedef T type;};
+    // Allow Position<double> += Position<int>
+    template<> struct SelfPromotion<double, int> {typedef double type;};
+    // But leave out (and thus prohibit) Position<int> += Position<double>
+
     /// @brief Class for storing 2d position vectors in an (x, y) format.
     template <class T>
     class Position
@@ -51,10 +64,14 @@ namespace galsim {
         }
 
         /// @brief Overloaded += operator, following standard vector algebra rules.
-        Position<T>& operator+=(const Position<T>& rhs) { x+=rhs.x; y+=rhs.y; return *this; }
+        template <typename T2>
+        Position<typename SelfPromotion<T,T2>::type>&
+        operator+=(const Position<T2>& rhs) { x+=rhs.x; y+=rhs.y; return *this; }
 
         /// @brief Overloaded -= operator, following standard vector algebra rules.
-        Position<T>& operator-=(const Position<T>& rhs) { x-=rhs.x; y-=rhs.y; return *this; }
+        template <typename T2>
+        Position<typename SelfPromotion<T,T2>::type>&
+        operator-=(const Position<T2>& rhs) { x-=rhs.x; y-=rhs.y; return *this; }
 
         /// @brief Overloaded *= operator for scalar multiplication.
         Position<T>& operator*=(const T rhs) { x*=rhs; y*=rhs; return *this; }
@@ -75,12 +92,14 @@ namespace galsim {
         Position<T> operator-() const { return Position<T>(-x,-y); }
 
         /// @brief Overloaded vector + addition operator with a Position on the rhs.
-        Position<T> operator+(const Position<T>& rhs) const
-        { return Position<T>(x+rhs.x,y+rhs.y); }
+        template <typename T2>
+        Position<typename Promotion<T,T2>::type> operator+(const Position<T2>& rhs) const
+        { return Position<typename Promotion<T,T2>::type>(x+rhs.x, y+rhs.y);}
 
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
-        Position<T> operator-(const Position<T>& rhs) const
-        { return Position<T>(x-rhs.x,y-rhs.y); }
+        template <typename T2>
+        Position<typename Promotion<T,T2>::type> operator-(const Position<T2>& rhs) const
+        { return Position<typename Promotion<T,T2>::type>(x-rhs.x, y-rhs.y); }
 
         /// @brief Overloaded == relational equality operator.
         bool operator==(const Position<T>& rhs) const { return (x==rhs.x && y==rhs.y); }

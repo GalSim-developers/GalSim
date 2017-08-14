@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -52,8 +52,8 @@ for chip_num in {1..$nfiles}
 do
     root=DECam_00154912_01
     file_name=${root}_psfex_image.fits
-    ../check_diff.py output/$file_name output_yaml/$file_name
+    $python ../check_diff.py output/$file_name output_yaml/$file_name
     file_name=${root}_fitpsf_image.fits
-    ../check_diff.py output/$file_name output_yaml/$file_name
+    $python ../check_diff.py output/$file_name output_yaml/$file_name
 done
 

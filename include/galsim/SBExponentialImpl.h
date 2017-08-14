@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -130,16 +130,20 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillXImage(ImageView<double> im,
+        template <typename T>
+        void fillXImage(ImageView<T> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXImage(ImageView<double> im,
+        template <typename T>
+        void fillXImage(ImageView<T> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -153,10 +157,44 @@ namespace galsim {
         double _inv_r0_sq;
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
+        double _k_max;   ///< sqrt(_ksq_max)
         double _norm; ///< flux / r0^2 / 2pi
         double _flux_over_2pi; ///< Flux / 2pi
 
         const boost::shared_ptr<ExponentialInfo> _info;
+
+        void doFillXImage(ImageView<double> im,
+                          double x0, double dx, int izero,
+                          double y0, double dy, int jzero) const
+        { fillXImage(im,x0,dx,izero,y0,dy,jzero); }
+        void doFillXImage(ImageView<double> im,
+                          double x0, double dx, double dxy,
+                          double y0, double dy, double dyx) const
+        { fillXImage(im,x0,dx,dxy,y0,dy,dyx); }
+        void doFillXImage(ImageView<float> im,
+                          double x0, double dx, int izero,
+                          double y0, double dy, int jzero) const
+        { fillXImage(im,x0,dx,izero,y0,dy,jzero); }
+        void doFillXImage(ImageView<float> im,
+                          double x0, double dx, double dxy,
+                          double y0, double dy, double dyx) const
+        { fillXImage(im,x0,dx,dxy,y0,dy,dyx); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
 
         // Copy constructor and op= are undefined.
         SBExponentialImpl(const SBExponentialImpl& rhs);
