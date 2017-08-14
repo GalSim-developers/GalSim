@@ -115,13 +115,15 @@ class Image(object):
 
         Image(image, dtype=dtype)
 
-                This creates a shallow copy of an Image, possibly changing the type.  e.g.
+                This creates a copy of an Image, possibly changing the type.  e.g.
 
                     >>> image_float = galsim.Image(64, 64) # default dtype=numpy.float32
                     >>> image_double = galsim.Image(image_float, dtype=numpy.float64)
 
-                To get a deep copy, use the `copy` method rather than the `Image` constructor.
                 You can see a list of valid values for dtype in `galsim.Image.valid_dtypes`.
+                Without the `dtype` argument, this is equivalent to `image.copy()`, which makes
+                a deep copy.  If you want a copy that shares data with the original, see
+                the image.view() method.
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -347,16 +349,15 @@ class Image(object):
             if wcs is None and scale is None:
                 wcs = image.wcs
             self._bounds = image.bounds
-            if dtype is not None and image.dtype != dtype:
+            if dtype is None:
+                self.dtype = image.dtype
+            else:
                 # Allow dtype to force a retyping of the provided image
                 # e.g. im = ImageF(...)
                 #      im2 = ImageD(im)
-                self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=dtype)
-                self._array[:,:] = image.array[:,:]
                 self.dtype = dtype
-            else:
-                self._array = image.array
-                self.dtype = self._array.dtype.type
+            self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self.dtype)
+            self._array[:,:] = image.array[:,:]
         else:
             self._array = np.empty(shape=(1,1), dtype=self.dtype)
             self._bounds = galsim.BoundsI()

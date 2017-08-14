@@ -464,11 +464,12 @@ class VariableGaussianNoise(_galsim.BaseNoise):
             raise TypeError(
                 "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
 
-        # Make sure var_image is an ImageF, converting dtype if necessary
-        var_image = galsim.ImageF(var_image)
+        # Make a copy of the input, so we can guarantee read-only, and converting to float32
+        # if necessary
+        self._var_image = galsim.ImageF(var_image)
 
         # Make the noise object using the image.image as needed in the C++ layer.
-        self.noise = _galsim.VarGaussianNoise(rng, var_image.image)
+        self.noise = _galsim.VarGaussianNoise(rng, self._var_image.image)
 
     def applyTo(self, image):
         """
@@ -490,7 +491,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         self.noise.applyToView(image_view)
 
     def getVarImage(self):
-        return galsim.Image(self.noise.getVarImage())
+        return self._var_image
 
     def getRNG(self):
         return self.noise.getRNG()
@@ -498,7 +499,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     @property
     def rng(self): return self.getRNG()
     @property
-    def var_image(self): return self.getVarImage()
+    def var_image(self): return self._var_image
 
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.
