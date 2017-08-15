@@ -503,6 +503,18 @@ above (see also https://docs.pytest.org/en/latest/). Many third party-
 maintained Python distributions, such as the Enthought Python Distribution,
 include `pytest`.
 
+By default, the python tests will use the pytest plugins `pytest-xdist` (for 
+running tests in parallel) and `pytest-timeout` (to manage how much time each 
+test is allowed to run).  These plugins are usually installable using pip:
+
+    pip install pytest-xdist pytest-timeout
+    
+Sometimes the `--user` flag may be needed in the above command to make the 
+plugins discoverable.  If you want to run the python tests without these
+plugins (serially!), you can still do this via
+
+    scons tests -j1
+
 Note: if your system does not have `pytest` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
