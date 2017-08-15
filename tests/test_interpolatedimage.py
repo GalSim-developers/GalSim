@@ -105,8 +105,6 @@ def test_roundtrip():
         # Check picklability
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
-        do_pickle(interp.SBProfile, irreprable=True)
-        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         # interp.SBProfile is not actually an SBInterpolatedImage.  That's stored as _sbii.
         do_pickle(interp._sbii, irreprable=True)
 
@@ -1004,10 +1002,8 @@ def test_kroundtrip():
 
     # Check picklability
     do_pickle(b)
-    do_pickle(b._sbiki, irreprable=True)
     do_pickle(b, lambda x: x.drawImage())
-    do_pickle(b.SBProfile, irreprable=True)
-    do_pickle(b.SBProfile, lambda x: repr(x), irreprable=True)
+    do_pickle(b._sbiki, irreprable=True)
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
