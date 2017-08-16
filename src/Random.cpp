@@ -235,7 +235,7 @@ namespace galsim {
 
     void UniformDeviate::clearCache() { _devimpl->_urd.reset(); }
 
-    double UniformDeviate::operator()()
+    double UniformDeviate::val()
     { return _devimpl->_urd(*this->_impl->_rng); }
 
     std::string UniformDeviate::make_repr(bool incl_seed)
@@ -283,7 +283,7 @@ namespace galsim {
 
     void GaussianDeviate::clearCache() { _devimpl->_normal.reset(); }
 
-    double GaussianDeviate::operator()()
+    double GaussianDeviate::val()
     { return _devimpl->_normal(*this->_impl->_rng); }
 
     std::string GaussianDeviate::make_repr(bool incl_seed)
@@ -340,7 +340,7 @@ namespace galsim {
 
     void BinomialDeviate::clearCache() { _devimpl->_bd.reset(); }
 
-    int BinomialDeviate::operator()()
+    double BinomialDeviate::val()
     { return _devimpl->_bd(*this->_impl->_rng); }
 
     std::string BinomialDeviate::make_repr(bool incl_seed)
@@ -355,8 +355,68 @@ namespace galsim {
 
     struct PoissonDeviate::PoissonDeviateImpl
     {
-        PoissonDeviateImpl(double mean) : _pd(mean) {}
-        boost::random::poisson_distribution<> _pd;
+        PoissonDeviateImpl(double mean) { setMean(mean); }
+
+        double getMean() { return _mean; }
+
+        void setMean(double mean)
+        {
+            // Near 2**31, the boost poisson rng can wrap around to negative integers, which
+            // is bad.  But this high, the Gaussian approximation is extremely accurate, so
+            // just use that.
+            const double MAX_POISSON = 1<<30;
+
+            if (mean != _mean) {
+                _mean = mean;
+                if (mean > MAX_POISSON) setMeanGD(mean);
+                else setMeanPD(mean);
+            }
+        }
+
+        void setMeanGD(double mean)
+        {
+            _pd.reset();
+            if (!_gd) {
+                _gd.reset(new boost::random::normal_distribution<>(mean, std::sqrt(mean)));
+            } else {
+                _gd->param(boost::random::normal_distribution<>::param_type(mean, std::sqrt(mean)));
+            }
+            _getValue = &PoissonDeviateImpl::getGDValue;
+        }
+
+        void setMeanPD(double mean)
+        {
+            _gd.reset();
+            if (!_pd) {
+                _pd.reset(new boost::random::poisson_distribution<>(mean));
+            } else {
+                _pd->param(boost::random::poisson_distribution<>::param_type(mean));
+            }
+            _getValue = &PoissonDeviateImpl::getPDValue;
+        }
+
+        void clearCache()
+        {
+            if (_pd) _pd->reset();
+            if (_gd) _gd->reset();
+        }
+
+        typedef BaseDeviate::BaseDeviateImpl::rng_type rng_type;
+        double getPDValue(rng_type& rng) { return (*_pd)(rng); }
+        double getGDValue(rng_type& rng) { return (*_gd)(rng); }
+
+        double getValue(rng_type& rng)
+        { return (this->*_getValue)(rng); }
+
+    private:
+
+        // A variable equal to either getPDValue (normal)
+        // or getGDValue (if mean > 2^30)
+        double (PoissonDeviateImpl::*_getValue)(rng_type& rng);
+
+        double _mean;
+        boost::shared_ptr<boost::random::poisson_distribution<> > _pd;
+        boost::shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
     PoissonDeviate::PoissonDeviate(long lseed, double mean) :
@@ -371,17 +431,13 @@ namespace galsim {
     PoissonDeviate::PoissonDeviate(const std::string& str, double mean) :
         BaseDeviate(str), _devimpl(new PoissonDeviateImpl(mean)) {}
 
-    double PoissonDeviate::getMean() { return _devimpl->_pd.mean(); }
+    double PoissonDeviate::getMean() { return _devimpl->getMean(); }
 
-    void PoissonDeviate::setMean(double mean)
-    {
-        _devimpl->_pd.param(boost::random::poisson_distribution<>::param_type(mean));
-    }
+    void PoissonDeviate::setMean(double mean) { _devimpl->setMean(mean); }
 
-    void PoissonDeviate::clearCache() { _devimpl->_pd.reset(); }
+    double PoissonDeviate::val() { return _devimpl->getValue(*this->_impl->_rng); }
 
-    int PoissonDeviate::operator()()
-    { return _devimpl->_pd(*this->_impl->_rng); }
+    void PoissonDeviate::clearCache() { _devimpl->clearCache(); }
 
     std::string PoissonDeviate::make_repr(bool incl_seed)
     {
@@ -437,7 +493,7 @@ namespace galsim {
 
     void WeibullDeviate::clearCache() { _devimpl->_weibull.reset(); }
 
-    double WeibullDeviate::operator()()
+    double WeibullDeviate::val()
     { return _devimpl->_weibull(*this->_impl->_rng); }
 
     std::string WeibullDeviate::make_repr(bool incl_seed)
@@ -484,7 +540,7 @@ namespace galsim {
 
     void GammaDeviate::clearCache() { _devimpl->_gamma.reset(); }
 
-    double GammaDeviate::operator()()
+    double GammaDeviate::val()
     { return _devimpl->_gamma(*this->_impl->_rng); }
 
     std::string GammaDeviate::make_repr(bool incl_seed)
@@ -524,7 +580,7 @@ namespace galsim {
 
     void Chi2Deviate::clearCache() { _devimpl->_chi_squared.reset(); }
 
-    double Chi2Deviate::operator()()
+    double Chi2Deviate::val()
     { return _devimpl->_chi_squared(*this->_impl->_rng); }
 
     std::string Chi2Deviate::make_repr(bool incl_seed)
@@ -535,42 +591,4 @@ namespace galsim {
         oss << "n="<<getN()<<")";
         return oss.str();
     }
-
-    void PoissonDeviate::setMean(double mean)
-    {
-        // Near 2**31, the boost poisson rng can wrap around to negative integers, which
-        // is bad.  But this high, the Gaussian approximation is extremely accurate, so
-        // just use that.
-        const double MAX_POISSON = 1<<30;
-
-        if (mean == getMean()) return;
-        _pd.param(boost::random::poisson_distribution<>::param_type(mean));
-        if (mean > MAX_POISSON) {
-            if (!_gd) {
-                _gd.reset(new boost::random::normal_distribution<>(mean, std::sqrt(mean)));
-            } else {
-                _gd->param(boost::random::normal_distribution<>::param_type(mean, std::sqrt(mean)));
-            }
-            _getValue = &PoissonDeviate::getGDValue;
-        } else {
-            _gd.reset();
-            _getValue = &PoissonDeviate::getPDValue;
-        }
-    }
-
-    double PoissonDeviate::_val()
-    {
-        return (this->*_getValue)();
-    }
-
-    double PoissonDeviate::getPDValue()
-    {
-        return _pd(*this->_rng);
-    }
-
-    double PoissonDeviate::getGDValue()
-    {
-        return (*_gd)(*this->_rng);
-    }
-
 }

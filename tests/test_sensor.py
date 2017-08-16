@@ -299,7 +299,7 @@ def test_silicon():
     try:
         np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='junk')
         np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='output')
-        np.testing.assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
+        np.testing.assert_raises(ValueError, galsim.SiliconSensor, rng=3.4)
         np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl', 'hello')
     except ImportError:
         print('The assert_raises tests require nose')

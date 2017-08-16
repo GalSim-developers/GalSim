@@ -193,7 +193,12 @@ namespace galsim {
          * However, we don't make it pure virtual, since we want to be able to make
          * BaseDeviate objects as a direct way to define a common seed for other Deviates.
          */
-        double operator()() { return _val(); }
+        double operator()()
+        { return val(); }
+
+        // This is the virtual function that is overridden in subclasses.
+        virtual double val()
+        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
          * @brief Draw N new random numbers from the distribution and save the values in
@@ -216,10 +221,6 @@ namespace galsim {
    protected:
         struct BaseDeviateImpl;
         boost::shared_ptr<BaseDeviateImpl> _impl;
-
-        // This is the virtual function that is actually overridden.
-        virtual double _val()
-        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /// Helper to make the repr with or without the (lengthy!) seed item.
         virtual std::string make_repr(bool incl_seed);
@@ -275,7 +276,7 @@ namespace galsim {
          *
          * @return A uniform deviate in the interval [0.,1.)
          */
-        double operator()();
+        double val();
 
         /**
          * @brief Clear the internal cache
@@ -283,7 +284,6 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return _urd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -345,7 +345,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double operator()();
+        double val();
 
         /**
          * @brief Get current distribution mean
@@ -393,7 +393,6 @@ namespace galsim {
         void generateFromVariance(int N, double* data);
 
     protected:
-        double _val() { return _normal(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -456,7 +455,7 @@ namespace galsim {
          *
          * @return A binomial deviate with current N and p
          */
-        int operator()();
+        double val();
 
         /**
          * @brief Report current value of N
@@ -492,7 +491,6 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return _bd(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -540,19 +538,19 @@ namespace galsim {
         PoissonDeviate(const std::string& str, double mean);
 
         /**
+         * @brief Draw a new random number from the distribution
+         *
+         * @return A Poisson deviate with current mean
+         */
+        double val();
+
+        /**
          * @brief Construct a duplicate of this PoissonDeviate object.
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         PoissonDeviate duplicate()
         { return PoissonDeviate(serialize(),getMean()); }
-
-        /**
-         * @brief Draw a new random number from the distribution
-         *
-         * @return A Poisson deviate with current mean
-         */
-        int operator()();
 
         /**
          * @brief Report current distribution mean
@@ -582,17 +580,9 @@ namespace galsim {
          */
         void generateFromExpectation(int N, double* data);
 
+
     protected:
-        double _val();
-
-        double (PoissonDeviate::*_getValue)(); // A variable equal to either getPDValue (normal)
-                                               // or getGDValue (if mean > 2^30)
-
         std::string make_repr(bool incl_seed);
-
-        double getPDValue();
-        double getGDValue();
-
 
     private:
         struct PoissonDeviateImpl;
@@ -659,7 +649,7 @@ namespace galsim {
          *
          * @return A Weibull deviate with current shape k and scale lam.
          */
-        double operator()();
+        double val();
 
         /**
          * @brief Get current distribution shape parameter a.
@@ -697,7 +687,6 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return _weibull(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -763,7 +752,7 @@ namespace galsim {
          *
          * @return A Gamma deviate with current shape k and scale theta.
          */
-        double operator()();
+        double val();
 
         /**
          * @brief Get current distribution shape parameter k.
@@ -801,7 +790,6 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return _gamma(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:
@@ -867,7 +855,7 @@ namespace galsim {
          *
          * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
          */
-        double operator()();
+        double val();
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.
@@ -890,7 +878,6 @@ namespace galsim {
         void clearCache();
 
     protected:
-        double _val() { return _chi_squared(*this->_rng); }
         std::string make_repr(bool incl_seed);
 
     private:

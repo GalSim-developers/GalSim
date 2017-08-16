@@ -245,9 +245,9 @@ def test_uniform():
     # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.UniformDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.UniformDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.UniformDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -394,9 +394,9 @@ def test_gaussian():
     # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.GaussianDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.GaussianDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.GaussianDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -526,9 +526,9 @@ def test_binomial():
     # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.BinomialDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.BinomialDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.BinomialDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -674,9 +674,9 @@ def test_poisson():
     # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.PoissonDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.PoissonDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.PoissonDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -913,9 +913,9 @@ def test_weibull():
     # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.WeibullDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.WeibullDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.WeibullDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -1043,9 +1043,9 @@ def test_gamma():
     # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, set())
+        np.testing.assert_raises(ValueError, galsim.GammaDeviate, dict())
+        np.testing.assert_raises(ValueError, galsim.GammaDeviate, list())
+        np.testing.assert_raises(ValueError, galsim.GammaDeviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -1173,9 +1173,9 @@ def test_chi2():
     # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, set())
+        np.testing.assert_raises(ValueError, galsim.Chi2Deviate, dict())
+        np.testing.assert_raises(ValueError, galsim.Chi2Deviate, list())
+        np.testing.assert_raises(ValueError, galsim.Chi2Deviate, set())
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -1353,9 +1353,9 @@ def test_distfunction():
     # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
     # or None.
     try:
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
+        np.testing.assert_raises(ValueError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+        np.testing.assert_raises(ValueError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+        np.testing.assert_raises(ValueError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
     except ImportError:
         print('The assert_raises tests require nose')
 
