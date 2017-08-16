@@ -550,7 +550,7 @@ def AddOpenMPFlag(env):
         env['WITH_OPENMP'] = False
         return
 
-    #print 'Adding openmp support:',flag
+    #print('Adding openmp support:',flag)
     print('Using OpenMP')
     env.AppendUnique(LINKFLAGS=ldflag)
     env.AppendUnique(LIBS=xlib)
@@ -678,7 +678,7 @@ def GetPytestVersion(env):
     p = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
     line = p.stdout.readlines()[0].decode()
     version = line.split()[4].replace(',', '')
-    print 'pytest version:',version
+    print('pytest version:',version)
     env['PYTESTVERSION'] = version
 
 def ExpandPath(path):
@@ -1188,7 +1188,7 @@ def TryModule(config,text,name,pyscript=""):
     # We have an arbitrary requirement that the run() command output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
     if ok and out != '23':
-        #print "Script's run() command didn't output '23'."
+        #print("Script's run() command didn't output '23'.")
         ok = False
 
     return ok
@@ -1991,7 +1991,7 @@ def DoConfig(env):
             env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
     if env['USE_BOOST']:
-        print 'Using local boost header files'
+        print('Using local boost header files')
         env.AppendUnique(CPPDEFINES=['USE_BOOST'])
 
     # Don't bother with checks if doing scons -c
