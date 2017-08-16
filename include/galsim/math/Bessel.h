@@ -28,10 +28,12 @@ namespace galsim {
 namespace math {
 
     // Functions defined in src/Bessel.cpp
-    double cyl_bessel_j(double nu, double x);
-    double cyl_bessel_y(double nu, double x);
-    double cyl_bessel_k(double nu, double x);
-    double cyl_bessel_i(double nu, double x);
+    double BesselJ0(double x);
+    double BesselJ1(double x);
+    double BesselJ(double nu, double x);
+    double BesselY(double nu, double x);
+    double BesselK(double nu, double x);
+    double BesselI(double nu, double x);
 
 } }
 

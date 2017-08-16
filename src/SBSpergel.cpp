@@ -598,7 +598,7 @@ namespace galsim {
             // => F(R) = u v | k=0,inf - int(v du, k=0..inf)
             //         = (0 + 1) - 2 (1+nu) int(k J0(k R) / (1+k^2)^2+nu, k=0..inf)
             //         = 1 - 2 (1+nu) (R/2)^(nu+1) K_{nu+1}(R) / Gamma(nu+2)
-            double fnup1 = std::pow(u/2., _nu+1.) * math::cyl_bessel_k(_nu+1., u) / _gamma_nup2;
+            double fnup1 = std::pow(u/2., _nu+1.) * math::BesselK(_nu+1., u) / _gamma_nup2;
             double f = 1.0 - 2.0 * (1.+_nu)*fnup1;
             return f - _target;
         }
@@ -669,7 +669,7 @@ namespace galsim {
     double SpergelInfo::xValue(double r) const
     {
         if (r == 0.) return _xnorm0;
-        else return math::cyl_bessel_k(_nu, r) * fast_pow(r, _nu);
+        else return math::BesselK(_nu, r) * fast_pow(r, _nu);
     }
 
     double SpergelInfo::kValue(double ksq) const
@@ -684,7 +684,7 @@ namespace galsim {
             _nu(nu), _xnorm0(xnorm0) {}
         double operator()(double r) const {
             if (r == 0.) return _xnorm0;
-            else return math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
+            else return math::BesselK(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -698,7 +698,7 @@ namespace galsim {
             _nu(nu), _rmin(rmin), _a(a), _b(b) {}
         double operator()(double r) const {
             if (r <= _rmin) return _a + _b*r;
-            else return math::cyl_bessel_k(_nu, r) * fast_pow(r,_nu);
+            else return math::BesselK(_nu, r) * fast_pow(r,_nu);
         }
     private:
         double _nu;
@@ -729,7 +729,7 @@ namespace galsim {
                 // a + b rmin = K_nu(rmin) * rmin^nu
                 double flux_target = _gsparams->shoot_accuracy;
                 double shoot_rmin = calculateFluxRadius(flux_target);
-                double knur = math::cyl_bessel_k(_nu, shoot_rmin) * fast_pow(shoot_rmin, _nu);
+                double knur = math::BesselK(_nu, shoot_rmin) * fast_pow(shoot_rmin, _nu);
                 double b = 3./shoot_rmin*(knur - flux_target/(M_PI*shoot_rmin*shoot_rmin));
                 double a = knur - shoot_rmin*b;
                 dbg<<"flux target: "<<flux_target<<std::endl;

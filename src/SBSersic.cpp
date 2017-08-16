@@ -548,7 +548,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = math::getBesselRoot0(s);
+                double root = math::BesselJ0Root(s);
                 if (root > k * integ_maxr) break;
                 reg.addSplit(root/k);
             }

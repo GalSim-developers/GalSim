@@ -245,10 +245,12 @@ def test_yv():
 
 @timer
 def test_in():
-    """Test the bessel.in function"""
+    """Test the bessel.iv function with integer values.  (There is no bessel.in, nor
+    scipy.special.in, since in is of course a reserved word.)
+    """
     n_list = [ 3, 4, 1, 0, 9, 7, 4, 300, 39, 2 ]
     x_list = [ 0, 2.01, 0.2, 3.3, 15.9, 7.7, 1.e-12, 500., 3.4, 19.1 ]
-    vals1 = [ galsim.bessel.i_n(n,x) for n,x in zip(n_list,x_list) ]
+    vals1 = [ galsim.bessel.iv(n,x) for n,x in zip(n_list,x_list) ]
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
@@ -259,9 +261,9 @@ def test_in():
         vals2 = [ scipy.special.iv(n,x) for n,x in zip(n_list,x_list) ]
         print('vals2 = ',vals2)
         np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.i_n disagrees with scipy.special.iv")
+            vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with scipy.special.iv")
     except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of i_n.')
+        print('Unable to import scipy.  Skipping scipy tests of iv.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -276,7 +278,7 @@ def test_in():
                 16279753.373047709,
             ]
     np.testing.assert_allclose(
-        vals1, vals2, rtol=1.e-10, err_msg="bessel.i_n disagrees with reference values")
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with reference values")
 
 
 
