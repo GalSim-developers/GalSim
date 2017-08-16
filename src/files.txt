@@ -35,6 +35,7 @@ BesselJ.cpp
 BesselY.cpp
 BesselI.cpp
 BesselK.cpp
+IncompleteGamma.cpp
 Version.cpp
 Polygon.cpp
 Silicon.cpp
