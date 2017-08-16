@@ -151,7 +151,6 @@ namespace math {
         int nud = int(fnu);
         double dnu = fnu - nud;
         double fn = fnu;
-        double fnn = fn;
 
         if (fnu == 0.) return dbesk0(x);
         else if (fnu == 1.) return dbesk1(x);
@@ -811,7 +810,7 @@ namespace math {
                     s1 = s2;
                     double s = 1.;
                     double ak = 0.;
-                    double ck = 1.;
+                    ck = 1.;
                     double sqk = 1.;
                     double dk = ex;
                     for (int j=0; j < 30; ++j) {
@@ -836,7 +835,7 @@ namespace math {
                 double fks = 1.;
                 double fhs = .25;
                 double fk = 0.;
-                double ck = x + x + 2.;
+                ck = x + x + 2.;
                 double p1 = 0.;
                 double p2 = 1.;
                 double a[160], b[160];
@@ -912,7 +911,7 @@ namespace math {
             double p = fc * .5 / t2;
             double q = .5 / (fc * t1);
             double ak = 1.;
-            double ck = 1.;
+            ck = 1.;
             double bk = 1.;
             s1 = f;
             s2 = p;
@@ -962,7 +961,7 @@ namespace math {
         }
         if (recurse) {
             //     FORWARD RECURSION ON THE THREE TERM RECURSION RELATION */
-            double ck = (dnu + dnu + 2.) / x;
+            ck = (dnu + dnu + 2.) / x;
             if (n == 1) --inu;
             if (inu > 0) {
                 for (int i=1; i<=inu; ++i) {
@@ -998,8 +997,8 @@ namespace math {
                 for (int i=2; i<n; ++i) {
                     kk = i+1;
                     double st = s2;
-                    double s2 = ck * s2 + s1;
-                    double s1 = st;
+                    s2 = ck * s2 + s1;
+                    s1 = st;
                     ck += rx;
                     s = -x + std::log(s2);
                     if (s < -elim) {

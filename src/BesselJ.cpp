@@ -141,7 +141,6 @@ namespace math {
         const double pidt = 1.5707963267949;
         const double pp[4] = {
             8.72909153935547, 0.26569393226503, 0.124578576865586, 7.70133747430388e-4 };
-        const int inlim = 150;
         const double fnulim[2] = {100., 60.};
 
         const double tol = std::max(std::numeric_limits<double>::epsilon(), 1e-15);
@@ -801,7 +800,6 @@ namespace math {
         const int nbm12 = 13;
         const int nbth1 = 14;
         const double xsml = std::sqrt(std::numeric_limits<double>::epsilon() * 8);
-        const double xmin = std::numeric_limits<double>::min() * 2.;
         const double xmax = 0.5/std::numeric_limits<double>::epsilon();
         const double pi4 = 0.785398163397448309615660845819876;
 

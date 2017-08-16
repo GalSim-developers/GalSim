@@ -147,7 +147,6 @@ namespace math {
         const double elim = -std::log(std::numeric_limits<double>::min() * 1.e3);
         const double tolln = -std::log(tol);
         const double rttpi = 0.398942280401433;
-        const int inlim = 80;
 
         assert(x >= 0.);
         assert(fnu >= 0.);
@@ -229,7 +228,6 @@ namespace math {
                 earg *= std::exp(x);
                 double etx = x * 8.;
                 in = 0;
-                double fn = fnu;
                 double dx = fni + fni;
                 double tm = fnf * 4. * (fni + fni + fnf);
                 double dtm = dx * dx;
@@ -628,9 +626,7 @@ namespace math {
             1.43679482206208e-32
         };
         const int nti1 = 11;
-        const double xmin = 2. * std::numeric_limits<double>::min();
         const double xsml = std::sqrt(std::numeric_limits<double>::epsilon() * 4.5);
-        const double xmax = std::log(std::numeric_limits<double>::max());
 
         assert(x > 0.);
         if (x <= 3.) {
@@ -830,7 +826,6 @@ namespace math {
         const int nti1 = 11;
         const int ntai1 = 23;
         const int ntai12 = 25;
-        const double xmin = 2. * std::numeric_limits<double>::min();
         const double xsml = std::sqrt(std::numeric_limits<double>::epsilon() * 4.5);
 
         assert(x > 0.);
