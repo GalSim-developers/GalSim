@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -79,10 +79,9 @@ namespace galsim {
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
                      double* vertex_data) :
-        _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
-        _diffStep(diffStep), _pixelSize(pixelSize), _sensorThickness(sensorThickness),
-        _nrecalc(nrecalc)
-
+        _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
+        _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
+        _sensorThickness(sensorThickness)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -193,7 +192,7 @@ namespace galsim {
                         int index = (polyi - minx) * (maxy - miny + 1) + (polyj - miny);
 
                         int disti = nxCenter + di;
-                        int distj = nxCenter + dj;
+                        int distj = nyCenter + dj;
                         int dist_index = disti * _ny + distj;
                         for (int n=0; n<_nv; n++) {
                             double dx = _distortions[dist_index][n].x * charge;

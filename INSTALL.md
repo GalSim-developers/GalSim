@@ -194,7 +194,7 @@ many of these are free for non-commercial or academic use.
 
 One good example of such a package, which includes all of the Python
 dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-nosetests; see Section 2 below) was the Enthought Python Distribution (EPD; see
+pytest; see Section 2 below) was the Enthought Python Distribution (EPD; see
 https://enthought.com/products/canopy/academic/ for the academic download
 instructions).
 
@@ -493,17 +493,29 @@ You can run our test suite by typing
     scons tests
 
 This should compile the test suite and run it. The tests of our C++ library
-will always be run, but we use `nosetests` for our Python test suite, so that
-will only be run if `nosetests` is present on your system.  We do not require
+will always be run, but we use `pytest` for our Python test suite, so that
+will only be run if `pytest` is present on your system.  We do not require
 this as a dependency, since you can still do everything with the GalSim library
 without this.  But it is required for a complete run of the test suite.
 
-To install `nosetests`, you can also use easy_install as described in Section 1
-above (see also http://nose.readthedocs.org/en/latest/). Many third party-
+To install `pytest`, you can also use easy_install as described in Section 1
+above (see also https://docs.pytest.org/en/latest/). Many third party-
 maintained Python distributions, such as the Enthought Python Distribution,
-include `nosetests`.
+include `pytest`.
 
-Note: if your system does not have `nosetests` installed, and you do not want to
+By default, the python tests will use the pytest plugins `pytest-xdist` (for 
+running tests in parallel) and `pytest-timeout` (to manage how much time each 
+test is allowed to run).  These plugins are usually installable using pip:
+
+    pip install pytest-xdist pytest-timeout
+    
+Sometimes the `--user` flag may be needed in the above command to make the 
+plugins discoverable.  If you want to run the python tests without these
+plugins (serially!), you can still do this via
+
+    scons tests -j1
+
+Note: if your system does not have `pytest` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
 have passed.
@@ -614,15 +626,15 @@ you able to install GalSim using the master branch with:
 
 from within the repository base directory.
 
-To run the unit tests, you will also need nosetests, which you can also get from
+To run the unit tests, you will also need pytest, which you can also get from
 fink:
 
-    fink install nose-py27
-    scons tests NOSETESTS=/sw/bin/nosetests
+    fink install pytest-py27
+    scons tests PYTEST=/sw/bin/pytest
 
 If you want to use the system Python, or some other version, then the fink
 Python installations will not work.  You will need to manually install
-NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
+NumPy, PyFITS, PyYAML and pytest, for example using easy_install, with your
 chosen Python.
 
 For the system Python, you can use fink for Boost, but you will want a
@@ -868,11 +880,11 @@ You can list these options from the command line with
 
 ### Miscellaneous flags ###
 
-* `NOSETESTS` (nosetests) specifies which version of nosetests you want to use
+* `PYTEST` (pytest) specifies which version of pytest you want to use
    for running the unit tests.  If you specified a non-default Python, then
-   there is a possibility that the standard nosetests executable in your path
+   there is a possibility that the standard pytest executable in your path
    will not work (since it might be for a different version of Python).  In
-   that case, specify the correct nosetests here.
+   that case, specify the correct pytest here.
 
 * `CACHE_LIB` (True) specifies whether to cache the results of the library
    checks.  While you are working one getting the prerequisites installed

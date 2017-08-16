@@ -121,7 +121,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     """
     def canindex(arg):
         try: arg[0], arg[1]
-        except: return False
+        except (TypeError, IndexError): return False
         else: return True
 
     other_vals = []
@@ -278,7 +278,7 @@ def _convertPositions(pos, units, func):
         try:
             pos = [ np.array([float(pos[0])], dtype='float'),
                     np.array([float(pos[1])], dtype='float') ]
-        except:
+        except TypeError:
             # Only other valid option is ( xlist , ylist )
             pos = [ np.array(pos[0], dtype='float'),
                     np.array(pos[1], dtype='float') ]
@@ -578,7 +578,7 @@ def _gammafn(x):  # pragma: no cover
     try:
         import math
         return math.gamma(x)
-    except:
+    except AttributeError:
         y  = float(x) - 1.0
         sm = _gammafn._a[-1]
         for an in _gammafn._a[-2::-1]:
@@ -596,6 +596,49 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000122678, -0.00000000000000011813, 0.00000000000000000119,
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
+
+def horner(x, coef, dtype=None):
+    """Evaluate univariate polynomial using Horner's method.
+
+    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
+    A + x(B + x(C + x(D)))
+
+    @param x        A numpy array of values at which to evaluate the polynomial.
+    @param coef     Polynomial coefficients of increasing powers of x.
+    @param dtype    Optionally specify the dtype of the return array. [default: None]
+
+    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x.
+    """
+    coef = np.trim_zeros(coef, trim='b')
+    result = np.zeros_like(x, dtype=dtype)
+    if len(coef) == 0: return result
+    result += coef[-1]
+    for c in coef[-2::-1]:
+        result *= x
+        if c != 0: result += c
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x,coef))
+    return result
+
+def horner2d(x, y, coefs, dtype=None):
+    """Evaluate bivariate polynomial using nested Horner's method.
+
+    @param x        A numpy array of the x values at which to evaluate the polynomial.
+    @param y        A numpy array of the y values at which to evaluate the polynomial.
+    @param coefs    2D array-like of coefficients in increasing powers of x and y.
+                    The first axis corresponds to increasing the power of y, and the second to
+                    increasing the power of x.
+    @param dtype    Optionally specify the dtype of the return array. [default: None]
+
+    @returns a numpy array of the evaluated polynomial.  Will be the same shape as x and y.
+    """
+    result = horner(y, coefs[-1], dtype=dtype)
+    for coef in coefs[-2::-1]:
+        result *= x
+        result += horner(y, coef, dtype=dtype)
+    # Useful when working on this... (Numpy method is much slower, btw.)
+    #np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x,y,coefs))
+    return result
+
 
 def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     """
@@ -1019,7 +1062,7 @@ def dol_to_lod(dol, N=None):
                 out[k] = v
             except KeyboardInterrupt:
                 raise
-            except Exception:
+            except: # pragma: no cover
                 raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
@@ -1035,7 +1078,7 @@ def set_func_doc(func, doc):
     try:
         # Python3
         func.__doc__ = doc
-    except:
+    except AttributeError:
         func.__func__.__doc__ = doc
 
 
@@ -1284,8 +1327,8 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
     if weight is not None:
         # We need some sanity checks here in case people passed in weird values.
         if len(weight) != n_choices:
-            raise ValueError("Array of weights has wrong length: %d instead of %d"%\
-                                 (len_weight,n_choices))
+            raise ValueError("Array of weights has wrong length: %d instead of %d"%
+                                 (len(weight), n_choices))
         if np.min(weight)<0 or np.max(weight)>1 or np.any(np.isnan(weight)) or \
                 np.any(np.isinf(weight)):
             raise ValueError("Supplied weights include values outside [0,1] or inf/NaN values!")
@@ -1331,3 +1374,46 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
         return index, n_rng_calls
     else:
         return index
+
+
+def check_share_file(filename, subdir):
+    """Find SED or Bandpass file, possibly adding share dir or raising deprecation warning if old
+    share dir was specified.
+    """
+    from .deprecated import depr
+    import os
+
+    if os.path.isfile(filename):
+        return True, filename
+
+    new_filename = os.path.join(galsim.meta_data.share_dir, subdir, filename)
+    if os.path.isfile(new_filename):
+        return True, new_filename
+
+    dirname, basename = os.path.split(filename)
+    new_filename = os.path.join(dirname, subdir, basename)
+    if os.path.isfile(new_filename):
+        depr("Filename os.path.join(galsim.meta_data.share_dir, {0})".format(basename),
+             1.5,
+             "os.path.join(galsim.meta_data.share_dir, '{0}', {1})".format(subdir, basename))
+        return True, new_filename
+
+    return False, ''
+
+
+# http://stackoverflow.com/a/6849299
+class lazy_property(object):
+    """
+    meant to be used for lazy evaluation of an object attribute.
+    property should represent non-mutable data, as it replaces itself.
+    """
+    def __init__(self, fget):
+        self.fget = fget
+        self.func_name = fget.__name__
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return self
+        value = self.fget(obj)
+        setattr(obj, self.func_name, value)
+        return value

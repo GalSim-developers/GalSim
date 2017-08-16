@@ -52,7 +52,8 @@ def test_gaussian():
                    'magnify' : 0.93,
                    'shear' : galsim.Shear(g1=-0.15, g2=0.2)
                  },
-    }
+        'gal6' : { 'type' : 'DeltaFunction' , 'flux' : 72.5 },
+     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.Gaussian(sigma = 2)
@@ -77,6 +78,13 @@ def test_gaussian():
     gal5b = galsim.Gaussian(sigma = 1.5, flux = 72.5)
     gal5b = gal5b.rotate(-34 * galsim.degrees).lens(-0.15, 0.2, 0.93)
     gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.DeltaFunction(flux = 72.5)
+    gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=0.01))
+    # DeltaFunction is functionally equivalent to an extremely narrow Gaussian.
+    gal6c = galsim.Gaussian(sigma = 1.e-10, flux = 72.5)
+    gsobject_compare(gal6a, gal6c, conv=galsim.Gaussian(sigma=0.01))
 
 
 @timer
@@ -777,8 +785,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index=0).original_gal
-    # The convolution here
+    gal6b = galsim.RealGalaxy(real_cat, index=5).original_gal
     gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['obj_num'] = 6
@@ -790,7 +797,7 @@ def test_realgalaxy():
 
     config['obj_num'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index=0)
+    gal8b = galsim.RealGalaxy(real_cat, index=7)
     gsobject_compare(gal8a, gal8b, conv=conv)
 
 @timer
@@ -881,7 +888,7 @@ def test_cosmosgalaxy():
         # Use defaults for gal_type (parametric, since we used the actual catalog and not the
         # parametric one) and select a random galaxy using internal routines.
         'gal1' : { 'type' : 'COSMOSGalaxy' },
-        }
+    }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
@@ -1063,7 +1070,7 @@ def test_add():
             ],
             'flux' : 170.
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1202,7 +1209,7 @@ def test_convolve():
                 { 'type' : 'Gaussian' , 'sigma' : 2 },
             ]
         },
-     }
+    }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b_1 = galsim.Gaussian(sigma = 2)
@@ -1384,7 +1391,7 @@ def test_usertype():
         _takes_rng = False
         def __init__(self, flux=1., gsparams=None):
             obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
-            galsim.GSObject.__init__(self, obj)
+            galsim.GSObject.__init__(self, obj.SBProfile)
 
     galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 

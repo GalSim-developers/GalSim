@@ -959,9 +959,8 @@ def test_ne():
     # Sum.  Params are objs to add and potentially gsparams.
     gals = [galsim.Sum(gal1),
             galsim.Sum(gal1, gal2),
-            galsim.Sum(gal2, gal1),  # Not! commutative.
+            galsim.Sum(gal2, gal1),  # Not! commutative.  (but is associative)
             galsim.Sum(galsim.Sum(gal1, gal2), gal2),
-            galsim.Sum(gal1, galsim.Sum(gal2, gal2)),  # Not! associative.
             galsim.Sum(gal1, gsparams=gsp)]
     all_obj_diff(gals)
 

@@ -130,8 +130,6 @@ class ChromaticObject(object):
     The drawImage() method draws the object as observed through a particular bandpass, so the
     arguments are somewhat different.  See the docstring for ChromaticObject.drawImage() for more
     details.
-
-    The drawKImage() method is not yet implemented.
     """
 
     # ChromaticObjects should adhere to the following invariants:
@@ -365,6 +363,8 @@ class ChromaticObject(object):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used and any extra kwargs.
+        self._last_bp = bandpass
         if self.SED.dimensionless:
             raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
@@ -421,6 +421,97 @@ class ChromaticObject(object):
         if not add_to_image:
             image.setZero()
         image += integral
+        self._last_wcs = image.wcs
+        return image
+
+    def drawKImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+        """Base implementation for drawing the Fourier transform of a ChromaticObject.
+
+        The task of drawKImage() in a chromatic context is exactly analogous to the task of
+        drawImage() in a chromatic context: to integrate the `SED` * `bandpass` weighted Fourier
+        profiles over wavelength.
+
+        See drawImage() for details on integration options.
+
+        @param bandpass     A Bandpass object representing the filter against which to integrate.
+        @param image        If provided, this will be the ImageC onto which to draw the k-space
+                            image.  If `image` is None, then an automatically-sized image will be
+                            created.  If `image` is given, but its bounds are undefined, then it
+                            will be resized appropriately based on the profile's size.
+                            [default: None]
+        @param integrator   When doing the exact evaluation of the profile, this argument should be
+                            one of the image integrators from galsim.integ, or a string
+                            'trapezoidal' or 'midpoint', in which case the routine will use a
+                            SampleIntegrator or ContinuousIntegrator depending on whether or not the
+                            object has a `wave_list`.  [default: 'trapezoidal', which will try to
+                            select an appropriate integrator using the trapezoidal integration rule
+                            automatically.]
+        @param **kwargs     For all other kwarg options, see GSObject.drawKImage()
+
+        @returns an ImageC instance (created if necessary)
+        """
+        if self.SED.dimensionless:
+            raise ValueError("Can only drawK ChromaticObjects with spectral SEDs.")
+
+        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
+        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        image = prof0.drawKImage(image=image, setup_only=True, **kwargs)
+        _remove_setup_kwargs(kwargs)
+
+        # determine combined self.wave_list and bandpass.wave_list
+        wave_list, _ , _ = galsim.utilities.combine_wave_list(self, bandpass)
+
+        if self.separable:
+            if len(wave_list) > 0:
+                multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
+            else:
+                multiplier = galsim.integ.int1d(lambda w: self.SED(w) * bandpass(w),
+                                                bandpass.blue_limit, bandpass.red_limit)
+            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            image = prof0.drawKImage(image=image, **kwargs)
+            return image
+
+        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
+        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
+        # of `wave_list`.
+        if isinstance(integrator, str):
+            if integrator == 'trapezoidal':
+                rule = np.trapz
+            elif integrator == 'midpoint':
+                rule = galsim.integ.midpt
+            else:
+                raise TypeError("Unrecognized integration rule: %s"%integrator)
+            if len(wave_list) > 0:
+                integrator = galsim.integ.SampleIntegrator(rule)
+            else:
+                integrator = galsim.integ.ContinuousIntegrator(rule)
+        if not isinstance(integrator, galsim.integ.SampleIntegrator) and \
+                not isinstance(integrator, galsim.integ.ContinuousIntegrator):
+            raise TypeError("Invalid type passed in for integrator!")
+
+        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        if isinstance(integrator, galsim.integ.SampleIntegrator):
+            bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
+                                                          interpolant='linear'),
+                                       wave_type='nm')
+
+        add_to_image = kwargs.pop('add_to_image', False)
+        image_int = integrator(self.evaluateAtWavelength, bandpass, image, kwargs, doK=True)
+
+        # For performance profiling, store the number of evaluations used for the last integration
+        # performed.  Note that this might not be very useful for ChromaticSum instances, which are
+        # drawn one profile at a time, and hence _last_n_eval will only represent the final
+        # component drawn.
+        self._last_n_eval = integrator.last_n_eval
+
+        # Apply integral to the initial image appropriately.
+        # Note: Don't do image = integral and return that for add_to_image==False.
+        #       Remember that python doesn't actually do assignments, so this won't update the
+        #       original image if the user provided one.  The following procedure does work.
+        if add_to_image:
+            image += image_int
+        else:
+            image.copyFrom(image_int)
         return image
 
     def evaluateAtWavelength(self, wave):
@@ -862,7 +953,7 @@ class ChromaticObject(object):
                         d = args[0](w)
                         return np.asarray( (d.x, d.y) )
                     offset = offset_func
-                except:
+                except AttributeError:
                     # Then it's a function returning a tuple or list or array.
                     # Just make sure it is actually an array to make our life easier later.
                     offset = lambda w: np.asarray(args[0](w))
@@ -1143,11 +1234,14 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         if self.SED.dimensionless:
             raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
+        self._last_wcs = image.wcs
         return image
 
 
@@ -1554,9 +1648,10 @@ class ChromaticTransformation(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         if self.SED.dimensionless:
             raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
-
         if isinstance(self.original, InterpolatedChromaticObject):
             # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
             # where it will be used to reweight the stored images.
@@ -1567,9 +1662,31 @@ class ChromaticTransformation(ChromaticObject):
             jac, offset, _ = self._getTransformations(bandpass.red_limit)
             int_im = galsim.Transform(int_im, jac=jac, offset=offset, gsparams=self.gsparams)
             image = int_im.drawImage(image=image, **kwargs)
+            self._last_wcs = image.wcs
             return image
         else:
-            return ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
+            image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
+            self._last_wcs = image.wcs
+            return image
+
+    @property
+    def noise(self):
+        # Condition for being able to propagate noise:
+        # 1) All transformations are achromatic.
+        # 2) This ChromaticTransformation wraps a ChromaticConvolution with a valid noise property.
+        if (hasattr(self._jac, '__call__') or
+            hasattr(self._offset, '__call__') or
+            not self._flux_ratio._const):
+            raise TypeError("Cannot propagate noise through chromatic transformation")
+        noise = self.original.noise
+        jac = self._jac
+        flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
+        return galsim.correlatednoise._BaseCorrelatedNoise(
+                noise.rng,
+                galsim._Transform(noise._profile,
+                                  jac[0,0], jac[0,1], jac[1,0], jac[1,1],
+                                  flux_ratio=flux_ratio**2),
+                noise.wcs)
 
 
 class ChromaticSum(ChromaticObject):
@@ -1640,9 +1757,10 @@ class ChromaticSum(ChromaticObject):
         # impossible to identify if two SEDs are proportional (or even equal) unless they point to
         # the same memory, so we just accept this limitation.
 
-        # Each input summand will either end up in norm_dict if it's separable, or in self.objlist
-        # if it's inseparable.
-        SED_dict = {}
+        # Each input summand will either end up in SED_dict if it's separable, or in self.objlist
+        # if it's inseparable.  Use an OrderedDict to ensure deterministic results.
+        from collections import OrderedDict
+        SED_dict = OrderedDict()
         self.objlist = []
         for obj in args:
             if obj.separable:
@@ -1725,9 +1843,10 @@ class ChromaticSum(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         if self.SED.dimensionless:
             raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
-
         add_to_image = kwargs.pop('add_to_image', False)
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
         image = self.objlist[0].drawImage(
@@ -1735,6 +1854,7 @@ class ChromaticSum(ChromaticObject):
         _remove_setup_kwargs(kwargs)
         for obj in self.objlist[1:]:
             image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
+        self._last_wcs = image.wcs
         return image
 
     def withScaledFlux(self, flux_ratio):
@@ -1744,7 +1864,11 @@ class ChromaticSum(ChromaticObject):
 
         @returns the object with the new flux.
         """
-        return ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
+        new_obj = ChromaticSum([ obj.withScaledFlux(flux_ratio) for obj in self.objlist ])
+        if hasattr(self, 'covspec'):
+            new_covspec = self.covspec * flux_ratio**2
+            new_obj.covspec = new_covspec
+        return new_obj
 
 
 class ChromaticConvolution(ChromaticObject):
@@ -1934,12 +2058,15 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         if self.SED.dimensionless:
             raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
-
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
-            return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
+            image = ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
+            self._last_wcs = image.wcs
+            return image
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:
@@ -2005,6 +2132,7 @@ class ChromaticConvolution(ChromaticObject):
                 # Return the image here, breaking the loop early.  If there are two ChromaticSum
                 # instances in objlist, then the above procedure will repeat in the recursion,
                 # effectively distributing the multiplication over both sums.
+                self._last_wcs = image.wcs
                 return image
 
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
@@ -2050,7 +2178,25 @@ class ChromaticConvolution(ChromaticObject):
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = galsim.Convolve(sep_profs, gsparams=self.gsparams)
-        return final_prof.drawImage(image=image, **kwargs)
+        image = final_prof.drawImage(image=image, **kwargs)
+        self._last_wcs = image.wcs
+        return image
+
+    @property
+    def noise(self):
+        # Condition for being able to propagate noise:
+        # Exactly one of the convolutants has a .covspec attribute.
+        covspecs = [ obj.covspec for obj in self.objlist if hasattr(obj, 'covspec') ]
+        if len(covspecs) != 1:
+            raise TypeError("Cannot compute noise for ChromaticConvolution for which number "
+                            "of convolutants with covspec attribute is not 1.")
+        if not hasattr(self, '_last_bp'):
+            raise TypeError("Cannot compute noise for ChromaticConvolution until after drawImage "
+                            "has been called.")
+        covspec = covspecs[0]
+        other = galsim.Convolve([obj for obj in self.objlist if not hasattr(obj, 'covspec')])
+        return covspec.toNoise(self._last_bp, other, self._last_wcs)  # rng=?
+
 
 ChromaticConvolution._effective_prof_cache = galsim.utilities.LRU_Cache(
     ChromaticConvolution._get_effective_prof, maxsize=10)
@@ -2096,7 +2242,8 @@ class ChromaticDeconvolution(ChromaticObject):
         return hash(("galsim.ChromaticDeconvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticDeconvolution(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticDeconvolution(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticDeconvolution(%s)'%self.obj
@@ -2150,7 +2297,8 @@ class ChromaticAutoConvolution(ChromaticObject):
         return hash(("galsim.ChromaticAutoConvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoConvolution(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticAutoConvolution(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticAutoConvolution(%s)'%self.obj
@@ -2205,7 +2353,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return hash(("galsim.ChromaticAutoCorrelation", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoCorrelation(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticAutoCorrelation(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticAutoCorrelation(%s)'%self.obj
@@ -2262,7 +2411,8 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         self.wave_list = obj.wave_list
 
     def __repr__(self):
-        return 'galsim.ChromaticFourierSqrtProfile(%r, %r)'%(self.obj, self.kwargs)
+        kwargs_str = ', '.join('%s=%s'%(k,v) for k,v in self.kwargs.items())
+        return 'galsim.ChromaticFourierSqrtProfile(%r, %s)'%(self.obj, kwargs_str)
 
     def __str__(self):
         return 'galsim.ChromaticFourierSqrtProfile(%s)'%self.obj

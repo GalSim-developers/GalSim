@@ -30,9 +30,8 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 @timer
 def test_photon_array():
@@ -134,7 +133,7 @@ def test_wavelength_sampler():
 
     photon_array = obj.shoot(nphotons, rng)
 
-    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'A', 'flambda').thin()
     bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
 
     sampler = galsim.WavelengthSampler(sed, bandpass, rng)
@@ -154,10 +153,21 @@ def test_wavelength_sampler():
     assert np.min(photon_array.wavelength) > bandpass.blue_limit
     assert np.max(photon_array.wavelength) < bandpass.red_limit
 
-    # This is a regression test based on the value at commit 0b0cc764a9
-    np.testing.assert_almost_equal(np.mean(photon_array.wavelength), 616.92072, decimal=3)
+    # This is a regression test based on the value at commit 134a119
+    np.testing.assert_almost_equal(np.mean(photon_array.wavelength), 622.755128, decimal=3)
 
-    # Test that using this as a surface op work properly.
+    # If we use a flat SED (in photons/nm), then the mean sampled wavelength should very closely
+    # match the bandpass effective wavelength.
+    photon_array2 = galsim.PhotonArray(100000)
+    sed2 = galsim.SED('1', 'nm', 'fphotons')
+    sampler2 = galsim.WavelengthSampler(sed2, bandpass, rng)
+    sampler2.applyTo(photon_array2)
+    np.testing.assert_allclose(np.mean(photon_array2.wavelength),
+                               bandpass.effective_wavelength,
+                               rtol=0, atol=0.2,  # 2 Angstrom accuracy is pretty good
+                               err_msg="Mean sampled wavelength not close to effective_wavelength")
+
+    # Test that using this as a surface op works properly.
 
     # First do the shooting and clipping manually.
     im1 = galsim.Image(64,64,scale=1)

@@ -217,7 +217,7 @@ def PhotonArray_write(self, file_name):
     cols = pyfits.ColDefs(cols)
     try:
         table = pyfits.BinTableHDU.from_columns(cols)
-    except:  # pragma: no cover  (Might need this for older pyfits versions)
+    except AttributeError:  # pragma: no cover  (Might need this for older pyfits versions)
         table = pyfits.new_table(cols)
     galsim.fits.writeFile(file_name, table)
 

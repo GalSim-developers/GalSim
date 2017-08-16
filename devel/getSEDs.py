@@ -16,23 +16,27 @@
 #    and/or other materials provided with the distribution.
 #
 """@file getSEDs.py
-Grab example SEDs from the web, clip them at 22050 Angstroms, and then thin with rel_err = 1.e-5 or
-1.e-3 (two versions).
-Note that the outputs of this script, which are the files GALSIM_DIR/share/CWW_*.sed, are
+Grab example SEDs from the web, clip them and then thin.
+Note that the outputs of this script, which are the files GALSIM_DIR/share/SEDs/CWW_*.sed, are
 already included in the repository.  This script just lets users know where these files came from
 and how they were downloaded and altered.
 """
-
+from __future__ import print_function
+try:
+    from urllib2 import urlopen
+    from StringIO import StringIO
+except:
+    from urllib.request import urlopen
+    from io import BytesIO as StringIO
 import os
 import galsim
-import urllib2
-from StringIO import StringIO
 import tarfile
-
 import numpy as np
 
+MAX_WAVE = 22050 # Angstroms
+
 urlfile = 'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
-data = StringIO(urllib2.urlopen(urlfile).read())
+data = StringIO(urlopen(urlfile).read())
 t = tarfile.open(fileobj=data, mode='r:gz')
 
 sednames = ['./ZPHOT/templates/'+sedname for sedname in ['CWW_E_ext.sed',
@@ -44,17 +48,17 @@ for sedname in sednames:
     file_ = t.extractfile(sedname)
     base = os.path.basename(sedname)
     x,f = np.loadtxt(file_, unpack=True)
-    w = x<=22050 # Angstroms
+    w = x <= MAX_WAVE
     x = x[w]
     f = f[w]
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     # First write out the 1e-5 version.
-    with open(os.path.join('../../share', base), 'w') as out:
+    with open(base, 'w') as out:
         out.write(
 """#  {0} SED of Coleman, Wu, and Weedman (1980)
 #  Extended below 1400 A and beyond 10000 A by
@@ -64,20 +68,20 @@ for sedname in sednames:
 #  Obtained from ZPHOT code at
 #  'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
 #
-#  Truncated to wavelengths less than 22050 Angstroms, and thinned by
+#  Truncated to wavelengths less than {1} Angstroms, and thinned by
 #  galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
 #  with fast_search=False.  See devel/modules/getSEDs.py for details.
 #
 #  Angstroms     Flux/A
 #
-""".format(base.split('_')[1]))
+""".format(base.split('_')[1], MAX_WAVE))
         for i in range(len(x1)):
             out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x1[i], f1[i]))
 
     # Then write out the more thinned version.  Have to make a new filename.
     first_part, extension = base.split(".")
     out_base = first_part+"_more."+extension
-    with open(os.path.join('../../share', out_base), 'w') as out:
+    with open(out_base, 'w') as out:
         out.write(
 """#  {0} SED of Coleman, Wu, and Weedman (1980)
 #  Extended below 1400 A and beyond 10000 A by
@@ -87,12 +91,12 @@ for sedname in sednames:
 #  Obtained from ZPHOT code at
 #  'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
 #
-#  Truncated to wavelengths less than 22050 Angstroms, and thinned by
+#  Truncated to wavelengths less than {1} Angstroms, and thinned by
 #  galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
 #  with fast_search=False.  See devel/modules/getSEDs.py for details.
 #
 #  Angstroms     Flux/A
 #
-""".format(base.split('_')[1]))
+""".format(base.split('_')[1], MAX_WAVE))
         for i in range(len(x3)):
             out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))

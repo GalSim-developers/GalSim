@@ -112,13 +112,15 @@ class ImageIntegrator(object):
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
     #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
 
-    def __call__(self, evaluateAtWavelength, bandpass, image, drawImageKwargs):
+    def __call__(self, evaluateAtWavelength, bandpass, image, drawImageKwargs, doK=False):
         """
         @param evaluateAtWavelength Function that returns a monochromatic surface brightness
                                     profile as a function of wavelength.
         @param bandpass             Bandpass object representing the filter being imaged through.
         @param image                Image used to set size and scale of output
         @param drawImageKwargs      dict with other kwargs to send to drawImage function.
+        @param doK                  Integrate up results of drawKImage instead of results of
+                                    drawImage.
 
         @returns the result of integral as an Image
         """
@@ -128,7 +130,10 @@ class ImageIntegrator(object):
         drawImageKwargs.pop('add_to_image', None) # Make sure add_to_image isn't in kwargs
         for w in waves:
             prof = evaluateAtWavelength(w) * bandpass(w)
-            images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
+            if not doK:
+                images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
+            else:
+                images.append(prof.drawKImage(image=image.copy(), **drawImageKwargs))
         return self.rule(images, waves)
 
 class SampleIntegrator(ImageIntegrator):

@@ -100,7 +100,12 @@ class LookupTable(object):
                                           # it from pandas.parser
             try:
                 import pandas
-                from pandas.parser import CParserError
+                try:
+                    # version >= 0.20
+                    from pandas.io.common import CParserError
+                except ImportError:
+                    # version < 0.20
+                    from pandas.parser import CParserError
                 data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
                 data = data.values.transpose()
             except (ImportError, AttributeError, CParserError):
@@ -564,7 +569,7 @@ class LookupTable2D(object):
                 self.edge_mode == other.edge_mode)
 
     def __ne__(self, other):
-        return not self.__eq__(self, other)
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(("galsim._galsim._LookupTable2D", self.table, self.edge_mode))

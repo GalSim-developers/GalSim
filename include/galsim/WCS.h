@@ -21,8 +21,10 @@
 
 namespace galsim {
 
+    void ApplyCD(int n, double* x, double* y, const double* cd);
+    void ApplyPV(int n, int m, double* u, double* v, const double* pv);
     void InvertPV(double& u, double& v, const double* pv);
-    void InvertAB(double& x, double& y, const double* ab, int order, const double* abp);
+    void InvertAB(int m, double& x, double& y, const double* ab, const double* abp);
 
 }
 

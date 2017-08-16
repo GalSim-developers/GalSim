@@ -127,6 +127,9 @@ def check_basic_k(prof, name):
     if prof.maxK()/prof.stepK() > 2000.:
         # Don't try to draw huge images!
         kimage = prof.drawKImage(nx=2000,ny=2000)
+    elif prof.maxK()/prof.stepK() < 12.:
+        # or extremely small ones.
+        kimage = prof.drawKImage(nx=12,ny=12)
     else:
         kimage = prof.drawKImage()
     kimage.setCenter(0,0)
@@ -338,6 +341,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     #print('func(obj2) = ',repr(f2))
     assert f1 == f2
 
+    # Check that == works properly if the other thing isn't the same type.
+    assert f1 != object()
+    assert object() != f1
+
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
     if isinstance(obj1, Hashable):
@@ -488,7 +495,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     """
     if bps is None:
         # load a filter
-        bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+        bppath = os.path.join(galsim.meta_data.share_dir, 'bandpasses')
         bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
                     .truncate(relative_throughput=1e-3)
                     .thin(rel_err=1e-3))

@@ -550,7 +550,7 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         PoissonDeviate(const PoissonDeviate& rhs) :
-            BaseDeviate(rhs), _pd(rhs._pd), _gd(rhs._gd), _getValue(rhs._getValue) {}
+            BaseDeviate(rhs), _getValue(rhs._getValue), _pd(rhs._pd), _gd(rhs._gd) {}
 
         /// @brief Construct a new PoissonDeviate from a serialization string
         PoissonDeviate(const std::string& str, double mean) :

@@ -21,6 +21,7 @@ Python layer documentation and functions for handling correlated noise in GalSim
 
 import numpy as np
 import galsim
+from future.utils import iteritems
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -622,7 +623,7 @@ class _BaseCorrelatedNoise(object):
         automatically set to 'sb' and cannot be changed, and the `gain` is set to unity.
         Also, not all the normal parameters of the GSObject method are available.
 
-        It `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
+        If `scale` and `wcs` are not set, and the `image` has no `wcs` attribute, then this will
         use the wcs of the CorrelatedNoise object.
 
         @param image        If provided, this will be the image on which to draw the profile.
@@ -657,6 +658,44 @@ class _BaseCorrelatedNoise(object):
         return self._profile.drawImage(
             image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
             add_to_image=add_to_image, use_true_center=False, wmult=wmult)
+
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
+                   add_to_image=False):
+        """A method for drawing profiles storing correlation functions (i.e., power spectra) in
+        Fourier space.
+
+        This is a mild reimplementation of the drawKImage() method for GSObjects.  The `gain` is
+        automatically set to unity and cannot be change.  Also, not all the normal parameters of the
+        GSObject method are available.
+
+        If `scale` is not set, and `image` has no `wcs` attribute, then this will use the
+        wcs of the CorrelatedNoise object, which must be a `PixelScale`.
+
+        @param image        If provided, this will be the Image onto which to draw the k-space
+                            image.  If `image` is None, then an automatically-sized image will be
+                            created.  If `image` is given, but its bounds are undefined, then it
+                            will be resized appropriately based on the profile's size.
+                            [default: None]
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
+        @param scale        If provided, use this as the pixel scale, dk, for the images.
+                            If `scale` is None and `image` is given, then take the provided
+                            images' pixel scale (which must be equal).
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
+                            [default: None]
+        @param add_to_image Whether to add to the existing images rather than clear out
+                            anything in the image before drawing.
+                            Note: This requires that `image` be provided and that it has defined
+                            bounds. [default: False]
+
+        @returns the tuple of Image instances, `(re, im)` (created if necessary)
+        """
+        return self._profile.drawKImage(
+                image=image, nx=nx, ny=ny, bounds=bounds, scale=scale, add_to_image=add_to_image)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
@@ -1360,7 +1399,9 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         raise IOError("The file '"+str(file_name)+"' does not exist.")
     try:
         cfimage = galsim.fits.read(file_name)
-    except Exception:
+    except KeyboardInterrupt:
+        raise
+    except: # pragma: no cover
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
@@ -1465,3 +1506,91 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
     def __str__(self):
         return "galsim.UncorrelatedNoise(variance=%r, wcs=%s)"%(self.variance, self.wcs)
+
+
+class CovarianceSpectrum(object):
+    """Class to hold a `ChromaticSum` noise covariance spectrum (which is a generalization of a
+    power spectrum or equivalently a correlation function).
+
+    Analogous to how a galsim.CorrelatedNoise object stores the variance and covariance of a
+    galsim.Image object, a galsim.CovarianceSpectrum stores the variance and covariance of the
+    Fourier mode amplitudes in different components of a `ChromaticSum`.  Note that the covariance
+    in question exists between different SED-components of the `ChromaticSum`, and not between
+    different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally
+    for `ChromaticRealGalaxy`s (see devel/modules/CGNotes.pdf for more details).
+
+    @param Sigma   A dictionary whose keys are tuples numerically indicating a pair of ChromaticSum
+                   components whose Fourier mode amplitude covariances are described by the
+                   corresponding GSObject values.
+    @param SEDs    SEDs of associated ChromaticSum components.
+    """
+    def __init__(self, Sigma, SEDs):
+        self.Sigma = Sigma
+        self.SEDs = SEDs
+
+    def __mul__(self, variance_ratio):
+        return self.withScaledVariance(variance_ratio)
+
+    def transform(self, dudx, dudy, dvdx, dvdy):
+        Sigma = {}
+        for k, v in iteritems(self.Sigma):
+            Sigma[k] = v.transform(dudx, dudy, dvdx, dvdy)
+        return CovarianceSpectrum(Sigma, self.SEDs)
+
+    def withScaledVariance(self, variance_ratio):
+        Sigma = {}
+        for k, v in iteritems(self.Sigma):
+            Sigma[k] = v * variance_ratio
+        return CovarianceSpectrum(Sigma, self.SEDs)
+
+    def toNoise(self, bandpass, PSF, wcs, rng=None):
+        """ Derive the galsim.CorrelatedNoise object for the associated ChromaticSum when convolved
+        with `PSF` and drawn through `bandpass` onto pixels with specified `wcs`.
+
+        @param bandpass   galsim.Bandpass object representing filter image is drawn through.
+        @param PSF        output chromatic PSF to convolve by.
+        @param wcs        WCS of output pixel scale.
+        @param rng        Random number generator to forward to resulting CorrelatedNoise object.
+        @returns  CorrelatedNoise object.
+        """
+        import numpy as np
+        NSED = len(self.SEDs)
+        maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxK(),
+                       PSF.evaluateAtWavelength(bandpass.red_limit).maxK()])
+        stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepK(),
+                        PSF.evaluateAtWavelength(bandpass.red_limit).stepK()])
+        nk = 2*int(np.ceil(maxk/stepk))
+
+        PSF_eff_kimgs = np.empty((NSED, nk, nk), dtype=np.complex128)
+        for i, sed in enumerate(self.SEDs):
+            # Assume that PSF does not yet include pixel contribution, so add it in.
+            conv = galsim.Convolve(PSF, galsim.Pixel(wcs.scale)) * sed
+            PSF_eff_kimgs[i] = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk).array
+        pkout = np.zeros((nk, nk), dtype=np.float64)
+        for i in range(NSED):
+            for j in range(i, NSED):
+                s = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk).array
+                pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
+                          (2 if i != j else 1)).real
+        pk = galsim.ImageCD(pkout + 0j, scale=stepk)  # imag part should be zero
+        iki = galsim.InterpolatedKImage(pk)
+        iki *= wcs.pixelArea()**2  # determined this empirically
+        return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.CovarianceSpectrum) and
+                self.SEDs == other.SEDs and
+                self.Sigma == other.Sigma)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(("galsim.CovarianceSpectrum", tuple(self.SEDs),
+                     frozenset(iteritems(self.Sigma))))
+
+    def __repr__(self):
+        return "galsim.CovarianceSpectrum(%r, %r)" % (self.Sigma, self.SEDs)
+
+    def __str__(self):
+        sigma_str = '{' + ', '.join([':'.join((str(k),str(v))) for k,v in self.Sigma.items()]) + '}'
+        seds_str = '[' + ', '.join([str(s) for s in self.SEDs]) + ']'
+        return "galsim.CovarianceSpectrum(%s, %s)" % (sigma_str, seds_str)
