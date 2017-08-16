@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -562,8 +562,8 @@ def test_psf():
 
     # Repeat without the wcs_file argument, so the model is in chip coordinates.
     # Also check the functionality where the file is already open.
-    hdu_list = pyfits.open(os.path.join(data_dir,psfex_file))
-    psfex = galsim.des.DES_PSFEx(hdu_list[1])
+    with pyfits.open(os.path.join(data_dir, psfex_file)) as hdu_list:
+        psfex = galsim.des.DES_PSFEx(hdu_list[1])
     psf = psfex.getPSF(image_pos)
 
     # In this case, the getLocalWCS function won't return anything useful.

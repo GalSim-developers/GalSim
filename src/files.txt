@@ -9,6 +9,7 @@ GSParams.cpp
 SBProfile.cpp
 SBBox.cpp
 SBGaussian.cpp
+SBDeltaFunction.cpp
 SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp
@@ -23,6 +24,7 @@ SBFourierSqrt.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
+SBInclinedSersic.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp
@@ -34,3 +36,7 @@ BesselY.cpp
 BesselI.cpp
 BesselK.cpp
 Version.cpp
+Polygon.cpp
+Silicon.cpp
+RealGalaxy.cpp
+WCS.cpp

@@ -15,8 +15,8 @@ coverage:
 
     patch:
       default:
-        target: auto
-        threshold: 1%
+        target: 95%
+        threshold: 0%
         branches: null
 
     changes: false

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -115,10 +115,12 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -137,6 +139,23 @@ namespace galsim {
 
         mutable double _maxk; ///< Minimum maxK() of the convolved SBProfiles.
         mutable double _stepk; ///< Minimum stepK() of the convolved SBProfiles.
+
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
 
         // Copy constructor and op= are undefined.
         SBConvolveImpl(const SBConvolveImpl& rhs);
@@ -177,10 +196,12 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -194,6 +215,23 @@ namespace galsim {
 
         template <typename T>
         static T SQR(T x) { return x*x; }
+
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
 
         // Copy constructor and op= are undefined.
         SBAutoConvolveImpl(const SBAutoConvolveImpl& rhs);
@@ -234,10 +272,12 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKImage(ImageView<std::complex<double> > im,
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
@@ -253,6 +293,23 @@ namespace galsim {
         static T SQR(T x) { return x*x; }
         template <typename T>
         static T NORM(std::complex<T> x) { return std::norm(x); }
+
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<double> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, int izero,
+                          double ky0, double dky, int jzero) const
+        { fillKImage(im,kx0,dkx,izero,ky0,dky,jzero); }
+        void doFillKImage(ImageView<std::complex<float> > im,
+                          double kx0, double dkx, double dkxy,
+                          double ky0, double dky, double dkyx) const
+        { fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx); }
 
         // Copy constructor and op= are undefined.
         SBAutoCorrelateImpl(const SBAutoCorrelateImpl& rhs);

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -1160,6 +1160,110 @@ def test_psr():
     psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
     do_pickle(psr)
 
+@timer
+def test_normalization():
+    """Test the normalization of the input power spectrum"""
+
+    # Repeat some of this from test_shear_variance above.
+    # We define it as P(k) = exp(-s^2 k^2 / 2).
+    grid_size = 50. # degrees
+    ngrid = 500
+    kmin = 2.*np.pi/grid_size/3600.
+    kmax = np.pi/(grid_size/ngrid)/3600.
+    # Now choose s such that s*kmax=2.5, i.e., very little power at kmax.
+    s = 2.5/kmax
+    ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    rng = galsim.BaseDeviate(12345)
+    g1, g2, k = ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                             units=galsim.degrees, get_convergence=True)
+    # The prediction for the variance is:
+    # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
+    try:
+        erfmax = math.erf(s*kmax/math.sqrt(2.))
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+        print('erfmax = ',erfmax)
+        print('erfmin = ',erfmin)
+    except: # For python2.6, which doesn't have math.erf.
+        erfmax = 0.9875806693484477
+        erfmin = 0.007978712629263206
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    vark = np.var(k)
+    print('varg = ',var1+var2)
+    print('vark = ',vark)
+    pred_var = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
+    print('predicted variance = ',pred_var)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/pred_var-1))
+    np.testing.assert_allclose(var1+var2, pred_var, rtol=0.03,
+                               err_msg="Incorrect shear variance from Gaussian power spectrum")
+    np.testing.assert_allclose(vark, pred_var, rtol=0.03,
+                               err_msg="Incorrect kappa variance from Gaussian power spectrum")
+
+    # Renormalize to a given desired variance
+    target_var = 0.04
+    g1, g2, k = ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                             units=galsim.degrees, get_convergence=True, variance=target_var)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    vark = np.var(k)
+    print('varg1 = ',var1)
+    print('varg2 = ',var2)
+    print('vark = ',vark)
+    np.testing.assert_allclose(var1+var2, target_var, rtol=1.e-3,
+                               err_msg="Incorrect shear variance using renormalized variance")
+    np.testing.assert_allclose(vark, target_var, rtol=1.e-3,
+                               err_msg="Incorrect kappa variance using renormalized variance")
+
+    # Now do one that (AFAIK) doesn't have an analytic integral for the variance.
+    # This is the kind of power spectrum that one expects for PSF shapes due to the atmosphere.
+    L0 = 2.9 # arcmin.  Heymans et al, 2012 found L0 ~ 2.6 - 3.2 arcmin
+    Pk = lambda k : 1.e-5 * (k**2 + 1/L0**2)**(-11/6)
+    ps = galsim.PowerSpectrum(Pk, Pk, units=galsim.arcmin)
+
+    grid_spacing = 30 # arcsec
+    ngrid = 1000
+    g1, g2, k = ps.buildGrid(ngrid=ngrid, grid_spacing=grid_spacing, units=galsim.arcsec,
+                             rng=rng, get_convergence=True)
+
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    vark = np.var(k)
+    print('varg1 = ',var1)
+    print('varg2 = ',var2)
+    print('vark = ',vark)
+
+    # Predicted variance is the integral of P(k) from kmin to kmax
+    # As discussed in ../devel/modules/lensing_engine.pdf, this is not super accurate for
+    # gridded power spectra, but in our case, with small grid spacing, it's not too bad.
+    kmin = 2.*np.pi/(grid_spacing*ngrid*3600.)  # arcsec^-1
+    kmax = np.pi/(grid_spacing/3600.)
+    print('Pk(kmin) = ',Pk(kmin))
+    print('Pk(kmax) = ',Pk(kmax))
+
+    pred_var = galsim.integ.int1d(lambda k: 2*math.pi*k*Pk(k), min=kmin, max=kmax) / (2.*math.pi)**2
+    print('pred_var = ',pred_var)
+    print('ratio = ',pred_var / vark)
+    np.testing.assert_allclose(var1+var2, 2*pred_var, rtol=0.01,
+                               err_msg="Incorrect shear variance from atmospheric power spectrum")
+    np.testing.assert_allclose(vark, pred_var, rtol=0.01,
+                               err_msg="Incorrect kappa variance from atmospheric power spectrum")
+
+    # Renormalize to a given desired variance
+    target_var = 0.04
+    g1, g2, k = ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                             units=galsim.degrees, get_convergence=True, variance=target_var)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    vark = np.var(k)
+    print('varg1 = ',var1)
+    print('varg2 = ',var2)
+    print('vark = ',vark)
+    np.testing.assert_allclose(var1+var2, target_var, rtol=1.e-3,
+                               err_msg="Incorrect shear variance using renormalized variance")
+    np.testing.assert_allclose(vark, target_var/2., rtol=1.e-3,
+                               err_msg="Incorrect kappa variance using renormalized variance")
+
 
 if __name__ == "__main__":
     test_nfwhalo()
@@ -1176,3 +1280,4 @@ if __name__ == "__main__":
     test_periodic()
     test_bandlimit()
     test_psr()
+    test_normalization()

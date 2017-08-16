@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -226,7 +226,7 @@ def test_trapz_basic():
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Simple test of trapz() method failed for f(x)=x^2 from 0 to 1')
 
-    result = galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 1e5))
+    result = galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 100000))
     expected_val = 1.**3./3.
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=6, verbose=True,

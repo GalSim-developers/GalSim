@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -222,7 +222,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
 
 def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     """
-    Remove any "current values" stored in the config dict at any level.
+    Remove any "current" values stored in the config dict at any level.
 
     @param config       The configuration dict.
     @param keep_safe    Should current values that are marked as safe be preserved?
@@ -240,6 +240,7 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     # Recurse to lower levels, if any
     force = False  # If lower levels removed anything, then force removal at this level as well.
     for key in config:
+        if key[0] == '_': continue  # These are our own implementation details, not the normal dict.
         if isinstance(config[key],list):
             for item in config[key]:
                 force = RemoveCurrent(item, keep_safe, type, index_key) or force
@@ -251,20 +252,20 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
         index_key = None
 
     # Delete the current_val at this level, if any
-    if ( 'current_val' in config
-          and not (keep_safe and config['current_safe'])
-          and (type is None or ('type' in config and config['type'] == type))
-          and (index_key is None or config['current_index_key'].startswith(index_key)) ):
-        del config['current_val']
-        del config['current_safe']
-        del config['current_index']
-        del config['current_value_type']
-        return True
-    else:
-        return force
+    if 'current' in config:
+        cval, csafe, ctype, cindex, cindex_key = config['current']
+        if (not (keep_safe and csafe)
+                and (type is None or ('type' in config and config['type'] == type))
+                and (index_key is None or cindex_key.startswith(index_key))):
+            del config['current']
+            return True
+    return force
 
-top_level_fields = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
-                     'eval_variables', 'root', 'modules', 'profile' ]
+top_level_fields = ['psf', 'gal', 'stamp', 'image', 'input', 'output',
+                    'eval_variables', 'root', 'modules', 'profile']
+
+rng_fields = ['rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng',
+              'obj_num_rngs', 'image_num_rngs', 'file_num_rngs']
 
 def CopyConfig(config):
     """
@@ -284,9 +285,9 @@ def CopyConfig(config):
     # Make sure the input_manager isn't in the copy
     config1.pop('input_manager',None)
 
-    # Now deepcopy all the regular config fields to make sure things like current_val don't
-    # get clobbered by two processes writing to the same dict.
-    for field in top_level_fields:
+    # Now deepcopy all the regular config fields to make sure things like current don't
+    # get clobbered by two processes writing to the same dict.  Also the rngs.
+    for field in top_level_fields + rng_fields:
         if field in config:
             config1[field] = copy.deepcopy(config[field])
 
@@ -385,7 +386,7 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             logger.debug("ncpu = %d.",nproc)
         except KeyboardInterrupt:
             raise
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.warning("nproc <= 0, but unable to determine number of cpus.")
             logger.warning("Caught error: %s",e)
             logger.warning("Using single process")
@@ -404,78 +405,140 @@ def UpdateNProc(nproc, ntot, config, logger=None):
     return nproc
 
 
-def SetupConfigRNG(config, seed_offset=0):
-    """Set up the RNG in the config dict.
-
-    - Setup config['image']['random_seed'] if necessary
-    - Set config['rng'] based on appropriate random_seed
-
-    @param config           The configuration dict.
-    @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
-                            [default: 0]
-
-    @returns the seed used to initialize the RNG.
-    """
-    # Normally, random_seed is just a number, which really means to use that number
+def ParseRandomSeed(config, param_name, base, seed_offset):
+    # Normally, random_seed parameter is just a number, which really means to use that number
     # for the first item and go up sequentially from there for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the
     # normal case, we just convert it into a Sequence.
-    if ( 'image' in config
-         and 'random_seed' in config['image']
-         and not isinstance(config['image']['random_seed'],dict) ):
+    if isinstance(config[param_name], int):
          # The "first" is actually the seed value to use for anything at file or image scope
          # using the obj_num of the first object in the file or image.  Seeds for objects
          # will start at 1 more than this.
-         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-         config['image']['random_seed'] = {
+         first = galsim.config.ParseValue(config, param_name, base, int)[0]
+         config[param_name] = {
                  'type' : 'Sequence',
                  'index_key' : 'obj_num',
                  'first' : first
          }
 
-    index_key = config['index_key']
-
-    # If we are starting a new file, clear out the existing rngs.
-    if index_key == 'file_num':
-        for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
-            config.pop(key, None)
-
-    if 'image' in config and 'random_seed' in config['image']:
-        if index_key == 'obj_num':
-            # The normal case
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        else:
-            # If we are setting either the file_num or image_num rng, we need to be careful.
-            config['index_key'] = 'obj_num'
-            obj_num = config['obj_num']
-            if 'start_obj_num' in config:
-                config['obj_num'] = config['start_obj_num']
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['index_key'] = index_key
-            config['obj_num'] = obj_num
-        seed += seed_offset
+    index_key = base['index_key']
+    if index_key == 'obj_num':
+        # The normal case
+        seed = galsim.config.ParseValue(config, param_name, base, int)[0]
     else:
-        seed = 0
+        # If we are setting either the file_num or image_num rng, we need to be careful.
+        base['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config, param_name, base, int)[0]
+        base['index_key'] = index_key
+    seed += seed_offset
 
     # Normally, the file_num rng and the image_num rng can be the same.  So if seed
     # comes out the same as what we already built, then just use the existing file_num_rng.
-    if index_key == 'image_num' and 'file_num_rng' in config and seed == config.get('seed',None):
-        rng = config['file_num_rng']
+    if index_key == 'image_num' and seed == base.get('file_num_seed',None):
+        rng = base['file_num_rng']
     else:
-        config['seed'] = seed
         rng = galsim.BaseDeviate(seed)
-        config['rng'] = rng
 
-    # Also save this rng as 'file_num_rng' or 'image_num_rng' or 'obj_num_rng' according
-    # to whatever the index_key is.
-    config[index_key + '_rng'] = rng
+    return seed, rng
+
+def PropagateIndexKeyRNGNum(config, index_key, rng_num):
+    """Propagate any index_key or rng_num specification in a dict to all sub-fields
+    """
+    if isinstance(config, list):
+        for item in config:
+            PropagateIndexKeyRNGNum(item, index_key, rng_num)
+        return
+
+    if not isinstance(config, dict): return
+
+    if 'index_key' in config:
+        index_key = config['index_key']
+    elif index_key is not None:
+        config['index_key'] = index_key
+
+    if 'rng_num' in config:
+        rng_num = config['rng_num']
+    elif rng_num is not None:
+        config['rng_num'] = rng_num
+
+    for key, field in config.items():
+        if key[0] == '_': continue
+        PropagateIndexKeyRNGNum(field, index_key, rng_num)
+
+
+def SetupConfigRNG(config, seed_offset=0, logger=None):
+    """Set up the RNG in the config dict.
+
+    - Setup config['image']['random_seed'] if necessary
+    - Set config['rng'] and other related values based on appropriate random_seed
+
+    @param config           The configuration dict.
+    @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
+                            [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
+
+    @returns the seed used to initialize the RNG.
+    """
+    logger = LoggerWrapper(logger)
+
+    # If we are starting a new file, clear out the existing rngs.
+    index_key = config['index_key']
+    if index_key == 'file_num':
+        for key in rng_fields + ['seed', 'obj_num_seed', 'image_num_seed', 'file_num_seed']:
+            config.pop(key, None)
 
     # This can be present for efficiency, since GaussianDeviates produce two values at a time,
     # so it is more efficient to not create a new GaussianDeviate object each time.
     # But if so, we need to remove it now.
-    config.pop('gd',None)
+    config.pop('gd', None)
 
-    return seed
+    # All fields have a default index_key that they would normally use as well as a default
+    # rng_num = 0 if the random_seed is a list.  But we allow users to specify alternate values
+    # of index_key and/or rng_num at any level in the dict.  We want that specification to
+    # propagate down to lower levels from that point forward.  The easiest way to do so is to
+    # explicitly run through the dict once and propagate any index_key and/or rng_num fields
+    # to all sub-fields.
+    if not config.get('_propagated_index_key_rng_num',False):
+        logger.debug('Propagating any index_key or rng_num specifications')
+        for field in config.values():
+            PropagateIndexKeyRNGNum(field, None, None)
+        config['_propagated_index_key_rng_num'] = True
+
+    if 'image' not in config or 'random_seed' not in config['image']:
+        logger.debug('obj %d: No random_seed specified.  Using /dev/urandom',
+                     config.get('obj_num',0))
+        config['seed'] = 0
+        rng = galsim.BaseDeviate()
+        config['rng'] = rng
+        config[index_key + '_rng'] = rng
+        return 0
+
+    image = config['image']
+    # Normally, there is just one random_seed and it is just an integer.  However, sometimes
+    # it is useful to have 2 (or more) rngs going with different seed sequences.  To enable this,
+    # image.random_seed is allowed to be a list, each item of which may be either an integer or
+    # a dict defining an integer sequence.  If it is a list, we parse each item separately
+    # and then put the combined results into config['rng'] as a list.
+    if isinstance(image['random_seed'], list):
+        lst = image['random_seed']
+        seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
+        config['seed'] = seeds[0]
+        config['rng'] = rngs[0]
+        config[index_key + '_seed'] = seeds[0]
+        config[index_key + '_rng'] = rngs[0]
+        config[index_key + '_rngs'] = rngs
+        logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
+                     config.get('obj_num',0), seeds)
+        return seeds[0]
+    else:
+        seed, rng = ParseRandomSeed(image, 'random_seed', config, seed_offset)
+        config['seed'] = seed
+        config['rng'] = rng
+        config[index_key + '_seed'] = seed
+        config[index_key + '_rng'] = rng
+        logger.debug('obj %d: Initializing rng with seed %s', config.get('obj_num',0), seed)
+        return seed
+
 
 def ImportModules(config):
     """Import any modules listed in config['modules'].
@@ -526,7 +589,9 @@ def ParseExtendedKey(config, key):
         if len(chain) == 0: break
         try:
             config = d[k]
-        except Exception as e:
+        except (TypeError, KeyError):
+            # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
+            # KeyError for the case where d is a dict, but k is not a valid key.
             raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
     return d, k
 
@@ -584,48 +649,60 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-def ProcessTemplate(config, logger=None):
+def ProcessTemplate(config, base, logger=None):
     """If the config dict has a 'template' item, read in the appropriate file and
     make any requested updates.
 
     @param config           The configuration dict.
+    @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     """
     logger = LoggerWrapper(logger)
     if 'template' in config:
         template_string = config.pop('template')
         logger.debug("Processing template specified as %s",template_string)
+
+        # Parse the template string
         if ':' in template_string:
             config_file, field = template_string.split(':')
         else:
-            config_file = template_string
-            field = None
-        all_config = ReadConfig(config_file, logger=logger)
-        if len(all_config) != 1:
-            raise RuntimeError("Template config file %s is not allowed to have multiple documents.",
-                               config_file)
+            config_file, field = template_string, None
+
+        # Read the config file if appropriate
+        if config_file != '':
+            template = ReadConfig(config_file, logger=logger)[0]
+        else:
+            template = base
+
+        # Pull out the specified field, if any
+        if field is not None:
+            template = GetFromConfig(template, field)
+
         # Copy over the template config into this one.
         new_params = config.copy()  # N.B. Already popped config['template'].
         config.clear()
-        if field is None:
-            config.update(all_config[0])
-        else:
-            config.update(GetFromConfig(all_config[0],field))
+        config.update(template)
 
         # Update the config with the requested changes
         UpdateConfig(config, new_params)
 
 
-def ProcessAllTemplates(config, logger=None):
+def ProcessAllTemplates(config, logger=None, base=None):
     """Check through the full config dict and process any fields that have a 'template' item.
 
     @param config           The configuration dict.
+    @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     """
-    ProcessTemplate(config, logger)
+    if base is None: base = config
+    ProcessTemplate(config, base, logger)
     for (key, field) in config.items():
         if isinstance(field, dict):
-            ProcessAllTemplates(field, logger)
+            ProcessAllTemplates(field, logger, base)
+        elif isinstance(field, list):
+            for item in field:
+                if isinstance(item, dict):
+                    ProcessAllTemplates(item, logger, base)
 
 # This is the main script to process everything in the configuration dict.
 def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=False):
@@ -660,8 +737,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(job,njobs))
 
     # First thing to do is deep copy the input config to make sure we don't modify the original.
-    import copy
-    config = copy.deepcopy(config)
+    config = CopyConfig(config)
 
     # Process any template specifications in the dict.
     ProcessAllTemplates(config, logger)
@@ -682,22 +758,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
                        unexpected)
         logger.warning("These fields are not (directly) processed by the config processing.")
 
-    # Make config['output'] exist if it doesn't yet.
-    if 'output' not in config:
-        config['output'] = {}
-    output = config['output']
-    if not isinstance(output, dict):
-        raise AttributeError("config.output is not a dict.")
-
-    # We need to know how many objects we'll need for each file (and each image within each file)
-    # to get the indexing correct for any sequence items.  (e.g. random_seed)
-    # If we use multiple processors and let the regular sequencing happen,
-    # it will get screwed up by the multi-processing potentially happening out of order.
-    # Start with the number of files.
-    if 'nfiles' in output:
-        nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
-    else:
-        nfiles = 1
+    # Determine how many files we will be processing in total.
+    # Usually, this is just output.nfiles, but different output types may define this differently.
+    nfiles = galsim.config.output.GetNFiles(config)
     logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:
@@ -915,7 +978,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 except Exception as e:
                     import traceback
                     tr = traceback.format_exc()
-                    if except_func is not None:
+                    if except_func is not None: # pragma: no branch
                         except_func(logger, None, k, e, tr)
                     if except_abort or isinstance(e,KeyboardInterrupt):
                         raise
@@ -926,16 +989,71 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
     return results
 
-def check_for_rng(base, logger, tag):
-    """A helper function to check for base['rng'] and emit a warning if it is not present.
 
-    @returns either base['rng'] or None
+valid_index_keys = [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]
+
+def GetIndex(config, base, is_sequence=False):
+    """Return the index to use for the current object or parameter and the index_key.
+
+    First check for an explicit index_key value given by the user.
+    Then if base[index_key] is other than obj_num, use that.
+    Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
+
+    @returns index, index_key
     """
-    if 'rng' not in base and logger:
+    if 'index_key' in config:
+        index_key = config['index_key']
+        if index_key not in valid_index_keys:
+            raise AttributeError("Invalid index_key=%s."%index_key)
+    else:
+        index_key = base.get('index_key','obj_num')
+        if index_key == 'obj_num' and is_sequence:
+            index_key = 'obj_num_in_file'
+
+    if index_key == 'obj_num_in_file':
+        index = base.get('obj_num',0) - base.get('start_obj_num',0)
+        index_key = 'obj_num'
+    else:
+        index = base.get(index_key,0)
+
+    return index, index_key
+
+
+def GetRNG(config, base, logger=None, tag=None):
+    """Get the appropriate current rng according to whatever the current index_key is.
+
+    If a logger is provided, then it will emit a warning if there is no current rng setup.
+
+    @param config           The configuration dict for the current item being worked on.
+    @param base             The base configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param tag              If given, an appropriate name for the current item to use ing the
+                            warning message. [default: None]
+
+    @returns either the appropriate rng for the current index_key or None
+    """
+    logger = LoggerWrapper(logger)
+    index, index_key = GetIndex(config, base)
+
+    if 'rng_num' in config:
+        rng_num = config['rng_num']
+        if int(rng_num) != rng_num:
+            raise ValueError("rng_num must be an integer")
+        if not (index_key + '_rngs') in base:
+            raise AttributeError("rng_num is only allowed when image.random_seed is a list")
+        rng = base.get(index_key + '_rngs', None)[int(rng_num)]
+    else:
+        rng = base.get(index_key + '_rng', None)
+
+    if rng is None:
+        rng = base.get('rng',None)
+
+    if rng is None and logger:
         # Only report the warning the first time.
         rng_tag = tag + '_reported_no_rng'
         if rng_tag not in base:
             base[rng_tag] = True
             logger.warning("No base['rng'] available for %s.  Using /dev/urandom."%tag)
-    return base.get('rng',None)
+
+    return rng
 

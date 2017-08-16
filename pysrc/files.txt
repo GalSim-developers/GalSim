@@ -11,6 +11,7 @@ SBFourierSqrt.cpp
 SBTransform.cpp
 SBBox.cpp
 SBGaussian.cpp
+SBDeltaFunction.cpp
 SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp
@@ -20,6 +21,7 @@ SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
+SBInclinedSersic.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp
@@ -28,3 +30,6 @@ Table.cpp
 Interpolant.cpp
 Bessel.cpp
 CDModel.cpp
+Silicon.cpp
+RealGalaxy.cpp
+WCS.cpp

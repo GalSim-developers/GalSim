@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -35,7 +35,7 @@ x ->
 With array directions as indicated. This hopefully will make it easy enough to perform sub-image
 checks, etc.
 
-Images are in US, UI, S, I, F, D, and C flavors.
+Images are in US, UI, S, I, F, D, CF, and CD flavors.
 
 There are also four FITS cubes, and four FITS multi-extension files for testing.  Each is 12
 images deep, with the first image being the reference above and each subsequent being the same
@@ -61,14 +61,14 @@ except ImportError:
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 7  # Note: Most tests below only run through the first 7 types.
-            # test_Image_basic tests all 10 types including the aliases.
-types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64, np.complex128,
-         int, float, complex]
-simple_types = [int, int, int, int, float, float, complex, int, float, complex]
-np_types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64, np.complex128,
-            np.int32, np.float64, np.complex128]
-tchar = ['S', 'I', 'US', 'UI', 'F', 'D', 'C', 'I', 'D', 'C']
+ntypes = 8  # Note: Most tests below only run through the first 8 types.
+            # test_Image_basic tests all 11 types including the aliases.
+types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64,
+         np.complex64, np.complex128, int, float, complex]
+simple_types = [int, int, int, int, float, float, complex, complex, int, float, complex]
+np_types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64,
+            np.complex64, np.complex128, np.int32, np.float64, np.complex128]
+tchar = ['S', 'I', 'US', 'UI', 'F', 'D', 'CF', 'CD', 'I', 'D', 'CD']
 int_ntypes = 4  # The first four are the integer types for which we need to test &, |, ^.
 
 ncol = 7
@@ -126,20 +126,28 @@ def test_Image_basic():
         assert im1.getYMax() == nrow
         assert im1.getBounds() == bounds
         assert im1.bounds == bounds
+        assert im1.getOuterBounds() == galsim.BoundsD(0.5, ncol+0.5, 0.5, nrow+0.5)
+
+        # Same thing if ncol,nrow are kwargs.  Also can give init_value
+        im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, init_value=23)
+        np.testing.assert_array_equal(im1b.array, 23.)
+        assert im1 == im1b
 
         # Adding on xmin, ymin allows you to set an origin other than (1,1)
         im1a = galsim.Image(ncol, nrow, dtype=array_type, xmin=4, ymin=7)
-        im1b = galsim.Image(ncol, nrow, dtype=array_type, xmin=0, ymin=0)
+        im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, xmin=0, ymin=0)
         assert im1a.getXMin() == 4
         assert im1a.getXMax() == ncol+3
         assert im1a.getYMin() == 7
         assert im1a.getYMax() == nrow+6
         assert im1a.bounds == galsim.BoundsI(4,ncol+3,7,nrow+6)
+        assert im1a.getOuterBounds() == galsim.BoundsD(3.5, ncol+3.5, 6.5, nrow+6.5)
         assert im1b.getXMin() == 0
         assert im1b.getXMax() == ncol-1
         assert im1b.getYMin() == 0
         assert im1b.getYMax() == nrow-1
         assert im1b.bounds == galsim.BoundsI(0,ncol-1,0,nrow-1)
+        assert im1b.getOuterBounds() == galsim.BoundsD(-0.5, ncol-0.5, -0.5, nrow-0.5)
 
         # Also test alternate name of image type: ImageD, ImageF, etc.
         image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
@@ -170,7 +178,10 @@ def test_Image_basic():
         assert im2_view.imag.bounds == bounds
         assert im2_cview.real.bounds == bounds
         assert im2_cview.imag.bounds == bounds
-        if tchar[i] == 'C':
+        if tchar[i] == 'CF':
+            assert im1.real.array.dtype.type == np.float32
+            assert im1.imag.array.dtype.type == np.float32
+        elif tchar[i] == 'CD':
             assert im1.real.array.dtype.type == np.float64
             assert im1.imag.array.dtype.type == np.float64
         else:
@@ -199,7 +210,7 @@ def test_Image_basic():
                 assert im2_view(x,y) == value
                 assert im2_cview(x,y) == value
                 assert im1.conjugate()(x,y) == value
-                if tchar[i] == 'C':
+                if tchar[i][0] == 'C':
                     # complex conjugate is not a view into the original.
                     assert im2_conj(x,y) == 23
                     assert im2.conjugate()(x,y) == value
@@ -271,7 +282,7 @@ def test_Image_basic():
             np.testing.assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
             np.testing.assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
             np.testing.assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
-            if tchar[i] != 'C':
+            if tchar[i][0] != 'C':
                 np.testing.assert_raises(ValueError,im1.imag.setValue,1,1,1)
 
             # Finally check for the wrong number of arguments in get/setitem
@@ -424,8 +435,8 @@ def test_Image_FITS_IO():
     for i in range(ntypes):
         array_type = types[i]
 
-        if tchar[i] == 'C':
-            # Cannot write ImageC to fits.  Check for an exception and continue.
+        if tchar[i][0] == 'C':
+            # Cannot write complex Images to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
             try:
@@ -589,8 +600,8 @@ def test_Image_MultiFITS_IO():
     for i in range(ntypes):
         array_type = types[i]
 
-        if tchar[i] == 'C':
-            # Cannot write ImageC to fits.  Check for an exception and continue.
+        if tchar[i][0] == 'C':
+            # Cannot write complex Images to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             image_list = []
             for k in range(nimages):
@@ -833,8 +844,8 @@ def test_Image_CubeFITS_IO():
     for i in range(ntypes):
         array_type = types[i]
 
-        if tchar[i] == 'C':
-            # Cannot write ImageC to fits.  Check for an exception and continue.
+        if tchar[i][0] == 'C':
+            # Cannot write complex Images to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             image_list = []
             for k in range(nimages):
@@ -1234,15 +1245,16 @@ def test_Image_binary_divide():
     # Note: tests here are not precisely equal, since division can have rounding errors for
     # some elements.  In particular when dividing by complex, where there is a bit more to the
     # generic calculation (even though the imaginary parts are zero here).
-    # So check that they are *almost* equal to 12 digits of precision.
+    # So check that they are *almost* equal to 12 digits of precision (or 4 for complex64).
     for i in range(ntypes):
+        decimal = 4 if types[i] == np.complex64 else 12
         # First try using the dictionary-type Image init
         # Note that I am using refarray + 1 to avoid divide-by-zero.
         image1 = galsim.Image((ref_array + 1).astype(types[i]))
         image2 = galsim.Image((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
         np.testing.assert_almost_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
-                decimal=12,
+                decimal=decimal,
                 err_msg="Binary divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
 
@@ -1253,17 +1265,18 @@ def test_Image_binary_divide():
         image2 = image_init_func((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
         np.testing.assert_almost_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
-                decimal=12,
+                decimal=decimal,
                 err_msg="Binary divide in Image class does not match reference for dtype = "
                 +str(types[i]))
 
         for j in range(ntypes):
+            decimal = 4 if (types[i] == np.complex64 or types[j] == np.complex64) else 12
             image2_init_func = eval("galsim.Image"+tchar[j])
             image2 = image2_init_func((3 * (ref_array+1)**2).astype(types[j]))
             image3 = image2 / image1
             type3 = image3.array.dtype.type
             np.testing.assert_almost_equal((3*(ref_array+1)).astype(type3), image3.array,
-                    decimal=12,
+                    decimal=decimal,
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
@@ -1524,11 +1537,13 @@ def test_Image_inplace_divide():
     """Test that all six types of supported Images inplace divide correctly.
     """
     for i in range(ntypes):
+        decimal = 4 if types[i] == np.complex64 else 12
         # First try using the dictionary-type Image init
         image1 = galsim.Image((2 * (ref_array + 1)**2).astype(types[i]))
         image2 = galsim.Image((ref_array + 1).astype(types[i]))
         image1 /= image2
-        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
+        np.testing.assert_almost_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
+                decimal=decimal,
                 err_msg="Inplace divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
 
@@ -1538,17 +1553,20 @@ def test_Image_inplace_divide():
         image1 = image_init_func(slice_array)
         image2 = image_init_func((ref_array + 1).astype(types[i]))
         image1 /= image2
-        np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
+        np.testing.assert_almost_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
+                decimal=decimal,
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
 
         for j in range(i): # Only divide simpler types into this one.
+            decimal = 4 if (types[i] == np.complex64 or types[j] == np.complex64) else 12
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = (2*(large_array+1)**2).astype(types[i])[::3,::2]
             image1 = image_init_func(slice_array)
             image2 = image2_init_func((ref_array+1).astype(types[j]))
             image1 /= image2
-            np.testing.assert_array_equal((2 * (ref_array+1)).astype(types[i]), image1.array,
+            np.testing.assert_almost_equal((2 * (ref_array+1)).astype(types[i]), image1.array,
+                    decimal=decimal,
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
@@ -1981,9 +1999,6 @@ def test_BoundsI_init_with_non_pure_ints():
 def test_Image_constructor():
     """Check that the Image constructor that takes NumPy array does not mangle input.
     """
-    from sys import byteorder
-    native_byteorder = {'big': '>', 'little': '<'}[byteorder]
-
     # Loop over types.
     for i in range(ntypes):
 
@@ -2225,37 +2240,37 @@ def test_copy():
     im2.setValue(3,8,11.)
     assert im(3,8) != 11.
 
-    # Can also use constructor to "copy", although this doesn't copy the numpy array.
+    # Can also use constructor to "copy"
     im3 = galsim.Image(im)
     assert im3.wcs == im.wcs
     assert im3.bounds == im.bounds
     np.testing.assert_array_equal(im3.array, im.array)
     im3.setValue(3,8,11.)
-    assert im(3,8) == 11.   # im value changes when im3 value changes.
+    assert im(3,8) != 11.
 
-    # Constructor can change the wcs, but keep the array.
+    # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
     assert im4.wcs != im.wcs            # wcs is not equal this time.
     assert im4.bounds == im.bounds
     np.testing.assert_array_equal(im4.array, im.array)
-    im4.setValue(3,8,13.)
-    assert im(3,8) == 13.
+    im4.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
     im5 = galsim.Image(im, wcs=galsim.PixelScale(1.4))
     assert im5.wcs != im.wcs            # wcs is not equal this time.
     assert im5.bounds == im.bounds
     np.testing.assert_array_equal(im5.array, im.array)
-    im5.setValue(3,8,15.)
-    assert im(3,8) == 15.
+    im5.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
     im6 = galsim.Image(im, wcs=wcs)
     assert im6.wcs == im.wcs            # This is the same wcs now.
     assert im6.bounds == im.bounds
     np.testing.assert_array_equal(im6.array, im.array)
-    im6.setValue(3,8,17.)
-    assert im(3,8) == 17.
+    im6.setValue(3,8,11.)
+    assert im(3,8) != 11.
 
-    # With dtype different from the original, then should actually copy.
+    # Can also change the dtype
     im7 = galsim.Image(im, dtype=float)
     assert im7.wcs == im.wcs
     assert im7.bounds == im.bounds
@@ -2284,8 +2299,8 @@ def test_copy():
     # copyFrom copies the data only.
     im5.copyFrom(im8)
     assert im5.wcs != im.wcs  # im5 had a different wcs.  Should still have it.
-    assert im5.bounds == im.bounds
-    np.testing.assert_array_equal(im5.array, im.array)
+    assert im5.bounds == im8.bounds
+    np.testing.assert_array_equal(im5.array, im8.array)
     assert im5(3,8) == 11.
     im8[3,8] = 15
     assert im5(3,8) == 11.
@@ -2296,93 +2311,95 @@ def test_complex_image():
     """Additional tests that are relevant for complex Image types
     """
 
-    # Some complex modifications to tests in test_Image_basic
-    im1 = galsim.Image(ncol, nrow, dtype=complex)
-    im1_view = im1.view()
-    im1_cview = im1.view(make_const=True)
-    im2 = galsim.ImageC(ncol, nrow, init_value=23)
-    im2_view = im2.view()
-    im2_cview = im2.view(make_const=True)
-    im2_conj = im2.conjugate()
+    for dtype in [np.complex64, np.complex128]:
+        # Some complex modifications to tests in test_Image_basic
+        im1 = galsim.Image(ncol, nrow, dtype=dtype)
+        im1_view = im1.view()
+        im1_cview = im1.view(make_const=True)
+        im2 = galsim.Image(ncol, nrow, init_value=23, dtype=dtype)
+        im2_view = im2.view()
+        im2_cview = im2.view(make_const=True)
+        im2_conj = im2.conjugate()
 
-    # Check various ways to set and get values
-    for y in range(1,nrow+1):
-        for x in range(1,ncol+1):
-            im1.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
-            im2_view.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
+        # Check various ways to set and get values
+        for y in range(1,nrow+1):
+            for x in range(1,ncol+1):
+                im1.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
+                im2_view.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
 
-    for y in range(1,nrow+1):
-        for x in range(1,ncol+1):
-            value = 100 + 10*x + y + 13j*x + 23j*y
-            assert im1(x,y) == value
-            assert im1.view()(x,y) == value
-            assert im1.view(make_const=True)(x,y) == value
-            assert im2(x,y) == value
-            assert im2_view(x,y) == value
-            assert im2_cview(x,y) == value
-            assert im1.conjugate()(x,y) == np.conjugate(value)
+        for y in range(1,nrow+1):
+            for x in range(1,ncol+1):
+                value = 100 + 10*x + y + 13j*x + 23j*y
+                assert im1(x,y) == value
+                assert im1.view()(x,y) == value
+                assert im1.view(make_const=True)(x,y) == value
+                assert im2(x,y) == value
+                assert im2_view(x,y) == value
+                assert im2_cview(x,y) == value
+                assert im1.conjugate()(x,y) == np.conjugate(value)
 
-            # complex conjugate is not a view into the original.
-            assert im2_conj(x,y) == 23
-            assert im2.conjugate()(x,y) == np.conjugate(value)
+                # complex conjugate is not a view into the original.
+                assert im2_conj(x,y) == 23
+                assert im2.conjugate()(x,y) == np.conjugate(value)
 
-            value2 = 10*x + y + 20j*x + 2j*y
-            im1.setValue(x,y, value2)
-            im2_view.setValue(x=x, y=y, value=value2)
-            assert im1(x,y) == value2
-            assert im1.view()(x,y) == value2
-            assert im1.view(make_const=True)(x,y) == value2
-            assert im2(x,y) == value2
-            assert im2_view(x,y) == value2
-            assert im2_cview(x,y) == value2
+                value2 = 10*x + y + 20j*x + 2j*y
+                im1.setValue(x,y, value2)
+                im2_view.setValue(x=x, y=y, value=value2)
+                assert im1(x,y) == value2
+                assert im1.view()(x,y) == value2
+                assert im1.view(make_const=True)(x,y) == value2
+                assert im2(x,y) == value2
+                assert im2_view(x,y) == value2
+                assert im2_cview(x,y) == value2
 
-            assert im1.real(x,y) == value2.real
-            assert im1.view().real(x,y) == value2.real
-            assert im1.view(make_const=True).real(x,y) == value2.real
-            assert im2.real(x,y) == value2.real
-            assert im2_view.real(x,y) == value2.real
-            assert im2_cview.real(x,y) == value2.real
-            assert im1.imag(x,y) == value2.imag
-            assert im1.view().imag(x,y) == value2.imag
-            assert im1.view(make_const=True).imag(x,y) == value2.imag
-            assert im2.imag(x,y) == value2.imag
-            assert im2_view.imag(x,y) == value2.imag
-            assert im2_cview.imag(x,y) == value2.imag
-            assert im1.conjugate()(x,y) == np.conjugate(value2)
-            assert im2.conjugate()(x,y) == np.conjugate(value2)
+                assert im1.real(x,y) == value2.real
+                assert im1.view().real(x,y) == value2.real
+                assert im1.view(make_const=True).real(x,y) == value2.real
+                assert im2.real(x,y) == value2.real
+                assert im2_view.real(x,y) == value2.real
+                assert im2_cview.real(x,y) == value2.real
+                assert im1.imag(x,y) == value2.imag
+                assert im1.view().imag(x,y) == value2.imag
+                assert im1.view(make_const=True).imag(x,y) == value2.imag
+                assert im2.imag(x,y) == value2.imag
+                assert im2_view.imag(x,y) == value2.imag
+                assert im2_cview.imag(x,y) == value2.imag
+                assert im1.conjugate()(x,y) == np.conjugate(value2)
+                assert im2.conjugate()(x,y) == np.conjugate(value2)
 
-            rvalue3 = 12*x + y
-            ivalue3 = x + 21*y
-            value3 = rvalue3 + 1j * ivalue3
-            im1.real.setValue(x,y, rvalue3)
-            im1.imag.setValue(x,y, ivalue3)
-            im2_view.real.setValue(x,y, rvalue3)
-            im2_view.imag.setValue(x,y, ivalue3)
-            assert im1(x,y) == value3
-            assert im1.view()(x,y) == value3
-            assert im1.view(make_const=True)(x,y) == value3
-            assert im2(x,y) == value3
-            assert im2_view(x,y) == value3
-            assert im2_cview(x,y) == value3
-            assert im1.conjugate()(x,y) == np.conjugate(value3)
-            assert im2.conjugate()(x,y) == np.conjugate(value3)
+                rvalue3 = 12*x + y
+                ivalue3 = x + 21*y
+                value3 = rvalue3 + 1j * ivalue3
+                im1.real.setValue(x,y, rvalue3)
+                im1.imag.setValue(x,y, ivalue3)
+                im2_view.real.setValue(x,y, rvalue3)
+                im2_view.imag.setValue(x,y, ivalue3)
+                assert im1(x,y) == value3
+                assert im1.view()(x,y) == value3
+                assert im1.view(make_const=True)(x,y) == value3
+                assert im2(x,y) == value3
+                assert im2_view(x,y) == value3
+                assert im2_cview(x,y) == value3
+                assert im1.conjugate()(x,y) == np.conjugate(value3)
+                assert im2.conjugate()(x,y) == np.conjugate(value3)
 
-    # Check view of given data
-    im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
-    slice_array = (large_array * (1+2j)).astype(complex)[::3,::2]
-    im4_view = galsim.Image(slice_array)
-    for y in range(1,nrow+1):
-        for x in range(1,ncol+1):
-            assert im3_view(x,y) == 10*x + y + 20j*x + 2j*y
-            assert im4_view(x,y) == 10*x + y + 20j*x + 2j*y
+        # Check view of given data
+        im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
+        slice_array = (large_array * (1+2j)).astype(complex)[::3,::2]
+        im4_view = galsim.Image(slice_array)
+        for y in range(1,nrow+1):
+            for x in range(1,ncol+1):
+                assert im3_view(x,y) == 10*x + y + 20j*x + 2j*y
+                assert im4_view(x,y) == 10*x + y + 20j*x + 2j*y
 
-    # Check picklability
-    do_pickle(im1)
-    do_pickle(im1_view)
-    do_pickle(im2)
-    do_pickle(im2_view)
-    do_pickle(im3_view)
-    do_pickle(im4_view)
+        # Check picklability
+        do_pickle(im1)
+        do_pickle(im1_view)
+        do_pickle(im1_cview)
+        do_pickle(im2)
+        do_pickle(im2_view)
+        do_pickle(im3_view)
+        do_pickle(im4_view)
 
 @timer
 def test_complex_image_arith():
@@ -2420,130 +2437,130 @@ def test_complex_image_arith():
 
     image2 = image1 * (3+1j)
 
-    # Binary ImageC op complex scalar
+    # Binary ImageCD op complex scalar
     image3 = image2 + (2+5j)
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array + (2+5j),
-            err_msg="ImageC + complex is not correct")
+            err_msg="ImageCD + complex is not correct")
     image3 = image2 - (2+5j)
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array - (2+5j),
-            err_msg="ImageC - complex is not correct")
+            err_msg="ImageCD - complex is not correct")
     image3 = image2 * (2+5j)
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
-            err_msg="ImageC * complex is not correct")
+            err_msg="ImageCD * complex is not correct")
     image3 = image2 / (2+5j)
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array / (2+5j),
-            err_msg="ImageC / complex is not correct")
+            err_msg="ImageCD / complex is not correct")
 
-    # Binary complex scalar op ImageC
+    # Binary complex scalar op ImageCD
     image3 = (2+5j) + image2
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array + (2+5j),
-            err_msg="complex + ImageC is not correct")
+            err_msg="complex + ImageCD is not correct")
     image3 = (2+5j) - image2
     np.testing.assert_array_equal(image3.array, (-3-1j)*ref_array + (2+5j),
-            err_msg="complex - ImageC is not correct")
+            err_msg="complex - ImageCD is not correct")
     image3 = (2+5j) * image2
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
-            err_msg="complex * ImageC is not correct")
+            err_msg="complex * ImageCD is not correct")
     image3 = (2+5j) / image2
     np.testing.assert_array_equal(image3.array, (2+5j) / ((3+1j)*ref_array),
-            err_msg="complex / ImageC is not correct")
+            err_msg="complex / ImageCD is not correct")
 
-    # Binary ImageD op ImageC
+    # Binary ImageD op ImageCD
     image3 = image1 + image2
     np.testing.assert_array_equal(image3.array, (4+1j)*ref_array,
-            err_msg="ImageD + ImageC is not correct")
+            err_msg="ImageD + ImageCD is not correct")
     image3 = image1 - image2
     np.testing.assert_array_equal(image3.array, (-2-1j)*ref_array,
-            err_msg="ImageD - ImageC is not correct")
+            err_msg="ImageD - ImageCD is not correct")
     image3 = image1 * image2
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
-            err_msg="ImageD * ImageC is not correct")
+            err_msg="ImageD * ImageCD is not correct")
     image3 = image1 / image2
     np.testing.assert_almost_equal(image3.array, 1./(3+1j), decimal=12,
-            err_msg="ImageD / ImageC is not correct")
+            err_msg="ImageD / ImageCD is not correct")
 
-    # Binary ImageC op ImageD
+    # Binary ImageCD op ImageD
     image3 = image2 + image1
     np.testing.assert_array_equal(image3.array, (4+1j)*ref_array,
-            err_msg="ImageD + ImageC is not correct")
+            err_msg="ImageD + ImageCD is not correct")
     image3 = image2 - image1
     np.testing.assert_array_equal(image3.array, (2+1j)*ref_array,
-            err_msg="ImageD - ImageC is not correct")
+            err_msg="ImageD - ImageCD is not correct")
     image3 = image2 * image1
     np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
-            err_msg="ImageD * ImageC is not correct")
+            err_msg="ImageD * ImageCD is not correct")
     image3 = image2 / image1
     np.testing.assert_almost_equal(image3.array, (3+1j), decimal=12,
-            err_msg="ImageD / ImageC is not correct")
+            err_msg="ImageD / ImageCD is not correct")
 
-    # Binary ImageC op ImageC
+    # Binary ImageCD op ImageCD
     image3 = (4-3j) * image1
     image4 = image2 + image3
     np.testing.assert_array_equal(image4.array, (7-2j)*ref_array,
-            err_msg="ImageC + ImageC is not correct")
+            err_msg="ImageCD + ImageCD is not correct")
     image4 = image2 - image3
     np.testing.assert_array_equal(image4.array, (-1+4j)*ref_array,
-            err_msg="ImageC - ImageC is not correct")
+            err_msg="ImageCD - ImageCD is not correct")
     image4 = image2 * image3
     np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
-            err_msg="ImageC * ImageC is not correct")
+            err_msg="ImageCD * ImageCD is not correct")
     image4 = image2 / image3
     np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
-            err_msg="ImageC / ImageC is not correct")
+            err_msg="ImageCD / ImageCD is not correct")
 
-    # In place ImageC op complex scalar
+    # In place ImageCD op complex scalar
     image4 = image2.copy()
     image4 += (2+5j)
     np.testing.assert_array_equal(image4.array, (3+1j)*ref_array + (2+5j),
-            err_msg="ImageC + complex is not correct")
+            err_msg="ImageCD + complex is not correct")
     image4 = image2.copy()
     image4 -= (2+5j)
     np.testing.assert_array_equal(image4.array, (3+1j)*ref_array - (2+5j),
-            err_msg="ImageC - complex is not correct")
+            err_msg="ImageCD - complex is not correct")
     image4 = image2.copy()
     image4 *= (2+5j)
     np.testing.assert_array_equal(image4.array, (3+1j)*ref_array * (2+5j),
-            err_msg="ImageC * complex is not correct")
+            err_msg="ImageCD * complex is not correct")
     image4 = image2.copy()
     image4 /= (2+5j)
     np.testing.assert_array_equal(image4.array, (3+1j)*ref_array / (2+5j),
-            err_msg="ImageC / complex is not correct")
+            err_msg="ImageCD / complex is not correct")
 
-    # In place ImageC op ImageD
+    # In place ImageCD op ImageD
     image4 = image2.copy()
     image4 += image1
     np.testing.assert_array_equal(image4.array, (4+1j)*ref_array,
-            err_msg="ImageD + ImageC is not correct")
+            err_msg="ImageD + ImageCD is not correct")
     image4 = image2.copy()
     image4 -= image1
     np.testing.assert_array_equal(image4.array, (2+1j)*ref_array,
-            err_msg="ImageD - ImageC is not correct")
+            err_msg="ImageD - ImageCD is not correct")
     image4 = image2.copy()
     image4 *= image1
     np.testing.assert_array_equal(image4.array, (3+1j)*ref_array**2,
-            err_msg="ImageD * ImageC is not correct")
+            err_msg="ImageD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image1
     np.testing.assert_almost_equal(image4.array, (3+1j), decimal=12,
-            err_msg="ImageD / ImageC is not correct")
+            err_msg="ImageD / ImageCD is not correct")
 
-    # In place ImageC op ImageC
+    # In place ImageCD op ImageCD
     image4 = image2.copy()
     image4 += image3
     np.testing.assert_array_equal(image4.array, (7-2j)*ref_array,
-            err_msg="ImageC + ImageC is not correct")
+            err_msg="ImageCD + ImageCD is not correct")
     image4 = image2.copy()
     image4 -= image3
     np.testing.assert_array_equal(image4.array, (-1+4j)*ref_array,
-            err_msg="ImageC - ImageC is not correct")
+            err_msg="ImageCD - ImageCD is not correct")
     image4 = image2.copy()
     image4 *= image3
     np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
-            err_msg="ImageC * ImageC is not correct")
+            err_msg="ImageCD * ImageCD is not correct")
     image4 = image2.copy()
     image4 /= image3
     np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
-            err_msg="ImageC / ImageC is not correct")
+            err_msg="ImageCD / ImageCD is not correct")
 
 @timer
 def test_int_image_arith():
@@ -2872,16 +2889,16 @@ def test_wrap():
     N = 25
     K = 8
     L = 5
-    im = galsim.ImageC(2*M+1, 2*N+1, xmin=-M, ymin=-N)  # Explicitly Hermitian
-    im2 = galsim.ImageC(2*M+1, N+1, xmin=-M, ymin=0)   # Implicitly Hermitian across y axis
-    im3 = galsim.ImageC(M+1, 2*N+1, xmin=0, ymin=-N)   # Implicitly Hermitian across x axis
+    im = galsim.ImageCD(2*M+1, 2*N+1, xmin=-M, ymin=-N)  # Explicitly Hermitian
+    im2 = galsim.ImageCD(2*M+1, N+1, xmin=-M, ymin=0)   # Implicitly Hermitian across y axis
+    im3 = galsim.ImageCD(M+1, 2*N+1, xmin=0, ymin=-N)   # Implicitly Hermitian across x axis
     #print('im = ',im)
     #print('im2 = ',im2)
     #print('im3 = ',im3)
     b = galsim.BoundsI(-K+1,K,-L+1,L)
     b2 = galsim.BoundsI(-K+1,K,0,L)
     b3 = galsim.BoundsI(0,K,-L+1,L)
-    im_test = galsim.ImageC(b, init_value=0)
+    im_test = galsim.ImageCD(b, init_value=0)
     for i in range(-M,M+1):
         for j in range(-N,N+1):
             # An arbitrary, complicated Hermitian function.
@@ -2979,6 +2996,121 @@ def test_FITS_bad_type():
     # Don't forget to set it back to the original.
     setattr(galsim.Image,'valid_dtypes',orig_dtypes)
 
+@timer
+def test_bin():
+    """Test the bin and subsample methods"""
+
+    # Start with a relatively simple case of 2x2 binning with no partial bins to worry about.
+    obj = galsim.Gaussian(sigma=2, flux=17).shear(g1=0.1, g2=0.3)
+    im1 = obj.drawImage(nx=10, ny=14, scale=0.6, dtype=float)
+
+    im2 = obj.drawImage(nx=20, ny=28, scale=0.3, dtype=float)
+    im3 = im2.bin(2,2)
+    ar2 = im2.array
+    ar3b = ar2[0::2,0::2] + ar2[0::2,1::2] + ar2[1::2,0::2] + ar2[1::2,1::2]
+
+    np.testing.assert_almost_equal(ar3b.sum(), im2.array.sum(), 6,
+                                   "direct binning didn't perserve total flux")
+    np.testing.assert_almost_equal(ar3b, im3.array, 6,
+                                   "direct binning didn't match bin function.")
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.sum(), 6,
+                                   "bin didn't preserve the total flux")
+    np.testing.assert_almost_equal(im3.array, im1.array, 6,
+                                   "2x2 binned image doesn't match image with 2x2 larger pixels")
+    np.testing.assert_almost_equal(im3.scale, im1.scale, 6, "bin resulted in wrong scale")
+
+    im4 = im2.subsample(2,2)
+    np.testing.assert_almost_equal(im4.array.sum(), im2.array.sum(), 6,
+                                   "subsample didn't preserve the total flux")
+    np.testing.assert_almost_equal(im4.scale, im2.scale/2., 6, "subsample resulted in wrong scale")
+    im5 = im4.bin(2,2)
+    np.testing.assert_almost_equal(im5.array, im2.array, 6,
+                                   "Round trip subsample then bin 2x2 doesn't match original")
+    np.testing.assert_almost_equal(im5.scale, im2.scale, 6, "round trip resulted in wrong scale")
+
+    # Next do nx != ny.  And wcs = JacobianWCS
+    wcs1 = galsim.JacobianWCS(0.6, 0.14, 0.15, 0.7)
+    im1 = obj.drawImage(nx=11, ny=15, wcs=wcs1, dtype=float)
+    im1.wcs = im1.wcs.withOrigin(im1.trueCenter(), galsim.PositionD(200,300))
+    center1 = im1.wcs.toWorld(im1.trueCenter())
+    print('center1 = ',center1)
+
+    wcs2 = galsim.JacobianWCS(0.2, 0.07, 0.05, 0.35)
+    im2 = obj.drawImage(nx=33, ny=30, wcs=wcs2, dtype=float)
+    im2.wcs = im2.wcs.withOrigin(im2.trueCenter(), galsim.PositionD(200,300))
+    center2 = im2.wcs.toWorld(im2.trueCenter())
+    print('center2 = ',center2)
+    im3 = im2.bin(3,2)
+    center3 = im2.wcs.toWorld(im2.trueCenter())
+    print('center3 = ',center3)
+    ar2 = im2.array
+    ar3b = (ar2[0::2,0::3] + ar2[0::2,1::3] + ar2[0::2,2::3] +
+            ar2[1::2,0::3] + ar2[1::2,1::3] + ar2[1::2,2::3])
+
+    np.testing.assert_almost_equal(ar3b.sum(), im2.array.sum(), 6,
+                                   "direct binning didn't perserve total flux")
+    np.testing.assert_almost_equal(ar3b, im3.array, 6,
+                                   "direct binning didn't match bin function.")
+    np.testing.assert_almost_equal(im3.array.sum(), im2.array.sum(), 6,
+                                   "bin didn't preserve the total flux")
+    np.testing.assert_almost_equal(im3.array, im1.array, 6,
+                                   "3x2 binned image doesn't match image with 3x2 larger pixels")
+    np.testing.assert_almost_equal((center3.x, center3.y), (center1.x, center1.y), 6,
+                                   "3x2 binned image wcs is wrong")
+
+    im4 = im2.subsample(3,2)
+    np.testing.assert_almost_equal(im4.array.sum(), im2.array.sum(), 6,
+                                   "subsample didn't preserve the total flux")
+    center4 = im4.wcs.toWorld(im4.trueCenter())
+    print('center4 = ',center4)
+    np.testing.assert_almost_equal((center4.x, center4.y), (center1.x, center1.y), 6,
+                                   "3x2 subsampled image wcs is wrong")
+
+    im5 = im4.bin(3,2)
+    np.testing.assert_almost_equal(im5.array, im2.array, 6,
+                                   "Round trip subsample then bin 3x2 doesn't match original")
+    center5 = im5.wcs.toWorld(im5.trueCenter())
+    print('center5 = ',center5)
+    np.testing.assert_almost_equal((center5.x, center5.y), (center1.x, center1.y), 6,
+                                   "Round trip 3x2 image wcs is wrong")
+
+    # If the initial wcs is None or not uniform, then the resulting wcs will be None.
+    im2.wcs = galsim.UVFunction('0.6 + np.sin(x*y)', '0.6 + np.cos(x+y)')
+    im3b = im2.bin(3,2)
+    assert im3b.wcs is None
+    np.testing.assert_array_equal(im3b.array, im3.array,
+                                  "The wcs shouldn't affect what bin does to the array.")
+    im4b = im2.subsample(3,2)
+    assert im4b.wcs is None
+    np.testing.assert_array_equal(im4b.array, im4.array,
+                                  "The wcs shouldn't affect what subsample does to the array.")
+
+    im2.wcs = None
+    im3c = im2.bin(3,2)
+    assert im3c.wcs is None
+    np.testing.assert_array_equal(im3c.array, im3.array,
+                                  "The wcs shouldn't affect what bin does to the array.")
+    im4c = im2.subsample(3,2)
+    assert im4c.wcs is None
+    np.testing.assert_array_equal(im4c.array, im4.array,
+                                  "The wcs shouldn't affect what subsample does to the array.")
+
+    # Finally, binning should still work, even if the number of pixels doesn't go evenly into
+    # the number of pixels/block specified.
+    im6 = im1.bin(8,8)
+    ar6 = np.array([[ im1.array[0:8,0:8].sum(), im1.array[0:8,8:].sum() ],
+                    [ im1.array[8:,0:8].sum(),  im1.array[8:,8:].sum()  ]])
+    np.testing.assert_almost_equal(im6.array, ar6, 6,
+                                   "Binning past the edge of the image didn't work properly")
+    # The center of this image doesn't correspond to the center of the original.
+    # But the lower left edge does.
+    origin1 = im1.wcs.toWorld(galsim.PositionD(im1.xmin-0.5, im1.ymin-0.5))
+    origin6 = im6.wcs.toWorld(galsim.PositionD(im1.xmin-0.5, im6.ymin-0.5))
+    print('origin1 = ',origin1)
+    print('origin6 = ',origin6)
+    np.testing.assert_almost_equal((origin6.x, origin6.y), (origin1.x, origin1.y), 6,
+                                   "Binning past the edge resulted in wrong wcs")
+
 if __name__ == "__main__":
     test_Image_basic()
     test_undefined_image()
@@ -3019,3 +3151,4 @@ if __name__ == "__main__":
     test_int_image_arith()
     test_wrap()
     test_FITS_bad_type()
+    test_bin()

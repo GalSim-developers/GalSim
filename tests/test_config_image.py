@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,6 +23,7 @@ import sys
 import logging
 import math
 import re
+import warnings
 
 from galsim_test_helpers import *
 
@@ -55,7 +56,7 @@ def test_single():
 
     logger = logging.getLogger('test_single')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     im1_list = []
     nimages = 6
@@ -124,9 +125,9 @@ def test_positions():
         }
     }
 
-    logger = logging.getLogger('test_single')
+    logger = logging.getLogger('test_positions')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     gal = galsim.Gaussian(sigma=1.7, flux=100)
     im1= gal.drawImage(nx=21, ny=21, scale=1)
@@ -288,6 +289,7 @@ def test_reject():
                 'radius' : { 'type' : 'Random', 'min' : 0, 'max': 20 },
                 'inner_radius' : { 'type' : 'Random', 'min' : 0, 'max': 10 },
             },
+            'skip' : '$obj_num == 9',
         },
         'gal' : {
             'type' : 'Convolve',
@@ -329,9 +331,9 @@ def test_reject():
     galsim.config.ProcessInput(config)
 
     if False:
-        logger = logging.getLogger('test_single')
+        logger = logging.getLogger('test_reject')
         logger.addHandler(logging.StreamHandler(sys.stdout))
-        logger.setLevel(logging.DEBUG)
+        #logger.setLevel(logging.DEBUG)
     else:
         logger = galsim.config.LoggerWrapper(None)
 
@@ -340,7 +342,7 @@ def test_reject():
     # For this particular config, only 6 of them are real images.  The others were skipped.
     # The skipped ones are present in the list, but their flux is 0
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
-    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 1341]
+    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
     # Check for a few of the logging outputs that explain why things were rejected.
@@ -693,7 +695,7 @@ def test_scattered():
     }
     for convention in [ 0, 1 ]:
         for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
-            # Deep copy to make sure we don't have any "current_val" caches present.
+            # Deep copy to make sure we don't have any "current" caches present.
             config = copy.deepcopy(base_config)
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
@@ -884,7 +886,7 @@ def test_scattered_whiten():
     with CaptureLog() as cl:
         im3 = galsim.config.BuildImage(config, logger=cl.logger)
     #print(cl.output)
-    assert "Object centered at (-24,-43) is entirely off the main image" in cl.output
+    assert "skip drawing object because its image will be entirely off the main image." in cl.output
     im2 = galsim.config.BuildImage(config)
 
 
@@ -1072,11 +1074,14 @@ def test_njobs():
             },
         },
     }
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger()
+    config1 = galsim.config.CopyConfig(config)
+
+    logger = logging.getLogger('test_njobs')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
     galsim.config.Process(config, logger=logger)
 
     # Repeat with 2 jobs
+    config = galsim.config.CopyConfig(config1)
     config['output']['file_name']['root'] = 'test_two_jobs_'
     galsim.config.Process(config, njobs=2, job=1, logger=logger)
     galsim.config.Process(config, njobs=2, job=2, logger=logger)
@@ -1092,6 +1097,581 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
+def test_wcs():
+    """Test various wcs options"""
+    config = {
+        # We'll need this for some of the items below.
+        'image_center' : galsim.PositionD(1024, 1024)
+    }
+    config['image'] = {
+        'pixel_scale' : 0.34,
+        'scale2' : { 'type' : 'PixelScale', 'scale' : 0.43 },
+        'scale3' : {
+            'type' : 'PixelScale',
+            'scale' : 0.43,
+            'origin' : galsim.PositionD(32,24),
+        },
+        'scale4' : {
+            'type' : 'PixelScale',
+            'scale' : 0.43,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'scale5' : galsim.PixelScale(0.49),
+        'scale6' : '$galsim.PixelScale(0.56)',
+        'scale7' : '@image.scale6',
+        'scale8' : { 'type': 'Eval', 'str': 'galsim.PixelScale(0.56)' },
+        'scale9' : { 'type': 'Current', 'key': 'image.scale6' },
+        'shear1' : {
+            'type' : 'Shear',
+            'scale' : 0.43,
+            'shear' : galsim.Shear(g1=0.2, g2=0.3)
+        },
+        'shear2' : {
+            'type' : 'Shear',
+            'scale' : 0.43,
+            'shear' : { 'type' : 'G1G2', 'g1' : 0.2, 'g2' : 0.3 },
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'jac1' : {
+            'type' : 'Jacobian',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21
+        },
+        'jac2' : {
+            'type' : 'Affine',  # Affine is really just a synonym for Jacobian here.
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21
+        },
+        'jac3' : {
+            'type' : 'Jacobian',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'jac4' : {
+            'type' : 'Affine',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
+            'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
+        },
+        'uv' : {
+            'type' : 'UVFunction',
+            'ufunc' : '0.05 * numpy.exp(1. + x/100.)',
+            'vfunc' : '0.05 * np.exp(1. + y/100.)',
+            'xfunc' : '100. * (np.log(u*20.) - 1.)',
+            'yfunc' : '100. * (np.log(v*20.) - math.sqrt(1.))',
+            'origin' : 'center',
+        },
+        'radec' : {
+            'type' : 'RaDecFunction',
+            'ra_func' : '0.05 * numpy.exp(1. + x/100.) * galsim.hours / galsim.radians',
+            'dec_func' : '0.05 * np.exp(math.sqrt(1.) + y/100.) * galsim.degrees / galsim.radians',
+            'origin' : 'center',
+        },
+        'fits1' : {
+            'type' : 'Fits',
+            'file_name' : 'tpv.fits',
+            'dir' : 'fits_files'
+        },
+        'fits2' : {
+            'type' : 'Fits',
+            'file_name' : 'fits_files/tpv.fits',
+        },
+        'tan1' : {
+            'type' : 'Tan',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'units' : 'arcsec',
+            'origin' : 'center',
+            'ra' : '19.3 hours',
+            'dec' : '-33.1 degrees',
+        },
+        'tan2' : {
+            'type' : 'Tan',
+            'dudx' : 0.2,
+            'dudy' : 0.02,
+            'dvdx' : -0.04,
+            'dvdy' : 0.21,
+            'ra' : '19.3 hours',
+            'dec' : '-33.1 degrees',
+        },
+        'list' : {
+            'type' : 'List',
+            'items' : [
+                galsim.PixelScale(0.12),
+                { 'type': 'PixelScale', 'scale' : 0.23 },
+                { 'type': 'PixelScale', 'scale' : '0.34' }
+            ]
+        },
+        # This needs to be done after 'scale2', so call it zref to make sure it happens
+        # alphabetically after scale2 in a sorted list.
+        'zref' : '$(@image.scale2).withOrigin(galsim.PositionD(22,33))',
+        'invalid' : 34
+    }
+
+    reference = {
+        'scale1' : galsim.PixelScale(0.34),  # Missing from config.  Uses pixel_scale
+        'scale2' : galsim.PixelScale(0.43),
+        'scale3' : galsim.OffsetWCS(scale=0.43, origin=galsim.PositionD(32,24)),
+        'scale4' : galsim.OffsetWCS(scale=0.43, origin=galsim.PositionD(32,24),
+                                    world_origin=galsim.PositionD(15,90)),
+        'scale5' : galsim.PixelScale(0.49),
+        'scale6' : galsim.PixelScale(0.56),
+        'scale7' : galsim.PixelScale(0.56),
+        'scale8' : galsim.PixelScale(0.56),
+        'scale9' : galsim.PixelScale(0.56),
+        'shear1' : galsim.ShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3)),
+        'shear2' : galsim.OffsetShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3),
+                                         origin=galsim.PositionD(32,24),
+                                         world_origin=galsim.PositionD(15,90)),
+        'jac1' : galsim.JacobianWCS(0.2, 0.02, -0.04, 0.21),
+        'jac2' : galsim.JacobianWCS(0.2, 0.02, -0.04, 0.21),
+        'jac3' : galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                  origin=galsim.PositionD(32,24),
+                                  world_origin=galsim.PositionD(15,90)),
+        'jac4' : galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                  origin=galsim.PositionD(32,24),
+                                  world_origin=galsim.PositionD(15,90)),
+        'uv' : galsim.UVFunction(
+                ufunc = lambda x,y: 0.05 * np.exp(1. + x/100.),
+                vfunc = lambda x,y: 0.05 * np.exp(1. + y/100.),
+                xfunc = lambda u,v: 100. * (np.log(u*20.) - 1.),
+                yfunc = lambda u,v: 100. * (np.log(v*20.) - 1.),
+                origin = config['image_center']),
+        'radec' : galsim.RaDecFunction(
+                ra_func = lambda x,y: 0.05 * np.exp(1. + x/100.) * galsim.hours / galsim.radians,
+                dec_func = lambda x,y: 0.05 * np.exp(1. + y/100.) * galsim.degrees / galsim.radians,
+                origin = config['image_center']),
+        'fits1' : galsim.FitsWCS('fits_files/tpv.fits'),
+        'fits2' : galsim.FitsWCS('fits_files/tpv.fits'),
+        'tan1' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21,
+                                                             origin=config['image_center']),
+                               world_origin=galsim.CelestialCoord(19.3*galsim.hours,
+                                                                  -33.1*galsim.degrees),
+                               units=galsim.arcsec),
+        'tan2' : galsim.TanWCS(affine=galsim.AffineTransform(0.2, 0.02, -0.04, 0.21),
+                               world_origin=galsim.CelestialCoord(19.3*galsim.hours,
+                                                                  -33.1*galsim.degrees)),
+        'list' : galsim.PixelScale(0.12),
+        'zref' : galsim.PixelScale(0.43).withOrigin(galsim.PositionD(22,33)),
+    }
+
+    for key in sorted(reference.keys()):
+        wcs = galsim.config.BuildWCS(config['image'], key, config)
+        ref = reference[key]
+
+        print(key,'=',wcs)
+        #print('ref =',ref)
+
+        p = galsim.PositionD(23,12)
+        #print(wcs.toWorld(p), ref.toWorld(p))
+        if ref.isCelestial():
+            np.testing.assert_almost_equal(wcs.toWorld(p).ra.rad(), ref.toWorld(p).ra.rad())
+            np.testing.assert_almost_equal(wcs.toWorld(p).dec.rad(), ref.toWorld(p).dec.rad())
+        else:
+            np.testing.assert_almost_equal(wcs.toWorld(p).x, ref.toWorld(p).x)
+            np.testing.assert_almost_equal(wcs.toWorld(p).y, ref.toWorld(p).y)
+            #print(wcs.toImage(p), ref.toImage(p))
+            np.testing.assert_almost_equal(wcs.toImage(p).x, ref.toImage(p).x)
+            np.testing.assert_almost_equal(wcs.toImage(p).y, ref.toImage(p).y)
+
+    # If we build something again with the same index, it should get the current value
+    wcs = galsim.config.BuildWCS(config['image'], 'shear2', config)
+    ref = reference['shear2']
+    assert wcs == ref
+    assert wcs is config['image']['shear2']['current'][0]
+
+    # List should return different wcs when indexed differently.
+    config['image_num'] = 1
+    wcs = galsim.config.BuildWCS(config['image'], 'list', config)
+    assert wcs == galsim.PixelScale(0.23)
+    config['image_num'] = 2
+    wcs = galsim.config.BuildWCS(config['image'], 'list', config)
+    assert wcs == galsim.PixelScale(0.34)
+
+    # Finally, check the default if there is no wcs or pixel_scale item
+    wcs = galsim.config.BuildWCS(config, 'wcs', config)
+    assert wcs == galsim.PixelScale(1.0)
+
+    try:
+        np.testing.assert_raises(ValueError,
+                                 galsim.config.BuildWCS, config['image'], 'invalid', config)
+    except ImportError:
+        pass
+
+@timer
+def test_index_key():
+    """Test some aspects of setting non-default index_key values
+    """
+    nfiles = 3
+    nimages = 3
+    nx = 3
+    ny = 3
+    n_per_file = nimages * nx * ny
+    n_per_image = nx * ny
+
+    # First generate using the config layer.
+    config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
+
+    # Normal sequential
+    config1 = galsim.config.CopyConfig(config)
+    galsim.config.BuildFiles(nfiles, config1)
+    images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+    if __name__ == '__main__':
+        # For nose tests skip these 3 to save some time.
+        # images5 is really the hardest test, and images1 is the easiest, so those two will
+        # give good diagnostics for any errors.
+
+        # Multiprocessing files
+        config2 = galsim.config.CopyConfig(config)
+        config2['output']['nproc'] = nfiles
+        galsim.config.BuildFiles(nfiles, config2)
+        images2 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+        # Multiprocessing images
+        config3 = galsim.config.CopyConfig(config)
+        config3['image']['nproc'] = nfiles
+        galsim.config.BuildFiles(nfiles, config3)
+        images3 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
+
+        # New config for each file
+        config4 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
+        for n in range(nfiles):
+            galsim.config.SetupConfigFileNum(config4[n], n, n*nimages, n*n_per_file)
+        images4 = [ galsim.config.BuildImages(nimages, config4[n],
+                                             image_num=n*nimages, obj_num=n*n_per_file)
+                    for n in range(nfiles) ]
+
+    # New config for each image
+    config5 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
+    for n in range(nfiles):
+        galsim.config.SetupConfigFileNum(config5[n], n, n*nimages, n*n_per_file)
+
+    images5 = [ [ galsim.config.BuildImage(galsim.config.CopyConfig(config5[n]),
+                                           image_num=n*nimages+i,
+                                           obj_num=n*n_per_file + i*n_per_image)
+                  for i in range(nimages) ]
+                for n in range(nfiles) ]
+
+    # Now generate by hand
+    for n in range(nfiles):
+        seed = 12345 + n*n_per_file
+        file_rng = galsim.UniformDeviate(seed)
+        fwhm = file_rng() * 0.2 + 0.9
+        e = 0.2 + 0.05 * n
+        beta = file_rng() * 2 * np.pi * galsim.radians
+        kolm = galsim.Kolmogorov(fwhm=fwhm)
+        psf_shear = galsim.Shear(e=e, beta=beta)
+        kolm = kolm.shear(psf_shear)
+        airy = galsim.Airy(lam=700, diam=4)
+        psf = galsim.Convolve(kolm, airy)
+        print('fwhm, shear = ',fwhm,psf_shear._g)
+        ellip_e1 = file_rng() * 0.4 - 0.2
+
+        for i in range(nimages):
+            if i == 0:
+                image_rng = file_rng
+            else:
+                seed = 12345 + n*n_per_file + i*n_per_image
+                image_rng = galsim.UniformDeviate(seed)
+            im = galsim.ImageF(32*3, 32*3, scale=0.3)
+            ellip_e2 = image_rng() * 0.4 - 0.2
+            ellip = galsim.Shear(e1=ellip_e1, e2=ellip_e2)
+            shear_g2 = image_rng() * 0.04 - 0.02
+
+            for k in range(nx*ny):
+                seed = 12345 + n*n_per_file + i*n_per_image + k + 1
+                obj_rng = galsim.UniformDeviate(seed)
+                kx = k % 3
+                ky = k // 3
+                b = galsim.BoundsI(32*kx+1, 32*kx+32, 32*ky+1, 32*ky+32)
+                stamp = im[b]
+                flux = 100 + k*100
+                hlr = 0.5 + i*0.5
+                gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
+                while True:
+                    shear_g1 = obj_rng() * 0.04 - 0.02
+                    bd = galsim.BinomialDeviate(obj_rng, N=1, p=0.2)
+                    if bd() == 0: break;
+                shear = galsim.Shear(g1=shear_g1, g2=shear_g2)
+                gal = gal.shear(ellip).shear(shear)
+                print(n,i,k,flux,hlr,ellip._g,shear._g)
+                final = galsim.Convolve(psf, gal)
+                final.drawImage(stamp)
+
+            if __name__ == '__main__':
+                im.write('output/test_index_key%02d_%02d.fits'%(n,i))
+                images5[n][i].write('output/test_index_key%02d_%02d_5.fits'%(n,i))
+            np.testing.assert_array_equal(im.array, images1[n][i].array,
+                                          "index_key parsing failed for sequential BuildFiles run")
+            if __name__ == '__main__':
+                np.testing.assert_array_equal(im.array, images2[n][i].array,
+                                              "index_key parsing failed for output.nproc > 1")
+                np.testing.assert_array_equal(im.array, images3[n][i].array,
+                                              "index_key parsing failed for image.nproc > 1")
+                np.testing.assert_array_equal(im.array, images4[n][i].array,
+                                              "index_key parsing failed for BuildImages")
+            np.testing.assert_array_equal(im.array, images5[n][i].array,
+                                          "index_key parsing failed for BuildImage")
+
+    # Check that current values get removed properly for various options to RemoveCurrent
+    assert 'current' in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert config1['psf']['items'][1]['current'][1]  # Index 1 in current is "safe"
+    assert 'current' in config1['gal']
+    assert 'current' in config1['gal']['ellip']
+    assert 'current' in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1, keep_safe=True, index_key='obj_num')
+    assert 'current' in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1, keep_safe=True)
+    assert 'current' not in config1['psf']
+    assert 'current' in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
+
+    galsim.config.RemoveCurrent(config1)
+    assert 'current' not in config1['psf']
+    assert 'current' not in config1['psf']['items'][1]
+    assert 'current' not in config1['gal']
+    assert 'current' not in config1['gal']['ellip']
+    assert 'current' not in config1['gal']['shear']
+
+
+@timer
+def test_multirng():
+    """Test using multiple rngs.
+
+    This models a run where the galaxies are the same for 3 images, then a new set for the next
+    3 images.  This includes both the galaxy positions and the shear from a power spectrum.
+    The psf changes each image (also from a power spectrum) and the telescope pointing moves
+    around a bit within the field being observed.
+
+    Actually, this tests a few features.
+    - Multiple rngs (random_seed being a list and using rng_num)
+    - Multiple input fields (although tests in test_config_value.py also do this)
+    - Using a non-default build_index for power_spectrum
+    """
+    if __name__ == '__main__':
+        nimages = 6
+        ngals = 20
+        logger = logging.getLogger('test_multirng')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        #logger.setLevel(logging.DEBUG)
+    else:
+        nimages = 3
+        ngals = 3
+        logger = None
+
+    # First generate using the config layer.
+    config = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
+    config['image']['nobjects'] = ngals
+    config1 = galsim.config.CopyConfig(config)  # Make sure the config dict is clean for each pass.
+    config2 = galsim.config.CopyConfig(config)
+    config3 = galsim.config.CopyConfig(config)
+
+    images1 = galsim.config.BuildImages(nimages, config1, logger=logger)
+    config2['image']['nproc'] = 6
+    images2 = galsim.config.BuildImages(nimages, config2)
+    images3 = [ galsim.config.BuildImage(galsim.config.CopyConfig(config),
+                                         image_num=n, obj_num=n*ngals)
+                for n in range(nimages) ]
+
+    # Now generate by hand
+    psf_ps = galsim.PowerSpectrum('(k**2 + (1./180)**2)**(-11./6.)',
+                                  '(k**2 + (1./180)**2)**(-11./6.)',
+                                  units=galsim.arcsec)
+    gal_ps = galsim.PowerSpectrum('3.5e-8 * (k/10)**-1.4', units=galsim.radians)
+
+    for n in range(nimages):
+        seed = 12345 + n*ngals
+        rng = galsim.UniformDeviate(seed)
+        centeru = rng() * 10. - 5.
+        centerv = rng() * 10. - 5.
+        wcs = galsim.OffsetWCS(scale=0.1, world_origin=galsim.PositionD(centeru,centerv),
+                               origin=galsim.PositionD(128.5,128.5))
+        im = galsim.ImageF(256, 256, wcs=wcs)
+        world_center = im.wcs.toWorld(im.trueCenter())
+        psf_ps.buildGrid(grid_spacing=1.0, ngrid=30, rng=rng, center=world_center, variance=0.1)
+        ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
+        if n % 3 == 0:
+            gal_ps.buildGrid(grid_spacing=1.0, ngrid=50, rng=ps_rng, center=galsim.PositionD(0,0))
+        for i in range(ngals):
+            seedb = 123456789 + (n//3)*ngals + i + 1
+            rngb = galsim.UniformDeviate(seedb)
+            u = rngb() * 50. - 25.
+            v = rngb() * 50. - 25.
+            world_pos = galsim.PositionD(u,v)
+            with warnings.catch_warnings(record=True) as w:
+                psf_g1, psf_g2 = psf_ps.getShear(world_pos)
+            if len(w) > 0:
+                assert not psf_ps.bounds.includes(world_pos)
+            psf = galsim.Moffat(fwhm=0.9, beta=2).shear(g1=psf_g1, g2=psf_g2)
+            gal_g1, gal_g2 = gal_ps.getShear(world_pos)
+            gal = galsim.Exponential(half_light_radius=1.3, flux=100).shear(g1=gal_g1, g2=gal_g2)
+            print(n,i,u,v,psf_g1,psf_g2,gal_g1,gal_g2)
+            image_pos = wcs.toImage(world_pos)
+            ix = int(math.floor(image_pos.x+1))
+            iy = int(math.floor(image_pos.y+1))
+            offset = galsim.PositionD(image_pos.x-ix+0.5, image_pos.y-iy+0.5)
+            stamp = galsim.Convolve(psf,gal).drawImage(scale=0.1, offset=offset)
+            stamp.setCenter(ix,iy)
+            b = stamp.bounds & im.bounds
+            if b.isDefined():
+                im[b] += stamp[b]
+        im.addNoise(galsim.GaussianNoise(sigma=0.001, rng=rng))
+        if __name__ == '__main__':
+            im.write('output/test_multirng%02d.fits'%n)
+        np.testing.assert_array_equal(im.array, images1[n].array)
+        np.testing.assert_array_equal(im.array, images2[n].array)
+        np.testing.assert_array_equal(im.array, images3[n].array)
+
+@timer
+def test_template():
+    """Test various uses of the template keyword
+    """
+    # Use the multirng.yaml config file from the above test as a convenient template source
+    config = {
+        # This copies everything, but we'll override a few things
+        "template" : "config_input/multirng.yaml",
+
+        # Specific fields can be overridden
+        "output" : { "file_name" : "test_template.fits" },
+
+        # Can override non-top-level fields
+        "gal.shear" : { "type" : "E1E2", "e1" : 0.2, "e2" : 0 },
+
+        # Including within a list
+        "input.power_spectrum.1.grid_spacing" : 2,
+
+        # Can add new fields to an existing dict
+        "gal.magnify" : { "type" : "PowerSpectrumMagnification", "num" : 1 },
+
+        # Can use specific fields from the template file rather than the whole thing using :
+        "gal.ellip" : { "template" : "config_input/multirng.yaml:psf.ellip" },
+
+        # Using a zero-length string deletes an item
+        "gal.half_light_radius" : "",
+        "gal.scale_radius" : 1.6,
+
+        # Check that template items work inside a list.
+        "psf" : {
+            "type" : "List",
+            "items" : [
+                { "template" : "config_input/multirng.yaml:psf" },
+                { "type" : "Gaussian", "sigma" : 0.3 },
+                # Omitting the file name before : means use the current config file instead.
+                { "template" : ":psf.items.1", "sigma" : 0.4 },
+            ]
+        }
+    }
+    config2 = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
+
+    galsim.config.ProcessAllTemplates(config)
+
+    assert config['image'] == config2['image']
+    assert config['output'] != config2['output']
+    assert config['output'] == { "file_name" : "test_template.fits" }
+
+    assert config['gal']['type'] == 'Exponential'
+    assert config['gal']['flux'] == 100
+    assert config['gal']['shear'] == { "type" : "E1E2", "e1" : 0.2, "e2" : 0 }
+    assert config['gal']['magnify'] == { "type" : "PowerSpectrumMagnification", "num" : 1 }
+    assert config['gal']['ellip'] == { "type" : "PowerSpectrumShear", "num" : 0 }
+    assert 'half_light_radius' not in config['gal']
+    assert config['gal']['scale_radius'] == 1.6
+
+    assert config['psf']['type'] == 'List'
+    assert config['psf']['items'][0] == { "type": "Moffat", "beta": 2, "fwhm": 0.9,
+                                          "ellip": { "type" : "PowerSpectrumShear", "num" : 0 } }
+    assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
+    assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
+
+@timer
+def test_variable_cat_size():
+    """Test that some automatic nitems calculations work with variable input catalog sizes
+    """
+    config = {
+        'gal': {
+            'type': 'Gaussian',
+            'half_light_radius': { 'type': 'Catalog', 'col': 0 },
+            'shear': {
+                'type': 'G1G2',
+                'g1': { 'type': 'Catalog', 'col': 1 },
+                'g2': { 'type': 'Catalog', 'col': 2 }
+            },
+            'flux': 1.7
+        },
+        'stamp': {
+            'size': 33   # Use odd to avoid all the even-sized image centering complications
+        },
+        'image': {
+            'type': 'Scattered',
+            'size': 256,
+            'image_pos': {
+                'type': 'XY',
+                'x': { 'type': 'Catalog', 'col': 3 },
+                'y': { 'type': 'Catalog', 'col': 4 }
+            }
+        },
+        'input': {
+            'catalog': {
+                'dir': 'config_input',
+                'file_name': [ 'cat_3.txt', 'cat_5.txt' ]
+            }
+        }
+    }
+
+    logger = logging.getLogger('test_single')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    #logger.setLevel(logging.DEBUG)
+    cfg_images = []
+    galsim.config.SetupConfigFileNum(config, 0, 0, 0)
+    galsim.config.ProcessInput(config, logger=logger)
+    cfg_images.append(galsim.config.BuildImage(config, 0, 0, logger=logger))
+    galsim.config.SetupConfigFileNum(config, 1, 1, 3)
+    galsim.config.ProcessInput(config, logger=logger)
+    cfg_images.append(galsim.config.BuildImage(config, 1, 3, logger=logger))
+
+    # Build by hand to compare
+    ref_images = []
+    for cat_name in ['cat_3.txt', 'cat_5.txt']:
+        cat = np.genfromtxt(os.path.join('config_input',cat_name), names=True, skip_header=1)
+        im = galsim.ImageF(256,256,scale=1)
+        for row in cat:
+            gal = galsim.Gaussian(half_light_radius=row['hlr'], flux=1.7)
+            gal = gal.shear(g1=row['e1'], g2=row['e2'])
+            stamp = galsim.ImageF(33,33,scale=1)
+            gal.drawImage(stamp)
+            stamp.setCenter(row['x'],row['y'])
+            im[stamp.bounds] += stamp
+        ref_images.append(im)
+
+    np.testing.assert_array_equal(cfg_images[0], ref_images[0])
+    np.testing.assert_array_equal(cfg_images[1], ref_images[1])
+
+
 
 if __name__ == "__main__":
     test_single()
@@ -1104,3 +1684,8 @@ if __name__ == "__main__":
     test_scattered_whiten()
     test_tiled()
     test_njobs()
+    test_wcs()
+    test_index_key()
+    test_multirng()
+    test_template()
+    test_variable_cat_size()

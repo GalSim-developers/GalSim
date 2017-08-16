@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -165,6 +165,8 @@ def test_shear_initialization():
         all_shear_vals(s, ind)
         # initialize with a complex number g1 + 1j * g2
         s = galsim.Shear(g1[ind] + 1j * g2[ind])
+        all_shear_vals(s, ind)
+        s = galsim._Shear(g1[ind] + 1j * g2[ind])
         all_shear_vals(s, ind)
         # which should also be the value of s.shear
         s2 = galsim.Shear(s.shear)

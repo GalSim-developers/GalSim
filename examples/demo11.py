@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -97,6 +97,8 @@ def main(argv):
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
     exp_time = 300                    # exposing for 300 seconds.
+    center_ra = 19.3*galsim.hours     # The RA, Dec of the center of the image on the sky
+    center_dec = -33.1*galsim.degrees
 
     # The catalog returns objects that are appropriate for HST in 1 second exposures.  So for our
     # telescope we scale up by the relative area and exposure time.  Note that what is important is
@@ -218,7 +220,7 @@ def main(argv):
     # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
     # that plane onto the sky using a given point as the tangent point.  The tangent
     # point should be given as a CelestialCoord.
-    sky_center = galsim.CelestialCoord(ra=19.3*galsim.hours, dec=-33.1*galsim.degrees)
+    sky_center = galsim.CelestialCoord(ra=center_ra, dec=center_dec)
 
     # The third parameter, units, defaults to arcsec, but we make it explicit here.
     # It sets the angular units of the (u,v) intermediate coordinate system.
@@ -231,18 +233,23 @@ def main(argv):
         # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k+1)
 
-        # Choose a random position in the image
-        x = ud()*(image_size-1)
-        y = ud()*(image_size-1)
-        image_pos = galsim.PositionD(x,y)
+        # Choose a random RA, Dec around the sky_center.
+        # Note that for this to come out close to a square shape, we need to account for the
+        # cos(dec) part of the metric: ds^2 = dr^2 + r^2 d(dec)^2 + r^2 cos^2(dec) d(ra)^2
+        # So need to calculate dec first.
+        dec = center_dec + (ud()-0.5) * image_size_arcsec * galsim.arcsec
+        ra = center_ra + (ud()-0.5) * image_size_arcsec / math.cos(dec.rad()) * galsim.arcsec
+        world_pos = galsim.CelestialCoord(ra,dec)
 
-        # Turn this into a position in world coordinates
-        # We leave this in the (u,v) plane, since the PowerSpectrum class is really defined
-        # on the tangent plane, not in (ra,dec).
-        world_pos = affine.toWorld(image_pos)
+        # We will need the image position as well, so use the wcs to get that
+        image_pos = wcs.toImage(world_pos)
+
+        # We also need this in the tangent plane, which we call "world coordinates" here,
+        # since the PowerSpectrum class is really defined on that plane, not in (ra,dec).
+        uv_pos = affine.toWorld(image_pos)
 
         # Get the reduced shears and magnification at this point
-        g1, g2, mu = ps.getLensing(pos = world_pos)
+        g1, g2, mu = ps.getLensing(pos = uv_pos)
 
         # Now we will have the COSMOSCatalog make a galaxy profile for us.  It can make either
         # a RealGalaxy using the original HST image and PSF, or a parametric model based on
@@ -360,7 +367,7 @@ def main(argv):
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to center = %s, t=%f s',
-                    k, str(world_pos), tot_time)
+                    k, str(uv_pos), tot_time)
 
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
@@ -393,8 +400,8 @@ def main(argv):
     # that ds9 reports.  ds9 always uses (1,1) for the lower left pixel, so the pixel coordinates
     # of these pixels are different by 1, but you can check that the RA and Dec values are
     # the same as what GalSim calculates.
-    ra_str = sky_center.ra.hms()
-    dec_str = sky_center.dec.dms()
+    ra_str = center_ra.hms()
+    dec_str = center_dec.dms()
     logger.info('Center of image    is at RA %sh %sm %ss, DEC %sd %sm %ss',
                 ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
     for (x,y) in [ (0,0), (0,image_size-1), (image_size-1,0), (image_size-1,image_size-1) ]:

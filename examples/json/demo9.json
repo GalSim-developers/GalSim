@@ -95,7 +95,7 @@
 
     "world_pos" : {
         "type" : "RandomCircle",
-        "radius" : 12,
+        "radius" : 21,
         "inner_radius" : 3
     },
 

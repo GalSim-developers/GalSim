@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,6 +29,9 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 # set up any necessary info for tests
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
@@ -83,6 +86,7 @@ def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    assert len(rgc) == rgc.getNObjects() == rgc.nobjects == len(rgc.cat)
     rg = galsim.RealGalaxy(rgc, index=ind_fake)
     # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
     # or when trying to specify the galaxy too many ways
@@ -105,7 +109,7 @@ def test_real_galaxy_ideal():
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
 
-    do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
+    do_pickle(rgc, lambda x: [ x.getGalImage(ind_fake), x.getPSFImage(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
     do_pickle(rgc)
@@ -168,6 +172,34 @@ def test_real_galaxy_ideal():
 
 
 @timer
+def test_real_galaxy_makeFromImage():
+    """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
+    # read in faked Gaussian RealGalaxy from file
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_fake)
+
+    gal_image = rg.gal_image
+    psf = rg.original_psf
+    xi = rg.noise
+    rg_2 = galsim.RealGalaxy.makeFromImage(gal_image, psf, xi)
+
+    check_basic(rg_2, "RealGalaxy", approx_maxsb=True)
+    do_pickle(rg_2, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+                                x.original_psf.flux, x.original_gal.flux, x.flux ])
+    do_pickle(rg_2, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg_2)
+
+    # See if we get reasonably consistent results for rg and rg_2
+    psf = galsim.Kolmogorov(fwhm=0.6)
+    obj1 = galsim.Convolve(psf, rg)
+    obj2 = galsim.Convolve(psf, rg_2)
+    im1 = obj1.drawImage(scale=0.2, nx=12, ny=12)
+    im2 = obj2.drawImage(image=im1.copy())
+    atol = obj1.getFlux()*3e-5
+    np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=atol)
+
+
+@timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
     # read in real RealGalaxy from file
@@ -206,7 +238,7 @@ def test_real_galaxy_saved():
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
 
     # Check picklability
-    do_pickle(rgc, lambda x: [ x.getGal(ind_real), x.getPSF(ind_real),
+    do_pickle(rgc, lambda x: [ x.getGalImage(ind_real), x.getPSFImage(ind_real),
                                x.getNoiseProperties(ind_real) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
     do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
@@ -216,20 +248,219 @@ def test_real_galaxy_saved():
 
 
 @timer
+def test_pickle_crg():
+    """Just do some pickling tests of ChromaticRealGalaxy."""
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+
+    do_pickle(crg)
+    do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
+
+    # Check that missing band raises ValueError
+    orig_band = f606w_cat.band
+    f606w_cat.band = 'eggs'
+    np.testing.assert_raises(ValueError, f606w_cat.getBandpass)
+    f606w_cat.band = orig_band
+    f606w_cat.getBandpass()
+
+
+@timer
+def test_crg_roundtrip():
+    """Test that drawing a ChromaticRealGalaxy using the HST collecting area and filter gives back
+    the original image.
+    """
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    indices = [0] if __name__ != "__main__" else list(range(len(f606w_cat)))
+
+    for index in indices:
+        orig_f606w = f606w_cat.getGalImage(index)
+        orig_f814w = f814w_cat.getGalImage(index)
+
+        crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=index)
+
+        # Note that getPSF() return value already includes convolution by the pixel
+        f606w_obj = galsim.Convolve(crg, f606w_cat.getPSF(index))
+        f814w_obj = galsim.Convolve(crg, f814w_cat.getPSF(index))
+        f606w = f606w_cat.getBandpass()
+        f814w = f814w_cat.getBandpass()
+
+        im_f606w = f606w_obj.drawImage(f606w, image=orig_f606w.copy(), method='no_pixel')
+        im_f814w = f814w_obj.drawImage(f814w, image=orig_f814w.copy(), method='no_pixel')
+
+        printval(im_f606w, orig_f606w)
+        printval(im_f814w, orig_f814w)
+
+        orig_f606w_mom = galsim.hsm.FindAdaptiveMom(orig_f606w)
+        orig_f814w_mom = galsim.hsm.FindAdaptiveMom(orig_f814w)
+
+        im_f606w_mom = galsim.hsm.FindAdaptiveMom(im_f606w)
+        im_f814w_mom = galsim.hsm.FindAdaptiveMom(im_f814w)
+
+        # Images are only pixel-by-pixel consistent to 5% or so.  However, if you actually plot the
+        # residuals (which you can do by flipping False->True in printval in galsim_test_helpers),
+        # they appear as ringing over the whole image.  Probably it's unrealistic to expect this
+        # test to work perfectly since we're effectively deconvolving and then reconvolving by the
+        # same PSF, not a fatter PSF.
+        np.testing.assert_allclose(orig_f606w.array, im_f606w.array,
+                                   rtol=0., atol=5e-2*orig_f606w.array.max())
+        np.testing.assert_allclose(orig_f814w.array, im_f814w.array,
+                                   rtol=0., atol=5e-2*orig_f814w.array.max())
+
+        # Happily, the pixel-by-pixel residuals don't appear to affect the moments much:
+        np.testing.assert_allclose(orig_f606w_mom.moments_amp,
+                                   im_f606w_mom.moments_amp,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f606w_mom.moments_centroid.x,
+                                   im_f606w_mom.moments_centroid.x,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f606w_mom.moments_centroid.y,
+                                   im_f606w_mom.moments_centroid.y,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f606w_mom.moments_sigma,
+                                   im_f606w_mom.moments_sigma,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f606w_mom.observed_shape.g1,
+                                   im_f606w_mom.observed_shape.g1,
+                                   rtol=0, atol=2e-4)
+        np.testing.assert_allclose(orig_f606w_mom.observed_shape.g2,
+                                   im_f606w_mom.observed_shape.g2,
+                                   rtol=0, atol=2e-4)
+
+        np.testing.assert_allclose(orig_f814w_mom.moments_amp,
+                                   im_f814w_mom.moments_amp,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f814w_mom.moments_centroid.x,
+                                   im_f814w_mom.moments_centroid.x,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f814w_mom.moments_centroid.y,
+                                   im_f814w_mom.moments_centroid.y,
+                                   rtol=0., atol=1e-2)
+        np.testing.assert_allclose(orig_f814w_mom.moments_sigma,
+                                   im_f814w_mom.moments_sigma,
+                                   rtol=1e-3, atol=0)
+        np.testing.assert_allclose(orig_f814w_mom.observed_shape.g1,
+                                   im_f814w_mom.observed_shape.g1,
+                                   rtol=0, atol=1e-4)
+        np.testing.assert_allclose(orig_f814w_mom.observed_shape.g2,
+                                   im_f814w_mom.observed_shape.g2,
+                                   rtol=0, atol=1e-4)
+
+
+@timer
+def test_crg_roundtrip_larger_target_psf():
+    """Test that drawing a chromatic galaxy with a color gradient directly using an LSST-size PSF
+    is equivalent to first drawing the galaxy to HST-like images, and then using ChromaticRealGalaxy
+    to produce an LSST-like image.
+    """
+    # load some spectra
+    bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                            flux_type='flambda')
+                 .thin(rel_err=1e-3)
+                 .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
+
+    disk_SED = (galsim.SED(os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='ang',
+                           flux_type='flambda')
+                .thin(rel_err=1e-3)
+                .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
+
+    bulge = galsim.Sersic(n=4, half_light_radius=0.6)*bulge_SED
+    disk = galsim.Sersic(n=1, half_light_radius=0.4)*disk_SED
+    # Decenter components a bit to make the test more complicated
+    disk = disk.shift(0.05, 0.1)
+    gal = (bulge+disk).shear(g1=0.3, g2=0.1)
+
+    # Much faster to just use some achromatic HST-like PSFs.  We'll make them slightly different in
+    # each band though.
+    f606w_PSF = galsim.ChromaticObject(galsim.Gaussian(half_light_radius=0.05))
+    f814w_PSF = galsim.ChromaticObject(galsim.Gaussian(half_light_radius=0.07))
+    LSSTPSF = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.7),
+                                         600.0,
+                                         zenith_angle=0.0*galsim.degrees)
+
+    f606w = galsim.Bandpass(os.path.join(bppath, "ACS_wfc_F606W.dat"), 'nm').truncate()
+    f814w = galsim.Bandpass(os.path.join(bppath, "ACS_wfc_F814W.dat"), 'nm')
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+
+    truth_image = galsim.Convolve(LSSTPSF, gal).drawImage(LSST_i, nx=24, ny=24, scale=0.2)
+    f606w_image = galsim.Convolve(f606w_PSF, gal).drawImage(f606w, nx=192, ny=192, scale=0.03)
+    f814w_image = galsim.Convolve(f814w_PSF, gal).drawImage(f814w, nx=192, ny=192, scale=0.03)
+
+    crg = galsim.ChromaticRealGalaxy.makeFromImages(
+            images=[f606w_image, f814w_image],
+            bands=[f606w, f814w],
+            PSFs=[f606w_PSF, f814w_PSF],
+            xis=[galsim.UncorrelatedNoise(1e-16)]*2,
+            SEDs=[bulge_SED, disk_SED])
+
+    test_image = galsim.Convolve(crg, LSSTPSF).drawImage(LSST_i, nx=24, ny=24, scale=0.2)
+
+    truth_mom = galsim.hsm.FindAdaptiveMom(truth_image)
+    test_mom = galsim.hsm.FindAdaptiveMom(test_image)
+
+    np.testing.assert_allclose(test_mom.moments_amp,
+                               truth_mom.moments_amp,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(test_mom.moments_centroid.x,
+                               truth_mom.moments_centroid.x,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(test_mom.moments_centroid.y,
+                               truth_mom.moments_centroid.y,
+                               rtol=0., atol=1e-2)
+    np.testing.assert_allclose(test_mom.moments_sigma,
+                               truth_mom.moments_sigma,
+                               rtol=1e-3, atol=0)
+    np.testing.assert_allclose(test_mom.observed_shape.g1,
+                               truth_mom.observed_shape.g1,
+                               rtol=0, atol=1e-4)
+    np.testing.assert_allclose(test_mom.observed_shape.g2,
+                               truth_mom.observed_shape.g2,
+                               rtol=0, atol=1e-4)
+
+
+@timer
 def test_ne():
     """ Check that inequality works as expected."""
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=1)
+    covspec1 = crg1.covspec
+    covspec2 = crg2.covspec
+
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
 
-    gals = [galsim.RealGalaxy(rgc, index=0),
+    objs = [galsim.RealGalaxy(rgc, index=0),
             galsim.RealGalaxy(rgc, index=1),
             galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
             galsim.RealGalaxy(rgc, index=0, flux=1.1),
+            galsim.RealGalaxy(rgc, index=0, flux_rescale=1.2),
+            galsim.RealGalaxy(rgc, index=0, area_norm=2),
             galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
-            galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
-    all_obj_diff(gals)
+            galsim.RealGalaxy(rgc, index=0, gsparams=gsp),
+            crg1,
+            crg2,
+            galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, k_interpolant='Linear'),
+            covspec1,
+            covspec2]
+    all_obj_diff(objs)
+    for obj in objs[:-5]:
+        do_pickle(obj)
+
+    # CovarianceSpectrum and ChromaticRealGalaxy are both reprable, but their reprs are rather
+    # large, so the eval(repr) checks take a long time.
+    # Therefore, run them from command line, but not from pytest.
+    if __name__ == '__main__':
+        do_pickle(crg1)
+        do_pickle(covspec1)
+    else:
+        do_pickle(crg1, irreprable=True)
+        do_pickle(covspec1, irreprable=True)
 
 @timer
 def test_noise():
@@ -257,8 +488,293 @@ def test_noise():
     cf_2 = cf_2.withVariance(var_2)
     assert cf_1==cf_2,'Inconsistent noise properties from getNoise and getNoiseProperties'
 
+
+@timer
+def test_area_norm():
+    """Check that area_norm works as expected"""
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    psf = galsim.Gaussian(fwhm=0.6)
+
+    rng = galsim.BaseDeviate(5772)
+    crg1 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate())
+    crg2 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate(),
+                                      area_norm=galsim.real.HST_area)
+    assert crg1 != crg2
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+    obj1 = galsim.Convolve(crg1, psf)
+    obj2 = galsim.Convolve(crg2, psf)
+    im1 = obj1.drawImage(LSST_i, exptime=1, area=1)
+    im2 = obj2.drawImage(LSST_i, exptime=1, area=galsim.real.HST_area)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array)
+    np.testing.assert_almost_equal(
+            obj1.noise.getVariance(),
+            obj2.noise.getVariance() * galsim.real.HST_area**2)
+
+    # area_norm is equivalant to an overall scaling
+    crg3 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], random=True, rng=rng.duplicate())
+    crg3 /= galsim.real.HST_area
+    obj3 = galsim.Convolve(crg3, psf)
+    im3 = obj3.drawImage(LSST_i, exptime=1, area=galsim.real.HST_area)
+    np.testing.assert_array_almost_equal(im3.array, im2.array)
+    np.testing.assert_almost_equal(obj3.noise.getVariance(), obj2.noise.getVariance())
+
+    rg1 = galsim.RealGalaxy(f606w_cat, index=1)
+    rg2 = galsim.RealGalaxy(f606w_cat, index=1, area_norm=galsim.real.HST_area)
+    assert rg1 != rg2
+    obj1 = galsim.Convolve(rg1, psf)
+    obj2 = galsim.Convolve(rg2, psf)
+    im1 = obj1.drawImage()
+    im2 = obj2.drawImage(exptime=1, area=galsim.real.HST_area)
+    printval(im1, im2)
+    np.testing.assert_array_almost_equal(im1.array, im2.array)
+    np.testing.assert_almost_equal(
+            obj1.noise.getVariance(),
+            obj2.noise.getVariance() * galsim.real.HST_area**2)
+
+    # area_norm is equivalant to an overall scaling
+    rg3 = galsim.RealGalaxy(f606w_cat, index=1)
+    rg3 /= galsim.real.HST_area
+    obj3 = galsim.Convolve(rg3, psf)
+    im3 = obj3.drawImage(exptime=1, area=galsim.real.HST_area)
+    np.testing.assert_array_almost_equal(im3.array, im2.array)
+    np.testing.assert_almost_equal(obj3.noise.getVariance(), obj2.noise.getVariance())
+
+
+
+@timer
+def test_crg_noise_draw_transform_commutativity():
+    """Test commutativity of ChromaticRealGalaxy correlated noise under operations of drawImage and
+    applying transformations.
+    """
+    LSST_i = galsim.Bandpass(os.path.join(bppath, "LSST_r.dat"), 'nm')
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    psf = galsim.Gaussian(fwhm=0.6)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], id=14886,
+                                     maxk=psf.maxK())
+
+    factor = 1.5
+    g1 = g2 = 0.1
+    mu = 1.2
+    theta = 45*galsim.degrees
+    jac = [1.1, 0.1, -0.1, 1.2]
+
+    orig = galsim.Convolve(crg, psf)
+    orig.drawImage(LSST_i)
+
+    draw_transform_img = galsim.ImageD(16, 16, scale=0.2)
+    transform_draw_img = draw_transform_img.copy()
+
+    multiplied = orig * factor
+    multiplied.drawImage(LSST_i) # needed to populate noise property
+    (orig.noise*factor**2).drawImage(image=draw_transform_img)
+    multiplied.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    divided = orig / factor
+    divided.drawImage(LSST_i)
+    (orig.noise/factor**2).drawImage(image=draw_transform_img)
+    divided.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    expanded = orig.expand(factor)
+    expanded.drawImage(LSST_i)
+    orig.noise.expand(factor).drawImage(image=draw_transform_img)
+    expanded.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    dilated = orig.dilate(factor)
+    dilated.drawImage(LSST_i)
+    orig.noise.dilate(factor).drawImage(image=draw_transform_img)
+    dilated.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    magnified = orig.magnify(mu)
+    magnified.drawImage(LSST_i)
+    orig.noise.magnify(mu).drawImage(image=draw_transform_img)
+    magnified.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    lensed = orig.lens(g1, g2, mu)
+    lensed.drawImage(LSST_i)
+    orig.noise.lens(g1, g2, mu).drawImage(image=draw_transform_img)
+    lensed.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    rotated = orig.rotate(theta)
+    rotated.drawImage(LSST_i)
+    orig.noise.rotate(theta).drawImage(image=draw_transform_img)
+    rotated.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    sheared = orig.shear(g1=g1, g2=g2)
+    sheared.drawImage(LSST_i)
+    orig.noise.shear(g1=g1, g2=g2).drawImage(image=draw_transform_img)
+    sheared.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+    transformed = orig.transform(*jac)
+    transformed.drawImage(LSST_i)
+    orig.noise.transform(*jac).drawImage(image=draw_transform_img)
+    transformed.noise.drawImage(image=transform_draw_img)
+    np.testing.assert_array_almost_equal(
+            draw_transform_img.array,
+            transform_draw_img.array)
+
+
+def check_crg_noise(n_sed, n_im, n_trial, tol):
+    print("Checking CRG noise for")
+    print("n_sed = {}".format(n_sed))
+    print("n_im = {}".format(n_im))
+    print("n_trial = {}".format(n_trial))
+    print("Constructing chromatic PSFs")
+    in_PSF = galsim.ChromaticAiry(lam=700., diam=2.4)
+    out_PSF = galsim.ChromaticAiry(lam=700., diam=0.6)
+
+    print("Constructing filters and SEDs")
+    waves = np.arange(550.0, 900.1, 10.0)
+    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'),
+                              wave_type='nm')
+    split_points = np.linspace(550.0, 900.0, n_im+1, endpoint=True)
+    bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
+             for blim, rlim in zip(split_points[:-1], split_points[1:])]
+
+    maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxK(),
+                out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
+
+    SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
+                       flux_type='fphotons', wave_type='nm').withFlux(1.0, visband)
+            for i in range(n_sed)]
+
+    print("Constructing input noise correlation functions")
+    rng = galsim.BaseDeviate(57721)
+    in_xis = [galsim.getCOSMOSNoise(cosmos_scale=0.03, rng=rng)
+              .dilate(1 + i * 0.05)
+              .rotate(5 * i * galsim.degrees)
+              for i in range(n_im)]
+
+    print("Creating noise images")
+    img_sets = []
+    for i in range(n_trial):
+        imgs = []
+        for xi in in_xis:
+            img = galsim.Image(128, 128, scale=0.03)
+            img.addNoise(xi)
+            imgs.append(img)
+        img_sets.append(imgs)
+
+    print("Constructing `ChromaticRealGalaxy`s")
+    crgs = []
+    for imgs in img_sets:
+        crgs.append(galsim.ChromaticRealGalaxy.makeFromImages(
+                imgs, bands, in_PSF, in_xis, SEDs=SEDs, maxk=maxk))
+
+    print("Convolving by output PSF")
+    objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
+
+    print("Drawing through output filter")
+    out_imgs = [obj.drawImage(visband, nx=30, ny=30, scale=0.1)
+                for obj in objs]
+
+    noise = objs[0].noise
+
+    print("Measuring images' correlation functions")
+    xi_obs = galsim.correlatednoise.CorrelatedNoise(out_imgs[0])
+    for img in out_imgs[1:]:
+        xi_obs += galsim.correlatednoise.CorrelatedNoise(img)
+    xi_obs /= n_trial
+    xi_obs_img = galsim.Image(30, 30, scale=0.1)
+    xi_obs.drawImage(xi_obs_img)
+    noise_img = galsim.Image(30, 30, scale=0.1)
+    noise.drawImage(noise_img)
+
+    print("Predicted/Observed variance:", noise.getVariance()/xi_obs.getVariance())
+    print("Predicted/Observed xlag-1 covariance:", noise_img.array[14, 15]/xi_obs_img.array[14, 15])
+    print("Predicted/Observed ylag-1 covariance:", noise_img.array[15, 14]/xi_obs_img.array[15, 14])
+    # Just test that the covariances for nearest neighbor pixels are accurate.
+    np.testing.assert_allclose(
+            noise_img.array[14:17, 14:17], xi_obs_img.array[14:17, 14:17],
+            rtol=0, atol=noise.getVariance()*tol)
+
+
+@timer
+def test_crg_noise():
+    """Verify that we can propagate the noise covariance by actually measuring the covariance of
+    some pure noise fields put through ChromaticRealGalaxy.
+    """
+    if __name__ == '__main__':
+        check_crg_noise(2, 2, 50, tol=0.03)
+        check_crg_noise(2, 3, 25, tol=0.03)
+        check_crg_noise(3, 3, 25, tol=0.03)
+    else:
+        check_crg_noise(2, 2, 10, tol=0.05)
+
+
+@timer
+def test_crg_noise_pad():
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+
+    # If we don't use noise_pad_size, then when we draw an image larger than the original postage
+    # stamp, it gets padded with (nearly) zeros.  We can check this by measuring the variance around
+    # the edge of the image (so away from the galaxy light).
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    psf = galsim.Gaussian(fwhm=0.4)
+    obj = galsim.Convolve(crg, psf)
+    bandpass = f606w_cat.getBandpass()
+    img = obj.drawImage(bandpass, nx=24, ny=24, scale=0.2)
+
+    x = np.arange(24)
+    x, y = np.meshgrid(x, x)
+    edge = (x < 4) | (x > 19) | (y < 4) | (y > 19)
+    print(np.var(img.array[edge]))
+    edgevar = np.var(img.array[edge])
+    np.testing.assert_allclose(edgevar, 0.0, rtol=0, atol=1e-11)
+
+    # If we turn up noise_pad_size though, then the variance of the edge should match the variance
+    # computed via CRG
+    rng = galsim.BaseDeviate(577)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, rng=rng, noise_pad_size=4)
+    obj = galsim.Convolve(crg, psf)
+    img = obj.drawImage(bandpass, nx=24, ny=24, scale=0.2)
+    edgevar = np.var(img.array[edge])
+    print("expected variance: ", obj.noise.getVariance())
+    print("edge variance: ", edgevar)
+    # Not super accurate, but since we only have a handful of correlated pixels to use, that
+    # may be expected.  More detailed tests of noise in test_crg_noise() show better accuracy.
+    np.testing.assert_allclose(obj.noise.getVariance(), edgevar, atol=0, rtol=0.3)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
+    test_real_galaxy_makeFromImage()
+    test_pickle_crg()
+    test_crg_roundtrip()
+    test_crg_roundtrip_larger_target_psf()
     test_ne()
     test_noise()
+    test_area_norm()
+    test_crg_noise_draw_transform_commutativity()
+    test_crg_noise()
+    test_crg_noise_pad()

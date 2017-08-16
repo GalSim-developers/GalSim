@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -44,7 +44,7 @@ precisionS = 1  # "precision" also a silly concept for ints, but allows all 4 te
 precisionI = 1
 
 # The number of values to generate when checking the mean and variance calculations.
-# This is currenly low enough to not dominate the time of the unit tests, but when changing
+# This is currently low enough to not dominate the time of the unit tests, but when changing
 # something, it may be useful to add a couple zeros while testing.
 nvals = 100000
 
@@ -251,6 +251,19 @@ def test_uniform():
     do_pickle(galsim.DeviateNoise(u), drawNoise)
     do_pickle(u)
     do_pickle(galsim.DeviateNoise(u))
+
+    # Check that we can construct a UniformDeviate from None, and that it depends on dev/random.
+    u1 = galsim.UniformDeviate(None)
+    u2 = galsim.UniformDeviate(None)
+    assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
+    # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -481,6 +494,19 @@ def test_gaussian():
     do_pickle(gn)
     do_pickle(galsim.DeviateNoise(g))
 
+    # Check that we can construct a GaussianDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GaussianDeviate(None)
+    g2 = galsim.GaussianDeviate(None)
+    assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_binomial():
@@ -601,6 +627,19 @@ def test_binomial():
     do_pickle(galsim.DeviateNoise(b), drawNoise)
     do_pickle(b)
     do_pickle(galsim.DeviateNoise(b))
+
+    # Check that we can construct a BinomialDeviate from None, and that it depends on dev/random.
+    b1 = galsim.BinomialDeviate(None)
+    b2 = galsim.BinomialDeviate(None)
+    assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
+    # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -828,6 +867,118 @@ def test_poisson():
     do_pickle(pn)
     do_pickle(galsim.DeviateNoise(p))
 
+    # Check that we can construct a PoissonDeviate from None, and that it depends on dev/random.
+    p1 = galsim.PoissonDeviate(None)
+    p2 = galsim.PoissonDeviate(None)
+    assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
+    # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
+@timer
+def test_poisson_highmean():
+    """Test Poisson random number generator with high (>2^30) mean (cf. Issue #881)
+
+    It turns out that the boost poisson deviate class that we use maxes out at 2^31 and wraps
+    around to -2^31.  We have code to automatically switch over to using a Gaussian deviate
+    instead if the mean > 2^30 (factor of 2 from the problem to be safe).  Check that this
+    works properly.
+    """
+    mean_vals =[ 2**30 + 50,  # Uses Gaussian
+                 2**30 - 50,  # Uses Poisson
+                 2**30,       # Uses Poisson (highest value of mean that does)
+                 2**31,       # This is where problems happen if not using Gaussian
+                 5.e20,       # Definitely would have problems with normal implementation.
+               ]
+
+    if __name__ == '__main__':
+        nvals = 10000000
+        rtol_var = 1.e-3
+    else:
+        nvals = 100000
+        rtol_var = 1.e-2
+
+    for mean in mean_vals:
+        print('Test PoissonDeviate with mean = ',mean)
+        p = galsim.PoissonDeviate(testseed, mean=mean)
+        p2 = p.duplicate()
+        p3 = galsim.PoissonDeviate(p.serialize(), mean=mean)
+        testResult = (p(), p(), p())
+        testResult2 = (p2(), p2(), p2())
+        testResult3 = (p3(), p3(), p3())
+        np.testing.assert_allclose(
+                testResult2, testResult, rtol=1.e-8,
+                err_msg='PoissonDeviate.duplicate not equivalent for mean=%s'%mean)
+        np.testing.assert_allclose(
+                testResult3, testResult, rtol=1.e-8,
+                err_msg='PoissonDeviate from serialize not equivalent for mean=%s'%mean)
+
+        # Check that the mean and variance come out right
+        vals = [p() for i in range(nvals)]
+        mu = np.mean(vals)
+        var = np.var(vals)
+        print('mean = ',mu,'  true mean = ',mean)
+        print('var = ',var,'   true var = ',mean)
+        np.testing.assert_allclose(mu, mean, rtol=1.e-5,
+                err_msg='Wrong mean from PoissonDeviate with mean=%s'%mean)
+        np.testing.assert_allclose(var, mean, rtol=rtol_var,
+                err_msg='Wrong variance from PoissonDeviate with mean=%s'%mean)
+
+        # Check that two connected poisson deviates work correctly together.
+        p2 = galsim.PoissonDeviate(testseed, mean=mean)
+        p.reset(p2)
+        testResult2 = (p(), p(), p2())
+        np.testing.assert_array_equal(
+                testResult2, testResult,
+                err_msg='Wrong poisson random number sequence generated using two pds')
+        p.seed(testseed)
+        p2.clearCache()
+        testResult2 = (p2(), p2(), p())
+        np.testing.assert_array_equal(
+                testResult2, testResult,
+                err_msg='Wrong poisson random number sequence generated using two pds after seed')
+
+        # Test filling an image
+        p.seed(testseed)
+        testimage = galsim.ImageD(np.zeros((3, 1)))
+        testimage.addNoise(galsim.DeviateNoise(p))
+        np.testing.assert_array_equal(
+                testimage.array.flatten(), testResult,
+                err_msg='Wrong poisson random number sequence generated when applied to image.')
+
+        # The PoissonNoise version also subtracts off the mean value
+        rng = galsim.BaseDeviate(testseed)
+        pn = galsim.PoissonNoise(rng, sky_level=mean)
+        testimage.fill(0)
+        testimage.addNoise(pn)
+        np.testing.assert_array_equal(
+                testimage.array.flatten(), np.array(testResult)-mean,
+                err_msg='Wrong poisson random number sequence generated using PoissonNoise')
+
+        # Check PoissonNoise variance:
+        np.testing.assert_allclose(
+                pn.getVariance(), mean, rtol=1.e-8,
+                err_msg="PoissonNoise getVariance returns wrong variance")
+        np.testing.assert_allclose(
+                pn.getSkyLevel(), mean, rtol=1.e-8,
+                err_msg="PoissonNoise getSkyLevel returns wrong value")
+
+        # Check that the noise model really does produce this variance.
+        big_im = galsim.Image(2048,2048,dtype=float)
+        big_im.addNoise(pn)
+        var = np.var(big_im.array)
+        print('variance = ',var)
+        print('getVar = ',pn.getVariance())
+        np.testing.assert_allclose(
+                var, pn.getVariance(), rtol=rtol_var,
+                err_msg='Realized variance for PoissonNoise did not match getVariance()')
+
 
 @timer
 def test_weibull():
@@ -957,6 +1108,19 @@ def test_weibull():
     do_pickle(w)
     do_pickle(galsim.DeviateNoise(w))
 
+    # Check that we can construct a WeibullDeviate from None, and that it depends on dev/random.
+    w1 = galsim.WeibullDeviate(None)
+    w2 = galsim.WeibullDeviate(None)
+    assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
+    # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_gamma():
@@ -1076,6 +1240,19 @@ def test_gamma():
     do_pickle(g)
     do_pickle(galsim.DeviateNoise(g))
 
+    # Check that we can construct a GammaDeviate from None, and that it depends on dev/random.
+    g1 = galsim.GammaDeviate(None)
+    g2 = galsim.GammaDeviate(None)
+    assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
+    # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
+
 
 @timer
 def test_chi2():
@@ -1194,6 +1371,19 @@ def test_chi2():
     do_pickle(galsim.DeviateNoise(c), drawNoise)
     do_pickle(c)
     do_pickle(galsim.DeviateNoise(c))
+
+    # Check that we can construct a Chi2Deviate from None, and that it depends on dev/random.
+    c1 = galsim.Chi2Deviate(None)
+    c2 = galsim.Chi2Deviate(None)
+    assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
+    # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, list())
+        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, set())
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1351,6 +1541,19 @@ def test_distfunction():
     do_pickle(galsim.DeviateNoise(d), drawNoise)
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
+
+    # Check that we can construct a DistDeviate from None, and that it depends on dev/random.
+    c1 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    c2 = galsim.DistDeviate(None, lambda x:1, 0, 1)
+    assert c1 != c2, "Consecutive DistDeviate(None) compared equal!"
+    # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
+    # or None.
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1814,6 +2017,7 @@ if __name__ == "__main__":
     test_gaussian()
     test_binomial()
     test_poisson()
+    test_poisson_highmean()
     test_weibull()
     test_gamma()
     test_chi2()

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -325,7 +325,7 @@ class InterpolatedImage(GSObject):
         # Check that the given noise_pad is valid:
         try:
             noise_pad = float(noise_pad)
-        except:
+        except (TypeError, ValueError):
             pass
         if isinstance(noise_pad, float):
             if noise_pad < 0.:
@@ -604,7 +604,8 @@ class InterpolatedKImage(GSObject):
     >>> a = returns_a_GSObject()
     >>> b = galsim.InterpolatedKImage(a.drawKImage())
 
-    The input `kimage` must have dtype=numpy.complex128, which is also known as an ImageC object.
+    The input `kimage` must have dtype=numpy.complex64 or dtype=numpy.complex128, which are also
+    known as ImageCF and ImageCD objects respectively.
     The only wcs permitted is a simple PixelScale (or OffsetWCS), in which case `kimage.scale` is
     used for the `stepk` value unless overridden by the `stepk` initialization argument.
 
@@ -696,11 +697,13 @@ class InterpolatedKImage(GSObject):
             if real_kimage is not None or imag_kimage is not None:
                 raise ValueError("Cannot provide both kimage and real_kimage/imag_kimage")
             if not kimage.iscomplex:
-                raise ValueError("Supplied kimage is not an ImageC")
+                raise ValueError("Supplied kimage is not complex")
 
         # Make sure wcs is a PixelScale.
         if kimage.wcs is not None and not kimage.wcs.isPixelScale():
             raise ValueError("kimage wcs must be PixelScale or None.")
+
+        self._kimage = kimage.copy()
 
         # Check for Hermitian symmetry properties of kimage
         shape = kimage.array.shape
@@ -725,8 +728,15 @@ class InterpolatedKImage(GSObject):
                     "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
                 stepk = kimage.scale
 
-        self._kimage = kimage
+        # Default to dk=1
+        if stepk is None:
+            stepk = 1.
+            self._kimage.scale = 1.
+
         self._stepk = stepk
+
+        stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
+
         self._gsparams = gsparams
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
@@ -736,12 +746,23 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
-            self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, gsparams))
+        sbiki = _galsim.SBInterpolatedKImage(
+                self._kimage.image, stepk_image, self.k_interpolant, gsparams)
+        self._sbiki = sbiki
+
+        if kimage.wcs is not None:
+            sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
+                                      galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+        else:
+            sbp = sbiki
+        sbp = _galsim.SBAdd([sbp])
+
+        GSObject.__init__(self, sbp)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
-                self._kimage == other._kimage and
+                np.array_equal(self._kimage.array, other._kimage.array) and
+                self._kimage.scale == other._kimage.scale and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
                 self._gsparams == other._gsparams)
@@ -774,8 +795,24 @@ class InterpolatedKImage(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.SBProfile = galsim._galsim.SBInterpolatedKImage(
-            self._kimage.image, self._kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
+        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self._gsparams)
+
+
+def _InterpolatedKImage(kimage, k_interpolant, gsparams):
+    """Approximately equivalent to InterpolatedKImage, but with fewer options and no sanity checks.
+    """
+    ret = InterpolatedKImage.__new__(InterpolatedKImage)
+    ret._kimage = kimage.copy()
+    ret._stepk = kimage.scale
+    ret._gsparams = gsparams
+    ret.k_interpolant = k_interpolant
+    ret._sbiki = _galsim.SBInterpolatedKImage(
+            ret._kimage.image, 1.0, ret.k_interpolant, gsparams)
+    sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
+                              galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+    ret.SBProfile = _galsim.SBAdd([sbp])
+    return ret
+
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), self.getPadFactor(),
@@ -784,18 +821,12 @@ _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
-def _SBIKI_getinitargs(self):
-    if self._cenIsSet():
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
-                self.centroid().x, self.centroid().y, True, self.getGSParams())
-    else:
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
-                0.0, 0.0, False, self.getGSParams())
-_galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
+_galsim.SBInterpolatedKImage.__getinitargs__ = lambda self: (
+        self._getKData(), self.stepK(), self.maxK(), self.getKInterp(), self.getGSParams())
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
-    %self.__getinitargs__())
+        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r)'
+        %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
