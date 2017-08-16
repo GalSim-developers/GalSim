@@ -355,7 +355,7 @@ namespace galsim {
 
     struct PoissonDeviate::PoissonDeviateImpl
     {
-        PoissonDeviateImpl(double mean) { setMean(mean); }
+        PoissonDeviateImpl(double mean) : _mean(0) { setMean(mean); }
 
         double getMean() { return _mean; }
 
