@@ -215,7 +215,6 @@ namespace galsim {
 
         for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
             int x = xStart;
-            double yy = y;
             for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
                 double sb = _xtab->xval(x,y);
                 if (std::abs(sb) > maxsb) maxsb = std::abs(sb);

@@ -318,8 +318,6 @@ namespace galsim {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
 
-        const int m = image.getNCol();
-        const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
         const int izero = xmin < 0 ? -xmin : 0;
@@ -350,8 +348,6 @@ namespace galsim {
         dbg<<"Start drawK: \n";
         assert(_pimpl.get());
 
-        const int m = image.getNCol();
-        const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
         const int izero = xmin < 0 ? -xmin : 0;
@@ -399,7 +395,6 @@ namespace galsim {
         dbg<<x0<<" "<<dx<<" "<<m1<<"   "<<y0<<" "<<dy<<" "<<n1<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        const int stride = im.getStride();
         T* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
@@ -489,7 +484,6 @@ namespace galsim {
         // if at least one of the extreme values of kx or ky is > kmax.
         if (std::abs(kx0) > kmax || std::abs(kx0+m*dkx) > kmax ||
             std::abs(ky0) > kmax || std::abs(ky0+m+dky) > kmax) {
-            double ky0sq = ky0*ky0;
             // first and last i are where
             //   (kx0 + i*dkx)^2 + (ky0 + i*dkyx)^2 = ksq_max
             //   (dkx^2 + dky^2) i^2 + 2 (dkx kx0 + dky ky0) i + (kx0^2 + ky0^2 - ksqmax) = 0
