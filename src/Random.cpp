@@ -235,7 +235,7 @@ namespace galsim {
 
     void UniformDeviate::clearCache() { _devimpl->_urd.reset(); }
 
-    double UniformDeviate::val()
+    double UniformDeviate::generate1()
     { return _devimpl->_urd(*this->_impl->_rng); }
 
     std::string UniformDeviate::make_repr(bool incl_seed)
@@ -283,7 +283,7 @@ namespace galsim {
 
     void GaussianDeviate::clearCache() { _devimpl->_normal.reset(); }
 
-    double GaussianDeviate::val()
+    double GaussianDeviate::generate1()
     { return _devimpl->_normal(*this->_impl->_rng); }
 
     std::string GaussianDeviate::make_repr(bool incl_seed)
@@ -340,7 +340,7 @@ namespace galsim {
 
     void BinomialDeviate::clearCache() { _devimpl->_bd.reset(); }
 
-    double BinomialDeviate::val()
+    double BinomialDeviate::generate1()
     { return _devimpl->_bd(*this->_impl->_rng); }
 
     std::string BinomialDeviate::make_repr(bool incl_seed)
@@ -435,7 +435,7 @@ namespace galsim {
 
     void PoissonDeviate::setMean(double mean) { _devimpl->setMean(mean); }
 
-    double PoissonDeviate::val() { return _devimpl->getValue(*this->_impl->_rng); }
+    double PoissonDeviate::generate1() { return _devimpl->getValue(*this->_impl->_rng); }
 
     void PoissonDeviate::clearCache() { _devimpl->clearCache(); }
 
@@ -493,7 +493,7 @@ namespace galsim {
 
     void WeibullDeviate::clearCache() { _devimpl->_weibull.reset(); }
 
-    double WeibullDeviate::val()
+    double WeibullDeviate::generate1()
     { return _devimpl->_weibull(*this->_impl->_rng); }
 
     std::string WeibullDeviate::make_repr(bool incl_seed)
@@ -540,7 +540,7 @@ namespace galsim {
 
     void GammaDeviate::clearCache() { _devimpl->_gamma.reset(); }
 
-    double GammaDeviate::val()
+    double GammaDeviate::generate1()
     { return _devimpl->_gamma(*this->_impl->_rng); }
 
     std::string GammaDeviate::make_repr(bool incl_seed)
@@ -580,7 +580,7 @@ namespace galsim {
 
     void Chi2Deviate::clearCache() { _devimpl->_chi_squared.reset(); }
 
-    double Chi2Deviate::val()
+    double Chi2Deviate::generate1()
     { return _devimpl->_chi_squared(*this->_impl->_rng); }
 
     std::string Chi2Deviate::make_repr(bool incl_seed)

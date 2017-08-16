@@ -256,7 +256,7 @@ class UniformDeviate(BaseDeviate):
 
         Returns a uniform deviate between 0 and 1.
         """
-        return self._rng()
+        return self._rng.generate1()
 
 class GaussianDeviate(BaseDeviate):
     """Pseudo-random number generator with Gaussian distribution.
@@ -312,7 +312,7 @@ class GaussianDeviate(BaseDeviate):
 
         Returns a Gaussian deviate with the given mean and sigma.
         """
-        return self._rng()
+        return self._rng.generate1()
 
     def generate_from_variance(self, array):
         """Generate many Gaussian deviate values using the existing array values as the
@@ -380,7 +380,7 @@ class BinomialDeviate(BaseDeviate):
 
         Returns a Binomial deviate with the given N and p.
         """
-        return self._rng()
+        return self._rng.generate1()
 
 class PoissonDeviate(BaseDeviate):
     """Pseudo-random Poisson deviate with specified `mean`.
@@ -427,7 +427,7 @@ class PoissonDeviate(BaseDeviate):
 
         Returns a Poisson deviate with the given mean.
         """
-        return self._rng()
+        return self._rng.generate1()
 
     def generate_from_expectation(self, array):
         """Generate many Poisson deviate values using the existing array values as the
@@ -498,7 +498,7 @@ class WeibullDeviate(BaseDeviate):
 
         Returns a Weibull-distributed deviate with the given shape parameters a and b.
         """
-        return self._rng()
+        return self._rng.generate1()
 
 
 class GammaDeviate(BaseDeviate):
@@ -554,7 +554,7 @@ class GammaDeviate(BaseDeviate):
 
         Returns a Gamma-distributed deviate with the given k and theta.
         """
-        return self._rng()
+        return self._rng.generate1()
 
 
 class Chi2Deviate(BaseDeviate):
@@ -603,7 +603,7 @@ class Chi2Deviate(BaseDeviate):
 
         Returns a Chi2-distributed deviate with the given number of degrees of freedom.
         """
-        return self._rng()
+        return self._rng.generate1()
 
 
 class DistDeviate(BaseDeviate):
@@ -819,7 +819,7 @@ class DistDeviate(BaseDeviate):
 
 
     def __call__(self):
-        return self.val(self._rng())
+        return self.val(self._rng.generate1())
 
     def generate(self, array):
         """Generate many pseudo-random values, filling in the values of a numpy array.

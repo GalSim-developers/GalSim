@@ -194,10 +194,10 @@ namespace galsim {
          * BaseDeviate objects as a direct way to define a common seed for other Deviates.
          */
         double operator()()
-        { return val(); }
+        { return generate1(); }
 
         // This is the virtual function that is overridden in subclasses.
-        virtual double val()
+        virtual double generate1()
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
@@ -276,7 +276,7 @@ namespace galsim {
          *
          * @return A uniform deviate in the interval [0.,1.)
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Clear the internal cache
@@ -345,7 +345,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Get current distribution mean
@@ -455,7 +455,7 @@ namespace galsim {
          *
          * @return A binomial deviate with current N and p
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Report current value of N
@@ -542,7 +542,7 @@ namespace galsim {
          *
          * @return A Poisson deviate with current mean
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Construct a duplicate of this PoissonDeviate object.
@@ -649,7 +649,7 @@ namespace galsim {
          *
          * @return A Weibull deviate with current shape k and scale lam.
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Get current distribution shape parameter a.
@@ -752,7 +752,7 @@ namespace galsim {
          *
          * @return A Gamma deviate with current shape k and scale theta.
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Get current distribution shape parameter k.
@@ -855,7 +855,7 @@ namespace galsim {
          *
          * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
          */
-        double val();
+        double generate1();
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.

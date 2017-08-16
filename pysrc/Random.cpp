@@ -45,12 +45,12 @@ namespace galsim {
     protected:
         // This is the special magic needed so the virtual function calls back to the
         // function defined in the python layer.
-        double val()
+        double generate1()
         {
-            if (bp::override py_func = this->get_override("val"))
+            if (bp::override py_func = this->get_override("generate1"))
                 return py_func();
             else
-                return BaseDeviate::val();
+                return BaseDeviate::generate1();
         }
     };
 
@@ -158,7 +158,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
                 .def(bp::init<std::string>(bp::arg("seed")))
                 .def("duplicate", &UniformDeviate::duplicate)
-                .def("__call__", &UniformDeviate::operator())
+                .def("generate1", &UniformDeviate::generate1)
                 .enable_pickling()
                 ;
         }
@@ -190,7 +190,7 @@ namespace galsim {
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
-                .def("__call__", &GaussianDeviate::operator())
+                .def("generate1", &GaussianDeviate::generate1)
                 .def("generate_from_variance", &GenerateFromVariance,
                      bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &GaussianDeviate::getMean)
@@ -226,7 +226,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
                 .def("duplicate", &BinomialDeviate::duplicate)
-                .def("__call__", &BinomialDeviate::operator())
+                .def("generate1", &BinomialDeviate::generate1)
                 .def("getN", &BinomialDeviate::getN)
                 .def("getP", &BinomialDeviate::getP)
                 .enable_pickling()
@@ -260,7 +260,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("mean")=1.)
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
-                .def("__call__", &PoissonDeviate::operator())
+                .def("generate1", &PoissonDeviate::generate1)
                 .def("generate_from_expectation", &GenerateFromExpectation,
                      bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &PoissonDeviate::getMean)
@@ -296,7 +296,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
                 .def("duplicate", &WeibullDeviate::duplicate)
-                .def("__call__", &WeibullDeviate::operator())
+                .def("generate1", &WeibullDeviate::generate1)
                 .def("getA", &WeibullDeviate::getA)
                 .def("getB", &WeibullDeviate::getB)
                 .enable_pickling()
@@ -330,7 +330,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def("duplicate", &GammaDeviate::duplicate)
-                .def("__call__", &GammaDeviate::operator())
+                .def("generate1", &GammaDeviate::generate1)
                 .def("getK", &GammaDeviate::getK)
                 .def("getTheta", &GammaDeviate::getTheta)
                 .enable_pickling()
@@ -364,7 +364,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("n")=1.)
                 ))
                 .def("duplicate", &Chi2Deviate::duplicate)
-                .def("__call__", &Chi2Deviate::operator())
+                .def("generate1", &Chi2Deviate::generate1)
                 .def("getN", &Chi2Deviate::getN)
                 .enable_pickling()
                 ;
