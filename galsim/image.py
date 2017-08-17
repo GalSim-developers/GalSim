@@ -332,7 +332,8 @@ class Image(object):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self._array = self._make_empty(bounds.numpyShape(), dtype=self.dtype)
             self._bounds = bounds
-            self.fill(init_value)
+            if bounds.isDefined():
+                self.fill(init_value)
         elif array is not None:
             self._array = array.view()
             nrow,ncol = array.shape
@@ -1234,7 +1235,8 @@ class Image(object):
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        if not self.bounds.isDefined(): return
+        if not self.bounds.isDefined():
+            raise RuntimeError("Attempt to set values of an undefined image")
         if value is None: value = 0
         self._fill(value)
 
