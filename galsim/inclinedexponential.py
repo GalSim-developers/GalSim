@@ -140,7 +140,7 @@ class InclinedExponential(GSObject):
 
         self._inclination = inclination
         GSObject.__init__(self, _galsim.SBInclinedExponential(
-                inclination.rad(), scale_radius, scale_height, flux, gsparams))
+                inclination.rad, scale_radius, scale_height, flux, gsparams))
         self._gsparams = gsparams
 
     def getInclination(self):

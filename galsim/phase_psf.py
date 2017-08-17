@@ -419,7 +419,7 @@ class Aperture(object):
                           "Consider increasing sampling by a factor %f, and/or check "
                           "PhaseScreenPSF outputs for signs of folding in real space."%ratio)
 
-        if pupil_angle.rad() == 0.:
+        if pupil_angle.rad == 0.:
             self._illuminated = pp_arr.astype(bool)
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
@@ -1057,7 +1057,7 @@ class PhaseScreenPSF(GSObject):
         self.theta = theta
         self.interpolant = interpolant
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = galsim.AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
@@ -1507,7 +1507,7 @@ class OpticalPSF(GSObject):
                  _force_maxk=None, _force_stepk=None,
                  suppress_warning=False, geometric_shooting=False):
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = galsim.AngleUnit.from_name(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
         if lam_over_diam is not None:

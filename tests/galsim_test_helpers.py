@@ -21,6 +21,7 @@ import numpy as np
 import os
 import sys
 import logging
+import coord
 
 path, filename = os.path.split(__file__)
 try:

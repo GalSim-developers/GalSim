@@ -1313,7 +1313,7 @@ class ChromaticAtmosphere(ChromaticObject):
         self.base_wavelength = base_wavelength
 
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = galsim.AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
 
         self.alpha = kwargs.pop('alpha', -0.2)
@@ -1572,7 +1572,7 @@ class ChromaticTransformation(ChromaticObject):
                 single = None
                 if flip:
                     single = 0  # Special value indicating to just use transform.
-                if abs(theta.rad()) > 1.e-12:
+                if abs(theta.rad) > 1.e-12:
                     if single is None:
                         single = '.rotate(%s)'%theta
                     else:
@@ -2475,7 +2475,7 @@ class ChromaticOpticalPSF(ChromaticObject):
                  scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = galsim.AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
 
         # We have to require either diam OR lam_over_diam:
@@ -2581,7 +2581,7 @@ class ChromaticAiry(ChromaticObject):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
         if isinstance(scale_unit, str):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            scale_unit = galsim.AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
 
         if (diam is None and lam_over_diam is None) or \

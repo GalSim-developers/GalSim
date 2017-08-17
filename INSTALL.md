@@ -32,6 +32,7 @@ recent versions will also work:
 - Python (2.7, 3.4, 3.5, 3.6)
 - SCons (2.1.0)
 - NumPy (1.11)
+- LSSTDESC.Coord (1.0.4)
 - Astropy (1.1.1)
 - Future (0.16.0)
 - FFTW (3.3)
@@ -113,6 +114,10 @@ The GalSim package also requires
   Currently GalSim is regularly tested to ensure it works with version 3.12
   of this package, but other versions may work.
 
+* the LSSTDESC.Coord module (https://github.com/LSSTDESC/Coord), which is
+  used for angles and coordinates.  It is a faster alternative to the
+  astropy.coordinates module for the use cases that we need.
+
 * Optional dependency: PyAst WCS package.  This is a really nice front end
   for the Starlink AST astrometry code.  It seems to support pretty much
   every WCS encoding there is.  (At least every one we tried.)  Their
@@ -146,6 +151,7 @@ These should installed onto your Python system so that they can be imported by:
     >>> import pyfits           [ ... or this.               ]
     >>> import future
     >>> import yaml
+    >>> import coord
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
     >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
     >>> import pandas           [ for faster ASCII table input ]
@@ -183,6 +189,7 @@ system.  Then
     pip install astropy
     pip install future
     pip install pyyaml
+    pip install lsstdesc.coord
     pip install starlink-pyast
     pip install scipy
 

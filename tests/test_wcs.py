@@ -97,62 +97,62 @@ references = {
     # The ra, dec are thus essentially the same (modulo the large pixel size of 3 arcmin).
     # However, the image positions are quite different.
     'HPX' : ('1904-66_HPX.fits' ,
-            [ ('193916.551671', '-634247.346862', 114, 180, 13.59960),
-              ('181935.761589', '-634608.860203', 144, 30, 11.49591) ] ),
+            [ ('19:39:16.551671', '-63:42:47.346862', 114, 180, 13.59960),
+              ('18:19:35.761589', '-63:46:08.860203', 144, 30, 11.49591) ] ),
     'TAN' : ('1904-66_TAN.fits' ,
-            [ ('193930.753119', '-634259.217527', 117, 178, 13.43628),
-              ('181918.652839', '-634903.833411', 153, 35, 11.44438) ] ),
+            [ ('19:39:30.753119', '-63:42:59.217527', 117, 178, 13.43628),
+              ('18:19:18.652839', '-63:49:03.833411', 153, 35, 11.44438) ] ),
     'TSC' : ('1904-66_TSC.fits' ,
-            [ ('193939.996553', '-634114.585586', 113, 161, 12.48409),
-              ('181905.985494', '-634905.781036', 141, 48, 11.65945) ] ),
+            [ ('19:39:39.996553', '-63:41:14.585586', 113, 161, 12.48409),
+              ('18:19:05.985494', '-63:49:05.781036', 141, 48, 11.65945) ] ),
     'STG' : ('1904-66_STG.fits' ,
-            [ ('193914.752140', '-634420.882465', 112, 172, 13.1618),
-              ('181937.824461', '-634624.483497', 147, 38, 11.6091) ] ),
+            [ ('19:39:14.752140', '-63:44:20.882465', 112, 172, 13.1618),
+              ('18:19:37.824461', '-63:46:24.483497', 147, 38, 11.6091) ] ),
     'ZEA' : ('1904-66_ZEA.fits' ,
-            [ ('193926.871566', '-634326.059526', 110, 170, 13.253),
-              ('181934.480902', '-634640.038427', 144, 39, 11.62) ] ),
+            [ ('19:39:26.871566', '-63:43:26.059526', 110, 170, 13.253),
+              ('18:19:34.480902', '-63:46:40.038427', 144, 39, 11.62) ] ),
     'ARC' : ('1904-66_ARC.fits' ,
-            [ ('193928.622018', '-634153.658982', 111, 171, 13.7654),
-              ('181947.020701', '-634622.381334', 145, 39, 11.2099) ] ),
+            [ ('19:39:28.622018', '-63:41:53.658982', 111, 171, 13.7654),
+              ('18:19:47.020701', '-63:46:22.381334', 145, 39, 11.2099) ] ),
     'ZPN' : ('1904-66_ZPN.fits' ,
-            [ ('193924.948254', '-634643.636138', 95, 151, 12.84769),
-              ('181924.149409', '-634937.453404', 122, 48, 11.01434) ] ),
+            [ ('19:39:24.948254', '-63:46:43.636138', 95, 151, 12.84769),
+              ('18:19:24.149409', '-63:49:37.453404', 122, 48, 11.01434) ] ),
     'SIP' : ('sipsample.fits' ,
-            [ ('133001.474154', '471251.794474', 242, 75, 12.24437),
-              ('132943.747626', '470913.879660', 12, 106, 5.30282) ] ),
+            [ ('13:30:01.474154', '47:12:51.794474', 242, 75, 12.24437),
+              ('13:29:43.747626', '47:09:13.879660', 12, 106, 5.30282) ] ),
     'TPV' : ('tpv.fits',
-            [ ('033009.340034', '-284350.811107', 418, 78, 2859.53882),
-              ('033015.728999', '-284501.488629', 148, 393, 2957.98584) ] ),
+            [ ('03:30:09.340034', '-28:43:50.811107', 418, 78, 2859.53882),
+              ('03:30:15.728999', '-28:45:01.488629', 148, 393, 2957.98584) ] ),
     # Strangely, zpx.fits is the same image as tpv.fits, but the WCS-computed RA, Dec
     # values are not anywhere close to TELRA, TELDEC in the header.  It's a bit
     # unfortunate, since my understanding is that ZPX can encode the same function as
     # TPV, so they could have produced the equivalent function.  But instead they just
     # inserted some totally off-the-wall different WCS transformation.
     'ZPX' : ('zpx.fits',
-            [ ('212412.094326', '371034.575917', 418, 78, 2859.53882),
-              ('212405.350816', '371144.596579', 148, 393, 2957.98584) ] ),
+            [ ('21:24:12.094326', '37:10:34.575917', 418, 78, 2859.53882),
+              ('21:24:05.350816', '37:11:44.596579', 148, 393, 2957.98584) ] ),
     # Older versions of the new TPV standard just used the TAN wcs name and expected
     # the code to notice the PV values and use them correctly.  This did not become a
     # FITS standard (or even a registered non-standard), but some old FITS files use
     # this, so we want to support it.  I just edited the tpv.fits to change the
     # CTYPE values from TPV to TAN.
     'TAN-PV' : ('tanpv.fits',
-            [ ('033009.340034', '-284350.811107', 418, 78, 2859.53882),
-              ('033015.728999', '-284501.488629', 148, 393, 2957.98584) ] ),
+            [ ('03:30:09.340034', '-28:43:50.811107', 418, 78, 2859.53882),
+              ('03:30:15.728999', '-28:45:01.488629', 148, 393, 2957.98584) ] ),
     # It is apparently valid FITS format to have Dec as the first axis and RA as the second.
     # This is in fact the output of PyAst when writing the file tpv.fits in FITS encoding.
     # It seems worth testing that all the WCS types get this input correct.
     'TAN-FLIP' : ('tanflip.fits',
-            [ ('033009.262392', '-284348.697347', 418, 78, 2859.53882),
-              ('033015.718834', '-284459.073468', 148, 393, 2957.98584) ] ),
+            [ ('03:30:09.262392', '-28:43:48.697347', 418, 78, 2859.53882),
+              ('03:30:15.718834', '-28:44:59.073468', 148, 393, 2957.98584) ] ),
     'REGION' : ('region.fits',
-            [ ('140211.202432', '543007.702200', 80, 80, 2241),
-              ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
+            [ ('14:02:11.202432', '54:30:07.702200', 80, 80, 2241),
+              ('14:04:17.341523', '54:16:28.554326', 45, 54, 1227) ] ),
     # Strangely, ds9 seems to get this one wrong.  It differs by about 6 arcsec in dec.
     # But PyAst and wcstools agree on these values, so I'm taking them to be accurate.
     'TNX' : ('tnx.fits',
-            [ ('174653.214511', '-300847.895372', 32, 91, 7140),
-              ('174658.100741', '-300750.121787', 246, 326, 15022) ] ),
+            [ ('17:46:53.214511', '-30:08:47.895372', 32, 91, 7140),
+              ('17:46:58.100741', '-30:07:50.121787', 246, 326, 15022) ] ),
 }
 all_tags = references.keys()
 
@@ -492,8 +492,8 @@ def do_jac_decomp(wcs, name):
     # First see if we can recreate the right matrix from this:
     S = np.matrix( [ [ 1.+shear.g1, shear.g2 ],
                      [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
-    R = np.matrix( [ [ np.cos(theta.rad()), -np.sin(theta.rad()) ],
-                     [ np.sin(theta.rad()), np.cos(theta.rad()) ] ] )
+    R = np.matrix( [ [ np.cos(theta.rad), -np.sin(theta.rad) ],
+                     [ np.sin(theta.rad), np.cos(theta.rad) ] ] )
     if flip:
         F = np.matrix( [ [ 0, 1 ],
                          [ 1, 0 ] ] )
@@ -521,9 +521,9 @@ def do_jac_decomp(wcs, name):
     np.testing.assert_equal(flip, flip2, "inverse flip")
     np.testing.assert_almost_equal(scale, 1./scale2, 6, "inverse scale")
     if flip:
-        np.testing.assert_almost_equal(theta.rad(), theta2.rad(), 6, "inverse theta")
+        np.testing.assert_almost_equal(theta.rad, theta2.rad, 6, "inverse theta")
     else:
-        np.testing.assert_almost_equal(theta.rad(), -theta2.rad(), 6, "inverse theta")
+        np.testing.assert_almost_equal(theta.rad, -theta2.rad, 6, "inverse theta")
     np.testing.assert_almost_equal(shear.getG(), shear2.getG(), 6, "inverse shear")
     # There is no simple relation between the directions of the shear in the two cases.
     # The shear direction gets mixed up by the rotation if that is non-zero.
@@ -717,7 +717,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         w2 = wcs.toWorld(galsim.PositionD(x0-0.5,y0))
         w3 = wcs.toWorld(galsim.PositionD(x0,y0+0.5))
         w4 = wcs.toWorld(galsim.PositionD(x0,y0-0.5))
-        cosdec = np.cos(world_pos.dec.rad())
+        cosdec = np.cos(world_pos.dec)
         jac = wcs.jacobian(image_pos)
         np.testing.assert_array_almost_equal(
                 jac.dudx, (w2.ra - w1.ra)/galsim.arcsec * cosdec, digits2,
@@ -737,20 +737,20 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         origin = galsim.PositionD(0,0)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos)
-        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-1, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-1, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         origin = galsim.PositionD(x0+0.5, y0-0.5)
         uv_pos1 = wcs.toWorld(image_pos, project_center=wcs.toWorld(origin))
         uv_pos2 = wcs.local(origin).toWorld(image_pos - origin)
-        uv_pos3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
+        u3, v3 = wcs.toWorld(origin).project(world_pos, 'gnomonic')
         np.testing.assert_allclose(uv_pos1.x, uv_pos2.x, rtol=1.e-2, atol=1.e-8)
         np.testing.assert_allclose(uv_pos1.y, uv_pos2.y, rtol=1.e-2, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
-        np.testing.assert_allclose(uv_pos1.y, uv_pos3.y, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.x, u3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(uv_pos1.y, v3 / galsim.arcsec, rtol=1.e-6, atol=1.e-8)
 
         # Test drawing the profile on an image with the given wcs
         ix0 = int(x0)
@@ -1380,15 +1380,10 @@ def test_radecfunction():
         wcs1 = galsim.UVFunction(ufunc, vfunc)
         for cenra, cendec in centers:
             center = galsim.CelestialCoord(cenra * galsim.degrees, cendec * galsim.degrees)
-            # Unit test the hms, dms parsers:
-            np.testing.assert_almost_equal(galsim.HMS_Angle(center.ra.hms()).wrap() / galsim.arcsec,
-                                           center.ra.wrap() / galsim.arcsec, digits,
-                                           'HMS parser error')
-            np.testing.assert_almost_equal(galsim.DMS_Angle(center.dec.dms()) / galsim.arcsec,
-                                           center.dec / galsim.arcsec, digits,
-                                           'DMS parser error')
 
-            radec_func = lambda x,y: center.deproject_rad(ufunc(x,y), vfunc(x,y))
+            scale = galsim.arcsec / galsim.radians
+            radec_func = lambda x,y: center.deproject_rad(ufunc(x,y)*scale, vfunc(x,y)*scale,
+                                                          projection='lambert')
             wcs2 = galsim.RaDecFunction(radec_func)
 
             # Also test with one that doesn't work with numpy arrays to test that the
@@ -1396,17 +1391,19 @@ def test_radecfunction():
             # try the numpy option first and do something else if it fails.
             # This also tests the alternate initialization using separate ra_func, dec_fun.
             ra_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad()
+                    ufunc(x,y)*galsim.arcsec, vfunc(x,y)*galsim.arcsec,
+                    projection='lambert').ra.rad
             dec_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad()
+                    ufunc(x,y)*galsim.arcsec, vfunc(x,y)*galsim.arcsec,
+                    projection='lambert').dec.rad
             wcs3 = galsim.RaDecFunction(ra_func, dec_func)
 
             # The pickle tests need to have a string for ra_func, dec_func, which is
             # a bit tough with the ufunc,vfunc stuff.  So do something simpler for that.
-            radec_str = '%r.deproject_rad(x,y)'%center
+            radec_str = '%r.deproject_rad(x*%f,y*%f,projection="lambert")'%(center,scale,scale)
             wcs4 = galsim.RaDecFunction(radec_str, origin=galsim.PositionD(17.,34.))
-            ra_str = '%r.deproject(galsim.PositionD(x,y)).ra.rad()'%center
-            dec_str = '%r.deproject(galsim.PositionD(x,y)).dec.rad()'%center
+            ra_str = '%r.deproject(x*galsim.arcsec,y*galsim.arcsec,projection="lambert").ra.rad'%center
+            dec_str = '%r.deproject(x*galsim.arcsec,y*galsim.arcsec,projection="lambert").dec.rad'%center
             wcs5 = galsim.RaDecFunction(ra_str, dec_str, origin=galsim.PositionD(-9.,-8.))
 
             # Check that distance, jacobian for some x,y positions match the UV values.
@@ -1415,21 +1412,23 @@ def test_radecfunction():
                 # First do some basic checks of project, deproject for the given (u,v)
                 u = ufunc(x,y)
                 v = vfunc(x,y)
-                coord = center.deproject(galsim.PositionD(u,v))
+                coord = center.deproject(u*galsim.arcsec, v*galsim.arcsec, projection='lambert')
                 ra, dec = radec_func(x,y)
-                np.testing.assert_almost_equal(ra, coord.ra.rad(), 8,
+                np.testing.assert_almost_equal(ra, coord.ra.rad, 8,
                                                'rafunc produced wrong value')
-                np.testing.assert_almost_equal(dec, coord.dec.rad(), 8,
+                np.testing.assert_almost_equal(dec, coord.dec.rad, 8,
                                                'decfunc produced wrong value')
-                pos = center.project(coord)
-                np.testing.assert_almost_equal(pos.x, u, digits, 'project x was inconsistent')
-                np.testing.assert_almost_equal(pos.y, v, digits, 'project y was inconsistent')
+                pos = center.project(coord, projection='lambert')
+                np.testing.assert_almost_equal(pos[0]/galsim.arcsec, u, digits,
+                                               'project x was inconsistent')
+                np.testing.assert_almost_equal(pos[1]/galsim.arcsec, v, digits,
+                                               'project y was inconsistent')
                 d1 = np.sqrt(u*u+v*v)
                 d2 = center.distanceTo(coord)
                 # The distances aren't expected to match.  Instead, for a Lambert projection,
                 # d1 should match the straight line distance through the sphere.
                 import math
-                d2 = 2.*math.sin(d2.rad()/2) * galsim.radians / galsim.arcsec
+                d2 = 2.*math.sin(d2.rad/2.) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
@@ -1441,7 +1440,7 @@ def test_radecfunction():
                     origin = test_wcs.toWorld(galsim.PositionD(0.,0.))
                     d3 = np.sqrt( world_pos1.x**2 + world_pos1.y**2 )
                     d4 = center.distanceTo(world_pos2)
-                    d4 = 2.*math.sin(d4.rad()/2) * galsim.radians / galsim.arcsec
+                    d4 = 2.*math.sin(d4.rad/2) * galsim.radians / galsim.arcsec
                     np.testing.assert_almost_equal(
                             d3, d1, digits, 'UV '+name+' dist does not match expected value.')
                     np.testing.assert_almost_equal(
@@ -1493,8 +1492,8 @@ def test_radecfunction():
                     angle = 180 * galsim.degrees - A - B
 
                     # Now we can use this angle to correct the jacobian from test_wcs.
-                    c = math.cos(angle.rad())
-                    s = math.sin(angle.rad())
+                    c = math.cos(angle.rad)
+                    s = math.sin(angle.rad)
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
                     rot_dudy = c*jac2.dudy + s*jac2.dvdy
                     rot_dvdx = -s*jac2.dudx + c*jac2.dvdx
@@ -1550,8 +1549,8 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
 
     print('Start reference testing for '+name)
     for ref in ref_list:
-        ra = galsim.HMS_Angle(ref[0])
-        dec = galsim.DMS_Angle(ref[1])
+        ra = galsim.Angle.from_hms(ref[0])
+        dec = galsim.Angle.from_dms(ref[1])
         x = ref[2]
         y = ref[3]
         val = ref[4]

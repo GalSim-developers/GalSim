@@ -286,7 +286,7 @@ def _convertPositions(pos, units, func):
     # Check validity of units
     if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
-        units = galsim.angle.get_angle_unit(units)
+        units = galsim.AngleUnit.from_name(units)
     if not isinstance(units, galsim.AngleUnit):
         raise ValueError("units must be either an AngleUnit or a string")
 
@@ -1224,6 +1224,7 @@ def math_eval(str, other_modules=()):
     exec_('import numpy', gdict)
     exec_('import numpy as np', gdict)
     exec_('import math', gdict)
+    exec_('import coord', gdict)
     for m in other_modules:
         exec_('import ' + m, gdict)
     return eval(str, gdict)
