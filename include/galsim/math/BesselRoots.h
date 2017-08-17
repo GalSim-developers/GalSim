@@ -78,7 +78,7 @@ namespace math {
         124.8793089132329460453,
     };
 
-    inline double BesselJ0Root(int s)
+    inline double getBesselRoot0(int s)
     {
         if (s <= 0)
             throw std::runtime_error("s must be > 0");

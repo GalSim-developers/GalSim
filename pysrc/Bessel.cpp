@@ -30,23 +30,22 @@ namespace math {
 
     void pyExportBessel() {
 
-        // These will be imported into the galsim.bessel namespace, so remove the Bessel
-        // part of the name to avoid redundancy.  Also, go to lowercase to match the names
-        // scipy.special uses.
-        bp::def("j0_root", &BesselJ0Root, bp::args("s"),
+        bp::def("j0_root", &getBesselRoot0, bp::args("s"),
                 "Get the sth root of the n=0 Bessel function, J_0(x)");
-        bp::def("j0", &BesselJ0, bp::args("x"),
+        // In python, with switch from mostly matching the boost names for these to matching
+        // the names scipy.special uses.
+        bp::def("j0", &j0, bp::args("x"),
                 "Calculate the cylindrical Bessel function, J_0(x)");
-        bp::def("j1", &BesselJ1, bp::args("x"),
+        bp::def("j1", &j1, bp::args("x"),
                 "Calculate the cylindrical Bessel function, J_1(x)");
-        bp::def("jv", &BesselJ, bp::args("nu","x"),
-                "Calculate the cylindrical Bessel function, J_nu(x)");
-        bp::def("kv", &BesselK, bp::args("nu","x"),
-                "Calculate the modified cylindrical Bessel function, K_nu(x)");
-        bp::def("yv", &BesselY, bp::args("nu","x"),
-                "Calculate the cylindrical Bessel function, Y_nu(x)");
-        bp::def("iv", &BesselI, bp::args("nu","x"),
-                "Calculate the modified cylindrical Bessel function, I_nu(x)");
+        bp::def("jv", &cyl_bessel_j, bp::args("v","x"),
+                "Calculate the arbitrary v cylindrical Bessel function, J_v(x)");
+        bp::def("yv", &cyl_bessel_y, bp::args("v","x"),
+                "Calculate the arbitrary v cylindrical Bessel function, Y_v(x)");
+        bp::def("iv", &cyl_bessel_i, bp::args("v","x"),
+                "Calculate the arbitrary v modified cylindrical Bessel function, I_v(x)");
+        bp::def("kv", &cyl_bessel_k, bp::args("v","x"),
+                "Calculate the arbitrary v modified cylindrical Bessel function, K_v(x)");
 
     }
 

@@ -61,22 +61,23 @@ namespace math {
     double dbsk1e(double x);
     void dbsknu(double x, double fnu, int n, double *y);
 
-    double BesselJ(double nu, double x)
+
+    double cyl_bessel_j(double nu, double x)
     {
         // Negative arguments yield complex values, so don't do that.
         if (x < 0)
-            throw std::runtime_error("BesselJ x must be >= 0");
+            throw std::runtime_error("cyl_bessel_j x must be >= 0");
 
         // Identity: J_-nu(x) = cos(pi nu) J_nu(x) - sin(pi nu) Y_nu(x)
         if (nu < 0) {
             nu = -nu;
             if (int(nu) == nu) {
-                if (int(nu) % 2 == 0) return BesselJ(nu, x);
-                else return -BesselJ(nu, x);
+                if (int(nu) % 2 == 0) return cyl_bessel_j(nu, x);
+                else return -cyl_bessel_j(nu, x);
             } else {
                 double c = std::cos(M_PI * nu);
                 double s = std::sin(M_PI * nu);
-                return c * BesselJ(nu, x) - s * BesselY(nu, x);
+                return c * cyl_bessel_j(nu, x) - s * cyl_bessel_y(nu, x);
             }
         }
 
@@ -88,45 +89,29 @@ namespace math {
             std::cerr<<"J("<<nu<<","<<x<<") = "<<jnu2<<"  =? "<<jnu<<std::endl;
             std::cerr<<"diff = "<<jnu-jnu2<<std::endl;
             std::cerr<<"rel diff = "<<(jnu-jnu2)/std::abs(jnu2)<<std::endl;
-            throw std::runtime_error("BesselJ doesn't agree with boost::cyl_bessel_j");
+            throw std::runtime_error("cyl_bessel_j doesn't agree with boost::cyl_bessel_j");
         }
 #endif
         return jnu;
     }
 
-    // It's not much faster to have these specializations, but people will expect them.
-    // We only do it for J though.  It there is demand, it would be trivial to add the others.
-    double BesselJ0(double x)
-    {
-        if (x < 0)
-            throw std::runtime_error("BesselJ0 x must be >= 0");
-        return dbesj0(x);
-    }
-
-    double BesselJ1(double x)
-    {
-        if (x < 0)
-            throw std::runtime_error("BesselJ1 x must be >= 0");
-        return dbesj1(x);
-    }
-
-    double BesselY(double nu, double x)
+    double cyl_bessel_y(double nu, double x)
     {
         // Negative arguments yield complex values, so don't do that.
         // And Y_nu(0) = inf.
         if (x <= 0)
-            throw std::runtime_error("BesselY x must be > 0");
+            throw std::runtime_error("cyl_bessel_y x must be > 0");
 
         // Identity: Y_-nu(x) = cos(pi nu) Y_nu(x) + sin(pi nu) J_nu(x)
         if (nu < 0) {
             nu = -nu;
             if (int(nu) == nu) {
-                if (int(nu) % 2 == 1) return -BesselY(nu, x);
-                else return BesselY(nu, x);
+                if (int(nu) % 2 == 1) return -cyl_bessel_y(nu, x);
+                else return cyl_bessel_y(nu, x);
             } else {
                 double c = std::cos(M_PI * nu);
                 double s = std::sin(M_PI * nu);
-                return c * BesselY(nu, x) + s * BesselJ(nu, x);
+                return c * cyl_bessel_y(nu, x) + s * cyl_bessel_j(nu, x);
             }
         }
 
@@ -138,21 +123,21 @@ namespace math {
             std::cerr<<"Y("<<nu<<","<<x<<") = "<<ynu2<<"  =? "<<ynu<<std::endl;
             std::cerr<<"diff = "<<ynu-ynu2<<std::endl;
             std::cerr<<"rel diff = "<<(ynu-ynu2)/std::abs(ynu2)<<std::endl;
-            throw std::runtime_error("BesselY doesn't agree with boost::cyl_bessel_y");
+            throw std::runtime_error("cyl_bessel_y doesn't agree with boost::cyl_bessel_y");
         }
 #endif
         return ynu;
     }
 
-    double BesselI(double nu, double x)
+    double cyl_bessel_i(double nu, double x)
     {
         // Negative arguments yield complex values, so don't do that.
         if (x < 0)
-            throw std::runtime_error("BesselI x must be >= 0");
+            throw std::runtime_error("cyl_bessel_i x must be >= 0");
 
         // Identity: I_−nu(x) = I_nu(z) + 2/pi sin(pi nu) K_nu(x)
         if (nu < 0)
-            return BesselI(-nu, x) + 2./M_PI * std::sin(-M_PI*nu) * BesselK(-nu,x);
+            return cyl_bessel_i(-nu, x) + 2./M_PI * std::sin(-M_PI*nu) * cyl_bessel_k(-nu,x);
 
         double inu = dbesi(x, nu);
 #ifdef TEST
@@ -162,13 +147,13 @@ namespace math {
             std::cerr<<"K("<<nu<<","<<x<<") = "<<inu2<<"  =? "<<inu<<std::endl;
             std::cerr<<"diff = "<<inu-inu2<<std::endl;
             std::cerr<<"rel diff = "<<(inu-inu2)/std::abs(inu2)<<std::endl;
-            throw std::runtime_error("BesselI doesn't agree with boost::cyl_bessel_i");
+            throw std::runtime_error("cyl_bessel_i doesn't agree with boost::cyl_bessel_i");
         }
 #endif
         return inu;
     }
 
-    double BesselK(double nu, double x)
+    double cyl_bessel_k(double nu, double x)
     {
         // Identity: K_-nu(x) = K_nu(x)
         nu = std::abs(nu);
@@ -176,7 +161,7 @@ namespace math {
         // Negative arguments yield complex values, so don't do that.
         // And K_nu(0) = inf.
         if (x <= 0)
-            throw std::runtime_error("BesselK x must be > 0");
+            throw std::runtime_error("cyl_bessel_k x must be > 0");
 
         double knu = dbesk(x, nu);
 #ifdef TEST
@@ -186,7 +171,7 @@ namespace math {
             std::cerr<<"K("<<nu<<","<<x<<") = "<<knu2<<"  =? "<<knu<<std::endl;
             std::cerr<<"diff = "<<knu-knu2<<std::endl;
             std::cerr<<"rel diff = "<<(knu-knu2)/std::abs(knu2)<<std::endl;
-            throw std::runtime_error("BesselK doesn't agree with boost::cyl_bessel_k");
+            throw std::runtime_error("cyl_bessel_k doesn't agree with boost::cyl_bessel_k");
         }
 #endif
         return knu;

@@ -321,7 +321,7 @@ namespace galsim {
         if (ksq == 0.) return 1.;
         else {
             double k = sqrt(ksq);
-            return math::BesselK(1,k) * k;
+            return math::cyl_bessel_k(1,k) * k;
         }
     }
 
@@ -336,7 +336,7 @@ namespace galsim {
         if (ksq == 0.) return 2.;
         else {
             double k = sqrt(ksq);
-            return math::BesselK(2,k) * ksq;
+            return math::cyl_bessel_k(2,k) * ksq;
         }
     }
 
@@ -351,7 +351,7 @@ namespace galsim {
         if (ksq == 0.) return 8.;
         else {
             double k = sqrt(ksq);
-            return math::BesselK(3,k) * k*ksq;
+            return math::cyl_bessel_k(3,k) * k*ksq;
         }
     }
 
@@ -360,7 +360,7 @@ namespace galsim {
         if (ksq == 0.) return _flux/_knorm;
         else {
             double k = sqrt(ksq);
-            return math::BesselK(_beta-1,k) * fast_pow(k,_beta-1);
+            return math::cyl_bessel_k(_beta-1,k) * fast_pow(k,_beta-1);
         }
     }
 
@@ -629,7 +629,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = math::BesselJ0Root(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * _maxRrD) break;
                 reg.addSplit(root/k);
             }
