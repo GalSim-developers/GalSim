@@ -27,6 +27,7 @@
 #include "Solve.h"
 #include "math/BesselRoots.h"
 #include "math/Bessel.h"
+#include "math/Gamma.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -273,7 +274,7 @@ namespace galsim {
             _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
-            _knorm *= 4. / (std::tgamma(beta-1.) * std::pow(2.,beta));
+            _knorm *= 4. / (math::tgamma(beta-1.) * std::pow(2.,beta));
         }
     }
 
@@ -522,7 +523,7 @@ namespace galsim {
                 // Solve for f(k) = maxk_threshold
                 //
                 double temp = (this->gsparams->maxk_threshold
-                               * std::tgamma(_beta-1.)
+                               * math::tgamma(_beta-1.)
                                * std::pow(2.,_beta-0.5)
                                / (2. * sqrt(M_PI)));
                 // Solve k^(beta-1/2) exp(-k) = temp

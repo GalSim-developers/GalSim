@@ -21,7 +21,7 @@
 #include <limits>
 
 #include "Std.h"
-#include "math/IncompleteGamma.h"
+#include "math/Gamma.h"
 
 //#define TEST // Uncomment this to turn on testing of this code against boost code.
                // It does some additional testing beyond just what we get from the SBSersic
@@ -34,10 +34,31 @@
 namespace galsim {
 namespace math {
 
+    // Defined below.
+    double dgamma(double x);
+    double d9lgmc(double x);
     double dgamit(double a, double x);
     double d9lgit(double a, double x);
     double d9gmit(double a, double x, double algap1, double sgngam);
     double d9lgic(double a, double x);
+
+    // Defined in BesselJ.cpp
+    double dcsevl(double x, const double* cs, int n);
+
+    double tgamma(double x)
+    {
+        double g = dgamma(x);
+#ifdef TEST
+        double g2 = boost::math::tgamma(x);
+        if (std::abs(g-g2) > 1.e-6) {
+            std::cerr<<"tgamma("<<x<<") = "<<g2<<"  =? "<<g<<std::endl;
+            throw std::runtime_error("tgamma doesn't agree with boost tgamma");
+        }
+        // We don't normally use x < 1, so test those too.
+        if (x>1) tgamma(1./x);
+#endif
+        return g;
+    }
 
     double gamma_p(double a, double x)
     {
@@ -74,6 +95,202 @@ namespace math {
     // to C++ (guided by f2c, but then manually edited).
     // I left the original PROLOGUEs from the fortran code intact, but added a line to their
     // revision histories that I converted them to C++.
+    double dgamma(double x)
+    {
+        // ***BEGIN PROLOGUE  DGAMMA
+        // ***PURPOSE  Compute the complete Gamma function.
+        // ***LIBRARY   SLATEC (FNLIB)
+        // ***CATEGORY  C7A
+        // ***TYPE      DOUBLE PRECISION (GAMMA-S, DGAMMA-D, CGAMMA-C)
+        // ***KEYWORDS  COMPLETE GAMMA FUNCTION, FNLIB, SPECIAL FUNCTIONS
+        // ***AUTHOR  Fullerton, W., (LANL)
+        // ***DESCRIPTION
+
+        // DGAMMA(X) calculates the double precision complete Gamma function
+        // for double precision argument X.
+
+        // Series for GAM        on the interval  0.          to  1.00000E+00
+        //                                        with weighted error   5.79E-32
+        //                                         log weighted error  31.24
+        //                               significant figures required  30.00
+        //                                    decimal places required  32.05
+
+        // ***REFERENCES  (NONE)
+        // ***ROUTINES CALLED  D1MACH, D9LGMC, DCSEVL, DGAMLM, INITDS, XERMSG
+        // ***REVISION HISTORY  (YYMMDD)
+        //   770601  DATE WRITTEN
+        //   890531  Changed all specific intrinsics to generic.  (WRB)
+        //   890911  Removed unnecessary intrinsics.  (WRB)
+        //   890911  REVISION DATE from Version 3.2
+        //   891214  Prologue converted to Version 4.0 format.  (BAB)
+        //   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
+        //   920618  Removed space from variable name.  (RWC, WRB)
+        //   170817  Converted to C++. (MJ)
+        // ***END PROLOGUE  DGAMMA
+
+        const double gamcs[42] = {
+            0.008571195590989331421920062399942,
+            0.004415381324841006757191315771652,
+            0.05685043681599363378632664588789,
+            -0.004219835396418560501012500186624,
+            0.001326808181212460220584006796352,
+            -1.893024529798880432523947023886e-4,
+            3.606925327441245256578082217225e-5,
+            -6.056761904460864218485548290365e-6,
+            1.055829546302283344731823509093e-6,
+            -1.811967365542384048291855891166e-7,
+            3.117724964715322277790254593169e-8,
+            -5.354219639019687140874081024347e-9,
+            9.19327551985958894688778682594e-10,
+            -1.577941280288339761767423273953e-10,
+            2.707980622934954543266540433089e-11,
+            -4.646818653825730144081661058933e-12,
+            7.973350192007419656460767175359e-13,
+            -1.368078209830916025799499172309e-13,
+            2.347319486563800657233471771688e-14,
+            -4.027432614949066932766570534699e-15,
+            6.910051747372100912138336975257e-16,
+            -1.185584500221992907052387126192e-16,
+            2.034148542496373955201026051932e-17,
+            -3.490054341717405849274012949108e-18,
+            5.987993856485305567135051066026e-19,
+            -1.027378057872228074490069778431e-19,
+            1.762702816060529824942759660748e-20,
+            -3.024320653735306260958772112042e-21,
+            5.188914660218397839717833550506e-22,
+            -8.902770842456576692449251601066e-23,
+            1.527474068493342602274596891306e-23,
+            -2.620731256187362900257328332799e-24,
+            4.496464047830538670331046570666e-25,
+            -7.714712731336877911703901525333e-26,
+            1.323635453126044036486572714666e-26,
+            -2.270999412942928816702313813333e-27,
+            3.896418998003991449320816639999e-28,
+            -6.685198115125953327792127999999e-29,
+            1.146998663140024384347613866666e-29,
+            -1.967938586345134677295103999999e-30,
+            3.376448816585338090334890666666e-31,
+            -5.793070335782135784625493333333e-32 };
+        const double pi = 3.1415926535897932384626433832795;
+        const double sq2pil = .91893853320467274178032973640562;
+        const int ngam = 23;
+
+        if (x == 0.)
+            throw std::runtime_error("Argument of dgamma is 0.");
+
+        double y = std::abs(x);
+        if (y > 10.) {
+
+            // GAMMA(X) FOR ABS(X) .GT. 10.0.  RECALL Y = ABS(X).
+            double ret_val = std::exp((y - 0.5) * std::log(y) - y + sq2pil + d9lgmc(y));
+            if (x > 0.) return ret_val;
+            else {
+                double sinpiy = std::sin(pi * y);
+                if (sinpiy == 0.)
+                    throw std::runtime_error("Argument of dgamma is a negative integer");
+                ret_val = -pi / (y * sinpiy * ret_val);
+                return ret_val;
+            }
+
+        } else {
+
+            // COMPUTE GAMMA(X) FOR -XBND .LE. X .LE. XBND.  REDUCE INTERVAL AND FIND
+            // GAMMA(1+Y) FOR 0.0 .LE. Y .LT. 1.0 FIRST OF ALL.
+
+            int n = int(x);
+            if (x < 0.) --n;
+            y = x - n;
+            --n;
+            double z = 2.*y - 1.;
+            double ret_val = dcsevl(z, gamcs, ngam) + .9375;
+            if (n == 0) return ret_val;
+            else if (n > 0) {
+
+                /* GAMMA(X) FOR X .GE. 2.0 AND X .LE. 10.0 */
+                for (int i=1; i <= n; ++i)
+                    ret_val = (y + i) * ret_val;
+                return ret_val;
+
+            } else {
+
+                /* COMPUTE GAMMA(X) FOR X .LT. 1.0 */
+                n = -n;
+                if (x < 0. && x+n-2 == 0.) 
+                    throw std::runtime_error("argument of dgamma is a negative integer");
+
+                for (int i=1; i<=n; ++i) 
+                    ret_val /= x + i - 1;
+                return ret_val;
+            }
+        }
+    }
+
+    double d9lgmc(double x)
+    {
+        // ***BEGIN PROLOGUE  D9LGMC
+        // ***SUBSIDIARY
+        // ***PURPOSE  Compute the log Gamma correction factor so that
+        //            LOG(DGAMMA(X)) = LOG(SQRT(2*PI)) + (X-5.)*LOG(X) - X
+        //            + D9LGMC(X).
+        // ***LIBRARY   SLATEC (FNLIB)
+        // ***CATEGORY  C7E
+        // ***TYPE      DOUBLE PRECISION (R9LGMC-S, D9LGMC-D, C9LGMC-C)
+        // ***KEYWORDS  COMPLETE GAMMA FUNCTION, CORRECTION TERM, FNLIB,
+        //             LOG GAMMA, LOGARITHM, SPECIAL FUNCTIONS
+        // ***AUTHOR  Fullerton, W., (LANL)
+        // ***DESCRIPTION
+
+        // Compute the log gamma correction factor for X .GE. 10. so that
+        // LOG (DGAMMA(X)) = LOG(SQRT(2*PI)) + (X-.5)*LOG(X) - X + D9lGMC(X)
+
+        // Series for ALGM       on the interval  0.          to  1.00000E-02
+        //                                        with weighted error   1.28E-31
+        //                                         log weighted error  30.89
+        //                               significant figures required  29.81
+        //                                    decimal places required  31.48
+
+        // ***REFERENCES  (NONE)
+        // ***ROUTINES CALLED  D1MACH, DCSEVL, INITDS, XERMSG
+        // ***REVISION HISTORY  (YYMMDD)
+        //   770601  DATE WRITTEN
+        //   890531  Changed all specific intrinsics to generic.  (WRB)
+        //   890531  REVISION DATE from Version 3.2
+        //   891214  Prologue converted to Version 4.0 format.  (BAB)
+        //   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
+        //   900720  Routine changed from user-callable to subsidiary.  (WRB)
+        //   170817  Converted to C++. (MJ)
+        // ***END PROLOGUE  D9LGMC
+        // ***FIRST EXECUTABLE STATEMENT  D9LGMC
+
+        const double algmcs[15] = {
+            0.1666389480451863247205729650822,
+            -1.384948176067563840732986059135e-5,
+            9.810825646924729426157171547487e-9,
+            -1.809129475572494194263306266719e-11,
+            6.221098041892605227126015543416e-14,
+            -3.399615005417721944303330599666e-16,
+            2.683181998482698748957538846666e-18,
+            -2.868042435334643284144622399999e-20,
+            3.962837061046434803679306666666e-22,
+            -6.831888753985766870111999999999e-24,
+            1.429227355942498147573333333333e-25,
+            -3.547598158101070547199999999999e-27,1.025680058010470912e-28,
+            -3.401102254316748799999999999999e-30,
+            1.276642195630062933333333333333e-31
+        };
+        const double xbig = 1. / std::numeric_limits<double>::epsilon();
+        const int nalgm = 7;
+
+        double ret_val = 1. / (x * 12.);
+        if (x < xbig) {
+            // Computing 2nd power
+            double temp = 10. / x;
+            temp = temp * temp* 2. - 1.;
+            ret_val = dcsevl(temp, algmcs, nalgm) / x;
+        }
+        return ret_val;
+    }
+
     double dgamit(double a, double x)
     {
         // ***BEGIN PROLOGUE  DGAMIT
@@ -136,7 +353,7 @@ namespace math {
         double aeps = a - ainta;
 
         if (x == 0.)
-            return (ainta > 0. || aeps != 0.) ? 1. / std::tgamma(a+1.) : 0.;
+            return (ainta > 0. || aeps != 0.) ? 1. / math::tgamma(a+1.) : 0.;
 
         if (x <= 1.) {
             double algap1 = (a >= -0.5 || aeps != 0.) ? std::lgamma(a+1.) : 0.;
