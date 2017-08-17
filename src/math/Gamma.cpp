@@ -414,7 +414,7 @@ namespace math {
 
         assert(x >= 0.);
 
-        double sga = a == 0. ? 1.0 : std::copysign(1.0, a);
+        double sga = a >= 0. ? 1.0 : -1.0;
         double ainta = std::floor(a + sga * 0.5);
         double aeps = a - ainta;
 
@@ -449,7 +449,7 @@ namespace math {
             h = 1. - sga * sgngam * std::exp(t);
         }
         t = -a * std::log(x) + std::log((std::abs(h)));
-        return std::copysign(std::exp(t), h);
+        return h >= 0. ? std::exp(t) : -std::exp(t);
     }
 
     double d9lgit(double a, double x)
@@ -581,7 +581,7 @@ namespace math {
         if (s == 0. || aeps == 0.)
             return std::exp(-ma * std::log(x) + algs);
 
-        double sgng2 = sgngam * std::copysign(1., s);
+        double sgng2 = s >= 0. ? sgngam : -sgngam;
         double alg2 = -x - algap1 + std::log((std::abs(s)));
 
         double ret_val = 0.;

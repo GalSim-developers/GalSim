@@ -934,7 +934,7 @@ namespace math {
         double t = 1. / ra;
         double t2 = t * t;
         t /= fn;
-        t = std::copysign(t, flgik);
+        t *= flgik;
         double s2 = 1.;
         double ap = 1.;
         int l = 0;
