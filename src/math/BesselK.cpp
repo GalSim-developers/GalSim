@@ -24,6 +24,8 @@
 #include <limits>
 #include <algorithm>
 
+#include "math/Gamma.h"
+
 // The functions in this file and the other Bessel?.cpp files are manual conversions from the
 // public domain fortran code here:
 //
@@ -877,8 +879,8 @@ namespace math {
             //     SERIES FOR X.LE.X1
             double a1 = 1. - dnu;
             double a2 = dnu + 1.;
-            double t1 = 1. / std::tgamma(a1);
-            double t2 = 1. / std::tgamma(a2);
+            double t1 = 1. / math::tgamma(a1);
+            double t2 = 1. / math::tgamma(a2);
             double g1;
             if (std::abs(dnu) > .1) {
                 g1 = (t1 - t2) / (dnu + dnu);
