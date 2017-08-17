@@ -588,22 +588,23 @@ def test_shear_units():
 
     grid_size = 10. # degrees
     ngrid = 100
+    grid_spacing = 3600. * grid_size / ngrid
 
     # Define a PS with some normalization value P(k=1/arcsec)=1 arcsec^2.
     # For this case we are getting the shears using units of arcsec for everything.
     ps = galsim.PowerSpectrum(lambda k : k)
-    g1, g2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+    g1, g2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
                           rng = galsim.BaseDeviate(rand_seed))
     # The above was done with all inputs given in arcsec.  Now, redo it, inputting the PS
     # information in degrees and the grid info in arcsec.
     # We know that if k=1/arcsec, then when expressed as 1/degrees, it is
     # k=3600/degree.  So define the PS as P(k=3600/degree)=(1/3600.)^2 degree^2.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units=galsim.degrees)
-    g1_2, g2_2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+    g1_2, g2_2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
                               rng=galsim.BaseDeviate(rand_seed))
     # Finally redo it, inputting the PS and grid info in degrees.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units='degrees')
-    g1_3, g2_3 = ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+    g1_3, g2_3 = ps.buildGrid(grid_spacing=grid_spacing/3600., ngrid=ngrid,
                               units='degrees', rng=galsim.BaseDeviate(rand_seed))
 
     # Since same random seed was used, require complete equality of shears, which would show that
@@ -617,6 +618,22 @@ def test_shear_units():
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
 
+    # Can also change the units in the getShear function
+    origin = galsim.PositionD(-grid_size/2. * 3600. + grid_spacing/2.,
+                              -grid_size/2. * 3600. + grid_spacing/2.)
+    g1_4, g2_4 = ps.getShear(origin, reduced=False)
+    np.testing.assert_almost_equal(g1_4, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_4, g2[0,0], decimal=12)
+
+    origin /= 3600.
+    g1_5, g2_5 = ps.getShear(origin, reduced=False, units=galsim.degrees)
+    np.testing.assert_almost_equal(g1_5, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_5, g2[0,0], decimal=12)
+
+    origin *= 60.
+    g1_6, g2_6 = ps.getShear(origin, reduced=False, units='arcmin')
+    np.testing.assert_almost_equal(g1_6, g1[0,0], decimal=12)
+    np.testing.assert_almost_equal(g2_6, g2[0,0], decimal=12)
 
 @timer
 def test_tabulated():
@@ -954,6 +971,11 @@ def test_corr_func():
             test_xip, theory_val, decimal=10,
             err_msg='Integrated xi+ differs from reference values')
 
+    # Repeat with different units
+    t, test_xip2, _ = ps.calculateXi(grid_spacing=grid_spacing/3600, ngrid=ngrid, n_theta=n_theta,
+                                     bandlimit='hard', units='deg')
+    np.testing.assert_array_almost_equal(test_xip2, test_xip, decimal=12)
+
     # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
     # engine output:
     #    xi-(r) = (1/2pi) \int_{kmin}^{kmax} P(k) J_4(kr) k dk
@@ -975,22 +997,28 @@ def test_corr_func():
     # zero: (k+1e-12)^{-4} instead of k^{-4}
     ps = galsim.PowerSpectrum(lambda k : (k+1.e-12)**(-4))
     t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
-                                    bandlimit='hard')
+                                           bandlimit='hard')
     # Now we have to calculate the theoretical values.
-    theory_val = np.zeros_like(t)
-    for ind in range(len(theory_val)):
-        theory_val[ind] = \
-            galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
-    theory_val /= (2.*np.pi*t)
+    theory_xim = np.zeros_like(t)
+    for ind in range(len(theory_xim)):
+        theory_xim[ind] = (galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 -
+                           galsim.bessel.jn(3,t[ind]*kmax)/kmax**3)
+    theory_xim /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
     try:
-        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
+        np.testing.assert_allclose(test_xim, theory_xim, rtol=1.e-5,
                                    err_msg='Integrated xi+ differs from reference values')
     except AttributeError:
         # Older NumPy versions don't have assert_allclose, so use this instead.
         np.testing.assert_array_almost_equal(
-            test_xim, theory_val, decimal=10,
+            test_xim, theory_xim, decimal=10,
             err_msg='Integrated xi+ differs from reference values')
+
+    # Repeat with different units
+    t, _, test_xim2 = ps.calculateXi(grid_spacing=grid_spacing/3600, ngrid=ngrid, n_theta=n_theta,
+                                    bandlimit='hard', units='deg')
+    np.testing.assert_array_almost_equal(test_xim2, test_xim, decimal=12)
+
 
 
 @timer

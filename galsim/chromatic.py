@@ -1358,17 +1358,19 @@ class ChromaticAtmosphere(ChromaticObject):
                 self.alpha == other.alpha and
                 self.zenith_angle == other.zenith_angle and
                 self.parallactic_angle == other.parallactic_angle and
+                self.scale_unit == other.scale_unit and
                 self.kw == other.kw)
 
     def __hash__(self):
         return hash(("galsim.ChromaticAtmosphere", self.base_obj, self.base_wavelength,
-                     self.alpha, self.zenith_angle, self.parallactic_angle,
+                     self.alpha, self.zenith_angle, self.parallactic_angle, self.scale_unit,
                      frozenset(self.kw.items())))
 
     def __repr__(self):
         s = 'galsim.ChromaticAtmosphere(%r, base_wavelength=%r, alpha=%r'%(
                 self.base_obj, self.base_wavelength, self.alpha)
         s += ', zenith_angle=%r, parallactic_angle=%r'%(self.zenith_angle, self.parallactic_angle)
+        s += ', scale_unit=%r'%(self.scale_unit)
         for k,v in self.kw.items():
             s += ', %s=%r'%(k,v)
         s += ')'

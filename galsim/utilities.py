@@ -1225,7 +1225,7 @@ def math_eval(str, other_modules=()):
     exec_('import numpy as np', gdict)
     exec_('import math', gdict)
     exec_('import coord', gdict)
-    for m in other_modules:
+    for m in other_modules:  # pragma: no cover  (We don't use this.)
         exec_('import ' + m, gdict)
     return eval(str, gdict)
 
