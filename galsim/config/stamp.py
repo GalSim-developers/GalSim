@@ -226,7 +226,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
     if isinstance(world_pos, galsim.CelestialCoord):
         # Then project this position relative to the image center.
         world_center = config['wcs'].toWorld(config['image_center'])
-        world_pos = world_center.project(world_pos, projection='gnomonic')
+        u, v = world_center.project(world_pos, projection='gnomonic')
+        world_pos = galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
 
     if image_pos is not None:
         # The image_pos refers to the location of the true center of the image, which is

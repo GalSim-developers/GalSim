@@ -209,10 +209,12 @@ def main(argv):
     theta = 0.17 * galsim.degrees
     # ( dudx  dudy ) = ( cos(theta)  -sin(theta) ) * pixel_scale
     # ( dvdx  dvdy )   ( sin(theta)   cos(theta) )
-    dudx = math.cos(theta.rad()) * pixel_scale
-    dudy = -math.sin(theta.rad()) * pixel_scale
-    dvdx = math.sin(theta.rad()) * pixel_scale
-    dvdy = math.cos(theta.rad()) * pixel_scale
+    # Aside: You can call numpy trig functions on Angle objects directly, rather than getting
+    #        their values in radians first.
+    dudx = numpy.cos(theta) * pixel_scale
+    dudy = -numpy.sin(theta) * pixel_scale
+    dvdx = numpy.sin(theta) * pixel_scale
+    dvdy = numpy.cos(theta) * pixel_scale
     image_center = full_image.trueCenter()
     affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=full_image.trueCenter())
 
@@ -238,7 +240,7 @@ def main(argv):
         # cos(dec) part of the metric: ds^2 = dr^2 + r^2 d(dec)^2 + r^2 cos^2(dec) d(ra)^2
         # So need to calculate dec first.
         dec = center_dec + (ud()-0.5) * image_size_arcsec * galsim.arcsec
-        ra = center_ra + (ud()-0.5) * image_size_arcsec / math.cos(dec.rad()) * galsim.arcsec
+        ra = center_ra + (ud()-0.5) * image_size_arcsec / numpy.cos(dec) * galsim.arcsec
         world_pos = galsim.CelestialCoord(ra,dec)
 
         # We will need the image position as well, so use the wcs to get that
