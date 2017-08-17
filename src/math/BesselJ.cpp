@@ -24,6 +24,8 @@
 #include <limits>
 #include <algorithm>
 
+#include "math/Gamma.h"
+
 // The functions in this file and the other Bessel?.cpp files are manual conversions from the
 // public domain fortran code here:
 //
@@ -227,7 +229,7 @@ namespace math {
         double jnu;
         if (series) {
             //     SERIES FOR (X/2)**2.LE.NU+1
-            double gln = std::lgamma(fn+1);
+            double gln = math::lgamma(fn+1);
             double xo2l = std::log(xo2);
             double arg = fn * xo2l - gln;
             if (arg < -elim1) return 0.;

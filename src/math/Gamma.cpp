@@ -36,6 +36,7 @@ namespace math {
 
     // Defined below.
     double dgamma(double x);
+    double dlngam(double x);
     double d9lgmc(double x);
     double dgamit(double a, double x);
     double d9lgit(double a, double x);
@@ -56,6 +57,20 @@ namespace math {
         }
         // We don't normally use x < 1, so test those too.
         if (x>1) tgamma(1./x);
+#endif
+        return g;
+    }
+
+    double lgamma(double x)
+    {
+        double g = dlngam(x);
+#ifdef TEST
+        double g2 = boost::math::lgamma(x);
+        if (std::abs(g-g2) > 1.e-6) {
+            std::cerr<<"lgamma("<<x<<") = "<<g2<<"  =? "<<g<<std::endl;
+            throw std::runtime_error("lgamma doesn't agree with boost lgamma");
+        }
+        if (x>1) lgamma(1./x);
 #endif
         return g;
     }
@@ -188,8 +203,7 @@ namespace math {
                 double sinpiy = std::sin(pi * y);
                 if (sinpiy == 0.)
                     throw std::runtime_error("Argument of dgamma is a negative integer");
-                ret_val = -pi / (y * sinpiy * ret_val);
-                return ret_val;
+                return -pi / (y * sinpiy * ret_val);
             }
 
         } else {
@@ -206,14 +220,14 @@ namespace math {
             if (n == 0) return ret_val;
             else if (n > 0) {
 
-                /* GAMMA(X) FOR X .GE. 2.0 AND X .LE. 10.0 */
+                // GAMMA(X) FOR X .GE. 2.0 AND X .LE. 10.0
                 for (int i=1; i <= n; ++i)
                     ret_val = (y + i) * ret_val;
                 return ret_val;
 
             } else {
 
-                /* COMPUTE GAMMA(X) FOR X .LT. 1.0 */
+                // COMPUTE GAMMA(X) FOR X .LT. 1.0
                 n = -n;
                 if (x < 0. && x+n-2 == 0.) 
                     throw std::runtime_error("argument of dgamma is a negative integer");
@@ -222,6 +236,60 @@ namespace math {
                     ret_val /= x + i - 1;
                 return ret_val;
             }
+        }
+    }
+
+    double dlngam(double x)
+    {
+        // ***BEGIN PROLOGUE  DLNGAM
+        // ***PURPOSE  Compute the logarithm of the absolute value of the Gamma
+        //            function.
+        // ***LIBRARY   SLATEC (FNLIB)
+        // ***CATEGORY  C7A
+        // ***TYPE      DOUBLE PRECISION (ALNGAM-S, DLNGAM-D, CLNGAM-C)
+        // ***KEYWORDS  ABSOLUTE VALUE, COMPLETE GAMMA FUNCTION, FNLIB, LOGARITHM,
+        //             SPECIAL FUNCTIONS
+        // ***AUTHOR  Fullerton, W., (LANL)
+        // ***DESCRIPTION
+
+        // DLNGAM(X) calculates the double precision logarithm of the
+        // absolute value of the Gamma function for double precision
+        // argument X.
+
+        // ***REFERENCES  (NONE)
+        // ***ROUTINES CALLED  D1MACH, D9LGMC, DGAMMA, XERMSG
+        // ***REVISION HISTORY  (YYMMDD)
+        //   770601  DATE WRITTEN
+        //   890531  Changed all specific intrinsics to generic.  (WRB)
+        //   890531  REVISION DATE from Version 3.2
+        //   891214  Prologue converted to Version 4.0 format.  (BAB)
+        //   900315  CALLs to XERROR changed to CALLs to XERMSG.  (THJ)
+        //   900727  Added EXTERNAL statement.  (WRB)
+        //   170817  Converted to C++. (MJ)
+        // ***END PROLOGUE  DLNGAM
+
+        static double sq2pil = 0.91893853320467274178032973640562;
+        static double sqpi2l = 0.225791352644727432363097614947441;
+        static double pi = 3.1415926535897932384626433832795;
+
+        if (x == 0.)
+            throw std::runtime_error("Argument of dlngam is 0.");
+
+        double y = std::abs(x);
+        if (y > 10.) {
+            // LOG ( ABS (DGAMMA(X)) ) FOR ABS(X) .GT. 10.0
+
+            if (x > 0.) {
+                return sq2pil + (x - 0.5) * std::log(x) - x + d9lgmc(y);
+            } else {
+                double sinpiy = std::abs(std::sin(pi * y));
+                if (sinpiy == 0.)
+                    throw std::runtime_error("Argument of lgamma is a negative integer");
+                return sqpi2l + (x - 0.5) * std::log(y) - x - std::log(sinpiy) - d9lgmc(y);
+            }
+        } else {
+            // LOG (ABS (DGAMMA(X)) ) FOR ABS(X) .LE. 10.0
+            return std::log(std::abs(dgamma(x)));
         }
     }
 
@@ -260,7 +328,6 @@ namespace math {
         //   900720  Routine changed from user-callable to subsidiary.  (WRB)
         //   170817  Converted to C++. (MJ)
         // ***END PROLOGUE  D9LGMC
-        // ***FIRST EXECUTABLE STATEMENT  D9LGMC
 
         const double algmcs[15] = {
             0.1666389480451863247205729650822,
@@ -344,7 +411,6 @@ namespace math {
 
         const double eps = std::numeric_limits<double>::epsilon();
         const double alneps = -std::log(eps);
-        const double sqeps = std::sqrt(eps);
 
         assert(x >= 0.);
 
@@ -356,7 +422,7 @@ namespace math {
             return (ainta > 0. || aeps != 0.) ? 1. / math::tgamma(a+1.) : 0.;
 
         if (x <= 1.) {
-            double algap1 = (a >= -0.5 || aeps != 0.) ? std::lgamma(a+1.) : 0.;
+            double algap1 = (a >= -0.5 || aeps != 0.) ? math::lgamma(a+1.) : 0.;
             double sgngam = (a < 0. && int(std::floor(a)) % 2 == 1) ? -1 : 1.;
             return d9gmit(a, x, algap1, sgngam);
         }
@@ -370,7 +436,7 @@ namespace math {
             return std::pow(x,-a);
 
         double alng = d9lgic(a, x);
-        double algap1 = std::lgamma(a+1.);
+        double algap1 = math::lgamma(a+1.);
         double sgngam = (a < 0. && int(std::floor(a)) % 2 == 1) ? -1 : 1.;
         double t = std::log((std::abs(a))) + alng - algap1;
         if (t > alneps) {
@@ -382,12 +448,8 @@ namespace math {
         if (t > -alneps) {
             h = 1. - sga * sgngam * std::exp(t);
         }
-        if (std::abs(h) > sqeps) {
-            t = -a * std::log(x) + std::log((std::abs(h)));
-            return std::copysign(std::exp(t), h);
-        }
-
-        throw std::runtime_error("DGAMIT RESULT LESS THAN HALF PRECISION");
+        t = -a * std::log(x) + std::log((std::abs(h)));
+        return std::copysign(std::exp(t), h);
     }
 
     double d9lgit(double a, double x)
@@ -421,12 +483,11 @@ namespace math {
         // ***END PROLOGUE  D9LGIT
 
         const double eps = std::numeric_limits<double>::epsilon() * 0.5;
-        const double sqeps = std::sqrt(std::numeric_limits<double>::epsilon() * 2.);
 
         assert(x > 0.);
         assert(a >= x);
 
-        double algap1 = std::lgamma(a+1.);
+        double algap1 = math::lgamma(a+1.);
         double ax = a + x;
         double a1x = ax + 1.;
         double r = 0.;
@@ -440,8 +501,6 @@ namespace math {
             s += p;
             if (std::abs(p) < eps * s) {
                 double hstar = 1. - x * s / a1x;
-                if (hstar < sqeps)
-                    throw std::runtime_error("D9LGIT RESULT LESS THAN HALF PRECISION");
                 return -x - algap1 - std::log(hstar);
             }
         }
@@ -505,7 +564,7 @@ namespace math {
         if (a >= -0.5)
             return std::exp(-algap1 + std::log(s));
 
-        double algs = -std::lgamma(aeps + 1.) + std::log(s);
+        double algs = -math::lgamma(aeps + 1.) + std::log(s);
         s = 1.;
         int m = -ma - 1;
         if (m != 0) {

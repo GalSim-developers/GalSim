@@ -31,9 +31,11 @@ namespace math {
     // Note, the regular (not incomplete) gamma function is available as std::tgamma(x) in
     // c++11, so we don't need to implement that one ourselves (nor use boost).
     using std::tgamma;
+    using std::lgamma;
 #else
     // But if not using c++11, then we need to implement it ourselves.
     double tgamma(double x);
+    double lgamma(double x);
 #endif
 
     // This specific function is what boost calls gamma_p:
