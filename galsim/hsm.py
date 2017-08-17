@@ -439,7 +439,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
 
     @returns a ShapeData object containing the results of shape measurement.
     """
-    # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
+    # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
     weight = _convertMask(gal_image, weight=weight, badpix=badpix)
@@ -549,7 +549,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
     @returns a ShapeData object containing the results of moment measurement.
     """
-    # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
+    # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
     weight = _convertMask(object_image, weight=weight, badpix=badpix)
 
