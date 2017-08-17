@@ -931,7 +931,8 @@ class Image(object):
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
         if self.bounds.numpyShape() != rhs.bounds.numpyShape():
-            raise ValueError("Trying to copy images that are not the same shape")
+            raise ValueError("Trying to copy images that are not the same shape (%s -> %s)"%(
+                             rhs.bounds, self.bounds))
         self._array[:,:] = rhs.array[:,:]
 
     def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
