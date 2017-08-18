@@ -192,7 +192,7 @@ namespace galsim {
                         int index = (polyi - minx) * (maxy - miny + 1) + (polyj - miny);
 
                         int disti = nxCenter + di;
-                        int distj = nxCenter + dj;
+                        int distj = nyCenter + dj;
                         int dist_index = disti * _ny + distj;
                         for (int n=0; n<_nv; n++) {
                             double dx = _distortions[dist_index][n].x * charge;
