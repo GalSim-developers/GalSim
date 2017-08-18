@@ -270,7 +270,7 @@ namespace math {
             //     UNIFORM ASYMPTOTIC EXPANSION FOR NU TO INFINITY
             double wk[7];
             int iflw;
-            double jnu = dasyjy(x, fn, true, wk, &iflw);
+            jnu = dasyjy(x, fn, true, wk, &iflw);
             if (iflw != 0) return 0.;
             if (ns == 0) return jnu;
 
