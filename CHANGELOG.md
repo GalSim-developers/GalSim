@@ -4,7 +4,9 @@ Changes from v1.5 to v2.0
 Dependency Changes
 ------------------
 
-- Added LSSTDESC.Coord. (#809b)
+- Added LSSTDESC.Coord, which contains the functionality that used to be in GalSim as the Angle
+  and CelestialCoord classes.  We moved it to a separate repo so people could more easily use
+  this functionality without requiring all of GalSim as a dependency. (#809b)
 
 
 API Changes
