@@ -16,12 +16,28 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Main
 
-#include "galsim/IgnoreWarnings.h"
+// Without a snazzy unit test framework, we need to register all the tests to be run here
+// by hand.
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/test/included/unit_test.hpp>
+#include <stdexcept>
+#include "Test.h"
 
-//JAZ Nothing needs to go here - the test module definitions above create a main function.
+extern void TestImage();
+extern void TestInteg();
+extern void TestVersion();
+
+int main()
+{
+    try {
+        // Run them all here:
+        TestImage();
+        TestInteg();
+        TestVersion();
+
+    } catch (std::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    return 0;
+}
