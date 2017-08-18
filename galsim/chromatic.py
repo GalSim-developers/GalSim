@@ -1274,10 +1274,10 @@ class ChromaticAtmosphere(ChromaticObject):
     Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
-    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
+    source multiplied by an SED:
 
         >>> psf = galsim.ChromaticAtmosphere(...)
-        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> star = galsim.DeltaFunction() * psf_sed
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
@@ -2450,10 +2450,10 @@ class ChromaticOpticalPSF(ChromaticObject):
     Note that a ChromaticOpticalPSF by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticOpticalPSF object by an SED, or convolve it with a point
-    source (typically approximated by a very tiny Gaussian) multiplied by an SED:
+    source multiplied by an SED:
 
         >>> psf = galsim.ChromaticOpticalPSF(...)
-        >>> star = galsim.Gaussian(sigma = 1.e-6) * psf_sed
+        >>> star = galsim.DeltaFunction() * psf_sed
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
