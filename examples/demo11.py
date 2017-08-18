@@ -210,7 +210,8 @@ def main(argv):
     # ( dudx  dudy ) = ( cos(theta)  -sin(theta) ) * pixel_scale
     # ( dvdx  dvdy )   ( sin(theta)   cos(theta) )
     # Aside: You can call numpy trig functions on Angle objects directly, rather than getting
-    #        their values in radians first.
+    #        their values in radians first.  Or, if you prefer, you can write things like
+    #        theta.sin() or theta.cos(), which are equivalent.
     dudx = numpy.cos(theta) * pixel_scale
     dudy = -numpy.sin(theta) * pixel_scale
     dvdx = numpy.sin(theta) * pixel_scale
