@@ -2153,9 +2153,17 @@ if not GetOption('help'):
             if pytest is None:
                 pytest = which('py.test')
             if pytest is None:
+                print('Unable to find pytest.  Skipping python tests.')
                 env['PYTEST'] = None
             else:
                 env['PYTEST'] = pytest
+        else:
+            # This bit lets you type scons tests PYTEST=NO to skip the python tests.
+            # It's not the cleanest interface, but this is probably only relevant for developers,
+            # so I didn't try to clean it up (e.g. with a RUN_PYTEST=False option or similar).
+            if which(env['PYTEST']) is None:
+                print('Unable to find %s.  Skipping python tests.'%env['PYTEST'])
+                env['PYTEST'] = None
         if env['PYTEST']:
             GetPytestVersion(env)
         subdirs += ['tests']
