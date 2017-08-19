@@ -119,7 +119,7 @@ namespace galsim {
             // If sbp is an SBAutoCorrelate, put its item and 180 degree rotated verion here:
             const SBProfile& obj = sbc3->getAdaptee();
             add(obj);
-            SBProfile temp = obj.rotate(180. * degrees);
+            SBProfile temp = obj.transform(-1., 0., 0., -1.);
             add(temp);
         } else {
             if (!sbp.isAnalyticK() && !_real_space)
@@ -432,7 +432,7 @@ namespace galsim {
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     {
-        SBProfile temp = _adaptee.rotate(180. * degrees);
+        SBProfile temp = _adaptee.transform(-1., 0., 0., -1.);
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 

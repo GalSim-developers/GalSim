@@ -994,7 +994,9 @@ class CelestialWCS(BaseWCS):
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             ra, dec = self._radec(xlist,ylist,color)
-        except TypeError:
+        except KeyboardInterrupt:
+            raise
+        except Exception:
             # Otherwise do them one at a time.
             world = [ self._radec(x,y,color) for (x,y) in zip(xlist,ylist) ]
             ra = [ w[0] for w in world ]
@@ -1027,7 +1029,9 @@ class CelestialWCS(BaseWCS):
         try:
             # First try to use the _radec function with the numpy arrays.
             ra, dec = self._radec(x.ravel(),y.ravel(),color)
-        except TypeError:
+        except KeyboardInterrupt:
+            raise
+        except Exception:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             rd = [ self._radec(x1,y1,color) for x1,y1 in zip(x.ravel(),y.ravel()) ]
             ra = np.array([ radec[0] for radec in rd ])
@@ -1056,12 +1060,13 @@ class CelestialWCS(BaseWCS):
         if project_center is None:
             return coord
         else:
-            return project_center.project(coord, projection=projection)
+            u,v = project_center.project(coord, projection=projection)
+            return galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos, color):
-        ra = world_pos.ra.rad()
-        dec = world_pos.dec.rad()
+        ra = world_pos.ra.rad
+        dec = world_pos.dec.rad
         x, y = self._xy(ra,dec,color)
         return galsim.PositionD(x,y) + self.origin
 

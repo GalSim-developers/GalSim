@@ -237,8 +237,8 @@ def main(argv):
     # can be specified in several ways (see the ChromaticAtmosphere docstring for all of them).
     # Here are a couple ways: let's pretend our object is located near M101 on the sky, we observe
     # it 1 hour before it transits and we're observing from Mauna Kea.
-    ra = galsim.HMS_Angle("14:03:13") # hours : minutes : seconds
-    dec = galsim.DMS_Angle("54:20:57") # degrees : minutes : seconds
+    ra = galsim.Angle.from_hms("14:03:13") # hours : minutes : seconds
+    dec = galsim.Angle.from_dms("54:20:57") # degrees : minutes : seconds
     m101 = galsim.CelestialCoord(ra, dec)
     latitude = 19.8207 * galsim.degrees # latitude of Mauna Kea
     HA = -1.0 * galsim.hours # Hour angle = one hour before transit

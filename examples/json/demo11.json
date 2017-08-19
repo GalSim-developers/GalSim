@@ -57,10 +57,10 @@
 
     "wcs" : {
         "type" : "Tan",
-        "dudx" : "$ math.cos(theta.rad()) * pixel_scale",
-        "dudy" : "$ -math.sin(theta.rad()) * pixel_scale",
-        "dvdx" : "$ math.sin(theta.rad()) * pixel_scale",
-        "dvdy" : "$ math.cos(theta.rad()) * pixel_scale",
+        "dudx" : "$ numpy.cos(theta) * pixel_scale",
+        "dudy" : "$ -numpy.sin(theta) * pixel_scale",
+        "dvdx" : "$ numpy.sin(theta) * pixel_scale",
+        "dvdy" : "$ numpy.cos(theta) * pixel_scale",
         "units" : "arcsec",
         "origin" : "center",
         "ra" : "19.3 hours",
@@ -71,7 +71,7 @@
         "type": "RADec",
         "ra": {
             "type": "Eval",
-            "str": "@image.wcs.ra + dtheta/math.cos((@image.world_pos.dec).rad()) * galsim.degrees",
+            "str": "@image.wcs.ra + dtheta/numpy.cos(@image.world_pos.dec) * galsim.degrees",
             "fdtheta": { "type": "Random", "min": "$-size_degrees/2.", "max": "$size_degrees/2." }
         },
         "dec": {

@@ -390,7 +390,7 @@ class Airy(GSObject):
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, str):
-                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+                scale_unit = galsim.AngleUnit.from_name(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 
         GSObject.__init__(self, _galsim.SBAiry(lam_over_diam, obscuration, flux, gsparams))
@@ -596,7 +596,7 @@ class Kolmogorov(GSObject):
                         "r0_500) must be specified for Kolmogorov")
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, str):
-                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+                scale_unit = galsim.AngleUnit.from_name(scale_unit)
             if r0 is None:
                 r0 = r0_500 * (lam/500.)**1.2
             lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)

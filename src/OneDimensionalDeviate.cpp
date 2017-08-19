@@ -341,7 +341,7 @@ namespace galsim {
                 // Draw second ud to get azimuth
                 double theta = 2.*M_PI*ud();
                 double sintheta, costheta;
-                (theta * radians).sincos(sintheta,costheta);
+                sincos(theta, sintheta, costheta);
                 result->setPhoton(i, radius*costheta, radius*sintheta, flux*fluxPerPhoton);
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt

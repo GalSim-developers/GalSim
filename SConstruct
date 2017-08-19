@@ -1622,6 +1622,19 @@ def CheckFuture(config):
 
     return 1
 
+def CheckCoord(config):
+    config.Message('Checking for coord... ')
+
+    result, output = TryScript(config,"import coord",python)
+    if not result:
+        ErrorExit("Unable to import coord using the python executable:\n" + python)
+    config.Result(1)
+
+    result, coord_ver = TryScript(config,"import coord; print(coord.__version__)",python)
+    print('Coord version is',coord_ver)
+
+    return 1
+
 def CheckBoostPython(config):
     bp_source_file = """
 
@@ -1929,6 +1942,7 @@ def DoPyChecks(config):
     config.CheckNumPy()
     config.CheckPyFITS()
     config.CheckFuture()
+    config.CheckCoord()
     config.CheckBoostPython()
     config.CheckPythonExcept()
 
@@ -2018,6 +2032,7 @@ def DoConfig(env):
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
             'CheckFuture' : CheckFuture ,
+            'CheckCoord' : CheckCoord ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPythonExcept' : CheckPythonExcept ,
             })

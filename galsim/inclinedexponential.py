@@ -138,14 +138,15 @@ class InclinedExponential(GSObject):
         if not isinstance(inclination, galsim.Angle):
             raise TypeError("Input inclination should be an Angle")
 
+        self._inclination = inclination
         GSObject.__init__(self, _galsim.SBInclinedExponential(
-                inclination, scale_radius, scale_height, flux, gsparams))
+                inclination.rad, scale_radius, scale_height, flux, gsparams))
         self._gsparams = gsparams
 
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
         """
-        return self.SBProfile.getInclination()
+        return self._inclination
 
     def getScaleRadius(self):
         """Return the scale radius for this profile.
@@ -169,7 +170,7 @@ class InclinedExponential(GSObject):
         return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
 
     @property
-    def inclination(self): return self.getInclination()
+    def inclination(self): return self._inclination
     @property
     def scale_radius(self): return self.getScaleRadius()
     @property

@@ -464,9 +464,9 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         kwargs['speed'] = galsim.utilities.listify(kwargs['speed'])
         if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
-        kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
-                                         for v, d in zip(kwargs['speed'],
-                                                         kwargs['direction'])])
+        kwargs['vx'], kwargs['vy'] = zip(*[v * np.array(d.sincos())
+                                           for v, d in zip(kwargs['speed'],
+                                                           kwargs['direction'])])
         del kwargs['speed']
         del kwargs['direction']
 

@@ -482,7 +482,7 @@ class OutputCatalog(object):
                 new_cols.append(col)
             elif t == galsim.Angle:
                 dtypes.append( (name + ".rad", float) )
-                new_cols.append( [ val.rad() for val in col ] )
+                new_cols.append( [ val.rad for val in col ] )
             elif t == galsim.PositionI:
                 dtypes.append( (name + ".x", int) )
                 dtypes.append( (name + ".y", int) )

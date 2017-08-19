@@ -201,7 +201,7 @@ class PowerSpectrum(object):
         # Check validity of units
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
+            units = galsim.AngleUnit.from_name(units)
         if not isinstance(units, galsim.AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
 
@@ -469,7 +469,7 @@ class PowerSpectrum(object):
         # automatically converted to do so, so we'll also do that here.
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
+            units = galsim.AngleUnit.from_name(units)
         if not isinstance(units, galsim.AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
         if units != galsim.arcsec:
@@ -765,7 +765,7 @@ class PowerSpectrum(object):
         # automatically converted to do so, so we'll also do that here.
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
+            units = galsim.AngleUnit.from_name(units)
         if not isinstance(units, galsim.AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
         if units != galsim.arcsec:

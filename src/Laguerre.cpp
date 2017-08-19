@@ -55,11 +55,11 @@ namespace galsim {
         return oss.str();
     }
 
-    void LVector::rotate(const Angle& theta)
+    void LVector::rotate(double theta)
     {
         take_ownership();
         double s, c;
-        theta.sincos(s,c);
+        sincos(theta, s, c);
         std::complex<double> z(c, -s);
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=_order; m++) {

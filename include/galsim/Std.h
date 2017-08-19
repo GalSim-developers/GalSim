@@ -50,6 +50,16 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// A helper function to compute sin and cos in one call if it is available.
+inline void sincos(double val, double& sint, double& cost) {
+#ifdef _GLIBCXX_HAVE_SINCOS
+    ::sincos(val,&sint,&cost);
+#else
+    cost = std::cos(val);
+    sint = std::sin(val);
+#endif
+}
+
 // Check if ptr is aligned on 128 bit boundary
 inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
 

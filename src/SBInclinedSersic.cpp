@@ -47,7 +47,8 @@ namespace galsim {
         double _target_k_value;
     };
 
-    SBInclinedSersic::SBInclinedSersic(double n, Angle inclination, double size, SBInclinedSersic::RadiusType rType,
+    SBInclinedSersic::SBInclinedSersic(double n, double inclination, double size,
+                                       SBInclinedSersic::RadiusType rType,
             double height, SBInclinedSersic::HeightType hType, double flux,
             double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
         SBProfile(new SBInclinedSersicImpl(n, inclination, size, rType, height, hType, flux, trunc,
@@ -63,7 +64,7 @@ namespace galsim {
         return static_cast<const SBInclinedSersicImpl&>(*_pimpl).getN();
     }
 
-    Angle SBInclinedSersic::getInclination() const
+    double SBInclinedSersic::getInclination() const
     {
         assert(dynamic_cast<const SBInclinedSersicImpl*>(_pimpl.get()));
         return static_cast<const SBInclinedSersicImpl&>(*_pimpl).getInclination();
@@ -104,16 +105,17 @@ namespace galsim {
         return oss.str();
     }
 
-    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(double n, Angle inclination, double size, RadiusType rType,
-                                         double height, HeightType hType, double flux,
-                                         double trunc, bool flux_untruncated,
-                                         const GSParamsPtr& gsparams) :
+    SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(
+        double n, double inclination, double size, RadiusType rType,
+        double height, HeightType hType, double flux,
+        double trunc, bool flux_untruncated,
+        const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
         _flux(flux),
         _trunc(trunc),
-        _cosi(std::abs(inclination.cos())),
+        _cosi(std::abs(std::cos(inclination))),
         _trunc_sq(trunc*trunc),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
@@ -199,7 +201,7 @@ namespace galsim {
 
         dbg << "scale height = "<<_h0<<std::endl;
 
-        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(_inclination.sin())/_r0;
+        _half_pi_h_sini_over_r = 0.5*M_PI*_h0*std::abs(std::sin(_inclination))/_r0;
 
         dbg << "half_pi_h_sini_over_r = " << _half_pi_h_sini_over_r << std::endl;
 

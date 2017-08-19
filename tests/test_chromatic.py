@@ -909,11 +909,11 @@ def test_ChromaticObject_rotate():
     # mxx = int(dw (1 + 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # myy = int(dw (1 - 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # mxy = int(dw 0.3 sin(2theta(w)) * F(w))  / int(dw F(w))
-    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w).rad)) * bp(w),500,700)
     rot_mxx /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w).rad)) * bp(w),500,700)
     rot_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w).rad)) * bp(w),500,700)
     rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
     rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
@@ -928,10 +928,10 @@ def test_ChromaticObject_rotate():
 
     # Repeat using transform rather than rotate
     gal3 = cgal.transform(
-                lambda w: np.cos(rotation(w).rad()),
-                lambda w: -np.sin(rotation(w).rad()),
-                lambda w: np.sin(rotation(w).rad()),
-                lambda w: np.cos(rotation(w).rad()) )
+                lambda w: np.cos(rotation(w).rad),
+                lambda w: -np.sin(rotation(w).rad),
+                lambda w: np.sin(rotation(w).rad),
+                lambda w: np.cos(rotation(w).rad) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mom = galsim.utilities.unweighted_moments(im3)
     np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1, decimal=4)
@@ -2035,8 +2035,8 @@ def test_ne():
     # and H2O_pressure.
 
     # Some params to test the celestial coords inputs.
-    ra = galsim.HMS_Angle("14:03:13") # hours : minutes : seconds
-    dec = galsim.DMS_Angle("54:20:57") # degrees : minutes : seconds
+    ra = galsim.Angle.from_hms("14:03:13") # hours : minutes : seconds
+    dec = galsim.Angle.from_dms("54:20:57") # degrees : minutes : seconds
     m101 = galsim.CelestialCoord(ra, dec)
     latitude = 19.8207 * galsim.degrees # latitude of Mauna Kea
     HA = -1.0 * galsim.hours # Hour angle = one hour before transit
@@ -2045,6 +2045,10 @@ def test_ne():
     gals = [galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),
             galsim.ChromaticAtmosphere(gal2, 500.0, zenith_angle=30*galsim.degrees),
             galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees),
+            galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees,
+                                       scale_unit=galsim.degrees),
+            galsim.ChromaticAtmosphere(gal1, 600.0, zenith_angle=30*galsim.degrees,
+                                       scale_unit='arcmin'),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees, alpha=-0.1),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees,
                                        parallactic_angle=45*galsim.degrees),
@@ -2130,6 +2134,7 @@ def test_ne():
     gals = [galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit=galsim.arcmin),
+            galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit='radians'),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, aberrations=[0, 0, 0, 0, 0.1]),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, defocus=0.2),
@@ -2142,6 +2147,7 @@ def test_ne():
     gals = [galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticAiry(lam=1.0, diam=1.0),
             galsim.ChromaticAiry(lam=1.0, diam=1.0, scale_unit=galsim.arcmin),
+            galsim.ChromaticAiry(lam=1.0, diam=1.0, scale_unit='deg'),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp)]

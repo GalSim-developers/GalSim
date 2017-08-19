@@ -190,10 +190,10 @@ namespace galsim {
     SBTransform SBProfile::expand(double scale) const
     { return SBTransform(*this,scale,0.,0.,scale); }
 
-    SBTransform SBProfile::rotate(const Angle& theta) const
+    SBTransform SBProfile::rotate(double theta) const
     {
         double sint,cost;
-        theta.sincos(sint,cost);
+        sincos(theta, sint, cost);
         return SBTransform(*this,cost,-sint,sint,cost);
     }
 

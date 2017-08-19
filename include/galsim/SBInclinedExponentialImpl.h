@@ -28,7 +28,7 @@ namespace galsim {
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
     public:
-        SBInclinedExponentialImpl(Angle inclination, double scale_radius, double scale_height,
+        SBInclinedExponentialImpl(double inclination, double scale_radius, double scale_height,
                                   double flux, const GSParamsPtr& gsparams);
 
         ~SBInclinedExponentialImpl() {}
@@ -74,8 +74,8 @@ namespace galsim {
         /// @brief photon shooting is not implemented yet.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /// @brief Returns the inclination angle as an Angle instance
-        Angle getInclination() const { return _inclination; }
+        /// @brief Returns the inclination angle in radians
+        double getInclination() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
         /// @brief Returns the scale height
@@ -94,7 +94,7 @@ namespace galsim {
         std::string serialize() const;
 
     private:
-        Angle _inclination; ///< Inclination angle
+        double _inclination; ///< Inclination angle
         double _r0;          ///< Scale radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
         double _flux;        ///< Actual flux (may differ from that specified at the constructor).
