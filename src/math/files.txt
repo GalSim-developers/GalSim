@@ -4,3 +4,4 @@ BesselY.cpp
 BesselI.cpp
 BesselK.cpp
 Gamma.cpp
+Sinc.cpp
