@@ -140,7 +140,7 @@ def test_moments_basic():
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
                 # if this is the first time through this loop, just make sure it runs and gives the
-                # same result for ImageView and ConstImageViews:
+                # same result whether const or not.
                 if first_test:
                     result = gal_image.view().FindAdaptiveMom()
                     first_test=False
@@ -158,14 +158,14 @@ def test_moments_basic():
                     result = gal_image.view(make_const=True).FindAdaptiveMom()
                     np.testing.assert_almost_equal(
                         np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
-                        err_msg = "- incorrect dsigma (ConstImageView)", decimal = decimal)
+                        err_msg = "- incorrect dsigma (make_const=True)", decimal = decimal)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e1,
-                        distortion_1, err_msg = "- incorrect e1 (ConstImageView)",
+                        distortion_1, err_msg = "- incorrect e1 (make_const=True)",
                         decimal = decimal_shape)
                     np.testing.assert_almost_equal(
                         result.observed_shape.e2,
-                        distortion_2, err_msg = "- incorrect e2 (ConstImageView)",
+                        distortion_2, err_msg = "- incorrect e2 (make_const=True)",
                         decimal = decimal_shape)
 
 

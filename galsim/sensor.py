@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2017 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -54,7 +54,7 @@ class Sensor(object):
         @param photons      A PhotonArray instance describing the incident photons.
         @param image        The image into which the photons should be accumuated.
         """
-        return photons.addTo(image.image.view())
+        return photons.addTo(image.image)
 
     def __repr__(self):
         return 'galsim.Sensor()'
@@ -184,7 +184,7 @@ class SiliconSensor(Sensor):
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
         """
-        return self._silicon.accumulate(photons, self.rng, image.image.view())
+        return self._silicon.accumulate(photons, self.rng, image.image)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for

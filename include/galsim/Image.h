@@ -310,23 +310,6 @@ namespace galsim {
          */
         T sumElements() const;
 
-        /**
-         *  @brief Perform a 2D FFT from real space to k-space.
-         */
-        ImageView<std::complex<double> > fft(bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D inverse FFT from k-space to real space.
-         */
-        ImageView<double> inverse_fft(bool shift_in=true, bool shift_out=true) const;
-
-        /**
-         *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
-         */
-        ImageView<std::complex<double> > cfft(bool inverse, bool shift_in=true,
-                                              bool shift_out=true) const;
-
-
     protected:
 
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
@@ -547,13 +530,6 @@ namespace galsim {
         ImageView<T> operator[](const Bounds<int>& bounds)
         { return subImage(bounds); }
 
-        /**
-         *  @brief Wrap the full image onto a subset of the image and return that subset.
-         *
-         *  This is used to alias the data of a k-space image before doing the FFT to real space.
-         */
-        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
-
         //@{
         /**
          *  @brief Unchecked access
@@ -757,14 +733,6 @@ namespace galsim {
         { return view().subImage(bounds); }
         //@}
 
-        /**
-         *  @brief Wrap the full image onto a subset of the image and return that subset.
-         *
-         *  This is used to alias the data of a k-space image before doing the FFT to real space.
-         */
-        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy)
-        { return view().wrap(bounds, hermx, hermy); }
-
         //@{
         /**
          *  @brief im[bounds] is another syntax for making a sub-image
@@ -825,6 +793,47 @@ namespace galsim {
      * even and >= the input integer.
      */
     int goodFFTSize(int input);
+
+
+    /**
+     *  @brief Perform a 2D FFT from real space to k-space.
+     */
+    template <typename T>
+    void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+             bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D inverse FFT from k-space to real space.
+     */
+    template <typename T>
+    void irfft(const BaseImage<T>& in, ImageView<double> out,
+               bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
+     */
+    template <typename T>
+    void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
+              bool inverse, bool shift_in=true, bool shift_out=true);
+
+    /**
+     *  @brief Wrap the full image onto a subset of the image and return that subset.
+     *
+     *  This is used to alias the data of a k-space image before doing the FFT to real space.
+     */
+    template <typename T>
+    void wrapImage(ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
+
+    /**
+     *  @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
+     *
+     *  Note that if an element is zero, then this function quietly returns its inverse as zero.
+     */
+    template <typename T>
+    void invertImage(ImageView<T> im);
+
+
+
 
 } // namespace galsim
 

@@ -1501,14 +1501,14 @@ class GSObject(object):
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ]:
-            return self.SBProfile.draw(image.image.view(), image.scale, add_to_image)
+            return self.SBProfile.draw(image.image, image.scale, add_to_image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
                 im1 = galsim.ImageD(bounds=image.bounds)
             else:
                 im1 = galsim.ImageF(bounds=image.bounds)
-            added_flux = self.SBProfile.draw(im1.image.view(), image.scale, False)
+            added_flux = self.SBProfile.draw(im1.image, image.scale, False)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
@@ -1599,18 +1599,21 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        kimage_wrap = kimage.image.wrap(bwrap, True, False)
+        _galsim.wrapImage(kimage.image, bwrap, True, False)
+        kimage_wrap = kimage.subImage(bwrap)
 
         # Perform the fourier transform.
-        real_image = kimage_wrap.irfft()
+        breal = galsim._BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
+        real_image = galsim.Image(breal, dtype=float)
+        _galsim.irfft(kimage_wrap.image, real_image.image)
 
         # Add (a portion of) this to the original image.
-        ar = real_image.subImage(image.bounds).array
+        temp = real_image.subImage(image.bounds)
         if add_to_image:
-            image.array[:,:] += ar.astype(image.dtype, copy=False)
+            image += temp
         else:
-            image.array[:,:] = ar
-        added_photons = ar.sum(dtype=float)
+            image.copyFrom(temp)
+        added_photons = temp.array.sum(dtype=float)
         return added_photons
 
     def drawFFT(self, image, add_to_image=False):
@@ -2005,7 +2008,7 @@ class GSObject(object):
         if setup_only:
             return image
 
-        self.SBProfile.drawK(image.image.view(), dk, add_to_image)
+        self.SBProfile.drawK(image.image, dk, add_to_image)
 
         return image
 
@@ -2023,7 +2026,7 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        self.SBProfile.drawK(image.image.view(), image.scale, add_to_image)
+        self.SBProfile.drawK(image.image, image.scale, add_to_image)
         return image
 
 
@@ -2056,6 +2059,18 @@ def SBProfile_setstate(self, state):
     self.__class__ = eval(cls)
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
+
+def SBProfile_copy(self):
+    cls = self.__class__
+    if hasattr(self,'__getinitargs__'):
+        return cls(*self.__getinitargs__())
+    else:
+        new_obj = cls.__new__(cls)
+        new_obj.__setstate__(self.__getstate__())
+        return new_obj
+_galsim.SBProfile.__copy__ = SBProfile_copy
+_galsim.SBProfile.__deepcopy__ = lambda self, memo : self.__copy__()
+
 # Quick and dirty.  Just check serializations are equal.
 _galsim.SBProfile.__eq__ = lambda self, other: (
     isinstance(other,_galsim.SBProfile) and self.serialize() == other.serialize())

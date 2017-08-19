@@ -109,7 +109,7 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
 
-        # Check basic features of array built by ImageAlloc constructor
+        # Check basic features of array built by Image
         np.testing.assert_array_equal(im1.array, 0.)
         assert im1.array.shape == (nrow,ncol)
         assert im1.array.dtype.type == np_array_type
@@ -194,7 +194,8 @@ def test_Image_basic():
                 im1.setValue(x, y, 100 + 10*x + y)
                 im1a.setValue(x+3, y+6, 100 + 10*x + y)
                 im1b.setValue(x=x-1, y=y-1, value=100 + 10*x + y)
-                im2_view.setValue(x=x, y=y, value=100 + 10*x + y)
+                im2_view._setValue(x, y, 100 + 10*x)
+                im2_view._addValue(x, y, y)
 
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
@@ -227,7 +228,7 @@ def test_Image_basic():
                 assert im1.view(make_const=True).getValue(x,y) == value2
                 assert im2.getValue(x=x, y=y) == value2
                 assert im2_view.getValue(x,y) == value2
-                assert im2_cview.getValue(x,y) == value2
+                assert im2_cview._getValue(x,y) == value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
@@ -342,22 +343,6 @@ def test_Image_basic():
         do_pickle(im2_cview)
         do_pickle(im3_view)
         do_pickle(im4_view)
-
-        # Check the c++ classes directly too.
-        do_pickle(im1.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im1_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
-
-        # Check the c++ classes directly too.
-        do_pickle(im1.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im1_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
 
     # Also check picklability of Bounds, Position here.
     do_pickle(galsim.PositionI(2,3))
@@ -1558,6 +1543,19 @@ def test_Image_inplace_divide():
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
 
+        # Test image.invertSelf()
+        # Intentionally make some elements zero, so we test that 1/0 -> 0.
+        image1 = galsim.Image((ref_array // 11 - 3).astype(types[i]))
+        image2 = image1.copy()
+        mask1 = image1.array == 0
+        mask2 = image1.array != 0
+        image2.invertSelf()
+        np.testing.assert_array_equal(image2.array[mask1], 0,
+                err_msg="invertSelf did not do 1/0 -> 0.")
+        np.testing.assert_array_equal(image2.array[mask2],
+                (1./image1.array[mask2]).astype(types[i]),
+                err_msg="invertSelf gave wrong answer for non-zero elements")
+
         for j in range(i): # Only divide simpler types into this one.
             decimal = 4 if (types[i] == np.complex64 or types[j] == np.complex64) else 12
             image2_init_func = eval("galsim.Image"+tchar[j])
@@ -1873,7 +1871,7 @@ def test_Image_resize():
                 for y in range(ymin,ymax+1):
                     val = simple_types[i](ud()*500)
                     im1.setValue(x,y,val)
-                    im2.setValue(x,y,val)
+                    im2._setValue(x,y,val)
                     im3.setValue(x,y,val)
 
             # They should be equal now.  This doesn't completely guarantee that nothing is
@@ -2095,7 +2093,7 @@ def test_Image_view():
     """
     im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22,
                        galsim.PositionI(13,13)))
-    im.fill(17)
+    im._fill(17)
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.

@@ -865,7 +865,7 @@ class EuclideanWCS(BaseWCS):
         dvdy = 0.5 * (v[2:ny,1:nx-1] - v[0:ny-2,1:nx-1])
 
         area = np.abs(dudx * dvdy - dvdx * dudy)
-        image.image.array[:,:] = area * sky_level
+        image.array[:,:] = area * sky_level
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
     def __ne__(self, other): return not self.__eq__(other)
@@ -1044,7 +1044,7 @@ class CelestialWCS(BaseWCS):
 
         area = np.abs(dudx * dvdy - dvdx * dudy)
         factor = galsim.radians / galsim.arcsec
-        image.image.array[:,:] = area * sky_level * factor**2
+        image.array[:,:] = area * sky_level * factor**2
 
 
     # Simple.  Just call _radec.

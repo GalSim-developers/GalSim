@@ -91,12 +91,11 @@ class BaseCDModel(object):
                            flat fields; default value is 1., which assumes the common case that your
                            flat and science images have the same gain value
         """
-        retimage = galsim.Image(
-            image=galsim._galsim._ApplyCD(
-                image.image, self.a_l.image, self.a_r.image, self.a_b.image, self.a_t.image,
-                int(self.n), float(gain_ratio)),
-            wcs=image.wcs)
-        return retimage
+        ret = image.copy()
+        galsim._galsim._ApplyCD(
+            ret.image, image.image, self.a_l.image, self.a_r.image, self.a_b.image, self.a_t.image,
+            int(self.n), float(gain_ratio))
+        return ret
 
     def applyBackward(self, image, gain_ratio=1.):
         """Apply the charge deflection model in the backward direction (accurate to linear order).
