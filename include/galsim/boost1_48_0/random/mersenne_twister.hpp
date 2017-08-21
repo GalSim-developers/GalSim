@@ -34,7 +34,7 @@
 #ifdef USE_BOOST
 // Note: seed_impl is only needed for features that we don't ever use.
 //       And since it has a huge dependency tree, it's easier to just not include it and
-//       disble the features here the depend on it (blocked out by #ifdef USE_BOOST guards).
+//       disable the features here that depend on it (blocked out by #ifdef USE_BOOST guards).
 #include <boost/random/detail/seed_impl.hpp>
 #endif
 #include "galsim/boost1_48_0/random/detail/generator_seed_seq.hpp"
