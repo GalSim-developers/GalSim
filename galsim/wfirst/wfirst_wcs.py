@@ -39,22 +39,30 @@ prog_version = "0.4"
 
 # Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)
 # coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as
-# projected onto the sky. Note that the origin is at the center of the payload axes, on the
-# telescope boresight, not centered on the FPA.  Since the SCAs are 1-indexed, these arrays have a
-# non-used entry with index 0.  i.e., the maximum SCA is 18, and its value is in sca_xc_mm[18].
-# Units are mm.  The ordering of SCAs was swapped between cycle 5 and 6, with 1<->2, 4<->5,
-# etc. swapping their y positions.  TODO: update pic on wiki page to reflect this.
-sca_xc_mm = np.array([0., -21.690, -21.690, -21.690, -65.070, -65.070, -65.070, -108.450, -108.450,
-                      -108.450,  21.690,  21.690,  21.690,  65.070,  65.070,  65.070, 108.450,
-                      108.450, 108.450])
-sca_yc_mm = np.array([0., 149.824, 199.250, 242.630, 138.824, 188.250, 231.630, 115.498, 164.923,
-                      208.304, 149.824, 199.250, 242.630, 138.824, 188.250, 231.630, 115.498, 
-                      164.923, 208.304])
-# Nominal center of FPA in this coordinate frame, in mm and as an angle.
+# projected onto the sky. Note that the origin is centered on the FPA, but to get coordinates at the
+# center of the payload axes on the telescope boresight, we can simply add fpa_xc_mm and fpa_yc_mm.
+# Since the SCAs are 1-indexed, these arrays have a non-used entry with index 0.  i.e., the maximum
+# SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
+# between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
+# were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
+# TODO: update pic on wiki page to reflect this.
+sca_xc_mm = np.array([0., 21.44, 21.44, 21.44, 67.32, 67.32, 67.32, 113.20, 113.20,
+                      113.20, -21.44, -21.44, -21.44,  -67.32, -67.32, -67.32, -113.20,
+                      -113.20, -113.20])
+sca_yc_mm = np.array([0., -12.88,  30.00,  72.88, -24.88,  18.00,  60.88,  -42.88,     0.0,
+                      42.88,  -12.88, 30.00, 72.88, -24.88, 18.00, 60.88, -42.88,
+                      0.00,    42.88])
+# Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle.
 fpa_xc_mm = 0.0
-fpa_yc_mm = 161.447
+# This calculation is using the WIM page on the WFIRST_MCS_WFC_Zernike_and_Field_Data_160610.xlsm
+# spreadsheet on the https://wfirst.gsfc.nasa.gov/science/Inst_Ref_Info_Cycle6.html page.
+fpa_yc_mm = focal_length*(np.tan(0.46107*galsim.degrees/galsim.radians) - \
+                                   np.tan(-0.038903*galsim.degrees/galsim.radians))
 xc_fpa = np.arctan(fpa_xc_mm/focal_length)*galsim.radians
 yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
+# Now move the sca coordinates to be with respect to the payload axis location.
+sca_xc_mm += fpa_xc_mm
+sca_yc_mm += fpa_yc_mm
 
 # The next array contains rotation offsets of individual SCA Y axis relative to FPA f2 axis. Same
 # sign convention as theta_fpa. These represent mechanical installation deviations from perfect
