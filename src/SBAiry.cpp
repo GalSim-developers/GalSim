@@ -24,6 +24,7 @@
 
 #include "SBAiry.h"
 #include "SBAiryImpl.h"
+#include "math/Bessel.h"
 
 namespace galsim {
 
@@ -110,7 +111,7 @@ namespace galsim {
             xval =  0.5 * (1.-_obssq);
         } else {
             // See Schroeder eq (10.1.10)
-            xval = ( j1(nu) - _obscuration*j1(_obscuration*nu) ) / nu ;
+            xval = ( math::j1(nu) - _obscuration * math::j1(_obscuration*nu) ) / nu ;
         }
         xval *= xval;
         // Normalize to give unit flux integrated over area.
@@ -434,7 +435,7 @@ namespace galsim {
             // lim j1(u)/u = 1/2
             xval = 0.5;
         } else {
-            xval = j1(nu) / nu;
+            xval = math::j1(nu) / nu;
         }
         xval *= xval;
         // Normalize to give unit flux integrated over area.

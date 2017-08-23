@@ -30,6 +30,9 @@
 namespace galsim {
 namespace math {
 
+    double j0(double x) { return ::j0(x); }
+    double j1(double x) { return ::j1(x); }
+
     // Routines ported from netlib, defined in BesselJ.cpp
     double dbesj(double x, double fnu);
     double dbesj0(double x);

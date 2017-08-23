@@ -23,6 +23,7 @@
 #include "SBBoxImpl.h"
 #include "math/Sinc.h"
 #include "math/Angle.h"
+#include "math/Bessel.h"
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp
 #ifdef _INTEL_COMPILER
@@ -312,7 +313,7 @@ namespace galsim {
             return _flux * (1. - kr0sq * ( (1./8.) + (1./192.) * kr0sq ));
         } else {
             double kr0 = sqrt(kr0sq);
-            return 2.*_flux * j1(kr0)/kr0;
+            return 2.*_flux * math::j1(kr0)/kr0;
         }
     }
 

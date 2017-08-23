@@ -23,6 +23,7 @@
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
+#include "math/Bessel.h"
 #include "math/BesselRoots.h"
 #include "math/Gamma.h"
 #include "fmath/fmath.hpp"
@@ -456,7 +457,7 @@ namespace galsim {
         SersicHankel(double invn, double k): _invn(invn), _k(k) {}
 
         double operator()(double r) const
-        { return r*fmath::expd(-fast_pow(r, _invn))*j0(_k*r); }
+        { return r*fmath::expd(-fast_pow(r, _invn)) * math::j0(_k*r); }
 
     private:
         double _invn;

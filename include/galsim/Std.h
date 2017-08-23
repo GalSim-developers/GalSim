@@ -23,9 +23,6 @@
 #define GalSim_Std_H
 
 #include <cmath>
-#define _USE_MATH_DEFINES  // To make sure M_PI is defined.
-// It should be in math.h, but not necessarily in cmath.
-#include <math.h>
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
