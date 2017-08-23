@@ -14,9 +14,13 @@
 #define BOOST_RANDOM_CHI_SQUARED_DISTRIBUTION_HPP_INCLUDED
 
 #include <iosfwd>
+#ifdef USE_BOOST
 #include <boost/limits.hpp>
+#endif
 
-#include "galsim/boost1_48_0/random/detail/config.hpp"
+#ifdef USE_BOOST
+#include <boost/random/detail/config.hpp>
+#endif
 #include "galsim/boost1_48_0/random/gamma_distribution.hpp"
 
 namespace boost {

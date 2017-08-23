@@ -11,9 +11,11 @@
 #ifndef BOOST_RANDOM_DETAIL_SIGNED_UNSIGNED_TOOLS
 #define BOOST_RANDOM_DETAIL_SIGNED_UNSIGNED_TOOLS
 
+#ifdef USE_BOOST
 #include <boost/limits.hpp>
 #include <boost/config.hpp>
 #include <boost/type_traits/make_unsigned.hpp>
+#endif
 
 namespace boost {
 namespace random {
@@ -37,7 +39,12 @@ struct subtract<T, /* signed */ false>
 template<class T>
 struct subtract<T, /* signed */ true>
 {
+#ifdef USE_BOOST
   typedef typename make_unsigned<T>::type result_type;
+#else
+  // Just use an unsigned type that should be plenty big enough.
+  typedef size_t result_type;
+#endif
   result_type operator()(T x, T y)
   {
     if (y >= 0)   // because x >= y, it follows that x >= 0, too

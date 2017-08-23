@@ -427,7 +427,6 @@ namespace galsim {
         const int m = im.getNCol();
         const int n = im.getNRow();
         std::complex<T>* ptr = im.getData();
-        int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         kx0 *= _r0;

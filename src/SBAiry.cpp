@@ -34,9 +34,9 @@ namespace galsim {
 
     // Specialize the NewValue function used by LRUCache:
     template <>
-    struct LRUCacheHelper< AiryInfo, std::pair< double, GSParamsPtr > >
+    struct LRUCacheHelper< AiryInfo, Tuple< double, GSParamsPtr > >
     {
-        static AiryInfo* NewValue(const std::pair<double, GSParamsPtr >& key)
+        static AiryInfo* NewValue(const Tuple<double, GSParamsPtr >& key)
         {
             const double obscuration = key.first;
             const GSParamsPtr& gsparams = key.second;
@@ -88,14 +88,14 @@ namespace galsim {
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(cache.get(std::make_pair(_obscuration, this->gsparams.duplicate())))
+        _info(cache.get(MakeTuple(_obscuration, this->gsparams.duplicate())))
     {
         xdbg<<"SBAiryImpl constructor: gsparams = "<<gsparams.get()<<std::endl;
         xdbg<<"this->gsparams = "<<this->gsparams.get()<<std::endl;
         xdbg<<*this->gsparams<<std::endl;
     }
 
-    LRUCache< std::pair<double, GSParamsPtr>, AiryInfo > SBAiry::SBAiryImpl::cache(
+    LRUCache< Tuple<double, GSParamsPtr>, AiryInfo > SBAiry::SBAiryImpl::cache(
         sbp::max_airy_cache);
 
     // This is a scale-free version of the Airy radial function.

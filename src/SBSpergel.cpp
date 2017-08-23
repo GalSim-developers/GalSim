@@ -83,13 +83,13 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).calculateFluxRadius(f);
     }
 
-    LRUCache<boost::tuple<double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
+    LRUCache<Tuple<double,GSParamsPtr>,SpergelInfo> SBSpergel::SBSpergelImpl::cache(
         sbp::max_spergel_cache);
 
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
                                             double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _info(cache.get(boost::make_tuple(_nu, this->gsparams.duplicate())))
+        _nu(nu), _flux(flux), _info(cache.get(MakeTuple(_nu, this->gsparams.duplicate())))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;

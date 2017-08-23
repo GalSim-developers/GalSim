@@ -510,7 +510,7 @@ class Convolution(galsim.GSObject):
         # both have their negative ones at the end.
         # However, this decision is now made by the convolve method.
         for obj in self._obj_list[1:]:
-            photon_array.convolve(obj.shoot(n_photons, ud), ud)
+            photon_array.convolve(obj.shoot(n_photons, ud), ud._rng)
         return photon_array
 
     def __getstate__(self):
@@ -766,7 +766,7 @@ class AutoConvolution(galsim.GSObject):
         ud = galsim.UniformDeviate(rng)
 
         photon_array = self._orig_obj.shoot(n_photons, ud)
-        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
+        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud._rng)
         return photon_array
 
     def __getstate__(self):
@@ -931,7 +931,7 @@ class AutoCorrelation(galsim.GSObject):
         result2.x *= -1
         result2.y *= -1
 
-        result.convolve(result2, ud)
+        result.convolve(result2, ud._rng)
         return result
 
     def __getstate__(self):

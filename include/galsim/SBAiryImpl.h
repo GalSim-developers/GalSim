@@ -303,7 +303,7 @@ namespace galsim {
         const boost::shared_ptr<AiryInfo> _info;
 
         /// One static map of all `AiryInfo` structures for whole program.
-        static LRUCache< std::pair< double, GSParamsPtr >, AiryInfo > cache;
+        static LRUCache< Tuple< double, GSParamsPtr >, AiryInfo > cache;
     };
 }
 

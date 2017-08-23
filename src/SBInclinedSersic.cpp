@@ -120,7 +120,7 @@ namespace galsim {
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
+        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, 0., this->gsparams.duplicate())))
     {
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -148,8 +148,8 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                           this->gsparams.duplicate()));
+                       _info = SBSersic::SBSersicImpl::cache.get(
+                           MakeTuple(_n, _trunc/_r0, this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -167,8 +167,8 @@ namespace galsim {
                   _r0 = size;
                   if (_truncated) {
                       // Update _info with the correct truncated version.
-                      _info = SBSersic::SBSersicImpl::cache.get(boost::make_tuple(_n,_trunc/_r0,
-                                                          this->gsparams.duplicate()));
+                      _info = SBSersic::SBSersicImpl::cache.get(
+                          MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
                        if (flux_untruncated) {
                           // Update the stored _flux with the correct value
                           _flux *= _info->getFluxFraction();

@@ -22,7 +22,6 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include "Random.h"
-#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -46,25 +45,37 @@ namespace galsim {
     protected:
         // This is the special magic needed so the virtual function calls back to the
         // function defined in the python layer.
-        double _val()
+        double generate1()
         {
-            if (bp::override py_func = this->get_override("_val"))
+            if (bp::override py_func = this->get_override("generate1"))
                 return py_func();
             else
-                return BaseDeviate::_val();
+                return BaseDeviate::generate1();
         }
     };
 
-    void Generate(BaseDeviate& rng, const bp::object& array)
+    void Generate(BaseDeviate& rng, size_t N, size_t idata)
     {
-        double* data;
-        boost::shared_ptr<double> owner;
-        int step, stride;
-        CheckNumpyArray(array, 1, false, data, owner, step, stride);
-        if (step != 1 || stride != 1)
-            throw std::runtime_error("generate requires a contiguous numpy array");
-        int N = GetNumpyArrayDim(array.ptr(), 0);
+        double* data = reinterpret_cast<double*>(idata);
         rng.generate(N, data);
+    }
+
+    void AddGenerate(BaseDeviate& rng, size_t N, size_t idata)
+    {
+        double* data = reinterpret_cast<double*>(idata);
+        rng.addGenerate(N, data);
+    }
+
+    void GenerateFromVariance(GaussianDeviate& rng, size_t N, size_t idata)
+    {
+        double* data = reinterpret_cast<double*>(idata);
+        rng.generateFromVariance(N, data);
+    }
+
+    void GenerateFromExpectation(PoissonDeviate& rng, size_t N, size_t idata)
+    {
+        double* data = reinterpret_cast<double*>(idata);
+        rng.generateFromExpectation(N, data);
     }
 
     struct PyBaseDeviate {
@@ -77,7 +88,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<BaseDeviateCallBack>
-                pyBaseDeviate("BaseDeviate", "", bp::no_init);
+                pyBaseDeviate("BaseDeviateImpl", "", bp::no_init);
             pyBaseDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
@@ -95,7 +106,8 @@ namespace galsim {
                 .def("duplicate", &BaseDeviate::duplicate)
                 .def("discard", &BaseDeviate::discard)
                 .def("raw", &BaseDeviate::raw)
-                .def("generate", &Generate, bp::arg("array"))
+                .def("generate", &Generate, bp::arg("N"), bp::arg("idata"))
+                .def("add_generate", &AddGenerate, bp::arg("N"), bp::arg("idata"))
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()
@@ -138,7 +150,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<UniformDeviate, bp::bases<BaseDeviate> >
-                pyUniformDeviate("UniformDeviate", "", bp::no_init);
+                pyUniformDeviate("UniformDeviateImpl", "", bp::no_init);
             pyUniformDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
@@ -146,7 +158,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
                 .def(bp::init<std::string>(bp::arg("seed")))
                 .def("duplicate", &UniformDeviate::duplicate)
-                .def("__call__", &UniformDeviate::operator())
+                .def("generate1", &UniformDeviate::generate1)
                 .enable_pickling()
                 ;
         }
@@ -163,7 +175,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<GaussianDeviate, bp::bases<BaseDeviate> >
-                pyGaussianDeviate("GaussianDeviate", "", bp::no_init);
+                pyGaussianDeviate("GaussianDeviateImpl", "", bp::no_init);
             pyGaussianDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -178,7 +190,9 @@ namespace galsim {
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
-                .def("__call__", &GaussianDeviate::operator())
+                .def("generate1", &GaussianDeviate::generate1)
+                .def("generate_from_variance", &GenerateFromVariance,
+                     bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &GaussianDeviate::getMean)
                 .def("getSigma", &GaussianDeviate::getSigma)
                 .enable_pickling()
@@ -197,7 +211,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<BinomialDeviate, bp::bases<BaseDeviate> >
-                pyBinomialDeviate("BinomialDeviate", "", bp::no_init);
+                pyBinomialDeviate("BinomialDeviateImpl", "", bp::no_init);
             pyBinomialDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -212,7 +226,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
                 .def("duplicate", &BinomialDeviate::duplicate)
-                .def("__call__", &BinomialDeviate::operator())
+                .def("generate1", &BinomialDeviate::generate1)
                 .def("getN", &BinomialDeviate::getN)
                 .def("getP", &BinomialDeviate::getP)
                 .enable_pickling()
@@ -231,7 +245,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<PoissonDeviate, bp::bases<BaseDeviate> >
-                pyPoissonDeviate("PoissonDeviate", "", bp::no_init);
+                pyPoissonDeviate("PoissonDeviateImpl", "", bp::no_init);
             pyPoissonDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -246,7 +260,9 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("mean")=1.)
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
-                .def("__call__", &PoissonDeviate::operator())
+                .def("generate1", &PoissonDeviate::generate1)
+                .def("generate_from_expectation", &GenerateFromExpectation,
+                     bp::arg("N"), bp::arg("idata"))
                 .def("getMean", &PoissonDeviate::getMean)
                 .enable_pickling()
                 ;
@@ -265,7 +281,7 @@ namespace galsim {
         static void wrap() {
 
             bp::class_<WeibullDeviate, bp::bases<BaseDeviate> >
-                pyWeibullDeviate("WeibullDeviate", "", bp::no_init);
+                pyWeibullDeviate("WeibullDeviateImpl", "", bp::no_init);
             pyWeibullDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -280,7 +296,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
                 .def("duplicate", &WeibullDeviate::duplicate)
-                .def("__call__", &WeibullDeviate::operator())
+                .def("generate1", &WeibullDeviate::generate1)
                 .def("getA", &WeibullDeviate::getA)
                 .def("getB", &WeibullDeviate::getB)
                 .enable_pickling()
@@ -299,7 +315,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<GammaDeviate, bp::bases<BaseDeviate> >
-                pyGammaDeviate("GammaDeviate", "", bp::no_init);
+                pyGammaDeviate("GammaDeviateImpl", "", bp::no_init);
             pyGammaDeviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -314,7 +330,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def("duplicate", &GammaDeviate::duplicate)
-                .def("__call__", &GammaDeviate::operator())
+                .def("generate1", &GammaDeviate::generate1)
                 .def("getK", &GammaDeviate::getK)
                 .def("getTheta", &GammaDeviate::getTheta)
                 .enable_pickling()
@@ -333,7 +349,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<Chi2Deviate, bp::bases<BaseDeviate> >
-                pyChi2Deviate("Chi2Deviate", "", bp::no_init);
+                pyChi2Deviate("Chi2DeviateImpl", "", bp::no_init);
             pyChi2Deviate
                 .def("__init__", bp::make_constructor(
                     &construct, bp::default_call_policies(),
@@ -348,7 +364,7 @@ namespace galsim {
                         (bp::arg("seed")=0, bp::arg("n")=1.)
                 ))
                 .def("duplicate", &Chi2Deviate::duplicate)
-                .def("__call__", &Chi2Deviate::operator())
+                .def("generate1", &Chi2Deviate::generate1)
                 .def("getN", &Chi2Deviate::getN)
                 .enable_pickling()
                 ;

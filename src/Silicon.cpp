@@ -105,10 +105,10 @@ namespace galsim {
             int i = (index - n - j * _nv) / (_ny * _nv);
             double x0 = vertex_data[5*index+0];
             double y0 = vertex_data[5*index+1];
-            double th = vertex_data[5*index+2];
             double x1 = vertex_data[5*index+3];
             double y1 = vertex_data[5*index+4];
 #ifdef DEBUGLOGGING
+            double th = vertex_data[5*index+2];
             if (index == 73) { // Test print out of read in
                 dbg<<"Successfully reading the Pixel vertex file\n";
                 //dbg<<"line = "<<line<<std::endl;
@@ -225,7 +225,6 @@ namespace galsim {
 
         const int minx = target.getXMin();
         const int miny = target.getYMin();
-        const int maxx = target.getXMax();
         const int maxy = target.getYMax();
 
         int index = (ix - minx) * (maxy - miny + 1) + (iy - miny);
