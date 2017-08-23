@@ -23,6 +23,7 @@
 #include "integ/Int.h"
 #include "SBProfile.h"
 #include "math/Sinc.h"
+#include "math/Angle.h"
 
 // Gary's original code used a lot of lookup tables, but most of these have analytic formulae
 // that seem to be generally faster than the lookup table.  Part of this is probably because
@@ -558,7 +559,7 @@ namespace galsim {
                   // Then sin(pi x) = 2 * sn * cn
                   // xval = 4/pi^2 sn^2 cn / x^2
                   double sn, cn;
-                  (x * M_PI/2. * radians).sincos(sn,cn);
+                  math::sincos(x * M_PI/2., sn, cn);
                   s = 2.*sn*cn;
                   res = (2./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -575,7 +576,7 @@ namespace galsim {
               }
               case 4 : {
                   double sn, cn;
-                  (x * M_PI/4. * radians).sincos(sn,cn);
+                  math::sincos(x * M_PI/4, sn, cn);
                   s = sn*cn*(4.-8.*sn*sn);
                   res = (4./(M_PI*M_PI)) * s*sn/(x*x);
                   break;
@@ -589,7 +590,7 @@ namespace galsim {
               }
               case 6 : {
                   double sn, cn;
-                  (x * M_PI/6. * radians).sincos(sn, cn);
+                  math::sincos(x * M_PI/6., sn, cn);
                   double snsq = sn*sn;
                   s = sn*cn*(6.-32.*snsq*(1.-snsq));
                   res = (6./(M_PI*M_PI)) * s*sn/(x*x);

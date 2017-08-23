@@ -22,6 +22,7 @@
 #include "SBBox.h"
 #include "SBBoxImpl.h"
 #include "math/Sinc.h"
+#include "math/Angle.h"
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp
 #ifdef _INTEL_COMPILER
@@ -474,7 +475,7 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double r = sqrt(rsq) * _r0;;
             result->setPhoton(i, r*cost, r*sint, fluxPerPhoton);

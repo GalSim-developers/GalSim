@@ -47,6 +47,7 @@
 #include <iostream>
 
 #include "Std.h"
+#include "math/Angle.h"
 
 namespace galsim {
 
@@ -206,12 +207,7 @@ namespace galsim {
         double tan() const { return std::tan(_val); }
 
         void sincos(double& sint, double& cost) const {
-#ifdef _GLIBCXX_HAVE_SINCOS
-            ::sincos(_val,&sint,&cost);
-#else
-            cost = std::cos(_val);
-            sint = std::sin(_val);
-#endif
+            math::sincos(_val, sint, cost);
         }
 
     private:

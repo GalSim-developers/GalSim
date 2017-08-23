@@ -20,7 +20,7 @@
 
 #include <cmath>
 #include "math/Sinc.h"
-#include "Angle.h"
+#include "math/Angle.h"
 
 namespace galsim {
 namespace math {
@@ -136,7 +136,7 @@ namespace math {
                                            y*(3.99653257887490811e13))))))))));
 
             double sinx,cosx;
-            (x * radians).sincos(sinx,cosx);
+            math::sincos(x, sinx, cosx);
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate

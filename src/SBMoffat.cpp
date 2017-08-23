@@ -28,6 +28,7 @@
 #include "math/BesselRoots.h"
 #include "math/Bessel.h"
 #include "math/Gamma.h"
+#include "math/Angle.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -666,7 +667,7 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            (theta * radians).sincos(sint,cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
