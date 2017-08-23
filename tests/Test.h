@@ -22,6 +22,7 @@
 // So we don't bother with a large complicated unit test framework (like Boost or Google Tests).
 // These simple helper functions are sufficient for our needs.
 
+#include <cmath>
 #include <string>
 #include <iostream>
 #include <fstream>
