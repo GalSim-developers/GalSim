@@ -6,3 +6,4 @@ BesselK.cpp
 Gamma.cpp
 Sinc.cpp
 Angle.cpp
+Nan.cpp
