@@ -24,7 +24,7 @@
 #ifdef USE_BOOST
 // MJ: These are in the original file, but we don't actually need this functionality,
 // so rather than include all the explosion of header files they depend on, I slightly
-// edited the code below to no do the disable_if check.
+// edited the code below to not do the disable_if check.
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 #endif
