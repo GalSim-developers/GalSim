@@ -1021,8 +1021,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if 'CUNIT1' in header:
             cunit1 = header['CUNIT1']
             cunit2 = header['CUNIT2']
-            ra_units = galsim.angle.get_angle_unit(cunit1)
-            dec_units = galsim.angle.get_angle_unit(cunit2)
+            ra_units = galsim.AngleUnit.from_name(cunit1)
+            dec_units = galsim.AngleUnit.from_name(cunit2)
         else:
             ra_units = galsim.degrees
             dec_units = galsim.degrees
@@ -1321,10 +1321,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if self.pv is not None:
             u, v = self._apply_pv(u, v)
 
-        # Convert (u,v) from degrees to arcsec
+        # Convert (u,v) from degrees to radians
         # Also, the FITS standard defines u,v backwards relative to our standard.
         # They have +u increasing to the east, not west.  Hence the - for u.
-        factor = 1. * galsim.degrees / galsim.arcsec
+        factor = 1. * galsim.degrees / galsim.radians
         u *= -factor
         v *= factor
         return u, v
@@ -1357,7 +1357,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
 
         # Again, FITS has +u increasing to the east, not west.  Hence the - for u.
-        factor = 1. * galsim.arcsec / galsim.degrees
+        factor = galsim.radians / galsim.degrees
         u *= -factor
         v *= factor
 
@@ -1447,7 +1447,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                                 np.dot(np.dot(self.pv, dvpow), upow) ])
             jac = np.dot(j1,jac)
 
-        unit_convert = [ -1 * galsim.degrees / galsim.arcsec, 1 * galsim.degrees / galsim.arcsec ]
+        unit_convert = [ -1 * galsim.degrees / galsim.radians, 1 * galsim.degrees / galsim.radians ]
         p2 *= unit_convert
         # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and
         #               that would change self.cd!
@@ -1455,10 +1455,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         # Finally convert from (u,v) to (ra, dec).  We have a special function that computes
         # the jacobian of this step in the CelestialCoord class.
-        drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection=self.projection)
-        j2 = np.array([ [ drdu, drdv ],
-                        [ dddu, dddv ] ])
+        j2 = self.center.jac_deproject_rad(p2[0], p2[1], projection=self.projection)
         jac = np.dot(j2,jac)
+
+        # This now has units of radians/pixel.  We want instead arcsec/pixel.
+        jac *= galsim.radians / galsim.arcsec
 
         return galsim.JacobianWCS(jac[0,0], jac[0,1], jac[1,0], jac[1,1])
 

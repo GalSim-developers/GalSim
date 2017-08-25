@@ -320,7 +320,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          base.get('image_num',0),base.get('obj_num',0), var, current_var)
             if isinstance(total_sky, galsim.Image):
-                test = np.any(total_sky.image.array < current_var)
+                test = np.any(total_sky.array < current_var)
             else:
                 test = (total_sky < current_var)
             if test:
@@ -345,10 +345,13 @@ class PoissonNoiseBuilder(NoiseBuilder):
                 # back off.
                 im -= total_sky
         else:
-            im += extra_sky
             # Do the normal PoissonNoise calculation.
-            im.addNoise(galsim.PoissonNoise(rng))
-            im -= extra_sky
+            if isinstance(total_sky, galsim.Image):
+                im += extra_sky
+                im.addNoise(galsim.PoissonNoise(rng))
+                im -= extra_sky
+            else:
+                im.addNoise(galsim.PoissonNoise(rng, sky_level=extra_sky))
 
         logger.debug('image %d, obj %d: Added Poisson noise',
                      base.get('image_num',0),base.get('obj_num',0))
@@ -417,7 +420,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                         base.get('image_num',0),base.get('obj_num',0), var, current_var)
             read_noise_var_adu = read_noise_var / gain**2
             if isinstance(total_sky, galsim.Image):
-                test = np.any(total_sky.image.array/gain + read_noise_var_adu < current_var)
+                test = np.any(total_sky.array/gain + read_noise_var_adu < current_var)
             else:
                 target_var = total_sky / gain + read_noise_var_adu
                 logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
@@ -464,9 +467,13 @@ class CCDNoiseBuilder(NoiseBuilder):
                 im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise/gain))
         else:
             # Do the normal CCDNoise calculation.
-            im += extra_sky
-            im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-            im -= extra_sky
+            if isinstance(total_sky, galsim.Image):
+                im += extra_sky
+                im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+                im -= extra_sky
+            else:
+                im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise,
+                            sky_level=extra_sky))
 
         logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
                      base.get('image_num',0),base.get('obj_num',0), gain, read_noise)

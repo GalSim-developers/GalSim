@@ -1280,8 +1280,7 @@ def test_wcs():
         p = galsim.PositionD(23,12)
         #print(wcs.toWorld(p), ref.toWorld(p))
         if ref.isCelestial():
-            np.testing.assert_almost_equal(wcs.toWorld(p).ra.rad(), ref.toWorld(p).ra.rad())
-            np.testing.assert_almost_equal(wcs.toWorld(p).dec.rad(), ref.toWorld(p).dec.rad())
+            np.testing.assert_almost_equal(wcs.toWorld(p).rad, ref.toWorld(p).rad)
         else:
             np.testing.assert_almost_equal(wcs.toWorld(p).x, ref.toWorld(p).x)
             np.testing.assert_almost_equal(wcs.toWorld(p).y, ref.toWorld(p).y)

@@ -374,7 +374,7 @@ def test_scale_unit():
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
     im1 = psf.drawImage(nx=32, ny=32, scale=0.1, method='no_pixel')
-    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcmin)
+    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit='arcmin')
     im2 = psf2.drawImage(nx=32, ny=32, scale=0.1/60.0, method='no_pixel')
     np.testing.assert_almost_equal(
             im1.array, im2.array, 8,

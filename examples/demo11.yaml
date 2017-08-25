@@ -255,10 +255,10 @@ image :
     wcs :
         type : Tan
         # theta and pixel_scale are defined in eval_variables, so we can use them here.
-        dudx : '$ math.cos(theta.rad()) * pixel_scale'
-        dudy : '$ -math.sin(theta.rad()) * pixel_scale'
-        dvdx : '$ math.sin(theta.rad()) * pixel_scale'
-        dvdy : '$ math.cos(theta.rad()) * pixel_scale'
+        dudx : '$ numpy.cos(theta) * pixel_scale'
+        dudy : '$ -numpy.sin(theta) * pixel_scale'
+        dvdx : '$ numpy.sin(theta) * pixel_scale'
+        dvdy : '$ numpy.cos(theta) * pixel_scale'
 
         # This is the default, but we put it in anyway to make it explicit.
         # It sets the angular units of the (u,v) intermediate coordinate system.
@@ -291,7 +291,7 @@ image :
             # it would still be allowed to use @ value in the string as we do here.
             type: Eval
             # Range of RA = RA_center +- image_size / cos(Dec)
-            str: "@image.wcs.ra + dtheta / math.cos((@image.world_pos.dec).rad()) * galsim.degrees"
+            str: "@image.wcs.ra + dtheta / numpy.cos(@image.world_pos.dec) * galsim.degrees"
             fdtheta: { type: Random, min: '$-size_degrees/2.', max: '$size_degrees/2.' }
         dec:
             type: Eval

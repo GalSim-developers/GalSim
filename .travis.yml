@@ -78,7 +78,7 @@ install:
     # code, despite that not being a dependency.
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
     # if it's not in the cache yet.
-    - travis_wait 30 pip install numpy astropy future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.0 scipy pandas coverage
+    - travis_wait 30 pip install numpy astropy future lsstdesc.coord pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.0 scipy pandas coverage
     - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install simplejson ordereddict; fi
 
 script:

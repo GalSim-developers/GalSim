@@ -266,7 +266,7 @@ class OpticalPSF(GSObject):
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, basestring):
-                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+                scale_unit = galsim.AngleUnit.from_name(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 
         # Choose scale for lookup table using Nyquist for optical aperture and the specified
@@ -540,7 +540,7 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     max_in_pupil = max(tot_k[pupil_plane_im.array>0])
 
     # Next, deal with any requested rotations.
-    if pupil_angle.rad() == 0.:
+    if pupil_angle.rad == 0.:
         pp_arr = pupil_plane_im.array
     else:
         # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to

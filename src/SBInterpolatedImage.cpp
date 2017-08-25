@@ -215,7 +215,6 @@ namespace galsim {
 
         for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
             int x = xStart;
-            double yy = y;
             for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
                 double sb = _xtab->xval(x,y);
                 if (std::abs(sb) > maxsb) maxsb = std::abs(sb);
@@ -430,7 +429,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedImage(";
-        oss << "galsim._galsim.ConstImageViewD(array([";
+        oss << "galsim.ImageD(array([";
 
         ConstImageView<double> im = getImage();
         const double* ptr = im.getData();
@@ -448,7 +447,7 @@ namespace galsim {
             oss << "]";
         }
 
-        oss<<"],dtype=float)), ";
+        oss<<"],dtype=float)).image, ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
@@ -994,7 +993,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedKImage(";
-        oss << "galsim._galsim.ConstImageViewD(array([";
+        oss << "galsim.ImageD(array([";
 
         ConstImageView<double> data = getKData();
         const double* ptr = data.getData();
@@ -1006,13 +1005,13 @@ namespace galsim {
         const int ymax = data.getYMax();
         for (int j=ymin; j<=ymax; j++, ptr+=skip) {
             if (j > ymin) oss <<",";
-            oss << "[" << (*ptr + 0.0); // annoying `+ 0.0`, but needed to convert `-0` to `0`.
+            oss << "[" << (*ptr == 0. ? 0. : *ptr);
             ptr += step;
-            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << (*ptr+0.0);
+            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << (*ptr == 0. ? 0. : *ptr);
             oss << "]";
         }
 
-        oss<<"],dtype=float)), ";
+        oss<<"],dtype=float)).image, ";
 
         oss << stepK() << ", " << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();

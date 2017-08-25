@@ -557,7 +557,6 @@ namespace galsim {
                 const float kyfi = kyflux.imag();
                 const __m128 mkyfr = _mm_set1_ps(kyfr);
                 const __m128 mkyfi = _mm_set_ps(kyfi, -kyfi, kyfi, -kyfi);
-                const __m128 mzero = _mm_setzero_ps();
                 const __m128 mneg = _mm_set_ps(1, -1, 1, -1);
                 do {
                     // Separate out calculation into components
@@ -612,7 +611,6 @@ namespace galsim {
             const double kyfi = kyflux.imag();
             const __m128d mkyfr = _mm_set1_pd(kyfr);
             const __m128d mkyfi = _mm_set_pd(kyfi, -kyfi);
-            const __m128d mzero = _mm_setzero_pd();
             const __m128d mneg = _mm_set_pd(1, -1);
             for (; m; --m) {
                 // Separate out calculation into components

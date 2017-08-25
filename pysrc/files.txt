@@ -23,7 +23,6 @@ SBSpergel.cpp
 SBInclinedExponential.cpp
 SBInclinedSersic.cpp
 Random.cpp
-Noise.cpp
 HSM.cpp
 Integ.cpp
 Table.cpp

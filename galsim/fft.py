@@ -35,6 +35,7 @@ in the numpy version, feel free to post a feature request on our GitHub page.
 """
 
 import galsim
+from . import _galsim
 import numpy as np
 
 def fft2(a, shift_in=False, shift_out=False):
@@ -85,19 +86,25 @@ def fft2(a, shift_in=False, shift_out=False):
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
-        xim = galsim._galsim.ConstImageViewCD(a, -No2, -Mo2)
-        kar = xim.cfft(shift_in=shift_in, shift_out=shift_out).array
+        xim = galsim.ImageCD(a, xmin = -No2, ymin = -Mo2)
+        kim = galsim.ImageCD(galsim.BoundsI(-No2,No2-1,-Mo2,Mo2-1))
+        _galsim.cfft(xim.image, kim.image, shift_in=shift_in, shift_out=shift_out)
+        kar = kim.array
     else:
         a = a.astype(np.float64, copy=False)
-        xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
+        xim = galsim.ImageD(a, xmin = -No2, ymin = -Mo2)
 
         # This works, but it's a bit slower.
-        #kar = xim.cfft(shift_in=shift_in, shift_out=shift_out).array
+        #kim = galsim.ImageCD(galsim.BoundsI(-No2,No2-1,-Mo2,Mo2-1))
+        #_galsim.cfft(xim.image, kim.image, shift_in=shift_in, shift_out=shift_out)
+        #kar = kim.array
 
         # Faster to start with rfft2 version
-        rkar = xim.rfft(shift_in=shift_in, shift_out=shift_out).array
+        rkim = galsim.ImageCD(galsim.BoundsI(0,No2,-Mo2,Mo2-1))
+        _galsim.rfft(xim.image, rkim.image, shift_in=shift_in, shift_out=shift_out)
         # This only returns kx >= 0.  Fill out the full image.
         kar = np.empty( (M,N), dtype=np.complex128)
+        rkar = rkim.array
         if shift_out:
             kar[:,No2:N] = rkar[:,0:No2]
             kar[0,0:No2] = rkar[0,No2:0:-1].conjugate()
@@ -132,7 +139,7 @@ def ifft2(a, shift_in=False, shift_out=False):
         - If it has a real dtype, it will be coerced to numpy.float64.
         - If it has a complex dtype, it will be coerced to numpy.complex128.
 
-    The returned array will be real with dtype numpy.float64.
+    The returned array will be complex with dtype numpy.complex128
 
     If shift_in is True, then this is equivalent to applying numpy.fft.fftshift to the input.
 
@@ -150,7 +157,7 @@ def ifft2(a, shift_in=False, shift_out=False):
     @param shift_out    Whether to shift the output array so that the center is moved to (0,0).
                         [default: False]
 
-    @returns a real numpy array
+    @returns a complex numpy array
     """
     s = a.shape
     if len(s) != 2:
@@ -164,11 +171,13 @@ def ifft2(a, shift_in=False, shift_out=False):
 
     if a.dtype.kind == 'c':
         a = a.astype(np.complex128, copy=False)
-        xim = galsim._galsim.ConstImageViewCD(a, -No2, -Mo2)
+        kim = galsim.ImageCD(a, xmin = -No2, ymin = -Mo2)
     else:
         a = a.astype(np.float64, copy=False)
-        xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
-    return xim.cfft(inverse=True, shift_in=shift_in, shift_out=shift_out).array
+        kim = galsim.ImageD(a, xmin = -No2, ymin = -Mo2)
+    xim = galsim.ImageCD(galsim.BoundsI(-No2,No2-1,-Mo2,Mo2-1))
+    _galsim.cfft(kim.image, xim.image, inverse=True, shift_in=shift_in, shift_out=shift_out)
+    return xim.array
 
 
 def rfft2(a, shift_in=False, shift_out=False):
@@ -217,8 +226,10 @@ def rfft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     a = a.astype(np.float64, copy=False)
-    xim = galsim._galsim.ConstImageViewD(a, -No2, -Mo2)
-    return xim.rfft(shift_in=shift_in, shift_out=shift_out).array
+    xim = galsim.ImageD(a, xmin = -No2, ymin = -Mo2)
+    kim = galsim.ImageCD(galsim.BoundsI(0,No2,-Mo2,Mo2-1))
+    _galsim.rfft(xim.image, kim.image, shift_in=shift_in, shift_out=shift_out)
+    return kim.array
 
 
 def irfft2(a, shift_in=False, shift_out=False):
@@ -267,7 +278,10 @@ def irfft2(a, shift_in=False, shift_out=False):
         raise ValueError("Input array must have even sizes. Got shape=%s"%str(s))
 
     a = a.astype(np.complex128, copy=False)
-    kim = galsim._galsim.ConstImageViewCD(a, 0, -Mo2)
-    return kim.irfft(shift_in=shift_in, shift_out=shift_out).array
+    kim = galsim.ImageCD(a, xmin = 0, ymin = -Mo2)
+    xim = galsim.ImageD(galsim.BoundsI(-No2,No2+1,-Mo2,Mo2-1))
+    _galsim.irfft(kim.image, xim.image, shift_in=shift_in, shift_out=shift_out)
+    xim = xim.subImage(galsim.BoundsI(-No2,No2-1,-Mo2,Mo2-1))
+    return xim.array
 
 

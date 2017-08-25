@@ -158,7 +158,7 @@ class Shapelet(GSObject):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         bvec = self.SBProfile.getBVec().copy()
-        bvec.rotate(theta)
+        bvec.rotate(theta.rad)
         return Shapelet(self.sigma, self.order, bvec.array)
 
     def expand(self, scale):

@@ -60,7 +60,6 @@ namespace galsim {
     void pyExportSBInclinedSersic();
     void pyExportSBDeltaFunction();
     void pyExportRandom();
-    void pyExportNoise();
     void pyExportTable();
     void pyExportTable2D();
     void pyExportInterpolant();
@@ -110,7 +109,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBInclinedSersic();
     galsim::pyExportSBDeltaFunction();
     galsim::pyExportRandom();
-    galsim::pyExportNoise();
     galsim::pyExportInterpolant();
     galsim::pyExportCDModel();
     galsim::hsm::pyExportHSM();

@@ -32,6 +32,7 @@ recent versions will also work:
 - Python (2.7, 3.4, 3.5, 3.6)
 - SCons (2.1.0)
 - NumPy (1.11)
+- LSSTDESC.Coord (1.0.4)
 - Astropy (1.1.1)
 - Future (0.16.0)
 - FFTW (3.3)
@@ -113,6 +114,10 @@ The GalSim package also requires
   Currently GalSim is regularly tested to ensure it works with version 3.12
   of this package, but other versions may work.
 
+* the LSSTDESC.Coord module (https://github.com/LSSTDESC/Coord), which is
+  used for angles and coordinates.  It is a faster alternative to the
+  astropy.coordinates module for the use cases that we need.
+
 * Optional dependency: PyAst WCS package.  This is a really nice front end
   for the Starlink AST astrometry code.  It seems to support pretty much
   every WCS encoding there is.  (At least every one we tried.)  Their
@@ -146,6 +151,7 @@ These should installed onto your Python system so that they can be imported by:
     >>> import pyfits           [ ... or this.               ]
     >>> import future
     >>> import yaml
+    >>> import coord
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
     >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
     >>> import pandas           [ for faster ASCII table input ]
@@ -183,6 +189,7 @@ system.  Then
     pip install astropy
     pip install future
     pip install pyyaml
+    pip install lsstdesc.coord
     pip install starlink-pyast
     pip install scipy
 
@@ -817,6 +824,15 @@ You can list these options from the command line with
 
 * `BOOST_DIR` ('') specifies the root location of BOOST The header files should
    be in `BOOST_DIR/include/boost` and the library files in `BOOST_DIR/lib`.
+
+* `USE_BOOST` (False) specifies whether to use a local boost installation for
+   some optional boost header files.  We bundle the boost.random implementation
+   from a specific boost version (1.48) to make sure "random" variable generation
+   is deterministic across machines and over time.  To make it fully self-
+   contained, we edited them slightly to not include many of the complicated
+   workarounds boost has for specific compilers and such.  However, those
+   workarounds can be reenabled by setting USE_BOOST=True if your system needs
+   them.
 
 * `EXTRA_INCLUDE_PATH` ('') specifies extra directories in which to search for
    header files in addition to the standard locations such as `/usr/include` and

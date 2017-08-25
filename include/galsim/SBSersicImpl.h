@@ -266,7 +266,7 @@ namespace galsim {
         SBSersicImpl(const SBSersicImpl& rhs);
         void operator=(const SBSersicImpl& rhs);
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, SersicInfo> cache;
+        static LRUCache<Tuple< double, double, GSParamsPtr >, SersicInfo> cache;
 
         friend class SBInclinedSersic;
         friend class SBInclinedSersic::SBInclinedSersicImpl;
