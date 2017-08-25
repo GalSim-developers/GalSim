@@ -21,7 +21,7 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "Std.h"
+#include "math/Angle.h"
 
 namespace bp = boost::python;
 
@@ -30,7 +30,7 @@ namespace galsim {
 namespace {
     bp::tuple call_sincos(const double theta) {
         double sint, cost;
-        sincos(theta, sint, cost);
+        math::sincos(theta, sint, cost);
         return bp::make_tuple(sint, cost);
     }
 }

@@ -22,6 +22,7 @@
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
+#include "math/Angle.h"
 
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -193,7 +194,7 @@ namespace galsim {
     SBTransform SBProfile::rotate(double theta) const
     {
         double sint,cost;
-        sincos(theta, sint, cost);
+        math::sincos(theta, sint, cost);
         return SBTransform(*this,cost,-sint,sint,cost);
     }
 

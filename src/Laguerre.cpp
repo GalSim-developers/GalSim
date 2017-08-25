@@ -25,6 +25,7 @@
 #include "BinomFact.h"
 #include "Laguerre.h"
 #include "Solve.h"
+#include "math/Angle.h"
 
 namespace galsim {
 
@@ -59,7 +60,7 @@ namespace galsim {
     {
         take_ownership();
         double s, c;
-        sincos(theta, s, c);
+        math::sincos(theta, s, c);
         std::complex<double> z(c, -s);
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=_order; m++) {
