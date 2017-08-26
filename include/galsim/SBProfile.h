@@ -297,11 +297,10 @@ namespace galsim {
          * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an
          * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called

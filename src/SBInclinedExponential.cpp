@@ -371,8 +371,8 @@ namespace galsim {
     }
 
     // Not yet implemented, but needs to be defined
-    boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(
-        int N, UniformDeviate ud) const
+    void SBInclinedExponential::SBInclinedExponentialImpl::shoot(
+        PhotonArray& photons, UniformDeviate ud) const
     {
         throw std::runtime_error(
             "Photon shooting not yet implemented for SBInclinedExponential profile.");

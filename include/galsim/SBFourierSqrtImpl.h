@@ -55,7 +55,7 @@ namespace galsim {
         double maxSB() const;
 
         // shoot also not implemented.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>

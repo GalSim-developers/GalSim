@@ -436,27 +436,25 @@ namespace galsim {
 #endif
     }
 
-    boost::shared_ptr<PhotonArray> KolmogorovInfo::shoot(int N, UniformDeviate ud) const
+    void KolmogorovInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"KolmogorovInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        //result->scaleFlux(_norm);
-        dbg<<"KolmogorovInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"KolmogorovInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBKolmogorov::SBKolmogorovImpl::shoot(
-        int N, UniformDeviate ud) const
+    void SBKolmogorov::SBKolmogorovImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Kolmogorov shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the KolmogorovInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_flux);
-        result->scaleXY(1./_k0);
-        dbg<<"Kolmogorov Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_flux);
+        photons.scaleXY(1./_k0);
+        dbg<<"Kolmogorov Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

@@ -654,40 +654,39 @@ namespace galsim {
         dbg<<"maxk = "<<_maxk<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    void SBMoffat::SBMoffatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Moffat has analytic inverse-cumulative-flux function.
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
 #ifdef USE_COS_SIN
             // First get a point uniformly distributed on unit circle
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
             math::sincos(theta, sint, cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
-            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq / rsq);
-            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Moffat Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Moffat Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

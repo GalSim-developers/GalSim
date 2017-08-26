@@ -174,7 +174,7 @@ namespace galsim {
                 .def("getPositiveFlux", &SBProfile::getPositiveFlux)
                 .def("getNegativeFlux", &SBProfile::getNegativeFlux)
                 .def("maxSB", &SBProfile::maxSB)
-                .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
+                .def("shoot", &SBProfile::shoot, bp::args("pa", "u"))
                 .def("__repr__", &SBProfile::repr)
                 .def("serialize", &SBProfile::serialize)
                 .enable_pickling()

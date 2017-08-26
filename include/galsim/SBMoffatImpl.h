@@ -71,8 +71,11 @@ namespace galsim {
          * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
+         *
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }

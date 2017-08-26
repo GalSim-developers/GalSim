@@ -203,17 +203,17 @@ class Sum(galsim.GSObject):
         @returns PhotonArray.
         """
         if n_photons == 0:
-            return galsim._galsim.PhotonArray(0)
+            return galsim.PhotonArray(0)
         ud = galsim.UniformDeviate(rng)
 
         remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
         fluxPerPhoton = remainingAbsoluteFlux / n_photons
 
         # Initialize the output array
-        result = galsim._galsim.PhotonArray(n_photons)
+        photons = galsim.PhotonArray(n_photons)
 
         remainingN = n_photons
-        istart = 0  # The location in the result array where we assign the component arrays.
+        istart = 0  # The location in the photons array where we assign the component arrays.
 
         # Get photons from each summand, using BinomialDeviate to randomize
         # the distribution of photons among summands
@@ -232,7 +232,7 @@ class Sum(galsim.GSObject):
                 # whereas the shoot() routine would have made them each nominally
                 # thisAbsoluteFlux/thisN
                 thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
-                result.assignAt(istart, thisPA)
+                photons.assignAt(istart, thisPA)
                 istart += thisN
             remainingN -= thisN
             remainingAbsoluteFlux -= thisAbsoluteFlux
@@ -241,9 +241,8 @@ class Sum(galsim.GSObject):
 
         # This process produces correlated photons, so mark the resulting array as such.
         if len(self.obj_list) > 1:
-            result.setCorrelated(True)
-
-        return result
+            photons.setCorrelated()
+        return photons
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -510,7 +509,7 @@ class Convolution(galsim.GSObject):
         # both have their negative ones at the end.
         # However, this decision is now made by the convolve method.
         for obj in self._obj_list[1:]:
-            photon_array.convolve(obj.shoot(n_photons, ud), ud._rng)
+            photon_array.convolve(obj.shoot(n_photons, ud), ud)
         return photon_array
 
     def __getstate__(self):
@@ -766,7 +765,7 @@ class AutoConvolution(galsim.GSObject):
         ud = galsim.UniformDeviate(rng)
 
         photon_array = self._orig_obj.shoot(n_photons, ud)
-        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud._rng)
+        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
         return photon_array
 
     def __getstate__(self):
@@ -924,15 +923,14 @@ class AutoCorrelation(galsim.GSObject):
         """
         ud = galsim.UniformDeviate(rng)
 
-        result = self._orig_obj.shoot(n_photons, ud)
-        result2 = self._orig_obj.shoot(n_photons, ud)
+        photons = self._orig_obj.shoot(n_photons, ud)
+        photons2 = self._orig_obj.shoot(n_photons, ud)
 
         # Flip sign of (x, y) in one of the results
-        result2.x *= -1
-        result2.y *= -1
+        photons2.scaleXY(-1)
 
-        result.convolve(result2, ud._rng)
-        return result
+        photons.convolve(photons2, ud)
+        return photons
 
     def __getstate__(self):
         d = self.__dict__.copy()

@@ -168,8 +168,8 @@ namespace galsim {
          * @param[in] ud UniformDeviate used to generate random values
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
-        { checkSampler(); return _sampler->shoot(N, ud); }
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const
+        { checkSampler(); _sampler->shoot(photons, ud); }
 
         virtual std::string makeStr() const =0;
 
@@ -222,7 +222,7 @@ namespace galsim {
 
         virtual double getPositiveFlux() const=0;
         virtual double getNegativeFlux() const=0;
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const=0;
     };
 
     /**
@@ -252,7 +252,7 @@ namespace galsim {
         // Photon-shooting routines:
         double getPositiveFlux() const;
         double getNegativeFlux() const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Access the 1d interpolant functions for more efficient 2d interps:
         double xval1d(double x) const { return _i1d->xval(x); }
@@ -304,7 +304,7 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -348,7 +348,7 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -389,7 +389,7 @@ namespace galsim {
         double xvalWrapped(double x, int N) const;
         double uval(double u) const;
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 
@@ -432,7 +432,7 @@ namespace galsim {
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         // Linear interpolant has fast photon-shooting by adding two uniform deviates per
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         std::string makeStr() const;
 

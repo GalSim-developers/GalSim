@@ -363,25 +363,23 @@ namespace galsim {
         this->_stepk = M_PI / R;
     }
 
-    boost::shared_ptr<PhotonArray> SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
+    void SBAiry::SBAiryImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Airy shoot: N = "<<N<<std::endl;
+        dbg<<"Airy shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result=_info->shoot(N, u);
+        _info->shoot(photons, ud);
         // Then rescale for this flux & size
-        result->scaleFlux(_flux);
-        result->scaleXY(1./_D);
-        dbg<<"Airy Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        photons.scaleFlux(_flux);
+        photons.scaleXY(1./_D);
+        dbg<<"Airy Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> AiryInfo::shoot(
-        int N, UniformDeviate u) const
+    void AiryInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
         assert(_sampler.get());
-        return _sampler->shoot(N, u);
+        _sampler->shoot(photons, ud);
     }
 
     void AiryInfoObs::checkSampler() const

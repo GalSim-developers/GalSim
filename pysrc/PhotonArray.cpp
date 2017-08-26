@@ -31,120 +31,43 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    template <typename T>
-    boost::shared_ptr<PhotonArray> MakePhotonsFromImage(
-        const BaseImage<T>& image, double maxFlux, UniformDeviate ud)
-    {
-        return boost::shared_ptr<PhotonArray>(new PhotonArray(image,maxFlux,ud));
-    }
-
-
     struct PyPhotonArray {
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W& wrapper) {
             wrapper
                 .def("addTo",
-                     (double (PhotonArray::*)(ImageView<U>) const)&PhotonArray::addTo,
-                     (bp::arg("image")),
-                     "Add flux of photons to an image by binning into pixels.")
-                ;
-            bp::def("MakePhotonsFromImage",
-                (boost::shared_ptr<PhotonArray> (*)(const BaseImage<U>&, double, UniformDeviate))
-                &MakePhotonsFromImage<U>,
-                bp::args("image", "maxFlux", "ud"));
+                    (double (PhotonArray::*)(ImageView<U>) const)
+                    &PhotonArray::addTo,
+                    (bp::arg("image")))
+                .def("setFrom",
+                    (int (PhotonArray::*)(const BaseImage<U>&, double, UniformDeviate))
+                    &PhotonArray::setFrom,
+                    bp::args("image", "maxFlux", "ud"));
         }
 
-        static bp::object GetXArray(PhotonArray& phot)
+        static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
+                                      size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
         {
-            return MakeNumpyArray(&phot.getXVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
-        }
-
-        static bp::object GetYArray(PhotonArray& phot)
-        {
-            return MakeNumpyArray(&phot.getYVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
-        }
-
-        static bp::object GetFluxArray(PhotonArray& phot)
-        {
-            return MakeNumpyArray(&phot.getFluxVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
-        }
-
-        static bp::object GetDXDZArray(PhotonArray& phot)
-        {
-            return MakeNumpyArray(&phot.getDXDZVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
-        }
-
-        static bp::object GetDYDZArray(PhotonArray& phot)
-        {
-            return MakeNumpyArray(&phot.getDYDZVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
-        }
-
-        static bp::object GetWavelengthArray(PhotonArray& phot)
-        {
-            return MakeNumpyArray(&phot.getWavelengthVector()[0], phot.size(), 1, false,
-                                  boost::shared_ptr<double>());
+            double *x = reinterpret_cast<double*>(ix);
+            double *y = reinterpret_cast<double*>(iy);
+            double *flux = reinterpret_cast<double*>(iflux);
+            double *dxdz = reinterpret_cast<double*>(idxdz);
+            double *dydz = reinterpret_cast<double*>(idydz);
+            double *wave = reinterpret_cast<double*>(iwave);
+            return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
         }
 
         static void wrap()
         {
             bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
             pyPhotonArray
-                .def(bp::init<int>(bp::args("N")))
-                .def("size", &PhotonArray::size,
-                     "Return the number of photons")
-                .def("setPhoton", &PhotonArray::setPhoton,
-                     (bp::arg("i"), bp::arg("x"), bp::arg("y"), bp::arg("flux")),
-                     "Set x,y,flux for photon number i")
-                .def("getX", &PhotonArray::getX, (bp::arg("i")),
-                     "Get x for photon number i")
-                .def("getY", &PhotonArray::getY, (bp::arg("i")),
-                     "Get y for photon number i")
-                .def("getFlux", &PhotonArray::getFlux, (bp::arg("i")),
-                     "Get flux for photon number i")
-                .def("getDXDZ", &PhotonArray::getDXDZ, (bp::arg("i")),
-                     "Get dxdz for photon number i")
-                .def("getDYDZ", &PhotonArray::getDYDZ, (bp::arg("i")),
-                     "Get dydz for photon number i")
-                .def("getWavelength", &PhotonArray::getWavelength, (bp::arg("i")),
-                     "Get wavelength for photon number i")
-                .def("getXArray", GetXArray,
-                     "Get numpy array of x positions")
-                .def("getYArray", GetYArray,
-                     "Get numpy array of y positions")
-                .def("getFluxArray", GetFluxArray,
-                     "Get numpy array of fluxes")
-                .def("hasAllocatedAngles", &PhotonArray::hasAllocatedAngles,
-                     "Returns whether the dxdz and dydz arrays are allocated")
-                .def("hasAllocatedWavelengths", &PhotonArray::hasAllocatedWavelengths,
-                     "Returns whether the wavelength arrays are allocated")
-                .def("getDXDZArray", GetDXDZArray,
-                     "Get numpy array of dxdz values")
-                .def("getDYDZArray", GetDYDZArray,
-                     "Get numpy array of dydz values")
-                .def("getWavelengthArray", GetWavelengthArray,
-                     "Get numpy array of wavelengths")
-                .def("getTotalFlux", &PhotonArray::getTotalFlux,
-                     "Return the total flux of all photons")
-                .def("setTotalFlux", &PhotonArray::setTotalFlux, (bp::arg("flux")),
-                     "Set the total flux to a new value")
-                .def("scaleFlux", &PhotonArray::scaleFlux, (bp::arg("scale")),
-                     "Scale the total flux by a given factor")
-                .def("scaleXY", &PhotonArray::scaleXY, (bp::arg("scale")),
-                     "Scale the photon positions (x,y) a given factor")
-                .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
-                     "Assign the contents of another PhotonArray to this one starting at istart.")
+                .def("__init__", bp::make_constructor(
+                    &construct, bp::default_call_policies(),
+                    bp::args("N", "x", "y", "flux", "dxdz", "dydz", "wavelength", "is_corr")))
                 .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
                      "Convolve this PhotonArray with another")
-                .def("setCorrelated", &PhotonArray::setCorrelated, (bp::arg("new_val")),
-                     "Declare that the photons in this array are correlated.")
                 .enable_pickling()
                 ;
-            bp::register_ptr_to_python< boost::shared_ptr<PhotonArray> >();
             wrapTemplates<double>(pyPhotonArray);
             wrapTemplates<float>(pyPhotonArray);
         }

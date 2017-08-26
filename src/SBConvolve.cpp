@@ -266,23 +266,26 @@ namespace galsim {
         return nResult;
     }
 
-    boost::shared_ptr<PhotonArray> SBConvolve::SBConvolveImpl::shoot(int N, UniformDeviate u) const
+    void SBConvolve::SBConvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Convolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         std::list<SBProfile>::const_iterator pptr = _plist.begin();
         if (pptr==_plist.end())
             throw SBError("Cannot shoot() for empty SBConvolve");
-        boost::shared_ptr<PhotonArray> result = pptr->shoot(N, u);
+        pptr->shoot(photons, ud);
         // It may be necessary to shuffle when convolving because we do
         // do not have a gaurantee that the convolvee's photons are
         // uncorrelated, e.g. they might both have their negative ones
         // at the end.
         // However, this decision is now made by the convolve method.
-        for (++pptr; pptr != _plist.end(); ++pptr)
-            result->convolve(*pptr->shoot(N, u), u);
-        dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            PhotonArray temp(N);
+            pptr->shoot(temp, ud);
+            photons.convolve(temp, ud);
+        }
+        dbg<<"Convolve Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     //
@@ -374,15 +377,16 @@ namespace galsim {
         return 2.*p*n;
     }
 
-    boost::shared_ptr<PhotonArray> SBAutoConvolve::SBAutoConvolveImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBAutoConvolve::SBAutoConvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"AutoConvolve shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
-        result->convolve(*_adaptee.shoot(N, u), u);
-        dbg<<"AutoConvolve Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _adaptee.shoot(photons, ud);
+        PhotonArray temp(N);
+        _adaptee.shoot(temp, ud);
+        photons.convolve(temp, ud);
+        dbg<<"AutoConvolve Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 
@@ -478,21 +482,18 @@ namespace galsim {
         return 2.*p*n;
     }
 
-    boost::shared_ptr<PhotonArray> SBAutoCorrelate::SBAutoCorrelateImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBAutoCorrelate::SBAutoCorrelateImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"AutoCorrelate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
-        boost::shared_ptr<PhotonArray> result2 = _adaptee.shoot(N, u);
+        _adaptee.shoot(photons, ud);
+        PhotonArray temp(N);
+        _adaptee.shoot(temp, ud);
         // Flip sign of (x,y) in one of the results
-        for (size_t i=0; i<result2->size(); i++) {
-            Position<double> negxy = -Position<double>(result2->getX(i), result2->getY(i));
-            result2->setPhoton(i, negxy.x, negxy.y, result2->getFlux(i));
-        }
-        result->convolve(*result2, u);
-        dbg<<"AutoCorrelate Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        temp.scaleXY(-1.);
+        photons.convolve(temp, ud);
+        dbg<<"AutoCorrelate Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

@@ -80,18 +80,16 @@ namespace galsim {
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBDeltaFunction::SBDeltaFunctionImpl::shoot(int N, UniformDeviate u) const
+    void SBDeltaFunction::SBDeltaFunctionImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Delta Function shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
-            result->setPhoton(i, 0.0, 0.0, fluxPerPhoton);
+            photons.setPhoton(i, 0.0, 0.0, fluxPerPhoton);
         }
-        dbg<<"Realized flux = "<<result->getTotalFlux()<<std::endl;
-
-        return result;
+        dbg<<"Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

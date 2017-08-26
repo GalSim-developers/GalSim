@@ -99,15 +99,16 @@ namespace galsim {
     double InterpolantXY::getNegativeFlux() const
     { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
 
-    boost::shared_ptr<PhotonArray> InterpolantXY::shoot(int N, UniformDeviate ud) const
+    void InterpolantXY::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"InterpolantXY shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = 1.\n";
         // Going to assume here that there is not a need to randomize any Interpolant
-        boost::shared_ptr<PhotonArray> result = _i1d->shoot(N, ud);   // get X coordinates
-        result->takeYFrom(*_i1d->shoot(N, ud));
-        dbg<<"InterpolantXY Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _i1d->shoot(photons, ud);  // get X coordinates
+        PhotonArray temp(photons.size());
+        _i1d->shoot(temp, ud);     // get Y coordinates (in x location)
+        photons.takeYFrom(temp);
+        dbg<<"InterpolantXY Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     double Interpolant::xvalWrapped(double x, int N) const
@@ -139,17 +140,16 @@ namespace galsim {
     // Delta
     //
 
-    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const
+    void Delta::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        const int N = photons.size();
+        dbg<<"Delta shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result->setPhoton(i, 0., 0., fluxPerPhoton);
+            photons.setPhoton(i, 0., 0., fluxPerPhoton);
         }
-        dbg<<"Delta Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Delta Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Delta::makeStr() const
@@ -169,17 +169,16 @@ namespace galsim {
 
     double Nearest::uval(double u) const { return math::sinc(u); }
 
-    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const
+    void Nearest::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result->setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+            photons.setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
         }
-        dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Nearest Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Nearest::makeStr() const
@@ -212,10 +211,9 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SincInterpolant::shoot(int N, UniformDeviate ud) const
+    void SincInterpolant::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
-        return boost::shared_ptr<PhotonArray>();
     }
 
     std::string SincInterpolant::makeStr() const
@@ -238,18 +236,17 @@ namespace galsim {
         return s*s;
     }
 
-    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const
+    void Linear::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {
             // *** Guessing here that 2 random draws is faster than a sqrt:
-            result->setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+            photons.setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
         }
-        dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Linear Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Linear::makeStr() const

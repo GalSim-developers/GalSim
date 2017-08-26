@@ -60,7 +60,7 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not yet implemented
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }

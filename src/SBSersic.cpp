@@ -850,9 +850,8 @@ namespace galsim {
         double _invn;
     };
 
-    boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
+    void SersicInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
 
         if (!_sampler) {
@@ -866,20 +865,18 @@ namespace galsim {
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SersicInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SersicInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
+    void SBSersic::SBSersicImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Sersic shoot: N = "<<N<<std::endl;
+        dbg<<"Sersic shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Sersic Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Sersic Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

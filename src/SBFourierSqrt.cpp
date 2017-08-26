@@ -138,11 +138,9 @@ namespace galsim {
         return 2. * _adaptee.maxSB() / std::abs(getFlux());
     }
 
-    boost::shared_ptr<PhotonArray> SBFourierSqrt::SBFourierSqrtImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBFourierSqrt::SBFourierSqrtImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw SBError("SBFourierSqrt::shoot() not implemented");
-        return boost::shared_ptr<PhotonArray>();
     }
 
 }

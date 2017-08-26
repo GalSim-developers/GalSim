@@ -57,7 +57,7 @@ namespace galsim {
         double getWidth() const { return _width; }
         double getHeight() const { return _height; }
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -165,7 +165,7 @@ namespace galsim {
 
         double getRadius() const { return _r0; }
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Overrides for better efficiency
         template <typename T>

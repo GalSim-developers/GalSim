@@ -444,7 +444,8 @@ namespace galsim {
         return res;
     }
 
-    boost::shared_ptr<PhotonArray> SBInclinedSersic::SBInclinedSersicImpl::shoot(int N, UniformDeviate ud) const
+    void SBInclinedSersic::SBInclinedSersicImpl::shoot(
+        PhotonArray& photons, UniformDeviate ud) const
     {
         throw std::runtime_error(
             "Photon shooting not yet implemented for SBInclinedSersic profile.");

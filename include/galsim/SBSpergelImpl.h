@@ -72,11 +72,10 @@ namespace galsim {
          * Spergel profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N  Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double calculateIntegratedFlux(const double& r) const;
         double calculateFluxRadius(const double& f) const;
@@ -153,7 +152,7 @@ namespace galsim {
         double maxSB() const { return std::abs(_xnorm) * _info->xValue(0.); }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }

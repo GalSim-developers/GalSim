@@ -92,11 +92,10 @@ namespace galsim {
          *
          * Photon shooting with the Sinc kernel is a bad idea and is currently forbidden.
          *
-         * @param[in] N Total umber of photons to produce.
-         * @param[in] u UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
@@ -242,7 +241,7 @@ namespace galsim {
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
         double maxSB() const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
+        void shoot(PhotonArray& photons, UniformDeviate ud) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 
 

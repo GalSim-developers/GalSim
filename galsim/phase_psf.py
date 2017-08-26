@@ -1271,14 +1271,10 @@ class PhaseScreenPSF(GSObject):
         v = v[pick]
 
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
-        y *= 1e-9 * 206265
+        x *= 1e-9 * galsim.radians / galsim.arcsec  # convert from nm/m to arcsec.
+        y *= 1e-9 * galsim.radians / galsim.arcsec
 
-        photon_array = galsim._galsim.PhotonArray(n_photons)
-        photon_array.x = x
-        photon_array.y = y
-        photon_array.flux = self._flux/n_photons
-        return photon_array
+        return galsim.PhotonArray(n_photons, x=x, y=y, flux=self._flux/n_photons)
 
 
 class OpticalPSF(GSObject):

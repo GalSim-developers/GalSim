@@ -240,10 +240,10 @@ namespace galsim {
          *
          * If `_isRadial=true`, photons will populate the plane.  Otherwise only the x coordinate
          * of photons will be generated, for 1d distribution.
-         * @param[in] N number of photons to draw
-         * @param[in] ud UniformDeviate used to produce random selections.
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
     private:
 

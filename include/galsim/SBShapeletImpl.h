@@ -51,7 +51,7 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
+        void shoot(PhotonArray& photons, UniformDeviate ud) const
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
         // Overrides for better efficiency

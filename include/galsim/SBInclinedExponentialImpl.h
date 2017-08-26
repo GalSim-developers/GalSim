@@ -72,7 +72,7 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the inclination angle in radians
         double getInclination() const { return _inclination; }

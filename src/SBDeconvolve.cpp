@@ -173,11 +173,9 @@ namespace galsim {
         return -_adaptee.maxSB() / std::abs(_adaptee.getFlux() * _adaptee.getFlux());
     }
  
-    boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBDeconvolve::SBDeconvolveImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw SBError("SBDeconvolve::shoot() not implemented");
-        return boost::shared_ptr<PhotonArray>();
     }
 
 }

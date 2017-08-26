@@ -708,11 +708,8 @@ namespace galsim {
         double _b;
     };
 
-    boost::shared_ptr<PhotonArray> SpergelInfo::shoot(int N, UniformDeviate ud) const
+    void SpergelInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SpergelInfo shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.0\n";
-
         if (!_sampler) {
             // Set up the classes for photon shooting
             double shoot_rmax = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
@@ -749,19 +746,17 @@ namespace galsim {
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SpergelInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SpergelInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSpergel::SBSpergelImpl::shoot(int N, UniformDeviate ud) const
+    void SBSpergel::SBSpergelImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Spergel shoot: N = "<<N<<std::endl;
+        dbg<<"Spergel shoot: N = "<<photons.size()<<std::endl;
         // Get photons from the SpergelInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Spergel Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Spergel Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

@@ -106,7 +106,7 @@ namespace galsim {
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0;
         virtual double maxSB() const =0;
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
+        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const=0;
 
         // Functions with default implementations:
         virtual void getXRange(double& xmin, double& xmax, std::vector<double>& /*splits*/) const

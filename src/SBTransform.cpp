@@ -905,19 +905,18 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SBTransform::SBTransformImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBTransform::SBTransformImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Distort shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
-        for (size_t i=0; i<result->size(); i++) {
-            Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i)))+_cen;
-            result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_fluxScaling);
+        _adaptee.shoot(photons,ud);
+        for (int i=0; i<N; i++) {
+            Position<double> xy = fwd(Position<double>(photons.getX(i), photons.getY(i)))+_cen;
+            photons.setPhoton(i, xy.x, xy.y, photons.getFlux(i)*_fluxScaling);
         }
-        dbg<<"Distort Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Distort Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

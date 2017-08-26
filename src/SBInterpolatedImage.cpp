@@ -744,9 +744,10 @@ namespace galsim {
     }
 
     // Photon-shooting
-    boost::shared_ptr<PhotonArray> SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
-        int N, UniformDeviate ud) const
+    void SBInterpolatedImage::SBInterpolatedImageImpl::shoot(
+        PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"InterpolatedImage shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         assert(N>=0);
@@ -759,8 +760,7 @@ namespace galsim {
          */
         assert(N>=0);
 
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        if (N<=0 || _pt.empty()) return result;
+        if (N<=0 || _pt.empty()) return;
         double totalAbsFlux = _positiveFlux + _negativeFlux;
         double fluxPerPhoton = totalAbsFlux / N;
         dbg<<"posFlux = "<<_positiveFlux<<", negFlux = "<<_negativeFlux<<std::endl;
@@ -769,22 +769,21 @@ namespace galsim {
         for (int i=0; i<N; ++i) {
             double unitRandom = ud();
             const Pixel* p = _pt.find(unitRandom);
-            result->setPhoton(i, p->x, p->y,
-                              p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
+            photons.setPhoton(i, p->x, p->y, p->isPositive ? fluxPerPhoton : -fluxPerPhoton);
         }
-        dbg<<"result->getTotalFlux = "<<result->getTotalFlux()<<std::endl;
+        dbg<<"photons.getTotalFlux = "<<photons.getTotalFlux()<<std::endl;
 
         // Last step is to convolve with the interpolation kernel.
         // Can skip if using a 2d delta function
         const InterpolantXY* xyPtr = dynamic_cast<const InterpolantXY*> (_xInterp.get());
         if ( !(xyPtr && dynamic_cast<const Delta*> (xyPtr->get1d().get()))) {
-            boost::shared_ptr<PhotonArray> pa_interp = _xInterp->shoot(N, ud);
-            pa_interp->scaleXY(_xtab->getDx());
-            result->convolve(*pa_interp, ud);
+            PhotonArray temp(N);
+            _xInterp->shoot(temp, ud);
+            temp.scaleXY(_xtab->getDx());
+            photons.convolve(temp, ud);
         }
 
-        dbg<<"InterpolatedImage Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"InterpolatedImage Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 

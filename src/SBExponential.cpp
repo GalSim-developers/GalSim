@@ -563,19 +563,16 @@ namespace galsim {
     double ExponentialInfo::stepK() const
     { return _stepk; }
 
-    boost::shared_ptr<PhotonArray> ExponentialInfo::shoot(int N, UniformDeviate ud) const
+    void ExponentialInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.0\n";
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"ExponentialInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"ExponentialInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBExponential::SBExponentialImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBExponential::SBExponentialImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Exponential shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
 #ifdef USE_NEWTON_RAPHSON
@@ -588,13 +585,12 @@ namespace galsim {
         const double Y_TOLERANCE=this->gsparams->shoot_accuracy;
 
         double fluxPerPhoton = _flux / N;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         for (int i=0; i<N; i++) {
-            double y = u();
+            double y = ud();
             if (y==0.) {
                 // In case of infinite radius - just set to origin:
-                result->setPhoton(i,0.,0.,fluxPerPhoton);
+                photons.setPhoton(i,0.,0.,fluxPerPhoton);
                 continue;
             }
             // Initial guess
@@ -607,31 +603,30 @@ namespace galsim {
             }
             // Draw another (or multiple) randoms for azimuthal angle
 #ifdef USE_COS_SIN
-            double theta = 2. * M_PI * u();
+            double theta = 2. * M_PI * ud();
             double sint,cost;
             math::sincos(theta, sint, cost);
             double rFactor = r * _r0;
-            result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
-                xu = 2. * u() - 1.;
-                yu = 2. * u() - 1.;
+                xu = 2. * ud() - 1.;
+                yu = 2. * ud() - 1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq >= 1. || rsq == 0.);
             double rFactor = r * _r0 / std::sqrt(rsq);
-            result->setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor * xu, rFactor * yu, fluxPerPhoton);
 #endif
         }
 #else
         // Get photons from the ExponentialInfo structure, rescale flux and size for this instance
         dbg<<"flux scaling = "<<_flux_over_2pi<<std::endl;
         dbg<<"r0 = "<<_r0<<std::endl;
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,u);
-        result->scaleFlux(_flux_over_2pi);
-        result->scaleXY(_r0);
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_flux_over_2pi);
+        photons.scaleXY(_r0);
 #endif
-        dbg<<"Exponential Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Exponential Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

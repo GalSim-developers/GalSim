@@ -173,7 +173,7 @@ def test_wavelength_sampler():
     im1 = galsim.Image(64,64,scale=1)
     im1.setCenter(0,0)
     photon_array.flux[photon_array.wavelength < 600] = 0.
-    photon_array.addTo(im1.image)
+    photon_array.addTo(im1)
 
     # Make a dummy surface op that clips any photons with lambda < 600
     class Clip600(object):

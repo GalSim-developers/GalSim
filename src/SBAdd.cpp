@@ -223,15 +223,13 @@ namespace galsim {
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const
+    void SBAdd::SBAddImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Add shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         double fluxPerPhoton = totalAbsoluteFlux / N;
-
-        // Initialize the output array
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
 
         double remainingAbsoluteFlux = totalAbsoluteFlux;
         int remainingN = N;
@@ -248,16 +246,17 @@ namespace galsim {
             ++nextPtr;
             if (nextPtr!=_plist.end()) {
                 // otherwise allocate a randomized fraction of the remaining photons to this summand:
-                BinomialDeviate bd(u, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
+                BinomialDeviate bd(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux);
                 thisN = bd();
             }
             if (thisN > 0) {
-                boost::shared_ptr<PhotonArray> thisPA = pptr->shoot(thisN, u);
+                PhotonArray thisPA(thisN);
+                pptr->shoot(thisPA, ud);
                 // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
                 // whereas the shoot() routine would have made them each nominally
                 // thisAbsoluteFlux/thisN
-                thisPA->scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
-                result->assignAt(istart, *thisPA);
+                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
+                photons.assignAt(istart, thisPA);
                 istart += thisN;
             }
             remainingN -= thisN;
@@ -266,12 +265,10 @@ namespace galsim {
             if (remainingAbsoluteFlux <= 0.) break;
         }
 
-        dbg<<"Add Realized flux = "<<result->getTotalFlux()<<std::endl;
+        dbg<<"Add Realized flux = "<<photons.getTotalFlux()<<std::endl;
 
         // This process produces correlated photons, so mark the resulting array as such.
-        if (_plist.size() > 1) result->setCorrelated();
-
-        return result;
+        if (_plist.size() > 1) photons.setCorrelated();
     }
 
 }

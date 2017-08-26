@@ -1918,7 +1918,17 @@ class GSObject(object):
         @returns PhotonArray.
         """
         ud = galsim.UniformDeviate(rng)
-        return self.SBProfile.shoot(int(n_photons), ud._rng)
+        photons = galsim.PhotonArray(n_photons)
+        corr = self._shoot(photons, ud)
+        if corr:
+            photons.setCorrelated()
+        return photons
+
+    def _shoot(self, photons, rng):
+        # Most of the time the shooting process doesn't correlate the photons.
+        # If they do end up correlated, the subclass should override the _shoot function and
+        # call photons.setCorrelated().
+        self.SBProfile.shoot(photons._pa, rng._rng)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, setup_only=False):
