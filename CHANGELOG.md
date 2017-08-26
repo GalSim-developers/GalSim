@@ -11,6 +11,8 @@ Dependency Changes
 - Added LSSTDESC.Coord, which contains the functionality that used to be in GalSim as the Angle
   and CelestialCoord classes.  We moved it to a separate repo so people could more easily use
   this functionality without requiring all of GalSim as a dependency. (#809b)
+- Removed dependency on boost.
+- Added dependency on (pybind11 or cffi...)
 
 
 API Changes
@@ -29,13 +31,6 @@ API Changes
   classmethods of the Shapelet class: `Shapelet.size(order)` and `Shapelet.fit(image)`.
   Also LVector is not longer in the galsim.shapelet namespece.  It was an implementation
   detail of Shapelet, which should not be needed for any use case.  (#809e)
-
-
-Dependency Changes
-------------------
-
-- Removed dependency on boost.
-- Added dependency on (pybind11 or cffi...)
 
 
 Bug Fixes
