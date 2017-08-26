@@ -316,18 +316,20 @@ namespace galsim {
         _pt.buildTree(thresh);
     }
 
-    void OneDimensionalDeviate::shoot(PhotonArray& photons, UniformDeviate ud) const
+    void OneDimensionalDeviate::shoot(PhotonArray& photons, UniformDeviate ud, bool xandy) const
     {
         const int N = photons.size();
         dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         dbg<<"isradial? "<<_isRadial<<std::endl;
+        dbg<<"xandy = "<<xandy<<std::endl;
         dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
         if (N==0) return;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
+        if (xandy) fluxPerPhoton *= totalAbsoluteFlux;
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
 
         // For each photon, first decide which Interval it's in, then drawWithin the interval.
@@ -370,7 +372,15 @@ namespace galsim {
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
-                photons.setPhoton(i, x, 0., flux*fluxPerPhoton);
+                if (xandy) {
+                    double y, flux2;
+                    unitRandom = ud();
+                    chosen = _pt.find(unitRandom);
+                    chosen->drawWithin(unitRandom, y, flux2, ud);
+                    photons.setPhoton(i, x, y, flux*flux2*fluxPerPhoton);
+                } else {
+                    photons.setPhoton(i, x, 0., flux*fluxPerPhoton);
+                }
             }
         }
         dbg<<"OneDimentionalDeviate Realized flux = "<<photons.getTotalFlux()<<std::endl;

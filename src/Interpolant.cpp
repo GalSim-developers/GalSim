@@ -104,10 +104,8 @@ namespace galsim {
         dbg<<"InterpolantXY shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = 1.\n";
         // Going to assume here that there is not a need to randomize any Interpolant
-        _i1d->shoot(photons, ud);  // get X coordinates
-        PhotonArray temp(photons.size());
-        _i1d->shoot(temp, ud);     // get Y coordinates (in x location)
-        photons.takeYFrom(temp);
+        // The 1d interpolants will populate x and y values separately.
+        _i1d->shoot(photons, ud);
         dbg<<"InterpolantXY Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
@@ -176,7 +174,7 @@ namespace galsim {
         dbg<<"Target flux = 1.\n";
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            photons.setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+            photons.setPhoton(i, ud()-0.5, ud()-0.5, fluxPerPhoton);
         }
         dbg<<"Nearest Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
@@ -244,7 +242,7 @@ namespace galsim {
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {
             // *** Guessing here that 2 random draws is faster than a sqrt:
-            photons.setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+            photons.setPhoton(i, ud() + ud() - 1., ud() + ud() - 1., fluxPerPhoton);
         }
         dbg<<"Linear Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }

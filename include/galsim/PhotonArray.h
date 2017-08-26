@@ -224,14 +224,6 @@ namespace galsim {
         void convolveShuffle(const PhotonArray& rhs, UniformDeviate ud);
 
         /**
-         * @brief Take x displacement from this, and y displacement from x of another array,
-         * multiplying fluxes.
-         *
-         * @param[in] rhs Source of y displacements
-         */
-        void takeYFrom(const PhotonArray& rhs);
-
-        /**
          * @brief Add flux of photons to an image by binning into pixels.
          *
          * Photon in this PhotonArray are binned into the pixels of the input

@@ -242,8 +242,9 @@ namespace galsim {
          * of photons will be generated, for 1d distribution.
          * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @param[in] xandy Whether to populate both x and y values (true) or just x (false)
          */
-        void shoot(PhotonArray& photons, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud, bool xandy=false) const;
 
     private:
 

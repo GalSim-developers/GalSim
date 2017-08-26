@@ -189,16 +189,6 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::takeYFrom(const PhotonArray& rhs)
-    {
-        assert(rhs.size()==size());
-        int N = size();
-        for (int i=0; i<N; i++) {
-            _y[i] = rhs._x[i];
-            _flux[i] *= rhs._flux[i]*N;
-        }
-    }
-
     template <class T>
     double PhotonArray::addTo(ImageView<T> target) const
     {

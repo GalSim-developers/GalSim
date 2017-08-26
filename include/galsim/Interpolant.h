@@ -169,7 +169,7 @@ namespace galsim {
          * @returns a PhotonArray containing the vector of displacements for interpolation kernel.
          */
         virtual void shoot(PhotonArray& photons, UniformDeviate ud) const
-        { checkSampler(); _sampler->shoot(photons, ud); }
+        { checkSampler(); _sampler->shoot(photons, ud, true); }
 
         virtual std::string makeStr() const =0;
 
