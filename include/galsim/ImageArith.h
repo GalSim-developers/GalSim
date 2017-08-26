@@ -43,7 +43,7 @@ namespace galsim {
      *  @brief Call a unary function on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel(const BaseImage<T>& image, Op f)
+    void for_each_pixel_ref(const BaseImage<T>& image, Op& f)
     {
         const T* ptr = image.getData();
         if (ptr) {
@@ -59,14 +59,17 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr+=step) f(*ptr);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void for_each_pixel(const BaseImage<T>& image, Op f)
+    { for_each_pixel_ref(image, f); }
 
     /**
      *  @brief Call a function of (value, i, j) on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel_ij(const BaseImage<T>& image, Op f)
+    void for_each_pixel_ij_ref(const BaseImage<T>& image, Op& f)
     {
         const T* ptr = image.getData();
         if (ptr) {
@@ -84,14 +87,17 @@ namespace galsim {
                     for (int i=xmin; i<=xmax; i++, ptr+=step) f(*ptr,i,j);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void for_each_pixel_ij(const BaseImage<T>& image, Op f)
+    { for_each_pixel_ij_ref(image, f); }
 
     /**
      *  @brief Replace image with a function of its pixel values.
      */
     template <typename T, typename Op>
-    Op transform_pixel(ImageView<T> image, Op f)
+    void transform_pixel_ref(ImageView<T> image, Op& f)
     {
         T* ptr = image.getData();
         if (ptr) {
@@ -107,14 +113,17 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr+=step) *ptr = f(*ptr);
             }
         }
-        return f;
     }
+
+    template <typename T, typename Op>
+    void transform_pixel(ImageView<T> image, Op f)
+    { transform_pixel_ref(image, f); }
 
     /**
      *  @brief Assign function of 2 images to 1st
      */
     template <typename T1, typename T2, typename Op>
-    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
+    void transform_pixel_ref(ImageView<T1> image1, const BaseImage<T2>& image2, Op& f)
     {
         T1* ptr1 = image1.getData();
         if (ptr1) {
@@ -137,8 +146,11 @@ namespace galsim {
                     for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,T1(*ptr2));
             }
         }
-        return f;
     }
+
+    template <typename T1, typename T2, typename Op>
+    void transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
+    { transform_pixel_ref(image1, image2, f); }
 
     // Some functionals that are useful for operating on images:
     template <typename T>
