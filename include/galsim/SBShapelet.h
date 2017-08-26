@@ -51,6 +51,7 @@ namespace galsim {
 
         double getSigma() const;
         const LVector& getBVec() const;
+        void rotate(double theta);
 
     protected:
         class SBShapeletImpl;

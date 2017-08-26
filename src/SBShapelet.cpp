@@ -43,6 +43,13 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
+    void SBShapelet::rotate(double theta)
+    {
+        assert(dynamic_cast<SBShapeletImpl*>(_pimpl.get()));
+        LVector& bvec = static_cast<SBShapeletImpl&>(*_pimpl).getBVec();
+        bvec.rotate(theta);
+    }
+
     std::string SBShapelet::SBShapeletImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -142,6 +149,7 @@ namespace galsim {
 
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
+    LVector& SBShapelet::SBShapeletImpl::getBVec() { return _bvec; }
 
     template <typename T>
     void SBShapelet::SBShapeletImpl::fillXImage(ImageView<T> im,

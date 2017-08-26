@@ -25,6 +25,10 @@ API Changes
   some were just deemed API improvements.  Probably the most relevant of these for most
   users will be that Angle.rad is now a property rather than a function.  So the value of an
   angle in radians is just `theta.rad` not `theta.rad()`. (#809b)
+- Removed ShapeletSize and FitShapelet from the galsim namespace and made the functionality
+  classmethods of the Shapelet class: `Shapelet.size(order)` and `Shapelet.fit(image)`.
+  Also LVector is not longer in the galsim.shapelet namespece.  It was an implementation
+  detail of Shapelet, which should not be needed for any use case.  (#809e)
 
 
 Dependency Changes
