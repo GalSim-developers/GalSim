@@ -153,11 +153,11 @@ class InclinedSersic(GSObject):
         if not isinstance(inclination, galsim.Angle):
             raise TypeError("Input inclination should be an Angle")
 
+        self._inclination = inclination
+        self._gsparams = galsim.GSParams.check(gsparams)
         GSObject.__init__(self, _galsim.SBInclinedSersic(
                 n, inclination.rad, scale_radius, half_light_radius,
-                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, gsparams))
-        self._inclination = inclination
-        self._gsparams = gsparams
+                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, self.gsparams._gsp))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -218,16 +218,16 @@ class InclinedSersic(GSObject):
                  (self.scale_height == other.scale_height) and
                  (self.flux == other.flux) and
                  (self.trunc == other.trunc) and
-                 (self._gsparams == other._gsparams)))
+                 (self.gsparams == other.gsparams)))
 
     def __hash__(self):
         return hash(("galsim.InclinedSersic", self.n, self.inclination, self.scale_radius,
-                    self.scale_height, self.flux, self.trunc, self._gsparams))
+                    self.scale_height, self.flux, self.trunc, self.gsparams))
     def __repr__(self):
         return ('galsim.InclinedSersic(n=%r, inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, trunc=%r, gsparams=%r)') % (self.n,
             self.inclination, self.scale_radius, self.scale_height, self.flux, self.trunc,
-            self._gsparams)
+            self.gsparams)
 
     def __str__(self):
         s = 'galsim.InclinedSersic(n=%s, inclination=%s, scale_radius=%s, scale_height=%s' % (

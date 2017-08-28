@@ -31,18 +31,18 @@ namespace galsim {
     struct PyInterpolant
     {
 
-        static Interpolant* ConstructInterpolant(std::string str, double tol)
+        static Interpolant* ConstructInterpolant(std::string str, double tol, const GSParams& gsp)
         {
             // Make it lowercase
             std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
             // Return the right Interpolant according to the given string.
-            if (str == "delta") return new Delta(tol);
-            else if (str == "nearest") return new Nearest(tol);
-            else if (str == "sinc") return new SincInterpolant(tol);
-            else if (str == "linear") return new Linear(tol);
-            else if (str == "cubic") return new Cubic(tol);
-            else if (str == "quintic") return new Quintic(tol);
+            if (str == "delta") return new Delta(tol, gsp);
+            else if (str == "nearest") return new Nearest(tol, gsp);
+            else if (str == "sinc") return new SincInterpolant(tol, gsp);
+            else if (str == "linear") return new Linear(tol, gsp);
+            else if (str == "cubic") return new Cubic(tol, gsp);
+            else if (str == "quintic") return new Quintic(tol, gsp);
             else if (str.substr(0,7) == "lanczos") {
                 int end = str.size();
                 bool conserve = true;
@@ -55,7 +55,7 @@ namespace galsim {
                     PyErr_SetString(PyExc_TypeError, "Invalid Lanczos order");
                     bp::throw_error_already_set();
                 }
-                return new Lanczos(n, conserve, tol);
+                return new Lanczos(n, conserve, tol, gsp);
             } else {
                 PyErr_SetString(PyExc_TypeError, "Invalid interpolant string");
                 bp::throw_error_already_set();
@@ -73,7 +73,7 @@ namespace galsim {
             bp::class_<Interpolant,boost::noncopyable>("Interpolant", bp::no_init)
                 .def("__init__", bp::make_constructor(
                         &ConstructInterpolant, bp::default_call_policies(),
-                        (bp::arg("str"), bp::arg("tol")=1.e-4)))
+                        (bp::arg("str"), bp::arg("tol")=1.e-4, bp::arg("gsparams")=GSParams())))
                 .def("uval", &Interpolant::uval, (bp::arg("uval")=0))
                 .def("makeStr", &Interpolant::makeStr)
                 .def("getTol", &Interpolant::getTolerance)
@@ -90,7 +90,7 @@ namespace galsim {
             "to the x-space delta function and to give a large but finite urange\n"
             "(default `width=1e-4`).\n";
             bp::class_<Delta,bp::bases<Interpolant> >("Delta", delta_doc, bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
 
@@ -104,7 +104,7 @@ namespace galsim {
             "Tolerance `tol` determines how far onto sinc wiggles the uval will go.  Very far, by\n"
             "default! (default `tol=1e-4`)\n";
             bp::class_<Nearest,bp::bases<Interpolant> >("Nearest", nearest_doc, bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
 
@@ -121,7 +121,7 @@ namespace galsim {
             "default! (default `tol=1e-4`)\n";
             bp::class_<SincInterpolant,bp::bases<Interpolant> >("SincInterpolant", sinc_doc,
                                                                 bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
 
@@ -134,7 +134,7 @@ namespace galsim {
             "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far,\n"
             "by default! (default `tol=1e-4`)\n";
             bp::class_<Linear,bp::bases<Interpolant> >("Linear", linear_doc, bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
 
@@ -152,8 +152,8 @@ namespace galsim {
             "function so that it approximately conserves the value of constant (DC) input data\n"
             "(accurate to better than 1.e-5 when used in two dimensions).\n";
             bp::class_<Lanczos,bp::bases<Interpolant> >("Lanczos", lanczos_doc, bp::no_init)
-                .def(bp::init<int,bool,double>(
-                    (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4)))
+                .def(bp::init<int,bool,double,GSParams>(
+                    (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .def("getN", &Lanczos::getN)
                 .def("conservesDC", &Lanczos::conservesDC)
                 .enable_pickling()
@@ -166,7 +166,7 @@ namespace galsim {
             "interpolated images.  (See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Cubic,bp::bases<Interpolant> >("Cubic", cubic_doc, bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
 
@@ -175,7 +175,7 @@ namespace galsim {
             "See Bernstein & Gruen, http://arxiv.org/abs/1401.2636.\n\n"
             "Default tolerance parameter `tol=1e-4`.\n";
             bp::class_<Quintic,bp::bases<Interpolant> >("Quintic", quintic_doc, bp::no_init)
-                .def(bp::init<double>(bp::arg("tol")=1e-4))
+                .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4, bp::arg("gsparams")=GSParams())))
                 .enable_pickling()
                 ;
         }

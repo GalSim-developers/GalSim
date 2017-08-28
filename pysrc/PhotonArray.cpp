@@ -24,7 +24,6 @@
 #include <boost/python/stl_iterator.hpp>
 
 #include "PhotonArray.h"
-#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 

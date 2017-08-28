@@ -68,10 +68,10 @@ namespace galsim {
         return _pimpl->repr();
     }
 
-    const boost::shared_ptr<GSParams> SBProfile::getGSParams() const
+    GSParams SBProfile::getGSParams() const
     {
         assert(_pimpl.get());
-        return _pimpl->gsparams.getP();
+        return _pimpl->gsparams;
     }
 
     double SBProfile::xValue(const Position<double>& p) const
@@ -179,30 +179,17 @@ namespace galsim {
 
     SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
 
-    SBProfile::SBProfileImpl::SBProfileImpl(const GSParamsPtr& gsparams) :
-        gsparams(gsparams ? gsparams : GSParamsPtr::getDefault()) {}
+    SBProfile::SBProfileImpl::SBProfileImpl(const GSParams& _gsparams) :
+        gsparams(_gsparams) {}
 
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs)
     { return rhs._pimpl.get(); }
 
-    SBTransform SBProfile::scaleFlux(double fluxRatio) const
-    { return SBTransform(*this,1.,0.,0.,1.,Position<double>(0.,0.),fluxRatio); }
-
-    SBTransform SBProfile::expand(double scale) const
-    { return SBTransform(*this,scale,0.,0.,scale); }
-
-    SBTransform SBProfile::rotate(double theta) const
-    {
-        double sint,cost;
-        math::sincos(theta, sint, cost);
-        return SBTransform(*this,cost,-sint,sint,cost);
-    }
-
     SBTransform SBProfile::transform(double dudx, double dudy, double dvdx, double dvdy) const
-    { return SBTransform(*this, dudx, dudy, dvdx, dvdy); }
-
-    SBTransform SBProfile::shift(const Position<double>& delta) const
-    { return SBTransform(*this,1.,0.,0.,1., delta); }
+    {
+        return SBTransform(*this, dudx, dudy, dvdx, dvdy,
+                           Position<double>(0,0), 1., getGSParams());
+    }
 
     //
     // Common methods of Base Class "SBProfile"

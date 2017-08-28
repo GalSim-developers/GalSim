@@ -32,7 +32,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SpergelInfo(double nu, const GSParamsPtr& gsparams);
+        SpergelInfo(double nu, GSParamsPtr gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}
@@ -87,7 +87,7 @@ namespace galsim {
 
         // Input variables:
         double _nu;       ///< Spergel index.
-        const GSParamsPtr _gsparams; ///< The GSParams object.
+        GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _gamma_nup1;  ///< Gamma(nu+1)
@@ -108,7 +108,7 @@ namespace galsim {
     {
     public:
         SBSpergelImpl(double nu, double size, RadiusType rType,
-                      double flux, const GSParamsPtr& gsparams);
+                      double flux, const GSParams& gsparams);
 
         ~SBSpergelImpl() {}
 
@@ -238,7 +238,7 @@ namespace galsim {
         SBSpergelImpl(const SBSpergelImpl& rhs);
         void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<Tuple< double, GSParamsPtr >, SpergelInfo> cache;
+        static LRUCache<Tuple<double, GSParamsPtr>, SpergelInfo> cache;
     };
 }
 

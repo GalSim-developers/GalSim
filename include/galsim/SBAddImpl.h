@@ -28,7 +28,7 @@ namespace galsim {
     class SBAdd::SBAddImpl : public SBProfileImpl
     {
     public:
-        SBAddImpl(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
+        SBAddImpl(const std::list<SBProfile>& slist, const GSParams& gsparams);
         ~SBAddImpl() {}
 
         std::list<SBProfile> getObjs() const { return _plist; }

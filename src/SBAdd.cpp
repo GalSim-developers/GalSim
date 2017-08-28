@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams) :
+    SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParams& gsparams) :
         SBProfile(new SBAddImpl(slist,gsparams)) {}
 
     SBAdd::SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
@@ -52,13 +52,12 @@ namespace galsim {
         ConstIter sptr = _plist.begin();
         oss << sptr->serialize();
         for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        oss << "], galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
-                                const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
+    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist, const GSParams& gsparams) :
+        SBProfileImpl(gsparams)
     {
         for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
             add(*sptr);

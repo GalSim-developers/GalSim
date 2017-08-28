@@ -34,9 +34,8 @@ namespace galsim {
     {
 
         static SBSersic* construct(
-            double n, const bp::object & scale_radius, const bp::object & half_light_radius,
-            double flux, double trunc, bool flux_untruncated,
-            boost::shared_ptr<GSParams> gsparams)
+            double n, const bp::object& scale_radius, const bp::object& half_light_radius,
+            double flux, double trunc, bool flux_untruncated, GSParams gsparams)
         {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, bp::object());
@@ -57,12 +56,9 @@ namespace galsim {
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
-                         (bp::arg("n"),
-                          bp::arg("scale_radius")=bp::object(),
-                          bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("flux")=1.,
-                          bp::arg("trunc")=0., bp::arg("flux_untruncated")=false,
-                          bp::arg("gsparams")=bp::object())
+                         (bp::arg("n"), bp::arg("scale_radius"), bp::arg("half_light_radius"),
+                          bp::arg("flux"), bp::arg("trunc"), bp::arg("flux_untruncated"),
+                          bp::arg("gsparams"))
                      )
                 )
                 .def(bp::init<const SBSersic &>())

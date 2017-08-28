@@ -28,7 +28,7 @@ namespace galsim {
     class SBBox::SBBoxImpl : public SBProfileImpl
     {
     public:
-        SBBoxImpl(double width, double height, double flux, const GSParamsPtr& gsparams);
+        SBBoxImpl(double width, double height, double flux, const GSParams& gsparams);
         ~SBBoxImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -130,7 +130,7 @@ namespace galsim {
     class SBTopHat::SBTopHatImpl : public SBProfileImpl
     {
     public:
-        SBTopHatImpl(double radius, double flux, const GSParamsPtr& gsparams);
+        SBTopHatImpl(double radius, double flux, const GSParams& gsparams);
         ~SBTopHatImpl() {}
 
         double xValue(const Position<double>& p) const;

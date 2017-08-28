@@ -293,7 +293,7 @@ namespace galsim {
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) :
+    Cubic::Cubic(double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         dbg<<"Start Cubic:  tol = "<<tol<<std::endl;
@@ -314,7 +314,7 @@ namespace galsim {
         } else {
             // Then need to do the calculation and then cache it.
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
@@ -438,7 +438,7 @@ namespace galsim {
                     + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
+    Quintic::Quintic(double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         dbg<<"Start Quintic:  tol = "<<tol<<std::endl;
@@ -459,7 +459,7 @@ namespace galsim {
         } else {
             // Then need to do the calculation and then cache it.
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
@@ -748,7 +748,7 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
@@ -827,7 +827,7 @@ namespace galsim {
             _xtab.reset(new Table<double,double>(Table<double,double>::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
             const double xStep1 =
-                gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
@@ -836,7 +836,7 @@ namespace galsim {
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
             for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);

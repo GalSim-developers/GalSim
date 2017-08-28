@@ -37,26 +37,26 @@ namespace galsim {
 
         static void wrap() {
 
-            bp::class_<GSParams, boost::shared_ptr<GSParams> > ("GSParams", bp::no_init)
+            bp::class_<GSParams> ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
-                        bp::arg("minimum_fft_size")=128,
-                        bp::arg("maximum_fft_size")=4096,
-                        bp::arg("folding_threshold")=5.e-3,
-                        bp::arg("stepk_minimum_hlr")=5.,
-                        bp::arg("maxk_threshold")=1.e-3,
-                        bp::arg("kvalue_accuracy")=1.e-5,
-                        bp::arg("xvalue_accuracy")=1.e-5,
-                        bp::arg("table_spacing")=1.,
-                        bp::arg("realspace_relerr")=1.e-4,
-                        bp::arg("realspace_abserr")=1.e-6,
-                        bp::arg("integration_relerr")=1.e-6,
-                        bp::arg("integration_abserr")=1.e-8,
-                        bp::arg("shoot_accuracy")=1.e-5,
-                        bp::arg("allowed_flux_variation")=0.81,
-                        bp::arg("range_division_for_extrema")=32,
-                        bp::arg("small_fraction_of_flux")=1.e-4)
+                        bp::arg("minimum_fft_size"),
+                        bp::arg("maximum_fft_size"),
+                        bp::arg("folding_threshold"),
+                        bp::arg("stepk_minimum_hlr"),
+                        bp::arg("maxk_threshold"),
+                        bp::arg("kvalue_accuracy"),
+                        bp::arg("xvalue_accuracy"),
+                        bp::arg("table_spacing"),
+                        bp::arg("realspace_relerr"),
+                        bp::arg("realspace_abserr"),
+                        bp::arg("integration_relerr"),
+                        bp::arg("integration_abserr"),
+                        bp::arg("shoot_accuracy"),
+                        bp::arg("allowed_flux_variation"),
+                        bp::arg("range_division_for_extrema"),
+                        bp::arg("small_fraction_of_flux"))
                     )
                 )
                 .def_readonly("minimum_fft_size", &GSParams::minimum_fft_size)

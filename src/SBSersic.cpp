@@ -34,7 +34,7 @@ namespace galsim {
     { return fmath::expd(y * std::log(x)); }
 
     SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
-                       double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
+                       double trunc, bool flux_untruncated, const GSParams& gsparams) :
         SBProfile(new SBSersicImpl(n, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -83,20 +83,20 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSersic("<<getN()<<", "<<getScaleRadius();
         oss <<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    LRUCache< Tuple<double, double, GSParamsPtr >, SersicInfo >
+    LRUCache<Tuple<double, double, GSParamsPtr>, SersicInfo>
         SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
                                          double trunc, bool flux_untruncated,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(MakeTuple(_n, 0., this->gsparams.duplicate())))
+        _info(cache.get(MakeTuple(_n, 0., GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -123,7 +123,7 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -141,7 +141,7 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
@@ -363,7 +363,7 @@ namespace galsim {
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
-    SersicInfo::SersicInfo(double n, double trunc, const GSParamsPtr& gsparams) :
+    SersicInfo::SersicInfo(double n, double trunc, GSParamsPtr gsparams) :
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
@@ -538,7 +538,8 @@ namespace galsim {
             SersicHankel I(_invn, k);
 
 #ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            std::ostream* integ_dbgout = verbose_level >= 3 ?
+                &Debugger::instance().get_dbgout() : 0;
             integ::IntRegion<double> reg(0, integ_maxr, integ_dbgout);
 #else
             integ::IntRegion<double> reg(0, integ_maxr);
@@ -861,7 +862,7 @@ namespace galsim {
             double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
             if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
             range[1] = shoot_maxr;
-            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
         }
 
         assert(_sampler.get());

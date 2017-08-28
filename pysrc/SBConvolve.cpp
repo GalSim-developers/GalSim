@@ -34,7 +34,7 @@ namespace galsim {
 
         // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
         static SBConvolve* construct(const bp::object& iterable, bool real_space,
-                                     boost::shared_ptr<GSParams> gsparams)
+                                     GSParams gsparams)
         {
             bp::stl_input_iterator<SBProfile> begin(iterable), end;
             std::list<SBProfile> plist(begin, end);
@@ -57,8 +57,8 @@ namespace galsim {
                 // to ensure we try it last
                 .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
-                        (bp::arg("slist"), bp::arg("real_space")=false,
-                         bp::arg("gsparams")=bp::object()))
+                        (bp::arg("slist"), bp::arg("real_space"),
+                         bp::arg("gsparams")))
                 )
                 .def(bp::init<const SBConvolve&>())
                 .def("getObjs", getObjs)
@@ -72,9 +72,9 @@ namespace galsim {
     {
         static void wrap() {
             bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, boost::shared_ptr<GSParams> >(
-                        (bp::arg("adaptee"), bp::arg("real_space")=false,
-                         bp::arg("gsparams")=bp::object())))
+                .def(bp::init<const SBProfile&, bool, GSParams>(
+                        (bp::arg("adaptee"), bp::arg("real_space"),
+                         bp::arg("gsparams"))))
                 .def(bp::init<const SBAutoConvolve&>())
                 .def("getObj", &SBAutoConvolve::getObj)
                 .def("isRealSpace", &SBAutoConvolve::isRealSpace)
@@ -87,9 +87,9 @@ namespace galsim {
     {
         static void wrap() {
             bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, boost::shared_ptr<GSParams> >(
-                        (bp::arg("adaptee"), bp::arg("real_space")=false,
-                         bp::arg("gsparams")=bp::object())))
+                .def(bp::init<const SBProfile&, bool, GSParams>(
+                        (bp::arg("adaptee"), bp::arg("real_space"),
+                         bp::arg("gsparams"))))
                 .def(bp::init<const SBAutoCorrelate&>())
                 .def("getObj", &SBAutoCorrelate::getObj)
                 .def("isRealSpace", &SBAutoCorrelate::isRealSpace)

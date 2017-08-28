@@ -117,7 +117,6 @@ class Sum(galsim.GSObject):
 
         # Check kwargs first:
         gsparams = kwargs.pop("gsparams", None)
-        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -151,8 +150,9 @@ class Sum(galsim.GSObject):
         for obj in args:
             if not isinstance(obj, galsim.GSObject):
                 raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
+        self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
         SBList = [obj.SBProfile for obj in args]
-        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
+        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, self.gsparams._gsp))
 
     @galsim.utilities.lazy_property
     def noise(self):
@@ -172,14 +172,14 @@ class Sum(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Sum) and
-                self._obj_list == other._obj_list and
-                self._gsparams == other._gsparams)
+                self.obj_list == other.obj_list and
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Sum", tuple(self._obj_list), self._gsparams))
+        return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams))
 
     def __repr__(self):
-        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self._gsparams)
+        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self.gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
@@ -190,7 +190,7 @@ class Sum(galsim.GSObject):
         for obj in self._obj_list:
             obj._prepareDraw()
         SBList = [obj.SBProfile for obj in self._obj_list]
-        self.SBProfile = galsim._galsim.SBAdd(SBList, self._gsparams)
+        self.SBProfile = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -251,7 +251,7 @@ class Sum(galsim.GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._obj_list, gsparams=self._gsparams)
+        self.__init__(self._obj_list, gsparams=self.gsparams)
 
 
 _galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
@@ -368,7 +368,6 @@ class Convolution(galsim.GSObject):
         # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
         gsparams = kwargs.pop("gsparams", None)
-        self._gsparams = gsparams
 
         # Make sure there is nothing left in the dict.
         if kwargs:
@@ -432,10 +431,11 @@ class Convolution(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._obj_list = args
+        self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
-        sbp = galsim._galsim.SBConvolve(SBList, real_space, gsparams)
+        sbp = galsim._galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
 
     @galsim.utilities.lazy_property
@@ -466,16 +466,16 @@ class Convolution(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Convolution) and
-                self._obj_list == other._obj_list and
+                self.obj_list == other.obj_list and
                 self.real_space == other.real_space and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Convolution", tuple(self._obj_list), self._real_space, self._gsparams))
+        return hash(("galsim.Convolution", tuple(self.obj_list), self.real_space, self.gsparams))
 
     def __repr__(self):
         return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
-                self.obj_list, self.real_space, self._gsparams)
+                self.obj_list, self.real_space, self.gsparams)
 
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
@@ -489,7 +489,7 @@ class Convolution(galsim.GSObject):
         for obj in self._obj_list:
             obj._prepareDraw()
         SBList = [obj.SBProfile for obj in self._obj_list]
-        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self._gsparams)
+        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -519,7 +519,7 @@ class Convolution(galsim.GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._obj_list, real_space=self._real_space, gsparams=self._gsparams)
+        self.__init__(self._obj_list, real_space=self._real_space, gsparams=self.gsparams)
 
 
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
@@ -585,9 +585,9 @@ class Deconvolution(galsim.GSObject):
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
+        sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
         if obj.noise is not None:
             import warnings
@@ -598,21 +598,21 @@ class Deconvolution(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Deconvolution) and
-                self._orig_obj == other._orig_obj and
-                self._gsparams == other._gsparams)
+                self.orig_obj == other.orig_obj and
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Deconvolution", self._orig_obj, self._gsparams))
+        return hash(("galsim.Deconvolution", self.orig_obj, self.gsparams))
 
     def __repr__(self):
-        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+        return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self.gsparams)
 
     def __str__(self):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self._gsparams)
+        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self.gsparams._gsp)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -714,9 +714,9 @@ class AutoConvolution(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
+        sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
         if obj.noise is not None:
             import warnings
@@ -731,14 +731,14 @@ class AutoConvolution(galsim.GSObject):
         return (isinstance(other, galsim.AutoConvolution) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self._gsparams))
+        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self.gsparams))
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self._gsparams)
+                self.orig_obj, self.real_space, self.gsparams)
 
     def __str__(self):
         s = 'galsim.AutoConvolve(%s'%self.orig_obj
@@ -750,7 +750,7 @@ class AutoConvolution(galsim.GSObject):
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
         self.SBProfile = galsim._galsim.SBAutoConvolve(self._orig_obj.SBProfile, self._real_space,
-                                                       self._gsparams)
+                                                       self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -873,9 +873,9 @@ class AutoCorrelation(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
+        sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
         if obj.noise is not None:
             import warnings
@@ -890,14 +890,14 @@ class AutoCorrelation(galsim.GSObject):
         return (isinstance(other, galsim.AutoCorrelation) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self._gsparams))
+        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self.gsparams))
 
     def __repr__(self):
         return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
-                self.orig_obj, self.real_space, self._gsparams)
+                self.orig_obj, self.real_space, self.gsparams)
 
     def __str__(self):
         s = 'galsim.AutoCorrelate(%s'%self.orig_obj
@@ -909,7 +909,7 @@ class AutoCorrelation(galsim.GSObject):
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
         self.SBProfile = galsim._galsim.SBAutoCorrelate(self._orig_obj.SBProfile,
-                                                        self._real_space, self._gsparams)
+                                                        self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -1012,9 +1012,9 @@ class FourierSqrtProfile(galsim.GSObject):
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
+        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
         if obj.noise is not None:
             import warnings
@@ -1025,21 +1025,21 @@ class FourierSqrtProfile(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.FourierSqrtProfile) and
-                self._orig_obj == other._orig_obj and
-                self._gsparams == other._gsparams)
+                self.orig_obj == other.orig_obj and
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.FourierSqrtProfile", self._orig_obj, self._gsparams))
+        return hash(("galsim.FourierSqrtProfile", self.orig_obj, self.gsparams))
 
     def __repr__(self):
-        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self.gsparams)
 
     def __str__(self):
         return 'galsim.FourierSqrt(%s)'%self.orig_obj
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self._gsparams)
+        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self.gsparams._gsp)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -1140,7 +1140,7 @@ class RandomWalk(galsim.GSObject):
         # size of the galsim.Gaussian objects to use as delta functions
         self._gaussian_sigma = 1.0e-8
 
-        self._input_gsparams=gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # we will verify this in the _verify() method
         if rng is None:
@@ -1155,7 +1155,7 @@ class RandomWalk(galsim.GSObject):
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
 
-        sbp = galsim._galsim.SBAdd(self._gaussians, gsparams)
+        sbp = galsim._galsim.SBAdd(self._gaussians, self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbp)
 
     def calculateHLR(self):
@@ -1215,14 +1215,13 @@ class RandomWalk(galsim.GSObject):
 
         gaussians = []
         sigma=self._gaussian_sigma
-        gsparams=self._input_gsparams
         fluxper=self._flux/self._npoints
 
         for p in points:
             g = galsim._galsim.SBGaussian(
                 sigma=sigma,
                 flux=fluxper,
-                gsparams=gsparams,
+                gsparams=self.gsparams._gsp,
             )
 
             pos = galsim.PositionD(p[0],p[1])
@@ -1235,7 +1234,7 @@ class RandomWalk(galsim.GSObject):
                 1.0,
                 pos,
                 1.0,
-                gsparams,
+                self.gsparams._gsp,
             )
 
             gaussians.append(g)
@@ -1298,7 +1297,7 @@ class RandomWalk(galsim.GSObject):
             npoints=self._npoints,
             hlr=self._half_light_radius,
             flux=self._flux,
-            gsparams=str(self._input_gsparams),
+            gsparams=str(self.gsparams),
         )
         return rep
 
@@ -1308,7 +1307,7 @@ class RandomWalk(galsim.GSObject):
             npoints=self._npoints,
             hlr=self._half_light_radius,
             flux=self._flux,
-            gsparams=repr(self._input_gsparams),
+            gsparams=repr(self.gsparams),
         )
         return rep
 
@@ -1317,8 +1316,8 @@ class RandomWalk(galsim.GSObject):
                 self._npoints == other._npoints and
                 self._half_light_radius == other._half_light_radius and
                 self._flux == other._flux and
-                self._input_gsparams == other._input_gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
         return hash(("galsim.RandomWalk", self._npoints, self._half_light_radius, self._flux,
-                     self._input_gsparams))
+                     self.gsparams))

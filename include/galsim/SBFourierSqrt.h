@@ -39,7 +39,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor.
-        SBFourierSqrt(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBFourierSqrt(const SBProfile& adaptee, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBFourierSqrt(const SBFourierSqrt& rhs);

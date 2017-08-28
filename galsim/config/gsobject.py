@@ -194,7 +194,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 def UpdateGSParams(gsparams, config, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
-    opt = galsim.GSObject._gsparams
+    opt = galsim.GSObject._gsparams_opt
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.

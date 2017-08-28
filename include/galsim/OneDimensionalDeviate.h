@@ -102,13 +102,38 @@ namespace galsim {
                  double xLower,
                  double xUpper,
                  bool isRadial,
-                 const GSParamsPtr& gsparams) :
+                 const GSParams& gsparams) :
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
             _isRadial(isRadial),
             _gsparams(gsparams),
             _fluxIsReady(false) {}
+
+        Interval(const Interval& rhs) :
+            _fluxDensityPtr(rhs._fluxDensityPtr),
+            _xLower(rhs._xLower),
+            _xUpper(rhs._xUpper),
+            _isRadial(rhs._isRadial),
+            _gsparams(rhs._gsparams),
+            _fluxIsReady(false),
+            _useRejectionMethod(rhs._useRejectionMethod),
+            _invMaxAbsDensity(rhs._invMaxAbsDensity),
+            _invMeanAbsDensity(rhs._invMeanAbsDensity)
+            {}
+
+        Interval& operator=(const Interval& rhs)
+        {
+            // Everything else is constant, so no need to copy.
+            _xLower = rhs._xLower;
+            _xUpper = rhs._xUpper;
+            _isRadial = rhs._isRadial;
+            _fluxIsReady = false;
+            _useRejectionMethod = rhs._useRejectionMethod;
+            _invMaxAbsDensity = rhs._invMaxAbsDensity;
+            _invMeanAbsDensity = rhs._invMeanAbsDensity;
+            return *this;
+        }
 
         /**
          * @brief Draw one photon position and flux from within this interval
@@ -158,7 +183,7 @@ namespace galsim {
         double _xLower; // Interval lower bound
         double _xUpper; // Interval upper bound
         bool _isRadial; // True if domain is an annulus, otherwise domain is a linear interval.
-        GSParamsPtr _gsparams;
+        const GSParams& _gsparams;
 
         mutable bool _fluxIsReady; // True if flux has been integrated
         void checkFlux() const; // Calculate flux if it has not already been done.
@@ -227,7 +252,7 @@ namespace galsim {
          */
         OneDimensionalDeviate(
             const FluxDensity& fluxDensity, std::vector<double>& range, bool isRadial,
-            const GSParamsPtr& gsparams);
+            const GSParams& gsparams);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
@@ -253,7 +278,7 @@ namespace galsim {
         double _positiveFlux; // Stored total positive flux
         double _negativeFlux; // Stored total negative flux
         const bool _isRadial; // True for 2d axisymmetric function, false for 1d function
-        const GSParamsPtr _gsparams;
+        GSParams _gsparams;
     };
 
 } // namespace galsim

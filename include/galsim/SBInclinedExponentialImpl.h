@@ -29,7 +29,7 @@ namespace galsim {
     {
     public:
         SBInclinedExponentialImpl(double inclination, double scale_radius, double scale_height,
-                                  double flux, const GSParamsPtr& gsparams);
+                                  double flux, const GSParams& gsparams);
 
         ~SBInclinedExponentialImpl() {}
 

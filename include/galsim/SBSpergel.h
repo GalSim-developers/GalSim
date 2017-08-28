@@ -76,8 +76,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBSpergel(double nu, double size, RadiusType rType, double flux,
-                  const GSParamsPtr& gsparams);
+        SBSpergel(double nu, double size, RadiusType rType, double flux, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBSpergel(const SBSpergel& rhs);

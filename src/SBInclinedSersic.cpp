@@ -47,7 +47,7 @@ namespace galsim {
     SBInclinedSersic::SBInclinedSersic(double n, double inclination, double size,
                                        SBInclinedSersic::RadiusType rType,
             double height, SBInclinedSersic::HeightType hType, double flux,
-            double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
+            double trunc, bool flux_untruncated, const GSParams& gsparams) :
         SBProfile(new SBInclinedSersicImpl(n, inclination, size, rType, height, hType, flux, trunc,
                 flux_untruncated, gsparams)) {}
 
@@ -98,15 +98,14 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInclinedSersic("<<getN()<<", "<<getInclination()<<", "<<getScaleRadius();
         oss <<", "<<getScaleHeight()<<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(
         double n, double inclination, double size, RadiusType rType,
         double height, HeightType hType, double flux,
-        double trunc, bool flux_untruncated,
-        const GSParamsPtr& gsparams) :
+        double trunc, bool flux_untruncated, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
@@ -117,7 +116,7 @@ namespace galsim {
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, 0., this->gsparams.duplicate())))
+        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, 0., GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -146,7 +145,7 @@ namespace galsim {
 
                        // Update _info with the correct truncated version.
                        _info = SBSersic::SBSersicImpl::cache.get(
-                           MakeTuple(_n, _trunc/_r0, this->gsparams.duplicate()));
+                           MakeTuple(_n, _trunc/_r0, GSParamsPtr(this->gsparams)));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -165,7 +164,7 @@ namespace galsim {
                   if (_truncated) {
                       // Update _info with the correct truncated version.
                       _info = SBSersic::SBSersicImpl::cache.get(
-                          MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
+                          MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
                        if (flux_untruncated) {
                           // Update the stored _flux with the correct value
                           _flux *= _info->getFluxFraction();
@@ -215,14 +214,14 @@ namespace galsim {
         // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
         // This is a bit conservative, note, assuming kx = 0
         double kderiv6 = 31./15120.*_half_pi_h_sini_over_r;
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / kderiv6, 1./3.);
+        _ksq_min = std::pow(this->gsparams.kvalue_accuracy / kderiv6, 1./3.);
 
         dbg << "ksq_min = " << _ksq_min << std::endl;
 
         // Solve for the proper _maxk and _ksq_max
 
-        double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
-        double clipk_min = std::pow(this->gsparams->kvalue_accuracy, -1./3.);
+        double maxk_min = std::pow(this->gsparams.maxk_threshold, -1./3.);
+        double clipk_min = std::pow(this->gsparams.kvalue_accuracy, -1./3.);
 
         // Bracket it appropriately, starting with guesses based on the 1/cosi scaling
         double maxk_max, clipk_max;
@@ -246,11 +245,11 @@ namespace galsim {
             clipk_max = 100*clipk_min;
         }
 
-        xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
+        xdbg << "maxk_threshold = " << this->gsparams.maxk_threshold << std::endl;
         xdbg << "F(" << maxk_min << ") = " << std::max(kValueHelper(maxk_min,0.),kValueHelper(0.,maxk_min)) << std::endl;
         xdbg << "F(" << maxk_max << ") = " << std::max(kValueHelper(maxk_max,0.),kValueHelper(0.,maxk_max)) << std::endl;
 
-        SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
+        SBInclinedSersicKValueFunctor maxk_func(this,this->gsparams.maxk_threshold);
         Solve<SBInclinedSersicKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
 
         maxk_solver.setMethod(Brent);
@@ -267,11 +266,11 @@ namespace galsim {
         xdbg << "_maxk = " << _maxk << std::endl;
         xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
 
-        xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
+        xdbg << "kvalue_accuracy = " << this->gsparams.kvalue_accuracy << std::endl;
         xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
         xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
 
-        SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
+        SBInclinedSersicKValueFunctor clipk_func(this,this->gsparams.kvalue_accuracy);
         Solve<SBInclinedSersicKValueFunctor> clipk_solver(clipk_func, clipk_min, clipk_max);
 
         if(clipk_func(clipk_min)<=0)

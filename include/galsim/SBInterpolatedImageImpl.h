@@ -35,7 +35,7 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double pad_factor, double stepk, double maxk, const GSParamsPtr& gsparams);
+            double pad_factor, double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
 
@@ -207,14 +207,14 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImageImpl(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data,
             double stepk, double maxk,
             boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const GSParams& gsparams);
 
         ~SBInterpolatedKImageImpl();
 

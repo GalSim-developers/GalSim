@@ -42,8 +42,7 @@ namespace galsim {
     inline double fast_pow(double x, double y)
     { return fmath::expd(y * std::log(x)); }
 
-    SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux,
-                               const GSParamsPtr& gsparams) :
+    SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux, const GSParams& gsparams) :
         SBProfile(new SBKolmogorovImpl(lam_over_r0, flux, gsparams)) {}
 
     SBKolmogorov::SBKolmogorov(const SBKolmogorov& rhs) : SBProfile(rhs) {}
@@ -61,7 +60,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBKolmogorov("<<getLamOverR0()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -78,7 +77,7 @@ namespace galsim {
     // k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
     //
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
-        double lam_over_r0, double flux, const GSParamsPtr& gsparams) :
+        double lam_over_r0, double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_r0(lam_over_r0),
         _k0(2.992934 / lam_over_r0),
@@ -87,7 +86,7 @@ namespace galsim {
         _inv_k0sq(1./_k0sq),
         _flux(flux),
         _xnorm(_flux * _k0sq),
-        _info(cache.get(this->gsparams.duplicate()))
+        _info(cache.get(GSParamsPtr(this->gsparams)))
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
@@ -271,18 +270,18 @@ namespace galsim {
     class KolmXValue : public std::unary_function<double,double>
     {
     public:
-        KolmXValue(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
+        KolmXValue(const GSParams& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
         {
             const double integ_maxK = integ::MOCK_INF;
             KolmIntegrand I(r);
             return integ::int1d(I, 0., integ_maxK,
-                                _gsparams->integration_relerr,
-                                _gsparams->integration_abserr);
+                                _gsparams.integration_relerr,
+                                _gsparams.integration_abserr);
         }
     private:
-        const GSParamsPtr& _gsparams;
+        const GSParams& _gsparams;
     };
 
 #ifdef SOLVE_FWHM_HLR
@@ -290,7 +289,7 @@ namespace galsim {
     class KolmTargetValue : public std::unary_function<double,double>
     {
     public:
-        KolmTargetValue(double target, const GSParamsPtr& gsparams) :
+        KolmTargetValue(double target, const GSParams& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -301,7 +300,7 @@ namespace galsim {
     class KolmXValueTimes2piR : public std::unary_function<double,double>
     {
     public:
-        KolmXValueTimes2piR(const GSParamsPtr& gsparams) : f(gsparams) {}
+        KolmXValueTimes2piR(const GSParams& gsparams) : f(gsparams) {}
 
         double operator()(double r) const
         { return f(r) * r; }
@@ -312,23 +311,23 @@ namespace galsim {
     class KolmEnclosedFlux : public std::unary_function<double,double>
     {
     public:
-        KolmEnclosedFlux(const GSParamsPtr& gsparams) :
+        KolmEnclosedFlux(const GSParams& gsparams) :
             f(gsparams), _gsparams(gsparams) {}
         double operator()(double r) const
         {
             return integ::int1d(f, 0., r,
-                                _gsparams->integration_relerr,
-                                _gsparams->integration_abserr);
+                                _gsparams.integration_relerr,
+                                _gsparams.integration_abserr);
         }
     private:
         KolmXValueTimes2piR f;
-        const GSParamsPtr& _gsparams;
+        const GSParams& _gsparams;
     };
 
     class KolmTargetFlux : public std::unary_function<double,double>
     {
     public:
-        KolmTargetFlux(double target, const GSParamsPtr& gsparams) :
+        KolmTargetFlux(double target, const GSParams& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -338,7 +337,7 @@ namespace galsim {
 #endif
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
-    KolmogorovInfo::KolmogorovInfo(const GSParamsPtr& gsparams) :
+    KolmogorovInfo::KolmogorovInfo(GSParamsPtr gsparams) :
         _radial(TableDD::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";
@@ -375,7 +374,7 @@ namespace galsim {
         double thresh2 = (1.-gsparams->folding_threshold/5.) / (2.*M_PI*dr);
         double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
-        KolmXValue xval_func(gsparams);
+        KolmXValue xval_func(*gsparams);
 
         for (double r = dr; sum < thresh2; r += dr) {
             val = xval_func(r) / (2.*M_PI);
@@ -401,11 +400,11 @@ namespace galsim {
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, gsparams));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, *gsparams));
 
 #ifdef SOLVE_FWHM_HLR
         // Improve upon the conversion between lam_over_r0 and fwhm:
-        KolmTargetValue fwhm_func(0.55090124543985636638457099311149824 / 2., gsparams);
+        KolmTargetValue fwhm_func(0.55090124543985636638457099311149824 / 2., *gsparams);
         double r1 = 1.4;
         double r2 = 1.5;
         Solve<KolmTargetValue> fwhm_solver(fwhm_func,r1,r2);

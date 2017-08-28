@@ -28,7 +28,7 @@ namespace galsim {
     class SBGaussian::SBGaussianImpl : public SBProfileImpl
     {
     public:
-        SBGaussianImpl(double sigma, double flux, const GSParamsPtr& gsparams);
+        SBGaussianImpl(double sigma, double flux, const GSParams& gsparams);
 
         ~SBGaussianImpl() {}
 

@@ -31,7 +31,7 @@ namespace galsim {
     {
     public:
         SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
-                     const GSParamsPtr& gsparams);
+                     const GSParams& gsparams);
 
         ~SBMoffatImpl() {}
 
@@ -40,7 +40,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams->maxk_threshold; }
+        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams.maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 

@@ -32,7 +32,7 @@ namespace galsim {
     class SBDeltaFunction::SBDeltaFunctionImpl : public SBProfileImpl
     {
     public:
-        SBDeltaFunctionImpl(double flux, const GSParamsPtr& gsparams);
+        SBDeltaFunctionImpl(double flux, const GSParams& gsparams);
 
         ~SBDeltaFunctionImpl() {}
 

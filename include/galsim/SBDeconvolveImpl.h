@@ -28,7 +28,7 @@ namespace galsim {
     class SBDeconvolve::SBDeconvolveImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBDeconvolveImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBDeconvolveImpl(const SBProfile& adaptee, const GSParams& gsparams);
         ~SBDeconvolveImpl() {}
 
         SBProfile getObj() const { return _adaptee; }

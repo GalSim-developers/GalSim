@@ -431,12 +431,12 @@ class InterpolatedImage(GSObject):
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # Make the SBInterpolatedImage out of the image.
         sbii = galsim._galsim.SBInterpolatedImage(
                 pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
-                _force_stepk, _force_maxk, gsparams)
+                _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if getFlux() == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
@@ -472,6 +472,7 @@ class InterpolatedImage(GSObject):
         self._serialize_maxk = sbii.maxK()
 
         prof = GSObject(sbii)
+        prof._gsparams = self.gsparams
 
         # Make sure offset is a PositionD
         offset = prof._parse_offset(offset)
@@ -497,7 +498,7 @@ class InterpolatedImage(GSObject):
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
         # is to hide the SBProfile in an SBAdd object.
-        sbp = galsim._galsim.SBAdd([prof.SBProfile])
+        sbp = galsim._galsim.SBAdd([prof.SBProfile], self.gsparams._gsp)
 
         GSObject.__init__(self, sbp)
 
@@ -541,7 +542,7 @@ class InterpolatedImage(GSObject):
                 self._pad_factor == other._pad_factor and
                 self._flux == other._flux and
                 self._offset == other._offset and
-                self._gsparams == other._gsparams and
+                self.gsparams == other.gsparams and
                 self._stepk == other._stepk and
                 self._maxk == other._maxk)
 
@@ -549,7 +550,7 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self._pad_factor, self._flux, self._offset, self._gsparams,
+                               self._pad_factor, self._flux, self._offset, self.gsparams,
                                self._stepk, self._maxk))
             self._hash ^= hash(tuple(self._pad_image.array.ravel()))
             self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
@@ -559,7 +560,7 @@ class InterpolatedImage(GSObject):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
                 'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
                 self._pad_image, self.x_interpolant, self.k_interpolant,
-                self._pad_factor, self._flux, self._offset, self._gsparams,
+                self._pad_factor, self._flux, self._offset, self.gsparams,
                 self._stepk, self._maxk)
 
     def __str__(self): return 'galsim.InterpolatedImage(image=%s, flux=%s)'%(self.image, self.flux)
@@ -581,7 +582,7 @@ class InterpolatedImage(GSObject):
         self.__init__(self._pad_image,
                       x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                       pad_factor=self._pad_factor, flux=self._flux,
-                      offset=self._offset, use_true_center=False, gsparams=self._gsparams,
+                      offset=self._offset, use_true_center=False, gsparams=self.gsparams,
                       _serialize_stepk=self._serialize_stepk,
                       _serialize_maxk=self._serialize_maxk)
 
@@ -737,7 +738,7 @@ class InterpolatedKImage(GSObject):
 
         stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
 
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
@@ -747,15 +748,15 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         sbiki = _galsim.SBInterpolatedKImage(
-                self._kimage.image, stepk_image, self.k_interpolant, gsparams)
+                self._kimage.image, stepk_image, self.k_interpolant, self.gsparams._gsp)
         self._sbiki = sbiki
 
         if kimage.wcs is not None:
             sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                      galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+                                      galsim.PositionD(0.,0.), kimage.scale**2, self.gsparams._gsp)
         else:
             sbp = sbiki
-        sbp = _galsim.SBAdd([sbp])
+        sbp = _galsim.SBAdd([sbp], self.gsparams._gsp)
 
         GSObject.__init__(self, sbp)
 
@@ -765,20 +766,20 @@ class InterpolatedKImage(GSObject):
                 self._kimage.scale == other._kimage.scale and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
         # Definitely want to cache this, since the kimage could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
-                               self._gsparams))
+                               self.gsparams))
             self._hash ^= hash(tuple(self._kimage.array.ravel()))
             self._hash ^= hash((self._kimage.bounds, self._kimage.wcs))
         return self._hash
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(\n%r,\n%r, stepk=%r, gsparams=%r)')%(
-                self._kimage, self.k_interpolant, self._stepk, self._gsparams)
+                self._kimage, self.k_interpolant, self._stepk, self.gsparams)
 
     def __str__(self):
         return 'galsim.InterpolatedKImage(kimage=%s)'%(self._kimage)
@@ -795,7 +796,7 @@ class InterpolatedKImage(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self._gsparams)
+        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self.gsparams)
 
 
 def _InterpolatedKImage(kimage, k_interpolant, gsparams):
@@ -804,13 +805,13 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret = InterpolatedKImage.__new__(InterpolatedKImage)
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale
-    ret._gsparams = gsparams
+    ret._gsparams = galsim.GSParams.check(gsparams)
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
-            ret._kimage.image, 1.0, ret.k_interpolant, gsparams)
+            ret._kimage.image, 1.0, ret.k_interpolant, ret.gsparams._gsp)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                              galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
-    ret.SBProfile = _galsim.SBAdd([sbp])
+                              galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
+    ret.SBProfile = _galsim.SBAdd([sbp], ret.gsparams._gsp)
     return ret
 
 

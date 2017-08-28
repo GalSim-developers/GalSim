@@ -34,9 +34,8 @@ namespace galsim {
     {
 
         static SBMoffat* construct(
-            double beta, const bp::object & scale_radius, const bp::object & half_light_radius,
-            const bp::object & fwhm, double trunc, double flux,
-            boost::shared_ptr<GSParams> gsparams)
+            double beta, const bp::object& scale_radius, const bp::object& half_light_radius,
+            const bp::object& fwhm, double trunc, double flux, GSParams gsparams)
         {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, fwhm);
@@ -61,10 +60,9 @@ namespace galsim {
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
-                         (bp::arg("beta"), bp::arg("scale_radius")=bp::object(),
-                          bp::arg("half_light_radius")=bp::object(), bp::arg("fwhm")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1.,
-                          bp::arg("gsparams")=bp::object())
+                         (bp::arg("beta"), bp::arg("scale_radius"),
+                          bp::arg("half_light_radius"), bp::arg("fwhm"),
+                          bp::arg("trunc"), bp::arg("flux"), bp::arg("gsparams"))
                      )
                 )
                 .def(bp::init<const SBMoffat &>())

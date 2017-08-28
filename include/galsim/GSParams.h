@@ -180,6 +180,7 @@ namespace galsim {
          */
         GSParamsPtr(GSParams* p) : _p(p) {}
         GSParamsPtr(boost::shared_ptr<GSParams> p) : _p(p) {}
+        GSParamsPtr(const GSParams& gsp) : _p(new GSParams(gsp)) {}
         GSParamsPtr() {}
         GSParamsPtr(const GSParamsPtr& rhs) : _p(rhs._p) {}
         GSParamsPtr& operator=(const GSParamsPtr& rhs) { _p = rhs._p; return *this; }
@@ -200,12 +201,6 @@ namespace galsim {
         boost::shared_ptr<GSParams> getP() { return _p; }
 
         GSParamsPtr duplicate() const { return GSParamsPtr(new GSParams(*_p)); }
-
-        static const GSParamsPtr& getDefault()
-        {
-            static GSParamsPtr def(new GSParams());
-            return def;
-        }
 
         bool operator==(const GSParamsPtr& rhs) const { return *_p == *rhs; }
         bool operator<(const GSParamsPtr& rhs) const { return *_p < *rhs; }

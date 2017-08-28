@@ -190,22 +190,22 @@ class GSObject(object):
     the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
     `folding_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
-    _gsparams = { 'minimum_fft_size' : int,
-                  'maximum_fft_size' : int,
-                  'folding_threshold' : float,
-                  'stepk_minimum_hlr' : float,
-                  'maxk_threshold' : float,
-                  'kvalue_accuracy' : float,
-                  'xvalue_accuracy' : float,
-                  'realspace_relerr' : float,
-                  'realspace_abserr' : float,
-                  'integration_relerr' : float,
-                  'integration_abserr' : float,
-                  'shoot_accuracy' : float,
-                  'allowed_flux_variation' : float,
-                  'range_division_for_extrema' : int,
-                  'small_fraction_of_flux' : float
-                }
+    _gsparams_opt = { 'minimum_fft_size' : int,
+                      'maximum_fft_size' : int,
+                      'folding_threshold' : float,
+                      'stepk_minimum_hlr' : float,
+                      'maxk_threshold' : float,
+                      'kvalue_accuracy' : float,
+                      'xvalue_accuracy' : float,
+                      'realspace_relerr' : float,
+                      'realspace_abserr' : float,
+                      'integration_relerr' : float,
+                      'integration_abserr' : float,
+                      'shoot_accuracy' : float,
+                      'allowed_flux_variation' : float,
+                      'range_division_for_extrema' : int,
+                      'small_fraction_of_flux' : float
+                    }
     def __init__(self, sbp):
         if not isinstance(sbp, _galsim.SBProfile):
             raise TypeError("GSObject must be initialized with an SBProfile!")
@@ -346,7 +346,7 @@ class GSObject(object):
     def getGSParams(self):
         """Returns the GSParams for the object.
         """
-        return self.SBProfile.getGSParams()
+        return self._gsparams
 
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.

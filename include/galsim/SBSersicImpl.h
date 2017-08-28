@@ -34,7 +34,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SersicInfo(double n, double trunc, const GSParamsPtr& gsparams);
+        SersicInfo(double n, double trunc, GSParamsPtr gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
@@ -93,7 +93,7 @@ namespace galsim {
         // Input variables:
         double _n;       ///< Sersic index.
         double _trunc;   ///< Truncation radius `trunc` in units of r0.
-        const GSParamsPtr _gsparams; ///< The GSParams object.
+        GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _invn;      ///< 1/n
@@ -133,7 +133,7 @@ namespace galsim {
     public:
         SBSersicImpl(double n, double size, RadiusType rType, double flux,
                      double trunc, bool flux_untruncated,
-                     const GSParamsPtr& gsparams);
+                     const GSParams& gsparams);
 
         ~SBSersicImpl() {}
 
@@ -265,7 +265,7 @@ namespace galsim {
         SBSersicImpl(const SBSersicImpl& rhs);
         void operator=(const SBSersicImpl& rhs);
 
-        static LRUCache<Tuple< double, double, GSParamsPtr >, SersicInfo> cache;
+        static LRUCache<Tuple<double, double, GSParamsPtr>, SersicInfo> cache;
 
         friend class SBInclinedSersic;
         friend class SBInclinedSersic::SBInclinedSersicImpl;

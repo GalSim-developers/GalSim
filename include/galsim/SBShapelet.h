@@ -41,7 +41,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBShapelet(double sigma, LVector bvec, const GSParamsPtr& gsparams);
+        SBShapelet(double sigma, LVector bvec, const GSParams& gsparams);
 
         /// @brief Copy Constructor.
         SBShapelet(const SBShapelet& rhs);

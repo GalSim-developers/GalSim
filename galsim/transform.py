@@ -127,14 +127,14 @@ class Transformation(galsim.GSObject):
             self._original = obj.original
         else:
             self._original = obj
+        self._gsparams = galsim.GSParams.check(gsparams, self._original.gsparams)
         sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                  gsparams)
+                                  self.gsparams._gsp)
         galsim.GSObject.__init__(self, sbt)
 
         self._jac = np.asarray(sbt.getJac())
         self._offset = sbt.getOffset()
         self._flux_ratio = sbt.getFluxScaling()
-        self._gsparams = gsparams
 
     def getJac(self):
         """Return the Jacobian of the transformation.
@@ -188,7 +188,7 @@ class Transformation(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
+            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
 
     def __str__(self):
         s = str(self.original)
@@ -235,7 +235,7 @@ class Transformation(galsim.GSObject):
         self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
                                                     dudx, dudy, dvdx, dvdy,
                                                     self.getOffset(), self.getFluxRatio(),
-                                                    self._gsparams)
+                                                    self.gsparams._gsp)
 
     def _fwd_ident(self, x, y):
         return x, y
@@ -302,13 +302,13 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
         ret._original = obj.original
     else:
         ret._original = obj
+    ret._gsparams = galsim.GSParams.check(gsparams, ret._original.gsparams)
     sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                              gsparams)
+                              ret.gsparams._gsp)
     galsim.GSObject.__init__(ret, sbt)
     ret._jac = np.asarray(sbt.getJac())
     ret._offset = sbt.getOffset()
     ret._flux_ratio = sbt.getFluxScaling()
-    ret._gsparams = gsparams
     return ret
 
 def SBTransform_init(self):

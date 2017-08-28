@@ -65,6 +65,7 @@ public:
     void set_dbgout(std::ostream* new_dbgout) { dbgout = new_dbgout; }
     void set_verbose(int level) { verbose_level = level; }
     bool do_level(int level) { return verbose_level >= level; }
+    int get_level() { return verbose_level; }
 
     static Debugger& instance()
     {
@@ -86,6 +87,7 @@ private:
 #define xxdbg if(Debugger::instance().do_level(3)) Debugger::instance().get_dbgout()
 #define set_dbgout(dbgout) Debugger::instance().set_dbgout(dbgout)
 #define set_verbose(level) Debugger::instance().set_verbose(level)
+#define verbose_level Debugger::instance().get_level()
 #define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)

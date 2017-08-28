@@ -136,7 +136,9 @@ namespace galsim {
         ~SBProfile();
 
         /// Get the GSParams object for this SBProfile
-        const boost::shared_ptr<GSParams> getGSParams() const;
+        /// Makes a copy, since this is used for python pickling, so the current SBProfile
+        /// may go out of scope before we need to use the returned GSParams.
+        GSParams getGSParams() const;
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in real space.

@@ -45,8 +45,7 @@
 
 namespace galsim {
 
-    SBExponential::SBExponential(double r0, double flux,
-                                 const GSParamsPtr& gsparams) :
+    SBExponential::SBExponential(double r0, double flux, const GSParams& gsparams) :
         SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -64,7 +63,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBExponential("<<getScaleRadius()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -72,21 +71,21 @@ namespace galsim {
         sbp::max_exponential_cache);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
-        double r0, double flux, const GSParamsPtr& gsparams) :
+        double r0, double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(this->gsparams.duplicate()))
+        _info(cache.get(GSParamsPtr(gsparams)))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
+        _ksq_max = (std::pow(this->gsparams.kvalue_accuracy,-1./1.5)-1.);
         _k_max = std::sqrt(_ksq_max);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
+        _ksq_min = std::pow(this->gsparams.kvalue_accuracy * 16./35., 1./3.);
 
         _flux_over_2pi = _flux / (2. * M_PI);
         _norm = _flux_over_2pi * _inv_r0_sq;
@@ -520,16 +519,16 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
+    ExponentialInfo::ExponentialInfo(GSParamsPtr gsparams)
     {
-        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
+        dbg<<"Start ExponentialInfo with gsparams = "<<*gsparams<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *gsparams));
         dbg<<"Made sampler"<<std::endl;
 #endif
 
@@ -582,7 +581,7 @@ namespace galsim {
         // the most efficient thing since there are logs in the iteration.
 
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=this->gsparams->shoot_accuracy;
+        const double Y_TOLERANCE=this->gsparams.shoot_accuracy;
 
         double fluxPerPhoton = _flux / N;
 

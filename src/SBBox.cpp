@@ -33,7 +33,7 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double width, double height, double flux, const GSParamsPtr& gsparams) :
+    SBBox::SBBox(double width, double height, double flux, const GSParams& gsparams) :
         SBProfile(new SBBoxImpl(width,height,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
@@ -57,12 +57,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBBox("<<getWidth()<<", "<<getHeight()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBBox::SBBoxImpl::SBBoxImpl(double width, double height, double flux,
-                                const GSParamsPtr& gsparams) :
+                                const GSParams& gsparams) :
         SBProfileImpl(gsparams), _width(width), _height(height), _flux(flux)
     {
         if (_height==0.) _height=_width;
@@ -236,7 +236,7 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const
     {
-        return 2. / (this->gsparams->maxk_threshold * std::min(_width,_height));
+        return 2. / (this->gsparams.maxk_threshold * std::min(_width,_height));
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -260,7 +260,7 @@ namespace galsim {
 
 
 
-    SBTopHat::SBTopHat(double radius, double flux, const GSParamsPtr& gsparams) :
+    SBTopHat::SBTopHat(double radius, double flux, const GSParams& gsparams) :
         SBProfile(new SBTopHatImpl(radius,flux,gsparams)) {}
 
     SBTopHat::SBTopHat(const SBTopHat& rhs) : SBProfile(rhs) {}
@@ -278,12 +278,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBTopHat("<<getRadius()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBTopHat::SBTopHatImpl::SBTopHatImpl(double radius, double flux,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _r0(radius), _r0sq(_r0*_r0), _flux(flux),
         _norm(_flux / (M_PI * _r0sq))
@@ -450,7 +450,7 @@ namespace galsim {
     {
         // |j1(x)| ~ sqrt(2/(Pi x)) for large x, so using this, we get
         // maxk_thresh = 2 * sqrt(2/(Pi k r0)) / (k r0) = 2 sqrt(2/Pi) (k r0)^-3/2
-        return std::pow(2. * sqrt(2./M_PI) / this->gsparams->maxk_threshold, 2./3.) / _r0;
+        return std::pow(2. * sqrt(2./M_PI) / this->gsparams.maxk_threshold, 2./3.) / _r0;
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at

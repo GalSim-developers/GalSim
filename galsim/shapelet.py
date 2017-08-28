@@ -118,7 +118,7 @@ class Shapelet(GSObject):
         self._order = int(order)
         self._sigma = float(sigma)
         bvec_size = self.size(order)
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # Make bvec if necessary
         if bvec is None:
@@ -128,7 +128,8 @@ class Shapelet(GSObject):
                 raise ValueError("bvec is the wrong size for the provided order")
             self._bvec = np.ascontiguousarray(bvec, dtype=float)
 
-        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data, self._gsparams)
+        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                 self.gsparams._gsp)
         GSObject.__init__(self, sbp)
 
     @classmethod
@@ -180,15 +181,14 @@ class Shapelet(GSObject):
                 self.sigma == other.sigma and
                 self.order == other.order and
                 np.array_equal(self.bvec, other.bvec) and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Shapelet", self.sigma, self.order, tuple(self.bvec),
-                     self._gsparams))
+        return hash(("galsim.Shapelet", self.sigma, self.order, tuple(self.bvec), self.gsparams))
 
     def __repr__(self):
         return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
-                self.sigma, self.order, self.bvec, self._gsparams)
+                self.sigma, self.order, self.bvec, self.gsparams)
 
     def __str__(self):
         return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
@@ -200,7 +200,8 @@ class Shapelet(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data, self._gsparams)
+        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                 self.gsparams._gsp)
         GSObject.__init__(self, sbp)
 
     @classmethod
@@ -258,7 +259,7 @@ class Shapelet(GSObject):
             ret._bvec /= image.scale**2
 
         # Update the SBProfile, since it doesn't have the right bvector anymore.
-        sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data, ret._gsparams)
+        sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data, ret.gsparams._gsp)
         GSObject.__init__(ret, sbp)
 
         return ret

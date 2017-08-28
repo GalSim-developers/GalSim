@@ -54,7 +54,7 @@ namespace galsim {
         };
 
         static SBShapelet* construct(double sigma, int order, size_t idata,
-                                     boost::shared_ptr<GSParams> gsparams)
+                                     GSParams gsparams)
         {
             double* data = reinterpret_cast<double*>(idata);
             int size = PQIndex::size(order);
@@ -67,7 +67,7 @@ namespace galsim {
                 .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("sigma"), bp::arg("order"),  bp::arg("idata"),
-                         bp::arg("gsparams")=bp::object())))
+                         bp::arg("gsparams"))))
                 .def("rotate", &SBShapelet::rotate)
                 .enable_pickling()
                 ;

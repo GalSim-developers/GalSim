@@ -30,8 +30,7 @@ namespace galsim {
     public:
 
         SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                        const Position<double>& cen, double ampScaling,
-                        const GSParamsPtr& gsparams);
+                        const Position<double>& cen, double ampScaling, const GSParams& gsparams);
 
         ~SBTransformImpl() {}
 

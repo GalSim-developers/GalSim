@@ -84,7 +84,7 @@ namespace galsim {
          */
         SBInclinedSersic(double n, double inclination, double size, RadiusType rType,
                  double height, HeightType hType, double flux,
-                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+                 double trunc, bool flux_untruncated, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBInclinedSersic(const SBInclinedSersic& rhs);

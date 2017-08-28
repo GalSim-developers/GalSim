@@ -184,14 +184,14 @@ namespace galsim {
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
             _flux = integ::int1d(integrand,
                                  _xLower, _xUpper,
-                                 _gsparams->integration_relerr,
-                                 _gsparams->integration_abserr);
+                                 _gsparams.integration_relerr,
+                                 _gsparams.integration_abserr);
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr,
                                  _xLower, _xUpper,
-                                 _gsparams->integration_relerr,
-                                 _gsparams->integration_abserr);
+                                 _gsparams.integration_relerr,
+                                 _gsparams.integration_abserr);
         }
         _fluxIsReady = true;
     }
@@ -220,7 +220,7 @@ namespace galsim {
         if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
             densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
-        if (densityVariation > _gsparams->allowed_flux_variation) {
+        if (densityVariation > _gsparams.allowed_flux_variation) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
@@ -245,7 +245,7 @@ namespace galsim {
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity,
                                                  std::vector<double>& range,
                                                  bool isRadial,
-                                                 const GSParamsPtr& gsparams) :
+                                                 const GSParams& gsparams) :
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
         _negativeFlux(0.),
@@ -281,21 +281,21 @@ namespace galsim {
                              range[iRange],
                              range[iRange+1],
                              extremum,
-                             _gsparams->range_division_for_extrema)) {
+                             _gsparams.range_division_for_extrema)) {
                 xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
                     "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial, _gsparams);
                     std::list<Interval> leftList = splitit.split(
-                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
                     _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial, _gsparams);
                     std::list<Interval> rightList = splitit.split(
-                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
                     _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
@@ -304,7 +304,7 @@ namespace galsim {
                 Interval splitit(
                     _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
                 std::list<Interval> leftList = splitit.split(
-                    _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                    _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                 xdbg<<"Add "<<leftList.size()<<" intervals\n";
                 _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }

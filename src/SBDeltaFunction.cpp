@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBDeltaFunction::SBDeltaFunction(double flux, const GSParamsPtr& gsparams) :
+    SBDeltaFunction::SBDeltaFunction(double flux, const GSParams& gsparams) :
         SBProfile(new SBDeltaFunctionImpl(flux, gsparams)) {}
 
     SBDeltaFunction::SBDeltaFunction(const SBDeltaFunction& rhs) : SBProfile(rhs) {}
@@ -36,14 +36,13 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBDeltaFunction("<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBDeltaFunction::SBDeltaFunctionImpl::SBDeltaFunctionImpl(double flux,
-                                               const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams),
-        _flux(flux)
+                                                              const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _flux(flux)
     {
         dbg<<"DeltaFunction:\n";
         dbg<<"_flux = "<<_flux<<std::endl;

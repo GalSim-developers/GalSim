@@ -66,7 +66,7 @@ namespace galsim {
          * @param[in] gsparams  GSParams object storing constants that control the accuracy of
          *                      operations, if different from the default.
          */
-        Interpolant(const GSParamsPtr& gsparams) : _gsparams(gsparams), _interp(*this) {}
+        Interpolant(const GSParams& gsparams) : _gsparams(gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
         Interpolant(const Interpolant& rhs): _gsparams(rhs._gsparams), _interp(rhs._interp) {}
@@ -175,7 +175,7 @@ namespace galsim {
 
     protected:
 
-        const GSParamsPtr _gsparams;
+        GSParams _gsparams;
         InterpolantFunction _interp;
 
         // Class that draws photons from this Interpolant
@@ -285,7 +285,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Delta(double width=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Delta(double width, const GSParams& gsparams) :
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
 
@@ -333,7 +333,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Nearest(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Nearest(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
 
@@ -376,7 +376,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        SincInterpolant(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        SincInterpolant(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
 
@@ -416,7 +416,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Linear(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+        Linear(double tol, const GSParams& gsparams) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
 
@@ -458,7 +458,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Cubic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Cubic(double tol, const GSParams& gsparams);
         ~Cubic() {}
 
         double xrange() const { return _range; }
@@ -506,7 +506,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Quintic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Quintic(double tol, const GSParams& gsparams);
         ~Quintic() {}
 
         double xrange() const { return _range; }
@@ -568,8 +568,7 @@ namespace galsim {
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           operations, if different from the default.
          */
-        Lanczos(int n, bool conserve_dc=true, double tol=1.e-4,
-                const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
+        Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams);
         ~Lanczos() {}
 
         double xrange() const { return _range; }

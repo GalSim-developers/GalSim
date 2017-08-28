@@ -29,7 +29,7 @@ namespace galsim {
     SBTransform::SBTransform(const SBProfile& adaptee,
                              double mA, double mB, double mC, double mD,
                              const Position<double>& cen, double ampScaling,
-                             const GSParamsPtr& gsparams) :
+                             const GSParams& gsparams) :
         SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,ampScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
@@ -46,7 +46,7 @@ namespace galsim {
         oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";
         Position<double> shift = getOffset();
         oss << "galsim.PositionD("<<shift.x<<", "<<shift.y<<"), "<<getFluxScaling();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -78,8 +78,8 @@ namespace galsim {
     SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& adaptee, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double ampScaling,
-        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
+        const GSParams& gsparams) :
+        SBProfileImpl(gsparams),
         _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling),
         _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.)
     {
@@ -166,7 +166,7 @@ namespace galsim {
         xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
 
         // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_fluxScaling-1.) < this->gsparams->kvalue_accuracy) {
+        if (std::abs(_fluxScaling-1.) < this->gsparams.kvalue_accuracy) {
             xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
         } else {

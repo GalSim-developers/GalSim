@@ -139,9 +139,9 @@ class InclinedExponential(GSObject):
             raise TypeError("Input inclination should be an Angle")
 
         self._inclination = inclination
+        self._gsparams = galsim.GSParams.check(gsparams)
         GSObject.__init__(self, _galsim.SBInclinedExponential(
-                inclination.rad, scale_radius, scale_height, flux, gsparams))
-        self._gsparams = gsparams
+                inclination.rad, scale_radius, scale_height, flux, self.gsparams._gsp))
 
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
@@ -186,16 +186,16 @@ class InclinedExponential(GSObject):
                  (self.scale_radius == other.scale_radius) and
                  (self.scale_height == other.scale_height) and
                  (self.flux == other.flux) and
-                 (self._gsparams == other._gsparams)))
+                 (self.gsparams == other.gsparams)))
 
     def __hash__(self):
         return hash(("galsim.InclinedExponential", self.inclination, self.scale_radius,
-                    self.scale_height, self.flux, self._gsparams))
+                    self.scale_height, self.flux, self.gsparams))
 
     def __repr__(self):
         return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, gsparams=%r)') % (
-            self.inclination, self.scale_radius, self.scale_height, self.flux, self._gsparams)
+            self.inclination, self.scale_radius, self.scale_height, self.flux, self.gsparams)
 
     def __str__(self):
         s = 'galsim.InclinedExponential(inclination=%s, scale_radius=%s, scale_height=%s' % (

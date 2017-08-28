@@ -34,9 +34,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBGaussian,bp::bases<SBProfile> >("SBGaussian", bp::no_init)
-                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("sigma")=bp::object(), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
+                .def(bp::init<double,double, GSParams>(
+                        (bp::arg("sigma"), bp::arg("flux"), bp::arg("gsparams"))
                 ))
                 .def(bp::init<const SBGaussian &>())
                 .def("getSigma", &SBGaussian::getSigma)

@@ -26,7 +26,7 @@
 namespace galsim {
 
     SBConvolve::SBConvolve(const std::list<SBProfile>& plist, bool real_space,
-                           const GSParamsPtr& gsparams) :
+                           const GSParams& gsparams) :
         SBProfile(new SBConvolveImpl(plist,real_space,gsparams)) {}
 
     SBConvolve::SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
@@ -78,14 +78,13 @@ namespace galsim {
         oss << "], ";
         if (_real_space) oss << "True, ";
         else oss << "False, ";
-        oss << "galsim.GSParams("<<*gsparams<<"))";
+        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& plist, bool real_space,
-                                               const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(plist.front())->gsparams),
-        _real_space(real_space),
+                                               const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _real_space(real_space),
         _x0(0.), _y0(0.), _isStillAxisymmetric(true), _fluxProduct(1.),
         _maxk(0.), _stepk(0.)
     {
@@ -293,7 +292,7 @@ namespace galsim {
     //
 
     SBAutoConvolve::SBAutoConvolve(const SBProfile& s, bool real_space,
-                                   const GSParamsPtr& gsparams) :
+                                   const GSParams& gsparams) :
         SBProfile(new SBAutoConvolveImpl(s, real_space, gsparams)) {}
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
@@ -323,14 +322,13 @@ namespace galsim {
         oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
-                                                           const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s), _real_space(real_space) {}
+                                                           const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(s), _real_space(real_space) {}
 
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
@@ -395,7 +393,7 @@ namespace galsim {
     //
 
     SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, bool real_space,
-                                     const GSParamsPtr& gsparams) :
+                                     const GSParams& gsparams) :
         SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
@@ -424,15 +422,13 @@ namespace galsim {
         oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(
-        const SBProfile& s, bool real_space,
-        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s), _real_space(real_space) {}
+        const SBProfile& s, bool real_space, const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(s), _real_space(real_space) {}
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     {

@@ -28,7 +28,7 @@ namespace galsim {
     class SBFourierSqrt::SBFourierSqrtImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBFourierSqrtImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
+        SBFourierSqrtImpl(const SBProfile& adaptee, const GSParams& gsparams);
         ~SBFourierSqrtImpl() {}
 
         // xValue() not implemented for SBFourierSqrt.

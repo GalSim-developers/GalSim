@@ -35,9 +35,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
-                .def(bp::init<const SBProfile &,boost::shared_ptr<GSParams> >(
-                        (bp::arg("adaptee"),
-                         bp::arg("gsparams")=bp::object())
+                .def(bp::init<const SBProfile &, GSParams>(
+                        (bp::arg("adaptee"), bp::arg("gsparams"))
                 ))
                 .def(bp::init<const SBDeconvolve &>())
                 .def("getObj", &SBDeconvolve::getObj)

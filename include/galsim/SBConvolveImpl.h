@@ -30,7 +30,7 @@ namespace galsim {
     public:
 
         SBConvolveImpl(const std::list<SBProfile>& plist, bool real_space,
-                       const GSParamsPtr& gsparams);
+                       const GSParams& gsparams);
         ~SBConvolveImpl() {}
 
         std::list<SBProfile> getObjs() const { return _plist; }
@@ -166,7 +166,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoConvolveImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+        SBAutoConvolveImpl(const SBProfile& s, bool real_space, const GSParams& gsparams);
 
         ~SBAutoConvolveImpl() {}
 
@@ -242,7 +242,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
+        SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParams& gsparams);
 
         ~SBAutoCorrelateImpl() {}
 

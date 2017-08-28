@@ -85,7 +85,7 @@ namespace galsim {
             boost::shared_ptr<Interpolant> xInterp,
             boost::shared_ptr<Interpolant> kInterp,
             double pad_factor, double stepk, double maxk,
-            const GSParamsPtr& gsparams);
+            const GSParams& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
         template <typename T>
@@ -94,7 +94,7 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double pad_factor, double stepk, double maxk,
-            const GSParamsPtr& gsparams);
+            const GSParams& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);
@@ -150,13 +150,13 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImage(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant> kInterp, const GSParamsPtr& gsparams);
+            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         /// @brief Same as above, but take 2-d interpolants.
         template <typename T>
         SBInterpolatedKImage(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParams& gsparams);
 
         // @brief Serialization constructor.
         // Note this is *not* a template since getKData only returns doubles.
@@ -164,7 +164,7 @@ namespace galsim {
             const BaseImage<double>& data,
             double stepk, double maxk,
             boost::shared_ptr<Interpolant> kInterp,
-            const GSParamsPtr& gsparams);
+            const GSParams& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedKImage(const SBInterpolatedKImage& rhs);

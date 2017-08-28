@@ -24,8 +24,7 @@
 
 namespace galsim {
 
-    SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee,
-                                 const GSParamsPtr& gsparams) :
+    SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee, const GSParams& gsparams) :
         SBProfile(new SBFourierSqrtImpl(adaptee,gsparams)) {}
 
     SBFourierSqrt::SBFourierSqrt(const SBFourierSqrt& rhs) : SBProfile(rhs) {}
@@ -42,14 +41,13 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBFourierSqrt(" << _adaptee.serialize();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBFourierSqrt::SBFourierSqrtImpl::SBFourierSqrtImpl(const SBProfile& adaptee,
-                                                        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee)
+                                                        const GSParams& gsparams) :
+        SBProfileImpl(gsparams), _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;

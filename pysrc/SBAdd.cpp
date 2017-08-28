@@ -33,7 +33,7 @@ namespace galsim {
     {
 
         // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBAdd* construct(const bp::object& iterable, boost::shared_ptr<GSParams> gsparams)
+        static SBAdd* construct(const bp::object& iterable, GSParams gsparams)
         {
             bp::stl_input_iterator<SBProfile> begin(iterable), end;
             std::list<SBProfile> plist(begin, end);
@@ -58,8 +58,7 @@ namespace galsim {
                 // to ensure we try it last
                 .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
-                        (bp::arg("slist"),
-                         bp::arg("gsparams")=bp::object())
+                        (bp::arg("slist"), bp::arg("gsparams"))
                 ))
                 .def(bp::init<const SBAdd &>())
                 .def("getObjs", getObjs)

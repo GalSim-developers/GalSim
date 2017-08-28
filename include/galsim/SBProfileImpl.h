@@ -31,7 +31,7 @@ namespace galsim {
     public:
 
         // Constructor
-        SBProfileImpl(const GSParamsPtr& _gsparams);
+        SBProfileImpl(const GSParams& _gsparams);
 
         // Virtual destructor
         virtual ~SBProfileImpl() {}
@@ -124,7 +124,7 @@ namespace galsim {
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // Public so it can be directly used from SBProfile.
-        const GSParamsPtr gsparams;
+        GSParams gsparams;
 
         virtual std::string serialize() const = 0;
 

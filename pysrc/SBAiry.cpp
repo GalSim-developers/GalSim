@@ -34,9 +34,9 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
-                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("lam_over_diam"), bp::arg("obscuration")=0., bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
+                .def(bp::init<double,double,double,GSParams>(
+                        (bp::arg("lam_over_diam"), bp::arg("obscuration"), bp::arg("flux"),
+                         bp::arg("gsparams"))
                 ))
                 .def(bp::init<const SBAiry &>())
                 .def("getLamOverD", &SBAiry::getLamOverD)
