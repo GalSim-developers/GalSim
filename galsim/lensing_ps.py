@@ -1094,28 +1094,28 @@ class PowerSpectrum(object):
 
                 # Then make the SBInterpolated image.
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r_new.image, xInterp=xinterp._i, kInterp=kinterp._i)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r_new.image, xInterp=xinterp._i, kInterp=kinterp._i)
             else:
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r.image, xInterp=xinterp._i, kInterp=kinterp._i)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r.image, xInterp=xinterp._i, kInterp=kinterp._i)
         else:
             if periodic:
                 # Need to expand array here, as well.
                 g1_r_new = self._wrap_image(self.im_g1)
                 g2_r_new = self._wrap_image(self.im_g2)
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r_new.image, xInterp=xinterp._i, kInterp=kinterp._i)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r_new.image, xInterp=xinterp._i, kInterp=kinterp._i)
             else:
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1.image, xInterp=xinterp,
-                                                             kInterp=kinterp)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2.image, xInterp=xinterp,
-                                                             kInterp=kinterp)
+                sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1.image, xInterp=xinterp._i,
+                                                             kInterp=kinterp._i)
+                sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2.image, xInterp=xinterp._i,
+                                                             kInterp=kinterp._i)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1229,10 +1229,10 @@ class PowerSpectrum(object):
 
             # Then make the SBInterpolated image.
             sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                kappa_new.image, xInterp=xinterp, kInterp=kinterp)
+                kappa_new.image, xInterp=xinterp._i, kInterp=kinterp._i)
         else:
             sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                self.im_kappa.image, xInterp=xinterp, kInterp=kinterp)
+                self.im_kappa.image, xInterp=xinterp._i, kInterp=kinterp._i)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1347,11 +1347,11 @@ class PowerSpectrum(object):
             im_mu_new = self._wrap_image(im_mu)
 
             # Then make the SBInterpolated image.
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
         else:
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1472,19 +1472,19 @@ class PowerSpectrum(object):
             im_g2_new = self._wrap_image(im_g2_r)
 
             # Then make the SBInterpolated image.
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
         else:
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp,
-                                                         kInterp=kinterp)
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp._i,
+                                                         kInterp=kinterp._i)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.

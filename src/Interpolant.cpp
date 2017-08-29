@@ -151,7 +151,13 @@ namespace galsim {
     }
 
     std::string Delta::makeStr() const
-    { return "delta"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Delta("<<_width<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -180,7 +186,13 @@ namespace galsim {
     }
 
     std::string Nearest::makeStr() const
-    { return "nearest"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Nearest("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -215,7 +227,13 @@ namespace galsim {
     }
 
     std::string SincInterpolant::makeStr() const
-    { return "sinc"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SincInterpolant("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -248,7 +266,13 @@ namespace galsim {
     }
 
     std::string Linear::makeStr() const
-    { return "linear"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Linear("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -348,7 +372,13 @@ namespace galsim {
     std::map<double,double> Cubic::_cache_umax;
 
     std::string Cubic::makeStr() const
-    { return "cubic"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Cubic("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -517,7 +547,13 @@ namespace galsim {
     std::map<double,double> Quintic::_cache_umax;
 
     std::string Quintic::makeStr() const
-    { return "quintic"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Quintic("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -879,8 +915,12 @@ namespace galsim {
     std::string Lanczos::makeStr() const
     {
         std::ostringstream oss(" ");
-        oss << "lanczos" << _n;
-        if (_conserve_dc) oss << "F";
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Lanczos("<<_n<<", ";
+        if (_conserve_dc) oss << "True, ";
+        else oss << "False, ";
+        oss <<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
 

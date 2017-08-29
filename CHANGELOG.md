@@ -31,6 +31,8 @@ API Changes
   classmethods of the Shapelet class: `Shapelet.size(order)` and `Shapelet.fit(image)`.
   Also LVector is not longer in the galsim.shapelet namespece.  It was an implementation
   detail of Shapelet, which should not be needed for any use case.  (#809e)
+- The Interpolant base class can no longer be used as a factory function.  Instead, use
+  `Interpolant.from_name(name)`.
 
 
 Bug Fixes

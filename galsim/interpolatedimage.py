@@ -21,12 +21,10 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
 from past.builtins import basestring
-import galsim
-from galsim import GSObject
-from . import _galsim
-from ._galsim import Interpolant
-from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 import numpy as np
+import galsim
+from .gsobject import GSObject
+from . import _galsim
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -434,8 +432,8 @@ class InterpolatedImage(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
 
         # Make the SBInterpolatedImage out of the image.
-        sbii = galsim._galsim.SBInterpolatedImage(
-                pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
+        sbii = _galsim.SBInterpolatedImage(
+                pad_image.image, self.x_interpolant._i, self.k_interpolant._i, pad_factor,
                 _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if getFlux() == 0 are the
@@ -498,7 +496,7 @@ class InterpolatedImage(GSObject):
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
         # is to hide the SBProfile in an SBAdd object.
-        sbp = galsim._galsim.SBAdd([prof.SBProfile], self.gsparams._gsp)
+        sbp = _galsim.SBAdd([prof.SBProfile], self.gsparams._gsp)
 
         GSObject.__init__(self, sbp)
 
@@ -748,7 +746,7 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         sbiki = _galsim.SBInterpolatedKImage(
-                self._kimage.image, stepk_image, self.k_interpolant, self.gsparams._gsp)
+                self._kimage.image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
         self._sbiki = sbiki
 
         if kimage.wcs is not None:
@@ -808,7 +806,7 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret._gsparams = galsim.GSParams.check(gsparams)
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
-            ret._kimage.image, 1.0, ret.k_interpolant, ret.gsparams._gsp)
+            ret._kimage.image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
                               galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
     ret.SBProfile = _galsim.SBAdd([sbp], ret.gsparams._gsp)
@@ -840,26 +838,3 @@ _galsim.SBInterpolatedKImage.__reduce__ = lambda self: (
         new_sbi, (self.__class__,), self.__getstate__())
 _galsim.SBInterpolatedImage.__setstate__ = sbi_setstate
 _galsim.SBInterpolatedKImage.__setstate__ = sbi_setstate
-
-_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
-_galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Nearest.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.SincInterpolant.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Linear.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
-
-_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r)'%self.__getinitargs__()
-_galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)'%self.getTol()
-_galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)'%self.getTol()
-_galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)'%self.getTol()
-_galsim.Linear.__repr__ = lambda self: 'galsim.Linear(%r)'%self.getTol()
-_galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)'%self.getTol()
-_galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)'%self.getTol()
-_galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
-
-# Quick and dirty.  Just check reprs are equal.
-_galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
-_galsim.Interpolant.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.Interpolant.__hash__ = lambda self: hash(repr(self))

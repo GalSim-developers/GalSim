@@ -449,12 +449,11 @@ namespace galsim {
 
         oss<<"],dtype=float)).image, ";
 
-        boost::shared_ptr<Interpolant> xinterp = getXInterp();
-        boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        oss << getXInterp()->makeStr()<<", ";
+        oss << getKInterp()->makeStr()<<", ";
+        oss << _pad_factor << ", "<<stepK()<<", "<<maxK()<<", ";
+        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
 
-        oss << _pad_factor << ", "<<stepK()<<", "<<maxK()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -1013,9 +1012,9 @@ namespace galsim {
         oss<<"],dtype=float)).image, ";
 
         oss << stepK() << ", " << maxK() << ", ";
-        boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        oss << getKInterp()->makeStr()<<", ";
         oss << "galsim._galsim.GSParams("<<gsparams<<"))";
+
         return oss.str();
     }
 
