@@ -33,8 +33,8 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant2d> xInterp,
-            boost::shared_ptr<Interpolant2d> kInterp,
+            boost::shared_ptr<Interpolant> xInterp,
+            boost::shared_ptr<Interpolant> kInterp,
             double pad_factor, double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
@@ -126,8 +126,8 @@ namespace galsim {
         double _xcentroid;
         double _ycentroid;
 
-        boost::shared_ptr<Interpolant2d> _xInterp; ///< Interpolant used in real space.
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
+        boost::shared_ptr<InterpolantXY> _xInterp; ///< Interpolant used in real space.
+        boost::shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
         boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
         const double _pad_factor;
@@ -207,14 +207,12 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImageImpl(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp, const GSParams& gsparams);
+            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
-            const BaseImage<double>& data,
-            double stepk, double maxk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParams& gsparams);
+            const BaseImage<double>& data, double stepk, double maxk,
+            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         ~SBInterpolatedKImageImpl();
 
@@ -257,7 +255,7 @@ namespace galsim {
         mutable double _xcentroid;
         mutable double _ycentroid;
 
-        boost::shared_ptr<Interpolant2d> _kInterp; ///< Interpolant used in k space.
+        boost::shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
         boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
