@@ -143,7 +143,8 @@ class SiliconSensor(Sensor):
                           % (vertex_file, self.config_file))
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness, vertex_data)
+                                               diff_step, PixelSize, SensorThickness,
+                                               vertex_data.ctypes.data)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir

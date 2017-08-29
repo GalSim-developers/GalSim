@@ -25,7 +25,6 @@
 
 #include "Silicon.h"
 #include "Random.h"
-#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -49,24 +48,11 @@ namespace {
 
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
-                                    double SensorThickness,
-                                    const bp::object& array)
+                                    double SensorThickness, size_t idata)
         {
-            double* data = 0;
-            boost::shared_ptr<double> owner;
-            int step = 0;
-            int stride = 0;
-            CheckNumpyArray(array, 2, false, data, owner, step, stride);
-            if (step != 1)
-                throw std::runtime_error("Silicon vertex_data requires step == 1");
-            if (stride != 5)
-                throw std::runtime_error("Silicon vertex_data requires stride == 5");
-            if (GetNumpyArrayDim(array.ptr(), 1) != 5)
-                throw std::runtime_error("Silicon vertex_data requires ncol == 5");
+            double* data = reinterpret_cast<double*>(idata);
             int NumPolys = Nx * Ny + 2;
             int Nv = 4 * NumVertices + 4;
-            if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
-                throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data);
         }
