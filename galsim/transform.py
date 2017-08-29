@@ -128,13 +128,12 @@ class Transformation(galsim.GSObject):
         else:
             self._original = obj
         self._gsparams = galsim.GSParams.check(gsparams, self._original.gsparams)
-        sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                  self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbt)
+        self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                        self.gsparams._gsp)
 
-        self._jac = np.asarray(sbt.getJac())
-        self._offset = sbt.getOffset()
-        self._flux_ratio = sbt.getFluxScaling()
+        self._jac = np.asarray(self._sbp.getJac())
+        self._offset = self._sbp.getOffset()
+        self._flux_ratio = self._sbp.getFluxScaling()
 
     def getJac(self):
         """Return the Jacobian of the transformation.
@@ -156,13 +155,12 @@ class Transformation(galsim.GSObject):
         if self.original.noise is None:
             return None
         else:
-            jac = self.SBProfile.getJac()
-            flux_ratio = self.SBProfile.getFluxScaling()
+            dudx, dudy, dvdx, dvdy = self._jac
             return galsim.correlatednoise._BaseCorrelatedNoise(
                     self.original.noise.rng,
                     galsim._Transform(self.original.noise._profile,
-                                      jac[0], jac[1], jac[2], jac[3],
-                                      flux_ratio=flux_ratio**2),
+                                      dudx, dudy, dvdx, dvdy,
+                                      flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
     @property
@@ -231,11 +229,11 @@ class Transformation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._original._prepareDraw()
-        dudx, dudy, dvdx, dvdy = self.getJac()
-        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
-                                                    dudx, dudy, dvdx, dvdy,
-                                                    self.getOffset(), self.getFluxRatio(),
-                                                    self.gsparams._gsp)
+        dudx, dudy, dvdx, dvdy = self._jac
+        self._sbp = galsim._galsim.SBTransform(self._original._sbp,
+                                               dudx, dudy, dvdx, dvdy,
+                                               self.getOffset(), self.getFluxRatio(),
+                                               self.gsparams._gsp)
 
     def _fwd_ident(self, x, y):
         return x, y
@@ -278,12 +276,12 @@ class Transformation(galsim.GSObject):
         return photon_array
 
     def __getstate__(self):
-        # While the SBProfile should be picklable, it is better to reconstruct it from the
+        # While the _sbp should be picklable, it is better to reconstruct it from the
         # original object, which will pickle better.  The SBProfile is only picklable via its
         # repr, which is not the most efficient serialization.  Especially for things like
         # SBInterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -303,12 +301,11 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     else:
         ret._original = obj
     ret._gsparams = galsim.GSParams.check(gsparams, ret._original.gsparams)
-    sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                              ret.gsparams._gsp)
-    galsim.GSObject.__init__(ret, sbt)
-    ret._jac = np.asarray(sbt.getJac())
-    ret._offset = sbt.getOffset()
-    ret._flux_ratio = sbt.getFluxScaling()
+    ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                   ret.gsparams._gsp)
+    ret._jac = np.asarray(ret._sbp.getJac())
+    ret._offset = ret._sbp.getOffset()
+    ret._flux_ratio = ret._sbp.getFluxScaling()
     return ret
 
 def SBTransform_init(self):

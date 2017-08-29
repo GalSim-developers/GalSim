@@ -175,7 +175,7 @@ class GSObject(object):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof.SBProfile.draw(imview.image)
+            image.added_flux = prof._sbp.draw(imview.image)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
@@ -206,10 +206,10 @@ class GSObject(object):
                       'range_division_for_extrema' : int,
                       'small_fraction_of_flux' : float
                     }
-    def __init__(self, sbp):
-        if not isinstance(sbp, _galsim.SBProfile):
-            raise TypeError("GSObject must be initialized with an SBProfile!")
-        self.SBProfile = sbp
+    def __init__(self):
+        raise NotImplemented("The GSObject base class should not be instantiated directly.")
+
+    # Note: subclasses are expected to define self._sbp and self._gsparams in their inits.
 
     @galsim.utilities.lazy_property
     def noise(self):
@@ -275,55 +275,85 @@ class GSObject(object):
     def __neg__(self):
         return -1. * self
 
-    # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
+    # Now define direct access to all SBProfile methods via calls to self._sbp.method_name()
     #
     def maxK(self):
         """Returns value of k beyond which aliasing can be neglected.
         """
-        return self.SBProfile.maxK()
+        return self._sbp.maxK()
 
     def nyquistScale(self):
         """Returns Image pixel spacing that does not alias maxK.
         """
-        return self.SBProfile.nyquistDx()
+        return self._sbp.nyquistDx()
 
     def stepK(self):
         """Returns sampling in k space necessary to avoid folding of image in x space.
         """
-        return self.SBProfile.stepK()
+        return self._sbp.stepK()
 
     def hasHardEdges(self):
         """Returns True if there are any hard edges in the profile, which would require very small k
         spacing when working in the Fourier domain.
         """
-        return self.SBProfile.hasHardEdges()
+        return self._sbp.hasHardEdges()
 
     def isAxisymmetric(self):
         """Returns True if axially symmetric: affects efficiency of evaluation.
         """
-        return self.SBProfile.isAxisymmetric()
+        return self._sbp.isAxisymmetric()
 
     def isAnalyticX(self):
         """Returns True if real-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
-        return self.SBProfile.isAnalyticX()
+        return self._sbp.isAnalyticX()
 
     def isAnalyticK(self):
         """Returns True if k-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
-        return self.SBProfile.isAnalyticK()
+        return self._sbp.isAnalyticK()
 
     def centroid(self):
         """Returns the (x, y) centroid of an object as a Position.
         """
-        return self.SBProfile.centroid()
+        return self._sbp.centroid()
 
     def getFlux(self):
         """Returns the flux of the object.
         """
-        return self.SBProfile.getFlux()
+        return self._sbp.getFlux()
+
+    def getPositiveFlux(self):
+        """Returns the expectation value of flux in positive photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total flux
+        of the positive-valued photons.
+
+        For profiles that don't have this complication, this is equivalent to getFlux().
+
+        It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
+        thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._sbp.getPositiveFlux()
+
+    def getNegativeFlux(self):
+        """Returns the expectation value of flux in negative photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total absolute flux
+        of the negative-valued photons (i.e. as a positive value).
+
+        For profiles that don't have this complication, this returns 0.
+
+        It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
+        thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._sbp.getNegativeFlux()
 
     def maxSB(self):
         """Returns an estimate of the maximum surface brightness of the object.
@@ -341,7 +371,7 @@ class GSObject(object):
         surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
         rather than the maximum value.  For most profiles, these are the same thing.
         """
-        return self.SBProfile.maxSB()
+        return self._sbp.maxSB()
 
     def getGSParams(self):
         """Returns the GSParams for the object.
@@ -564,7 +594,7 @@ class GSObject(object):
 
         @returns the surface brightness at that position.
         """
-        return self.SBProfile.xValue(pos)
+        return self._sbp.xValue(pos)
 
     def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
@@ -588,7 +618,7 @@ class GSObject(object):
     def _kValue(self, kpos):
         """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
-        return self.SBProfile.kValue(kpos)
+        return self._sbp.kValue(kpos)
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
@@ -1515,14 +1545,14 @@ class GSObject(object):
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ]:
-            return self.SBProfile.draw(image.image, image.scale, add_to_image)
+            return self._sbp.draw(image.image, image.scale, add_to_image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
                 im1 = galsim.ImageD(bounds=image.bounds)
             else:
                 im1 = galsim.ImageF(bounds=image.bounds)
-            added_flux = self.SBProfile.draw(im1.image, image.scale, False)
+            added_flux = self._sbp.draw(im1.image, image.scale, False)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
@@ -1543,7 +1573,7 @@ class GSObject(object):
 
         @returns N, a good (linear) size of an image on which to draw this object.
         """
-        return self.SBProfile.getGoodImageSize(pixel_scale)
+        return self._sbp.getGoodImageSize(pixel_scale)
 
     def drawFFT_makeKImage(self, image):
         """
@@ -1720,9 +1750,9 @@ class GSObject(object):
         # Returns the total flux placed inside the image bounds by photon shooting.
         #
 
-        flux = self.SBProfile.getFlux()
-        posflux = self.SBProfile.getPositiveFlux()
-        negflux = self.SBProfile.getNegativeFlux()
+        flux = self.getFlux()
+        posflux = self.getPositiveFlux()
+        negflux = self.getNegativeFlux()
         eta = negflux / (posflux + negflux)
         eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
         mod_flux = flux/(eta_factor*eta_factor)
@@ -1758,7 +1788,7 @@ class GSObject(object):
         if n_photons == 0.:
             n_photons = mod_flux
             if max_extra_noise > 0.:
-                gfactor = 1. + max_extra_noise / self.SBProfile.maxSB()
+                gfactor = 1. + max_extra_noise / self.maxSB()
                 n_photons /= gfactor
                 g *= gfactor
 
@@ -1942,7 +1972,7 @@ class GSObject(object):
         # Most of the time the shooting process doesn't correlate the photons.
         # If they do end up correlated, the subclass should override the _shoot function and
         # call photons.setCorrelated().
-        self.SBProfile.shoot(photons._pa, rng._rng)
+        self._sbp.shoot(photons._pa, rng._rng)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, setup_only=False):
@@ -2032,9 +2062,7 @@ class GSObject(object):
         if setup_only:
             return image
 
-        self.SBProfile.drawK(image.image, dk, add_to_image)
-
-        return image
+        return self._drawKImage(image, add_to_image)
 
     def _drawKImage(self, image, add_to_image=False):
         """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal
@@ -2050,16 +2078,16 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        self.SBProfile.drawK(image.image, image.scale, add_to_image)
+        self._sbp.drawK(image.image, image.scale, add_to_image)
         return image
 
 
     def __eq__(self, other):
         return (type(self) == type(other) and
-                self.SBProfile == other.SBProfile)
+                self._sbp == other._sbp)
 
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash(("galsim.GSObject", self.SBProfile))
+    def __hash__(self): return hash(("galsim.GSObject", self._sbp))
 
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is

@@ -151,8 +151,8 @@ class Sum(galsim.GSObject):
             if not isinstance(obj, galsim.GSObject):
                 raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
         self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
-        SBList = [obj.SBProfile for obj in args]
-        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, self.gsparams._gsp))
+        SBList = [obj._sbp for obj in args]
+        self._sbp = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
 
     @galsim.utilities.lazy_property
     def noise(self):
@@ -189,8 +189,8 @@ class Sum(galsim.GSObject):
     def _prepareDraw(self):
         for obj in self._obj_list:
             obj._prepareDraw()
-        SBList = [obj.SBProfile for obj in self._obj_list]
-        self.SBProfile = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
+        SBList = [obj._sbp for obj in self._obj_list]
+        self._sbp = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -206,7 +206,7 @@ class Sum(galsim.GSObject):
             return galsim.PhotonArray(0)
         ud = galsim.UniformDeviate(rng)
 
-        remainingAbsoluteFlux = self.SBProfile.getPositiveFlux() + self.SBProfile.getNegativeFlux()
+        remainingAbsoluteFlux = self.getPositiveFlux() + self.getNegativeFlux()
         fluxPerPhoton = remainingAbsoluteFlux / n_photons
 
         # Initialize the output array
@@ -218,7 +218,7 @@ class Sum(galsim.GSObject):
         # Get photons from each summand, using BinomialDeviate to randomize
         # the distribution of photons among summands
         for i, obj in enumerate(self.obj_list):
-            thisAbsoluteFlux = obj.SBProfile.getPositiveFlux() + obj.SBProfile.getNegativeFlux()
+            thisAbsoluteFlux = obj.getPositiveFlux() + obj.getNegativeFlux()
 
             # How many photons to shoot from this summand?
             thisN = remainingN  # All of what's left, if this is the last summand...
@@ -246,7 +246,7 @@ class Sum(galsim.GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -434,9 +434,8 @@ class Convolution(galsim.GSObject):
         self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
-        SBList = [ obj.SBProfile for obj in args ]
-        sbp = galsim._galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        SBList = [ obj._sbp for obj in args ]
+        self._sbp = galsim._galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
 
     @galsim.utilities.lazy_property
     def noise(self):
@@ -488,8 +487,8 @@ class Convolution(galsim.GSObject):
     def _prepareDraw(self):
         for obj in self._obj_list:
             obj._prepareDraw()
-        SBList = [obj.SBProfile for obj in self._obj_list]
-        self.SBProfile = galsim._galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
+        SBList = [obj._sbp for obj in self._obj_list]
+        self._sbp = galsim._galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -514,7 +513,7 @@ class Convolution(galsim.GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -587,8 +586,7 @@ class Deconvolution(galsim.GSObject):
         self._orig_obj = obj
         self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBDeconvolve(obj._sbp, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
@@ -612,11 +610,11 @@ class Deconvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBDeconvolve(self._orig_obj.SBProfile, self.gsparams._gsp)
+        self._sbp = galsim._galsim.SBDeconvolve(self._orig_obj._sbp, self.gsparams._gsp)
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -716,8 +714,7 @@ class AutoConvolution(galsim.GSObject):
         self._orig_obj = obj
         self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBAutoConvolve(obj._sbp, real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
@@ -749,8 +746,8 @@ class AutoConvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBAutoConvolve(self._orig_obj.SBProfile, self._real_space,
-                                                       self.gsparams._gsp)
+        self._sbp = galsim._galsim.SBAutoConvolve(self._orig_obj._sbp, self._real_space,
+                                                  self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -770,7 +767,7 @@ class AutoConvolution(galsim.GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -875,8 +872,7 @@ class AutoCorrelation(galsim.GSObject):
         self._orig_obj = obj
         self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBAutoCorrelate(obj._sbp, real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
@@ -908,8 +904,8 @@ class AutoCorrelation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBAutoCorrelate(self._orig_obj.SBProfile,
-                                                        self._real_space, self.gsparams._gsp)
+        self._sbp = galsim._galsim.SBAutoCorrelate(self._orig_obj._sbp,
+                                                   self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -934,7 +930,7 @@ class AutoCorrelation(galsim.GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -1014,8 +1010,7 @@ class FourierSqrtProfile(galsim.GSObject):
         self._orig_obj = obj
         self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBFourierSqrt(obj._sbp, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
@@ -1039,11 +1034,11 @@ class FourierSqrtProfile(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self.SBProfile = galsim._galsim.SBFourierSqrt(self._orig_obj.SBProfile, self.gsparams._gsp)
+        self._sbp = galsim._galsim.SBFourierSqrt(self._orig_obj._sbp, self.gsparams._gsp)
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -1155,8 +1150,7 @@ class RandomWalk(galsim.GSObject):
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
 
-        sbp = galsim._galsim.SBAdd(self._gaussians, self.gsparams._gsp)
-        galsim.GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBAdd(self._gaussians, self.gsparams._gsp)
 
     def calculateHLR(self):
         """

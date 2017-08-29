@@ -136,11 +136,8 @@ def test_gaussian():
         realspace_abserr = 7.e-1,
         integration_relerr = 8.e-1,
         integration_abserr = 9.e-1))
-    do_pickle(gauss.SBProfile, lambda x: (x.getSigma(), x.getFlux(), x.getGSParams()))
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
-    do_pickle(gauss.SBProfile)
-    do_pickle(galsim.GSObject(gauss.SBProfile), irreprable=True)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -421,10 +418,8 @@ def test_exponential():
     do_kvalue(expon,myImg,"Exponential")
 
     # Check picklability
-    do_pickle(expon.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(expon)
-    do_pickle(expon.SBProfile)
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     try:
@@ -602,11 +597,8 @@ def test_sersic():
     do_kvalue(sersic,myImg,"Sersic")
 
     # Check picklability
-    do_pickle(sersic.SBProfile,
-              lambda x: (x.getN(), x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
-    do_pickle(sersic.SBProfile)
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -645,11 +637,8 @@ def test_sersic():
     do_kvalue(sersic,myImg, "Truncated Sersic")
 
     # Check picklability
-    do_pickle(sersic.SBProfile,
-              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
-    do_pickle(sersic.SBProfile)
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
@@ -709,9 +698,6 @@ def test_sersic_radii():
         do_pickle(test_gal1)
         do_pickle(test_gal2)
         do_pickle(test_gal3)
-        do_pickle(test_gal1.SBProfile)
-        do_pickle(test_gal2.SBProfile)
-        do_pickle(test_gal3.SBProfile)
 
         # Check that the returned half-light radius is correct
         print('test_hlr = ',test_hlr)
@@ -1107,14 +1093,10 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.1")
 
     # Check picklability
-    do_pickle(airy0.SBProfile, lambda x: (x.getLamOverD(), x.getObscuration, x.getFlux(), x.getGSParams()))
     do_pickle(airy0, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(airy0)
-    do_pickle(airy0.SBProfile)
-    do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getObscuration, x.getFlux(), x.getGSParams()))
     do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(airy)
-    do_pickle(airy.SBProfile)
 
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
@@ -1277,11 +1259,8 @@ def test_box():
     do_shoot(pixel,myImg,"Pixel")
 
     # Check picklability
-    do_pickle(pixel.SBProfile,
-              lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(pixel)
-    do_pickle(pixel.SBProfile)
     do_pickle(galsim.Pixel(1))
 
     # Check that non-square Box profiles work correctly
@@ -1318,10 +1297,8 @@ def test_box():
                 err_msg="Box height not equivalent to  getHeight()")
 
     # Check picklability
-    do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(box)
-    do_pickle(box.SBProfile)
     do_pickle(galsim.Box(1,1))
 
     # Check sheared boxes the same way
@@ -1420,10 +1397,8 @@ def test_tophat():
 
 
     # Check picklability
-    do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(tophat)
-    do_pickle(tophat.SBProfile)
     do_pickle(galsim.TopHat(1))
 
     # Check sheared tophat the same way
@@ -1501,12 +1476,8 @@ def test_moffat():
     do_kvalue(moffat,myImg, "Moffat")
 
     # Check picklability
-    do_pickle(moffat.SBProfile,
-              lambda x: (x.getBeta(), x.getScaleRadius(), x.getTrunc(), x.getFlux(),\
-                         x.getGSParams()))
     do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(moffat)
-    do_pickle(moffat.SBProfile)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1944,10 +1915,8 @@ def test_kolmogorov():
     do_kvalue(kolm,myImg, "Kolmogorov")
 
     # Check picklability
-    do_pickle(kolm.SBProfile, lambda x: (x.getLamOverR0(), x.getFlux(), x.getGSParams()))
     do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(kolm)
-    do_pickle(kolm.SBProfile)
 
     # Test initialization separately with lam and r0, in various units.  Since the above profiles
     # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e9 nm and r0=2.0 m,
@@ -2222,10 +2191,10 @@ def test_spergel():
         # Test integrated flux routines against Mathematica
         spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
         np.testing.assert_almost_equal(
-            spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
+            spergel.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
             err_msg="Calculated incorrect Spergel(nu={0}) flux-enclosing-radius.".format(nu))
         np.testing.assert_almost_equal(
-            spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
+            spergel.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
             err_msg="Calculated incorrect Spergel(nu={0}) enclosed flux.".format(nu))
 
     # Use non-unity values.
@@ -2234,11 +2203,8 @@ def test_spergel():
     check_basic(spergel, "Spergel")
 
     # Check picklability
-    do_pickle(spergel.SBProfile,
-                lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(spergel)
-    do_pickle(spergel.SBProfile)
     do_pickle(galsim.Spergel(0,1))
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
@@ -2455,8 +2421,6 @@ def test_deltaFunction():
     np.testing.assert_almost_equal(delta.flux, test_flux)
     check_basic(delta, "DeltaFunction")
     do_pickle(delta)
-    do_pickle(delta.SBProfile, lambda x: (x.getFlux(), x.getGSParams()))
-    do_pickle(delta.SBProfile)
 
     # Test operations with no-ops on DeltaFunction
     delta_shr = delta.shear(g1=0.3, g2=0.1)

@@ -312,9 +312,9 @@ class RealGalaxy(GSObject):
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
 
-        # Initialize the SBProfile attribute
-        GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams).SBProfile)
+        # Initialize the _sbp attribute
+        self._conv = galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams)
+        self._sbp = self._conv._sbp
         if logger:
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
@@ -389,15 +389,15 @@ class RealGalaxy(GSObject):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
+        del d['_conv']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=self._gsparams)
-        GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams).SBProfile)
-
+        self._conv = galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams)
+        self._sbp = self._conv._sbp
 
 
 class RealGalaxyCatalog(object):

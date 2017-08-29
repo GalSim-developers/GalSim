@@ -103,6 +103,10 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
+    np.testing.assert_almost_equal(
+            prof.getPositiveFlux() - prof.getNegativeFlux(), prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
+
     print('  maxsb: ',prof.maxSB(), image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:

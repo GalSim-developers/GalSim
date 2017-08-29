@@ -128,9 +128,8 @@ class Shapelet(GSObject):
                 raise ValueError("bvec is the wrong size for the provided order")
             self._bvec = np.ascontiguousarray(bvec, dtype=float)
 
-        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                 self.gsparams._gsp)
-        GSObject.__init__(self, sbp)
+        self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                       self.gsparams._gsp)
 
     @classmethod
     def size(cls, order):
@@ -165,7 +164,7 @@ class Shapelet(GSObject):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         ret = Shapelet(self.sigma, self.order, self.bvec.copy())
-        ret.SBProfile.rotate(theta.rad)
+        ret._sbp.rotate(theta.rad)
         return ret
 
     def expand(self, scale):
@@ -195,14 +194,13 @@ class Shapelet(GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                 self.gsparams._gsp)
-        GSObject.__init__(self, sbp)
+        self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                       self.gsparams._gsp)
 
     @classmethod
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
@@ -259,7 +257,7 @@ class Shapelet(GSObject):
             ret._bvec /= image.scale**2
 
         # Update the SBProfile, since it doesn't have the right bvector anymore.
-        sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data, ret.gsparams._gsp)
-        GSObject.__init__(ret, sbp)
+        ret._sbp = _galsim.SBShapelet(ret._sigma, ret._order, ret._bvec.ctypes.data,
+                                      ret.gsparams._gsp)
 
         return ret

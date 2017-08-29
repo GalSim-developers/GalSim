@@ -1085,17 +1085,17 @@ class PhaseScreenPSF(GSObject):
         self._geometric_shooting = geometric_shooting
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
-        # self.SBProfile.stepK(), still work.
+        # self._sbp.stepK(), still work.
         array = np.array([[self._flux]], dtype=np.float)
         bounds = galsim._BoundsI(1, 1, 1, 1)
         wcs = galsim.PixelScale(self.scale)
         image = galsim._Image(array, bounds, wcs)
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
-        dummy_obj = galsim.InterpolatedImage(
+        self._dummy = galsim.InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
-        GSObject.__init__(self, dummy_obj.SBProfile)
+        self._sbp = self._dummy._sbp
 
         self._screen_list._delayCalculation(self)
 
@@ -1207,11 +1207,11 @@ class PhaseScreenPSF(GSObject):
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
 
-        GSObject.__init__(self, self.ii.SBProfile)
+        self._sbp = self.ii._sbp
 
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
-            observed_stepk = self.SBProfile.stepK()
+            observed_stepk = self.ii.stepK()
 
             if observed_stepk < specified_stepk:
                 import warnings
@@ -1227,8 +1227,10 @@ class PhaseScreenPSF(GSObject):
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        del d['SBProfile']
+        del d['_sbp']
         del d['ii']
+        if '_dummy' in d:
+            del d['_dummy']
         return d
 
     def __setstate__(self, d):
@@ -1239,7 +1241,7 @@ class PhaseScreenPSF(GSObject):
                                            _serialize_stepk=self._serialize_stepk,
                                            _serialize_maxk=self._serialize_maxk,
                                            gsparams=self._gsparams)
-        GSObject.__init__(self, self.ii.SBProfile)
+        self._sbp = self.ii._sbp
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -1577,7 +1579,7 @@ class OpticalPSF(GSObject):
                                           ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-        GSObject.__init__(self, self._psf.SBProfile)
+        self._sbp = self._psf._sbp
 
     def getFlux(self):
         return self._flux
@@ -1640,7 +1642,7 @@ class OpticalPSF(GSObject):
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
         d['aper'] = d['_psf'].aper
-        del d['SBProfile']
+        del d['_sbp']
         del d['_psf']
         return d
 
@@ -1655,7 +1657,7 @@ class OpticalPSF(GSObject):
                                           _force_stepk=self._force_stepk,
                                           ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-        GSObject.__init__(self, self._psf.SBProfile)
+        self._sbp = self._psf._sbp
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.

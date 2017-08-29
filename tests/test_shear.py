@@ -31,7 +31,7 @@ except ImportError:
     import galsim
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
-# ellipses using different conventions.  The underlying idea is that in test_SBProfile.py we already
+# ellipses using different conventions.  The underlying idea is that in test_base.py we already
 # have plenty of tests to ensure that a given Shear can be properly applied and gives the
 # expected result.  So here, we just work at the level of Shears that we've defined,
 # and make sure that they have the properties we expect given the values that were used to
@@ -64,7 +64,7 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
     print('test_shear = ',repr(test_shear))
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
-    # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
+    # fact that sometimes the angle is in the range [pi, 2*pi)
     ### note: can only use mult_val = 1, 0, -1
     if mult_val != -1.0 and mult_val != 0.0 and mult_val != 1.0:
         raise ValueError("Cannot put multiplier that is not -1, 0, or 1!")

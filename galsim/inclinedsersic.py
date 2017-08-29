@@ -155,14 +155,14 @@ class InclinedSersic(GSObject):
 
         self._inclination = inclination
         self._gsparams = galsim.GSParams.check(gsparams)
-        GSObject.__init__(self, _galsim.SBInclinedSersic(
+        self._sbp = _galsim.SBInclinedSersic(
                 n, inclination.rad, scale_radius, half_light_radius,
-                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, self.gsparams._gsp))
+                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, self.gsparams._gsp)
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
         """
-        return self.SBProfile.getN()
+        return self._sbp.getN()
 
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
@@ -172,28 +172,28 @@ class InclinedSersic(GSObject):
     def getScaleRadius(self):
         """Return the scale radius for this profile.
         """
-        return self.SBProfile.getScaleRadius()
+        return self._sbp.getScaleRadius()
 
     def getHalfLightRadius(self):
         """Return the half light radius for this profile (or rather, what it would be if the
            profile were face-on).
         """
-        return self.SBProfile.getHalfLightRadius()
+        return self._sbp.getHalfLightRadius()
 
     def getScaleHeight(self):
         """Return the scale height for this profile.
         """
-        return self.SBProfile.getScaleHeight()
+        return self._sbp.getScaleHeight()
 
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
+        return self._sbp.getScaleHeight() / self._sbp.getScaleRadius()
 
     def getTrunc(self):
         """Return the truncation radius for this profile.
         """
-        return self.SBProfile.getTrunc()
+        return self._sbp.getTrunc()
 
     @property
     def n(self): return self.getN()

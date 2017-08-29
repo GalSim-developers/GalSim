@@ -140,8 +140,8 @@ class InclinedExponential(GSObject):
 
         self._inclination = inclination
         self._gsparams = galsim.GSParams.check(gsparams)
-        GSObject.__init__(self, _galsim.SBInclinedExponential(
-                inclination.rad, scale_radius, scale_height, flux, self.gsparams._gsp))
+        self._sbp = _galsim.SBInclinedExponential(
+                inclination.rad, scale_radius, scale_height, flux, self.gsparams._gsp)
 
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
@@ -151,23 +151,23 @@ class InclinedExponential(GSObject):
     def getScaleRadius(self):
         """Return the scale radius for this profile.
         """
-        return self.SBProfile.getScaleRadius()
+        return self._sbp.getScaleRadius()
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Exponential profile.
         """
         # Use the factor from the Exponential class
-        return self.SBProfile.getScaleRadius() * galsim.Exponential._hlr_factor
+        return self._sbp.getScaleRadius() * galsim.Exponential._hlr_factor
 
     def getScaleHeight(self):
         """Return the scale height for this profile.
         """
-        return self.SBProfile.getScaleHeight()
+        return self._sbp.getScaleHeight()
 
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
+        return self._sbp.getScaleHeight() / self._sbp.getScaleRadius()
 
     @property
     def inclination(self): return self._inclination

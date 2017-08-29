@@ -33,6 +33,10 @@ API Changes
   detail of Shapelet, which should not be needed for any use case.  (#809e)
 - The Interpolant base class can no longer be used as a factory function.  Instead, use
   `Interpolant.from_name(name)`.
+- The `SBProfile` attribute of GSObject has changed to `_sbp` and is now officially an
+  implementation detail that users should not need to access.  If you think you have a use case
+  that is not covered by the public API (either for functionality of efficiency), please open
+  an issue.  (#809e)
 
 
 Bug Fixes
