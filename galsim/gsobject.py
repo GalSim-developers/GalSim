@@ -555,6 +555,15 @@ class GSObject(object):
         @returns the surface brightness at that position.
         """
         pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
+        return self._xValue(pos)
+
+    def _xValue(self, pos):
+        """Equivalent to xValue(pos), but pos must be a galsim.PositionD instance
+
+        @param pos      The position at which you want the surface brightness of the object.
+
+        @returns the surface brightness at that position.
+        """
         return self.SBProfile.xValue(pos)
 
     def kValue(self, *args, **kwargs):
@@ -574,6 +583,11 @@ class GSObject(object):
         @returns the amplitude of the fourier transform at that position.
         """
         kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
+        return self._kValue(kpos)
+
+    def _kValue(self, kpos):
+        """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
+        """
         return self.SBProfile.kValue(kpos)
 
     def withFlux(self, flux):
