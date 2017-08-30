@@ -487,13 +487,14 @@ def _det_to_tangplane_positions(x_in, y_in):
     Note that the coefficients given in this routine go in the order {a0, a1, a2}.
 
     """
-    img_dist_coeff = np.array([-1.4976e-02, 3.7053e-03, 3.0186e-02])
+    img_dist_coeff = np.array([-1.0873e-2, 3.5597e-03, 3.6515e-02, -1.8691e-4])
     if not isinstance(x_in, galsim.Angle) or not isinstance(y_in, galsim.Angle):
         raise ValueError("Input x_in and y_in are not galsim.Angles.")
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
     r = np.sqrt(r_sq)
-    dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq
+    dist_fac = 1. + img_dist_coeff[0] + img_dist_coeff[1]*r + img_dist_coeff[2]*r_sq \
+        + img_dist_coeff[3]*r*r_sq
     return x_in/dist_fac, y_in/dist_fac
 
 def allowedPos(world_pos, date):
