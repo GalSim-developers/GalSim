@@ -36,127 +36,26 @@ struct PyHSMParams {
 
     static void wrap() {
 
-        static const char* doc =
-            "HSMParams stores a set of numbers that determine how the moments/shape estimation\n"
-            "routines make speed/accuracy tradeoff decisions and/or store their results.\n"
-            "\n"
-            "The parameters, along with their default values, are as follows:\n"
-            "\n"
-            "nsig_rg           A parameter used to optimize convolutions by cutting off the galaxy\n"
-            "                  profile.  In the first step of the re-Gaussianization method of PSF\n"
-            "                  correction, a Gaussian approximation to the pre-seeing galaxy is\n"
-            "                  calculated. If re-Gaussianization is called with the flag 0x4 (as\n"
-            "                  is the default), then this approximation is cut off at nsig_rg\n"
-            "                  sigma to save computation time in convolutions.\n"
-            "nsig_rg2          A parameter used to optimize convolutions by cutting off the PSF\n"
-            "                  residual profile.  In the re-Gaussianization method of PSF\n"
-            "                  correction, a `PSF residual' (the difference between the true PSF\n"
-            "                  and its best-fit Gaussian approximation) is constructed. If\n"
-            "                  re-Gaussianization is called with the flag 0x8 (as is the default),\n"
-            "                  then this PSF residual is cut off at nsig_rg2 sigma to save\n"
-            "                  computation time in convolutions.\n"
-            "max_moment_nsig2  A parameter for optimizing calculations of adaptive moments by\n"
-            "                  cutting off profiles. This parameter is used to decide how many\n"
-            "                  sigma^2 into the Gaussian adaptive moment to extend the moment\n"
-            "                  calculation, with the weight being defined as 0 beyond this point.\n"
-            "                  i.e., if max_moment_nsig2 is set to 25, then the Gaussian is\n"
-            "                  extended to (r^2/sigma^2)=25, with proper accounting for elliptical\n"
-            "                  geometry.  If this parameter is set to some very large number, then\n"
-            "                  the weight is never set to zero and the exponential function is\n"
-            "                  always called. Note: GalSim script devel/modules/test_mom_timing.py\n"
-            "                  was used to choose a value of 25 as being optimal, in that for the\n"
-            "                  cases that were tested, the speedups were typically factors of\n"
-            "                  several, but the results of moments and shear estimation were\n"
-            "                  changed by <10^-5.  Not all possible cases were checked, and so for\n"
-            "                  use of this code for unusual cases, we recommend that users check\n"
-            "                  that this value does not affect accuracy, and/or set it to some\n"
-            "                  large value to completely disable this optimization.\n"
-            "regauss_too_small A parameter for how strictly the re-Gaussianization code treats\n"
-            "                  small galaxies. If this parameter is 1, then the re-Gaussianization\n"
-            "                  code does not impose a cut on the apparent resolution before trying\n"
-            "                  to measure the PSF-corrected shape of the galaxy; if 0, then it is\n"
-            "                  stricter.  Using the default value of 1 prevents the\n"
-            "                  re-Gaussianization PSF correction from completely failing at the\n"
-            "                  beginning, before trying to do PSF correction, due to the crudest\n"
-            "                  possible PSF correction (Gaussian approximation) suggesting that\n"
-            "                  the galaxy is very small.  This could happen for some usable\n"
-            "                  galaxies particularly when they have very non-Gaussian surface\n"
-            "                  brightness profiles -- for example, if there's a prominent bulge\n"
-            "                  that the adaptive moments attempt to fit, ignoring a more\n"
-            "                  extended disk.  Setting a value of 1 is useful for keeping galaxies\n"
-            "                  that would have failed for that reason.  If they later turn out to\n"
-            "                  be too small to really use, this will be reflected in the final\n"
-            "                  estimate of the resolution factor, and they can be rejected after\n"
-            "                  the fact.\n"
-            "adapt_order       The order to which circular adaptive moments should be calculated\n"
-            "                  for KSB method. This parameter only affects calculations using the\n"
-            "                  KSB method of PSF correction.  Warning: deviating from default\n"
-            "                  value of 2 results in code running more slowly, and results have\n"
-            "                  not been significantly tested.\n"
-            "convergence_threshold  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)\n"
-            "                  when calculating adaptive moments.\n"
-            "max_mom2_iter     Maximum number of iterations to use when calculating adaptive\n"
-            "                  moments.  This should be sufficient in nearly all situations, with\n"
-            "                  the possible exception being very flattened profiles.\n"
-            "num_iter_default   Number of iterations to report in the output ShapeData structure\n"
-            "                   when code fails to converge within max_mom2_iter iterations.\n"
-            "bound_correct_wt   Maximum shift in centroids and sigma between iterations for\n"
-            "                   adaptive moments.\n"
-            "max_amoment        Maximum value for adaptive second moments before throwing\n"
-            "                   exception.  Very large objects might require this value to be\n"
-            "                   increased.\n"
-            "max_ashift         Maximum allowed x / y centroid shift (units: pixels) between\n"
-            "                   successive iterations for adaptive moments before throwing\n"
-            "                   exception.\n"
-            "ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF\n"
-            "                   correction.\n"
-            "ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB\n"
-            "                   method.  Normally, this is derived from the measured moments of the\n"
-            "                   galaxy image; this keyword overrides this calculation.  Can be\n"
-            "                   combined with ksb_sig_factor.\n"
-            "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
-            "                   method (default: 1.0).  Can be combined with ksb_sig_weight.\n"
-            "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
-            "                   measurement fails.\n";
-
-        bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
+        bp::class_<HSMParams> pyHSMParams("HSMParams", bp::no_init);
         pyHSMParams
             .def(bp::init<
                  double, double, double, int, int, double, long, long, double, double, double,
                  int, double, double, double>(
-                     (bp::arg("nsig_rg")=3.0,
-                      bp::arg("nsig_rg2")=3.6,
-                      bp::arg("max_moment_nsig2")=25.0,
-                      bp::arg("regauss_too_small")=1,
-                      bp::arg("adapt_order")=2,
-                      bp::arg("convergence_threshold")=1.e-6,
-                      bp::arg("max_mom2_iter")=400,
-                      bp::arg("num_iter_default")=-1,
-                      bp::arg("bound_correct_wt")=0.25,
-                      bp::arg("max_amoment")=8000.,
-                      bp::arg("max_ashift")=15.,
-                      bp::arg("ksb_moments_max")=4,
-                      bp::arg("ksb_sig_weight")=0.0,
-                      bp::arg("ksb_sig_factor")=1.0,
-                      bp::arg("failed_moments")=-1000.))
-            )
-            .def(bp::init<const HSMParams&>())
-            .def_readonly("nsig_rg",&HSMParams::nsig_rg)
-            .def_readonly("nsig_rg2",&HSMParams::nsig_rg2)
-            .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
-            .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
-            .def_readonly("adapt_order",&HSMParams::adapt_order)
-            .def_readonly("convergence_threshold",&HSMParams::convergence_threshold)
-            .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
-            .def_readonly("num_iter_default",&HSMParams::num_iter_default)
-            .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)
-            .def_readonly("max_amoment",&HSMParams::max_amoment)
-            .def_readonly("max_ashift",&HSMParams::max_ashift)
-            .def_readonly("ksb_moments_max",&HSMParams::ksb_moments_max)
-            .def_readonly("ksb_sig_weight",&HSMParams::ksb_sig_weight)
-            .def_readonly("ksb_sig_factor",&HSMParams::ksb_sig_factor)
-            .def_readonly("failed_moments",&HSMParams::failed_moments)
-            .enable_pickling()
+                     (bp::arg("nsig_rg"),
+                      bp::arg("nsig_rg2"),
+                      bp::arg("max_moment_nsig2"),
+                      bp::arg("regauss_too_small"),
+                      bp::arg("adapt_order"),
+                      bp::arg("convergence_threshold"),
+                      bp::arg("max_mom2_iter"),
+                      bp::arg("num_iter_default"),
+                      bp::arg("bound_correct_wt"),
+                      bp::arg("max_amoment"),
+                      bp::arg("max_ashift"),
+                      bp::arg("ksb_moments_max"),
+                      bp::arg("ksb_sig_weight"),
+                      bp::arg("ksb_sig_factor"),
+                      bp::arg("failed_moments"))))
             ;
     }
 };
@@ -205,7 +104,7 @@ struct PyShapeData {
     static void wrapTemplates() {
         typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&,
                                          double, double, Position<double>,
-                                         boost::shared_ptr<HSMParams>);
+                                         const HSMParams&);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
@@ -216,7 +115,7 @@ struct PyShapeData {
         typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&,
                                          const BaseImage<int>&, float, const char *,
                                          const std::string&, double, double, double, Position<double>,
-                                         boost::shared_ptr<HSMParams>);
+                                         const HSMParams&);
         bp::def("_EstimateShearView",
                 ESH_func(&EstimateShearView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),

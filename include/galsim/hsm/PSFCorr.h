@@ -227,7 +227,6 @@ namespace hsm {
 #endif
 #endif
 #endif
-    const boost::shared_ptr<HSMParams> default_hsmparams(new HSMParams());
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
@@ -419,7 +418,7 @@ namespace hsm {
         const std::string& recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
         galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
-        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        const HSMParams& hsmparams=HSMParams());
 
     /**
      * @brief Measure the adaptive moments of an object directly using Images.
@@ -450,7 +449,7 @@ namespace hsm {
         const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
         double guess_sig = 5.0, double precision = 1.0e-6,
         galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
-        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        const HSMParams& hsmparams=HSMParams());
 
     /**
      * @brief Carry out PSF correction.
@@ -476,7 +475,7 @@ namespace hsm {
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         ObjectData& gal_data, ObjectData& PSF_data,
         const std::string& shear_est, unsigned long flags,
-        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        const HSMParams& hsmparams);
 
     /**
      * @brief Measure the adaptive moments of an object.
@@ -504,7 +503,7 @@ namespace hsm {
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
-        int& num_iter, boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        int& num_iter, const HSMParams& hsmparams);
 
 }
 }

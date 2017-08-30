@@ -58,7 +58,6 @@ with default values, using help(galsim.hsm.HSMParams).
 
 from . import _galsim
 import galsim
-from ._galsim import HSMParams
 import numpy as np
 
 
@@ -263,18 +262,191 @@ _galsim.CppShapeData.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim.CppShapeData.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
-_galsim.HSMParams.__getinitargs__ = lambda self: (
-        self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
-        self.adapt_order, self.convergence_threshold, self.max_mom2_iter, self.num_iter_default,
-        self.bound_correct_wt, self.max_amoment, self.max_ashift,
-        self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor, self.failed_moments)
 
-_galsim.HSMParams.__repr__ = lambda self: \
-        ('galsim.hsm.HSMParams(' + 14*'%r,' + '%r)')%self.__getinitargs__()
+class HSMParams(object):
+    """A collection of parameters that govern how the HSM functions operate.
 
-_galsim.HSMParams.__eq__ = lambda self, other: repr(self) == repr(other)
-_galsim.HSMParams.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.HSMParams.__hash__ = lambda self: hash(repr(self))
+    HSMParams stores a set of numbers that determine how the moments/shape estimation
+    routines make speed/accuracy tradeoff decisions and/or store their results.
+
+    The parameters, along with their default values, are as follows:
+
+    nsig_rg             A parameter used to optimize convolutions by cutting off the galaxy
+                        profile.  In the first step of the re-Gaussianization method of PSF
+                        correction, a Gaussian approximation to the pre-seeing galaxy is
+                        calculated. If nsig_rg > 0, then this approximation is cut off at
+                        nsig_rg sigma to save computation time in convolutions. [default: 3.0]
+    nsig_rg2            A parameter used to optimize convolutions by cutting off the PSF
+                        residual profile.  In the re-Gaussianization method of PSF correction,
+                        a `PSF residual' (the difference between the true PSF and its best-fit
+                        Gaussian approximation) is constructed. If nsig_rg2 > 0, then this PSF
+                        residual is cut off at nsig_rg2 sigma to save computation time in
+                        convolutions. [default: 3.6]
+    max_moment_nsig2    A parameter for optimizing calculations of adaptive moments by
+                        cutting off profiles. This parameter is used to decide how many
+                        sigma^2 into the Gaussian adaptive moment to extend the moment
+                        calculation, with the weight being defined as 0 beyond this point.
+                        i.e., if max_moment_nsig2 is set to 25, then the Gaussian is
+                        extended to (r^2/sigma^2)=25, with proper accounting for elliptical
+                        geometry.  If this parameter is set to some very large number, then
+                        the weight is never set to zero and the exponential function is
+                        always called. Note: GalSim script devel/modules/test_mom_timing.py
+                        was used to choose a value of 25 as being optimal, in that for the
+                        cases that were tested, the speedups were typically factors of
+                        several, but the results of moments and shear estimation were
+                        changed by <10^-5.  Not all possible cases were checked, and so for
+                        use of this code for unusual cases, we recommend that users check
+                        that this value does not affect accuracy, and/or set it to some
+                        large value to completely disable this optimization. [default: 25.0]
+    regauss_too_small   A parameter for how strictly the re-Gaussianization code treats
+                        small galaxies. If this parameter is 1, then the re-Gaussianization
+                        code does not impose a cut on the apparent resolution before trying
+                        to measure the PSF-corrected shape of the galaxy; if 0, then it is
+                        stricter.  Using the default value of 1 prevents the
+                        re-Gaussianization PSF correction from completely failing at the
+                        beginning, before trying to do PSF correction, due to the crudest
+                        possible PSF correction (Gaussian approximation) suggesting that
+                        the galaxy is very small.  This could happen for some usable
+                        galaxies particularly when they have very non-Gaussian surface
+                        brightness profiles -- for example, if there's a prominent bulge
+                        that the adaptive moments attempt to fit, ignoring a more
+                        extended disk.  Setting a value of 1 is useful for keeping galaxies
+                        that would have failed for that reason.  If they later turn out to
+                        be too small to really use, this will be reflected in the final
+                        estimate of the resolution factor, and they can be rejected after
+                        the fact. [default: 1]
+    adapt_order         The order to which circular adaptive moments should be calculated
+                        for KSB method. This parameter only affects calculations using the
+                        KSB method of PSF correction.  Warning: deviating from default
+                        value of 2 results in code running more slowly, and results have
+                        not been significantly tested. [default: 2]
+    convergence_threshold  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)
+                        when calculating adaptive moments. [default: 1.e-6]
+    max_mom2_iter       Maximum number of iterations to use when calculating adaptive
+                        moments.  This should be sufficient in nearly all situations, with
+                        the possible exception being very flattened profiles. [default: 400]
+    num_iter_default    Number of iterations to report in the output ShapeData structure
+                        when code fails to converge within max_mom2_iter iterations. [default: -1]
+    bound_correct_wt    Maximum shift in centroids and sigma between iterations for
+                        adaptive moments. [default: 0.25]
+    max_amoment         Maximum value for adaptive second moments before throwing
+                        exception.  Very large objects might require this value to be
+                        increased. [default: 8000]
+    max_ashift          Maximum allowed x / y centroid shift (units: pixels) between
+                        successive iterations for adaptive moments before throwing
+                        exception. [default: 15]
+    ksb_moments_max     Use moments up to ksb_moments_max order for KSB method of PSF
+                        correction. [default: 4]
+    ksb_sig_weight      The width of the weight function (in pixels) to use for the KSB
+                        method.  Normally, this is derived from the measured moments of the
+                        galaxy image; this keyword overrides this calculation.  Can be
+                        combined with ksb_sig_factor. [default: 0.0]
+    ksb_sig_factor      Factor by which to multiply the weight function width for the KSB
+                        method (default: 1.0).  Can be combined with ksb_sig_weight. [default: 1.0]
+    failed_moments      Value to report for ellipticities and resolution factor if shape
+                        measurement fails. [default: -1000.]
+    """
+    def __init__(self, nsig_rg=3.0, nsig_rg2=3.6, max_moment_nsig2=25.0, regauss_too_small=1,
+                 adapt_order=2, convergence_threshold=1.e-6, max_mom2_iter=400,
+                 num_iter_default=-1, bound_correct_wt=0.25, max_amoment=8000., max_ashift=15.,
+                 ksb_moments_max=4, ksb_sig_weight=0.0, ksb_sig_factor=1.0, failed_moments=-1000.):
+
+        self._nsig_rg = nsig_rg
+        self._nsig_rg2 = nsig_rg2
+        self._nsig_rg2 = nsig_rg2
+        self._max_moment_nsig2 = max_moment_nsig2
+        self._regauss_too_small = regauss_too_small
+        self._adapt_order = adapt_order
+        self._convergence_threshold = convergence_threshold
+        self._max_mom2_iter = max_mom2_iter
+        self._num_iter_default = num_iter_default
+        self._bound_correct_wt = bound_correct_wt
+        self._max_amoment = max_amoment
+        self._max_ashift = max_ashift
+        self._ksb_moments_max = ksb_moments_max
+        self._ksb_sig_weight = ksb_sig_weight
+        self._ksb_sig_factor = ksb_sig_factor
+        self._failed_moments = failed_moments
+        self._make_hsmp()
+
+    def _make_hsmp(self):
+        self._hsmp = _galsim.HSMParams(*self._getinitargs())
+
+    def _getinitargs(self):
+        return (self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
+                self.adapt_order, self.convergence_threshold, self.max_mom2_iter,
+                self.num_iter_default, self.bound_correct_wt, self.max_amoment, self.max_ashift,
+                self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor,
+                self.failed_moments)
+
+    @property
+    def nsig_rg(self): return self._nsig_rg
+    @property
+    def nsig_rg2(self): return self._nsig_rg2
+    @property
+    def nsig_rg2(self): return self._nsig_rg2
+    @property
+    def max_moment_nsig2(self): return self._max_moment_nsig2
+    @property
+    def regauss_too_small(self): return self._regauss_too_small
+    @property
+    def adapt_order(self): return self._adapt_order
+    @property
+    def convergence_threshold(self): return self._convergence_threshold
+    @property
+    def max_mom2_iter(self): return self._max_mom2_iter
+    @property
+    def num_iter_default(self): return self._num_iter_default
+    @property
+    def bound_correct_wt(self): return self._bound_correct_wt
+    @property
+    def max_amoment(self): return self._max_amoment
+    @property
+    def max_ashift(self): return self._max_ashift
+    @property
+    def ksb_moments_max(self): return self._ksb_moments_max
+    @property
+    def ksb_sig_weight(self): return self._ksb_sig_weight
+    @property
+    def ksb_sig_factor(self): return self._ksb_sig_factor
+    @property
+    def failed_moments(self): return self._failed_moments
+
+    @staticmethod
+    def check(hsmparams, default=None):
+        """Checks that hsmparams is either a valid HSMParams instance or None.
+
+        In the former case, it returns hsmparams, in the latter it returns default
+        (HSMParams.default if no other default specified).
+        """
+        if hsmparams is None:
+            return default if default is not None else HSMParams.default
+        elif not isinstance(hsmparams, GSParams):
+            raise TypeError("Invalid GSParams: %s"%hsmparams)
+        else:
+            return hsmparams
+
+    def __repr__(self):
+        return ('galsim.hsm.HSMParams(' + 14*'%r,' + '%r)')%self._getinitargs()
+
+    def __eq__(self, other):
+        return isinstance(other, HSMParams) and self._getinitargs() == other._getinitargs()
+    def __ne__(self, other):
+        return not (self == other)
+    def __hash__(self):
+        return hash(('galsim.HSMParams', self._getinitargs()))
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_hsmp']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._make_hsmp()
+
+# We use the default a lot, so make it a class attribute.
+HSMParams.default = HSMParams()
 
 
 # A helper function for taking input weight and badpix Images, and returning a weight Image in the
@@ -383,8 +555,8 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
 
     After running the above code, `result.observed_shape` is a galsim.Shear object with a value of
     `(0.0438925349133, -2.85747392701e-18)` and `result.corrected_e1`, `result_corrected_e2` are
-    `(0.09934103488922119, -3.746108423463568e-10)`, compared with the expected `(0.09975, 0)` for a perfect
-    PSF correction method.
+    `(0.09934103488922119, -3.746108423463568e-10)`, compared with the expected `(0.09975, 0)` for
+    a perfect PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
@@ -443,6 +615,8 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
     weight = _convertMask(gal_image, weight=weight, badpix=badpix)
+    if hsmparams is None:
+        hsmparams = HSMParams.default
 
     if guess_centroid is None:
         guess_centroid = gal_image.trueCenter()
@@ -455,7 +629,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                                             guess_sig_PSF = guess_sig_PSF,
                                             precision = precision,
                                             guess_centroid = guess_centroid,
-                                            hsmparams = hsmparams)
+                                            hsmparams = hsmparams._hsmp)
     except RuntimeError as err:
         if (strict == True):
             raise
@@ -552,6 +726,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
     weight = _convertMask(object_image, weight=weight, badpix=badpix)
+    if hsmparams is None:
+        hsmparams = HSMParams.default
 
     if guess_centroid is None:
         guess_centroid = object_image.trueCenter()
@@ -560,7 +736,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         result = _galsim._FindAdaptiveMomView(object_image.image, weight.image,
                                               guess_sig = guess_sig, precision =  precision,
                                               guess_centroid = guess_centroid,
-                                              hsmparams = hsmparams)
+                                              hsmparams = hsmparams._hsmp)
     except RuntimeError as err:
         if (strict == True):
             raise
