@@ -83,7 +83,7 @@ def test_structure_function():
 
     atm = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
                                    r0_500=r0_500, L0=L0, rng=rng)
-    phase = atm._tab2d.table.getVals()[:-1, :-1].copy()
+    phase = atm._tab2d.getVals()[:-1, :-1].copy()
     phase *= 2 * np.pi / 500.0  # nm -> radians
     im = galsim.Image(phase, scale=screen_scale)
     D_sim = galsim.utilities.structure_function(im)
