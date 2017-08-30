@@ -65,7 +65,6 @@ namespace {
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
                                   "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
                                   "vertex_data"))))
-                .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);
             wrapTemplates<float>(pySilicon);

@@ -64,7 +64,6 @@ namespace {
                     bp::args("N", "x", "y", "flux", "dxdz", "dydz", "wavelength", "is_corr")))
                 .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
                      "Convolve this PhotonArray with another")
-                .enable_pickling()
                 ;
             wrapTemplates<double>(pyPhotonArray);
             wrapTemplates<float>(pyPhotonArray);

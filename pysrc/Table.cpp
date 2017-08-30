@@ -142,10 +142,6 @@ namespace {
 void pyExportTable()
 {
     PyTable::wrap();
-}
-
-void pyExportTable2D()
-{
     PyTable2D::wrap();
 }
 

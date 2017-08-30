@@ -307,27 +307,3 @@ class Lanczos(Interpolant):
     def __str__(self):
         return "galsim.Lanczos(%s, %s)"%(self._n, self._tol)
 
-
-
-_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
-_galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Nearest.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.SincInterpolant.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Linear.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
-
-_galsim.Interpolant.__repr__ = lambda self: 'galsim._galsim.Interpolant(%r, %r)'%self.__getinitargs__()
-_galsim.Delta.__repr__ = lambda self: 'galsim._galsim.Delta(%r)'%self.getTol()
-_galsim.Nearest.__repr__ = lambda self: 'galsim._galsim.Nearest(%r)'%self.getTol()
-_galsim.SincInterpolant.__repr__ = lambda self: 'galsim._galsim.SincInterpolant(%r)'%self.getTol()
-_galsim.Linear.__repr__ = lambda self: 'galsim._galsim.Linear(%r)'%self.getTol()
-_galsim.Cubic.__repr__ = lambda self: 'galsim._galsim.Cubic(%r)'%self.getTol()
-_galsim.Quintic.__repr__ = lambda self: 'galsim._galsim.Quintic(%r)'%self.getTol()
-_galsim.Lanczos.__repr__ = lambda self: 'galsim._galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
-
-# Quick and dirty.  Just check reprs are equal.
-_galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
-_galsim.Interpolant.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.Interpolant.__hash__ = lambda self: hash(repr(self))
