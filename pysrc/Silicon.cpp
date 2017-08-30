@@ -21,7 +21,6 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/python.hpp> // header that includes Python.h always needs to come first
-#include <boost/python/stl_iterator.hpp>
 
 #include "Silicon.h"
 #include "Random.h"

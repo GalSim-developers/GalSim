@@ -21,6 +21,7 @@
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
+
 #include "SBInterpolatedImage.h"
 
 namespace bp = boost::python;
