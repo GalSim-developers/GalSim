@@ -164,7 +164,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             self._origin = galsim.PositionD(0,0)
         else:
             if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
+                origin = galsim.PositionD(origin)
             elif not isinstance(origin, galsim.PositionD):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
@@ -462,7 +462,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             self._origin = galsim.PositionD(0,0)
         else:
             if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
+                origin = galsim.PositionD(origin)
             elif not isinstance(origin, galsim.PositionD):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
@@ -684,7 +684,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             self._origin = galsim.PositionD(0,0)
         else:
             if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
+                origin = galsim.PositionD(origin)
             elif not isinstance(origin, galsim.PositionD):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin

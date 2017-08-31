@@ -142,9 +142,13 @@ class ShapeData(object):
         # Avoid empty string, which can caus problems in C++ layer.
         if error_message == "": error_message = "None"
 
+        if not isinstance(image_bounds, galsim.BoundsI):
+            raise TypeError("image_bounds must be a BoundsI instance")
+        # The others will raise an appropriate TypeError from the call to _galsim.ShapeData.
+
         self._data = _galsim.ShapeData(
-            image_bounds, moments_status, observed_shape.e1, observed_shape.e2,
-            moments_sigma, moments_amp, moments_centroid, moments_rho4,
+            image_bounds._b, moments_status, observed_shape.e1, observed_shape.e2,
+            moments_sigma, moments_amp, moments_centroid._p, moments_rho4,
             moments_n_iter, correction_status, corrected_e1, corrected_e2,
             corrected_g1, corrected_g2, meas_type, corrected_shape_err,
             correction_method, resolution_factor, psf_sigma,
@@ -152,7 +156,7 @@ class ShapeData(object):
 
 
     @property
-    def image_bounds(self): return self._data.image_bounds
+    def image_bounds(self): return galsim.BoundsI(self._data.image_bounds)
     @property
     def moments_status(self): return self._data.moments_status
 
@@ -165,7 +169,7 @@ class ShapeData(object):
     @property
     def moments_amp(self): return self._data.moments_amp
     @property
-    def moments_centroid(self): return self._data.moments_centroid
+    def moments_centroid(self): return galsim.PositionD(self._data.moments_centroid)
     @property
     def moments_rho4(self): return self._data.moments_rho4
     @property
@@ -619,7 +623,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                                    guess_sig_gal = guess_sig_gal,
                                    guess_sig_PSF = guess_sig_PSF,
                                    precision = precision,
-                                   guess_centroid = guess_centroid,
+                                   guess_centroid = guess_centroid._p,
                                    hsmparams = hsmparams._hsmp)
         return result
     except RuntimeError as err:
@@ -728,7 +732,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         _galsim._FindAdaptiveMomView(result._data,
                                      object_image.image, weight.image,
                                      guess_sig = guess_sig, precision =  precision,
-                                     guess_centroid = guess_centroid,
+                                     guess_centroid = guess_centroid._p,
                                      hsmparams = hsmparams._hsmp)
         return result
     except RuntimeError as err:

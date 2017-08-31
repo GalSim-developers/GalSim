@@ -251,7 +251,7 @@ class Shapelet(GSObject):
                                         "with a non-trivial WCS.")
 
         _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
-                                 image.image, image.scale, center)
+                                 image.image, image.scale, center._p)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             ret._bvec /= image.scale**2

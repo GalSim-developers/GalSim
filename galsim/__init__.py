@@ -91,7 +91,7 @@ version = __version__
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else
-from .position import PositionI, PositionD
+from .position import Position, PositionI, PositionD
 from .bounds import BoundsI, BoundsD, _BoundsI
 from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec

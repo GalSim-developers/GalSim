@@ -42,6 +42,7 @@ import numpy as np
 
 import galsim
 from . import _galsim
+from .utilities import lazy_property
 
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
@@ -211,7 +212,7 @@ class GSObject(object):
 
     # Note: subclasses are expected to define self._sbp and self._gsparams in their inits.
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         return None
 
@@ -318,7 +319,7 @@ class GSObject(object):
     def centroid(self):
         """Returns the (x, y) centroid of an object as a Position.
         """
-        return self._sbp.centroid()
+        return galsim.PositionD(self._sbp.centroid())
 
     def getFlux(self):
         """Returns the flux of the object.
@@ -594,7 +595,7 @@ class GSObject(object):
 
         @returns the surface brightness at that position.
         """
-        return self._sbp.xValue(pos)
+        return self._sbp.xValue(pos._p)
 
     def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
@@ -618,7 +619,7 @@ class GSObject(object):
     def _kValue(self, kpos):
         """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
-        return self._sbp.kValue(kpos)
+        return self._sbp.kValue(kpos._p)
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
@@ -1592,7 +1593,7 @@ class GSObject(object):
         N = self.getGoodImageSize(image.scale)
 
         # We must make something big enough to cover the target image size:
-        image_N = max(np.max(np.abs((image.bounds.__getinitargs__()))) * 2,
+        image_N = max(np.max(np.abs((image.bounds._getinitargs()))) * 2,
                       np.max(image.bounds.numpyShape()))
         N = max(N, image_N)
 
@@ -1643,7 +1644,7 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        _galsim.wrapImage(kimage.image, bwrap, True, False)
+        _galsim.wrapImage(kimage.image, bwrap._b, True, False)
         kimage_wrap = kimage.subImage(bwrap)
 
         # Perform the fourier transform.

@@ -31,23 +31,14 @@ namespace {
 template <typename T>
 struct PyPosition {
 
-    static bp::class_< Position<T> > wrap(std::string const & suffix) {
+    static void wrap(std::string const & suffix) {
 
         bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
-        pyPosition.def(bp::init< const Position<T>& >(bp::args("other")))
-            .def(bp::init<T,T>((bp::arg("x")=T(0), bp::arg("y")=T(0))))
+        pyPosition
+            .def(bp::init<T,T>((bp::arg("x"), bp::arg("y"))))
             .def_readonly("x", &Position<T>::x)
             .def_readonly("y", &Position<T>::y)
-            .def(bp::self * bp::other<T>())
-            .def("__div__", &Position<T>::operator/)
-            .def("__truediv__", &Position<T>::operator/)
-            .def(bp::other<T>() * bp::self)
-            .def(-bp::self)
-            .def(bp::self + bp::self)
-            .def(bp::self - bp::self)
-            .enable_pickling()
             ;
-        return pyPosition;
     }
 
 };
@@ -59,32 +50,6 @@ struct PyBounds {
         bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::init<>());
         pyBounds
             .def(bp::init<T,T,T,T>(bp::args("xmin","xmax","ymin","ymax")))
-            .def(bp::init< const Position<T>& >(bp::args("pos")))
-            .def(bp::init< const Position<T>&, const Position<T>& >(bp::args("pos1", "pos2")))
-            .def("copy", &Bounds<T>::copy)
-            .def("isDefined", &Bounds<T>::isDefined)
-            .def("origin", &Bounds<T>::origin)
-            .def("center", &Bounds<T>::center)
-            .def("trueCenter", &Bounds<T>::trueCenter)
-            // Note: the python methods always use the version that returns a new bounds object.
-            // This matches the typical python style of objects being immutable, and you get
-            // new objects back when you want to change them.
-            .def("withBorder", &Bounds<T>::withBorder)
-            .def("expand", &Bounds<T>::makeExpanded, "grow by the given factor about center")
-            .def(bp::self & bp::self)
-            .def("shift", (Bounds<T> (Bounds<T>::*)(const Position<T>&) const)&Bounds<T>::makeShifted,
-                           bp::args("delta"))
-            .def("includes", (bool (Bounds<T>::*)(const Position<T>&) const)&Bounds<T>::includes)
-            .def("includes", (bool (Bounds<T>::*)(const T, const T) const)&Bounds<T>::includes)
-            .def("includes", (bool (Bounds<T>::*)(const Bounds<T>&) const)&Bounds<T>::includes)
-            .def("area", &Bounds<T>::area)
-            .def(bp::self + bp::self)
-            .def(bp::self + bp::other< Position<T> >())
-            .def(bp::self + bp::other<T>())
-            .def("getXMin", &Bounds<T>::getXMin)
-            .def("getXMax", &Bounds<T>::getXMax)
-            .def("getYMin", &Bounds<T>::getYMin)
-            .def("getYMax", &Bounds<T>::getYMax)
             .add_property("xmin", &Bounds<T>::getXMin)
             .add_property("xmax", &Bounds<T>::getXMax)
             .add_property("ymin", &Bounds<T>::getYMin)
@@ -98,17 +63,9 @@ struct PyBounds {
 } // anonymous
 
 void pyExportBounds() {
-    bp::class_<Position<double> > pyPosD = PyPosition<double>::wrap("D");
-    // Add PositionD [+-] PositionI operators.
-    // Note, *don't* add augmented assignment operators, since python Positions should be immutable.
-    pyPosD
-        .def(bp::self + bp::other<Position<int> >())
-        .def(bp::other<Position<int> >() + bp::self)
-        .def(bp::self - bp::other<Position<int> >())
-        .def(bp::other<Position<int> >() - bp::self)
-        ;
-    PyBounds<double>::wrap("D");
+    PyPosition<double>::wrap("D");
     PyPosition<int>::wrap("I");
+    PyBounds<double>::wrap("D");
     PyBounds<int>::wrap("I");
 }
 

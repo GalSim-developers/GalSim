@@ -1144,11 +1144,11 @@ class PowerSpectrum(object):
                         (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
                         (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    g1.append(sbii_g1.xValue((wrap_pos-self.center)/self.grid_spacing))
-                    g2.append(sbii_g2.xValue((wrap_pos-self.center)/self.grid_spacing))
+                    g1.append(sbii_g1.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
+                    g2.append(sbii_g2.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
             else:
-                g1.append(sbii_g1.xValue((iter_pos-self.center)/self.grid_spacing))
-                g2.append(sbii_g2.xValue((iter_pos-self.center)/self.grid_spacing))
+                g1.append(sbii_g1.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
+                g2.append(sbii_g2.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
 
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0]
@@ -1258,9 +1258,9 @@ class PowerSpectrum(object):
                         (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
                         (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    kappa.append(sbii_kappa.xValue((wrap_pos-self.center)/self.grid_spacing))
+                    kappa.append(sbii_kappa.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
             else:
-                kappa.append(sbii_kappa.xValue((iter_pos-self.center)/self.grid_spacing))
+                kappa.append(sbii_kappa.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
 
         if isinstance(pos, galsim.PositionD):
             return kappa[0]
@@ -1377,10 +1377,10 @@ class PowerSpectrum(object):
                         (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
                         (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    mu.append(sbii_mu.xValue((wrap_pos-self.center)/self.grid_spacing)+1.)
+                    mu.append(sbii_mu.xValue(((wrap_pos-self.center)/self.grid_spacing)._p)+1.)
 
             else:
-                mu.append(sbii_mu.xValue((iter_pos-self.center)/self.grid_spacing)+1.)
+                mu.append(sbii_mu.xValue(((iter_pos-self.center)/self.grid_spacing)._p)+1.)
 
         if isinstance(pos, galsim.PositionD):
             return mu[0]
@@ -1512,14 +1512,14 @@ class PowerSpectrum(object):
                         (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
                         (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    g1.append(sbii_g1.xValue((wrap_pos-self.center)/self.grid_spacing))
-                    g2.append(sbii_g2.xValue((wrap_pos-self.center)/self.grid_spacing))
-                    mu.append(sbii_mu.xValue((wrap_pos-self.center)/self.grid_spacing)+1.)
+                    g1.append(sbii_g1.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
+                    g2.append(sbii_g2.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
+                    mu.append(sbii_mu.xValue(((wrap_pos-self.center)/self.grid_spacing)._p)+1.)
 
             else:
-                g1.append(sbii_g1.xValue((iter_pos-self.center)/self.grid_spacing))
-                g2.append(sbii_g2.xValue((iter_pos-self.center)/self.grid_spacing))
-                mu.append(sbii_mu.xValue((iter_pos-self.center)/self.grid_spacing)+1.)
+                g1.append(sbii_g1.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
+                g2.append(sbii_g2.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
+                mu.append(sbii_mu.xValue(((iter_pos-self.center)/self.grid_spacing)._p)+1.)
 
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0], mu[0]

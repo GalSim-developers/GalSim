@@ -460,7 +460,7 @@ class Image(object):
         return cls(self._array.ctypes.data,
                    self._array.strides[1]//self._array.itemsize,
                    self._array.strides[0]//self._array.itemsize,
-                   self._bounds)
+                   self._bounds._b)
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -691,19 +691,19 @@ class Image(object):
         # possibly writing data past the edge of the image.
         ret = self.subImage(bounds);
         if not hermitian:
-            _galsim.wrapImage(self.image, bounds, False, False)
+            _galsim.wrapImage(self.image, bounds._b, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
             if bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
-            _galsim.wrapImage(self.image, bounds, True, False)
+            _galsim.wrapImage(self.image, bounds._b, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
             if bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
-            _galsim.wrapImage(self.image, bounds, False, True)
+            _galsim.wrapImage(self.image, bounds._b, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return ret;
@@ -886,7 +886,7 @@ class Image(object):
             raise ValueError("calculate_inverse_fft requires that the image has a PixelScale wcs.")
         if not self.bounds.isDefined():
             raise ValueError("calculate_inverse_fft requires that the image have defined bounds.")
-        if not self.bounds.includes(galsim.PositionI(0,0)):
+        if not self.bounds.includes(0,0):
             raise ValueError("calculate_inverse_fft requires that the image includes point (0,0)")
 
         No2 = max(self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax)
@@ -1051,7 +1051,7 @@ class Image(object):
             galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
-        self._shift(cen - self.bounds.center())
+        self._shift(cen - self.center())
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -1087,7 +1087,7 @@ class Image(object):
             galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
          """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
-        self._shift(origin - self.bounds.origin())
+        self._shift(origin - self.origin())
 
     def center(self):
         """Return the current nominal center (xcen,ycen) of the image as a PositionI instance.
@@ -1172,7 +1172,7 @@ class Image(object):
         """
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to access values of an undefined image")
-        if not self.bounds.includes(galsim.PositionI(x,y)):
+        if not self.bounds.includes(x,y):
             raise RuntimeError("Attempt to access position %s,%s, not in bounds %s"%(x,y,self.bounds))
         return self._getValue(x,y)
 

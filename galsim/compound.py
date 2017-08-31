@@ -1218,15 +1218,10 @@ class RandomWalk(galsim.GSObject):
                 gsparams=self.gsparams._gsp,
             )
 
-            pos = galsim.PositionD(p[0],p[1])
-
             g = galsim._galsim.SBTransform(
                 g,
-                1.0,
-                0.0,
-                0.0,
-                1.0,
-                pos,
+                1.0, 0.0, 0.0, 1.0,
+                galsim._galsim.PositionD(p[0],p[1]),
                 1.0,
                 self.gsparams._gsp,
             )

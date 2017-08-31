@@ -747,7 +747,8 @@ class InterpolatedKImage(GSObject):
 
         if kimage.wcs is not None:
             sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                      galsim.PositionD(0.,0.), kimage.scale**2, self.gsparams._gsp)
+                                      galsim._galsim.PositionD(0.,0.), kimage.scale**2,
+                                      self.gsparams._gsp)
         else:
             sbp = sbiki
         self._sbp = _galsim.SBAdd([sbp], self.gsparams._gsp)
@@ -800,8 +801,9 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
             ret._kimage.image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
+
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                              galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
+                              galsim._galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
     ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
     return ret
 
