@@ -130,89 +130,79 @@ class ShapeData(object):
     routines that measure object moments (FindAdaptiveMom()) and carry out PSF correction
     (EstimateShear()).
     """
-    def __init__(self, *args, **kwargs):
-        # arg checking: require either a CppShapeData, or nothing
-        if len(args) > 1:
-            raise TypeError("Too many arguments to initialize ShapeData!")
-        elif len(args) == 1:
-            if isinstance(args[0], ShapeData):
-                data = args[0]
-                self.observed_shape = data.observed_shape
-                self.psf_shape = data.psf_shape
-            elif isinstance(args[0], _galsim.CppShapeData):
-                data = args[0]
-                self.observed_shape = galsim.Shear(e1=data.observed_e1, e2=data.observed_e2)
-                self.psf_shape = galsim.Shear(e1=data.psf_e1, e2=data.psf_e2)
-            else:
-                raise TypeError("Non keyword argument must be a ShapeData or CppShapeData!")
-            self.image_bounds = data.image_bounds
-            self.moments_status = data.moments_status
-            self.moments_sigma = data.moments_sigma
-            self.moments_amp = data.moments_amp
-            self.moments_centroid = data.moments_centroid
-            self.moments_rho4 = data.moments_rho4
-            self.moments_n_iter = data.moments_n_iter
-            self.correction_status = data.correction_status
-            self.corrected_e1 = data.corrected_e1
-            self.corrected_e2 = data.corrected_e2
-            self.corrected_g1 = data.corrected_g1
-            self.corrected_g2 = data.corrected_g2
-            self.meas_type = data.meas_type
-            self.corrected_shape_err = data.corrected_shape_err
-            self.correction_method = data.correction_method
-            self.resolution_factor = data.resolution_factor
-            self.psf_sigma = data.psf_sigma
-            # We use "None" in CppShapeData to indicate no error messages to avoid problems on
-            # (some) Macs using zero-length strings.  Here, we revert that back to "".
-            if data.error_message == "None":
-                self.error_message = ""
-            else:
-                self.error_message = data.error_message
-        else:
-            self.image_bounds = _galsim.BoundsI()
-            self.moments_status = -1
-            self.observed_shape = galsim.Shear()
-            self.moments_sigma = -1.0
-            self.moments_amp = -1.0
-            self.moments_centroid = _galsim.PositionD()
-            self.moments_rho4 = -1.0
-            self.moments_n_iter = 0
-            self.correction_status = -1
-            self.corrected_e1 = -10.
-            self.corrected_e2 = -10.
-            self.corrected_g1 = -10.
-            self.corrected_g2 = -10.
-            self.meas_type = "None"
-            self.corrected_shape_err = -1.0
-            self.correction_method = "None"
-            self.resolution_factor = -1.0
-            self.psf_sigma = -1.0
-            self.psf_shape = galsim.Shear()
-            self.error_message = ""
+    def __init__(self, image_bounds=galsim.BoundsI(), moments_status=-1,
+                 observed_shape=galsim.Shear(), moments_sigma=-1.0, moments_amp=-1.0,
+                 moments_centroid=galsim.PositionD(), moments_rho4=-1.0, moments_n_iter=0,
+                 correction_status=-10, corrected_e1=-10., corrected_e2=-10.,
+                 corrected_g1=-10., corrected_g2=-10., meas_type="None",
+                 corrected_shape_err=-1.0, correction_method="None",
+                 resolution_factor=-1.0, psf_sigma=-1.0,
+                 psf_shape=galsim.Shear(), error_message=""):
 
-        self.image_bounds = kwargs.pop('image_bounds', self.image_bounds)
-        self.moments_status = kwargs.pop('moments_status', self.moments_status)
-        self.observed_shape = kwargs.pop('observed_shape', self.observed_shape)
-        self.moments_sigma = kwargs.pop('moments_sigma', self.moments_sigma)
-        self.moments_amp = kwargs.pop('moments_amp', self.moments_amp)
-        self.moments_centroid = kwargs.pop('moments_centroid', self.moments_centroid)
-        self.moments_rho4 = kwargs.pop('moments_rho4', self.moments_rho4)
-        self.moments_n_iter = kwargs.pop('moments_n_iter', self.moments_n_iter)
-        self.correction_status = kwargs.pop('correction_status', self.correction_status)
-        self.corrected_e1 = kwargs.pop('corrected_e1', self.corrected_e1)
-        self.corrected_e2 = kwargs.pop('corrected_e2', self.corrected_e2)
-        self.corrected_g1 = kwargs.pop('corrected_g1', self.corrected_g1)
-        self.corrected_g2 = kwargs.pop('corrected_g2', self.corrected_g2)
-        self.meas_type = kwargs.pop('meas_type', self.meas_type)
-        self.corrected_shape_err = kwargs.pop('corrected_shape_err', self.corrected_shape_err)
-        self.correction_method = kwargs.pop('correction_method', self.correction_method)
-        self.resolution_factor = kwargs.pop('resolution_factor', self.resolution_factor)
-        self.psf_sigma = kwargs.pop('psf_sigma', self.psf_sigma)
-        self.psf_shape = kwargs.pop('psf_shape', self.psf_shape)
-        self.error_message = kwargs.pop('error_message', self.error_message)
-        if kwargs:
-            raise TypeError(
-                "ShapeData constructor got unexpected extra argument(s): %s"%kwargs.keys())
+        # Avoid empty string, which can caus problems in C++ layer.
+        if error_message == "": error_message = "None"
+
+        self._data = _galsim.ShapeData(
+            image_bounds, moments_status, observed_shape.e1, observed_shape.e2,
+            moments_sigma, moments_amp, moments_centroid, moments_rho4,
+            moments_n_iter, correction_status, corrected_e1, corrected_e2,
+            corrected_g1, corrected_g2, meas_type, corrected_shape_err,
+            correction_method, resolution_factor, psf_sigma,
+            psf_shape.e1, psf_shape.e2, error_message)
+
+
+    @property
+    def image_bounds(self): return self._data.image_bounds
+    @property
+    def moments_status(self): return self._data.moments_status
+
+    @property
+    def observed_shape(self):
+        return galsim.Shear(e1=self._data.observed_e1, e2=self._data.observed_e2)
+
+    @property
+    def moments_sigma(self): return self._data.moments_sigma
+    @property
+    def moments_amp(self): return self._data.moments_amp
+    @property
+    def moments_centroid(self): return self._data.moments_centroid
+    @property
+    def moments_rho4(self): return self._data.moments_rho4
+    @property
+    def moments_n_iter(self): return self._data.moments_n_iter
+    @property
+    def correction_status(self): return self._data.correction_status
+    @property
+    def corrected_e1(self): return self._data.corrected_e1
+    @property
+    def corrected_e2(self): return self._data.corrected_e2
+    @property
+    def corrected_g1(self): return self._data.corrected_g1
+    @property
+    def corrected_g2(self): return self._data.corrected_g2
+    @property
+    def meas_type(self): return self._data.meas_type
+    @property
+    def corrected_shape_err(self): return self._data.corrected_shape_err
+    @property
+    def correction_method(self): return self._data.correction_method
+    @property
+    def resolution_factor(self): return self._data.resolution_factor
+    @property
+    def psf_sigma(self): return self._data.psf_sigma
+
+    @property
+    def psf_shape(self):
+        return galsim.Shear(e1=self._data.psf_e1, e2=self._data.psf_e2)
+
+    @property
+    def error_message(self):
+        # We use "None" in C++ ShapeData to indicate no error messages to avoid problems on
+        # (some) Macs using zero-length strings.  Here, we revert that back to "".
+        if self._data.error_message == "None":
+            return ""
+        else:
+            return self._data.error_message
 
     def __repr__(self):
         s = 'galsim.hsm.ShapeData('
@@ -242,25 +232,24 @@ class ShapeData(object):
         s += ')'
         return s
 
-    # Quick and dirty.  Just check reprs are equal.
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other):
+        return isinstance(other,ShapeData) and self._getinitargs() == other._getinitargs()
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash(repr(self))
+    def __hash__(self): return hash(("galsim.hsm.ShapeData", self._getinitargs()))
 
-_galsim.CppShapeData.__getinitargs__ = lambda self: (
-        self.image_bounds, self.moments_status, self.observed_e1, self.observed_e2,
-        self.moments_sigma, self.moments_amp, self.moments_centroid, self.moments_rho4,
-        self.moments_n_iter, self.correction_status, self.corrected_e1, self.corrected_e2,
-        self.corrected_g1, self.corrected_g2, self.meas_type, self.corrected_shape_err,
-        self.correction_method, self.resolution_factor, self.psf_sigma,
-        self.psf_e1, self.psf_e2, self.error_message)
+    def _getinitargs(self):
+        return (self.image_bounds, self.moments_status, self.observed_shape,
+                self.moments_sigma, self.moments_amp, self.moments_centroid, self.moments_rho4,
+                self.moments_n_iter, self.correction_status, self.corrected_e1, self.corrected_e2,
+                self.corrected_g1, self.corrected_g2, self.meas_type, self.corrected_shape_err,
+                self.correction_method, self.resolution_factor, self.psf_sigma,
+                self.psf_shape, self.error_message)
 
-_galsim.CppShapeData.__repr__ = lambda self: \
-        ('galsim._galsim.CppShapeData(' + 21*'%r,' + '%r)')%self.__getinitargs__()
+    def __getstate__(self):
+        return self._getinitargs()
 
-_galsim.CppShapeData.__eq__ = lambda self, other: repr(self) == repr(other)
-_galsim.CppShapeData.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
+    def __setstate__(self, state):
+        self.__init__(*state)
 
 
 class HSMParams(object):
@@ -432,7 +421,7 @@ class HSMParams(object):
     def __eq__(self, other):
         return isinstance(other, HSMParams) and self._getinitargs() == other._getinitargs()
     def __ne__(self, other):
-        return not (self == other)
+        return not self.__eq__(other)
     def __hash__(self):
         return hash(('galsim.HSMParams', self._getinitargs()))
 
@@ -621,21 +610,23 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     if guess_centroid is None:
         guess_centroid = gal_image.trueCenter()
     try:
-        result = _galsim._EstimateShearView(gal_image.image, PSF_image.image, weight.image,
-                                            sky_var = sky_var,
-                                            shear_est = shear_est.upper(),
-                                            recompute_flux = recompute_flux.upper(),
-                                            guess_sig_gal = guess_sig_gal,
-                                            guess_sig_PSF = guess_sig_PSF,
-                                            precision = precision,
-                                            guess_centroid = guess_centroid,
-                                            hsmparams = hsmparams._hsmp)
+        result = ShapeData()
+        _galsim._EstimateShearView(result._data,
+                                   gal_image.image, PSF_image.image, weight.image,
+                                   sky_var = sky_var,
+                                   shear_est = shear_est.upper(),
+                                   recompute_flux = recompute_flux.upper(),
+                                   guess_sig_gal = guess_sig_gal,
+                                   guess_sig_PSF = guess_sig_PSF,
+                                   precision = precision,
+                                   guess_centroid = guess_centroid,
+                                   hsmparams = hsmparams._hsmp)
+        return result
     except RuntimeError as err:
         if (strict == True):
             raise
         else:
-            result = ShapeData(error_message = str(err))
-    return ShapeData(result)
+            return ShapeData(error_message = str(err))
 
 def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
                     guess_centroid=None, strict=True, hsmparams=None):
@@ -733,16 +724,18 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         guess_centroid = object_image.trueCenter()
 
     try:
-        result = _galsim._FindAdaptiveMomView(object_image.image, weight.image,
-                                              guess_sig = guess_sig, precision =  precision,
-                                              guess_centroid = guess_centroid,
-                                              hsmparams = hsmparams._hsmp)
+        result = ShapeData()
+        _galsim._FindAdaptiveMomView(result._data,
+                                     object_image.image, weight.image,
+                                     guess_sig = guess_sig, precision =  precision,
+                                     guess_centroid = guess_centroid,
+                                     hsmparams = hsmparams._hsmp)
+        return result
     except RuntimeError as err:
         if (strict == True):
             raise
         else:
-            result = ShapeData(error_message = str(err))
-    return ShapeData(result)
+            return ShapeData(error_message = str(err))
 
 # make FindAdaptiveMom a method of Image class
 galsim.Image.FindAdaptiveMom = FindAdaptiveMom

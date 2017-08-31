@@ -93,7 +93,8 @@ namespace hsm {
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
-    CppShapeData EstimateShearView(
+    void EstimateShearView(
+        ShapeData& results,
         const BaseImage<T>& gal_image, const BaseImage<U>& PSF_image,
         const BaseImage<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
@@ -101,8 +102,7 @@ namespace hsm {
         double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams)
     {
-        // define variables, create output CppShapeData struct, etc.
-        CppShapeData results;
+        // define variables, create output ShapeData struct, etc.
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
         unsigned long flags=0;
@@ -153,7 +153,7 @@ namespace hsm {
         find_ellipmom_2(masked_gal_image_cview, amp, gal_data.x0,
                         gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
                         precision, results.moments_n_iter, hsmparams);
-        // repackage outputs to the output CppShapeData struct
+        // repackage outputs to the output ShapeData struct
         dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
         results.moments_amp = 2.0*amp;
         results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
@@ -198,21 +198,20 @@ namespace hsm {
         }
 
         dbg<<"Exiting EstimateShearView"<<std::endl;
-        return results;
     }
 
     // Measure the adaptive moments of an object directly using ImageViews, repackaging for
     // find_ellipmom_2.
     template <typename T>
-    CppShapeData FindAdaptiveMomView(
+    void FindAdaptiveMomView(
+        ShapeData& results,
         const BaseImage<T>& object_image, const BaseImage<int>& object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams)
     {
         dbg<<"Start FindAdaptiveMomView"<<std::endl;
         dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
-        // define variables, create output CppShapeData struct, etc.
-        CppShapeData results;
+        // define variables, create output ShapeData struct, etc.
         double amp, m_xx, m_xy, m_yy;
 
         // set some values for initial guesses
@@ -247,7 +246,7 @@ namespace hsm {
                             precision, results.moments_n_iter, hsmparams);
             dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
 
-            // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
+            // repackage outputs from find_ellipmom_2 to the output ShapeData struct
             results.moments_amp = 2.0*amp;
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
             results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
@@ -266,7 +265,6 @@ namespace hsm {
         }
 
         dbg<<"Exiting FindAdaptiveMomView"<<std::endl;
-        return results;
     }
 
     /* fourier_trans_1
@@ -1806,40 +1804,47 @@ namespace hsm {
     }
 
     // instantiate template classes for expected types
-    template CppShapeData EstimateShearView(
+    template void EstimateShearView(
+        ShapeData& results,
         const BaseImage<float>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
-    template CppShapeData EstimateShearView(
+    template void EstimateShearView(
+        ShapeData& results,
         const BaseImage<double>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
-    template CppShapeData EstimateShearView(
+    template void EstimateShearView(
+        ShapeData& results,
         const BaseImage<float>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
-    template CppShapeData EstimateShearView(
+    template void EstimateShearView(
+        ShapeData& results,
         const BaseImage<double>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
 
-    template CppShapeData FindAdaptiveMomView(
+    template void FindAdaptiveMomView(
+        ShapeData& results,
         const BaseImage<float>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams);
-    template CppShapeData FindAdaptiveMomView(
+    template void FindAdaptiveMomView(
+        ShapeData& results,
         const BaseImage<double>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams);
-    template CppShapeData FindAdaptiveMomView(
+    template void FindAdaptiveMomView(
+        ShapeData& results,
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams);

@@ -553,7 +553,6 @@ def test_hsmparams():
                                    failed_moments=99.))
     do_pickle(res)
     do_pickle(res2)
-    do_pickle(galsim._galsim.CppShapeData())
 
     try:
         # Then check failure modes: force it to fail by changing HSMParams.

@@ -62,7 +62,7 @@ struct PyHSMParams {
 
 struct PyShapeData {
 
-    static CppShapeData* ShapeData_init(
+    static ShapeData* ShapeData_init(
         const galsim::Bounds<int>& image_bounds, int moments_status,
         float observed_e1, float observed_e2,
         float moments_sigma, float moments_amp,
@@ -74,7 +74,7 @@ struct PyShapeData {
         float resolution_factor, float psf_sigma,
         float psf_e1, float psf_e2, std::string error_message)
     {
-        CppShapeData* data = new CppShapeData();
+        ShapeData* data = new ShapeData();
         data->image_bounds = image_bounds;
         data->moments_status = moments_status;
         data->observed_e1 = observed_e1;
@@ -102,23 +102,24 @@ struct PyShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&,
-                                         double, double, Position<double>,
-                                         const HSMParams&);
+        typedef void (*FAM_func)(ShapeData& result, const BaseImage<U>&, const BaseImage<int>&,
+                                 double, double, Position<double>, const HSMParams&);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
-                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
+                (bp::args("result"),
+                 bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
                  bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&,
-                                         const BaseImage<int>&, float, const char *,
-                                         const std::string&, double, double, double, Position<double>,
-                                         const HSMParams&);
+        typedef void (*ESH_func)(ShapeData&, const BaseImage<U>&, const BaseImage<V>&,
+                                 const BaseImage<int>&, float, const char *,
+                                 const std::string&, double, double, double, Position<double>,
+                                 const HSMParams&);
         bp::def("_EstimateShearView",
                 ESH_func(&EstimateShearView),
-                (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
+                (bp::arg("result"),
+                 bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
                  bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
                  bp::arg("recompute_flux")="FIT",
                  bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
@@ -128,9 +129,7 @@ struct PyShapeData {
     };
 
     static void wrap() {
-        bp::class_<CppShapeData>("CppShapeData", "", bp::no_init)
-            .def(bp::init<>())
-            .def(bp::init<const CppShapeData&>())
+        bp::class_<ShapeData>("ShapeData", "", bp::no_init)
             .def("__init__",
                  bp::make_constructor(
                      &ShapeData_init, bp::default_call_policies(), (
@@ -148,29 +147,28 @@ struct PyShapeData {
                      )
                  )
             )
-            .def_readonly("image_bounds", &CppShapeData::image_bounds)
-            .def_readonly("moments_status", &CppShapeData::moments_status)
-            .def_readonly("observed_e1", &CppShapeData::observed_e1)
-            .def_readonly("observed_e2", &CppShapeData::observed_e2)
-            .def_readonly("moments_sigma", &CppShapeData::moments_sigma)
-            .def_readonly("moments_amp", &CppShapeData::moments_amp)
-            .def_readonly("moments_centroid", &CppShapeData::moments_centroid)
-            .def_readonly("moments_rho4", &CppShapeData::moments_rho4)
-            .def_readonly("moments_n_iter", &CppShapeData::moments_n_iter)
-            .def_readonly("correction_status", &CppShapeData::correction_status)
-            .def_readonly("corrected_e1", &CppShapeData::corrected_e1)
-            .def_readonly("corrected_e2", &CppShapeData::corrected_e2)
-            .def_readonly("corrected_g1", &CppShapeData::corrected_g1)
-            .def_readonly("corrected_g2", &CppShapeData::corrected_g2)
-            .def_readonly("meas_type", &CppShapeData::meas_type)
-            .def_readonly("corrected_shape_err", &CppShapeData::corrected_shape_err)
-            .def_readonly("correction_method", &CppShapeData::correction_method)
-            .def_readonly("resolution_factor", &CppShapeData::resolution_factor)
-            .def_readonly("psf_sigma", &CppShapeData::psf_sigma)
-            .def_readonly("psf_e1", &CppShapeData::psf_e1)
-            .def_readonly("psf_e2", &CppShapeData::psf_e2)
-            .def_readonly("error_message", &CppShapeData::error_message)
-            .enable_pickling()
+            .def_readonly("image_bounds", &ShapeData::image_bounds)
+            .def_readonly("moments_status", &ShapeData::moments_status)
+            .def_readonly("observed_e1", &ShapeData::observed_e1)
+            .def_readonly("observed_e2", &ShapeData::observed_e2)
+            .def_readonly("moments_sigma", &ShapeData::moments_sigma)
+            .def_readonly("moments_amp", &ShapeData::moments_amp)
+            .def_readonly("moments_centroid", &ShapeData::moments_centroid)
+            .def_readonly("moments_rho4", &ShapeData::moments_rho4)
+            .def_readonly("moments_n_iter", &ShapeData::moments_n_iter)
+            .def_readonly("correction_status", &ShapeData::correction_status)
+            .def_readonly("corrected_e1", &ShapeData::corrected_e1)
+            .def_readonly("corrected_e2", &ShapeData::corrected_e2)
+            .def_readonly("corrected_g1", &ShapeData::corrected_g1)
+            .def_readonly("corrected_g2", &ShapeData::corrected_g2)
+            .def_readonly("meas_type", &ShapeData::meas_type)
+            .def_readonly("corrected_shape_err", &ShapeData::corrected_shape_err)
+            .def_readonly("correction_method", &ShapeData::correction_method)
+            .def_readonly("resolution_factor", &ShapeData::resolution_factor)
+            .def_readonly("psf_sigma", &ShapeData::psf_sigma)
+            .def_readonly("psf_e1", &ShapeData::psf_e1)
+            .def_readonly("psf_e2", &ShapeData::psf_e2)
+            .def_readonly("error_message", &ShapeData::error_message)
             ;
 
         wrapTemplates<float, float>();
