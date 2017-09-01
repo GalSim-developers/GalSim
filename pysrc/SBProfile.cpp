@@ -18,11 +18,8 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
 #define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 
 #include "SBProfile.h"
@@ -77,12 +74,6 @@ namespace galsim {
                 .def(bp::self == bp::other<GSParams>())
                 .enable_pickling()
                 ;
-// Work around for "no to_python (by-value) converter found for C++ type: boost::shared_ptr<>"
-// boost::python bug that seems to only exist for boost version 1.60.
-// (GalSim Issue #764, https://github.com/GalSim-developers/GalSim/pull/767).
-#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
-            bp::register_ptr_to_python< boost::shared_ptr<GSParams> >();
-#endif
         }
     };
 

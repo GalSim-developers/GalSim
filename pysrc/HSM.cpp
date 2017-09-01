@@ -21,9 +21,8 @@
 
 #define BOOST_PYTHON_MAX_ARITY 22  // We have a function with 21 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
+
 #include "hsm/PSFCorr.h"
 
 namespace bp = boost::python;

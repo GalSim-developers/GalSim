@@ -18,10 +18,6 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#include "Python.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 
 namespace galsim {

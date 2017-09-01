@@ -1148,8 +1148,10 @@ class RandomWalk(galsim.GSObject):
         self._set_gaussian_rng()
 
         self._points = self._get_points()
-        self._gaussians = self._get_gaussians(self._points)
+        self._make_sbp()
 
+    def _make_sbp(self):
+        self._gaussians = self._get_gaussians(self._points)
         self._sbp = galsim._galsim.SBAdd(self._gaussians, self.gsparams._gsp)
 
     def calculateHLR(self):
@@ -1310,3 +1312,16 @@ class RandomWalk(galsim.GSObject):
     def __hash__(self):
         return hash(("galsim.RandomWalk", self._npoints, self._half_light_radius, self._flux,
                      self.gsparams))
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_gaussians']
+        del d['_sbp']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._make_sbp()
+
+
+

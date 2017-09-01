@@ -18,10 +18,8 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include <cstdlib>
+
 #include "Interpolant.h"
 
 namespace bp = boost::python;

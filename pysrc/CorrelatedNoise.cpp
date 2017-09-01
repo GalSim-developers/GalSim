@@ -18,9 +18,8 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
+
 #include "Interpolant.h"
 #include "CorrelatedNoise.h"
 
