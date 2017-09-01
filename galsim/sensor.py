@@ -138,7 +138,7 @@ class SiliconSensor(Sensor):
         vertex_file = os.path.join(self.full_dir,self.config['outputfilebase'] + '_0_Vertices.dat')
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
-        if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
+        if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):
             raise IOError("Vertex file %s does not match config file %s"
                           % (vertex_file, self.config_file))
 
