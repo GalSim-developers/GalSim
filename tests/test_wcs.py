@@ -1381,12 +1381,12 @@ def test_radecfunction():
         for cenra, cendec in centers:
             center = galsim.CelestialCoord(cenra * galsim.degrees, cendec * galsim.degrees)
             # Unit test the hms, dms parsers:
-            np.testing.assert_almost_equal(galsim.HMS_Angle(center.ra.hms()).wrap() / galsim.arcsec,
-                                           center.ra.wrap() / galsim.arcsec, digits,
-                                           'HMS parser error')
-            np.testing.assert_almost_equal(galsim.DMS_Angle(center.dec.dms()) / galsim.arcsec,
-                                           center.dec / galsim.arcsec, digits,
-                                           'DMS parser error')
+            np.testing.assert_almost_equal(
+                galsim.Angle.from_hms(center.ra.hms()).wrap() / galsim.arcsec,
+                center.ra.wrap() / galsim.arcsec, digits, 'HMS parser error')
+            np.testing.assert_almost_equal(
+                galsim.Angle.from_dms(center.dec.dms()) / galsim.arcsec,
+                center.dec / galsim.arcsec, digits, 'DMS parser error')
 
             radec_func = lambda x,y: center.deproject_rad(ufunc(x,y), vfunc(x,y))
             wcs2 = galsim.RaDecFunction(radec_func)
@@ -1550,8 +1550,8 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
 
     print('Start reference testing for '+name)
     for ref in ref_list:
-        ra = galsim.HMS_Angle(ref[0])
-        dec = galsim.DMS_Angle(ref[1])
+        ra = galsim.Angle.from_hms(ref[0])
+        dec = galsim.Angle.from_dms(ref[1])
         x = ref[2]
         y = ref[3]
         val = ref[4]

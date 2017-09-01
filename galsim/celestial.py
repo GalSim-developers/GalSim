@@ -741,10 +741,10 @@ def _ecliptic_obliquity(epoch):
     # Then we use the last (most recent) formula listed under
     # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
     # JPL's 2010 calculations.
-    ep = galsim.DMS_Angle('23:26:21.406')
-    ep -= galsim.DMS_Angle('00:00:46.836769')*t
-    ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
-    ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
+    ep = galsim.Angle.from_dms('23:26:21.406')
+    ep -= galsim.Angle.from_dms('00:00:46.836769')*t
+    ep -= galsim.Angle.from_dms('00:00:0.0001831')*(t**2)
+    ep += galsim.Angle.from_dms('00:00:0.0020034')*(t**3)
     # There are even higher order terms, but they are really not important for any reasonable
     # calculation we could ever do with GalSim.
     return ep

@@ -606,15 +606,15 @@ def test_ecliptic():
     """Test the conversion from equatorial to ecliptic coordinates."""
     # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
     north_pole = galsim.CelestialCoord(
-        galsim.HMS_Angle('18:00:00.00'),
-        galsim.DMS_Angle('66:33:38.55'))
+        galsim.Angle.from_hms('18:00:00.00'),
+        galsim.Angle.from_dms('66:33:38.55'))
     el, b = north_pole.ecliptic()
     # North pole should have b=90 degrees, with el being completely arbitrary.
     numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=6)
 
     south_pole = galsim.CelestialCoord(
-        galsim.HMS_Angle('06:00:00.00'),
-        galsim.DMS_Angle('-66:33:38.55'))
+        galsim.Angle.from_hms('06:00:00.00'),
+        galsim.Angle.from_dms('-66:33:38.55'))
     el, b = south_pole.ecliptic()
     # South pole should have b=-90 degrees, with el being completely arbitrary.
     numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=6)

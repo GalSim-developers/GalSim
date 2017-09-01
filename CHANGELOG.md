@@ -42,12 +42,14 @@ API Changes
   there may be slight changes to your code required.  See the doc strings of
   these functions for more information. (#865)
 - Switched galsim.Image(image) to make a copy of the image rather than a view.
-  If you want a view, you should use the more intuitive image.view().  (#873)
+  If you want a view, you should use the more intuitive image.view(). (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
-- Deprecated the function ShapeletSize and FitShapelet.  This functionality
+- Deprecated the functions HMS_Angle and DMS_Angle. These are now classmethods
+  of the Angle class: Angle.from_hms and Angle.from_dms, respectively. (#904)
+- Deprecated the function ShapeletSize and FitShapelet. This functionality
   is not in classmethods of the Shapelet class: `Shapelet.size(order)` and
-  `Shapelet.fit(image)`.  Also, direct use of LVector is deprecated, and it
+  `Shapelet.fit(image)`. Also, direct use of LVector is deprecated, and it
   will be removed in version 2.0. (#904)
 
 

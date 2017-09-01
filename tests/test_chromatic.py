@@ -2035,8 +2035,8 @@ def test_ne():
     # and H2O_pressure.
 
     # Some params to test the celestial coords inputs.
-    ra = galsim.HMS_Angle("14:03:13") # hours : minutes : seconds
-    dec = galsim.DMS_Angle("54:20:57") # degrees : minutes : seconds
+    ra = galsim.Angle.from_hms("14:03:13") # hours : minutes : seconds
+    dec = galsim.Angle.from_dms("54:20:57") # degrees : minutes : seconds
     m101 = galsim.CelestialCoord(ra, dec)
     latitude = 19.8207 * galsim.degrees # latitude of Mauna Kea
     HA = -1.0 * galsim.hours # Hour angle = one hour before transit

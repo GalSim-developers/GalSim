@@ -1780,6 +1780,88 @@ def test_dep_simreal():
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
 
+@timer
+def test_dep_ecliptic():
+    """Test the conversion from equatorial to ecliptic coordinates."""
+    from numpy import pi
+    # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
+    north_pole = galsim.CelestialCoord(
+        check_dep(galsim.HMS_Angle,'18:00:00.00'),
+        check_dep(galsim.DMS_Angle,'66:33:38.55'))
+    el, b = north_pole.ecliptic()
+    # North pole should have b=90 degrees, with el being completely arbitrary.
+    np.testing.assert_almost_equal(b.rad(), pi/2, decimal=6)
+
+    south_pole = galsim.CelestialCoord(
+        check_dep(galsim.HMS_Angle,'06:00:00.00'),
+        check_dep(galsim.DMS_Angle,'-66:33:38.55'))
+    el, b = south_pole.ecliptic()
+    # South pole should have b=-90 degrees, with el being completely arbitrary.
+    np.testing.assert_almost_equal(b.rad(), -pi/2, decimal=6)
+
+    # Also confirm that positions that should be the same in equatorial and ecliptic coordinates are
+    # actually the same:
+    vernal_equinox = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
+    el, b = vernal_equinox.ecliptic()
+    np.testing.assert_almost_equal(b.rad(), 0., decimal=6)
+    np.testing.assert_almost_equal(el.rad(), 0., decimal=6)
+    autumnal_equinox = galsim.CelestialCoord(pi*galsim.radians, 0.*galsim.radians)
+    el, b = autumnal_equinox.ecliptic()
+    np.testing.assert_almost_equal(el.rad(), pi, decimal=6)
+    np.testing.assert_almost_equal(b.rad(), 0., decimal=6)
+
+    # Finally, test the results of using a date to get ecliptic coordinates with respect to the sun,
+    # instead of absolute ones. For this, use dates and times of vernal and autumnal equinox
+    # in 2014 from
+    # http://wwp.greenwichmeantime.com/longest-day/
+    # and the conversion to Julian dates from
+    # http://www.aavso.org/jd-calculator
+    import datetime
+    vernal_eq_date = datetime.datetime(2014,3,20,16,57,0)
+    el, b = vernal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    # Vernal equinox: should have (el, b) = (el_rel, b_rel) = 0.0
+    np.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
+    np.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
+    # Now do the autumnal equinox: should have (el, b) = (pi, 0) = (el_rel, b_rel) when we look at
+    # the time of the vernal equinox.
+    el, b = autumnal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    np.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
+    np.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
+    # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
+    # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
+    autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
+    np.testing.assert_almost_equal(el_rel.rad(), -pi, decimal=3)
+    np.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
+    # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
+    # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    np.testing.assert_almost_equal(el_rel.rad(), pi, decimal=3)
+    np.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
+
+    # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
+    # results are the same.  This includes use of a function that isn't available to users, but we
+    # use it for a few things so we should still make sure it's working properly.
+    from galsim.celestial import _ecliptic_to_equatorial
+    north_pole_2 = _ecliptic_to_equatorial(north_pole.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(north_pole.ra.rad(), north_pole_2.ra.rad(), decimal=6)
+    np.testing.assert_almost_equal(north_pole.dec.rad(), north_pole_2.dec.rad(), decimal=6)
+    south_pole_2 = _ecliptic_to_equatorial(south_pole.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(south_pole.ra.rad(), south_pole_2.ra.rad(), decimal=6)
+    np.testing.assert_almost_equal(south_pole.dec.rad(), south_pole_2.dec.rad(), decimal=6)
+    vernal_equinox_2 = _ecliptic_to_equatorial(vernal_equinox.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(vernal_equinox.ra.rad(), vernal_equinox_2.ra.rad(), decimal=6)
+    np.testing.assert_almost_equal(vernal_equinox.dec.rad(), vernal_equinox_2.dec.rad(),
+                                      decimal=6)
+    autumnal_equinox_2 = _ecliptic_to_equatorial(autumnal_equinox.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(autumnal_equinox.ra.rad(), autumnal_equinox_2.ra.rad(),
+                                      decimal=6)
+    np.testing.assert_almost_equal(autumnal_equinox.dec.rad(), autumnal_equinox_2.dec.rad(),
+                                      decimal=6)
+
+
 if __name__ == "__main__":
     test_dep_bandpass()
     test_dep_base()
@@ -1802,3 +1884,4 @@ if __name__ == "__main__":
     test_dep_drawKImage_Gaussian()
     test_dep_kroundtrip()
     test_dep_simreal()
+    test_dep_ecliptic()

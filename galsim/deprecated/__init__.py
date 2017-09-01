@@ -52,6 +52,7 @@ def depr(f, v, s1, s2=None):
         s += '  ' + s2
     warnings.warn(s, GalSimDeprecationWarning)
 
+from . import angle
 from . import bandpass
 from . import base
 from . import bounds
