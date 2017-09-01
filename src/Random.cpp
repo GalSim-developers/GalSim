@@ -60,7 +60,7 @@ namespace galsim {
         // you want to use instead of mt19937
         typedef boost::mt19937 rng_type;
         BaseDeviateImpl() : _rng(new rng_type) {}
-        boost::shared_ptr<rng_type> _rng;
+        shared_ptr<rng_type> _rng;
     };
 
     BaseDeviate::BaseDeviate(long lseed) :
@@ -415,8 +415,8 @@ namespace galsim {
         double (PoissonDeviateImpl::*_getValue)(rng_type& rng);
 
         double _mean;
-        boost::shared_ptr<boost::random::poisson_distribution<> > _pd;
-        boost::shared_ptr<boost::random::normal_distribution<> > _gd;
+        shared_ptr<boost::random::poisson_distribution<> > _pd;
+        shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
     PoissonDeviate::PoissonDeviate(long lseed, double mean) :

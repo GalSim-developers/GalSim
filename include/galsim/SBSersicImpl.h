@@ -119,8 +119,8 @@ namespace galsim {
         mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
         // Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<FluxDensity> _radial;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
         void buildFT() const;
@@ -226,7 +226,7 @@ namespace galsim {
         double _inv_r0_sq;
         double _trunc_sq;
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,

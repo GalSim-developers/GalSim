@@ -24,6 +24,8 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/random/detail/config.hpp>
 #include <boost/random/detail/operators.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
 #endif
 #include "galsim/boost1_48_0/random/detail/signed_unsigned_tools.hpp"
 

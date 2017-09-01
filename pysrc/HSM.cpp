@@ -103,6 +103,7 @@ struct PyShapeData {
     static void wrapTemplates() {
         typedef void (*FAM_func)(ShapeData& result, const BaseImage<U>&, const BaseImage<int>&,
                                  double, double, Position<double>, const HSMParams&);
+
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::args("result"),

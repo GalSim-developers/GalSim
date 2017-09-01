@@ -22,6 +22,8 @@
 #include <boost/limits.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/random/detail/config.hpp>
+#else
+#include "galsim/boost1_48_0/config/suffix.hpp"
 #endif
 #include "galsim/boost1_48_0/random/detail/ptr_helper.hpp"
 

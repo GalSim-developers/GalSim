@@ -368,7 +368,7 @@ namespace galsim {
 #endif
     }
 
-    std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
+    std::map<double,shared_ptr<Table<double,double> > > Cubic::_cache_tab;
     std::map<double,double> Cubic::_cache_umax;
 
     std::string Cubic::makeStr() const
@@ -543,7 +543,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
     }
 
-    std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
+    std::map<double,shared_ptr<Table<double,double> > > Quintic::_cache_tab;
     std::map<double,double> Quintic::_cache_umax;
 
     std::string Quintic::makeStr() const
@@ -888,8 +888,8 @@ namespace galsim {
         }
     }
 
-    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_xtab;
-    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_utab;
+    std::map<Lanczos::KeyType,shared_ptr<Table<double,double> > > Lanczos::_cache_xtab;
+    std::map<Lanczos::KeyType,shared_ptr<Table<double,double> > > Lanczos::_cache_utab;
     std::map<Lanczos::KeyType,double> Lanczos::_cache_umax;
 
     double Lanczos::xval(double x) const

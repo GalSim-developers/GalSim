@@ -33,9 +33,6 @@
 // Hopefully all our compilers will conform to the C99 standard which includes stdint.h.
 #include <stdint.h>
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
-
 #include "Std.h"
 #include "Bounds.h"
 
@@ -168,7 +165,7 @@ namespace galsim {
          *  The actual pointer will point to a parent image rather than the image itself
          *  if this is a subimage.
          */
-        boost::shared_ptr<T> getOwner() const { return _owner; }
+        shared_ptr<T> getOwner() const { return _owner; }
 
         /**
          *  @brief Return a pointer to the first pixel in the image.
@@ -312,7 +309,7 @@ namespace galsim {
 
     protected:
 
-        boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
+        shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T* _data;                     // pointer to be used for this image
         ptrdiff_t _nElements;         // number of elements allocated in memory
         int _step;                    // number of elements between cols (normally 1)
@@ -329,7 +326,7 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner,
+        BaseImage(T* data, ptrdiff_t nElements, shared_ptr<T> owner,
                   int step, int stride, const Bounds<int>& b) :
             AssignableToImage<T>(b),
             _owner(owner), _data(data), _nElements(nElements),
@@ -391,7 +388,7 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ConstImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
+        ConstImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
                        const Bounds<int>& b) :
             BaseImage<T>(data,0,owner,step,stride,b) {}
 
@@ -448,7 +445,7 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
+        ImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
                   const Bounds<int>& b, int nElements=0) :
             BaseImage<T>(data, nElements, owner, step, stride, b) {}
 

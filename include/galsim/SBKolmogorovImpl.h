@@ -87,7 +87,7 @@ namespace galsim {
         TableDD _radial;  ///< Lookup table for Fourier transform of MTF.
 
         ///< Class that can sample radial distribution
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        shared_ptr<OneDimensionalDeviate> _sampler;
     };
 
     class SBKolmogorov::SBKolmogorovImpl : public SBProfileImpl
@@ -154,7 +154,7 @@ namespace galsim {
         double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.
 
-        const boost::shared_ptr<KolmogorovInfo> _info;
+        const shared_ptr<KolmogorovInfo> _info;
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,

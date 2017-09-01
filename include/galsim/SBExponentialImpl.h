@@ -79,10 +79,10 @@ namespace galsim {
         void operator=(const ExponentialInfo& rhs); ///<Hide assignment operator.
 
         /// Function class used for photon shooting
-        boost::shared_ptr<ExponentialRadialFunction> _radial;
+        shared_ptr<ExponentialRadialFunction> _radial;
 
         /// Class that does numerical photon shooting
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        shared_ptr<OneDimensionalDeviate> _sampler;
 
         double _maxk; ///< Calculated maxK * r0
         double _stepk; ///< Calculated stepK * r0
@@ -160,7 +160,7 @@ namespace galsim {
         double _norm; ///< flux / r0^2 / 2pi
         double _flux_over_2pi; ///< Flux / 2pi
 
-        const boost::shared_ptr<ExponentialInfo> _info;
+        const shared_ptr<ExponentialInfo> _info;
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,

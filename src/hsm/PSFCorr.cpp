@@ -934,7 +934,7 @@ namespace hsm {
         dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the FFT:
-        boost::shared_ptr<KTable> ktab1 = xtab.transform();
+        shared_ptr<KTable> ktab1 = xtab.transform();
 
         // Fill image2 into the XTable
         mxt.setZero();
@@ -944,7 +944,7 @@ namespace hsm {
         dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the second FFT and multiply:
-        boost::shared_ptr<KTable> ktab2 = xtab.transform();
+        shared_ptr<KTable> ktab2 = xtab.transform();
         (*ktab2) *= (*ktab1);
 
         // Inverse FFT to get back to real space
@@ -1848,6 +1848,6 @@ namespace hsm {
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams);
-        
+
 }
 }

@@ -167,7 +167,7 @@ namespace galsim {
                 << "Order mismatch between LTransform [" << _orderIn
                 << "] and LVector [" << rhs.getOrder()
                 << "]";
-        boost::shared_ptr<tmv::Vector<double> > out(new tmv::Vector<double>(sizeOut()));
+        shared_ptr<tmv::Vector<double> > out(new tmv::Vector<double>(sizeOut()));
         *out = (*_m) * rhs.rVector();
         return LVector(_orderOut, out);
     }
@@ -179,7 +179,7 @@ namespace galsim {
                 << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
-        boost::shared_ptr<tmv::Matrix<double> > out(
+        shared_ptr<tmv::Matrix<double> > out(
             new tmv::Matrix<double>(sizeOut(),rhs.sizeIn()));
         *out = (*_m) * (*rhs._m);
         return LTransform(_orderOut, rhs._orderIn, out);
@@ -258,12 +258,12 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
+    shared_ptr<tmv::Matrix<double> > LVector::basis(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         int order, double sigma)
     {
         assert(x.size()==y.size());
-        boost::shared_ptr<tmv::Matrix<double> > psi(
+        shared_ptr<tmv::Matrix<double> > psi(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
         basis(x, y, psi->view(), order, sigma);
         return psi;
@@ -278,11 +278,11 @@ namespace galsim {
         mBasis(x, y, 0, psi, order, sigma);
     }
 
-    boost::shared_ptr<tmv::Matrix<double> > LVector::design(
+    shared_ptr<tmv::Matrix<double> > LVector::design(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
-        boost::shared_ptr<tmv::Matrix<double> > psi(
+        shared_ptr<tmv::Matrix<double> > psi(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
         design(x, y, invsig, psi->view(), order, sigma);
         return psi;
@@ -298,14 +298,14 @@ namespace galsim {
         mBasis(x, y, &invsig, psi, order, sigma);
     }
 
-    boost::shared_ptr<tmv::Matrix<std::complex<double> > > LVector::kBasis(
+    shared_ptr<tmv::Matrix<std::complex<double> > > LVector::kBasis(
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         assert (ky.size() == kx.size());
         const int ndof=PQIndex::size(order);
         const int npts = kx.size();
-        boost::shared_ptr<tmv::Matrix<std::complex<double> > > psi_k(
+        shared_ptr<tmv::Matrix<std::complex<double> > > psi_k(
             new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
         kBasis(kx,ky,psi_k->view(),order,sigma);
         return psi_k;
@@ -428,11 +428,11 @@ namespace galsim {
             }
 
             // Make three DiagMatrix to hold Lmq's during recurrence calculations
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmq(
+            shared_ptr<tmv::DiagMatrixView<double> > Lmq(
                 new tmv::DiagMatrixView<double>(Lmq_full.subDiagMatrix(0,npts)));
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm1(
+            shared_ptr<tmv::DiagMatrixView<double> > Lmqm1(
                 new tmv::DiagMatrixView<double>(Lmqm1_full.subDiagMatrix(0,npts)));
-            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm2(
+            shared_ptr<tmv::DiagMatrixView<double> > Lmqm2(
                 new tmv::DiagMatrixView<double>(Lmqm2_full.subDiagMatrix(0,npts)));
 
             for (int m=0; m<=N; m++) {
@@ -502,7 +502,7 @@ namespace galsim {
 
     double LVector::apertureFlux(double R_, int maxP) const
     {
-        static boost::shared_ptr<tmv::Vector<double> > fp;
+        static shared_ptr<tmv::Vector<double> > fp;
         static double R=-1.;
         static double psize=-1;
 
@@ -605,12 +605,12 @@ namespace galsim {
     const tmv::ConstMatrixView<double> LVector::Generator(
         GType iparam, int orderOut, int orderIn)
     {
-        static boost::shared_ptr<tmv::Matrix<double> > gmu;
-        static boost::shared_ptr<tmv::Matrix<double> > gx;
-        static boost::shared_ptr<tmv::Matrix<double> > gy;
-        static boost::shared_ptr<tmv::Matrix<double> > ge1;
-        static boost::shared_ptr<tmv::Matrix<double> > ge2;
-        static boost::shared_ptr<tmv::Matrix<double> > grot;
+        static shared_ptr<tmv::Matrix<double> > gmu;
+        static shared_ptr<tmv::Matrix<double> > gx;
+        static shared_ptr<tmv::Matrix<double> > gy;
+        static shared_ptr<tmv::Matrix<double> > ge1;
+        static shared_ptr<tmv::Matrix<double> > ge2;
+        static shared_ptr<tmv::Matrix<double> > grot;
 
         const int sizeIn = PQIndex::size(orderIn);
         const int sizeOut = PQIndex::size(orderOut);

@@ -100,8 +100,8 @@ namespace galsim {
         mutable double _re;      ///< The HLR in units of r0.
 
         // Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<FluxDensity> _radial;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
@@ -199,7 +199,7 @@ namespace galsim {
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _k_max;   ///< sqrt(_ksq_max)
 
-        boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
+        shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,

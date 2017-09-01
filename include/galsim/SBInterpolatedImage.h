@@ -82,8 +82,8 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImage(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant> xInterp,
-            boost::shared_ptr<Interpolant> kInterp,
+            shared_ptr<Interpolant> xInterp,
+            shared_ptr<Interpolant> kInterp,
             double pad_factor, double stepk, double maxk, const GSParams& gsparams);
 
         /// @brief Copy Constructor.
@@ -92,8 +92,8 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
-        boost::shared_ptr<Interpolant> getXInterp() const;
-        boost::shared_ptr<Interpolant> getKInterp() const;
+        shared_ptr<Interpolant> getXInterp() const;
+        shared_ptr<Interpolant> getKInterp() const;
         double getPadFactor() const;
 
         /**
@@ -140,14 +140,14 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImage(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
+            shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         // @brief Serialization constructor.
         // Note this is *not* a template since getKData only returns doubles.
         SBInterpolatedKImage(
             const BaseImage<double>& data,
             double stepk, double maxk,
-            boost::shared_ptr<Interpolant> kInterp,
+            shared_ptr<Interpolant> kInterp,
             const GSParams& gsparams);
 
         /// @brief Copy Constructor.
@@ -156,7 +156,7 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedKImage();
 
-        boost::shared_ptr<Interpolant> getKInterp() const;
+        shared_ptr<Interpolant> getKInterp() const;
 
         ConstImageView<double> getKData() const;
 

@@ -35,8 +35,7 @@ namespace galsim {
                 "SBInclinedExponential", bp::no_init)
                 .def(bp::init<double,double,double,double, GSParams>(
                         (bp::arg("inclination"), bp::arg("scale_radius"), bp::arg("scale_height"),
-                         bp::arg("flux"), bp::arg("gsparams")))
-                )
+                         bp::arg("flux"), bp::arg("gsparams"))))
                 .def(bp::init<const SBInclinedExponential &>())
                 .def("getInclination", &SBInclinedExponential::getInclination)
                 .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)

@@ -33,8 +33,7 @@ namespace galsim {
         {
             bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
                 .def(bp::init<const SBProfile &, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("gsparams"))
-                ))
+                        (bp::arg("adaptee"), bp::arg("gsparams"))))
                 .def(bp::init<const SBDeconvolve &>())
                 .def("getObj", &SBDeconvolve::getObj)
                 ;

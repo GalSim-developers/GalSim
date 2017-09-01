@@ -33,8 +33,7 @@ namespace galsim {
         {
             bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
                 .def(bp::init<const SBProfile &, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("gsparams"))
-                ))
+                        (bp::arg("adaptee"), bp::arg("gsparams"))))
                 .def("getObj", &SBFourierSqrt::getObj)
                 .def(bp::init<const SBFourierSqrt &>())
                 ;

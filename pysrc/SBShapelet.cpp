@@ -50,8 +50,7 @@ namespace galsim {
             }
         };
 
-        static SBShapelet* construct(double sigma, int order, size_t idata,
-                                     GSParams gsparams)
+        static SBShapelet* construct(double sigma, int order, size_t idata, GSParams gsparams)
         {
             double* data = reinterpret_cast<double*>(idata);
             int size = PQIndex::size(order);

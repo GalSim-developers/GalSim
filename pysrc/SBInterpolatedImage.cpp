@@ -33,7 +33,7 @@ namespace galsim {
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
-                     boost::shared_ptr<Interpolant>, boost::shared_ptr<Interpolant>,
+                     shared_ptr<Interpolant>, shared_ptr<Interpolant>,
                      double, double, double, GSParams>(
                          (bp::arg("image"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
@@ -75,17 +75,16 @@ namespace galsim {
             );
             pySBInterpolatedKImage
                 .def(bp::init<const BaseImage<double> &,
-                              double, double, boost::shared_ptr<Interpolant>, GSParams>(
+                              double, double, shared_ptr<Interpolant>, GSParams>(
                                   (bp::arg("data"),
                                    bp::arg("stepk"),
                                    bp::arg("maxk"),
                                    bp::arg("kInterp"),
-                                   bp::arg("gsparams")=GSParams())
-                     ))
+                                   bp::arg("gsparams")=GSParams())))
                 .def("getKInterp", &SBInterpolatedKImage::getKInterp)
                 .def("_getKData", &SBInterpolatedKImage::getKData)
                 .def(bp::init<const BaseImage<std::complex<double> > &,
-                              double, boost::shared_ptr<Interpolant>, GSParams>(
+                              double, shared_ptr<Interpolant>, GSParams>(
                                   (bp::arg("kimage"),
                                    bp::arg("stepk"),
                                    bp::arg("kInterp"),

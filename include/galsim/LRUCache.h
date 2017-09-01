@@ -165,7 +165,7 @@ namespace galsim {
          */
         ~LRUCache() {}
 
-        boost::shared_ptr<Value> get(const Key& key)
+        shared_ptr<Value> get(const Key& key)
         {
             assert(_entries.size() == _cache.size());
             MapIter iter = _cache.find(key);
@@ -180,7 +180,7 @@ namespace galsim {
             } else {
                 // Item is not cached.
                 // Make a new one.
-                boost::shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
+                shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
                 // Remove items from the cache as necessary.
                 while (_entries.size() >= _nmax) {
                     bool erased = _cache.erase(_entries.back().first);
@@ -201,7 +201,7 @@ namespace galsim {
 
         size_t _nmax;
 
-        typedef std::pair<Key, boost::shared_ptr<Value> > Entry;
+        typedef std::pair<Key, shared_ptr<Value> > Entry;
         std::list<Entry> _entries;
 
         typedef typename std::list<Entry>::iterator ListIter;

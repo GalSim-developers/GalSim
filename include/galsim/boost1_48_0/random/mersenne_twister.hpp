@@ -23,6 +23,8 @@
 #ifdef USE_BOOST
 #include <boost/config.hpp>
 #include <boost/integer/integer_mask.hpp>
+#else
+#include "galsim/boost1_48_0/config/suffix.hpp"
 #endif
 
 #ifdef USE_BOOST

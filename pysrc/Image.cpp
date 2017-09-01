@@ -34,7 +34,7 @@ namespace galsim {
             size_t idata, int step, int stride, const Bounds<int>& bounds)
         {
             T* data = reinterpret_cast<T*>(idata);
-            boost::shared_ptr<T> owner;
+            shared_ptr<T> owner;
             return new ImageView<T>(data, owner, step, stride, bounds);
         }
 
@@ -42,7 +42,7 @@ namespace galsim {
             size_t idata, int step, int stride, const Bounds<int>& bounds)
         {
             T* data = reinterpret_cast<T*>(idata);
-            boost::shared_ptr<T> owner;
+            shared_ptr<T> owner;
             return new ConstImageView<T>(data, owner, step, stride, bounds);
         }
 

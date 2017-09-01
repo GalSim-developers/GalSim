@@ -47,6 +47,22 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// Bring either std::tr1::shared_ptr or std::shared_ptr into local namespace
+// cf. https://stackoverflow.com/questions/18831151/is-c-0x-tr1-safe-to-use-when-portability-matters
+#ifdef _LIBCPP_VERSION
+// using libc++
+
+#include <memory>
+using std::shared_ptr;
+
+#else  // !_LIBCPP_VERSION
+// not using libc++
+
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+
+#endif  // _LIBCPP_VERSION
+
 // Check if ptr is aligned on 128 bit boundary
 inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
 

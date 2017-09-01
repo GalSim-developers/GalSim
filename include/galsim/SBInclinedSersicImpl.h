@@ -112,7 +112,7 @@ namespace galsim {
         double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         double _stepk;   ///< Sampling in k space necessary to avoid folding.
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         void doFillKImage(ImageView<std::complex<double> > im,
                           double kx0, double dkx, int izero,

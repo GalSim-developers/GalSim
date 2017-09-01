@@ -34,11 +34,6 @@
 #include <algorithm>
 #include <complex>
 
-// Some versions of boost don't have the right guard to avoid C++-11 extensions.
-// This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
-
 #include "Std.h"
 #include "Random.h"
 #include "GSParams.h"
@@ -385,7 +380,7 @@ namespace galsim {
         // Protected static class to access pimpl of one SBProfile object from another one.
         static SBProfileImpl* GetImpl(const SBProfile& rhs);
 
-        boost::shared_ptr<SBProfileImpl> _pimpl;
+        shared_ptr<SBProfileImpl> _pimpl;
     };
 
 }

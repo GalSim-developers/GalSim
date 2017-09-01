@@ -21,8 +21,6 @@
 #define GalSim_Interpolant_H
 
 #include <cmath>
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 #include <map>
 
 #include "Std.h"
@@ -179,7 +177,7 @@ namespace galsim {
         InterpolantFunction _interp;
 
         // Class that draws photons from this Interpolant
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const
@@ -234,7 +232,7 @@ namespace galsim {
     class InterpolantXY : public Interpolant2d
     {
     public:
-        InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
+        InterpolantXY(shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
         ~InterpolantXY() {}
 
         // All of the calls below implement base class methods.
@@ -258,10 +256,10 @@ namespace galsim {
         double xval1d(double x) const { return _i1d->xval(x); }
         double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
         double uval1d(double u) const { return _i1d->uval(u); }
-        boost::shared_ptr<Interpolant> get1d() const { return _i1d; }
+        shared_ptr<Interpolant> get1d() const { return _i1d; }
 
     private:
-        boost::shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
+        shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
     };
 
     /**
@@ -480,14 +478,14 @@ namespace galsim {
         double _range;
 
         double _tolerance;
-        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<Table<double,double> > > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -527,14 +525,14 @@ namespace galsim {
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;
-        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<Table<double,double> > > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -592,8 +590,8 @@ namespace galsim {
         double _uMax;  // truncation point for Fourier transform
         std::vector<double> _K; // coefficients for flux correction in xval
         std::vector<double> _C; // coefficients for flux correction in uval
-        boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
-        boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+        shared_ptr<Table<double,double> > _xtab; // Table for x values
+        shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
 
         double xCalc(double x) const;
         double uCalc(double u) const;
@@ -601,8 +599,8 @@ namespace galsim {
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
-        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_xtab;
-        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab;
+        static std::map<KeyType,shared_ptr<Table<double,double> > > _cache_xtab;
+        static std::map<KeyType,shared_ptr<Table<double,double> > > _cache_utab;
         static std::map<KeyType,double> _cache_umax;
     };
 

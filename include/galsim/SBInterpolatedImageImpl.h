@@ -33,8 +33,8 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant> xInterp,
-            boost::shared_ptr<Interpolant> kInterp,
+            shared_ptr<Interpolant> xInterp,
+            shared_ptr<Interpolant> kInterp,
             double pad_factor, double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
@@ -107,8 +107,8 @@ namespace galsim {
         //////////////////////////////
         // Additional subclass methods
 
-        boost::shared_ptr<Interpolant> getXInterp() const;
-        boost::shared_ptr<Interpolant> getKInterp() const;
+        shared_ptr<Interpolant> getXInterp() const;
+        shared_ptr<Interpolant> getKInterp() const;
         double getPadFactor() const { return _pad_factor; }
         ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
@@ -126,10 +126,10 @@ namespace galsim {
         double _xcentroid;
         double _ycentroid;
 
-        boost::shared_ptr<InterpolantXY> _xInterp; ///< Interpolant used in real space.
-        boost::shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
-        boost::shared_ptr<XTable> _xtab; ///< Final padded real-space image.
-        mutable boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        shared_ptr<InterpolantXY> _xInterp; ///< Interpolant used in real space.
+        shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
+        shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+        mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         const double _pad_factor;
         mutable double _stepk;
         mutable double _maxk;
@@ -207,12 +207,12 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImageImpl(
             const BaseImage<T>& kimage, double stepk,
-            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
+            shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data, double stepk, double maxk,
-            boost::shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
+            shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
 
         ~SBInterpolatedKImageImpl();
 
@@ -223,7 +223,7 @@ namespace galsim {
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
 
-        boost::shared_ptr<Interpolant> getKInterp() const;
+        shared_ptr<Interpolant> getKInterp() const;
 
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
@@ -255,8 +255,8 @@ namespace galsim {
         mutable double _xcentroid;
         mutable double _ycentroid;
 
-        boost::shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
-        boost::shared_ptr<KTable> _ktab; ///< Final k-space image.
+        shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
+        shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;

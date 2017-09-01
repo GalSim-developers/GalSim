@@ -83,7 +83,7 @@ namespace galsim {
         virtual void checkSampler() const = 0;
 
         ///< Class that can sample radial distribution
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
     private:
         AiryInfo(const AiryInfo& rhs); ///< Hides the copy constructor.
@@ -297,7 +297,7 @@ namespace galsim {
 
         /// Info object that stores things that are common to all Airy functions with this
         /// obscuration value.
-        const boost::shared_ptr<AiryInfo> _info;
+        const shared_ptr<AiryInfo> _info;
 
         /// One static map of all `AiryInfo` structures for whole program.
         static LRUCache<Tuple<double, GSParamsPtr>, AiryInfo> cache;
