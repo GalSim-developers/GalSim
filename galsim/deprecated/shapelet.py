@@ -76,7 +76,19 @@ def Shapelet_fitImage(self, image, center=None, normalization='flux'):
     bvec = new_obj.SBProfile.getBVec()
     galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
 
+def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
+    "Deprecated function equivalent to Shapelet.fit"
+    depr("FitShapelet", 1.5, 'galsim.Shapelet.fit(...)')
+    return galsim.Shapelet.fit(sigma, order, image, center, normalization, gsparams)
+
+def ShapeletSize(order):
+    "Deprecated function equivalent to Shapelet.size"
+    depr("ShapeletSize", 1.5, 'galsim.Shapelet.size(order)')
+    return galsim.Shapelet.size(order)
+
 galsim.LVectorSize = LVectorSize
+galsim.ShapeletSize = ShapeletSize
+galsim.FitShapelet = FitShapelet
 galsim.Shapelet.setSigma = Shapelet_setSigma
 galsim.Shapelet.setOrder = Shapelet_setOrder
 galsim.Shapelet.setBVec = Shapelet_setBVec

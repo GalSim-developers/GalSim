@@ -50,7 +50,7 @@ def test_shapelet_gaussian():
         gauss = galsim.Gaussian(flux=test_flux, sigma=sigma)
         gauss.drawImage(im1, method='no_pixel')
         for order in [0, 2, 8]:
-            bvec = np.zeros(galsim.ShapeletSize(order))
+            bvec = np.zeros(galsim.Shapelet.size(order))
             bvec[0] = test_flux
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
             shapelet.drawImage(im2, method='no_pixel')
@@ -78,7 +78,7 @@ def test_shapelet_drawImage():
     im = galsim.ImageF(129,129, scale=scale)
     for sigma in [1., 0.3, 2.4]:
         for order in [0, 2, 8]:
-            bvec = np.zeros(galsim.ShapeletSize(order))
+            bvec = np.zeros(galsim.Shapelet.size(order))
             bvec[0] = 1.  # N,m = 0,0
             k = 0
             for n in range(1,order+1):
@@ -192,7 +192,7 @@ def test_shapelet_fit():
         im1 = conv.drawImage(scale=scale, method=method)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
-        shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
+        shapelet = galsim.Shapelet.fit(sigma, 10, im1, normalization=norm)
         #print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
@@ -220,7 +220,7 @@ def test_shapelet_fit():
                 err_msg="Shapelet version not a good match to original")
 
         # Remeasure -- should now be very close to the same.
-        shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm)
+        shapelet2 = galsim.Shapelet.fit(sigma, 10, im2, normalization=norm)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,
@@ -232,8 +232,8 @@ def test_shapelet_fit():
         im2 = im1.copy()
         offset = galsim.PositionD(0.3,1.4)
         shapelet.drawImage(im2, method=method, offset=offset)
-        shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm,
-                                       center=im2.trueCenter() + offset)
+        shapelet2 = galsim.Shapelet.fit(sigma, 10, im2, normalization=norm,
+                                        center=im2.trueCenter() + offset)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,

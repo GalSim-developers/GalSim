@@ -45,6 +45,10 @@ API Changes
   If you want a view, you should use the more intuitive image.view().  (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
+- Deprecated the function ShapeletSize and FitShapelet.  This functionality
+  is not in classmethods of the Shapelet class: `Shapelet.size(order)` and
+  `Shapelet.fit(image)`.  Also, direct use of LVector is deprecated, and it
+  will be removed in version 2.0. (#904)
 
 
 Dependency Changes

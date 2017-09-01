@@ -837,7 +837,8 @@ def test_dep_sed():
 def test_dep_shapelet():
     """Test the deprecated methods in galsim/deprecated/shapelet.py
     """
-    np.testing.assert_almost_equal(check_dep(galsim.LVectorSize,12), galsim.ShapeletSize(12))
+    np.testing.assert_almost_equal(check_dep(galsim.LVectorSize,12), galsim.Shapelet.size(12))
+    np.testing.assert_almost_equal(check_dep(galsim.ShapeletSize,12), galsim.Shapelet.size(12))
 
     # The next bit is from the old test_shapelet_adjustments() test
 
@@ -861,6 +862,11 @@ def test_dep_shapelet():
     ref_shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     ref_im = galsim.ImageF(nx,ny)
     ref_shapelet.drawImage(ref_im, scale=scale, method='no_pixel')
+
+    # test deprecated LVector
+    lvec = check_dep(galsim.shapelet.LVector, order, np.array(bvec))
+    np.testing.assert_array_equal(lvec.array, ref_shapelet.bvec)
+    np.testing.assert_array_equal(lvec.order, ref_shapelet.order)
 
     # test setsigma
     shapelet = galsim.Shapelet(sigma=1., order=order, bvec=bvec)
@@ -950,8 +956,74 @@ def test_dep_shapelet():
     # Check fitImage
     s1 = galsim.Shapelet(sigma=sigma, order=10)
     check_dep(s1.fitImage, image=im)
-    s2 = galsim.FitShapelet(sigma=sigma, order=10, image=im)
+    s2 = check_dep(galsim.FitShapelet, sigma=sigma, order=10, image=im)
     np.testing.assert_array_almost_equal(s1.getBVec(), s2.getBVec())
+
+
+@timer
+def test_dep_shapelet_fit():
+    """Test fitting a Shapelet decomposition of an image
+    """
+    for method, norm in [('no_pixel','f'), ('sb','sb')]:
+        # We fit a shapelet approximation of a distorted Moffat profile:
+        flux = 20
+        psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
+        psf = psf.shear(g1=0.11,g2=0.07).shift(0.03,0.04)
+        scale = 0.2
+        pixel = galsim.Pixel(scale)
+        conv = galsim.Convolve([psf,pixel])
+        im1 = conv.drawImage(scale=scale, method=method)
+
+        sigma = 1.2  # Match half-light-radius as a decent first approximation.
+        shapelet = check_dep(galsim.FitShapelet, sigma, 10, im1, normalization=norm)
+        #print('fitted shapelet coefficients = ',shapelet.bvec)
+
+        # Check flux
+        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
+        np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
+                err_msg="Fitted shapelet has the wrong flux")
+
+        # Test centroid
+        print('centroid = ',shapelet.centroid(),'  cf. ',conv.centroid())
+        np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
+                err_msg="Fitted shapelet has the wrong centroid (x)")
+        np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
+                err_msg="Fitted shapelet has the wrong centroid (y)")
+
+        # Test drawing image from shapelet
+        im2 = im1.copy()
+        shapelet.drawImage(im2, method=method)
+        # Check that images are close to the same:
+        print('norm(diff) = ',np.sum((im1.array-im2.array)**2))
+        print('norm(im) = ',np.sum(im1.array**2))
+        print('max(diff) = ',np.max(np.abs(im1.array-im2.array)))
+        print('max(im) = ',np.max(np.abs(im1.array)))
+        peak_scale = np.max(np.abs(im1.array))*3  # Check agreement to within 3% of peak value.
+        np.testing.assert_almost_equal(im2.array/peak_scale, im1.array/peak_scale, decimal=2,
+                err_msg="Shapelet version not a good match to original")
+
+        # Remeasure -- should now be very close to the same.
+        shapelet2 = check_dep(galsim.FitShapelet, sigma, 10, im2, normalization=norm)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
+
+        # Test drawing off center
+        im2 = im1.copy()
+        offset = galsim.PositionD(0.3,1.4)
+        shapelet.drawImage(im2, method=method, offset=offset)
+        shapelet2 = check_dep(galsim.FitShapelet, sigma, 10, im2, normalization=norm,
+                                       center=im2.trueCenter() + offset)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
+
 
 
 @timer
@@ -1721,6 +1793,7 @@ if __name__ == "__main__":
     test_dep_scene()
     test_dep_sed()
     test_dep_shapelet()
+    test_dep_shapelet_fit()
     test_dep_shear()
     test_dep_optics()
     test_dep_phase_psf()

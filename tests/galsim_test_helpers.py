@@ -431,7 +431,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
             # Special case: can't change size of LVector or PhotonArray without changing array
-            if classname in ['LVector', 'PhotonArray'] and i == 0:
+            if classname in ['LVector', 'PhotonArray'] and i == 0 or i == 2:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
