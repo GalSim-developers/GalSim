@@ -1852,22 +1852,22 @@ def test_dep_ecliptic():
     # results are the same.  This includes use of a function that isn't available to users, but we
     # use it for a few things so we should still make sure it's working properly.
     from galsim.celestial import _ecliptic_to_equatorial
-    north_pole_2 = _ecliptic_to_equatorial(north_pole.ecliptic(epoch=2014), 2014)
+    north_pole_2 = check_dep(_ecliptic_to_equatorial, north_pole.ecliptic(epoch=2014), 2014)
     np.testing.assert_almost_equal(check_dep(north_pole.ra.rad),
                                    check_dep(north_pole_2.ra.rad), decimal=6)
     np.testing.assert_almost_equal(check_dep(north_pole.dec.rad),
                                    check_dep(north_pole_2.dec.rad), decimal=6)
-    south_pole_2 = _ecliptic_to_equatorial(south_pole.ecliptic(epoch=2014), 2014)
+    south_pole_2 = check_dep(_ecliptic_to_equatorial, south_pole.ecliptic(epoch=2014), 2014)
     np.testing.assert_almost_equal(check_dep(south_pole.ra.rad),
                                    check_dep(south_pole_2.ra.rad), decimal=6)
     np.testing.assert_almost_equal(check_dep(south_pole.dec.rad),
                                    check_dep(south_pole_2.dec.rad), decimal=6)
-    vernal_equinox_2 = _ecliptic_to_equatorial(vernal_equinox.ecliptic(epoch=2014), 2014)
+    vernal_equinox_2 = check_dep(_ecliptic_to_equatorial, vernal_equinox.ecliptic(epoch=2014), 2014)
     np.testing.assert_almost_equal(check_dep(vernal_equinox.ra.rad),
                                    check_dep(vernal_equinox_2.ra.rad), decimal=6)
     np.testing.assert_almost_equal(check_dep(vernal_equinox.dec.rad),
                                    check_dep(vernal_equinox_2.dec.rad), decimal=6)
-    autumnal_equinox_2 = _ecliptic_to_equatorial(autumnal_equinox.ecliptic(epoch=2014), 2014)
+    autumnal_equinox_2 = check_dep(_ecliptic_to_equatorial, autumnal_equinox.ecliptic(epoch=2014), 2014)
     np.testing.assert_almost_equal(check_dep(autumnal_equinox.ra.rad),
                                    check_dep(autumnal_equinox_2.ra.rad), decimal=6)
     np.testing.assert_almost_equal(check_dep(autumnal_equinox.dec.rad),

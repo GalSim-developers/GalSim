@@ -507,8 +507,8 @@ def allowedPos(world_pos, date):
              date.
     """
     # Find the Sun's location on the sky on this date.
-    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
-    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+    lam = galsim.celestial._sun_position_ecliptic(date)
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
 
     # Find the angle between that and the supplied position
     angle_deg = abs(world_pos.distanceTo(sun)/galsim.degrees)
@@ -540,8 +540,8 @@ def bestPA(world_pos, date):
 
     # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
     # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
-    from galsim.celestial import _ecliptic_to_equatorial, _sun_position_ecliptic
-    sun = _ecliptic_to_equatorial(_sun_position_ecliptic(date), date.year)
+    lam = galsim.celestial._sun_position_ecliptic(date)
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
     # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
     sun_tp = world_pos.project(sun, 'gnomonic')
     # We want to rotate around by 90 degrees to find the +Y obs direction.  Specifically, we want

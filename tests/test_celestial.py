@@ -575,30 +575,51 @@ def test_galactic():
     """Test the conversion from equatorial to galactic coordinates."""
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
-    center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
+    # But I get more precise values from https://arxiv.org/pdf/1010.3773.pdf
+    center = galsim.CelestialCoord(
+        galsim.Angle.from_hms('17:45:37.1991'),
+        galsim.Angle.from_dms('-28:56:10.2207'))
     print('center.galactic = ',center.galactic())
     el,b = center.galactic()
-    numpy.testing.assert_almost_equal(el.rad, 0., decimal=3)
-    numpy.testing.assert_almost_equal(b.rad, 0., decimal=3)
+    np.testing.assert_almost_equal(el.wrap().rad, 0., decimal=8)
+    np.testing.assert_almost_equal(b.rad, 0., decimal=8)
 
-    # The north pole is at 12h:51.4m, 27.13d
-    north = galsim.CelestialCoord( (12.+51.4/60.) * galsim.hours, 27.13 * galsim.degrees)
+    # Go back from galactic coords to CelestialCoord
+    center2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(center2.ra.rad, center.ra.rad)
+    np.testing.assert_allclose(center2.dec.rad, center.dec.rad)
+
+    # The north pole is at 12h:51.4m, 27.13d again with more precise values from the above paper.
+    north = galsim.CelestialCoord(
+        galsim.Angle.from_hms('12:51:26.27549'),
+        galsim.Angle.from_dms('27:07:41.7043'))
     print('north.galactic = ',north.galactic())
     el,b = north.galactic()
-    numpy.testing.assert_almost_equal(b.rad, pi/2., decimal=3)
+    np.testing.assert_allclose(b.rad, pi/2.)
+    north2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(north2.ra.rad, north.ra.rad)
+    np.testing.assert_allclose(north2.dec.rad, north.dec.rad)
 
-    # The south pole is at 0h:51.4m, -27.13d
-    south = galsim.CelestialCoord( (0.+51.4/60.) * galsim.hours, -27.13 * galsim.degrees)
+    south = galsim.CelestialCoord(
+        galsim.Angle.from_hms('00:51:26.27549'),
+        galsim.Angle.from_dms('-27:07:41.7043'))
     print('south.galactic = ',south.galactic())
     el,b = south.galactic()
-    numpy.testing.assert_almost_equal(b.rad, -pi/2., decimal=3)
+    np.testing.assert_allclose(b.rad, -pi/2.)
+    south2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(south2.ra.rad, south.ra.rad)
+    np.testing.assert_allclose(south2.dec.rad, south.dec.rad)
 
-    # The anti-center is at 5h:42.6m, 28.92d
-    anticenter = galsim.CelestialCoord( (5.+45.6/60.) * galsim.hours, 28.94 * galsim.degrees)
+    anticenter = galsim.CelestialCoord(
+        galsim.Angle.from_hms('05:45:37.1991'),
+        galsim.Angle.from_dms('28:56:10.2207'))
     print('anticenter.galactic = ',anticenter.galactic())
     el,b = anticenter.galactic()
-    numpy.testing.assert_almost_equal(el.rad, pi, decimal=3)
-    numpy.testing.assert_almost_equal(b.rad, 0., decimal=3)
+    np.testing.assert_almost_equal(el.rad, pi, decimal=8)
+    np.testing.assert_almost_equal(b.rad, 0., decimal=8)
+    anticenter2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(anticenter2.ra.rad, anticenter.ra.rad)
+    np.testing.assert_allclose(anticenter2.dec.rad, anticenter.dec.rad)
 
 
 @timer
@@ -643,18 +664,28 @@ def test_ecliptic():
     # Vernal equinox: should have (el, b) = (el_rel, b_rel) = 0.0
     numpy.testing.assert_almost_equal(el_rel.rad, el.rad, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad, b.rad, decimal=6)
+    vernal2 = galsim.CelestialCoord.from_ecliptic(el_rel, b_rel, date=vernal_eq_date)
+    np.testing.assert_almost_equal(vernal2.ra.wrap().rad, vernal_equinox.ra.rad, decimal=8)
+    np.testing.assert_almost_equal(vernal2.dec.rad, vernal_equinox.dec.rad, decimal=8)
+
     # Now do the autumnal equinox: should have (el, b) = (pi, 0) = (el_rel, b_rel) when we look at
     # the time of the vernal equinox.
     el, b = autumnal_equinox.ecliptic(epoch=2014)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad, el.rad, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad, b.rad, decimal=6)
+    autumnal2 = galsim.CelestialCoord.from_ecliptic(el_rel, b_rel, date=vernal_eq_date)
+    np.testing.assert_almost_equal(autumnal2.ra.wrap(pi*galsim.radians).rad,
+                                   autumnal_equinox.ra.wrap(pi*galsim.radians).rad, decimal=8)
+    np.testing.assert_almost_equal(autumnal2.dec.rad, autumnal_equinox.dec.rad, decimal=8)
+
     # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
     # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
     autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.rad, -pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
+
     # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
@@ -662,20 +693,18 @@ def test_ecliptic():
     numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
 
     # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
-    # results are the same.  This includes use of a function that isn't available to users, but we
-    # use it for a few things so we should still make sure it's working properly.
-    from galsim.celestial import _ecliptic_to_equatorial
-    north_pole_2 = _ecliptic_to_equatorial(north_pole.ecliptic(epoch=2014), 2014)
+    # results are the same.
+    north_pole_2 = galsim.CelestialCoord.from_ecliptic(*north_pole.ecliptic(epoch=2014), epoch=2014)
     numpy.testing.assert_almost_equal(north_pole.ra.rad, north_pole_2.ra.rad, decimal=6)
     numpy.testing.assert_almost_equal(north_pole.dec.rad, north_pole_2.dec.rad, decimal=6)
-    south_pole_2 = _ecliptic_to_equatorial(south_pole.ecliptic(epoch=2014), 2014)
+    south_pole_2 = galsim.CelestialCoord.from_ecliptic(*south_pole.ecliptic(epoch=2014), epoch=2014)
     numpy.testing.assert_almost_equal(south_pole.ra.rad, south_pole_2.ra.rad, decimal=6)
     numpy.testing.assert_almost_equal(south_pole.dec.rad, south_pole_2.dec.rad, decimal=6)
-    vernal_equinox_2 = _ecliptic_to_equatorial(vernal_equinox.ecliptic(epoch=2014), 2014)
+    vernal_equinox_2 = galsim.CelestialCoord.from_ecliptic(*vernal_equinox.ecliptic(epoch=2014), epoch=2014)
     numpy.testing.assert_almost_equal(vernal_equinox.ra.rad, vernal_equinox_2.ra.rad, decimal=6)
     numpy.testing.assert_almost_equal(vernal_equinox.dec.rad, vernal_equinox_2.dec.rad,
                                       decimal=6)
-    autumnal_equinox_2 = _ecliptic_to_equatorial(autumnal_equinox.ecliptic(epoch=2014), 2014)
+    autumnal_equinox_2 = galsim.CelestialCoord.from_ecliptic(*autumnal_equinox.ecliptic(epoch=2014), epoch=2014)
     numpy.testing.assert_almost_equal(autumnal_equinox.ra.rad, autumnal_equinox_2.ra.rad,
                                       decimal=6)
     numpy.testing.assert_almost_equal(autumnal_equinox.dec.rad, autumnal_equinox_2.dec.rad,
