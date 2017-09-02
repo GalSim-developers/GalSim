@@ -119,6 +119,9 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof.xValue(x,y), rtol=1.e-5,
                 err_msg="%s profile sb image does not match xValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
+                err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
 
 def check_basic_k(prof, name):
     """Check drawKImage
@@ -150,6 +153,9 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof.kValue(kx,ky), rtol=1.e-5,
                 err_msg="%s profile kimage does not match kValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
+                err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
@@ -298,7 +304,7 @@ def radial_integrate(prof, minr, maxr):
     # In this tight loop, it is worth optimizing away the parse_pos_args step.
     # It makes a rather significant difference in the running time of this function.
     # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
-    f = lambda r: 2 * np.pi * r * prof.SBProfile.xValue(galsim.PositionD(r,0))
+    f = lambda r: 2 * np.pi * r * prof._xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 
 # A short helper function to test pickling of noise objects

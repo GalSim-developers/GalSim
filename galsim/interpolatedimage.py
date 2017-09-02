@@ -477,15 +477,15 @@ class InterpolatedImage(GSObject):
         self._serialize_stepk = sbii.stepK()
         self._serialize_maxk = sbii.maxK()
 
-        prof = GSObject(sbii)
+        self._sbp = sbii  # Temporary.  Will update below.
 
         # Make sure offset is a PositionD
-        offset = prof._parse_offset(offset)
+        offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the
         # draw function does.
-        prof = prof._fix_center(self.image.bounds, offset, use_true_center, reverse=True)
+        prof = self._fix_center(self.image.bounds, offset, use_true_center, reverse=True)
 
         # Save the offset we will need when pickling.
         if hasattr(prof, 'offset'):
@@ -503,9 +503,7 @@ class InterpolatedImage(GSObject):
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
         # is to hide the SBProfile in an SBAdd object.
-        sbp = galsim._galsim.SBAdd([prof.SBProfile])
-
-        GSObject.__init__(self, sbp)
+        self._sbp = galsim._galsim.SBAdd([prof._sbp])
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
@@ -579,7 +577,7 @@ class InterpolatedImage(GSObject):
         d = self.__dict__.copy()
         del d['_sbii']
         del d['image']
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -641,13 +639,12 @@ class InterpolatedKImage(GSObject):
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  [default: galsim.Quintic()]
     @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
-                            of the underlying SBProfile is set by the `scale` attribute of the
-                            supplied images.  This keyword allows the user to specify a coarser
-                            sampling in Fourier-space, which may increase efficiency at the expense
-                            of decreasing the separation between neighboring copies of the
-                            DFT-rendered real-space profile.  (See the GSParams docstring for the
-                            parameter `folding_threshold` for more information).
-                            [default: kimage.scale]
+                            is set by the `scale` attribute of the supplied images.  This keyword
+                            allows the user to specify a coarser sampling in Fourier-space, which
+                            may increase efficiency at the expense of decreasing the separation
+                            between neighboring copies of the DFT-rendered real-space profile.
+                            (See the GSParams docstring for the parameter `folding_threshold` for
+                            more information).  [default: kimage.scale]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param real_kimage      Optionally, rather than provide kimage, you may provide the real
@@ -773,9 +770,7 @@ class InterpolatedKImage(GSObject):
                                       galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
         else:
             sbp = sbiki
-        sbp = _galsim.SBAdd([sbp])
-
-        GSObject.__init__(self, sbp)
+        self._sbp = _galsim.SBAdd([sbp])
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
@@ -808,7 +803,7 @@ class InterpolatedKImage(GSObject):
         # an image to be pickled, but at least it will be through the normal pickling rules,
         # rather than the repr.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -828,7 +823,7 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
             ret._kimage.image, 1.0, ret.k_interpolant, gsparams)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
                               galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
-    ret.SBProfile = _galsim.SBAdd([sbp])
+    ret._sbp = _galsim.SBAdd([sbp])
     return ret
 
 

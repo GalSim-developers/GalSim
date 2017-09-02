@@ -252,6 +252,13 @@ def test_dep_base():
         test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
         test_gal_copy = check_dep(test_gal.copy)
 
+    # Check that GSObject(sbp) works but raises a deprecation warning
+    gso = check_dep(galsim.GSObject, g._sbp)
+    sbp = check_dep(getattr, gso, 'SBProfile')
+    sbp = check_dep(getattr, g, 'SBProfile')
+    do_pickle(gso, irreprable=True)
+    do_pickle(sbp)
+
 @timer
 def test_dep_bounds():
     """Test the deprecated methods in galsim/deprecated/bounds.py
@@ -1593,8 +1600,8 @@ def test_dep_kroundtrip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
-    do_pickle(b.SBProfile)
-    do_pickle(b.SBProfile, lambda x: repr(x))
+    do_pickle(check_dep(getattr, b, 'SBProfile'))
+    do_pickle(check_dep(getattr, b, 'SBProfile'), lambda x: repr(x))
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,

@@ -173,8 +173,6 @@ def test_shapelet_properties():
 
     # Check picklability
     do_pickle(shapelet)
-    do_pickle(shapelet.SBProfile)
-    do_pickle(shapelet.SBProfile.getBVec())
 
 
 @timer
@@ -279,7 +277,7 @@ def test_shapelet_adjustments():
 
     # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
     # Make it opaque to the Shapelet versions
-    gsref_shapelet = galsim.GSObject(ref_shapelet.SBProfile)  
+    gsref_shapelet = galsim.Add([ref_shapelet])
     gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     shapelet.withFlux(23.).drawImage(im, method='no_pixel')

@@ -64,7 +64,7 @@ image_decimal_precise = 15
 
 @timer
 def test_smallshear():
-    """Test the application of a small shear to a Gaussian SBProfile against a known result.
+    """Test the application of a small shear to a Gaussian profile against a known result.
     """
     e1 = 0.02
     e2 = 0.02
@@ -107,23 +107,20 @@ def test_smallshear():
     do_kvalue(gauss,myImg,"sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
-    do_pickle(gauss.SBProfile)
 
     # Check really small shear  (This mostly tests a branch in the str function.)
     do_pickle(galsim.Gaussian(sigma=2.3).shear(g1=1.e-13,g2=0))
 
 @timer
 def test_largeshear():
-    """Test the application of a large shear to a Sersic SBProfile against a known result.
+    """Test the application of a large shear to a Sersic profile against a known result.
     """
     e1 = 0.0
     e2 = 0.5
 
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test the SBProfile version using shear
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -168,10 +165,8 @@ def test_largeshear():
     do_kvalue(gauss,myImg, "sheared Gaussian")
 
     # Check picklability
-    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
-    do_pickle(gauss.SBProfile)
 
 
 @timer
@@ -220,10 +215,8 @@ def test_rotate():
     do_kvalue(gal,myImg,"rotated sheared Sersic")
 
     # Check picklability
-    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
-    do_pickle(gal.SBProfile)
 
 
 @timer
@@ -302,10 +295,8 @@ def test_mag():
     do_kvalue(gal,myImg,"dilated Exponential")
 
     # Check picklability
-    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
-    do_pickle(gal.SBProfile)
 
 
 @timer
@@ -376,10 +367,8 @@ def test_shift():
     do_kvalue(gauss,myImg, "shifted Gaussian")
 
     # Check picklability
-    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
-    do_pickle(gauss.SBProfile)
 
 
 @timer
@@ -523,10 +512,8 @@ def test_rescale():
     do_kvalue(sersic2,myImg, "scaled Sersic")
 
     # Check picklability
-    do_pickle(sersic2.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
     do_pickle(sersic2, lambda x: x.drawImage())
     do_pickle(sersic2)
-    do_pickle(sersic2.SBProfile)
 
 
 @timer

@@ -11,7 +11,6 @@ API Changes
 - Moved packaged `SED` and `Bandpass` files from `.../share/galsim/` to
   `.../share/galsim/SEDs` and `.../share/galsim/bandpasses` respectively.
   (#640)
-- Removed option to pass subclass of GSObject to GSObject initializer. (#640)
 - Changed the dimensions of `SED` from [photons/wavelength-interval] to either
   [photons/wavelength-interval/area/time] or [1] (dimensionless).
   `ChromaticObject`s representing stars or galaxies take SEDs with the former
@@ -55,6 +54,14 @@ API Changes
   will be removed in version 2.0. (#904)
 - The use of the Interpolant base class as a factory function is now deprecated.
   Instead, use `Interpolant.from_name(name)`. (#904)
+- Use of the `SBProfile` attribute of GSObject is deprecated. The attribute
+  `_sbp` takes its place, but that should be considered an implementation
+  detail that users should not need to access, not part of the public API.
+  If you think you have a use case that is not covered by the public API
+  (either for functionality of efficiency), please open an issue. (#904)
+- Deprecated making a GSObject directly rather than making one of the
+  subclasses. Again, this should not be necessary, but if you have a use
+  case that you think requires this, please open an issue. (#904)
 
 
 Dependency Changes

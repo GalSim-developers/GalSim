@@ -103,11 +103,8 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
-        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
-        do_pickle(interp.SBProfile)
 
     # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
@@ -1003,10 +1000,7 @@ def test_kroundtrip():
 
     # Check picklability
     do_pickle(b)
-    do_pickle(b._sbiki)
     do_pickle(b, lambda x: x.drawImage())
-    do_pickle(b.SBProfile)
-    do_pickle(b.SBProfile, lambda x: repr(x))
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,

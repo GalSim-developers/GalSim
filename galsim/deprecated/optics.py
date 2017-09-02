@@ -362,12 +362,12 @@ class OpticalPSF(GSObject):
         self._serialize_stepk = ii._serialize_stepk
         self._serialize_maxk = ii._serialize_maxk
 
-        GSObject.__init__(self, ii)
+        self._sbp = ii._sbp
 
         if not suppress_warning:
             # Check the calculated stepk value.  If it is smaller than stepk, then there might
             # be aliasing.
-            final_stepk = self.SBProfile.stepK()
+            final_stepk = self.stepK()
             if final_stepk < stepk:
                 import warnings
                 warnings.warn(
@@ -451,7 +451,7 @@ class OpticalPSF(GSObject):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -461,7 +461,7 @@ class OpticalPSF(GSObject):
                                        _serialize_stepk=self._serialize_stepk,
                                        _serialize_maxk=self._serialize_maxk,
                                        gsparams=self._gsparams)
-        GSObject.__init__(self, ii)
+        self._sbp = ii._sbp
 
 
 def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None,

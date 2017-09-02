@@ -57,7 +57,7 @@ test_scale = 1.8
 
 @timer
 def test_convolve():
-    """Test the convolution of a Moffat and a Box SBProfile against a known result.
+    """Test the convolution of a Moffat and a Box profile against a known result.
     """
     dx = 0.2
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
@@ -228,7 +228,7 @@ def test_convolve_flux_scaling():
 
 @timer
 def test_shearconvolve():
-    """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
+    """Test the convolution of a sheared Gaussian and a Box profile against a known result.
     """
     e1 = 0.04
     e2 = 0.0
@@ -280,7 +280,7 @@ def test_shearconvolve():
 
 @timer
 def test_realspace_convolve():
-    """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
+    """Test the real-space convolution of a Moffat and a Box profile against a known result.
     """
     dx = 0.2
     # Note: Using an image created from Maple "exact" calculations.
@@ -342,10 +342,8 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"Truncated Moffat*Box")
 
     # Check picklability
-    do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
 
     # Check some warnings that should be raised
 
@@ -370,13 +368,11 @@ def test_realspace_convolve():
     check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
 
     conv = galsim.AutoCorrelate(psf,real_space=True)
     check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
 
     try:
         np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
@@ -447,7 +443,7 @@ def test_realspace_distorted_convolve():
 
 @timer
 def test_realspace_shearconvolve():
-    """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a
+    """Test the real-space convolution of a sheared Gaussian and a Box profile against a
        known result.
     """
     e1 = 0.04
@@ -580,10 +576,8 @@ def test_add():
     do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum_gauss.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
     do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
     do_pickle(sum_gauss)
-    do_pickle(sum_gauss.SBProfile)
 
     # Sum of just one argument should be equivalent to that argument.
     single = galsim.Add(gauss1)
@@ -737,7 +731,6 @@ def test_deconvolve():
 
     # Check picklability
     do_pickle(inv_obj)
-    do_pickle(inv_obj.SBProfile)
 
     # And a significantly transformed deconvolve object
     jac = (0.3, -0.8, -0.7, 0.4)
@@ -763,7 +756,6 @@ def test_deconvolve():
 
     # Check picklability
     do_pickle(transformed_inv_obj)
-    do_pickle(transformed_inv_obj.SBProfile)
 
     # Should raise an exception for invalid arguments
     try:
@@ -822,10 +814,8 @@ def test_autoconvolve():
     np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
     # Check picklability
-    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(conv2)
-    do_pickle(conv2.SBProfile)
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
@@ -929,10 +919,8 @@ def test_autocorrelate():
     do_shoot(corr,myImg2,"AutoCorrelate")
 
     # Check picklability
-    do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(corr)
-    do_pickle(corr.SBProfile)
 
     # Should raise an exception for invalid arguments
     try:
@@ -1005,7 +993,7 @@ def test_fourier_sqrt():
     myImg2.setCenter(0,0)
 
     # Test trivial case, where we could (but don't) analytically collapse the
-    # chain of SBProfiles by recognizing that FourierSqrt is the inverse of
+    # chain of profiles by recognizing that FourierSqrt is the inverse of
     # AutoConvolve.
     psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
     psf.drawImage(myImg1, method='no_pixel')
@@ -1049,10 +1037,8 @@ def test_fourier_sqrt():
             err_msg="Fourier square root of expanded square disagrees with original")
 
     # Check picklability
-    do_pickle(sqrt1.SBProfile, lambda x: (repr(x.getObj()), x.getGSParams()))
     do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sqrt1)
-    do_pickle(sqrt1.SBProfile)
 
     # Should raise an exception for invalid arguments
     try:

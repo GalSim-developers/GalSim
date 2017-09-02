@@ -127,13 +127,12 @@ class Transformation(galsim.GSObject):
             self._original = obj.original
         else:
             self._original = obj
-        sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                  gsparams)
-        galsim.GSObject.__init__(self, sbt)
+        self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                        gsparams)
 
-        self._jac = np.asarray(sbt.getJac())
-        self._offset = sbt.getOffset()
-        self._flux_ratio = sbt.getFluxScaling()
+        self._jac = np.asarray(self._sbp.getJac())
+        self._offset = self._sbp.getOffset()
+        self._flux_ratio = self._sbp.getFluxScaling()
         self._gsparams = gsparams
 
     def getJac(self):
@@ -156,8 +155,8 @@ class Transformation(galsim.GSObject):
         if self.original.noise is None:
             return None
         else:
-            jac = self.SBProfile.getJac()
-            flux_ratio = self.SBProfile.getFluxScaling()
+            jac = self._jac
+            flux_ratio = self._flux_ratio
             return galsim.correlatednoise._BaseCorrelatedNoise(
                     self.original.noise.rng,
                     galsim._Transform(self.original.noise._profile,
@@ -232,10 +231,10 @@ class Transformation(galsim.GSObject):
     def _prepareDraw(self):
         self._original._prepareDraw()
         dudx, dudy, dvdx, dvdy = self.getJac()
-        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
-                                                    dudx, dudy, dvdx, dvdy,
-                                                    self.getOffset(), self.getFluxRatio(),
-                                                    self._gsparams)
+        self._sbp = galsim._galsim.SBTransform(self._original._sbp,
+                                               dudx, dudy, dvdx, dvdy,
+                                               self.getOffset(), self.getFluxRatio(),
+                                               self._gsparams)
 
     def _fwd_ident(self, x, y):
         return x, y
@@ -283,7 +282,7 @@ class Transformation(galsim.GSObject):
         # repr, which is not the most efficient serialization.  Especially for things like
         # SBInterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -302,12 +301,10 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
         ret._original = obj.original
     else:
         ret._original = obj
-    sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                              gsparams)
-    galsim.GSObject.__init__(ret, sbt)
-    ret._jac = np.asarray(sbt.getJac())
-    ret._offset = sbt.getOffset()
-    ret._flux_ratio = sbt.getFluxScaling()
+    ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
+    ret._jac = np.asarray(ret._sbp.getJac())
+    ret._offset = ret._sbp.getOffset()
+    ret._flux_ratio = ret._sbp.getFluxScaling()
     ret._gsparams = gsparams
     return ret
 

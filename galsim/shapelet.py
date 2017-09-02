@@ -128,17 +128,17 @@ class Shapelet(GSObject):
                 raise ValueError("bvec is the wrong size for the provided order")
             bvec = LVector(order,np.array(bvec), _depr_warn=False)
 
-        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
+        self._sbp = _galsim.SBShapelet(sigma, bvec, gsparams)
         self._gsparams = gsparams
 
     def getSigma(self):
-        return self.SBProfile.getSigma()
+        return self._sbp.getSigma()
 
     def getOrder(self):
-        return self.SBProfile.getBVec().order
+        return self._sbp.getBVec().order
 
     def getBVec(self):
-        return self.SBProfile.getBVec().array
+        return self._sbp.getBVec().array
 
     @property
     def sigma(self): return self.getSigma()
@@ -148,16 +148,16 @@ class Shapelet(GSObject):
     def bvec(self): return self.getBVec()
 
     def getPQ(self,p,q):
-        return self.SBProfile.getBVec().getPQ(p,q)
+        return self._sbp.getBVec().getPQ(p,q)
     def getNM(self,N,m):
-        return self.SBProfile.getBVec().getPQ((N+m)//2,(N-m)//2)
+        return self._sbp.getBVec().getPQ((N+m)//2,(N-m)//2)
 
     # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject
     def rotate(self, theta):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        bvec = self.SBProfile.getBVec().copy()
+        bvec = self._sbp.getBVec().copy()
         bvec.rotate(theta)
         return Shapelet(self.sigma, self.order, bvec.array)
 
