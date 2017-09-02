@@ -1866,6 +1866,16 @@ def test_dep_ecliptic():
     np.testing.assert_almost_equal(check_dep(autumnal_equinox.dec.rad),
                                    check_dep(autumnal_equinox_2.dec.rad), decimal=6)
 
+@timer
+def test_dep_interp():
+    im = galsim.Gaussian(sigma=4).drawImage()
+    test_func = lambda x : (
+        galsim.InterpolatedImage(im, x_interpolant=x).drawImage(method='no_pixel'))
+    do_pickle(check_dep(galsim.Interpolant, 'quintic'), test_func)
+    do_pickle(check_dep(galsim.Interpolant, 'lanczos7'), test_func)
+    do_pickle(check_dep(galsim.Interpolant, 'lanczos9F', 1.e-5), test_func)
+
+
 if __name__ == "__main__":
     test_dep_bandpass()
     test_dep_base()
@@ -1889,3 +1899,4 @@ if __name__ == "__main__":
     test_dep_kroundtrip()
     test_dep_simreal()
     test_dep_ecliptic()
+    test_dep_interp()

@@ -145,9 +145,9 @@ def test_roundtrip():
     do_pickle(galsim.Quintic(), test_func)
     do_pickle(galsim.Quintic(tol=0.1), test_func)
     do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant('quintic'), test_func)
-    do_pickle(galsim.Interpolant('lanczos7'), test_func)
-    do_pickle(galsim.Interpolant('lanczos9F'), test_func)
+    do_pickle(galsim.Interpolant.from_name('quintic'), test_func)
+    do_pickle(galsim.Interpolant.from_name('lanczos7'), test_func)
+    do_pickle(galsim.Interpolant.from_name('lanczos9F',1.e-6), test_func)
 
 
 @timer

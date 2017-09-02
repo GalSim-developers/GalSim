@@ -248,7 +248,7 @@ def convert_interpolant(interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
-        return galsim.Interpolant(interpolant)
+        return galsim.Interpolant.from_name(interpolant)
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):

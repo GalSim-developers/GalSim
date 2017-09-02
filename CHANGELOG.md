@@ -53,6 +53,8 @@ API Changes
   is not in classmethods of the Shapelet class: `Shapelet.size(order)` and
   `Shapelet.fit(image)`. Also, direct use of LVector is deprecated, and it
   will be removed in version 2.0. (#904)
+- The use of the Interpolant base class as a factory function is now deprecated.
+  Instead, use `Interpolant.from_name(name)`. (#904)
 
 
 Dependency Changes

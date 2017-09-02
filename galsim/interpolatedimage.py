@@ -846,7 +846,7 @@ _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
         'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r)'
         %self.__getinitargs__())
 
-_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
+_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol(), False)
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.Nearest.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.SincInterpolant.__getinitargs__ = lambda self: (self.getTol(), )
@@ -855,7 +855,7 @@ _galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
 
-_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r)'%self.__getinitargs__()
+_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r, %r)'%self.__getinitargs__()
 _galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)'%self.getTol()
 _galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)'%self.getTol()
 _galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)'%self.getTol()
@@ -868,3 +868,15 @@ _galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__geti
 _galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim.Interpolant.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.Interpolant.__hash__ = lambda self: hash(repr(self))
+
+Interpolant_init = _galsim.Interpolant.__init__
+def new_Interpolant_init(self, name, tol=1.e-4, depr_warn=True):
+    if depr_warn:
+        from .deprecated import depr
+        depr('Interpolant', 1.5, 'Interpolant.from_name')
+    Interpolant_init(self, name, tol)
+_galsim.Interpolant.__init__ = new_Interpolant_init
+
+def Interpolant_from_name(cls, name, tol=1.e-4):
+    return _galsim.Interpolant_from_name(name, tol)
+_galsim.Interpolant.from_name = classmethod(Interpolant_from_name)
