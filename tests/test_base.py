@@ -138,6 +138,7 @@ def test_gaussian():
         integration_abserr = 9.e-1))
     do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(gauss)
+    do_pickle(gauss._sbp)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -420,6 +421,7 @@ def test_exponential():
     # Check picklability
     do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(expon)
+    do_pickle(expon._sbp)
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
     try:
@@ -599,6 +601,7 @@ def test_sersic():
     # Check picklability
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
+    do_pickle(sersic._sbp)
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -1097,6 +1100,8 @@ def test_airy():
     do_pickle(airy0)
     do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(airy)
+    do_pickle(airy0._sbp)
+    do_pickle(airy._sbp)
 
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
@@ -1261,6 +1266,7 @@ def test_box():
     # Check picklability
     do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(pixel)
+    do_pickle(pixel._sbp)
     do_pickle(galsim.Pixel(1))
 
     # Check that non-square Box profiles work correctly
@@ -1299,6 +1305,7 @@ def test_box():
     # Check picklability
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(box)
+    do_pickle(box._sbp)
     do_pickle(galsim.Box(1,1))
 
     # Check sheared boxes the same way
@@ -1399,6 +1406,7 @@ def test_tophat():
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(tophat)
+    do_pickle(tophat._sbp)
     do_pickle(galsim.TopHat(1))
 
     # Check sheared tophat the same way
@@ -1478,6 +1486,7 @@ def test_moffat():
     # Check picklability
     do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(moffat)
+    do_pickle(moffat._sbp)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1917,6 +1926,7 @@ def test_kolmogorov():
     # Check picklability
     do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(kolm)
+    do_pickle(kolm._sbp)
 
     # Test initialization separately with lam and r0, in various units.  Since the above profiles
     # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e9 nm and r0=2.0 m,
@@ -2205,6 +2215,7 @@ def test_spergel():
     # Check picklability
     do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(spergel)
+    do_pickle(spergel._sbp)
     do_pickle(galsim.Spergel(0,1))
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
@@ -2412,6 +2423,7 @@ def test_deltaFunction():
     np.testing.assert_almost_equal(delta.flux, 1.0)
     check_basic(delta, "DeltaFunction")
     do_pickle(delta)
+    do_pickle(delta._sbp)
 
     # Check with default_params
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)

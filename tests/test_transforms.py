@@ -167,6 +167,7 @@ def test_largeshear():
     # Check picklability
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
+    do_pickle(gauss._sbp)
 
 
 @timer
@@ -217,6 +218,7 @@ def test_rotate():
     # Check picklability
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
+    do_pickle(gal._sbp)
 
 
 @timer
@@ -297,6 +299,7 @@ def test_mag():
     # Check picklability
     do_pickle(gal, lambda x: x.drawImage())
     do_pickle(gal)
+    do_pickle(gal._sbp)
 
 
 @timer
@@ -369,6 +372,7 @@ def test_shift():
     # Check picklability
     do_pickle(gauss, lambda x: x.drawImage())
     do_pickle(gauss)
+    do_pickle(gauss._sbp)
 
 
 @timer
@@ -514,6 +518,7 @@ def test_rescale():
     # Check picklability
     do_pickle(sersic2, lambda x: x.drawImage())
     do_pickle(sersic2)
+    do_pickle(sersic2._sbp)
 
 
 @timer

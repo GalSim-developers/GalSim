@@ -173,6 +173,8 @@ def test_shapelet_properties():
 
     # Check picklability
     do_pickle(shapelet)
+    do_pickle(shapelet._sbp)
+    do_pickle(shapelet._sbp.getBVec())
 
 
 @timer
