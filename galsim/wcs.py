@@ -1060,8 +1060,8 @@ class CelestialWCS(BaseWCS):
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos, color):
-        ra = world_pos.ra.rad()
-        dec = world_pos.dec.rad()
+        ra = world_pos.ra.rad
+        dec = world_pos.dec.rad
         x, y = self._xy(ra,dec,color)
         return galsim.PositionD(x,y) + self.origin
 

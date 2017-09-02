@@ -950,34 +950,34 @@ def test_angle_value():
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(val1.rad(), 1.9)
+    np.testing.assert_almost_equal(val1.rad, 1.9)
 
     val2 = galsim.config.ParseValue(config,'val2',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(val2.rad(), -41 * math.pi/180)
+    np.testing.assert_almost_equal(val2.rad, -41 * math.pi/180)
 
     val1b = galsim.config.ParseValue(config,'val1',config, None)[0]
     val2b = galsim.config.ParseValue(config,'val2',config, None)[0]
-    np.testing.assert_almost_equal(val1b.rad(), 1.9)
-    np.testing.assert_almost_equal(val2b.rad(), -41 * math.pi/180)
+    np.testing.assert_almost_equal(val1b.rad, 1.9)
+    np.testing.assert_almost_equal(val2b.rad, -41 * math.pi/180)
 
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str1.rad(), 0.73)
+    np.testing.assert_almost_equal(str1.rad, 0.73)
 
     str2 = galsim.config.ParseValue(config,'str2',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str2 / galsim.degrees, 240)
 
     str3 = galsim.config.ParseValue(config,'str3',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str3.rad(), 1.2)
+    np.testing.assert_almost_equal(str3.rad, 1.2)
 
     str4 = galsim.config.ParseValue(config,'str4',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str4.rad(), math.pi/4)
+    np.testing.assert_almost_equal(str4.rad, math.pi/4)
 
     str5 = galsim.config.ParseValue(config,'str5',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str5.rad(), math.pi/2)
+    np.testing.assert_almost_equal(str5.rad, math.pi/2)
 
     str6 = galsim.config.ParseValue(config,'str6',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str6.rad(), 7*math.pi/4)
+    np.testing.assert_almost_equal(str6.rad, 7*math.pi/4)
 
     str7 = galsim.config.ParseValue(config,'str7',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str7 / galsim.degrees, -4)
@@ -993,9 +993,9 @@ def test_angle_value():
     config['index_key'] = 'file_num'
     for k in range(5):
         config['file_num'] = k
-        cat1.append(galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad())
+        cat1.append(galsim.config.ParseValue(config,'cat1',config, galsim.Angle)[0].rad)
         cat2.append(galsim.config.ParseValue(config,'cat2',config, galsim.Angle)[0]/galsim.degrees)
-        cat3.append(galsim.config.ParseValue(config,'cat3',config, galsim.Angle)[0].rad())
+        cat3.append(galsim.config.ParseValue(config,'cat3',config, galsim.Angle)[0].rad)
         cat4.append(galsim.config.ParseValue(config,'cat4',config, galsim.Angle)[0]/galsim.degrees)
 
     np.testing.assert_array_almost_equal(cat1, [ 1.2, 0.1, -0.9, 1.2, 0.1 ])
@@ -1011,7 +1011,7 @@ def test_angle_value():
         config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
         theta = rng() * 2 * math.pi
-        np.testing.assert_almost_equal(ran1.rad(), theta)
+        np.testing.assert_almost_equal(ran1.rad, theta)
 
     # Test values generated from a Sequence
     seq1 = []
@@ -1019,7 +1019,7 @@ def test_angle_value():
     config['index_key'] = 'obj_num'
     for k in range(6):
         config['obj_num'] = k
-        seq1.append(galsim.config.ParseValue(config,'seq1',config, galsim.Angle)[0].rad())
+        seq1.append(galsim.config.ParseValue(config,'seq1',config, galsim.Angle)[0].rad)
         seq2.append(galsim.config.ParseValue(config,'seq2',config, galsim.Angle)[0]/galsim.degrees)
 
     np.testing.assert_array_almost_equal(seq1, [ 0, 1, 2, 3, 4, 5 ])
@@ -1090,7 +1090,7 @@ def test_shear_value():
 
     s2 = galsim.config.ParseValue(config,'s2',config, galsim.Shear)[0]
     np.testing.assert_almost_equal(s2.getE(), 0.5)
-    np.testing.assert_almost_equal(s2.getBeta().rad(), 0.1)
+    np.testing.assert_almost_equal(s2.getBeta().rad, 0.1)
 
     s3 = galsim.config.ParseValue(config,'s3',config, galsim.Shear)[0]
     np.testing.assert_almost_equal(s3.getG1(), 0.5)
@@ -1098,7 +1098,7 @@ def test_shear_value():
 
     s4 = galsim.config.ParseValue(config,'s4',config, galsim.Shear)[0]
     np.testing.assert_almost_equal(s4.getG(), 0.5)
-    np.testing.assert_almost_equal(s4.getBeta().rad(), 0.1)
+    np.testing.assert_almost_equal(s4.getBeta().rad, 0.1)
 
     s5 = galsim.config.ParseValue(config,'s5',config, galsim.Shear)[0]
     eta = s5.getEta()
@@ -1110,13 +1110,13 @@ def test_shear_value():
 
     s6 = galsim.config.ParseValue(config,'s6',config, galsim.Shear)[0]
     np.testing.assert_almost_equal(s6.getEta(), 0.5)
-    np.testing.assert_almost_equal(s6.getBeta().rad(), 0.1)
+    np.testing.assert_almost_equal(s6.getBeta().rad, 0.1)
 
     s7 = galsim.config.ParseValue(config,'s7',config, galsim.Shear)[0]
     g = s7.getG()
     q = (1-g)/(1+g)
     np.testing.assert_almost_equal(q, 0.5)
-    np.testing.assert_almost_equal(s7.getBeta().rad(), 0.1)
+    np.testing.assert_almost_equal(s7.getBeta().rad, 0.1)
 
     # Test values taken from a List
     list1 = []
@@ -1351,8 +1351,8 @@ def test_eval():
         'psf' : { 'type' : 'Gaussian', 'sigma' : 1.8 },
         'eval17' : '$np.exp(-@psf.sigma**2 / @eval_variables.itwo)',
         # A couple more to cover the other various letter prefixes.
-        'eval18' : { 'type' : 'Eval', 'str' : 'np.exp(-eval(half) * theta.rad()**lit_two)' },
-        'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad())' },
+        'eval18' : { 'type' : 'Eval', 'str' : 'np.exp(-eval(half) * theta.rad**lit_two)' },
+        'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad)' },
 
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),

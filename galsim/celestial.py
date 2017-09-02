@@ -430,7 +430,7 @@ class CelestialCoord(object):
         tandra_denom += cosc * self._cosdec
 
         dec = np.arcsin(sindec)
-        ra = self.ra.rad() + np.arctan2(tandra_num, tandra_denom)
+        ra = self.ra.rad + np.arctan2(tandra_num, tandra_denom)
 
         return ra, dec
 
@@ -643,8 +643,8 @@ class CelestialCoord(object):
         if date is not None:
             epoch = date.year
         ep = _ecliptic_obliquity(epoch)
-        cos_ep = math.cos(ep.rad())
-        sin_ep = math.sin(ep.rad())
+        cos_ep = np.cos(ep)
+        sin_ep = np.sin(ep)
 
         # Coordinate transformation here, from celestial to ecliptic:
         x_ecl = self._x
@@ -685,8 +685,7 @@ def _sun_position_ecliptic(date):
     n = jd - 2451545.0
     L = (280.46*galsim.degrees + (0.9856474*galsim.degrees)*n).wrap()
     g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
-    lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
-        (0.020*galsim.degrees)*math.sin((2*g).rad())
+    lam = L + (1.915*galsim.degrees)*np.sin(g) + (0.020*galsim.degrees)*np.sin(2*g)
     return (lam.wrap(), 0.*galsim.degrees)
 
 def _date_to_julian_day(date):
@@ -714,17 +713,17 @@ def _ecliptic_to_equatorial(ecliptic_pos, epoch):
     lam, beta = ecliptic_pos
     import math
     # Get the (x, y, z)_ecliptic from (lam, beta).
-    cosbeta = math.cos(beta.rad())
-    sinbeta = math.sin(beta.rad())
-    coslam = math.cos(lam.rad())
-    sinlam = math.sin(lam.rad())
+    cosbeta = np.cos(beta)
+    sinbeta = np.sin(beta)
+    coslam = np.cos(lam)
+    sinlam = np.sin(lam)
     x_ecl = cosbeta*coslam
     y_ecl = cosbeta*sinlam
     z_ecl = sinbeta
     # Transform to (x, y, z)_equatorial.
     ep = _ecliptic_obliquity(epoch)
-    cos_ep = math.cos(ep.rad())
-    sin_ep = math.sin(ep.rad())
+    cos_ep = np.cos(ep)
+    sin_ep = np.sin(ep)
     x_eq = x_ecl
     y_eq = cos_ep*y_ecl - sin_ep*z_ecl
     z_eq = sin_ep*y_ecl + cos_ep*z_ecl

@@ -909,11 +909,11 @@ def test_ChromaticObject_rotate():
     # mxx = int(dw (1 + 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # myy = int(dw (1 - 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # mxy = int(dw 0.3 sin(2theta(w)) * F(w))  / int(dw F(w))
-    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w))) * bp(w),500,700)
     rot_mxx /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w))) * bp(w),500,700)
     rot_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w))) * bp(w),500,700)
     rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
     rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
@@ -928,10 +928,10 @@ def test_ChromaticObject_rotate():
 
     # Repeat using transform rather than rotate
     gal3 = cgal.transform(
-                lambda w: np.cos(rotation(w).rad()),
-                lambda w: -np.sin(rotation(w).rad()),
-                lambda w: np.sin(rotation(w).rad()),
-                lambda w: np.cos(rotation(w).rad()) )
+                lambda w: np.cos(rotation(w)),
+                lambda w: -np.sin(rotation(w)),
+                lambda w: np.sin(rotation(w)),
+                lambda w: np.cos(rotation(w)) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mom = galsim.utilities.unweighted_moments(im3)
     np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1, decimal=4)

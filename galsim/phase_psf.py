@@ -419,7 +419,7 @@ class Aperture(object):
                           "Consider increasing sampling by a factor %f, and/or check "
                           "PhaseScreenPSF outputs for signs of folding in real space."%ratio)
 
-        if pupil_angle.rad() == 0.:
+        if pupil_angle.rad == 0.:
             self._illuminated = pp_arr.astype(bool)
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to

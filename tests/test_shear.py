@@ -68,7 +68,7 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
     ### note: can only use mult_val = 1, 0, -1
     if mult_val != -1.0 and mult_val != 0.0 and mult_val != 1.0:
         raise ValueError("Cannot put multiplier that is not -1, 0, or 1!")
-    beta_rad = test_shear.beta.rad()
+    beta_rad = test_shear.beta.rad
     while beta_rad < 0.0:
         beta_rad += np.pi
 
@@ -274,8 +274,8 @@ def test_shear_matrix():
             m3 = s3.getMatrix()
 
             theta = s1.rotationWith(s2)
-            r = np.array([[  np.cos(theta.rad()), -np.sin(theta.rad()) ],
-                          [  np.sin(theta.rad()),  np.cos(theta.rad()) ]])
+            r = np.array([[  np.cos(theta), -np.sin(theta) ],
+                          [  np.sin(theta),  np.cos(theta) ]])
             np.testing.assert_array_almost_equal(m3.dot(r), m1.dot(m2), decimal=12,
                                                  err_msg="rotationWith returned wrong angle")
 

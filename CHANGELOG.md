@@ -45,6 +45,10 @@ API Changes
   If you want a view, you should use the more intuitive image.view(). (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
+- Changed the Angle.rad method to a property, so now you should write
+  angle.rad rather than angle.rad() to get the value in radians.  Note: the
+  return value is a subclass of float, so angle.rad() still works but gives a
+  deprecation warning.  But it should work in all ways as a float. (#904)
 - Deprecated the functions HMS_Angle and DMS_Angle. These are now classmethods
   of the Angle class: Angle.from_hms and Angle.from_dms, respectively. (#904)
 - Deprecated the function ShapeletSize and FitShapelet. This functionality

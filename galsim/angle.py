@@ -120,7 +120,7 @@ Radian access method
 Since extracting the value in radians is extremely common, we have an accessor method to do this
 quickly:
 
-    >>> x = theta.rad()
+    >>> x = theta.rad
     >>> print x
     1.57079632679
 
@@ -157,10 +157,16 @@ There are convenience function for getting the sin, cos, and tan of an angle, al
 one for getting sin and cos together, which should be more efficient than doing sin and
 cos separately:
 
-    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
-    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad())
-    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad())
+    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad)
+    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad)
+    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad)
     >>> sint, cost = theta.sincos()
+
+A consequence of this is that you can also use numpy trig functions directly on Angles:
+
+    >>> sint = numpy.sin(theta)
+    >>> cost = numpy.cos(theta)
+    >>> tant = numpy.tan(theta)
 
 Wrapping
 --------
@@ -184,9 +190,9 @@ you would call
 @returns the equivalent angle within the range [center-pi, center+pi)
 """
 
-Angle.__str__ = lambda self: str(self.rad()) + ' radians'
-Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
-Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad() == other.rad()
+Angle.__str__ = lambda self: str(self.rad) + ' radians'
+Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad
+Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad == other.rad
 Angle.__ne__ = lambda self, other: not self.__eq__(other)
 Angle.__neg__ = lambda self: -1. * self
 Angle.__hash__ = lambda self: hash(repr(self))
@@ -268,7 +274,7 @@ Angle.dms = dms
 
 # Enable pickling
 def Angle_getstate(self):
-    return self.rad()
+    return self.rad
 def Angle_setstate(self, theta):
     self.__init__(theta, galsim.radians)
 Angle.__getstate__ = Angle_getstate
@@ -334,6 +340,36 @@ def Angle_from_dms(cls, dms_string):
 
 Angle.from_hms = classmethod(Angle_from_hms)
 Angle.from_dms = classmethod(Angle_from_dms)
+
+class rad_type(float):
+    """The return type of Angle.rad
+
+    A special type that works in most ways as a float, but which allows the use of Angle.rad()
+    as a function rather than a property, but raising a deprecation warning.
+
+    If you have trouble using this type as a float, you can write
+
+        >>> x = float(angle.rad)
+
+    to explicitly turn it into a regular float.  This won't be necessary in version 2.0.
+    """
+    def __init__(self, x):
+        float.__init__(x)
+
+    def __call__(self):
+        from .deprecated import depr
+        depr("angle.rad()", 1.5, "angle.rad",
+             "rad is now a property rather than a function.  Although note that the return "+
+             "type is not a float (so you can get this message), but acts in most ways like "+
+             "a float and is convertible into a real float with float(angle.rad) if needed.")
+        return float(self)
+
+Angle_rad_function = Angle.rad
+def Angle_rad_property(self):
+    return rad_type(Angle_rad_function(self))
+
+Angle.rad = property(Angle_rad_property)
+
 
 set_func_doc(Angle.wrap, """Wrap Angle to lie in the range [-pi, pi) radians.
 

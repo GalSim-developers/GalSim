@@ -1572,7 +1572,7 @@ class ChromaticTransformation(ChromaticObject):
                 single = None
                 if flip:
                     single = 0  # Special value indicating to just use transform.
-                if abs(theta.rad()) > 1.e-12:
+                if abs(theta.rad) > 1.e-12:
                     if single is None:
                         single = '.rotate(%s)'%theta
                     else:

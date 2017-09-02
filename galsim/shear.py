@@ -144,7 +144,7 @@ class Shear(object):
             g = kwargs.pop('g')
             if g > 1 or g < 0:
                 raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
-            self._g = g * np.exp(2j * beta.rad())
+            self._g = g * np.exp(2j * beta.rad)
 
         # e,beta
         elif 'e' in kwargs:
@@ -158,7 +158,7 @@ class Shear(object):
             e = kwargs.pop('e')
             if e > 1 or e < 0:
                 raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad())
+            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad)
 
         # eta,beta
         elif 'eta' in kwargs:
@@ -172,7 +172,7 @@ class Shear(object):
             eta = kwargs.pop('eta')
             if eta < 0:
                 raise ValueError("Requested eta is below 0: %f"%eta)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         # q,beta
         elif 'q' in kwargs:
@@ -187,7 +187,7 @@ class Shear(object):
             if q <= 0 or q > 1:
                 raise ValueError("Cannot use requested axis ratio of %f!"%q)
             eta = -np.log(q)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         elif 'beta' in kwargs:
             raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")

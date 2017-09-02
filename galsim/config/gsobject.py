@@ -423,7 +423,7 @@ def _Shear(gsobject, config, key, base, logger):
 
 def _Rotate(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
-    logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad())
+    logger.debug('obj %d: theta = %f rad',base.get('obj_num',0),theta.rad)
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 

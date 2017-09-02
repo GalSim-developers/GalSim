@@ -492,8 +492,8 @@ def do_jac_decomp(wcs, name):
     # First see if we can recreate the right matrix from this:
     S = np.matrix( [ [ 1.+shear.g1, shear.g2 ],
                      [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
-    R = np.matrix( [ [ np.cos(theta.rad()), -np.sin(theta.rad()) ],
-                     [ np.sin(theta.rad()), np.cos(theta.rad()) ] ] )
+    R = np.matrix( [ [ np.cos(theta), -np.sin(theta) ],
+                     [ np.sin(theta), np.cos(theta) ] ] )
     if flip:
         F = np.matrix( [ [ 0, 1 ],
                          [ 1, 0 ] ] )
@@ -521,9 +521,9 @@ def do_jac_decomp(wcs, name):
     np.testing.assert_equal(flip, flip2, "inverse flip")
     np.testing.assert_almost_equal(scale, 1./scale2, 6, "inverse scale")
     if flip:
-        np.testing.assert_almost_equal(theta.rad(), theta2.rad(), 6, "inverse theta")
+        np.testing.assert_almost_equal(theta.rad, theta2.rad, 6, "inverse theta")
     else:
-        np.testing.assert_almost_equal(theta.rad(), -theta2.rad(), 6, "inverse theta")
+        np.testing.assert_almost_equal(theta.rad, -theta2.rad, 6, "inverse theta")
     np.testing.assert_almost_equal(shear.getG(), shear2.getG(), 6, "inverse shear")
     # There is no simple relation between the directions of the shear in the two cases.
     # The shear direction gets mixed up by the rotation if that is non-zero.
@@ -717,7 +717,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
         w2 = wcs.toWorld(galsim.PositionD(x0-0.5,y0))
         w3 = wcs.toWorld(galsim.PositionD(x0,y0+0.5))
         w4 = wcs.toWorld(galsim.PositionD(x0,y0-0.5))
-        cosdec = np.cos(world_pos.dec.rad())
+        cosdec = np.cos(world_pos.dec)
         jac = wcs.jacobian(image_pos)
         np.testing.assert_array_almost_equal(
                 jac.dudx, (w2.ra - w1.ra)/galsim.arcsec * cosdec, digits2,
@@ -1396,17 +1396,17 @@ def test_radecfunction():
             # try the numpy option first and do something else if it fails.
             # This also tests the alternate initialization using separate ra_func, dec_fun.
             ra_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad()
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).ra.rad
             dec_func = lambda x,y: center.deproject(
-                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad()
+                    galsim.PositionD(ufunc(x,y), vfunc(x,y))).dec.rad
             wcs3 = galsim.RaDecFunction(ra_func, dec_func)
 
             # The pickle tests need to have a string for ra_func, dec_func, which is
             # a bit tough with the ufunc,vfunc stuff.  So do something simpler for that.
             radec_str = '%r.deproject_rad(x,y)'%center
             wcs4 = galsim.RaDecFunction(radec_str, origin=galsim.PositionD(17.,34.))
-            ra_str = '%r.deproject(galsim.PositionD(x,y)).ra.rad()'%center
-            dec_str = '%r.deproject(galsim.PositionD(x,y)).dec.rad()'%center
+            ra_str = '%r.deproject(galsim.PositionD(x,y)).ra.rad'%center
+            dec_str = '%r.deproject(galsim.PositionD(x,y)).dec.rad'%center
             wcs5 = galsim.RaDecFunction(ra_str, dec_str, origin=galsim.PositionD(-9.,-8.))
 
             # Check that distance, jacobian for some x,y positions match the UV values.
@@ -1417,9 +1417,9 @@ def test_radecfunction():
                 v = vfunc(x,y)
                 coord = center.deproject(galsim.PositionD(u,v))
                 ra, dec = radec_func(x,y)
-                np.testing.assert_almost_equal(ra, coord.ra.rad(), 8,
+                np.testing.assert_almost_equal(ra, coord.ra.rad, 8,
                                                'rafunc produced wrong value')
-                np.testing.assert_almost_equal(dec, coord.dec.rad(), 8,
+                np.testing.assert_almost_equal(dec, coord.dec.rad, 8,
                                                'decfunc produced wrong value')
                 pos = center.project(coord)
                 np.testing.assert_almost_equal(pos.x, u, digits, 'project x was inconsistent')
@@ -1428,8 +1428,7 @@ def test_radecfunction():
                 d2 = center.distanceTo(coord)
                 # The distances aren't expected to match.  Instead, for a Lambert projection,
                 # d1 should match the straight line distance through the sphere.
-                import math
-                d2 = 2.*math.sin(d2.rad()/2) * galsim.radians / galsim.arcsec
+                d2 = 2.*np.sin(d2/2) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
@@ -1441,7 +1440,7 @@ def test_radecfunction():
                     origin = test_wcs.toWorld(galsim.PositionD(0.,0.))
                     d3 = np.sqrt( world_pos1.x**2 + world_pos1.y**2 )
                     d4 = center.distanceTo(world_pos2)
-                    d4 = 2.*math.sin(d4.rad()/2) * galsim.radians / galsim.arcsec
+                    d4 = 2.*np.sin(d4/2) * galsim.radians / galsim.arcsec
                     np.testing.assert_almost_equal(
                             d3, d1, digits, 'UV '+name+' dist does not match expected value.')
                     np.testing.assert_almost_equal(
@@ -1493,8 +1492,8 @@ def test_radecfunction():
                     angle = 180 * galsim.degrees - A - B
 
                     # Now we can use this angle to correct the jacobian from test_wcs.
-                    c = math.cos(angle.rad())
-                    s = math.sin(angle.rad())
+                    c = np.cos(angle)
+                    s = np.sin(angle)
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
                     rot_dudy = c*jac2.dudy + s*jac2.dvdy
                     rot_dvdx = -s*jac2.dudx + c*jac2.dvdx

@@ -310,7 +310,7 @@ output:
             opt_psf_trefoil2: psf.items.1.trefoil2
             opt_psf_spher: psf.items.1.spher
             cosmos_index: "$(@gal).original.index"
-            theta: "$(@gal.rotate + @stamp.index * math.pi/@stamp.num * galsim.radians).rad()"
+            theta: "$(@gal.rotate + @stamp.index * math.pi/@stamp.num * galsim.radians).rad"
             mu: stamp.magnification
             g1: "$(@stamp.shear).g1"
             g2: "$(@stamp.shear).g2"

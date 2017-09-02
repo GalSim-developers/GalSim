@@ -434,7 +434,7 @@ def main(argv):
 
             # Add the truth information for this object to the truth catalog
             row = ( (first_obj_id + k), halo_id,
-                    flux, radius, h_over_r, inclination.rad(), theta.rad(),
+                    flux, radius, h_over_r, inclination.rad, theta.rad,
                     nfw_mu, nfw_z_source, total_shear.g1, total_shear.g2,
                     pos.x, pos.y, image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )
