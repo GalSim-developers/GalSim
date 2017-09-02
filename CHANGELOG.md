@@ -17,8 +17,6 @@ API Changes
   `ChromaticObject`s representing stars or galaxies take SEDs with the former
   dimensions; those representing a chromatic PSF take SEDs with the latter
   dimensions. (#789)
-- Added keywords `exptime` and `area` to `drawImage()` to indicate the image
-  exposure time and telescope collecting area. (#789)
 - Added restrictions to `ChromaticObject`s and `SED`s consistent with
   dimensional analysis.  E.g., only `ChromaticObject`s with dimensionful SEDs
   can be drawn. (#789)
@@ -126,6 +124,8 @@ New Features
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these
   had allowed `np.` for numpy commands, but inconsistently, so now they should
   all reliably work with any of these three module names. (#776)
+- Added keywords `exptime` and `area` to `drawImage()` to indicate the image
+  exposure time and telescope collecting area. (#789)
 - `SED`s can now be constructed with flexible units via the `astropy.units`
   module. (#789).
 - Added new surface brightness profile, 'InclinedExponential'. This represents
