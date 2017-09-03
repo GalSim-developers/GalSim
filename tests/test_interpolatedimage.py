@@ -1002,6 +1002,7 @@ def test_kroundtrip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
+    do_pickle(b._sbiki)
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
