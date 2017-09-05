@@ -19,6 +19,7 @@ Dependency Changes
 API Changes
 -----------
 
+- Removed all features deprecated in 1.x versions.
 - Most of the functionality associated with C++-layer objects has been
   redesigned or removed.  These were non-public-API features, so if you have
   been using the public API, you should be fine.  But if you have been relying
@@ -44,7 +45,6 @@ Bug Fixes
 Deprecated Features
 -------------------
 
-- Removed all features deprecated in 1.x versions.
 
 
 New Features
