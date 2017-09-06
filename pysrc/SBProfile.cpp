@@ -89,14 +89,14 @@ namespace galsim {
             // but it's easier to do that than write out the full class_ type.
             wrapper
                 .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double, bool) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("dx"), bp::arg("add")),
+                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("dx")),
                      "Draw in-place and return the summed flux.");
             wrapper
                 .def("drawK",
-                     (void (SBProfile::*)(ImageView<std::complex<U> >, double, bool) const)
+                     (void (SBProfile::*)(ImageView<std::complex<U> >, double) const)
                      &SBProfile::drawK,
-                     (bp::arg("image"), bp::arg("dk"), bp::arg("add")),
+                     (bp::arg("image"), bp::arg("dk")),
                      "Draw k-space image.");
         }
 

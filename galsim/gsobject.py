@@ -1547,20 +1547,26 @@ class GSObject(object):
         if image.wcs is None or not image.wcs.isPixelScale():
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
-        if image.dtype in [ np.float64, np.float32 ]:
-            return self._sbp.draw(image._image, image.scale, add_to_image)
+        if image.dtype in [ np.float64, np.float32 ] and not add_to_image:
+            return self._drawReal(image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
-                im1 = galsim.ImageD(bounds=image.bounds)
+                im1 = galsim.ImageD(bounds=image.bounds, scale=image.scale)
             else:
-                im1 = galsim.ImageF(bounds=image.bounds)
-            added_flux = self._sbp.draw(im1._image, image.scale, False)
+                im1 = galsim.ImageF(bounds=image.bounds, scale=image.scale)
+            added_flux = self._drawReal(im1)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
                 image.array[:,:] = im1.array
             return added_flux
+
+    def _drawReal(self, image):
+        """Equivalent to the regular drawReal(image, add_to_image=False), but without the usual
+        sanity checks, and the image's dtype must be either float32 or float64.
+        """
+        return self._sbp.draw(image._image, image.scale)
 
     def getGoodImageSize(self, pixel_scale):
         """Return a good size to use for drawing this profile.
@@ -2069,24 +2075,27 @@ class GSObject(object):
         if setup_only:
             return image
 
-        self._drawKImage(image, add_to_image)
+        if add_to_image:
+            im2 = galsim.Image(bounds=image.bounds, dtype=image.dtype, scale=image.scale)
+            self._drawKImage(im2)
+            image += im2
+        else:
+            self._drawKImage(image)
         return image
 
-    def _drawKImage(self, image, add_to_image=False):
-        """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal
-        sanity checks or the option to create the image automatically.
+    def _drawKImage(self, image):
+        """Equivalent to drawKImage(image, add_to_image, recenter=False, add_to_image=False), but
+        without the normal sanity checks or the option to create the image automatically.
 
-        The input image must be provided as a complex Image instancec, and the bounds should be
-        set up appropriately (e.g. with 0,0 in the center if so desired).  This corresponds to
-        recenter=False for the normal drawKImage.
+        The input image must be provided as a complex Image instance (dtype=complex64 or
+        complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if
+        so desired).  This corresponds to recenter=False for the normal drawKImage.
 
         @param image        The Image onto which to draw the k-space image. [required]
-        @param add_to_image Whether to add to the existing images rather than clear out
-                            anything in the image before drawing.  [default: False]
 
-        @returns an Image instance (created if necessary)
+        @returns image (just for consistency with drawKImage)
         """
-        self._sbp.drawK(image._image, image.scale, add_to_image)
+        self._sbp.drawK(image._image, image.scale)
         return image
 
     # Derived classes should define the __eq__ function

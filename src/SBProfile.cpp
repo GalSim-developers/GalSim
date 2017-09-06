@@ -301,7 +301,7 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::draw(ImageView<T> image, double dx, bool add) const
+    double SBProfile::draw(ImageView<T> image, double dx) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
@@ -311,13 +311,7 @@ namespace galsim {
         const int izero = xmin < 0 ? -xmin : 0;
         const int jzero = ymin < 0 ? -ymin : 0;
 
-        if (add) {
-            ImageAlloc<T> im2(image.getBounds());
-            _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
-            if (dx != 1.) im2 *= dx*dx;
-            image += im2;
-            return im2.sumElements();
-        } else if (image.getStep() != 1) {
+        if (image.getStep() != 1) {
             ImageAlloc<T> im2(image.getBounds());
             _pimpl->fillXImage(im2.view(), xmin*dx, dx, izero, ymin*dx, dx, jzero);
             if (dx != 1.) im2 *= dx*dx;
@@ -331,7 +325,7 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk, bool add) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
     {
         dbg<<"Start drawK: \n";
         assert(_pimpl.get());
@@ -341,11 +335,7 @@ namespace galsim {
         const int izero = xmin < 0 ? -xmin : 0;
         const int jzero = ymin < 0 ? -ymin : 0;
 
-        if (add) {
-            ImageAlloc<std::complex<T> > im2(image.getBounds());
-            _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
-            image += im2;
-        } else if (image.getStep() != 1) {
+        if (image.getStep() != 1) {
             ImageAlloc<std::complex<T> > im2(image.getBounds());
             _pimpl->fillKImage(im2.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
             image = im2;
@@ -518,13 +508,11 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::draw(ImageView<float> image, double dx, bool add) const;
-    template double SBProfile::draw(ImageView<double> image, double dx, bool add) const;
+    template double SBProfile::draw(ImageView<float> image, double dx) const;
+    template double SBProfile::draw(ImageView<double> image, double dx) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk,
-                                   bool add) const;
-    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk,
-                                   bool add) const;
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
 
     template void SBProfile::SBProfileImpl::defaultFillXImage(
         ImageView<double> im,
