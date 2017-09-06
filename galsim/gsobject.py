@@ -39,6 +39,7 @@ brightness profiles.
 """
 
 import numpy as np
+import math
 
 import galsim
 from . import _galsim
@@ -295,7 +296,7 @@ class GSObject(object):
     def nyquist_scale(self):
         """The Image pixel spacing that does not alias maxk.
         """
-        return self._sbp.nyquistDx()
+        return math.pi / self.maxk
 
     @property
     def has_hard_edges(self):
@@ -729,7 +730,6 @@ class GSObject(object):
 
         @returns the magnified object.
         """
-        import math
         return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
@@ -1576,7 +1576,16 @@ class GSObject(object):
 
         @returns N, a good (linear) size of an image on which to draw this object.
         """
-        return self._sbp.getGoodImageSize(pixel_scale)
+        # Start with a good size from stepk and the pixel scale
+        Nd = 2. * math.pi / (pixel_scale * self.stepk)
+
+        # Make it an integer
+        # (Some slop to keep from getting extra pixels due to roundoff errors in calculations.)
+        N = int(math.ceil(Nd*(1.-1.e-12)))
+
+        # Round up to an even value
+        N = 2 * ((N+1) // 2)
+        return N
 
     def drawFFT_makeKImage(self, image):
         """
