@@ -458,6 +458,15 @@ class Image(object):
     def isinteger(self): return self._array.dtype.kind in ['i','u']
 
     @property
+    def iscontiguous(self):
+        """Indicates whether each row of the image is contiguous in memory.
+
+        Note: it is ok for the end of one row to not be contiguous with the start of the
+        next row.  This just checks that each individual row has a stride of 1.
+        """
+        return self._array.strides[1]//self._array.itemsize == 1
+
+    @property
     def _image(self):
         if not self.array.flags.writeable:
             cls = _galsim.ConstImageView[self._typechar[self.dtype]]

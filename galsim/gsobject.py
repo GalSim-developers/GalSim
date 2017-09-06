@@ -1548,7 +1548,7 @@ class GSObject(object):
         if image.wcs is None or not image.wcs.isPixelScale():
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
-        if image.dtype in [ np.float64, np.float32 ] and not add_to_image:
+        if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
             return self._drawReal(image)
         else:
             # Need a temporary
@@ -1565,7 +1565,8 @@ class GSObject(object):
 
     def _drawReal(self, image):
         """Equivalent to the regular drawReal(image, add_to_image=False), but without the usual
-        sanity checks, and the image's dtype must be either float32 or float64.
+        sanity checks, and the image's dtype must be either float32 or float64, and it must
+        have a c_contiguous array (image.iscontiguous must be True).
         """
         return self._sbp.draw(image._image, image.scale)
 
@@ -2075,12 +2076,12 @@ class GSObject(object):
         if setup_only:
             return image
 
-        if add_to_image:
+        if not add_to_image and image.iscontiguous:
+            return self._drawKImage(image)
+        else:
             im2 = galsim.Image(bounds=image.bounds, dtype=image.dtype, scale=image.scale)
             self._drawKImage(im2)
             image += im2
-        else:
-            self._drawKImage(image)
         return image
 
     def _drawKImage(self, image):
@@ -2089,7 +2090,8 @@ class GSObject(object):
 
         The input image must be provided as a complex Image instance (dtype=complex64 or
         complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if
-        so desired).  This corresponds to recenter=False for the normal drawKImage.
+        so desired).  This corresponds to recenter=False for the normal drawKImage.  And, it must
+        have a c_contiguous array (image.iscontiguous must be True).
 
         @param image        The Image onto which to draw the k-space image. [required]
 
