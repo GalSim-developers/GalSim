@@ -33,9 +33,6 @@ namespace galsim {
             bp::class_<SBGaussian,bp::bases<SBProfile> >("SBGaussian", bp::no_init)
                 .def(bp::init<double,double, GSParams>(
                         (bp::arg("sigma"), bp::arg("flux"), bp::arg("gsparams"))))
-                .def(bp::init<const SBGaussian &>())
-                .def("getSigma", &SBGaussian::getSigma)
-                .enable_pickling()
                 ;
         }
     };
