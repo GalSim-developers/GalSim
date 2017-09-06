@@ -690,7 +690,7 @@ class Image(object):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         # Get this at the start to check for invalid bounds and raise the exception before
         # possibly writing data past the edge of the image.
-        ret = self.subImage(bounds);
+        ret = self.subImage(bounds)
         if not hermitian:
             _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
@@ -708,6 +708,14 @@ class Image(object):
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return ret;
+
+    def _wrap(self, bounds, hermx, hermy):
+        """Essentially equivalent to Image.wrap(bounds, hermitian=='x', hermitian=='y'), but
+        without some of the sanity checks that the regular function does.
+        """
+        ret = self.subImage(bounds)
+        _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
+        return ret
 
     def bin(self, nx, ny):
         """Bin the image pixels in blocks of nx x ny pixels.

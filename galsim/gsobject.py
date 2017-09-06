@@ -213,7 +213,8 @@ class GSObject(object):
     def __init__(self):
         raise NotImplementedError("The GSObject base class should not be instantiated directly.")
 
-    # Note: subclasses are expected to define self._sbp and self._gsparams in their inits.
+    # Note: subclasses are expected to define self._sbp and self._gsparams in their inits
+    # (or make them properties).
 
     @lazy_property
     def noise(self):
@@ -1661,8 +1662,7 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        _galsim.wrapImage(kimage._image, bwrap._b, True, False)
-        kimage_wrap = kimage.subImage(bwrap)
+        kimage_wrap = kimage._wrap(bwrap, True, False)
 
         # Perform the fourier transform.
         breal = galsim._BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
