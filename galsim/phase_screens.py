@@ -228,7 +228,7 @@ class AtmosphericScreen(object):
                            details. [default: None]
         @returns  Good pupil scale size in meters.
         """
-        from .base import Kolmogorov
+        from .kolmogorov import Kolmogorov
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
         obj = Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
