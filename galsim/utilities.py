@@ -1364,16 +1364,17 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
 def check_share_file(filename, subdir):
     """Find SED or Bandpass file, possibly adding share_dir/subdir.
     """
+    from . import meta_data
     import os
 
     if os.path.isfile(filename):
         return True, filename
 
-    new_filename = os.path.join(galsim.meta_data.share_dir, subdir, filename)
+    new_filename = os.path.join(meta_data.share_dir, subdir, filename)
     if os.path.isfile(new_filename):
         return True, new_filename
-
-    return False, ''
+    else:
+        return False, ''
 
 
 # http://stackoverflow.com/a/6849299

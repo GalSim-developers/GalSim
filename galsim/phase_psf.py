@@ -900,8 +900,7 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
-        theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
-        return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
+        return PhaseScreenPSF(self, lam, **kwargs)
 
     @property
     def r0_500_effective(self):

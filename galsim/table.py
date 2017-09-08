@@ -581,7 +581,7 @@ class LookupTable2D(object):
                 self.interpolant == other.interpolant and
                 self.edge_mode == other.edge_mode and
                 self.constant == other.constant)
- 
+
     def __ne__(self, other):
         return not self.__eq__(other)
 

@@ -24,7 +24,7 @@ from . import _galsim
 class GSParams(object):
     """GSParams stores a set of numbers that govern how GSObjects make various speed/accuracy
     tradeoff decisions.
-    
+
     All GSObjects can take an optional parameter named `gsparams`, which would be an instance of
     this class.  e.g.
 
