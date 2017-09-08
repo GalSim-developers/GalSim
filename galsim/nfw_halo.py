@@ -18,9 +18,11 @@
 """@file nfw_halo.py The "lensing engine" for drawing shears from an NFW halo.
 """
 
-import galsim
 import numpy as np
-
+from .position import PositionD
+from .angle import arcsec
+from . import integ
+from . import utilities
 
 class Cosmology(object):
     """Basic cosmology calculations.
@@ -91,7 +93,7 @@ class Cosmology(object):
             if z < z_ref:
                 raise ValueError("Redshift z must not be smaller than the reference redshift")
 
-            d = galsim.integ.int1d(self.__angKernel, z_ref+1, z+1)
+            d = integ.int1d(self.__angKernel, z_ref+1, z+1)
             # check for curvature
             rk = (abs(self.omega_c))**0.5
             if (rk*d > 0.01):
@@ -124,11 +126,11 @@ class NFWHalo(object):
     @param cosmo        A Cosmology instance. [default: None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
-    _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
+    _opt_params = { 'halo_pos' : PositionD , 'omega_m' : float , 'omega_lam' : float }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0),
+    def __init__(self, mass, conc, redshift, halo_pos=PositionD(0,0),
                  omega_m=None, omega_lam=None, cosmo=None):
         if omega_m is not None or omega_lam is not None:
             if cosmo is not None:
@@ -141,7 +143,7 @@ class NFWHalo(object):
         elif not isinstance(cosmo,Cosmology):
             raise TypeError("Invalid cosmo parameter in NFWHalo constructor")
 
-        halo_pos = galsim.PositionD(halo_pos)
+        halo_pos = PositionD(halo_pos)
 
         self.M = float(mass)
         self.c = float(conc)
@@ -168,7 +170,7 @@ class NFWHalo(object):
 
     def __repr__(self):
         s = "galsim.NFWHalo(mass=%r, conc=%r, redshift=%r"%(self.M, self.c, self.z)
-        if self.halo_pos != galsim.PositionD(0,0):
+        if self.halo_pos != PositionD(0,0):
             s += ", halo_pos=%r"%self.halo_pos
         if self.cosmo != Cosmology():
             s += ", cosmo=%r"%self.cosmo
@@ -290,7 +292,7 @@ class NFWHalo(object):
         k_s = dl * self.rs * rho_s / Sigma_c
         return k_s
 
-    def getShear(self, pos, z_s, units=galsim.arcsec, reduced=True):
+    def getShear(self, pos, z_s, units=arcsec, reduced=True):
         """Calculate (reduced) shear of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
@@ -311,7 +313,7 @@ class NFWHalo(object):
         @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
         """
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getShear')
         return self._getShear(pos_x, pos_y, z_s, reduced)
 
     def _getShear(self, pos_x, pos_y, z_s, reduced=True):
@@ -347,8 +349,7 @@ class NFWHalo(object):
         g2 = -g*sin2phi
         return g1, g2
 
-
-    def getConvergence(self, pos, z_s, units=galsim.arcsec):
+    def getConvergence(self, pos, z_s, units=arcsec):
         """Calculate convergence of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
@@ -369,7 +370,7 @@ class NFWHalo(object):
         """
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getKappa')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getKappa')
         return self._getConvergence(pos_x, pos_y, z_s)
 
     def _getConvergence(self, pos_x, pos_y, z_s):
@@ -389,8 +390,7 @@ class NFWHalo(object):
         kappa = self.__kappa(r, ks)
         return kappa
 
-
-    def getMagnification(self, pos, z_s, units=galsim.arcsec):
+    def getMagnification(self, pos, z_s, units=arcsec):
         """Calculate magnification of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
@@ -410,7 +410,7 @@ class NFWHalo(object):
         @returns the magnification as either a scalar or a numpy array
         """
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getMagnification')
         return self._getMagnification(pos_x, pos_y, z_s)
 
     def _getMagnification(self, pos_x, pos_y, z_s):
@@ -433,8 +433,7 @@ class NFWHalo(object):
         mu = 1. / ( (1.-kappa)**2 - g**2 )
         return mu
 
-
-    def getLensing(self, pos, z_s, units=galsim.arcsec):
+    def getLensing(self, pos, z_s, units=arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
@@ -455,7 +454,7 @@ class NFWHalo(object):
                  either a scalar or a numpy array)
         """
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getLensing')
         return self._getLensing(pos_x, pos_y, z_s)
 
     def _getLensing(self, pos_x, pos_y, z_s):

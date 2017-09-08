@@ -20,10 +20,11 @@
 InclinedExponential is a class representing an exponential profile inclined to the LOS.
 """
 
-from galsim import GSObject
-import galsim
-
 from . import _galsim
+from .gsobject import GSObject
+from .gsparams import GSParams
+from .base import Exponential
+from .angle import Angle
 
 
 class InclinedExponential(GSObject):
@@ -82,7 +83,7 @@ class InclinedExponential(GSObject):
         >>> rh = inclined_exponential_obj.half_light_radius
         >>> h0 = inclined_exponential_obj.scale_height
     """
-    _req_params = { "inclination" : galsim.Angle }
+    _req_params = { "inclination" : Angle }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
     _takes_rng = False
@@ -111,7 +112,7 @@ class InclinedExponential(GSObject):
                         "specified for InclinedExponential")
             else:
                 # Use the factor from the Exponential class
-                scale_radius = half_light_radius / galsim.Exponential._hlr_factor
+                scale_radius = half_light_radius / Exponential._hlr_factor
 
         # Check that the height specification is valid
         if scale_height is not None:
@@ -136,11 +137,11 @@ class InclinedExponential(GSObject):
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed
-        if not isinstance(inclination, galsim.Angle):
+        if not isinstance(inclination, Angle):
             raise TypeError("Input inclination should be an Angle")
 
         self._inclination = inclination
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._gsparams = GSParams.check(gsparams)
         self._sbp = _galsim.SBInclinedExponential(
                 inclination.rad, scale_radius, scale_height, flux, self.gsparams._gsp)
 
@@ -149,14 +150,14 @@ class InclinedExponential(GSObject):
     @property
     def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.scale_radius * galsim.Exponential._hlr_factor
+    def half_light_radius(self): return self.scale_radius * Exponential._hlr_factor
     @property
     def scale_height(self): return self._sbp.getScaleHeight()
     @property
     def scale_h_over_r(self): return self.scale_height / self.scale_radius
 
     def __eq__(self, other):
-        return ((isinstance(other, galsim.InclinedExponential) and
+        return ((isinstance(other, InclinedExponential) and
                  (self.inclination == other.inclination) and
                  (self.scale_radius == other.scale_radius) and
                  (self.scale_height == other.scale_height) and

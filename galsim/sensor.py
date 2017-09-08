@@ -27,9 +27,10 @@ bottom of the detector.
 """
 
 import numpy as np
-import galsim
 import glob
 import os
+
+from . import _galsim
 
 class Sensor(object):
     """
@@ -100,15 +101,18 @@ class SiliconSensor(Sensor):
     """
     def __init__(self, dir='lsst_itl', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000):
+        from .random import UniformDeviate
+        from . import meta_data
+
         self.dir = dir
         self.strength = strength
-        self.rng = galsim.UniformDeviate(rng)
+        self.rng = UniformDeviate(rng)
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
 
         if not os.path.isdir(dir):
-            self.full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
+            self.full_dir = os.path.join(meta_data.share_dir, 'sensors', dir)
             if not os.path.isdir(self.full_dir):
                 raise IOError("Cannot locate directory %s or %s"%(dir,self.full_dir))
         else:
@@ -142,9 +146,9 @@ class SiliconSensor(Sensor):
             raise IOError("Vertex file %s does not match config file %s"
                           % (vertex_file, self.config_file))
 
-        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness,
-                                               vertex_data.ctypes.data)
+        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
+                                        diff_step, PixelSize, SensorThickness,
+                                        vertex_data.ctypes.data)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir

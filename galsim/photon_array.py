@@ -22,7 +22,7 @@ Also includes classes that modify PhotonArray objects in a number of ways.
 
 import numpy as np
 from . import _galsim
-import galsim
+from .random import UniformDeviate
 
 # Add on more methods in the python layer
 
@@ -203,7 +203,7 @@ class PhotonArray(object):
 
     def convolve(self, rhs, rng=None):
         "Convolve this PhotonArray with another."
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
         self._pa.convolve(rhs._pa, ud._rng)
 
     def __repr__(self):
@@ -289,7 +289,7 @@ class PhotonArray(object):
 
         @returns a PhotonArray
         """
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
         max_flux = float(max_flux)
         if (max_flux <= 0):
             raise ValueError("max_flux must be positive")
@@ -327,7 +327,8 @@ class PhotonArray(object):
 
         @param file_name    The file name of the output FITS file.
         """
-        from galsim._pyfits import pyfits
+        from ._pyfits import pyfits
+        from . import fits
 
         cols = []
         cols.append(pyfits.Column(name='id', format='J', array=range(self.size())))
@@ -347,7 +348,7 @@ class PhotonArray(object):
             table = pyfits.BinTableHDU.from_columns(cols)
         except AttributeError:  # pragma: no cover  (Might need this for older pyfits versions)
             table = pyfits.new_table(cols)
-        galsim.fits.writeFile(file_name, table)
+        fits.writeFile(file_name, table)
 
     @classmethod
     def read(cls, file_name):
@@ -361,7 +362,7 @@ class PhotonArray(object):
 
         @param file_name    The file name of the input FITS file.
         """
-        from galsim._pyfits import pyfits, pyfits_version
+        from ._pyfits import pyfits, pyfits_version
         with pyfits.open(file_name) as fits:
             data = fits[1].data
         N = len(data)
@@ -423,7 +424,7 @@ class FRatioAngles(object):
             raise ValueError("The f-ratio must be positive.")
         if obscuration < 0 or obscuration >= 1:
             raise ValueError("The obscuration fraction must be between 0 and 1.")
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
 
         self.fratio = fratio
         self.obscuration = obscuration

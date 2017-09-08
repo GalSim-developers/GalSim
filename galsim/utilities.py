@@ -23,7 +23,6 @@ from future.utils import iteritems
 from builtins import range, object
 
 import numpy as np
-import galsim
 
 def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
@@ -98,7 +97,8 @@ def rotate_xy(x, y, theta):
 
     @return the rotated coordinates `(x_rot,y_rot)`.
     """
-    if not isinstance(theta, galsim.Angle):
+    from .angle import Angle
+    if not isinstance(theta, Angle):
         raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
     sint, cost = theta.sincos()
     x_rot = x * cost - y * sint
@@ -119,6 +119,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     If there are other args/kwargs to parse after these, then their names should be
     be given as the parameter `others`, which are passed back in a tuple after the position.
     """
+    from .position import PositionD, PositionI
     def canindex(arg):
         try: arg[0], arg[1]
         except (TypeError, IndexError): return False
@@ -130,8 +131,8 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         # If not, then python will raise an appropriate error.
         x = kwargs.pop(name1)
         y = kwargs.pop(name2)
-    elif ( ( isinstance(args[0], galsim.PositionI) or
-             (not integer and isinstance(args[0], galsim.PositionD)) ) and
+    elif ( ( isinstance(args[0], PositionI) or
+             (not integer and isinstance(args[0], PositionD)) ) and
            len(args) <= 1+len(others) ):
         x = args[0].x
         y = args[0].y
@@ -166,9 +167,9 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         raise TypeError("Received unexpected keyword arguments: %s",kwargs)
 
     if integer:
-        pos = galsim.PositionI(int(x),int(y))
+        pos = PositionI(int(x),int(y))
     else:
-        pos = galsim.PositionD(float(x),float(y))
+        pos = PositionD(float(x),float(y))
     if other_vals:
         return (pos,) + tuple(other_vals)
     else:
@@ -234,21 +235,24 @@ def rand_arr(shape, deviate):
     @returns a NumPy array of the desired dimensions with random numbers generated using the
     supplied deviate.
     """
+    from .image import ImageD
+    from .noise import DeviateNoise
     if len(shape) is not 2:
         raise ValueError("Can only make a 2d array from this function!")
     # note reversed indices due to NumPy vs. Image array indexing conventions!
-    tmp_img = galsim.ImageD(shape[1], shape[0])
-    tmp_img.addNoise(galsim.DeviateNoise(deviate))
+    tmp_img = ImageD(shape[1], shape[0])
+    tmp_img.addNoise(DeviateNoise(deviate))
     return tmp_img.array
 
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
     """
-    if isinstance(interpolant, galsim.Interpolant):
+    from .interpolant import Interpolant
+    if isinstance(interpolant, Interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
-        return galsim.Interpolant.from_name(interpolant)
+        return Interpolant.from_name(interpolant)
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
@@ -257,14 +261,16 @@ def _convertPositions(pos, units, func):
        This is used by the functions getShear(), getConvergence(), getMagnification(), and
        getLensing() for both PowerSpectrum and NFWHalo.
     """
+    from .position import PositionD, PositionI
+    from .angle import AngleUnit, arcsec
     # Check for PositionD or PositionI:
-    if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
+    if isinstance(pos, PositionD) or isinstance(pos, PositionI):
         pos = [ pos.x, pos.y ]
 
     # Check for list of PositionD or PositionI:
     # The only other options allow pos[0], so if this is invalid, an exception
     # will be raised:
-    elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
+    elif isinstance(pos[0], PositionD) or isinstance(pos[0], PositionI):
         pos = [ np.array([p.x for p in pos], dtype='float'),
                 np.array([p.y for p in pos], dtype='float') ]
 
@@ -284,13 +290,13 @@ def _convertPositions(pos, units, func):
     # Check validity of units
     if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
-        units = galsim.AngleUnit.from_name(units)
-    if not isinstance(units, galsim.AngleUnit):
+        units = AngleUnit.from_name(units)
+    if not isinstance(units, AngleUnit):
         raise ValueError("units must be either an AngleUnit or a string")
 
     # Convert pos to arcsec
-    if units != galsim.arcsec:
-        scale = 1. * units / galsim.arcsec
+    if units != arcsec:
+        scale = 1. * units / arcsec
         # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
         # elements of tuples is not allowed.
         pos[0] *= scale
@@ -686,6 +692,9 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
+    from .image import Image
+    from .position import PositionD
+    from .wcs import JacobianWCS, PixelScale
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -700,7 +709,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
-    if not isinstance(image,galsim.Image):
+    if not isinstance(image, Image):
         raise TypeError("'image' has to be an instance of galsim.Image")
 
     y_size,x_size = image.array.shape
@@ -715,9 +724,9 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
             dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
-            offset = galsim.PositionD(dx,dy)
+            offset = PositionD(dx,dy)
             img_arr = image.array[j::n2,i::n1].copy()
-            img = galsim.Image(img_arr)
+            img = Image(img_arr)
             if conserve_flux is True:
                 img *= n1*n2
             im_list.append(img)
@@ -727,12 +736,12 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     if wcs is not None and wcs.isUniform():
         jac = wcs.jacobian()
         for img in im_list:
-            img_wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+            img_wcs = JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
             ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel
             ## scale
             img_wcs_decomp = img_wcs.getDecomposition()
             if img_wcs_decomp[1].g==0:
-                img.wcs = galsim.PixelScale(img_wcs_decomp[0])
+                img.wcs = PixelScale(img_wcs_decomp[0])
             else:
                 img.wcs = img_wcs
             ## Preserve the origin so that the interleaved image has the same bounds as the image
@@ -820,6 +829,9 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     @returns the interleaved image
     """
+    from .position import PositionD
+    from .image import Image
+    from .wcs import PixelScale, JacobianWCS
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -844,10 +856,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         raise ValueError("'im_list' and 'offsets' must be lists of same length")
 
     for offset in offsets:
-        if not isinstance(offset,galsim.PositionD):
+        if not isinstance(offset, PositionD):
             raise TypeError("'offsets' must be a list of galsim.PositionD instances")
 
-    if not isinstance(im_list[0],galsim.Image):
+    if not isinstance(im_list[0], Image):
         raise TypeError("'im_list' must be a list of galsim.Image instances")
 
     # These should be the same for all images in `im_list'.
@@ -855,7 +867,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     wcs = im_list[0].wcs
 
     for im in im_list[1:]:
-        if not isinstance(im,galsim.Image):
+        if not isinstance(im, Image):
             raise TypeError("'im_list' must be a list of galsim.Image instances")
 
         if im.array.shape != (y_size,x_size):
@@ -880,16 +892,18 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             err_j = (n2-1)*0.5-n2*dy - round((n2-1)*0.5-n2*dy)
             tol = 1.e-6
             if abs(err_i)>tol or abs(err_j)>tol:
-                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
-                            +"values spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+                raise ValueError(
+                    "'offsets' must be a list of galsim.PositionD instances with x values "+
+                    "spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
 
             if i<0 or j<0 or i>=x_size or j>=y_size:
-                raise ValueError("'offsets' must be a list of galsim.PositionD instances with x "
-                            +"values spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
+                raise ValueError(
+                    "'offsets' must be a list of galsim.PositionD instances with x values "+
+                    "spaced by 1/{0} and y values by 1/{1} around 0 for N = ".format(n1,n2)+str(N))
 
         img_array[j::n2,i::n1] = im_list[k].array[:,:]
 
-    img = galsim.Image(img_array)
+    img = Image(img_array)
     if not add_flux:
         # Fix the flux normalization
         img /= 1.0*len(im_list)
@@ -898,11 +912,11 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     if wcs is not None and wcs.isUniform():
         jac = wcs.jacobian()
         dudx, dudy, dvdx, dvdy = jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
-        img_wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+        img_wcs = JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
         ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel scale
         img_wcs_decomp = img_wcs.getDecomposition()
         if img_wcs_decomp[1].g==0: ## getDecomposition returns scale,shear,angle,flip
-            img.wcs = galsim.PixelScale(img_wcs_decomp[0])
+            img.wcs = PixelScale(img_wcs_decomp[0])
         else:
             img.wcs = img_wcs
 
@@ -1078,6 +1092,7 @@ def structure_function(image):
     @returns      A python callable mapping a separation length r to the estimate of the structure
                   function D(r).
     """
+    from .table import LookupTable2D
     array = image.array
     nx, ny = array.shape
     scale = image.scale
@@ -1095,7 +1110,7 @@ def structure_function(image):
 
     x = scale * (np.arange(nx) - nx//2)
     y = scale * (np.arange(ny) - ny//2)
-    tab = galsim.LookupTable2D(x, y, corr)
+    tab = LookupTable2D(x, y, corr)
     thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
@@ -1107,9 +1122,13 @@ def combine_wave_list(*args):
     @param obj_list  List of SED, Bandpass, or ChromaticObject objects.
     @returns        wave_list, blue_limit, red_limit
     """
+    from .sed import SED
+    from .bandpass import Bandpass
+    from .gsobject import GSObject
+    from .chromatic import ChromaticObject
     if len(args) == 1:
         if isinstance(args[0],
-                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+                      (SED, Bandpass, ChromaticObject, GSObject)):
             args = [args[0]]
         elif isinstance(args[0], (list, tuple)):
             args = args[0]
@@ -1205,6 +1224,7 @@ def math_eval(str, other_modules=()):
     # The exec_ function lets us use the Python 3 syntax even in Python 2.
     from future.utils import exec_
     gdict = globals().copy()
+    exec_('import galsim', gdict)
     exec_('import numpy', gdict)
     exec_('import numpy as np', gdict)
     exec_('import math', gdict)
@@ -1241,7 +1261,7 @@ def binomial(a, b, n):
             yield c
     return np.fromiter(generate(), float, n+1)
 
-def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
+def unweighted_moments(image, origin=None):
     """Computes unweighted 0th, 1st, and 2nd moments in image coordinates.  Respects image bounds,
     but ignores any scale or wcs.
 
@@ -1250,6 +1270,9 @@ def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
                     [default: galsim.PositionD(0, 0)].
     @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
     """
+    from .position import PositionD
+    if origin is None:
+        origin = PositionD(0,0)
     a = image.array.astype(float)
     offset = image.origin - origin
     xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
@@ -1275,7 +1298,8 @@ def unweighted_shape(arg):
     @param arg   Either a galsim.Image or the output of unweighted_moments(image).
     @returns  Dict with entries for [rsqr, e1, e2]
     """
-    if isinstance(arg, galsim.Image):
+    from .image import Image
+    if isinstance(arg, Image):
         arg = unweighted_moments(arg)
     rsqr = arg['Mxx'] + arg['Myy']
     return dict(rsqr=rsqr, e1=(arg['Mxx']-arg['Myy'])/rsqr, e2=2*arg['Mxy']/rsqr)
@@ -1295,10 +1319,11 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
                        random indices.
     @returns a NumPy array of length `n` containing the integer-valued indices that were selected.
     """
+    from .random import BaseDeviate, UniformDeviate
     # Make sure we got a proper RNG.
-    if not isinstance(rng, galsim.BaseDeviate):
+    if not isinstance(rng, BaseDeviate):
         raise TypeError("The rng provided to rand_with_replacement() is not a BaseDeviate")
-    ud = galsim.UniformDeviate(rng)
+    ud = UniformDeviate(rng)
 
     # Sanity check the requested number of random indices.
     # Note: we do not require that the type be an int, as long as the value is consistent with
