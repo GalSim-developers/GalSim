@@ -22,9 +22,13 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 
 from past.builtins import basestring
 import numpy as np
-import galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .image import Image
+from .interpolant import Quintic, Interpolant
+from .utilities import convert_interpolant
 from . import _galsim
+from . import fits
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -258,9 +262,12 @@ class InterpolatedImage(GSObject):
                  _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
                  hdu=None):
 
+        from .wcs import BaseWCS, PixelScale
+        from .random import BaseDeviate
+
         # If the "image" is not actually an image, try to read the image as a file.
-        if not isinstance(image, galsim.Image):
-            image = galsim.fits.read(image, hdu=hdu)
+        if not isinstance(image, Image):
+            image = fits.read(image, hdu=hdu)
 
         # make sure image is really an image and has a float type
         if image.dtype != np.float32 and image.dtype != np.float64:
@@ -279,13 +286,13 @@ class InterpolatedImage(GSObject):
         # set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
         if x_interpolant is None:
-            self.x_interpolant = galsim.Quintic(tol=1e-4)
+            self.x_interpolant = Quintic(tol=1e-4)
         else:
-            self.x_interpolant = galsim.utilities.convert_interpolant(x_interpolant)
+            self.x_interpolant = convert_interpolant(x_interpolant)
         if k_interpolant is None:
-            self.k_interpolant = galsim.Quintic(tol=1e-4)
+            self.k_interpolant = Quintic(tol=1e-4)
         else:
-            self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
+            self.k_interpolant = convert_interpolant(k_interpolant)
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
@@ -296,9 +303,9 @@ class InterpolatedImage(GSObject):
         if scale is not None:
             if wcs is not None:
                 raise TypeError("Cannot provide both scale and wcs to InterpolatedImage")
-            self.image.wcs = galsim.PixelScale(scale)
+            self.image.wcs = PixelScale(scale)
         elif wcs is not None:
-            if not isinstance(wcs, galsim.BaseWCS):
+            if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs parameter is not a galsim.BaseWCS instance")
             self.image.wcs = wcs
         elif self.image.wcs is None:
@@ -307,15 +314,15 @@ class InterpolatedImage(GSObject):
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
         if rng is None:
-            if noise_pad: rng = galsim.BaseDeviate()
-        elif not isinstance(rng, galsim.BaseDeviate):
+            if noise_pad: rng = BaseDeviate()
+        elif not isinstance(rng, BaseDeviate):
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
         # Check that given pad_image is valid:
         if pad_image:
             if isinstance(pad_image, basestring):
-                pad_image = galsim.fits.read(pad_image)
-            if not isinstance(pad_image, galsim.Image):
+                pad_image = fits.read(pad_image)
+            if not isinstance(pad_image, Image):
                 raise ValueError("Supplied pad_image is not an Image!")
             if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
@@ -350,7 +357,7 @@ class InterpolatedImage(GSObject):
             # as large as we need in any direction.
             noise_pad_size = int(math.ceil(noise_pad_size / min_scale))
             # Round up to a good size for doing FFTs
-            noise_pad_size = galsim.Image.good_fft_size(noise_pad_size)
+            noise_pad_size = Image.good_fft_size(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0
@@ -379,7 +386,7 @@ class InterpolatedImage(GSObject):
 
         elif pad_image:
             # Just make sure pad_image is the right type
-            pad_image = galsim.Image(pad_image, dtype=image.dtype)
+            pad_image = Image(pad_image, dtype=image.dtype)
 
         # Now place the given image in the center of the padding image:
         if pad_image:
@@ -426,7 +433,7 @@ class InterpolatedImage(GSObject):
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._gsparams = GSParams.check(gsparams)
 
         # Make the SBInterpolatedImage out of the image.
         sbii = _galsim.SBInterpolatedImage(
@@ -497,16 +504,18 @@ class InterpolatedImage(GSObject):
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
         """
+        from .noise import GaussianNoise
+        from .correlatednoise import _BaseCorrelatedNoise, CorrelatedNoise
         # Make it with the same dtype as the image
-        pad_image = galsim.Image(noise_pad_size, noise_pad_size, dtype=self.image.dtype)
+        pad_image = Image(noise_pad_size, noise_pad_size, dtype=self.image.dtype)
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
-            noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
-        elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+            noise = GaussianNoise(rng, sigma = np.sqrt(noise_pad))
+        elif isinstance(noise_pad, _BaseCorrelatedNoise):
             noise = noise_pad.copy(rng=rng)
-        elif isinstance(noise_pad,galsim.Image):
-            noise = galsim.CorrelatedNoise(noise_pad, rng)
+        elif isinstance(noise_pad, Image):
+            noise = CorrelatedNoise(noise_pad, rng)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
             noise = InterpolatedImage._cache_noise_pad[noise_pad]
             if rng:
@@ -514,7 +523,7 @@ class InterpolatedImage(GSObject):
                 # CorrelatedNoise instance, otherwise preserve the cached RNG
                 noise = noise.copy(rng=rng)
         elif isinstance(noise_pad, basestring):
-            noise = galsim.CorrelatedNoise(galsim.fits.read(noise_pad), rng)
+            noise = CorrelatedNoise(fits.read(noise_pad), rng)
             if self.use_cache:
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
         else:
@@ -527,7 +536,7 @@ class InterpolatedImage(GSObject):
         return pad_image
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.InterpolatedImage) and
+        return (isinstance(other, InterpolatedImage) and
                 self._pad_image == other._pad_image and
                 self.x_interpolant == other.x_interpolant and
                 self.k_interpolant == other.k_interpolant and
@@ -615,7 +624,7 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret.use_cache = True
     ret._pad_image = image
     ret._pad_factor = 1.
-    ret._gsparams = galsim.GSParams.check(gsparams)
+    ret._gsparams = GSParams.check(gsparams)
 
     im_cen = image.true_center if use_true_center else image.center
     local_wcs = image.wcs.local(image_pos = im_cen)
@@ -726,22 +735,22 @@ class InterpolatedKImage(GSObject):
 
     def __init__(self, kimage=None, k_interpolant=None, stepk=None, gsparams=None,
                  real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):
-
+        from .bounds import _BoundsI
         if kimage is None:
             if real_kimage is None or imag_kimage is None:
                 raise ValueError("Must provide either kimage or real_kimage/imag_kimage")
 
             # If the "image" is not actually an image, try to read the image as a file.
-            if not isinstance(real_kimage, galsim.Image):
-                real_kimage = galsim.fits.read(real_kimage, hdu=real_hdu)
-            if not isinstance(imag_kimage, galsim.Image):
-                imag_kimage = galsim.fits.read(imag_kimage, hdu=imag_hdu)
+            if not isinstance(real_kimage, Image):
+                real_kimage = fits.read(real_kimage, hdu=real_hdu)
+            if not isinstance(imag_kimage, Image):
+                imag_kimage = fits.read(imag_kimage, hdu=imag_hdu)
 
             # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are
             # congruent.
-            if not isinstance(real_kimage, galsim.Image):
+            if not isinstance(real_kimage, Image):
                 raise ValueError("Supplied real_kimage is not an Image instance")
-            if not isinstance(imag_kimage, galsim.Image):
+            if not isinstance(imag_kimage, Image):
                 raise ValueError("Supplied imag_kimage is not an Image instance")
             if real_kimage.bounds != imag_kimage.bounds:
                 raise ValueError("Real and Imag kimages must have same bounds.")
@@ -765,10 +774,10 @@ class InterpolatedKImage(GSObject):
         shape = kimage.array.shape
         # If image is even-sized, ignore first row/column since in this case not every pixel has
         # a symmetric partner to which to compare.
-        bd = galsim.BoundsI(kimage.xmin + (1 if shape[1]%2==0 else 0),
-                            kimage.xmax,
-                            kimage.ymin + (1 if shape[0]%2==0 else 0),
-                            kimage.ymax)
+        bd = _BoundsI(kimage.xmin + (1 if shape[1]%2==0 else 0),
+                      kimage.xmax,
+                      kimage.ymin + (1 if shape[0]%2==0 else 0),
+                      kimage.ymax)
         if not (np.allclose(kimage[bd].real.array,
                             kimage[bd].real.array[::-1,::-1]) and
                 np.allclose(kimage[bd].imag.array,
@@ -793,14 +802,14 @@ class InterpolatedKImage(GSObject):
 
         stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
 
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._gsparams = GSParams.check(gsparams)
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
         if k_interpolant is None:
-            self.k_interpolant = galsim.Quintic(tol=1e-4)
+            self.k_interpolant = Quintic(tol=1e-4)
         else:
-            self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
+            self.k_interpolant = convert_interpolant(k_interpolant)
 
         sbiki = _galsim.SBInterpolatedKImage(
                 self._kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
@@ -808,14 +817,14 @@ class InterpolatedKImage(GSObject):
 
         if kimage.wcs is not None:
             sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                      galsim._galsim.PositionD(0.,0.), kimage.scale**2,
+                                      _galsim.PositionD(0.,0.), kimage.scale**2,
                                       self.gsparams._gsp)
         else:
             sbp = sbiki
         self._sbp = _galsim.SBAdd([sbp], self.gsparams._gsp)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.InterpolatedKImage) and
+        return (isinstance(other, InterpolatedKImage) and
                 np.array_equal(self._kimage.array, other._kimage.array) and
                 self._kimage.scale == other._kimage.scale and
                 self.k_interpolant == other.k_interpolant and
@@ -859,11 +868,11 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret = InterpolatedKImage.__new__(InterpolatedKImage)
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale
-    ret._gsparams = galsim.GSParams.check(gsparams)
+    ret._gsparams = GSParams.check(gsparams)
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
             ret._kimage._image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                              galsim._galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
+                              _galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
     ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
     return ret

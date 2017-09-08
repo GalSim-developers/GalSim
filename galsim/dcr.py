@@ -23,8 +23,6 @@ apparent zenith angles of an object), as a function of zenith angle, wavelength,
 pressure, and water vapor content.
 """
 
-import galsim
-
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):
     """Return the refractive index of air as function of wavelength.
 
@@ -92,12 +90,14 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
 
     @returns the tuple `(zenith_angle, parallactic_angle)`, each of which is an Angle.
     """
+    from .celestial import CelestialCoord
+    from .angle import degrees
     if zenith_coord is None:
         if HA is None or latitude is None:
             raise ValueError("Need to provide either zenith_coord or (HA, latitude) to"
                              +"zenith_parallactic_angles()")
-        zenith_coord = galsim.CelestialCoord(HA + obj_coord.ra, latitude)
+        zenith_coord = CelestialCoord(HA + obj_coord.ra, latitude)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
-    NCP = galsim.CelestialCoord(0.0*galsim.degrees, 90*galsim.degrees)
+    NCP = CelestialCoord(0.0*degrees, 90*degrees)
     parallactic_angle = obj_coord.angleBetween(zenith_coord, NCP)
     return zenith_angle, parallactic_angle

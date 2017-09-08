@@ -56,9 +56,12 @@ with default values, using help(galsim.hsm.HSMParams).
 """
 
 
-from . import _galsim
-import galsim
 import numpy as np
+from . import _galsim
+from .position import PositionD
+from .bounds import BoundsI
+from .shear import Shear
+from .image import Image, ImageI, ImageF, ImageD
 
 
 class ShapeData(object):
@@ -130,19 +133,19 @@ class ShapeData(object):
     routines that measure object moments (FindAdaptiveMom()) and carry out PSF correction
     (EstimateShear()).
     """
-    def __init__(self, image_bounds=galsim.BoundsI(), moments_status=-1,
-                 observed_shape=galsim.Shear(), moments_sigma=-1.0, moments_amp=-1.0,
-                 moments_centroid=galsim.PositionD(), moments_rho4=-1.0, moments_n_iter=0,
+    def __init__(self, image_bounds=BoundsI(), moments_status=-1,
+                 observed_shape=Shear(), moments_sigma=-1.0, moments_amp=-1.0,
+                 moments_centroid=PositionD(), moments_rho4=-1.0, moments_n_iter=0,
                  correction_status=-10, corrected_e1=-10., corrected_e2=-10.,
                  corrected_g1=-10., corrected_g2=-10., meas_type="None",
                  corrected_shape_err=-1.0, correction_method="None",
                  resolution_factor=-1.0, psf_sigma=-1.0,
-                 psf_shape=galsim.Shear(), error_message=""):
+                 psf_shape=Shear(), error_message=""):
 
         # Avoid empty string, which can caus problems in C++ layer.
         if error_message == "": error_message = "None"
 
-        if not isinstance(image_bounds, galsim.BoundsI):
+        if not isinstance(image_bounds, BoundsI):
             raise TypeError("image_bounds must be a BoundsI instance")
         # The others will raise an appropriate TypeError from the call to _galsim.ShapeData.
 
@@ -156,20 +159,20 @@ class ShapeData(object):
 
 
     @property
-    def image_bounds(self): return galsim.BoundsI(self._data.image_bounds)
+    def image_bounds(self): return BoundsI(self._data.image_bounds)
     @property
     def moments_status(self): return self._data.moments_status
 
     @property
     def observed_shape(self):
-        return galsim.Shear(e1=self._data.observed_e1, e2=self._data.observed_e2)
+        return Shear(e1=self._data.observed_e1, e2=self._data.observed_e2)
 
     @property
     def moments_sigma(self): return self._data.moments_sigma
     @property
     def moments_amp(self): return self._data.moments_amp
     @property
-    def moments_centroid(self): return galsim.PositionD(self._data.moments_centroid)
+    def moments_centroid(self): return PositionD(self._data.moments_centroid)
     @property
     def moments_rho4(self): return self._data.moments_rho4
     @property
@@ -197,7 +200,7 @@ class ShapeData(object):
 
     @property
     def psf_shape(self):
-        return galsim.Shear(e1=self._data.psf_e1, e2=self._data.psf_e2)
+        return Shear(e1=self._data.psf_e1, e2=self._data.psf_e2)
 
     @property
     def error_message(self):
@@ -216,7 +219,7 @@ class ShapeData(object):
         s += 'observed_shape=%r'%self.observed_shape
         if self.moments_sigma != -1: s += ', moments_sigma=%r'%self.moments_sigma
         if self.moments_amp != -1: s += ', moments_amp=%r'%self.moments_amp
-        if self.moments_centroid != galsim.PositionD():
+        if self.moments_centroid != PositionD():
             s += ', moments_centroid=%r'%self.moments_centroid
         if self.moments_rho4 != -1: s += ', moments_rho4=%r'%self.moments_rho4
         if self.moments_n_iter != 0: s += ', moments_n_iter=%r'%self.moments_n_iter
@@ -231,7 +234,7 @@ class ShapeData(object):
         if self.correction_method != 'None': s += ', correction_method=%r'%self.correction_method
         if self.resolution_factor != -1.: s += ', resolution_factor=%r'%self.resolution_factor
         if self.psf_sigma != -1.: s += ', psf_sigma=%r'%self.psf_sigma
-        if self.psf_shape != galsim.Shear(): s += ', psf_shape=%r'%self.psf_shape
+        if self.psf_shape != Shear(): s += ', psf_shape=%r'%self.psf_shape
         if self.error_message != "": s += ', error_message=%r'%self.error_message
         s += ')'
         return s
@@ -424,7 +427,7 @@ class HSMParams(object):
     def __ne__(self, other):
         return not self.__eq__(other)
     def __hash__(self):
-        return hash(('galsim.HSMParams', self._getinitargs()))
+        return hash(('galsim.hsm.HSMParams', self._getinitargs()))
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -448,7 +451,7 @@ def _convertMask(image, weight=None, badpix=None):
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight is None:
-        mask = galsim.ImageI(bounds=image.bounds, init_value=1)
+        mask = ImageI(bounds=image.bounds, init_value=1)
 
     else:
         # if weight image was supplied, check if it has the right bounds and is non-negative
@@ -465,11 +468,11 @@ def _convertMask(image, weight=None, badpix=None):
                 mask = weight
             else:
                 # If we need to mask bad pixels, we'll need a copy anyway.
-                mask = galsim.ImageI(weight)
+                mask = ImageI(weight)
 
         # otherwise, we need to convert it to the right type
         else:
-            mask = galsim.ImageI(bounds=image.bounds, init_value=0)
+            mask = ImageI(bounds=image.bounds, init_value=0)
             mask.array[weight.array > 0.] = 1
 
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
@@ -495,10 +498,10 @@ def _convertImage(image):
     """
     # if weight is not of type float/double, convert to float/double
     if (image.dtype == np.int16 or image.dtype == np.uint16):
-        image = galsim.ImageF(image)
+        image = ImageF(image)
 
     if (image.dtype == np.int32 or image.dtype == np.uint32):
-        image = galsim.ImageD(image)
+        image = ImageD(image)
 
     return image
 
@@ -738,4 +741,4 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
             return ShapeData(error_message = str(err))
 
 # make FindAdaptiveMom a method of Image class
-galsim.Image.FindAdaptiveMom = FindAdaptiveMom
+Image.FindAdaptiveMom = FindAdaptiveMom

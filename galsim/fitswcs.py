@@ -21,9 +21,13 @@ classes depending on what python modules are available and what kind of FITS fil
 trying to read.
 """
 
-import galsim
 import warnings
 import numpy as np
+from .wcs import CelestialWCS, JacobianWCS, AffineTransform
+from .position import PositionD, PositionI
+from .angle import radians, arcsec, degrees, AngleUnit
+from . import _galsim
+from . import fits
 
 #########################################################################################
 #
@@ -46,7 +50,7 @@ import numpy as np
 #########################################################################################
 
 
-class AstropyWCS(galsim.wcs.CelestialWCS):
+class AstropyWCS(CelestialWCS):
     """This WCS uses astropy.wcs to read WCS information from a FITS file.
     It requires the astropy.wcs python module to be installed.
 
@@ -90,7 +94,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                           [default: None]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "dir" : str, "hdu" : int, "origin" : galsim.PositionD,
+    _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
     _single_params = []
     _takes_rng = False
@@ -122,7 +126,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcs is not None:
                 raise TypeError("Cannot provide both file_name and wcs")
-            hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+            hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
         # At least as late as version 1.1.2, astropy thinks it knows how to parse ZPX files,
@@ -147,7 +151,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             raise TypeError("Must provide one of file_name, header, or wcs")
 
         if file_name is not None:
-            galsim.fits.closeHDUList(hdu_list, fin)
+            fits.closeHDUList(hdu_list, fin)
 
         # If astropy.wcs cannot parse the header, it won't notice from just doing the
         # WCS(header) command.  It will silently move on, thinking things are fine until
@@ -164,6 +168,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _load_from_header(self, header, hdu):
         import astropy.wcs
+        from . import fits
         self._fix_header(header)
         with warnings.catch_warnings():
             # The constructor might emit warnings if it wants to fix the header
@@ -174,7 +179,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # Some versions of astropy don't like to accept a galsim.FitsHeader object
             # as the header attribute here, even though they claim that dict-like objects
             # are ok.  So pull out the astropy.io.header object in this case.
-            if isinstance(header,galsim.fits.FitsHeader):
+            if isinstance(header,fits.FitsHeader):
                 header = header.header
             wcs = astropy.wcs.WCS(header)
         return wcs
@@ -222,7 +227,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
-        factor = galsim.degrees / galsim.radians
+        factor = degrees / radians
         ra *= factor
         dec *= factor
 
@@ -239,7 +244,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec, color=None):
         import astropy
-        factor = galsim.radians / galsim.degrees
+        factor = radians / degrees
         rd = np.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
@@ -335,7 +340,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         if self._tag is None:
             if hasattr(self,'header'):
-                self._tag = 'header=%r'%galsim.FitsHeader(self.header)
+                self._tag = 'header=%r'%fits.FitsHeader(self.header)
             else:
                 self._tag = 'wcs=%r'%self.wcs
         return "galsim.AstropyWCS(%s, origin=%r)"%(self._tag, self.origin)
@@ -351,13 +356,14 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         return d
 
     def __setstate__(self, d):
+        import galsim
         self.__dict__ = d
         hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
         self._wcs = self._load_from_header(hdu.header, hdu)
-        galsim.fits.closeHDUList(hdu_list, fin)
+        fits.closeHDUList(hdu_list, fin)
 
 
-class PyAstWCS(galsim.wcs.CelestialWCS):
+class PyAstWCS(CelestialWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
     information from a FITS file.  It requires the starlink.Ast python module to be installed.
 
@@ -403,7 +409,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                           [default: None]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "dir" : str, "hdu" : int, "origin" : galsim.PositionD,
+    _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
     _single_params = []
     _takes_rng = False
@@ -429,7 +435,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both file_name and wcsinfo")
-            hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+            hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
         # Load the wcs from the header.
@@ -449,7 +455,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             raise RuntimeError("The world coordinate system is not 2-dimensional")
 
         if file_name is not None:
-            galsim.fits.closeHDUList(hdu_list, fin)
+            fits.closeHDUList(hdu_list, fin)
 
         self._wcsinfo = wcsinfo
 
@@ -461,9 +467,9 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # PyFITSAdapter requires an hdu, not a header, so if we were given a header directly,
         # then we need to mock it up.
         if hdu is None:
-            from galsim._pyfits import pyfits
+            from ._pyfits import pyfits
             hdu = pyfits.PrimaryHDU()
-            galsim.fits.FitsHeader(hdu_list=hdu).update(header)
+            fits.FitsHeader(hdu_list=hdu).update(header)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # They aren't so good at keeping up with the latest pyfits and numpy syntax, so
@@ -538,7 +544,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         # See https://github.com/Starlink/starlink/issues/24 for helpful information from
         # David Berry, who assisted me in getting this working.
 
-        from galsim._pyfits import pyfits
+        from ._pyfits import pyfits
         import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
@@ -579,7 +585,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
     def _readHeader(header):
         x0 = header.get("GS_X0",0.)
         y0 = header.get("GS_Y0",0.)
-        return PyAstWCS(header=header, origin=galsim.PositionD(x0,y0))
+        return PyAstWCS(header=header, origin=PositionD(x0,y0))
 
     def copy(self):
         # The copy module version of copying the dict works fine here.
@@ -594,7 +600,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
     def __repr__(self):
         if self._tag is None:
             if hasattr(self, 'header'):
-                self._tag = 'header=%r'%galsim.FitsHeader(self.header)
+                self._tag = 'header=%r'%fits.FitsHeader(self.header)
             else:
                 # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
                 self._tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(self.wcsinfo)
@@ -611,15 +617,16 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         return d
 
     def __setstate__(self, d):
+        import galsim
         self.__dict__ = d
         hdu, hdu_list, fin = eval('galsim.fits.readFile('+d['_tag']+')')
         self._wcsinfo = self._load_from_header(hdu.header, hdu)
-        galsim.fits.closeHDUList(hdu_list, fin)
+        fits.closeHDUList(hdu_list, fin)
 
 
 # I can't figure out how to get wcstools installed in the travis environment (cf. .travis.yml).
 # So until that gets resolved, we omit this class from the coverage report.
-class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
+class WcsToolsWCS(CelestialWCS): # pragma: no cover
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
@@ -643,7 +650,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
                           [default: None]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "dir" : str, "origin" : galsim.PositionD }
+    _opt_params = { "dir" : str, "origin" : PositionD }
     _single_params = []
     _takes_rng = False
 
@@ -742,7 +749,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
                 dec.append(float(vals[1]))
 
         # wcstools reports ra, dec in degrees, so convert to radians
-        factor = galsim.degrees / galsim.radians
+        factor = degrees / radians
 
         try:
             len(x)
@@ -757,7 +764,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
     def _xy(self, ra, dec, color=None):
         import subprocess
         rd = np.array([ra, dec])
-        rd *= galsim.radians / galsim.degrees
+        rd *= radians / degrees
         for digits in range(10,5,-1):
             rd_strs = [ str(z) for z in rd ]
             p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name] + rd_strs,
@@ -819,7 +826,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
         file = header["GS_FILE"]
         x0 = header["GS_X0"]
         y0 = header["GS_Y0"]
-        return WcsToolsWCS(file, origin=galsim.PositionD(x0,y0))
+        return WcsToolsWCS(file, origin=PositionD(x0,y0))
 
     def copy(self):
         # The copy module version of copying the dict works fine here.
@@ -836,7 +843,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
 
     def __hash__(self): return hash(repr(self))
 
-class GSFitsWCS(galsim.wcs.CelestialWCS):
+class GSFitsWCS(CelestialWCS):
     """This WCS uses a GalSim implementation to read a WCS from a FITS file.
 
     It doesn't do nearly as many WCS types as the other options, and it does not try to be
@@ -878,7 +885,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                           [default: None]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "dir" : str, "hdu" : int, "origin" : galsim.PositionD,
+    _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
     _single_params = []
     _takes_rng = False
@@ -924,7 +931,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 self._tag += ', compression=%r'%compression
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
-            hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+            hdu, hdu_list, fin = fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
         if header is None:
@@ -934,7 +941,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         self._read_header(header)
 
         if file_name is not None:
-            galsim.fits.closeHDUList(hdu_list, fin)
+            fits.closeHDUList(hdu_list, fin)
 
         if origin is not None:
             self.crpix += [ origin.x, origin.y ]
@@ -943,9 +950,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     # withOrigin to get the current origin value.  We don't use it in this class, though, so
     # just make origin a dummy property that returns 0,0.
     @property
-    def origin(self): return galsim.PositionD(0.,0.)
+    def origin(self): return PositionD(0.,0.)
 
     def _read_header(self, header):
+        from .angle import AngleUnit
+        from .celestial import CelestialCoord
         # Start by reading the basic WCS stuff that most types have.
         ctype1 = header['CTYPE1']
         ctype2 = header['CTYPE2']
@@ -1000,11 +1009,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if 'CUNIT1' in header:
             cunit1 = header['CUNIT1']
             cunit2 = header['CUNIT2']
-            ra_units = galsim.AngleUnit.from_name(cunit1)
-            dec_units = galsim.AngleUnit.from_name(cunit2)
+            ra_units = AngleUnit.from_name(cunit1)
+            dec_units = AngleUnit.from_name(cunit2)
         else:
-            ra_units = galsim.degrees
-            dec_units = galsim.degrees
+            ra_units = degrees
+            dec_units = degrees
 
         if flip:
             crval1, crval2 = crval2, crval1
@@ -1016,7 +1025,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         self.cd = np.array( [ [ cd11, cd12 ],
                               [ cd21, cd22 ] ] )
 
-        self.center = galsim.CelestialCoord(crval1 * ra_units, crval2 * dec_units)
+        self.center = CelestialCoord(crval1 * ra_units, crval2 * dec_units)
 
         # There was an older proposed standard that used TAN with PV values, which is used by
         # SCamp, so we want to support it if possible.  The standard is now called TPV, so
@@ -1040,10 +1049,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # next bit might be wrong.
         # I did see documentation that the PV matrices always use degrees, so at least we shouldn't
         # have to worry about that.
-        if ra_units != galsim.degrees:  # pragma: no cover
-            self.cd[0,:] *= 1. * ra_units / galsim.degrees
-        if dec_units != galsim.degrees:  # pragma: no cover
-            self.cd[1,:] *= 1. * dec_units / galsim.degrees
+        if ra_units != degrees:  # pragma: no cover
+            self.cd[0,:] *= 1. * ra_units / degrees
+        if dec_units != degrees:  # pragma: no cover
+            self.cd[1,:] *= 1. * dec_units / degrees
 
     def _read_tpv(self, header):
 
@@ -1263,21 +1272,20 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     def _apply_pv(self, u, v):
         # Do this in C++ layer for speed.
-        galsim._galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data,
-                               self.pv.ctypes.data)
+        _galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data, self.pv.ctypes.data)
         return u, v
 
     def _apply_ab(self, x, y):
         # Do this in C++ layer for speed.
         dx = x.copy()
         dy = y.copy()
-        galsim._galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
-                               self.ab.ctypes.data)
+        _galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
+                        self.ab.ctypes.data)
         return x+dx, y+dy
 
     def _apply_cd(self, x, y):
         # Do this in C++ layer for speed.
-        galsim._galsim.ApplyCD(len(x), x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
+        _galsim.ApplyCD(len(x), x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
         return x, y
 
     def _uv(self, x, y):
@@ -1303,7 +1311,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # Convert (u,v) from degrees to radians
         # Also, the FITS standard defines u,v backwards relative to our standard.
         # They have +u increasing to the east, not west.  Hence the - for u.
-        factor = 1. * galsim.degrees / galsim.radians
+        factor = 1. * degrees / radians
         u *= -factor
         v *= factor
         return u, v
@@ -1325,18 +1333,18 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     def _invert_pv(self, u, v):
         # Do this in C++ layer for speed.
-        return galsim._galsim.InvertPV(u, v, self.pv.ctypes.data)
+        return _galsim.InvertPV(u, v, self.pv.ctypes.data)
 
     def _invert_ab(self, x, y):
         # Do this in C++ layer for speed.
         abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        return galsim._galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+        return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
 
         # Again, FITS has +u increasing to the east, not west.  Hence the - for u.
-        factor = galsim.radians / galsim.degrees
+        factor = radians / degrees
         u *= -factor
         v *= factor
 
@@ -1426,7 +1434,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                                 np.dot(np.dot(self.pv, dvpow), upow) ])
             jac = np.dot(j1,jac)
 
-        unit_convert = [ -1 * galsim.degrees / galsim.radians, 1 * galsim.degrees / galsim.radians ]
+        unit_convert = [ -1 * degrees / radians, 1 * degrees / radians ]
         p2 *= unit_convert
         # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and
         #               that would change self.cd!
@@ -1438,9 +1446,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         jac = np.dot(j2,jac)
 
         # This now has units of radians/pixel.  We want instead arcsec/pixel.
-        jac *= galsim.radians / galsim.arcsec
+        jac *= radians / arcsec
 
-        return galsim.JacobianWCS(jac[0,0], jac[0,1], jac[1,0], jac[1,1])
+        return JacobianWCS(jac[0,0], jac[0,1], jac[1,0], jac[1,1])
 
 
     def _newOrigin(self, origin):
@@ -1461,8 +1469,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         header["CD2_2"] = self.cd[1][1]
         header["CUNIT1"] = 'deg'
         header["CUNIT2"] = 'deg'
-        header["CRVAL1"] = self.center.ra / galsim.degrees
-        header["CRVAL2"] = self.center.dec / galsim.degrees
+        header["CRVAL1"] = self.center.ra / degrees
+        header["CRVAL2"] = self.center.dec / degrees
         if self.pv is not None:
             k = 0
             for n in range(4):
@@ -1545,7 +1553,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     def __hash__(self): return hash(repr(self))
 
 
-def TanWCS(affine, world_origin, units=galsim.arcsec):
+def TanWCS(affine, world_origin, units=arcsec):
     """This is a function that returns a GSFitsWCS object for a TAN WCS projection.
 
     The TAN projection is essentially an affine transformation from image coordinates to
@@ -1564,10 +1572,10 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
     @returns a GSFitsWCS describing this WCS.
     """
     # These will raise the appropriate errors if affine is not the right type.
-    dudx = affine.dudx * units / galsim.degrees
-    dudy = affine.dudy * units / galsim.degrees
-    dvdx = affine.dvdx * units / galsim.degrees
-    dvdy = affine.dvdy * units / galsim.degrees
+    dudx = affine.dudx * units / degrees
+    dudy = affine.dudy * units / degrees
+    dvdx = affine.dvdx * units / degrees
+    dvdy = affine.dvdy * units / degrees
     origin = affine.origin
     # The - signs are because the Fits standard is in terms of +u going east, rather than west
     # as we have defined.  So just switch the sign in the CD matrix.
@@ -1580,8 +1588,8 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
     # (0,0) = CD * (x0',y0') - CD * (x0,y0) + (u0,v0)
     # CD (x0',y0') = CD (x0,y0) - (u0,v0)
     # (x0',y0') = (x0,y0) - CD^-1 (u0,v0)
-    uv = np.array( [ affine.world_origin.x * units / galsim.degrees,
-                     affine.world_origin.y * units / galsim.degrees ] )
+    uv = np.array( [ affine.world_origin.x * units / degrees,
+                     affine.world_origin.y * units / degrees ] )
     crpix -= np.dot(np.linalg.inv(cd) , uv)
 
     # Invoke the private constructor of GSFits using the _data kwarg.
@@ -1659,8 +1667,8 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if file_name is not None:
         if header is not None:
             raise TypeError("Cannot provide both file_name and pyfits header")
-        header = galsim.FitsHeader(file_name=file_name, dir=dir, hdu=hdu, compression=compression,
-                                   text_file=text_file)
+        header = fits.FitsHeader(file_name=file_name, dir=dir, hdu=hdu, compression=compression,
+                                 text_file=text_file)
     else:
         file_name = 'header' # For sensible error messages below.
     if header is None:
@@ -1689,7 +1697,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         if not suppress_warning:
             warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
                         "Using AffineTransform instead, which will not really be correct.")
-        wcs = galsim.wcs.AffineTransform._readHeader(header)
+        wcs = AffineTransform._readHeader(header)
         return wcs
 
 # Let this function work like a class in config.

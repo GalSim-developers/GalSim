@@ -19,8 +19,9 @@
 Redefinition of the Shear class at the Python layer.
 """
 
-import galsim
 import numpy as np
+
+from .angle import Angle, _Angle, radians
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -138,7 +139,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when g is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             g = kwargs.pop('g')
@@ -152,7 +153,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when e is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             e = kwargs.pop('e')
@@ -166,7 +167,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when eta is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             eta = kwargs.pop('eta')
@@ -180,7 +181,7 @@ class Shear(object):
                 raise TypeError(
                     "Shear constructor requires position angle when q is specified!")
             beta = kwargs.pop('beta')
-            if not isinstance(beta, galsim.Angle):
+            if not isinstance(beta, Angle):
                 raise TypeError(
                     "The position angle that was supplied is not an Angle instance!")
             q = kwargs.pop('q')
@@ -198,7 +199,6 @@ class Shear(object):
             raise TypeError(
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
-    # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
     @property
     def g1(self): return self._g.real
 
@@ -207,7 +207,7 @@ class Shear(object):
     @property
     def g(self): return abs(self._g)
     @property
-    def beta(self): return galsim._Angle(0.5 * np.angle(self._g))
+    def beta(self): return _Angle(0.5 * np.angle(self._g))
 
     @property
     def shear(self): return self._g
@@ -305,7 +305,7 @@ class Shear(object):
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
         R = (-(self + other)).getMatrix().dot(S3)
         theta = np.arctan2(R[1,0], R[0,0])
-        return theta * galsim.radians
+        return theta * radians
 
     def __repr__(self):
         return 'galsim.Shear(%r)'%(self.shear)

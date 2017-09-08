@@ -20,10 +20,10 @@
 InclinedSersic is a class representing a (possibly-truncated) Sersic profile inclined to the LOS.
 """
 
-from galsim import GSObject
-import galsim
-
 from . import _galsim
+from .gsobject import GSObject
+from .gsparams import GSParams
+from .angle import Angle
 
 
 class InclinedSersic(GSObject):
@@ -98,7 +98,7 @@ class InclinedSersic(GSObject):
         >>> h0 = inclined_sersic_obj.scale_height
         >>> hlr = inclined_sersic_obj.half_light_radius
     """
-    _req_params = { "inclination" : galsim.Angle, "n" : float }
+    _req_params = { "inclination" : Angle, "n" : float }
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float,
                     "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float }]
@@ -150,11 +150,11 @@ class InclinedSersic(GSObject):
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed
-        if not isinstance(inclination, galsim.Angle):
+        if not isinstance(inclination, Angle):
             raise TypeError("Input inclination should be an Angle")
 
         self._inclination = inclination
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._gsparams = GSParams.check(gsparams)
         self._sbp = _galsim.SBInclinedSersic(
                 n, inclination.rad, scale_radius, half_light_radius,
                 scale_height, scale_h_over_r, flux, trunc, flux_untruncated, self.gsparams._gsp)
@@ -175,7 +175,7 @@ class InclinedSersic(GSObject):
     def trunc(self): return self._sbp.getTrunc()
 
     def __eq__(self, other):
-        return ((isinstance(other, galsim.InclinedSersic) and
+        return ((isinstance(other, InclinedSersic) and
                  (self.n == other.n) and
                  (self.inclination == other.inclination) and
                  (self.scale_radius == other.scale_radius) and

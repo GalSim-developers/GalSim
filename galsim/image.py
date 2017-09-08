@@ -20,9 +20,12 @@ The Image class
 """
 
 from __future__ import division
-from . import _galsim
 import numpy as np
-import galsim
+from . import _galsim
+from .position import PositionI, PositionD
+from .bounds import BoundsI, BoundsD
+from .wcs import BaseWCS, PixelScale, JacobianWCS
+from . import utilities
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
@@ -249,7 +252,7 @@ class Image(object):
                 array = args[0]
                 array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
-            elif isinstance(args[0], galsim.BoundsI):
+            elif isinstance(args[0], BoundsI):
                 bounds = args[0]
             elif isinstance(args[0], (list, tuple)):
                 array = np.array(args[0])
@@ -325,10 +328,10 @@ class Image(object):
             ncol = int(ncol)
             nrow = int(nrow)
             self._array = self._make_empty(shape=(nrow,ncol), dtype=self._dtype)
-            self._bounds = galsim.BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
+            self._bounds = BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
             self.fill(init_value)
         elif bounds is not None:
-            if not isinstance(bounds, galsim.BoundsI):
+            if not isinstance(bounds, BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self._array = self._make_empty(bounds.numpyShape(), dtype=self._dtype)
             self._bounds = bounds
@@ -337,7 +340,7 @@ class Image(object):
         elif array is not None:
             self._array = array.view()
             nrow,ncol = array.shape
-            self._bounds = galsim.BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
+            self._bounds = BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
             if make_const or not array.flags.writeable:
                 self._array.flags.writeable = False
             if init_value is not None:
@@ -361,7 +364,7 @@ class Image(object):
             self._array[:,:] = image.array[:,:]
         else:
             self._array = np.empty(shape=(1,1), dtype=self._dtype)
-            self._bounds = galsim.BoundsI()
+            self._bounds = BoundsI()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
 
@@ -369,9 +372,9 @@ class Image(object):
         if scale is not None:
             if wcs is not None:
                 raise TypeError("Cannot provide both scale and wcs to Image constructor")
-            self.wcs = galsim.PixelScale(float(scale))
+            self.wcs = PixelScale(float(scale))
         else:
-            if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
+            if wcs is not None and not isinstance(wcs,BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
 
@@ -389,7 +392,7 @@ class Image(object):
         ymin = kwargs.pop('ymin',1)
         if 'bounds' in kwargs:
             b = kwargs.pop('bounds')
-            if not isinstance(b, galsim.BoundsI):
+            if not isinstance(b, BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             if b.xmax-b.xmin+1 != array.shape[1]:
                 raise ValueError("Shape of array is inconsistent with provided bounds")
@@ -484,7 +487,7 @@ class Image(object):
         if self.wcs is not None and not self.wcs.isPixelScale():
             raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
         else:
-            self.wcs = galsim.PixelScale(value)
+            self.wcs = PixelScale(value)
 
     # Convenience functions
     @property
@@ -502,7 +505,7 @@ class Image(object):
 
         Equivalent to galsim.BoundsD(im.xmin-0.5, im.xmax+0.5, im.ymin-0.5, im.ymax+0.5)
         """
-        return galsim.BoundsD(self.xmin-0.5, self.xmax+0.5, self.ymin-0.5, self.ymax+0.5)
+        return BoundsD(self.xmin-0.5, self.xmax+0.5, self.ymin-0.5, self.ymax+0.5)
 
     # real, imag for everything, even real images.
     @property
@@ -566,7 +569,7 @@ class Image(object):
         """
         if self.isconst:
             raise ValueError("Cannot modify an immutable Image")
-        if not isinstance(bounds, galsim.BoundsI):
+        if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         self._array = self._make_empty(shape=bounds.numpyShape(), dtype=self.dtype)
         self._bounds = bounds
@@ -578,7 +581,7 @@ class Image(object):
 
         This is equivalent to self[bounds]
         """
-        if not isinstance(bounds, galsim.BoundsI):
+        if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         i1 = bounds.ymin - self.ymin
         i2 = bounds.ymax - self.ymin + 1
@@ -608,9 +611,9 @@ class Image(object):
             >>> value = im[5,5]
         """
         if len(args) == 1:
-            if isinstance(args[0], galsim.BoundsI):
+            if isinstance(args[0], BoundsI):
                 return self.subImage(*args)
-            elif isinstance(args[0], galsim.PositionI):
+            elif isinstance(args[0], PositionI):
                 return self(*args)
             elif isinstance(args[0], tuple):
                 return self.getValue(*args[0])
@@ -631,9 +634,9 @@ class Image(object):
             >>> im[5,5] = 17.
         """
         if len(args) == 2:
-            if isinstance(args[0], galsim.BoundsI):
+            if isinstance(args[0], BoundsI):
                 self.setSubImage(*args)
-            elif isinstance(args[0], galsim.PositionI):
+            elif isinstance(args[0], PositionI):
                 self.setValue(*args)
             elif isinstance(args[0], tuple):
                 self.setValue(*args)
@@ -686,7 +689,7 @@ class Image(object):
 
         @returns the subimage, image[bounds], after doing the wrapping.
         """
-        if not isinstance(bounds, galsim.BoundsI):
+        if not isinstance(bounds, BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         # Get this at the start to check for invalid bounds and raise the exception before
         # possibly writing data past the edge of the image.
@@ -732,6 +735,7 @@ class Image(object):
 
         @returns a new Image
         """
+        from .wcs import JacobianWCS
         ncol = self.xmax - self.xmin + 1
         nrow = self.ymax - self.ymin + 1
         nbins_x = (ncol-1) // nx + 1
@@ -752,21 +756,21 @@ class Image(object):
             target_wcs = None
         else:
             if self.wcs.isPixelScale() and nx == ny:
-                target_wcs = galsim.PixelScale(self.scale * nx)
+                target_wcs = PixelScale(self.scale * nx)
             else:
                 dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
                 dudx *= nx
                 dvdx *= nx
                 dudy *= ny
                 dvdy *= ny
-                target_wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+                target_wcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
 
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) / nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) / ny + 0.5
-            target_wcs = target_wcs.withOrigin(galsim.PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.withOrigin(PositionD(x0,y0), self.wcs.world_origin)
 
-        target_bounds = galsim.BoundsI(1, nbins_x, 1, nbins_y)
+        target_bounds = BoundsI(1, nbins_x, 1, nbins_y)
 
         return _Image(target_ar, target_bounds, target_wcs)
 
@@ -804,21 +808,21 @@ class Image(object):
             target_wcs = None
         else:
             if self.wcs.isPixelScale() and nx == ny:
-                target_wcs = galsim.PixelScale(self.scale / nx)
+                target_wcs = PixelScale(self.scale / nx)
             else:
                 dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
                 dudx /= nx
                 dvdx /= nx
                 dudy /= ny
                 dvdy /= ny
-                target_wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+                target_wcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
 
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) * nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) * ny + 0.5
-            target_wcs = target_wcs.withOrigin(galsim.PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.withOrigin(PositionD(x0,y0), self.wcs.world_origin)
 
-        target_bounds = galsim.BoundsI(1, npix_x, 1, npix_y)
+        target_bounds = BoundsI(1, npix_x, 1, npix_y)
 
         return _Image(target_ar, target_bounds, target_wcs)
 
@@ -843,7 +847,7 @@ class Image(object):
 
         No2 = max(-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1)
 
-        full_bounds = galsim.BoundsI(-No2, No2-1, -No2, No2-1)
+        full_bounds = BoundsI(-No2, No2-1, -No2, No2-1)
         if self.bounds == full_bounds:
             # Then the image is already in the shape we need.
             ximage = self
@@ -856,7 +860,7 @@ class Image(object):
         # dk = 2pi / (N dk)
         dk = np.pi / (No2 * dx)
 
-        out = Image(galsim.BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
+        out = Image(BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
         _galsim.rfft(ximage._image, out._image)
         out *= dx*dx
         out.setOrigin(0,-No2)
@@ -892,15 +896,15 @@ class Image(object):
 
         No2 = max(self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax)
 
-        target_bounds = galsim.BoundsI(0, No2, -No2, No2-1)
+        target_bounds = BoundsI(0, No2, -No2, No2-1)
         if self.bounds == target_bounds:
             # Then the image is already in the shape we need.
             kimage = self
         else:
             # Then we can pad out with zeros and wrap to get this in the form we need.
-            full_bounds = galsim.BoundsI(0, No2, -No2, No2)
+            full_bounds = BoundsI(0, No2, -No2, No2)
             kimage = Image(full_bounds, dtype=self.dtype, init_value=0)
-            posx_bounds = galsim.BoundsI(0, self.bounds.xmax, self.bounds.ymin, self.bounds.ymax)
+            posx_bounds = BoundsI(0, self.bounds.xmax, self.bounds.ymin, self.bounds.ymax)
             kimage[posx_bounds] = self[posx_bounds]
             kimage = kimage.wrap(target_bounds, hermitian = 'x')
 
@@ -909,10 +913,10 @@ class Image(object):
         dx = np.pi / (No2 * dk)
 
         # For the inverse, we need a bit of extra space for the fft.
-        out_extra = Image(galsim.BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
+        out_extra = Image(BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
         _galsim.irfft(kimage._image, out_extra._image)
         # Now cut off the bit we don't need.
-        out = out_extra.subImage(galsim.BoundsI(-No2,No2-1,-No2,No2-1))
+        out = out_extra.subImage(BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2
         out.setCenter(0,0)
         return out
@@ -958,15 +962,15 @@ class Image(object):
         if scale is not None:
             if wcs is not None:
                 raise TypeError("Cannot provide both scale and wcs")
-            wcs = galsim.PixelScale(scale)
+            wcs = PixelScale(scale)
         elif wcs is not None:
-            if not isinstance(wcs,galsim.BaseWCS):
+            if not isinstance(wcs,BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
             wcs = self.wcs
 
         if not self.bounds.isDefined():
-            return galsim.Image(wcs=wcs, dtype=self.dtype)
+            return Image(wcs=wcs, dtype=self.dtype)
 
         if make_const:
             array = self.array.view()
@@ -1002,7 +1006,7 @@ class Image(object):
             >>> im.shift(3,9)
             >>> ixy = im(x+3, y+9)
         """
-        delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
+        delta = utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
         self._shift(delta)
 
     def _shift(self, delta):
@@ -1051,7 +1055,7 @@ class Image(object):
             >>> im.bounds
             galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
-        cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
+        cen = utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
         self._shift(cen - self.center)
 
     def setOrigin(self, *args, **kwargs):
@@ -1087,7 +1091,7 @@ class Image(object):
             >>> im.bounds
             galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
          """
-        origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
+        origin = utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
         self._shift(origin - self.origin)
 
     @property
@@ -1166,7 +1170,7 @@ class Image(object):
         The arguments here may be either (x, y) or a PositionI instance.
         Or you can provide x, y as named kwargs.
         """
-        pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
+        pos = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
         return self.getValue(pos.x,pos.y)
 
     def getValue(self, x, y):
@@ -1198,7 +1202,7 @@ class Image(object):
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to set value of an undefined image")
-        pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
+        pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
             raise RuntimeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))
@@ -1222,7 +1226,7 @@ class Image(object):
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to set value of an undefined image")
-        pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
+        pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         if not self.bounds.includes(pos):
             raise RuntimeError("Attempt to set position %s, not in bounds %s"%(pos,self.bounds))

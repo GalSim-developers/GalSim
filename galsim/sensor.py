@@ -27,9 +27,14 @@ bottom of the detector.
 """
 
 import numpy as np
-import galsim
 import glob
 import os
+
+from . import _galsim
+from .position import PositionI, PositionD
+from .table import LookupTable
+from .random import UniformDeviate
+from . import meta_data
 
 class Sensor(object):
     """
@@ -122,10 +127,10 @@ class SiliconSensor(Sensor):
                             required if treering_func is provided]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treering_func=None, treering_center=galsim.PositionD(0,0)):
+                 nrecalc=10000, treering_func=None, treering_center=PositionD(0,0)):
         self.name = name
         self.strength = strength
-        self.rng = galsim.UniformDeviate(rng)
+        self.rng = UniformDeviate(rng)
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
@@ -135,11 +140,11 @@ class SiliconSensor(Sensor):
         self.config_file = name + '.cfg'
         self.vertex_file = name + '.dat'
         if not os.path.isfile(self.config_file):
-            cfg_file = os.path.join(galsim.meta_data.share_dir, 'sensors', self.config_file)
+            cfg_file = os.path.join(meta_data.share_dir, 'sensors', self.config_file)
             if not os.path.isfile(cfg_file):
                 raise IOError("Cannot locate file %s or %s"%(self.config_file, cfg_file))
             self.config_file = cfg_file
-            self.vertex_file = os.path.join(galsim.meta_data.share_dir, 'sensors', self.vertex_file)
+            self.vertex_file = os.path.join(meta_data.share_dir, 'sensors', self.vertex_file)
         if not os.path.isfile(self.vertex_file):
             raise IOError("Cannot locate vertex file %s"%(self.vertex_file))
 
@@ -149,14 +154,14 @@ class SiliconSensor(Sensor):
         if treering_func is None:
             # This is a dummy table in the case where no function is specified
             # A bit kludgy, but it works
-            self.treering_func = galsim.LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
-        elif not isinstance(treering_func, galsim.LookupTable):
+            self.treering_func = LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
+        elif not isinstance(treering_func, LookupTable):
             raise ValueError("treering_func must be a galsim.LookupTable")
-        if not isinstance(treering_center, galsim.PositionD):
+        if not isinstance(treering_center, PositionD):
             raise ValueError("treering_center must be a galsim.PositionD")
 
         # Now we read in the absorption length table:
-        abs_file = os.path.join(galsim.meta_data.share_dir, 'sensors', 'abs_length.dat')
+        abs_file = os.path.join(meta_data.share_dir, 'sensors', 'abs_length.dat')
         self._read_abs_length(abs_file)
         self._init_silicon()
 
@@ -177,11 +182,11 @@ class SiliconSensor(Sensor):
             raise IOError("Vertex file %s does not match config file %s"%(
                           self.vertex_file, self.config_file))
 
-        self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness,
-                                               vertex_data.ctypes.data,
-                                               self.treering_func._tab, self.treering_center._p,
-                                               self.abs_length_table._tab)
+        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
+                                        diff_step, PixelSize, SensorThickness,
+                                        vertex_data.ctypes.data,
+                                        self.treering_func._tab, self.treering_center._p,
+                                        self.abs_length_table._tab)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.name
@@ -219,7 +224,7 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=galsim.PositionI(0,0)):
+    def accumulate(self, photons, image, orig_center=PositionI(0,0)):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -259,7 +264,7 @@ class SiliconSensor(Sensor):
         abs_data = np.loadtxt(filename, skiprows = 1)
         xarray = abs_data[:,0]
         farray = abs_data[:,1]
-        table = galsim.LookupTable(x=xarray, f=farray, interpolant='linear')
+        table = LookupTable(x=xarray, f=farray, interpolant='linear')
         self.abs_length_table = table
         return
 
@@ -307,4 +312,4 @@ class SiliconSensor(Sensor):
         if dr is None:
             dr = period/100.
         npoints = int(r_max / dr) + 1
-        return galsim.LookupTable.from_func(func, x_min=0., x_max=r_max, npoints=npoints)
+        return LookupTable.from_func(func, x_min=0., x_max=r_max, npoints=npoints)

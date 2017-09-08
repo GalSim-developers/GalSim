@@ -20,9 +20,8 @@ Addition of docstrings to the Random deviate classes at the Python layer and def
 DistDeviate class.
 """
 
-from . import _galsim
 import numpy as np
-import galsim
+from . import _galsim
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -644,7 +643,9 @@ class DistDeviate(BaseDeviate):
     """
     def __init__(self, seed=None, function=None, x_min=None,
                  x_max=None, interpolant=None, npoints=256):
-        import galsim
+        from .table import LookupTable
+        from . import utilities
+        from . import integ
 
         # Set up the PRNG
         self._rng_type = _galsim.UniformDeviateImpl
@@ -671,12 +672,12 @@ class DistDeviate(BaseDeviate):
                 if x_min or x_max:
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to DistDeviate')
-                function = galsim.LookupTable.from_file(function, interpolant=interpolant)
+                function = LookupTable.from_file(function, interpolant=interpolant)
                 x_min = function.x_min
                 x_max = function.x_max
             else:
                 try:
-                    function = galsim.utilities.math_eval('lambda x : ' + function)
+                    function = utilities.math_eval('lambda x : ' + function)
                     if x_min is not None: # is not None in case x_min=0.
                         function(x_min)
                     else:
@@ -691,11 +692,11 @@ class DistDeviate(BaseDeviate):
                         "Caught error: {0}".format(e))
         else:
             # Check that the function is actually a function
-            if not (isinstance(function, galsim.LookupTable) or hasattr(function, '__call__')):
+            if not (isinstance(function, LookupTable) or hasattr(function, '__call__')):
                 raise TypeError('Keyword function must be a callable function or a string')
             if interpolant:
                 raise TypeError('Cannot provide an interpolant with a callable function argument')
-            if isinstance(function, galsim.LookupTable):
+            if isinstance(function, LookupTable):
                 if x_min or x_max:
                     raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
                                     'argument')
@@ -709,7 +710,7 @@ class DistDeviate(BaseDeviate):
         # Compute the cumulative distribution function
         xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints), dtype=float)
         # cdf is the cumulative distribution function--just easier to type!
-        dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
+        dcdf = [integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
         cdf = [sum(dcdf[0:i]) for i in range(npoints)]
         # Quietly renormalize the probability if it wasn't already normalized
         total_probability = cdf[-1]
@@ -754,7 +755,7 @@ class DistDeviate(BaseDeviate):
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
 
-        self._inverse_cdf = galsim.LookupTable(cdf, xarray, interpolant='linear')
+        self._inverse_cdf = LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
 
@@ -829,7 +830,8 @@ def permute(rng, *args):
     @param rng    The random number generator to use. (This will be converted to a UniformDeviate.)
     @param args   Any number of lists to be permuted.
     """
-    ud = galsim.UniformDeviate(rng)
+    from .random import UniformDeviate
+    ud = UniformDeviate(rng)
     if len(args) == 0:
         raise TypeError("permute called with no lists to permute")
 

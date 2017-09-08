@@ -18,10 +18,11 @@
 
 import numpy as np
 
-import galsim
 from . import _galsim
+from .gsparams import GSParams
+from .gsobject import GSObject
+from .chromatic import ChromaticObject, ChromaticSum, ChromaticConvolution
 from .utilities import lazy_property
-
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObject or ChromaticObject instances.
@@ -39,11 +40,12 @@ def Convolve(*args, **kwargs):
 
     @returns a Convolution or ChromaticConvolution instance as appropriate.
     """
+    from .chromatic import ChromaticConvolution
     # First check for number of arguments != 0
     if len(args) == 0:
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
-        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
+        if isinstance(args[0], (GSObject, ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
@@ -52,13 +54,13 @@ def Convolve(*args, **kwargs):
                             + "or a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, galsim.ChromaticObject) for a in args]):
-        return galsim.ChromaticConvolution(*args, **kwargs)
+    if any([isinstance(a, ChromaticObject) for a in args]):
+        return ChromaticConvolution(*args, **kwargs)
     else:
         return Convolution(*args, **kwargs)
 
 
-class Convolution(galsim.GSObject):
+class Convolution(GSObject):
     """A class for convolving 2 or more GSObject instances.
 
     The convolution will normally be done using discrete Fourier transforms of each of the component
@@ -115,7 +117,7 @@ class Convolution(galsim.GSObject):
         if len(args) == 0:
             raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
-            if isinstance(args[0], galsim.GSObject):
+            if isinstance(args[0], GSObject):
                 args = [args[0]]
             elif isinstance(args[0], list) or isinstance(args[0], tuple):
                 args = args[0]
@@ -141,7 +143,7 @@ class Convolution(galsim.GSObject):
         # Start by checking if all objects have a hard edge.
         hard_edge = True
         for obj in args:
-            if not isinstance(obj, galsim.GSObject):
+            if not isinstance(obj, GSObject):
                 raise TypeError("Arguments to Convolution must be GSObjects, not %s"%obj)
             if not obj.has_hard_edges:
                 hard_edge = False
@@ -194,11 +196,11 @@ class Convolution(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._obj_list = args
-        self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
+        self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj._sbp for obj in args ]
-        self._sbp = galsim._galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
 
     @lazy_property
     def noise(self):
@@ -218,7 +220,7 @@ class Convolution(galsim.GSObject):
                 if len(others) == 1:
                     _noise = _noise.convolvedWith(others[0])
                 else:
-                    _noise = _noise.convolvedWith(galsim.Convolve(others))
+                    _noise = _noise.convolvedWith(Convolve(others))
         return _noise
 
     @property
@@ -227,7 +229,7 @@ class Convolution(galsim.GSObject):
     def real_space(self): return self._real_space
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Convolution) and
+        return (isinstance(other, Convolution) and
                 self.obj_list == other.obj_list and
                 self.real_space == other.real_space and
                 self.gsparams == other.gsparams)
@@ -251,7 +253,7 @@ class Convolution(galsim.GSObject):
         for obj in self._obj_list:
             obj._prepareDraw()
         SBList = [obj._sbp for obj in self._obj_list]
-        self._sbp = galsim._galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -263,7 +265,8 @@ class Convolution(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        ud = galsim.UniformDeviate(rng)
+        from .random import UniformDeviate
+        ud = UniformDeviate(rng)
 
         photon_array = self._obj_list[0].shoot(n_photons, ud)
         # It may be necessary to shuffle when convolving because we do not have a
@@ -297,15 +300,16 @@ def Deconvolve(obj, gsparams=None):
 
     @returns a Deconvolution or ChromaticDeconvolution instance as appropriate.
     """
-    if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticDeconvolution(obj, gsparams=gsparams)
-    elif isinstance(obj, galsim.GSObject):
+    from .chromatic import ChromaticDeconvolution
+    if isinstance(obj, ChromaticObject):
+        return ChromaticDeconvolution(obj, gsparams=gsparams)
+    elif isinstance(obj, GSObject):
         return Deconvolution(obj, gsparams=gsparams)
     else:
         raise TypeError("Argument to Deconvolve must be either a GSObject or a ChromaticObject.")
 
 
-class Deconvolution(galsim.GSObject):
+class Deconvolution(GSObject):
     """A class for deconvolving a GSObject.
 
     The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
@@ -335,14 +339,14 @@ class Deconvolution(galsim.GSObject):
     There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
     def __init__(self, obj, gsparams=None):
-        if not isinstance(obj, galsim.GSObject):
+        if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
-        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = galsim._galsim.SBDeconvolve(obj._sbp, self.gsparams._gsp)
+        self._sbp = _galsim.SBDeconvolve(obj._sbp, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
@@ -351,7 +355,7 @@ class Deconvolution(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Deconvolution) and
+        return (isinstance(other, Deconvolution) and
                 self.orig_obj == other.orig_obj and
                 self.gsparams == other.gsparams)
 
@@ -366,7 +370,7 @@ class Deconvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self._sbp = galsim._galsim.SBDeconvolve(self._orig_obj._sbp, self.gsparams._gsp)
+        self._sbp = _galsim.SBDeconvolve(self._orig_obj._sbp, self.gsparams._gsp)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -394,15 +398,16 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
 
     @returns a AutoConvolution or ChromaticAutoConvolution instance as appropriate.
     """
-    if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
-    elif isinstance(obj, galsim.GSObject):
+    from .chromatic import ChromaticAutoConvolution
+    if isinstance(obj, ChromaticObject):
+        return ChromaticAutoConvolution(obj, real_space=real_space, gsparams=gsparams)
+    elif isinstance(obj, GSObject):
         return AutoConvolution(obj, real_space=real_space, gsparams=gsparams)
     else:
         raise TypeError("Argument to AutoConvolve must be either a GSObject or a ChromaticObject.")
 
 
-class AutoConvolution(galsim.GSObject):
+class AutoConvolution(GSObject):
     """A special class for convolving a GSObject with itself.
 
     It is equivalent in functionality to `Convolve([obj,obj])`, but takes advantage of
@@ -428,7 +433,7 @@ class AutoConvolution(galsim.GSObject):
     There are no additional methods for AutoConvolution beyond the usual GSObject methods.
     """
     def __init__(self, obj, real_space=None, gsparams=None):
-        if not isinstance(obj, galsim.GSObject):
+        if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolution must be a GSObject.")
 
         # Check whether to perform real space convolution...
@@ -461,9 +466,9 @@ class AutoConvolution(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
-        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = galsim._galsim.SBAutoConvolve(obj._sbp, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBAutoConvolve(obj._sbp, real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
@@ -474,7 +479,7 @@ class AutoConvolution(galsim.GSObject):
     def real_space(self): return self._real_space
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.AutoConvolution) and
+        return (isinstance(other, AutoConvolution) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
                 self.gsparams == other.gsparams)
@@ -495,7 +500,7 @@ class AutoConvolution(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self._sbp = galsim._galsim.SBAutoConvolve(self._orig_obj._sbp, self._real_space,
+        self._sbp = _galsim.SBAutoConvolve(self._orig_obj._sbp, self._real_space,
                                                   self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
@@ -508,7 +513,8 @@ class AutoConvolution(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        ud = galsim.UniformDeviate(rng)
+        from .random import UniformDeviate
+        ud = UniformDeviate(rng)
 
         photon_array = self._orig_obj.shoot(n_photons, ud)
         photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
@@ -540,15 +546,16 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
 
     @returns an AutoCorrelation or ChromaticAutoCorrelation instance as appropriate.
     """
-    if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
-    elif isinstance(obj, galsim.GSObject):
+    from .chromatic import ChromaticAutoCorrelation
+    if isinstance(obj, ChromaticObject):
+        return ChromaticAutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
+    elif isinstance(obj, GSObject):
         return AutoCorrelation(obj, real_space=real_space, gsparams=gsparams)
     else:
         raise TypeError("Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.")
 
 
-class AutoCorrelation(galsim.GSObject):
+class AutoCorrelation(GSObject):
     """A special class for correlating a GSObject with itself.
 
     It is equivalent in functionality to
@@ -578,7 +585,7 @@ class AutoCorrelation(galsim.GSObject):
     There are no additional methods for AutoCorrelation beyond the usual GSObject methods.
     """
     def __init__(self, obj, real_space=None, gsparams=None):
-        if not isinstance(obj, galsim.GSObject):
+        if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoCorrelation must be a GSObject.")
 
         # Check whether to perform real space convolution...
@@ -611,9 +618,9 @@ class AutoCorrelation(galsim.GSObject):
         # can be inspected later if necessary.
         self._real_space = real_space
         self._orig_obj = obj
-        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = galsim._galsim.SBAutoCorrelate(obj._sbp, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBAutoCorrelate(obj._sbp, real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
@@ -624,7 +631,7 @@ class AutoCorrelation(galsim.GSObject):
     def real_space(self): return self._real_space
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.AutoCorrelation) and
+        return (isinstance(other, AutoCorrelation) and
                 self.orig_obj == other.orig_obj and
                 self.real_space == other.real_space and
                 self.gsparams == other.gsparams)
@@ -645,7 +652,7 @@ class AutoCorrelation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self._sbp = galsim._galsim.SBAutoCorrelate(self._orig_obj._sbp,
+        self._sbp = _galsim.SBAutoCorrelate(self._orig_obj._sbp,
                                                    self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
@@ -658,7 +665,8 @@ class AutoCorrelation(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
-        ud = galsim.UniformDeviate(rng)
+        from .random import UniformDeviate
+        ud = UniformDeviate(rng)
 
         photons = self._orig_obj.shoot(n_photons, ud)
         photons2 = self._orig_obj.shoot(n_photons, ud)

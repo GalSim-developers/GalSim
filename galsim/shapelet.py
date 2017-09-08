@@ -22,8 +22,8 @@ Shapelet is a GSObject that implements a shapelet decomposition of a profile.
 
 import numpy as np
 
-import galsim
-from galsim import GSObject
+from .gsobject import GSObject
+from .gsparams import GSParams
 from . import _galsim
 
 class Shapelet(GSObject):
@@ -122,7 +122,7 @@ class Shapelet(GSObject):
         self._order = int(order)
         self._sigma = float(sigma)
         bvec_size = self.size(order)
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._gsparams = GSParams.check(gsparams)
 
         # Make bvec if necessary
         if bvec is None:
@@ -161,7 +161,8 @@ class Shapelet(GSObject):
     # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject
     def rotate(self, theta):
-        if not isinstance(theta, galsim.Angle):
+        from .angle import Angle
+        if not isinstance(theta, Angle):
             raise TypeError("Input theta should be an Angle")
         ret = Shapelet(self.sigma, self.order, self.bvec.copy())
         ret._sbp.rotate(theta.rad)
@@ -176,7 +177,7 @@ class Shapelet(GSObject):
         return Shapelet(sigma, self.order, self.bvec)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Shapelet) and
+        return (isinstance(other, Shapelet) and
                 self.sigma == other.sigma and
                 self.order == other.order and
                 np.array_equal(self.bvec, other.bvec) and
@@ -234,10 +235,11 @@ class Shapelet(GSObject):
 
         @returns the fitted Shapelet profile
         """
+        from .position import PositionD
         if not center:
             center = image.true_center
         # convert from PositionI if necessary
-        center = galsim.PositionD(center.x,center.y)
+        center = PositionD(center.x,center.y)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+

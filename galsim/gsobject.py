@@ -40,9 +40,9 @@ brightness profiles.
 
 import numpy as np
 
-import galsim
 from . import _galsim
-from .utilities import lazy_property
+from .position import PositionD, PositionI
+from .utilities import lazy_property, parse_pos_args
 
 
 class GSObject(object):
@@ -226,7 +226,9 @@ class GSObject(object):
     @property
     def deinterpolated(self): return self
     @property
-    def SED(self): return galsim.SED(self.flux, 'nm', '1')
+    def SED(self):
+        from .sed import SED
+        return SED(self.flux, 'nm', '1')
     @property
     def spectral(self): return False
     @property
@@ -244,11 +246,13 @@ class GSObject(object):
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
-        return galsim.Add([self, other])
+        from .sum import Add
+        return Add([self, other])
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
-        return galsim.Add([self, (-1. * other)])
+        from .sum import Add
+        return Add([self, (-1. * other)])
 
     # Make op* work to adjust the flux of an object
     def __mul__(self, other):
@@ -328,7 +332,7 @@ class GSObject(object):
     def centroid(self):
         """The (x, y) centroid of an object as a Position.
         """
-        return galsim.PositionD(self._sbp.centroid())
+        return PositionD(self._sbp.centroid())
 
     @property
     def positive_flux(self):
@@ -431,7 +435,7 @@ class GSObject(object):
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = galsim.PositionD(0.2, 0.33)
+        offset = PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
         center = im.true_center + offset + centroid/scale
@@ -545,7 +549,7 @@ class GSObject(object):
         # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
         # raw surface brightness profile, not integrated over pixels.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = galsim.PositionD(0.2, 0.33)
+        offset = PositionD(0.2, 0.33)
 
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb', dtype=float)
 
@@ -588,7 +592,7 @@ class GSObject(object):
 
         @returns the surface brightness at that position.
         """
-        pos = galsim.utilities.parse_pos_args(args,kwargs,'x','y')
+        pos = parse_pos_args(args,kwargs,'x','y')
         return self._xValue(pos)
 
     def _xValue(self, pos):
@@ -616,7 +620,7 @@ class GSObject(object):
 
         @returns the amplitude of the fourier transform at that position.
         """
-        kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
+        kpos = parse_pos_args(args,kwargs,'kx','ky')
         return self._kValue(kpos)
 
     def _kValue(self, kpos):
@@ -668,11 +672,13 @@ class GSObject(object):
 
         @returns the object with the new flux.
         """
+        from .sed import SED
+        from .transform import Transform
         # Prohibit non-SED callable flux_ratio here as most likely an error.
-        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, galsim.SED):
+        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
-        return galsim.Transform(self, flux_ratio=flux_ratio)
+        return Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
@@ -694,7 +700,8 @@ class GSObject(object):
 
         @returns the expanded object.
         """
-        return galsim.Transform(self, jac=[scale, 0., 0., scale])
+        from .transform import Transform
+        return Transform(self, jac=[scale, 0., 0., scale])
 
     def dilate(self, scale):
         """Dilate the linear size of the profile by the given `scale` factor, while preserving
@@ -709,8 +716,9 @@ class GSObject(object):
 
         @returns the dilated object.
         """
+        from .transform import Transform
         # equivalent to self.expand(scale) * (1./scale**2)
-        return galsim.Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
+        return Transform(self, jac=[scale, 0., 0., scale], flux_ratio=scale**-2)
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -749,17 +757,19 @@ class GSObject(object):
 
         @returns the sheared object.
         """
+        from .transform import Transform
+        from .shear import Shear
         if len(args) == 1:
             if kwargs:
                 raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
-            if not isinstance(args[0], galsim.Shear):
+            if not isinstance(args[0], Shear):
                 raise TypeError("Error, unnamed argument to GSObject.shear is not a Shear!")
             shear = args[0]
         elif len(args) > 1:
             raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
-            shear = galsim.Shear(**kwargs)
-        return galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
+            shear = Shear(**kwargs)
+        return Transform(self, jac=shear.getMatrix().ravel().tolist())
 
     def _shear(self, shear):
         """Equivalent to self.shear(shear), but without the overhead of sanity checks or other
@@ -772,7 +782,8 @@ class GSObject(object):
 
         @returns the sheared object.
         """
-        new_obj = galsim._Transform(self, *shear.getMatrix().ravel().tolist())
+        from .transform import _Transform
+        new_obj = _Transform(self, *shear.getMatrix().ravel().tolist())
         return new_obj
 
     def lens(self, g1, g2, mu):
@@ -803,10 +814,12 @@ class GSObject(object):
 
         @returns the rotated object.
         """
-        if not isinstance(theta, galsim.Angle):
+        from .angle import Angle
+        from .transform import Transform
+        if not isinstance(theta, Angle):
             raise TypeError("Input theta should be an Angle")
         s, c = theta.sincos()
-        return galsim.Transform(self, jac=[c, -s, s, c])
+        return Transform(self, jac=[c, -s, s, c])
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         """Create a version of the current object with an arbitrary Jacobian matrix transformation
@@ -834,7 +847,8 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        return galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
+        from .transform import Transform
+        return Transform(self, jac=[dudx, dudy, dvdx, dvdy])
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
@@ -869,8 +883,9 @@ class GSObject(object):
 
         @returns the shifted object.
         """
-        offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
-        return galsim.Transform(self, offset=offset)
+        from .transform import Transform
+        offset = parse_pos_args(args, kwargs, 'dx', 'dy')
+        return Transform(self, offset=offset)
 
     def _shift(self, offset):
         """Equivalent to self.shift(shift), but without the overhead of sanity checks or option
@@ -883,11 +898,14 @@ class GSObject(object):
 
         @returns the shifted object.
         """
-        new_obj = galsim._Transform(self, offset=offset)
+        from .transform import _Transform
+        new_obj = _Transform(self, offset=offset)
         return new_obj
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False):
+        from .image import Image
+        from .bounds import _BoundsI
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -906,15 +924,15 @@ class GSObject(object):
             if bounds is not None:
                 if nx is not None or ny is not None:
                     raise ValueError("Cannot set both bounds and (nx, ny)")
-                image = galsim.Image(bounds=bounds, dtype=dtype)
+                image = Image(bounds=bounds, dtype=dtype)
             elif nx is not None or ny is not None:
                 if nx is None or ny is None:
                     raise ValueError("Must set either both or neither of nx, ny")
-                image = galsim.Image(nx, ny, dtype=dtype)
+                image = Image(nx, ny, dtype=dtype)
             else:
                 N = self.getGoodImageSize(1.0)
                 if odd: N += 1
-                image = galsim.Image(N, N, dtype=dtype)
+                image = Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
@@ -923,7 +941,7 @@ class GSObject(object):
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             N = self.getGoodImageSize(1.0)
             if odd: N += 1
-            bounds = galsim._BoundsI(1,N,1,N)
+            bounds = _BoundsI(1,N,1,N)
             image.resize(bounds)
 
         # Else use the given image as is
@@ -946,30 +964,31 @@ class GSObject(object):
         else:
             obj_cen = bounds.center
             # Convert from PositionI to PositionD
-            obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
+            obj_cen = PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
         obj_cen += offset
         return wcs.local(image_pos=obj_cen)
 
     def _parse_offset(self, offset):
         if offset is None:
-            return galsim.PositionD(0,0)
+            return PositionD(0,0)
         else:
-            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
-                return galsim.PositionD(offset.x, offset.y)
+            if isinstance(offset, PositionD) or isinstance(offset, PositionI):
+                return PositionD(offset.x, offset.y)
             else:
                 # Let python raise the appropriate exception if this isn't valid.
-                return galsim.PositionD(offset[0], offset[1])
+                return PositionD(offset[0], offset[1])
 
     def _get_new_bounds(self, image, nx, ny, bounds):
+        from .bounds import BoundsI
         if image is not None and image.bounds.isDefined():
             return image.bounds
         elif nx is not None and ny is not None:
-            return galsim.BoundsI(1,nx,1,ny)
+            return BoundsI(1,nx,1,ny)
         elif bounds is not None and bounds.isDefined():
             return bounds
         else:
-            return galsim.BoundsI()
+            return BoundsI()
 
     def _fix_center(self, new_bounds, offset, use_true_center, reverse):
         # Note: this assumes self is in terms of image coordinates.
@@ -983,27 +1002,28 @@ class GSObject(object):
             shape = new_bounds.numpyShape()
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
-            offset = galsim.PositionD(dx,dy)
+            offset = PositionD(dx,dy)
 
         # For InterpolatedImage offsets, we apply the offset in the opposite direction.
         if reverse:
             offset = -offset
 
-        if offset == galsim.PositionD(0,0):
+        if offset == PositionD(0,0):
             return self
         else:
             return self._shift(offset)
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
+        from .wcs import BaseWCS, PixelScale
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if not isinstance(wcs, galsim.BaseWCS):
+            if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             if image is not None: image.wcs = None
         elif scale is not None:
-            wcs = galsim.PixelScale(scale)
+            wcs = PixelScale(scale)
             if image is not None: image.wcs = None
         elif image is not None and image.wcs is not None:
             wcs = image.wcs
@@ -1011,7 +1031,7 @@ class GSObject(object):
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
         if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
             if default_wcs is None:
-                wcs = galsim.PixelScale(self.nyquist_scale)
+                wcs = PixelScale(self.nyquist_scale)
             else:
                 wcs = default_wcs
 
@@ -1360,8 +1380,15 @@ class GSObject(object):
 
         @returns the drawn Image.
         """
+        from .image import Image, ImageD
+        from .convolve import Convolve, Convolution, Deconvolve
+        from .box import Pixel
+        from .wcs import PixelScale
+        from .random import UniformDeviate
+        from .photon_array import PhotonArray
+
         # Check that image is sane
-        if image is not None and not isinstance(image, galsim.Image):
+        if image is not None and not isinstance(image, Image):
             raise ValueError("image is not an Image instance")
 
         # Make sure (gain, area, exptime) have valid values:
@@ -1376,8 +1403,8 @@ class GSObject(object):
             raise ValueError("Invalid method name = %s"%method)
 
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
-        if method == 'auto' and isinstance(self, galsim.Convolution):
-            if any([ isinstance(obj, galsim.Pixel) for obj in self.obj_list ]):
+        if method == 'auto' and isinstance(self, Convolution):
+            if any([ isinstance(obj, Pixel) for obj in self.obj_list ]):
                 import warnings
                 warnings.warn(
                     "You called drawImage with `method='auto'` "
@@ -1443,8 +1470,8 @@ class GSObject(object):
             else:
                 real_space = True
             prof_no_pixel = prof
-            prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0, gsparams=self.gsparams),
-                                   real_space=real_space, gsparams=self.gsparams)
+            prof = Convolve(prof, Pixel(scale=1.0, gsparams=self.gsparams),
+                            real_space=real_space, gsparams=self.gsparams)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
@@ -1460,7 +1487,7 @@ class GSObject(object):
         # Making a view of the image lets us change the center without messing up the original.
         imview = image._view()
         imview.setCenter(0,0)
-        imview.wcs = galsim.PixelScale(1.0)
+        imview.wcs = PixelScale(1.0)
         orig_center = image.center  # Save the original center to pass to sensor.accumulate
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
@@ -1477,18 +1504,18 @@ class GSObject(object):
                 draw_image.setCenter(0,0)
                 if method in ['auto', 'fft', 'real_space']:
                     # Need to reconvolve by the new smaller pixel instead
-                    prof = galsim.Convolve(
+                    prof = Convolve(
                             prof_no_pixel,
-                            galsim.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
                             real_space=real_space, gsparams=self.gsparams)
                     prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
                 elif n_subsample != 1:
                     # We can't just pull off the pixel-free version, so we need to deconvolve
                     # by the original pixel and reconvolve by the smaller one.
-                    prof = galsim.Convolve(
+                    prof = Convolve(
                             prof,
-                            galsim.Deconvolve(galsim.Pixel(scale=1.0, gsparams=self.gsparams)),
-                            galsim.Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
+                            Deconvolve(Pixel(scale=1.0, gsparams=self.gsparams)),
+                            Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
                             gsparams=self.gsparams)
                 add = False
                 if not add_to_image: imview.setZero()
@@ -1502,15 +1529,15 @@ class GSObject(object):
                 added_photons = prof.drawFFT(draw_image, add)
 
             if sensor is not None:
-                ud = galsim.UniformDeviate(rng)
-                photons = galsim.PhotonArray.makeFromImage(draw_image, rng=ud)
+                ud = UniformDeviate(rng)
+                photons = PhotonArray.makeFromImage(draw_image, rng=ud)
                 for op in surface_ops:
                     op.applyTo(photons)
                 if imview.dtype in [np.float32, np.float64]:
                     added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
                     # Need a temporary
-                    im1 = galsim.ImageD(bounds=imview.bounds)
+                    im1 = ImageD(bounds=imview.bounds)
                     added_photons = sensor.accumulate(photons, im1, orig_center)
                     imview.array[:,:] += im1.array.astype(imview.dtype, copy=False)
 
@@ -1544,6 +1571,7 @@ class GSObject(object):
 
         @returns The total flux drawn inside the image bounds.
         """
+        from .image import ImageD, ImageF
         if image.wcs is None or not image.wcs.isPixelScale():
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
@@ -1552,9 +1580,9 @@ class GSObject(object):
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
-                im1 = galsim.ImageD(bounds=image.bounds)
+                im1 = ImageD(bounds=image.bounds)
             else:
-                im1 = galsim.ImageF(bounds=image.bounds)
+                im1 = ImageF(bounds=image.bounds)
             added_flux = self._sbp.draw(im1._image, image.scale, False)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
@@ -1591,6 +1619,8 @@ class GSObject(object):
         @returns (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if
                                       the result should be wrapped before doing the inverse fft.
         """
+        from .bounds import _BoundsI
+        from .image import ImageCD, ImageCF
         # Start with what this profile thinks a good size would be given the image's pixel scale.
         N = self.getGoodImageSize(image.scale)
 
@@ -1619,11 +1649,11 @@ class GSObject(object):
                 "drawFFT requires an FFT that is too large: %s. "%Nk +
                 "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
 
-        bounds = galsim._BoundsI(0,Nk//2,-Nk//2,Nk//2)
+        bounds = _BoundsI(0,Nk//2,-Nk//2,Nk//2)
         if image.dtype in [ np.complex128, np.float64, np.int32, np.uint32 ]:
-            kimage = galsim.ImageCD(bounds=bounds, scale=dk)
+            kimage = ImageCD(bounds=bounds, scale=dk)
         else:
-            kimage = galsim.ImageCF(bounds=bounds, scale=dk)
+            kimage = ImageCF(bounds=bounds, scale=dk)
         return kimage, N
 
     def drawFFT_finish(self, image, kimage, wrap_size, add_to_image):
@@ -1642,16 +1672,18 @@ class GSObject(object):
 
         @returns The total flux drawn inside the image bounds.
         """
+        from .bounds import _BoundsI
+        from .image import Image
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
-        bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
+        bwrap = _BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
         _galsim.wrapImage(kimage._image, bwrap._b, True, False)
         kimage_wrap = kimage.subImage(bwrap)
 
         # Perform the fourier transform.
-        breal = galsim._BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
-        real_image = galsim.Image(breal, dtype=float)
+        breal = _BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
+        real_image = Image(breal, dtype=float)
         _galsim.irfft(kimage_wrap._image, real_image._image)
 
         # Add (a portion of) this to the original image.
@@ -1702,6 +1734,7 @@ class GSObject(object):
 
         @returns n_photons, g
         """
+        from .random import PoissonDeviate
         # For profiles that are positive definite, then N = flux. Easy.
         #
         # However, some profiles shoot some of their photons with negative flux. This means that
@@ -1784,7 +1817,7 @@ class GSObject(object):
             # delta Var = (1 - 4*eta + 4*eta^2) * flux
             #           = (1-2eta)^2 * flux
             mean = eta_factor*eta_factor * flux
-            pd = galsim.PoissonDeviate(rng, mean)
+            pd = PoissonDeviate(rng, mean)
             pd_val = pd() - mean + flux
             ratio = pd_val / flux
             g *= ratio
@@ -1816,7 +1849,7 @@ class GSObject(object):
 
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None, orig_center=galsim.PositionI(0,0)):
+                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0)):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1879,6 +1912,9 @@ class GSObject(object):
 
         @returns The total flux of photons that landed inside the image bounds.
         """
+        from .random import UniformDeviate
+        from .sensor import Sensor
+        from .image import ImageD
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0.")
@@ -1894,15 +1930,15 @@ class GSObject(object):
                     "Warning: drawImage for object with flux == 1, area == 1, and "
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
         if image.wcs is None or not image.wcs.isPixelScale():
             raise ValueError("drawPhot requires an image with a PixelScale wcs")
 
         if sensor is None:
-            sensor = galsim.Sensor()
-        elif not isinstance(sensor, galsim.Sensor):
+            sensor = Sensor()
+        elif not isinstance(sensor, Sensor):
             raise TypeError("The sensor provided is not a Sensor instance")
 
         Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
@@ -1949,7 +1985,7 @@ class GSObject(object):
                 added_flux += sensor.accumulate(photons, image, orig_center)
             else:
                 # Need a temporary
-                im1 = galsim.ImageD(bounds=image.bounds)
+                im1 = ImageD(bounds=image.bounds)
                 added_flux += sensor.accumulate(photons, im1, orig_center)
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
 
@@ -1969,10 +2005,22 @@ class GSObject(object):
 
         @returns PhotonArray.
         """
-        ud = galsim.UniformDeviate(rng)
-        photons = galsim.PhotonArray(n_photons)
-        self._sbp.shoot(photons._pa, ud._rng)
+        from .random import UniformDeviate
+        from .photon_array import PhotonArray
+        photons = PhotonArray(n_photons)
+        ud = UniformDeviate(rng)
+        self._shoot(photons, ud)
         return photons
+
+    def _shoot(self, photons, ud):
+        """Shoot photons into the given PhotonArray
+
+        @param photons      A PhotonArray instance into which the photons should be placed.
+        @param ud           A UniformDeviate instance to use for the photon shooting,
+        """
+        # Note: If sub-class shooting ends up with correlated photons, it should override this
+        # and remember to call photons.setCorrelated()
+        self._sbp.shoot(photons._pa, ud._rng)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, setup_only=False):
@@ -2015,6 +2063,8 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
+        from .wcs import PixelScale
+        from .image import Image
         # Make sure provided image is complex
         if image is not None and not image.iscomplex:
             raise ValueError("Provided image must be complex")
@@ -2044,16 +2094,16 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         if image is None or not image.bounds.isDefined():
-            real_prof = galsim.PixelScale(dx).toImage(self)
+            real_prof = PixelScale(dx).toImage(self)
             dtype = np.complex128 if image is None else image.dtype
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
 
         # Can't both recenter a provided image and add to it.
-        if recenter and image.center != galsim.PositionI(0,0) and add_to_image:
+        if recenter and image.center != PositionI(0,0) and add_to_image:
             raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
 
         # Set the center to 0,0 if appropriate
-        if recenter and image.center != galsim.PositionI(0,0):
+        if recenter and image.center != PositionI(0,0):
             image._shift(-image.center)
 
         # Set the wcs of the images to use the dk scale size

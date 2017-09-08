@@ -19,8 +19,16 @@
 The "lensing engine" for drawing shears from some power spectrum.
 """
 
-import galsim
 import numpy as np
+from .angle import arcsec, AngleUnit
+from .position import PositionD, PositionI
+from .bounds import BoundsD, BoundsI
+from .interpolant import Quintic, Lanczos
+from .interpolatedimage import _InterpolatedImage
+from .image import Image, ImageD
+from .random import GaussianDeviate
+from . import utilities
+from . import _galsim
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -151,8 +159,7 @@ class PowerSpectrum(object):
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, e_power_function=None, b_power_function=None, delta2=False,
-                 units=galsim.arcsec):
+    def __init__(self, e_power_function=None, b_power_function=None, delta2=False, units=arcsec):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
             raise AttributeError(
@@ -174,14 +181,14 @@ class PowerSpectrum(object):
         # Check validity of units
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.AngleUnit.from_name(units)
-        if not isinstance(units, galsim.AngleUnit):
+            units = AngleUnit.from_name(units)
+        if not isinstance(units, AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
 
-        if units == galsim.arcsec:
+        if units == arcsec:
             self.scale = 1
         else:
-            self.scale = 1. * units / galsim.arcsec
+            self.scale = 1. * units / arcsec
 
     def __repr__(self):
         s = 'galsim.PowerSpectrum(e_power_function=%r'%self.e_power_function
@@ -189,7 +196,7 @@ class PowerSpectrum(object):
             s += ', b_power_function=%r'%self.b_power_function
         if self.delta2:
             s += ', delta2=%r'%self.delta2
-        if self.units != galsim.arcsec:
+        if self.units != arcsec:
             s += ', units=%r'%self.units
         s += ')'
         return s
@@ -212,7 +219,7 @@ class PowerSpectrum(object):
     def __hash__(self): return hash(repr(self))
 
     def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
-                  center=galsim.PositionD(0,0), units=galsim.arcsec, get_convergence=False,
+                  center=PositionD(0,0), units=arcsec, get_convergence=False,
                   kmax_factor=1, kmin_factor=1, bandlimit="hard", variance=None):
         """Generate a realization of the current power spectrum on the specified grid.
 
@@ -426,18 +433,18 @@ class PowerSpectrum(object):
             kmax_factor = int(kmax_factor)
 
         # Make sure center is a PositionD
-        center = galsim.PositionD(center)
+        center = PositionD(center)
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.AngleUnit.from_name(units)
-        if not isinstance(units, galsim.AngleUnit):
+            units = AngleUnit.from_name(units)
+        if not isinstance(units, AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
-        if units != galsim.arcsec:
-            scale_fac = (1.*units) / galsim.arcsec
+        if units != arcsec:
+            scale_fac = (1.*units) / arcsec
             center *= scale_fac
             grid_spacing *= scale_fac
 
@@ -446,21 +453,21 @@ class PowerSpectrum(object):
         self.center = center
 
         # It is also convenient to store the bounds within which an input position is allowed.
-        self.bounds = galsim.BoundsD( center.x - ngrid * grid_spacing / 2. ,
-                                      center.x + ngrid * grid_spacing / 2. ,
-                                      center.y - ngrid * grid_spacing / 2. ,
-                                      center.y + ngrid * grid_spacing / 2. )
+        self.bounds = BoundsD( center.x - ngrid * grid_spacing / 2. ,
+                               center.x + ngrid * grid_spacing / 2. ,
+                               center.y - ngrid * grid_spacing / 2. ,
+                               center.y + ngrid * grid_spacing / 2. )
         # Expand the bounds slightly to make sure rounding errors don't lead to points on the
         # edge being considered off the edge.
         self.bounds = self.bounds.expand( 1. + 1.e-15 )
 
-        gd = galsim.GaussianDeviate(rng)
+        gd = GaussianDeviate(rng)
 
         # Check that the interpolant is valid.
         if interpolant is None:
-            self.interpolant = galsim.Lanczos(5)
+            self.interpolant = Lanczos(5)
         else:
-            self.interpolant = galsim.utilities.convert_interpolant(interpolant)
+            self.interpolant = utilities.convert_interpolant(interpolant)
 
         # Convert power_functions into callables:
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
@@ -535,9 +542,9 @@ class PowerSpectrum(object):
         # Set up the images to be interpolated.
         # Note: We don't make the InterpolatedImages yet, since it's not picklable.
         #       So we wait to create them when we are actually going to use them.
-        self.im_g1 = galsim.ImageD(self.grid_g1, scale=self.grid_spacing)
-        self.im_g2 = galsim.ImageD(self.grid_g2, scale=self.grid_spacing)
-        self.im_kappa = galsim.ImageD(self.grid_kappa, scale=self.grid_spacing)
+        self.im_g1 = ImageD(self.grid_g1, scale=self.grid_spacing)
+        self.im_g2 = ImageD(self.grid_g2, scale=self.grid_spacing)
+        self.im_kappa = ImageD(self.grid_kappa, scale=self.grid_spacing)
 
         if get_convergence:
             return self.grid_g1, self.grid_g2, self.grid_kappa
@@ -590,15 +597,12 @@ class PowerSpectrum(object):
             raise RuntimeError("Subsample factor must be an integer>1 that divides the grid size!")
 
         # Make new array subsamples and turn them into Images
-        self.im_g1 = galsim.ImageD(
-            np.ascontiguousarray(self.im_g1.array[::subsample_fac,::subsample_fac]),
-            scale=self.grid_spacing)
-        self.im_g2 = galsim.ImageD(
-            np.ascontiguousarray(self.im_g2.array[::subsample_fac,::subsample_fac]),
-            scale=self.grid_spacing)
-        self.im_kappa = galsim.ImageD(
-            np.ascontiguousarray(self.im_kappa.array[::subsample_fac,::subsample_fac]),
-            scale=self.grid_spacing)
+        self.im_g1 = ImageD(np.ascontiguousarray(
+                self.im_g1.array[::subsample_fac,::subsample_fac]), scale=self.grid_spacing)
+        self.im_g2 = ImageD(np.ascontiguousarray(
+                self.im_g2.array[::subsample_fac,::subsample_fac]), scale=self.grid_spacing)
+        self.im_kappa = ImageD(np.ascontiguousarray(
+                self.im_kappa.array[::subsample_fac,::subsample_fac]), scale=self.grid_spacing)
 
         # Update internal parameters: grid_spacing, center.
         self.grid_spacing *= subsample_fac
@@ -609,18 +613,19 @@ class PowerSpectrum(object):
             return self.grid_g1, self.grid_g2
 
     def _convert_power_function(self, pf, pf_str):
+        from .table import LookupTable
         if pf is None: return None
 
         # Convert string inputs to either a lambda function or LookupTable
         if isinstance(pf,str):
             import os
             if os.path.isfile(pf):
-                pf = galsim.LookupTable.from_file(pf)
+                pf = LookupTable.from_file(pf)
             else:
                 # Detect at least _some_ forms of malformed string input.  Note that this
                 # test assumes that the eval string completion is defined for k=1.0.
                 try:
-                    pf = galsim.utilities.math_eval('lambda k : ' + pf)
+                    pf = utilities.math_eval('lambda k : ' + pf)
                     pf(1.0)
                 except Exception as e:
                     raise ValueError(
@@ -635,7 +640,7 @@ class PowerSpectrum(object):
         #       (If it's a LookupTable, then it could be a valid function that isn't
         #        defined at k=1, and by definition it must return something that is the
         #        same length as the input.)
-        if not isinstance(pf, galsim.LookupTable):
+        if not isinstance(pf, LookupTable):
             f1 = pf(np.array((0.1,1.)))
             if isinstance(f1, float):
                 raise AttributeError(
@@ -643,7 +648,7 @@ class PowerSpectrum(object):
         return pf
 
     def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
-                    units=galsim.arcsec, bandlimit="hard"):
+                    units=arcsec, bandlimit="hard"):
         """Calculate shear correlation functions for the current power spectrum on the specified
         grid.
 
@@ -696,6 +701,7 @@ class PowerSpectrum(object):
         @returns the tuple (theta, xi_p, xi_m), 1-d NumPy arrays for the angular separation theta
                  and the two shear correlation functions.
         """
+        from . import integ
         # Check for validity of integer values
         if not isinstance(ngrid, int):
             if ngrid != int(ngrid):
@@ -719,11 +725,11 @@ class PowerSpectrum(object):
         # automatically converted to do so, so we'll also do that here.
         if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.AngleUnit.from_name(units)
-        if not isinstance(units, galsim.AngleUnit):
+            units = AngleUnit.from_name(units)
+        if not isinstance(units, AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
-        if units != galsim.arcsec:
-            scale_fac = (1.*units) / galsim.arcsec
+        if units != arcsec:
+            scale_fac = (1.*units) / arcsec
             grid_spacing *= scale_fac
         else:
             scale_fac = 1.
@@ -809,9 +815,9 @@ class PowerSpectrum(object):
             else:
                 integrand_p = xip_integrand(p_B, theta[i_theta])
                 integrand_m = xim_integrand(-p_B, theta[i_theta])
-            xi_p[i_theta] = galsim.integ.int1d(integrand_p, k_min, k_max, rel_err=1.e-6,
+            xi_p[i_theta] = integ.int1d(integrand_p, k_min, k_max, rel_err=1.e-6,
                                                abs_err=1.e-12)
-            xi_m[i_theta] = galsim.integ.int1d(integrand_m, k_min, k_max, rel_err=1.e-6,
+            xi_m[i_theta] = integ.int1d(integrand_m, k_min, k_max, rel_err=1.e-6,
                                                abs_err=1.e-12)
         xi_p /= (2.*np.pi)
         xi_m /= (2.*np.pi)
@@ -869,9 +875,9 @@ class PowerSpectrum(object):
             raise RuntimeError("Periodic wrapping does not work with images this small!")
         expanded_bounds = im.bounds.withBorder(border)
         # Make new image with those bounds.
-        im_new = galsim.ImageD(expanded_bounds, scale=self.grid_spacing)
+        im_new = ImageD(expanded_bounds, scale=self.grid_spacing)
         # Make the central subarray equal to what we want.
-        im_new[im.bounds] = galsim.Image(im)
+        im_new[im.bounds] = Image(im)
         # Set the empty bits around the center properly.  There are four strips around the edge, and
         # 4 corner squares that need to be filled in.  Surely there must be a smarter python-y way
         # of doing this, but I'm not clever enough to figure it out.  This is basically the grossest
@@ -887,48 +893,48 @@ class PowerSpectrum(object):
         #
         ## Strip along left-hand side
         b1 = border-1
-        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                              im.bounds.ymin, im.bounds.ymax)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1,im.bounds.xmax,
-                                                             im.bounds.ymin, im.bounds.ymax)])
+        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                       im.bounds.ymin, im.bounds.ymax)] = \
+                       Image(im[BoundsI(im.bounds.xmax-b1,im.bounds.xmax,
+                                        im.bounds.ymin, im.bounds.ymax)])
         ## Strip along right-hand side
-        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                              im.bounds.ymin, im.bounds.ymax)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                                             im.bounds.ymin, im.bounds.ymax)])
+        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                       im.bounds.ymin, im.bounds.ymax)] = \
+                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                        im.bounds.ymin, im.bounds.ymax)])
         ## Strip along the bottom
-        im_new[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
-                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
-                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        im_new[BoundsI(im.bounds.xmin, im.bounds.xmax,
+                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmax,
+                                        im.bounds.ymax-b1, im.bounds.ymax)])
         ## Strip along the top
-        im_new[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
-                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmax,
-                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        im_new[BoundsI(im.bounds.xmin, im.bounds.xmax,
+                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmax,
+                                        im.bounds.ymin, im.bounds.ymin+b1)])
         ## Lower-left corner
-        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
-                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                       Image(im[BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
+                                        im.bounds.ymax-b1, im.bounds.ymax)])
         ## Upper-right corner
-        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                        im.bounds.ymin, im.bounds.ymin+b1)])
         ## Upper-left corner
-        im_new[galsim.BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
-                              im.bounds.ymax+1, expanded_bounds.ymax)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
-                                                             im.bounds.ymin, im.bounds.ymin+b1)])
+        im_new[BoundsI(expanded_bounds.xmin, im.bounds.xmin-1,
+                       im.bounds.ymax+1, expanded_bounds.ymax)] = \
+                       Image(im[BoundsI(im.bounds.xmax-b1, im.bounds.xmax,
+                                        im.bounds.ymin, im.bounds.ymin+b1)])
         ## Lower-right corner
-        im_new[galsim.BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
-                              expanded_bounds.ymin, im.bounds.ymin-1)] = \
-                              galsim.Image(im[galsim.BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
-                                                             im.bounds.ymax-b1, im.bounds.ymax)])
+        im_new[BoundsI(im.bounds.xmax+1, expanded_bounds.xmax,
+                       expanded_bounds.ymin, im.bounds.ymin-1)] = \
+                       Image(im[BoundsI(im.bounds.xmin, im.bounds.xmin+b1,
+                                        im.bounds.ymax-b1, im.bounds.ymax)])
         return im_new
 
-    def getShear(self, pos, units=galsim.arcsec, reduced=True, periodic=False, interpolant=None):
+    def getShear(self, pos, units=arcsec, reduced=True, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
@@ -1012,18 +1018,17 @@ class PowerSpectrum(object):
         If the input `pos` is given a list of positions, they are each a python list of values.
         If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
         """
-
         if not hasattr(self, 'im_g1'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getShear")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getShear')
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
+            xinterp = utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+            xinterp = utilities.convert_interpolant(self.interpolant)
         return self._getShear(pos_x, pos_y, xinterp, reduced, periodic)
 
     def _getShear(self, pos_x, pos_y, interpolant, reduced=True, periodic=False):
@@ -1039,17 +1044,16 @@ class PowerSpectrum(object):
 
         @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
         """
-        kinterp = galsim.Quintic()  # Irrelevant, but required.
+        kinterp = Quintic()  # Irrelevant, but required.
 
         im_g1 = self.im_g1
         im_g2 = self.im_g2
 
         if reduced:
             # get reduced shear (just discard magnification)
-            g1, g2, _ = galsim.lensing_ps.theoryToObserved(im_g1.array, im_g2.array,
-                                                           self.im_kappa.array)
-            im_g1 = galsim.ImageD(g1, scale=self.grid_spacing)
-            im_g2 = galsim.ImageD(g2, scale=self.grid_spacing)
+            g1, g2, _ = theoryToObserved(im_g1.array, im_g2.array, self.im_kappa.array)
+            im_g1 = ImageD(g1, scale=self.grid_spacing)
+            im_g2 = ImageD(g2, scale=self.grid_spacing)
 
         if periodic:
             # Make an expanded image.  We expand by 7 (default) to be safe, though most
@@ -1064,8 +1068,8 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_g1 = galsim._InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
-        ii_g2 = galsim._InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
+        ii_g1 = _InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
+        ii_g2 = _InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
         try:
@@ -1079,7 +1083,7 @@ class PowerSpectrum(object):
     def _getSingleShear(self, x, y, ii_g1, ii_g2, periodic):
         """Helper function for _getShear"""
         # Check that the position is in the bounds of the interpolated image
-        pos = galsim.PositionD(x,y)
+        pos = PositionD(x,y)
         if not self.bounds.includes(pos):
             if not periodic:
                 # We're not treating this as a periodic box, so issue a warning and set the
@@ -1094,15 +1098,14 @@ class PowerSpectrum(object):
                 # Treat this as a periodic box.
                 dx = self.bounds.xmax-self.bounds.xmin
                 dy = self.bounds.ymax-self.bounds.ymin
-                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
 
         g1 = ii_g1._xValue(pos-self.center)
         g2 = ii_g2._xValue(pos-self.center)
         return g1, g2
 
-
-    def getConvergence(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
+    def getConvergence(self, pos, units=arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the convergence values for a
         given list of input positions (or just a single position).  Before calling this function,
@@ -1147,18 +1150,17 @@ class PowerSpectrum(object):
         If the input `pos` is given a list of positions, kappa is a python list of values.
         If the input `pos` is given a NumPy array of positions, kappa is a NumPy array.
         """
-
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getConvergence")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getConvergence')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getConvergence')
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
+            xinterp = utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+            xinterp = utilities.convert_interpolant(self.interpolant)
         return self._getConvergence(pos_x, pos_y, xinterp, periodic)
 
     def _getConvergence(self, pos_x, pos_y, interpolant, periodic=False):
@@ -1173,7 +1175,7 @@ class PowerSpectrum(object):
 
         @returns the convergence, kappa (either a scalar or a numpy array)
         """
-        kinterp = galsim.Quintic()  # Irrelevant, but required.
+        kinterp = Quintic()  # Irrelevant, but required.
 
         im_kappa = self.im_kappa
 
@@ -1186,7 +1188,7 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_kappa = galsim._InterpolatedImage(im_kappa, interpolant, kinterp) * self.grid_spacing**2
+        ii_kappa = _InterpolatedImage(im_kappa, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
         try:
@@ -1198,7 +1200,7 @@ class PowerSpectrum(object):
 
     def _getSingleConvergence(self, x, y, ii_kappa, periodic):
         """Helper function for _getConvergence"""
-        pos = galsim.PositionD(x,y)
+        pos = PositionD(x,y)
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
@@ -1212,12 +1214,12 @@ class PowerSpectrum(object):
                 # Treat this as a periodic box.
                 dx = self.bounds.xmax-self.bounds.xmin
                 dy = self.bounds.ymax-self.bounds.ymin
-                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
 
         return ii_kappa._xValue(pos-self.center)
 
-    def getMagnification(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
+    def getMagnification(self, pos, units=arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the lensing magnification (mu)
         values for a given list of input positions (or just a single position).  Before calling this
@@ -1263,18 +1265,17 @@ class PowerSpectrum(object):
         If the input `pos` is given a list of positions, mu is a python list of values.
         If the input `pos` is given a NumPy array of positions, mu is a NumPy array.
         """
-
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getMagnification")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getMagnification')
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
+            xinterp = utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+            xinterp = utilities.convert_interpolant(self.interpolant)
         return self._getMagnification(pos_x, pos_y, xinterp, periodic)
 
     def _getMagnification(self, pos_x, pos_y, interpolant, periodic=False):
@@ -1289,13 +1290,12 @@ class PowerSpectrum(object):
 
         @returns the magnification, mu (either a scalar or a numpy array)
         """
-        kinterp = galsim.Quintic()  # Irrelevant, but required.
+        kinterp = Quintic()  # Irrelevant, but required.
 
         # Calculate the magnification based on the convergence and shear
-        _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
-                                                      self.im_kappa.array)
+        _, _, mu = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
         # Interpolate mu-1, so the zero values off the edge are appropriate.
-        im_mu = galsim.ImageD(mu-1, scale=self.grid_spacing)
+        im_mu = ImageD(mu-1, scale=self.grid_spacing)
 
         if periodic:
             # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
@@ -1306,7 +1306,7 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_mu = galsim._InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
+        ii_mu = _InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
         try:
@@ -1318,7 +1318,7 @@ class PowerSpectrum(object):
 
     def _getSingleMagnification(self, x, y, ii_mu, periodic):
         """Helper function for _getMagnification"""
-        pos = galsim.PositionD(x,y)
+        pos = PositionD(x,y)
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
@@ -1332,12 +1332,12 @@ class PowerSpectrum(object):
                 # Treat this as a periodic box.
                 dx = self.bounds.xmax-self.bounds.xmin
                 dy = self.bounds.ymax-self.bounds.ymin
-                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
 
         return ii_mu._xValue(pos-self.center) + 1.
 
-    def getLensing(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
+    def getLensing(self, pos, units=arcsec, periodic=False, interpolant=None):
         """
         This function can interpolate between grid positions to find the lensing observable
         quantities (reduced shears g1 and g2, and magnification mu) for a given list of input
@@ -1385,13 +1385,13 @@ class PowerSpectrum(object):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getLensing")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
+        pos_x, pos_y = utilities._convertPositions(pos, units, 'getLensing')
 
         # Set the interpolant:
         if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
+            xinterp = utilities.convert_interpolant(interpolant)
         else:
-            xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+            xinterp = utilities.convert_interpolant(self.interpolant)
         return self._getLensing(pos_x, pos_y, xinterp, periodic)
 
     def _getLensing(self, pos_x, pos_y, interpolant, periodic=False):
@@ -1407,14 +1407,13 @@ class PowerSpectrum(object):
         @returns the reduced shear and magnification as a tuple (g1,g2,mu) (either scalars or
                  numpy arrays)
         """
-        kinterp = galsim.Quintic()  # Irrelevant, but required.
+        kinterp = Quintic()  # Irrelevant, but required.
 
         # Calculate the magnification based on the convergence and shear
-        g1, g2, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
-                                                        self.im_kappa.array)
-        im_g1 = galsim.ImageD(g1, scale=self.grid_spacing)
-        im_g2 = galsim.ImageD(g2, scale=self.grid_spacing)
-        im_mu = galsim.ImageD(mu-1, scale=self.grid_spacing)
+        g1, g2, mu = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
+        im_g1 = ImageD(g1, scale=self.grid_spacing)
+        im_g2 = ImageD(g2, scale=self.grid_spacing)
+        im_mu = ImageD(mu-1, scale=self.grid_spacing)
 
         if periodic:
             # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
@@ -1427,9 +1426,9 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_g1 = galsim._InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
-        ii_g2 = galsim._InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
-        ii_mu = galsim._InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
+        ii_g1 = _InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
+        ii_g2 = _InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
+        ii_mu = _InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
         try:
@@ -1442,7 +1441,7 @@ class PowerSpectrum(object):
 
     def _getSingleLensing(self, x, y, ii_g1, ii_g2, ii_mu, periodic):
         """Helper function for _getLensing"""
-        pos = galsim.PositionD(x,y)
+        pos = PositionD(x,y)
         # Check that the position is in the bounds of the interpolated image
         if not self.bounds.includes(pos):
             if not periodic:
@@ -1456,8 +1455,8 @@ class PowerSpectrum(object):
                 # Treat this as a periodic box.
                 dx = self.bounds.xmax-self.bounds.xmin
                 dy = self.bounds.ymax-self.bounds.ymin
-                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
-                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+                pos = PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                (y-self.bounds.ymin) % dy + self.bounds.ymin)
 
         g1 = ii_g1._xValue(pos-self.center)
         g2 = ii_g2._xValue(pos-self.center)
@@ -1516,7 +1515,7 @@ class PowerSpectrumRealizer(object):
 
         # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L
-        self.kx, self.ky = galsim.utilities.kxky((self.ny,self.nx))
+        self.kx, self.ky = utilities.kxky((self.ny,self.nx))
         self.kx /= self.pixel_size
         self.ky /= self.pixel_size
 
@@ -1551,14 +1550,14 @@ class PowerSpectrumRealizer(object):
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
-        if not isinstance(gd, galsim.GaussianDeviate):
+        if not isinstance(gd, GaussianDeviate):
             raise TypeError(
                 "The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         # Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
-            r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
+            r1 = utilities.rand_arr(self.amplitude_E.shape, gd)
+            r2 = utilities.rand_arr(self.amplitude_E.shape, gd)
             E_k = np.empty((self.ny,self.nx), dtype=complex)
             E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
             # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
@@ -1567,8 +1566,8 @@ class PowerSpectrumRealizer(object):
 
         # Generate a random complex realization for the B-mode, if there is one
         if self.amplitude_B is not None:
-            r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
+            r1 = utilities.rand_arr(self.amplitude_B.shape, gd)
+            r2 = utilities.rand_arr(self.amplitude_B.shape, gd)
             B_k = np.empty((self.ny,self.nx), dtype=complex)
             B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
             # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
@@ -1640,6 +1639,7 @@ class PowerSpectrumRealizer(object):
             P_k[self.ny//2,self.nx//2] = np.real(P_k[self.ny//2,self.nx//2])
 
     def _generate_power_array(self, power_function):
+        from .table import LookupTable
         # Internal function to generate the result of a power function evaluated on a grid,
         # taking into account the symmetries.
         power_array = np.empty((self.ny, self.nx//2+1))
@@ -1650,7 +1650,7 @@ class PowerSpectrumRealizer(object):
         # Fudge the value at k=0, so we don't have to evaluate power there
         k[0,0] = k[1,0]
         # Raise a clear exception for LookupTable that are not defined on the full k range!
-        if isinstance(power_function, galsim.LookupTable):
+        if isinstance(power_function, LookupTable):
             mink = np.min(k)
             maxk = np.max(k)
             if mink < power_function.x_min or maxk > power_function.x_max:
@@ -1708,7 +1708,7 @@ def kappaKaiserSquires(g1, g2):
     prior to input.
     """
     # Checks on inputs
-    if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
+    if isinstance(g1, Image) and isinstance(g2, Image):
         g1 = g1.array
         g2 = g2.array
     elif isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
@@ -1721,7 +1721,7 @@ def kappaKaiserSquires(g1, g2):
         raise NotImplementedError("Non-square input shear grids not supported.")
 
     # Then setup the kx, ky grids
-    kx, ky = galsim.utilities.kxky(g1.shape)
+    kx, ky = utilities.kxky(g1.shape)
     kz = kx + ky*1j
 
     # exp(2i psi) = kz^2 / |kz|^2
@@ -1760,7 +1760,8 @@ class xip_integrand:
         self.pk = pk
         self.r = r
     def __call__(self, k):
-        return k * self.pk(k) * galsim.bessel.j0(self.r*k)
+        from .bessel import j0
+        return k * self.pk(k) * j0(self.r*k)
 
 class xim_integrand:
     """Utility class to assist in calculating the xi_- shear correlation function from power
@@ -1769,4 +1770,5 @@ class xim_integrand:
         self.pk = pk
         self.r = r
     def __call__(self, k):
-        return k * self.pk(k) * galsim.bessel.jn(4,self.r*k)
+        from .bessel import jn
+        return k * self.pk(k) * jn(4,self.r*k)

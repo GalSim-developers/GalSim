@@ -19,13 +19,14 @@
 A class that handles affine tranformations of a profile including a possible flux scaling.
 """
 
-import galsim
 import numpy as np
 from . import _galsim
+from .gsobject import GSObject
+from .gsparams import GSParams
 from .utilities import lazy_property
+from .position import PositionD
 
-def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
-              gsparams=None):
+def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None):
     """A function for transforming either a GSObject or ChromaticObject.
 
     This function will inspect its input argument to decide if a Transformation object or a
@@ -47,19 +48,23 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
 
     @returns a Transformation or ChromaticTransformation instance as appropriate.
     """
-    if not (isinstance(obj, galsim.GSObject) or isinstance(obj, galsim.ChromaticObject)):
+    from .sum import Sum
+    from .convolve import Convolution
+    from .chromatic import ChromaticObject
+    from .chromatic import ChromaticSum, ChromaticConvolution, ChromaticTransformation
+    if not (isinstance(obj, GSObject) or isinstance(obj, ChromaticObject)):
         raise TypeError("Argument to Transform must be either a GSObject or a ChromaticObject.")
 
     elif (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
-          hasattr(flux_ratio,'__call__') or isinstance(obj, galsim.ChromaticObject)):
+          hasattr(flux_ratio,'__call__') or isinstance(obj, ChromaticObject)):
 
         # Sometimes for Chromatic compound types, it is more efficient to apply the
         # transformation to the components rather than the whole.  In particular, this can
         # help preserve separability in many cases.
 
         # Don't transform ChromaticSum object, better to just transform the arguments.
-        if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
-            new_obj = galsim.ChromaticSum(
+        if isinstance(obj, ChromaticSum) or isinstance(obj, Sum):
+            new_obj = ChromaticSum(
                 [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
                 dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
@@ -69,19 +74,19 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # If we are just flux scaling, then a Convolution can do that to the first element.
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
-        elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
+        elif (isinstance(obj, ChromaticConvolution or isinstance(obj, Convolution))
               and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
-              and offset == galsim.PositionD(0.,0.)):
-            first = Transform(obj.obj_list[0],flux_ratio=flux_ratio,gsparams=gsparams)
-            return galsim.ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
+              and offset == PositionD(0.,0.)):
+            first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams)
+            return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
-            return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
+            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
     else:
         return Transformation(obj, jac, offset, flux_ratio, gsparams)
 
 
-class Transformation(galsim.GSObject):
+class Transformation(GSObject):
     """A class for modeling an affine transformation of a GSObject instance.
 
     Initialization
@@ -121,14 +126,14 @@ class Transformation(galsim.GSObject):
     be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
     """
-    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
+    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None):
         dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).ravel()
         if hasattr(obj, 'original'):
             self._original = obj.original
         else:
             self._original = obj
-        self._gsparams = galsim.GSParams.check(gsparams, self._original.gsparams)
+        self._gsparams = GSParams.check(gsparams, self._original.gsparams)
         self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset._p,
                                         flux_ratio, self.gsparams._gsp)
 
@@ -137,20 +142,21 @@ class Transformation(galsim.GSObject):
         # transformation.
         self._jac = np.empty((2,2), dtype=float)
         self._sbp.getJac(self._jac.ctypes.data)
-        self._offset = galsim.PositionD(self._sbp.getOffset())
+        self._offset = PositionD(self._sbp.getOffset())
         self._flux_ratio = self._sbp.getFluxScaling()
 
     @lazy_property
     def noise(self):
+        from .correlatednoise import _BaseCorrelatedNoise
         if self.original.noise is None:
             return None
         else:
             dudx, dudy, dvdx, dvdy = self._jac.ravel()
-            return galsim.correlatednoise._BaseCorrelatedNoise(
+            return _BaseCorrelatedNoise(
                     self.original.noise.rng,
-                    galsim._Transform(self.original.noise._profile,
-                                      dudx, dudy, dvdx, dvdy,
-                                      flux_ratio=self.flux_ratio**2),
+                    _Transform(self.original.noise._profile,
+                               dudx, dudy, dvdx, dvdy,
+                               flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
     @property
@@ -163,7 +169,7 @@ class Transformation(galsim.GSObject):
     def flux_ratio(self): return self._flux_ratio
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Transformation) and
+        return (isinstance(other, Transformation) and
                 self.original == other.original and
                 np.array_equal(self.jac, other.jac) and
                 np.array_equal(self.offset, other.offset) and
@@ -179,11 +185,12 @@ class Transformation(galsim.GSObject):
             self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
 
     def __str__(self):
+        from .wcs import JacobianWCS
         s = str(self.original)
         dudx, dudy, dvdx, dvdy = self._jac.ravel()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # Figure out the shear/rotate/dilate calls that are equivalent.
-            jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
+            jac = JacobianWCS(dudx,dudy,dvdx,dvdy)
             scale, shear, theta, flip = jac.getDecomposition()
             single = None
             if flip:
@@ -220,10 +227,10 @@ class Transformation(galsim.GSObject):
     def _prepareDraw(self):
         self._original._prepareDraw()
         dudx, dudy, dvdx, dvdy = self._jac.ravel()
-        self._sbp = galsim._galsim.SBTransform(self._original._sbp,
-                                               dudx, dudy, dvdx, dvdy,
-                                               self.offset._p, self.flux_ratio,
-                                               self.gsparams._gsp)
+        self._sbp = _galsim.SBTransform(self._original._sbp,
+                                        dudx, dudy, dvdx, dvdy,
+                                        self.offset._p, self.flux_ratio,
+                                        self.gsparams._gsp)
 
     def _fwd_ident(self, x, y):
         return x, y
@@ -244,6 +251,7 @@ class Transformation(galsim.GSObject):
                             [default: None]
         @returns PhotonArray.
         """
+        from .random import UniformDeviate
         # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
         if self._jac[0,1] == 0 and self._jac[1,0] == 0:
             if self._jac[0,0] == 1 and self._jac[1,1] == 1:     # jac is (1,0,0,1)
@@ -256,7 +264,7 @@ class Transformation(galsim.GSObject):
             fwd = self._fwd_normal
             det = abs(self._jac[0,0] * self._jac[1,1] - self._jac[0,1] * self._jac[1,0])
 
-        ud = galsim.UniformDeviate(rng)
+        ud = UniformDeviate(rng)
         photon_array = self.original.shoot(n_photons, ud)
 
         newx, newy = fwd(photon_array.x,photon_array.y)
@@ -278,7 +286,7 @@ class Transformation(galsim.GSObject):
         self.__dict__ = d
         self.__init__(self._original, self._jac, self._offset, self._flux_ratio, self._gsparams)
 
-def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0.),
+def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=PositionD(0.,0.),
                flux_ratio=1., gsparams=None):
     """Approximately equivalent to Transform (but with jac expanded out), but without all the
     sanity checks and options.
@@ -290,11 +298,11 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
         ret._original = obj.original
     else:
         ret._original = obj
-    ret._gsparams = galsim.GSParams.check(gsparams, ret._original.gsparams)
+    ret._gsparams = GSParams.check(gsparams, ret._original.gsparams)
     ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset._p,
                                    flux_ratio, ret.gsparams._gsp)
     ret._jac = np.empty((2,2), dtype=float)
     ret._sbp.getJac(ret._jac.ctypes.data)
-    ret._offset = galsim.PositionD(ret._sbp.getOffset())
+    ret._offset = PositionD(ret._sbp.getOffset())
     ret._flux_ratio = ret._sbp.getFluxScaling()
     return ret

@@ -21,9 +21,9 @@ Also includes the addNoise() and addNoiseSNR() methods of the Image classes at t
 layer.
 """
 
-import galsim
 import numpy as np
 import math
+from .image import Image, ImageD
 
 
 def addNoise(self, noise):
@@ -84,8 +84,8 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
         self.addNoise(noise)
         return noise_var
 
-galsim.Image.addNoise = addNoise
-galsim.Image.addNoiseSNR = addNoiseSNR
+Image.addNoise = addNoise
+Image.addNoiseSNR = addNoiseSNR
 
 
 class BaseNoise(object):
@@ -106,10 +106,11 @@ class BaseNoise(object):
         >>> isinstance(noise, galsim.BaseNoise)
     """
     def __init__(self, rng=None):
+        from .random import BaseDeviate
         if rng is None:
-            self._rng = galsim.BaseDeviate()
+            self._rng = BaseDeviate()
         else:
-            if not isinstance(rng, galsim.BaseDeviate):
+            if not isinstance(rng, BaseDeviate):
                 raise TypeError("rng must be a galsim.BaseDeviate instance.")
             self._rng = rng
 
@@ -186,7 +187,7 @@ class BaseNoise(object):
 
         which may be more convenient or clearer.
         """
-        if not isinstance(image, galsim.Image):
+        if not isinstance(image, Image):
             raise TypeError("Provided image must be a galsim.Image")
         return self._applyTo(image)
 
@@ -227,9 +228,10 @@ class GaussianNoise(BaseNoise):
         noise.sigma         # The value of the constructor parameter sigma (read-only)
     """
     def __init__(self, rng=None, sigma=1.):
+        from .random import GaussianDeviate
         BaseNoise.__init__(self, rng)
         self._sigma = sigma
-        self._gd = galsim.GaussianDeviate(self.rng, sigma=sigma)
+        self._gd = GaussianDeviate(self.rng, sigma=sigma)
 
     @property
     def sigma(self):
@@ -303,9 +305,10 @@ class PoissonNoise(BaseNoise):
         noise.sky_level     # The value of the constructor parameter sky_level (read-only)
     """
     def __init__(self, rng=None, sky_level=0.):
+        from .random import PoissonDeviate
         BaseNoise.__init__(self, rng)
         self._sky_level = sky_level
-        self._pd = galsim.PoissonDeviate(self.rng)
+        self._pd = PoissonDeviate(self.rng)
 
     @property
     def sky_level(self):
@@ -419,15 +422,16 @@ class CCDNoise(BaseNoise):
         noise.read_noise    # The value of the constructor parameter read_noise (read-only)
     """
     def __init__(self, rng=None, sky_level=0., gain=1., read_noise=0.):
+        from .random import PoissonDeviate, GaussianDeviate
         BaseNoise.__init__(self, rng)
         self._sky_level = float(sky_level)
         self._gain = float(gain)
         self._read_noise = float(read_noise)
-        self._pd = galsim.PoissonDeviate(self.rng)
+        self._pd = PoissonDeviate(self.rng)
         if gain > 0.:
-            self._gd = galsim.GaussianDeviate(self.rng, sigma=self.read_noise / self.gain)
+            self._gd = GaussianDeviate(self.rng, sigma=self.read_noise / self.gain)
         else:
-            self._gd = galsim.GaussianDeviate(self.rng, sigma=self.read_noise)
+            self._gd = GaussianDeviate(self.rng, sigma=self.read_noise)
 
     @property
     def sky_level(self):
@@ -601,11 +605,12 @@ class VariableGaussianNoise(BaseNoise):
         noise.var_image     # The value of the constructor parameter var_image (read-only)
     """
     def __init__(self, rng, var_image):
+        from .random import GaussianDeviate
         BaseNoise.__init__(self, rng)
-        self._gd = galsim.GaussianDeviate(rng)
+        self._gd = GaussianDeviate(rng)
 
         # Make sure var_image is an ImageD, converting dtype if necessary
-        self._var_image = galsim.ImageD(var_image)
+        self._var_image = ImageD(var_image)
 
     @property
     def var_image(self):
@@ -614,7 +619,7 @@ class VariableGaussianNoise(BaseNoise):
     # Repeat this here, since we want to add an extra sanity check, which should go in the
     # non-underscore version.
     def applyTo(self, image):
-        if not isinstance(image, galsim.Image):
+        if not isinstance(image, Image):
             raise TypeError("Provided image must be a galsim.Image")
         if image.array.shape != self.var_image.array.shape:
             raise ValueError("Provided image shape does not match the shape of var_image")
