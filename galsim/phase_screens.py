@@ -809,7 +809,7 @@ class OpticalScreen(object):
                            details. [default: None]
         @returns stepk in inverse arcsec.
         """
-        from .base import Airy
+        from .airy import Airy
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)

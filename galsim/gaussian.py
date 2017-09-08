@@ -172,9 +172,6 @@ class Gaussian(GSObject):
     def centroid(self):
         return PositionD(0,0)
 
-    def getFlux(self):
-        return self._flux
-
     def getPositiveFlux(self):
         return self._flux
 

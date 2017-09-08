@@ -2670,7 +2670,7 @@ class ChromaticAiry(ChromaticObject):
 
         @param  wave   Wavelength in nanometers.
         """
-        from .base import Airy
+        from .airy import Airy
         # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
         # wavelength.
         ret = Airy(

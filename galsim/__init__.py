@@ -117,7 +117,8 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .gaussian import Gaussian
 from .moffat import Moffat
-from .base import Airy, Kolmogorov, Pixel, Box, TopHat
+from .airy import Airy
+from .base import Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF

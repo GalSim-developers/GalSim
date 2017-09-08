@@ -211,7 +211,7 @@ class Aperture(object):
                  pupil_plane_im=None, pupil_angle=0.0*radians,
                  pupil_plane_scale=None, pupil_plane_size=None,
                  gsparams=None):
-        from .base import Airy
+        from .airy import Airy
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
         self._gsparams = gsparams
