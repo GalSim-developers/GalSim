@@ -64,6 +64,7 @@ Bug Fixes
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
 - Fixed minor bug in shear == implementation. (#865)
 - Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
+- Added check to `SED.atRedshift` for valid redshifts. (#905)
 
 
 Deprecated Features

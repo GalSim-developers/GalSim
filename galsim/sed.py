@@ -634,6 +634,8 @@ class SED(object):
 
         @returns the redshifted SED.
         """
+        if redshift <= -1:
+            raise ValueError("Invalid redshift {0}".format(redshift))
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
         wave_list = self.wave_list * wave_factor
         blue_limit = self.blue_limit
