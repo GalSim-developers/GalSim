@@ -309,7 +309,7 @@ def test_SED_atRedshift():
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bolo_flux = a.calculateFlux(bandpass=None)
     print('bolo_flux = ',bolo_flux)
-    for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
+    for z1, z2 in zip([-0.01, -0.02, 0.5, 1.0, 1.4], [-0.2, 0.2, 1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
         d = c.atRedshift(z2) # do a relative redshifting from z1 to z2
@@ -329,6 +329,10 @@ def test_SED_atRedshift():
                                            err_msg="error redshifting SED")
             np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
+    try:
+        np.testing.assert_raises(ValueError, a.atRedshift, -1.1)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
