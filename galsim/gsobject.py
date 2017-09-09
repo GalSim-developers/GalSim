@@ -2021,7 +2021,12 @@ class GSObject(object):
         """
         from .random import UniformDeviate
         from .photon_array import PhotonArray
+
         photons = PhotonArray(n_photons)
+        if n_photons == 0:
+            # It's ok to shoot 0, but downstream can have problems with it, so just stop now.
+            return photons
+
         ud = UniformDeviate(rng)
         self._shoot(photons, ud)
         return photons

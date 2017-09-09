@@ -18,14 +18,9 @@
 """@file base.py
 This file implements many of the basic kinds of surface brightness profiles in GalSim:
 
-    Kolmogorov
-    Pixel
-    Box
-    TopHat
     Sersic
     DeVaucouleurs
     Spergel
-    DeltaFunction
 
 These are all relatively simple profiles, most being radially symmetric.  They are all subclasses
 of GSObject, which defines much of the top-level interface to these objects.  See gsobject.py for
@@ -460,60 +455,3 @@ class Spergel(GSObject):
 
 _galsim.SBSpergel.__getinitargs__ = lambda self: (
         self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
-
-
-class DeltaFunction(GSObject):
-    """A class describing a DeltaFunction surface brightness profile.
-
-    The DeltaFunction surface brightness profile is characterized by a single property,
-    its `flux'.
-
-    Initialization
-    --------------
-
-    A DeltaFunction can be initialized with a specified flux.
-
-    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-
-    Methods and Properties
-    ----------------------
-
-    DeltaFunction simply has the usual GSObject properties.
-    """
-    # Initialization parameters of the object, with type information, to indicate
-    # which attributes are allowed / required in a config file for this object.
-    # _req_params are required
-    # _opt_params are optional
-    # _single_params are a list of sets for which exactly one in the list is required.
-    # _takes_rng indicates whether the constructor should be given the current rng.
-    _req_params = {}
-    _opt_params = { "flux" : float }
-    _single_params = []
-    _takes_rng = False
-
-    def __init__(self, flux=1., gsparams=None):
-        self._gsparams = GSParams.check(gsparams)
-        self._sbp = _galsim.SBDeltaFunction(flux, self.gsparams._gsp)
-
-    def __eq__(self, other):
-        return (isinstance(other, DeltaFunction) and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
-
-    def __hash__(self):
-        return hash(("galsim.DeltaFunction", self.flux, self.gsparams))
-
-    def __repr__(self):
-        return 'galsim.DeltaFunction(flux=%r, gsparams=%r)'%(self.flux, self.gsparams)
-
-    def __str__(self):
-        s = 'galsim.DeltaFunction('
-        if self.flux != 1.0:
-            s += 'flux=%s'%self.flux
-        s += ')'
-        return s
-
-_galsim.SBDeltaFunction.__getinitargs__ = lambda self: (
-        self.getFlux(), self.getGSParams())

@@ -106,6 +106,9 @@ class PhotonArray(object):
     def size(self):
         return len(self._x)
 
+    def __len__(self):
+        return len(self._x)
+
     @property
     def x(self):
         return self._x
