@@ -120,7 +120,8 @@ from .moffat import Moffat
 from .airy import Airy
 from .kolmogorov import Kolmogorov
 from .box import Pixel, Box, TopHat
-from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
+from .exponential import Exponential
+from .base import Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen

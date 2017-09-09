@@ -23,7 +23,7 @@ InclinedExponential is a class representing an exponential profile inclined to t
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .base import Exponential
+from .exponential import Exponential
 from .angle import Angle
 
 

@@ -69,182 +69,6 @@ default_params = galsim.GSParams(
 
 
 @timer
-def test_exponential():
-    """Test the generation of a specific exp profile against a known result.
-    """
-    re = 1.0
-    # Note the factor below should really be 1.6783469900166605, but the value of 1.67839 is
-    # retained here as it was used by SBParse to generate the original known result (this changed
-    # in commit b77eb05ab42ecd31bc8ca03f1c0ae4ee0bc0a78b.
-    # The value of this test for regression purposes is not harmed by retaining the old scaling, it
-    # just means that the half light radius chosen for the test is not really 1, but 0.999974...
-    r0 = re/1.67839
-    savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
-    dx = 0.2
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    myImg.setCenter(0,0)
-
-    expon = galsim.Exponential(flux=1., scale_radius=r0)
-    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Exponential disagrees with expected result")
-
-    # Check with default_params
-    expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=default_params)
-    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Exponential with default_params disagrees with expected result")
-    expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=galsim.GSParams())
-    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Exponential with GSParams() disagrees with expected result")
-
-    # Use non-unity values.
-    expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
-    check_basic(expon, "Exponential")
-
-    # Test photon shooting.
-    do_shoot(expon,myImg,"Exponential")
-
-    # Test kvalues
-    do_kvalue(expon,myImg,"Exponential")
-
-    # Check picklability
-    do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(expon)
-
-    # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Exponential, scale_radius=3, half_light_radius=1)
-    except ImportError:
-        pass
-
-
-@timer
-def test_exponential_properties():
-    """Test some basic properties of the Exponential profile.
-    """
-    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
-    # Check that we are centered on (0, 0)
-    cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(expon.centroid, cen)
-    # Check Fourier properties
-    np.testing.assert_almost_equal(expon.maxk, 10 / test_scale[0])
-    np.testing.assert_almost_equal(expon.stepk, 0.37436747851 / test_scale[0])
-    np.testing.assert_almost_equal(expon.kValue(cen), (1+0j) * test_flux)
-    np.testing.assert_almost_equal(expon.flux, test_flux)
-    import math
-    np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2)
-    np.testing.assert_almost_equal(expon.xValue(cen), expon.max_sb)
-    # Check input flux vs output flux
-    for inFlux in np.logspace(-2, 2, 10):
-        expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
-        outFlux = expon.flux
-        np.testing.assert_almost_equal(outFlux, inFlux)
-
-
-@timer
-def test_exponential_radii():
-    """Test initialization of Exponential with different types of radius specification.
-    """
-    import math
-    # Test constructor using half-light-radius:
-    test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr)
-    print('hlr_sum = ',hlr_sum)
-    np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
-            err_msg="Error in Exponential constructor with half-light radius")
-
-    # then test scale getter
-    center = test_gal.xValue(galsim.PositionD(0,0))
-    got_sr = test_gal.scale_radius
-    ratio = test_gal.xValue(galsim.PositionD(got_sr,0)) / center
-    print('scale ratio = ',ratio)
-    np.testing.assert_almost_equal(
-            ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in scale_radius for Exponential constructed with half light radius")
-
-    # Test constructor using scale radius:
-    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
-    center = test_gal.xValue(galsim.PositionD(0,0))
-    ratio = test_gal.xValue(galsim.PositionD(test_scale[0],0)) / center
-    print('scale ratio = ',ratio)
-    np.testing.assert_almost_equal(
-            ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in Exponential constructor with scale")
-
-    # then test that image indeed has the correct HLR properties when radially integrated
-    got_hlr = test_gal.half_light_radius
-    hlr_sum = radial_integrate(test_gal, 0., got_hlr)
-    print('hlr_sum (profile initialized with scale_radius) = ',hlr_sum)
-    np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
-            err_msg="Error in half light radius for Exponential initialized with scale_radius.")
-
-    # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-    except ImportError:
-        pass
-
-
-@timer
-def test_exponential_flux_scaling():
-    """Test flux scaling for Exponential.
-    """
-    # decimal point to go to for parameter value comparisons
-    param_decimal = 12
-
-    # init with scale and flux only (should be ok given last tests)
-    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
-    obj *= 2.
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
-    obj /= 2.
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
-    obj2 = obj * 2.
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
-    obj2 = 2. * obj
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
-    obj2 = obj / 2.
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")
-
-
-@timer
 def test_sersic():
     """Test the generation of a specific Sersic profile against a known result.
     """
@@ -1354,15 +1178,6 @@ def test_ne():
             galsim.Sersic(n=1.1, half_light_radius=1.0, gsparams=gsp)]
     all_obj_diff(gals)
 
-    # Exponential.  Params include half_light_radius, scale_radius, flux, gsparams
-    # The following should all test unequal:
-    gals = [galsim.Exponential(half_light_radius=1.0),
-            galsim.Exponential(half_light_radius=1.1),
-            galsim.Exponential(scale_radius=1.0),
-            galsim.Exponential(half_light_radius=1.0, flux=1.1),
-            galsim.Exponential(half_light_radius=1.0, gsparams=gsp)]
-    all_obj_diff(gals)
-
     # DeVaucouleurs.  Params include half_light_radius, scale_radius, flux, trunc, flux_untruncated,
     # and gsparams.
     # The following should all test unequal:
@@ -1387,10 +1202,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_exponential()
-    test_exponential_properties()
-    test_exponential_radii()
-    test_exponential_flux_scaling()
     test_sersic()
     test_sersic_radii()
     test_sersic_flux_scaling()
