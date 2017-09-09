@@ -119,7 +119,7 @@ from .gaussian import Gaussian
 from .moffat import Moffat
 from .airy import Airy
 from .kolmogorov import Kolmogorov
-from .base import Pixel, Box, TopHat
+from .box import Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF

@@ -1468,7 +1468,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     """
     def __init__(self, variance, rng=None, scale=None, wcs=None, gsparams=None):
         from .wcs import BaseWCS, PixelScale
-        from .base import Pixel
+        from .box import Pixel
         from .compound import AutoConvolve
         if variance < 0:
             raise ValueError("Input keyword variance must be zero or positive.")
@@ -1555,7 +1555,7 @@ class CovarianceSpectrum(object):
         """
         import numpy as np
         from .compound import Convolve
-        from .base import Pixel
+        from .box import Pixel
         from .interpolatedimage import InterpolatedKImage
         NSED = len(self.SEDs)
         maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxk,

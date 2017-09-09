@@ -1383,7 +1383,7 @@ class GSObject(object):
         """
         from .image import Image, ImageD
         from .compound import Convolve, Convolution, Deconvolve
-        from .base import Pixel
+        from .box import Pixel
         from .wcs import PixelScale
         from .random import UniformDeviate
         from .photon_array import PhotonArray
