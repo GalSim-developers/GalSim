@@ -336,6 +336,32 @@ def test_SED_atRedshift():
 
 
 @timer
+def test_combine_wave_list():
+    class A(object):
+        def __init__(self, wave_list):
+            self.wave_list = wave_list
+            if self.wave_list:
+                self.blue_limit = np.min(self.wave_list)
+                self.red_limit = np.max(self.wave_list)
+    a = A([1, 3, 5])
+    b = A([2, 4, 6])
+    c = A([2, 3, 4, 5])
+    d = A([7, 8, 9])
+
+    for a1, a2 in zip([a, a, b], [b, c, c]):
+        wave_list, blue_limit, red_limit = (
+            galsim.utilities.combine_wave_list(a1, a2))
+        np.testing.assert_equal(wave_list, c.wave_list)
+        np.testing.assert_equal(blue_limit, c.blue_limit)
+        np.testing.assert_equal(red_limit, c.red_limit)
+    try:
+        np.testing.assert_raises(
+            RuntimeError, galsim.utilities.combine_wave_list, a, d)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
+@timer
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
     """
@@ -755,6 +781,7 @@ if __name__ == "__main__":
     test_SED_mul()
     test_SED_div()
     test_SED_atRedshift()
+    test_combine_wave_list()
     test_SED_roundoff_guard()
     test_SED_init()
     test_SED_withFlux()
