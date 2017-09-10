@@ -662,20 +662,31 @@ class SED(object):
         if self.dimensionless:
             raise TypeError("Cannot calculate flux of dimensionless SED.")
         if bandpass is None: # do bolometric flux
-            if self.blue_limit is None:
-                blue_limit = 0.0
-            else:
-                blue_limit = self.blue_limit
-            if self.red_limit is None:
-                red_limit = 1.e11 # = infinity in int1d
-            else:
-                red_limit = self.red_limit
             if len(self.wave_list) > 0:
                 return(np.trapz(self(self.wave_list), self.wave_list))
             else:
+                if self.blue_limit is None:
+                    blue_limit = 0.0
+                else:
+                    blue_limit = self.blue_limit
+                if self.red_limit is None:
+                    red_limit = 1.e11 # = infinity in int1d
+                else:
+                    red_limit = self.red_limit
                 return galsim.integ.int1d(self, blue_limit, red_limit)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+                if self.blue_limit is None:
+                    blue_limit = 0.0
+                else:
+                    blue_limit = self.blue_limit
+                if self.red_limit is None:
+                    red_limit = 1.e11 # = infinity in int1d
+                else:
+                    red_limit = self.red_limit
+                slop = 1e-6 # nm
+                if blue_limit > bandpass.blue_limit + slop or red_limit < bandpass.red_limit - slop:
+                    raise ValueError("SED undefined within Bandpass")
                 x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
                 return np.trapz(bandpass(x) * self(x), x)
             else:
