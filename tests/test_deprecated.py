@@ -618,6 +618,11 @@ def test_dep_image():
                 assert im2(x,y) == 10*x+y
                 assert im2_view(x,y) == 10*x+y
 
+                assert check_dep(getattr, im1, 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im1.view(), 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im2, 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im2_view, 'image')(x,y) == 10*x+y
+
         # Check view of given data
         im3_view = check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
         for y in range(1,nrow):
@@ -1882,6 +1887,22 @@ def test_dep_interp():
     do_pickle(check_dep(galsim.Interpolant, 'lanczos7'), test_func)
     do_pickle(check_dep(galsim.Interpolant, 'lanczos9F', 1.e-5), test_func)
 
+@timer
+def test_dep_photon_array():
+    nphotons = 1000
+    obj = galsim.Gaussian(flux=1.7, sigma=2.3)
+    rng = galsim.UniformDeviate(1234)
+
+    photon_array = obj.shoot(nphotons, rng)
+    print('total flux = ',photon_array.flux.sum())
+    np.testing.assert_almost_equal(photon_array.flux.sum(), 1.7)
+
+    im1 = galsim.Image(64,64,scale=1)
+    im1.setCenter(0,0)
+    check_dep(photon_array.addTo, im1._image.view())
+    print('sum = ',im1.array.sum())
+    np.testing.assert_almost_equal(im1.array.sum(), 1.7)
+
 
 if __name__ == "__main__":
     test_dep_bandpass()
@@ -1907,3 +1928,4 @@ if __name__ == "__main__":
     test_dep_simreal()
     test_dep_ecliptic()
     test_dep_interp()
+    test_dep_photon_array()

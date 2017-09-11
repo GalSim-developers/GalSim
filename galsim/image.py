@@ -319,11 +319,11 @@ class Image(with_metaclass(MetaImage, object)):
             # type equal to the same one but with the appropriate endian-ness.
             if not array.dtype.isnative:
                 array = array.astype(array.dtype.newbyteorder('='))
-            self.dtype = array.dtype.type
+            self._dtype = array.dtype.type
         elif dtype is not None:
-            self.dtype = dtype
+            self._dtype = dtype
         else:
-            self.dtype = np.float32
+            self._dtype = np.float32
 
         # Construct the image attribute
         if (ncol is not None or nrow is not None):
@@ -333,35 +333,35 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("nrow, ncol must be integers")
             ncol = int(ncol)
             nrow = int(nrow)
-            self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
+            self._image = _galsim.ImageAlloc[self._dtype](ncol, nrow)
             if xmin != 1 or ymin != 1:
-                self.image.shift(galsim.PositionI(xmin-1,ymin-1))
+                self._image.shift(galsim.PositionI(xmin-1,ymin-1))
             if init_value is not None:
-                self.image.fill(init_value)
+                self._image.fill(init_value)
         elif bounds is not None:
             if not isinstance(bounds, galsim.BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
-            self.image = _galsim.ImageAlloc[self.dtype](bounds)
+            self._image = _galsim.ImageAlloc[self._dtype](bounds)
             if init_value is not None:
-                self.image.fill(init_value)
+                self._image.fill(init_value)
         elif array is not None:
             # Easier than getting the memory management right in the C++ layer.
             # If we were provided a numpy array, keep a pointer to it here so it lives
-            # as long as the self.image object.
+            # as long as the self._image object.
             self._array = array.view()
             if make_const or not array.flags.writeable:
-                self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
+                self._image = _galsim.ConstImageView[self._dtype](array, xmin, ymin)
                 self._array.flags.writeable = False
             else:
-                self.image = _galsim.ImageView[self.dtype](array, xmin, ymin)
+                self._image = _galsim.ImageView[self._dtype](array, xmin, ymin)
             if init_value is not None:
                 raise TypeError("Cannot specify init_value with array")
         elif image is not None:
             if isinstance(image, Image):
                 if wcs is None and scale is None:
                     wcs = image.wcs
-                image = image.image
-            self.image = None
+                image = image._image
+            self._image = None
             for im_dtype in Image.cpp_valid_dtypes:
                 if ( isinstance(image,_galsim.ImageAlloc[im_dtype]) or
                      isinstance(image,_galsim.ImageView[im_dtype]) or
@@ -370,22 +370,22 @@ class Image(with_metaclass(MetaImage, object)):
                         # Allow dtype to force a retyping of the provided image
                         # e.g. im = ImageF(...)
                         #      im2 = ImageD(im)
-                        self.image = _galsim.ImageAlloc[dtype](image)
+                        self._image = _galsim.ImageAlloc[dtype](image)
                     else:
-                        self.image = _galsim.ImageAlloc[im_dtype](image)
+                        self._image = _galsim.ImageAlloc[im_dtype](image)
                     break
-            if self.image is None:
+            if self._image is None:
                 # Then never found the dtype above:
                 raise TypeError("image must be an Image or BaseImage type")
             if init_value is not None:
                 raise TypeError("Cannot specify init_value with image")
-            self.dtype = self.image.array.dtype.type
+            self._dtype = self._image.array.dtype.type
         else:
-            self.image = _galsim.ImageAlloc[self.dtype]()
+            self._image = _galsim.ImageAlloc[self._dtype]()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
         if not hasattr(self,'_array'):
-            self._array = self.image.array
+            self._array = self._image.array
 
         # Construct the wcs attribute
         if scale is not None:
@@ -396,6 +396,18 @@ class Image(with_metaclass(MetaImage, object)):
             if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
+
+    # dtype is read-only
+    @property
+    def dtype(self): return self._dtype
+
+    @property
+    def image(self):
+        from .deprecated import depr
+        depr("image.image", 1.5, "image._image",
+             "Note however that this is now officially an implementation detail, and not "+
+             "part of the public API.  Therefore, it's usage may change without notice.")
+        return self._image
 
     @staticmethod
     def _get_xmin_ymin(array, kwargs):
@@ -463,7 +475,7 @@ class Image(with_metaclass(MetaImage, object)):
 
     # bounds and array are really properties which pass the request to the image
     @property
-    def bounds(self): return self.image.bounds
+    def bounds(self): return self._image.bounds
     @property
     def array(self): return self._array
     @property
@@ -493,18 +505,18 @@ class Image(with_metaclass(MetaImage, object)):
 
     # Convenience functions
     @property
-    def xmin(self): return self.image.bounds.xmin
+    def xmin(self): return self._image.bounds.xmin
     @property
-    def xmax(self): return self.image.bounds.xmax
+    def xmax(self): return self._image.bounds.xmax
     @property
-    def ymin(self): return self.image.bounds.ymin
+    def ymin(self): return self._image.bounds.ymin
     @property
-    def ymax(self): return self.image.bounds.ymax
-    def getXMin(self): return self.image.getXMin()
-    def getXMax(self): return self.image.getXMax()
-    def getYMin(self): return self.image.getYMin()
-    def getYMax(self): return self.image.getYMax()
-    def getBounds(self): return self.image.getBounds()
+    def ymax(self): return self._image.bounds.ymax
+    def getXMin(self): return self._image.getXMin()
+    def getXMax(self): return self._image.getXMax()
+    def getYMin(self): return self._image.getYMin()
+    def getYMax(self): return self._image.getYMax()
+    def getBounds(self): return self._image.getBounds()
 
     def getOuterBounds(self):
         """Get the bounds of the outer edge of the pixels.
@@ -567,11 +579,11 @@ class Image(with_metaclass(MetaImage, object)):
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         try:
-            self.image.resize(bounds)
+            self._image.resize(bounds)
         except AttributeError:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
-            self.image = _galsim.ImageAlloc[self.dtype](bounds)
-        self._array = self.image.array
+            self._image = _galsim.ImageAlloc[self.dtype](bounds)
+        self._array = self._image.array
         if wcs is not None:
             self.wcs = wcs
 
@@ -599,7 +611,7 @@ class Image(with_metaclass(MetaImage, object)):
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        self.subImage(bounds).image.copyFrom(rhs.image)
+        self.subImage(bounds).copyFrom(rhs)
 
     def __getitem__(self, *args):
         """Return either a subimage or a single pixel value.
@@ -691,19 +703,19 @@ class Image(with_metaclass(MetaImage, object)):
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         if not hermitian:
-            subimage = self.image.wrap(bounds, False, False)
+            subimage = self._image.wrap(bounds, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
             if bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
-            subimage = self.image.wrap(bounds, True, False)
+            subimage = self._image.wrap(bounds, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
             if bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
-            subimage = self.image.wrap(bounds, False, True)
+            subimage = self._image.wrap(bounds, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return _Image(subimage.array, bounds, self.wcs)
@@ -855,7 +867,7 @@ class Image(with_metaclass(MetaImage, object)):
         # dk = 2pi / (N dk)
         dk = np.pi / (No2 * dx)
 
-        imview = ximage.image.rfft()
+        imview = ximage._image.rfft()
         imview *= dx*dx
         image = Image(imview, scale=dk)
         image.setOrigin(0,-No2)
@@ -907,7 +919,7 @@ class Image(with_metaclass(MetaImage, object)):
         # dx = 2pi / (N dk)
         dx = np.pi / (No2 * dk)
 
-        imview = kimage.image.irfft()
+        imview = kimage._image.irfft()
         imview *= (dk * No2 / np.pi)**2
         image = Image(imview, scale=dx)
         image.setCenter(0,0)
@@ -939,7 +951,7 @@ class Image(with_metaclass(MetaImage, object)):
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        self.image.copyFrom(rhs.image)
+        self._image.copyFrom(rhs._image)
 
     def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
@@ -1017,7 +1029,7 @@ class Image(with_metaclass(MetaImage, object)):
         # The parse_pos_args function is a bit slow, so go directly to this point when we
         # call shift from setCenter or setOrigin.
         if delta.x != 0 or delta.y != 0:
-            self.image.shift(delta)
+            self._image.shift(delta)
             if self.wcs is not None:
                 self.wcs = self.wcs.withOrigin(delta)
 
@@ -1056,7 +1068,7 @@ class Image(with_metaclass(MetaImage, object)):
             galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
-        self._shift(cen - self.image.bounds.center())
+        self._shift(cen - self.bounds.center())
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -1092,7 +1104,7 @@ class Image(with_metaclass(MetaImage, object)):
             galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
          """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
-        self._shift(origin - self.image.bounds.origin())
+        self._shift(origin - self.bounds.origin())
 
     def center(self):
         """Return the current nominal center (xcen,ycen) of the image as a PositionI instance.
@@ -1168,14 +1180,14 @@ class Image(with_metaclass(MetaImage, object)):
         Or you can provide x, y as named kwargs.
         """
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
-        return self.image(pos.x, pos.y)
+        return self._image(pos.x, pos.y)
 
     def getValue(self, x, y):
         """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
         does not have to parse the different options available for __call__.  (i.e. im(x,y) or
         im(pos) or im(x=x,y=y))
         """
-        return self.image(x,y)
+        return self._image(x,y)
 
     def setValue(self, *args, **kwargs):
         """Set the pixel value at given (x,y) position
@@ -1189,7 +1201,7 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify the values of an immutable Image")
         pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
-        self.image.setValue(pos.x, pos.y, value)
+        self._image.setValue(pos.x, pos.y, value)
 
     def addValue(self, *args, **kwargs):
         """Add some amount to the pixel value at given (x,y) position
@@ -1203,28 +1215,28 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify the values of an immutable Image")
         pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
-        self.image.setValue(pos.x, pos.y, value + self.image(pos.x,pos.y))
+        self._image.setValue(pos.x, pos.y, value + self._image(pos.x,pos.y))
 
     def fill(self, value):
         """Set all pixel values to the given `value`
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        self.image.fill(value)
+        self._image.fill(value)
 
     def setZero(self):
         """Set all pixel values to zero.
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        self.image.setZero()
+        self._image.setZero()
 
     def invertSelf(self):
         """Set all pixel values to their inverse: x -> 1/x.
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
-        self.image.invertSelf()
+        self._image.invertSelf()
 
     def replaceNegative(self, replace_value=0):
         """Replace any negative values currently in the image with 0 (or some other value).
@@ -1430,17 +1442,17 @@ def _Image(array, bounds, wcs):
     """
     ret = Image.__new__(Image)
     ret.wcs = wcs
-    ret.dtype = array.dtype.type
-    if ret.dtype in Image.alias_dtypes:
-        ret.dtype = Image.alias_dtypes[ret.dtype]
-        array = array.astype(ret.dtype)
+    ret._dtype = array.dtype.type
+    if ret._dtype in Image.alias_dtypes:
+        ret._dtype = Image.alias_dtypes[ret._dtype]
+        array = array.astype(ret._dtype)
     ret._array = array
     if not bounds.isDefined():
-        ret.image = _galsim.ImageAlloc[ret.dtype](bounds)
+        ret._image = _galsim.ImageAlloc[ret._dtype](bounds)
     elif not array.flags.writeable:
-        ret.image = _galsim.ConstImageView[ret.dtype](array, bounds.xmin, bounds.ymin)
+        ret._image = _galsim.ConstImageView[ret._dtype](array, bounds.xmin, bounds.ymin)
     else:
-        ret.image = _galsim.ImageView[ret.dtype](array, bounds.xmin, bounds.ymin)
+        ret._image = _galsim.ImageView[ret._dtype](array, bounds.xmin, bounds.ymin)
     return ret
 
 

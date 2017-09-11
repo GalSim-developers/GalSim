@@ -344,20 +344,12 @@ def test_Image_basic():
         do_pickle(im4_view)
 
         # Check the c++ classes directly too.
-        do_pickle(im1.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im1_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
-
-        # Check the c++ classes directly too.
-        do_pickle(im1.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im1_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_view.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
-        do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im1._image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im1_view._image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2._image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2_view._image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2_cview._image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im3_view._image, lambda x: (x.array.tolist(), x.bounds))
 
     # Also check picklability of Bounds, Position here.
     do_pickle(galsim.PositionI(2,3))

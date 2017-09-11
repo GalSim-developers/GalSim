@@ -62,6 +62,11 @@ API Changes
 - Deprecated making a GSObject directly rather than making one of the
   subclasses. Again, this should not be necessary, but if you have a use
   case that you think requires this, please open an issue. (#904)
+- Use of the `image` attribute of Image is deprecated, being replaced by
+  `_image`, which is similarly now officially an implementation detail that
+  users should not need to access. (#904)
+- PhotonArray.addTo(image) now takes a regular galsim.Image for its argument,
+  not a C++-layer image object. (#904)
 
 
 Dependency Changes

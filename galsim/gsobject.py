@@ -1565,14 +1565,14 @@ class GSObject(object):
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ]:
-            return self._sbp.draw(image.image.view(), image.scale, add_to_image)
+            return self._sbp.draw(image._image.view(), image.scale, add_to_image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
                 im1 = galsim.ImageD(bounds=image.bounds)
             else:
                 im1 = galsim.ImageF(bounds=image.bounds)
-            added_flux = self._sbp.draw(im1.image.view(), image.scale, False)
+            added_flux = self._sbp.draw(im1._image.view(), image.scale, False)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
@@ -1663,7 +1663,7 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        kimage_wrap = kimage.image.wrap(bwrap, True, False)
+        kimage_wrap = kimage._image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.
         real_image = kimage_wrap.irfft()
@@ -2123,8 +2123,8 @@ class GSObject(object):
             re._array = image._array.real
             im._array = image._array.imag
             b = image.bounds
-            re.image = _galsim.ImageView[np.float64](re._array, b.xmin, b.ymin)
-            im.image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
+            re._image = _galsim.ImageView[np.float64](re._array, b.xmin, b.ymin)
+            im._image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
             re.scale = image.scale
             im.scale = image.scale
             re.setOrigin(image.origin())
@@ -2154,7 +2154,7 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        self._sbp.drawK(image.image.view(), image.scale, add_to_image)
+        self._sbp.drawK(image._image.view(), image.scale, add_to_image)
         return image
 
 

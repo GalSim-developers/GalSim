@@ -243,7 +243,7 @@ class Shapelet(GSObject):
             raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                         "with a non-trivial WCS.")
 
-        _galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
+        _galsim.ShapeletFitImage(sigma, bvec, image._image, image.scale, center)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             bvec /= image.scale**2

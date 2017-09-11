@@ -190,7 +190,7 @@ def GaussianNoise_applyTo(self, image):
 
     Note: The syntax `image.addNoise(gaussian_noise)` is preferred.
     """
-    self.applyToView(image.image.view())
+    self.applyToView(image._image.view())
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 set_func_doc(_galsim.GaussianNoise.getSigma, "Get `sigma` in current noise model.")
@@ -259,7 +259,7 @@ def PoissonNoise_applyTo(self, image):
 
     Note: the syntax `image.addNoise(poisson_noise)` is preferred.
     """
-    self.applyToView(image.image.view())
+    self.applyToView(image._image.view())
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 set_func_doc(_galsim.PoissonNoise.getSkyLevel, "Get sky level in current noise model.")
@@ -351,7 +351,7 @@ def CCDNoise_applyTo(self, image):
 
     Note: the syntax `image.addNoise(ccd_noise)` is preferred.
     """
-    self.applyToView(image.image.view())
+    self.applyToView(image._image.view())
 _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 
 set_func_doc(_galsim.CCDNoise.getSkyLevel, "Get sky level in current noise model.")
@@ -413,7 +413,7 @@ def DeviateNoise_applyTo(self, image):
 
     To add deviates to every element of an image, the syntax `image.addNoise()` is preferred.
     """
-    self.applyToView(image.image.view())
+    self.applyToView(image._image.view())
 _galsim.DeviateNoise.applyTo = DeviateNoise_applyTo
 
 def DeviateNoise_copy(self, rng=None):
@@ -467,8 +467,8 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         # Make sure var_image is an ImageF, converting dtype if necessary
         var_image = galsim.ImageF(var_image)
 
-        # Make the noise object using the image.image as needed in the C++ layer.
-        self.noise = _galsim.VarGaussianNoise(rng, var_image.image)
+        # Make the _noise object using the image._image as needed in the C++ layer.
+        self._noise = _galsim.VarGaussianNoise(rng, var_image._image)
 
     def applyTo(self, image):
         """
@@ -484,16 +484,16 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
         Note: The syntax `image.addNoise(variable_noise)` is preferred.
         """
-        self.noise.applyToView(image.image.view())
+        self._noise.applyToView(image._image.view())
 
     def applyToView(self, image_view):
-        self.noise.applyToView(image_view)
+        self._noise.applyToView(image_view)
 
     def getVarImage(self):
-        return galsim.Image(self.noise.getVarImage())
+        return galsim.Image(self._noise.getVarImage())
 
     def getRNG(self):
-        return self.noise.getRNG()
+        return self._noise.getRNG()
 
     @property
     def rng(self): return self.getRNG()

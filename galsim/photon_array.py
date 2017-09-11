@@ -177,7 +177,7 @@ def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
     max_flux = float(max_flux)
     if (max_flux <= 0):
         raise ValueError("max_flux must be positive")
-    photons = galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+    photons = galsim._galsim.MakePhotonsFromImage(image._image, max_flux, ud)
     if image.scale != 1.:
         photons.scaleXY(image.scale)
     return photons
@@ -255,6 +255,18 @@ def PhotonArray_read(cls, file_name):
 
 PhotonArray.write = PhotonArray_write
 PhotonArray.read = classmethod(PhotonArray_read)
+
+orig_addTo = PhotonArray.addTo
+def PhotonArray_addTo(self, image):
+    """Add flux of photons to an image by binning into pixels.
+    """
+    if isinstance(image, galsim.Image):
+        return orig_addTo(self, image._image.view())
+    else:
+        from .deprecated import depr
+        depr("C++-layer image as argument to PhotonArray.addTo", 1.5, "Use a regular galsim.Image")
+        return orig_addTo(self, image.view())
+PhotonArray.addTo = PhotonArray_addTo
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
