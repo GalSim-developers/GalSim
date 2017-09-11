@@ -433,7 +433,7 @@ class InterpolatedImage(GSObject):
 
         # Make the SBInterpolatedImage out of the image.
         sbii = _galsim.SBInterpolatedImage(
-                pad_image.image, self.x_interpolant._i, self.k_interpolant._i, pad_factor,
+                pad_image._image, self.x_interpolant._i, self.k_interpolant._i, pad_factor,
                 _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if getFlux() == 0 are the
@@ -742,7 +742,7 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         sbiki = _galsim.SBInterpolatedKImage(
-                self._kimage.image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
+                self._kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
         self._sbiki = sbiki
 
         if kimage.wcs is not None:
@@ -800,8 +800,7 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret._gsparams = galsim.GSParams.check(gsparams)
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
-            ret._kimage.image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
-
+            ret._kimage._image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
                               galsim._galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
     ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
@@ -824,7 +823,7 @@ def sbi_setstate(self, state):
     im = eval(im)
     args = eval(args)
     self.__class__ = eval(cls)
-    self.__init__(im.image, *args)
+    self.__init__(im._image, *args)
     self._full_image = im  # Save the original image so it doesn't go out of scope
 
 _galsim.SBInterpolatedImage.__reduce__ = lambda self: (

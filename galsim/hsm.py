@@ -616,7 +616,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     try:
         result = ShapeData()
         _galsim._EstimateShearView(result._data,
-                                   gal_image.image, PSF_image.image, weight.image,
+                                   gal_image._image, PSF_image._image, weight._image,
                                    sky_var = sky_var,
                                    shear_est = shear_est.upper(),
                                    recompute_flux = recompute_flux.upper(),
@@ -730,7 +730,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     try:
         result = ShapeData()
         _galsim._FindAdaptiveMomView(result._data,
-                                     object_image.image, weight.image,
+                                     object_image._image, weight._image,
                                      guess_sig = guess_sig, precision =  precision,
                                      guess_centroid = guess_centroid._p,
                                      hsmparams = hsmparams._hsmp)

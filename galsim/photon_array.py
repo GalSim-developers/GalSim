@@ -321,7 +321,7 @@ class PhotonArray(object):
 
         @returns the total flux of photons the landed inside the image bounds.
         """
-        return self._pa.addTo(image.image)
+        return self._pa.addTo(image._image)
 
     @classmethod
     def makeFromImage(cls, image, max_flux=1., rng=None):
@@ -353,7 +353,7 @@ class PhotonArray(object):
         photons = cls(N)
         print('initial N = ',N)
 
-        N = photons._pa.setFrom(image.image, max_flux, ud._rng)
+        N = photons._pa.setFrom(image._image, max_flux, ud._rng)
         print('N from setFrom = ',N)
         photons._x = photons.x[:N]
         photons._y = photons.y[:N]

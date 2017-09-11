@@ -310,11 +310,11 @@ class Image(object):
             # type equal to the same one but with the appropriate endian-ness.
             if not array.dtype.isnative:
                 array = array.astype(array.dtype.newbyteorder('='))
-            self.dtype = array.dtype.type
+            self._dtype = array.dtype.type
         elif dtype is not None:
-            self.dtype = dtype
+            self._dtype = dtype
         else:
-            self.dtype = np.float32
+            self._dtype = np.float32
 
         # Construct the image attribute
         if (ncol is not None or nrow is not None):
@@ -324,13 +324,13 @@ class Image(object):
                 raise TypeError("nrow, ncol must be integers")
             ncol = int(ncol)
             nrow = int(nrow)
-            self._array = self._make_empty(shape=(nrow,ncol), dtype=self.dtype)
+            self._array = self._make_empty(shape=(nrow,ncol), dtype=self._dtype)
             self._bounds = galsim.BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
             self.fill(init_value)
         elif bounds is not None:
             if not isinstance(bounds, galsim.BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
-            self._array = self._make_empty(bounds.numpyShape(), dtype=self.dtype)
+            self._array = self._make_empty(bounds.numpyShape(), dtype=self._dtype)
             self._bounds = bounds
             if bounds.isDefined():
                 self.fill(init_value)
@@ -351,16 +351,16 @@ class Image(object):
                 wcs = image.wcs
             self._bounds = image.bounds
             if dtype is None:
-                self.dtype = image.dtype
+                self._dtype = image.dtype
             else:
                 # Allow dtype to force a retyping of the provided image
                 # e.g. im = ImageF(...)
                 #      im2 = ImageD(im)
-                self.dtype = dtype
-            self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self.dtype)
+                self._dtype = dtype
+            self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
             self._array[:,:] = image.array[:,:]
         else:
-            self._array = np.empty(shape=(1,1), dtype=self.dtype)
+            self._array = np.empty(shape=(1,1), dtype=self._dtype)
             self._bounds = galsim.BoundsI()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
@@ -439,7 +439,9 @@ class Image(object):
         if isconst:
             self._array.flags.writeable = False
 
-    # bounds and array are really properties which pass the request to the image
+    # Read-only attributes:
+    @property
+    def dtype(self): return self._dtype
     @property
     def bounds(self): return self._bounds
     @property
@@ -452,7 +454,7 @@ class Image(object):
     def isinteger(self): return self._array.dtype.kind in ['i','u']
 
     @property
-    def image(self):
+    def _image(self):
         if not self.array.flags.writeable:
             cls = _galsim.ConstImageView[self._typechar[self.dtype]]
         else:
@@ -691,19 +693,19 @@ class Image(object):
         # possibly writing data past the edge of the image.
         ret = self.subImage(bounds);
         if not hermitian:
-            _galsim.wrapImage(self.image, bounds._b, False, False)
+            _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
             if self.bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
             if bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
-            _galsim.wrapImage(self.image, bounds._b, True, False)
+            _galsim.wrapImage(self._image, bounds._b, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
             if bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
-            _galsim.wrapImage(self.image, bounds._b, False, True)
+            _galsim.wrapImage(self._image, bounds._b, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return ret;
@@ -856,7 +858,7 @@ class Image(object):
         dk = np.pi / (No2 * dx)
 
         out = Image(galsim.BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
-        _galsim.rfft(ximage.image, out.image)
+        _galsim.rfft(ximage._image, out._image)
         out *= dx*dx
         out.setOrigin(0,-No2)
         return out
@@ -909,7 +911,7 @@ class Image(object):
 
         # For the inverse, we need a bit of extra space for the fft.
         out_extra = Image(galsim.BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
-        _galsim.irfft(kimage.image, out_extra.image)
+        _galsim.irfft(kimage._image, out_extra._image)
         # Now cut off the bit we don't need.
         out = out_extra.subImage(galsim.BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2
@@ -1268,7 +1270,7 @@ class Image(object):
         are defined.
         """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
-        _galsim.invertImage(self.image)
+        _galsim.invertImage(self._image)
 
     def replaceNegative(self, replace_value=0):
         """Replace any negative values currently in the image with 0 (or some other value).
@@ -1474,9 +1476,9 @@ def _Image(array, bounds, wcs):
     """
     ret = Image.__new__(Image)
     ret.wcs = wcs
-    ret.dtype = array.dtype.type
-    if ret.dtype in Image._alias_dtypes:
-        ret.dtype = Image._alias_dtypes[ret.dtype]
+    ret._dtype = array.dtype.type
+    if ret._dtype in Image._alias_dtypes:
+        ret._dtype = Image._alias_dtypes[ret.dtype]
         array = array.astype(ret.dtype)
     ret._array = array
     ret._bounds = bounds

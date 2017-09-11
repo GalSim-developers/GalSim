@@ -1546,14 +1546,14 @@ class GSObject(object):
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ]:
-            return self._sbp.draw(image.image, image.scale, add_to_image)
+            return self._sbp.draw(image._image, image.scale, add_to_image)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
                 im1 = galsim.ImageD(bounds=image.bounds)
             else:
                 im1 = galsim.ImageF(bounds=image.bounds)
-            added_flux = self._sbp.draw(im1.image, image.scale, False)
+            added_flux = self._sbp.draw(im1._image, image.scale, False)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
@@ -1644,13 +1644,13 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        _galsim.wrapImage(kimage.image, bwrap._b, True, False)
+        _galsim.wrapImage(kimage._image, bwrap._b, True, False)
         kimage_wrap = kimage.subImage(bwrap)
 
         # Perform the fourier transform.
         breal = galsim._BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
         real_image = galsim.Image(breal, dtype=float)
-        _galsim.irfft(kimage_wrap.image, real_image.image)
+        _galsim.irfft(kimage_wrap._image, real_image._image)
 
         # Add (a portion of) this to the original image.
         temp = real_image.subImage(image.bounds)
@@ -2079,7 +2079,7 @@ class GSObject(object):
 
         @returns an Image instance (created if necessary)
         """
-        self._sbp.drawK(image.image, image.scale, add_to_image)
+        self._sbp.drawK(image._image, image.scale, add_to_image)
         return image
 
 

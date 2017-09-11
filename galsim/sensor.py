@@ -185,7 +185,7 @@ class SiliconSensor(Sensor):
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
         """
-        return self._silicon.accumulate(photons._pa, self.rng._rng, image.image)
+        return self._silicon.accumulate(photons._pa, self.rng._rng, image._image)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for

@@ -93,7 +93,8 @@ class BaseCDModel(object):
         """
         ret = image.copy()
         galsim._galsim._ApplyCD(
-            ret.image, image.image, self.a_l.image, self.a_r.image, self.a_b.image, self.a_t.image,
+            ret._image, image._image,
+            self.a_l._image, self.a_r._image, self.a_b._image, self.a_t._image,
             int(self.n), float(gain_ratio))
         return ret
 
