@@ -15,21 +15,9 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file base.py
-This file implements many of the basic kinds of surface brightness profiles in GalSim:
-
-    Sersic
-    DeVaucouleurs
-    Spergel
-
-These are all relatively simple profiles, most being radially symmetric.  They are all subclasses
-of GSObject, which defines much of the top-level interface to these objects.  See gsobject.py for
-details about the GSObject class.
-
-For a description of units conventions for scale radii for our base classes see
-`doc/GalSim_Quick_Reference.pdf`, section 2.2.  In short, any system that will ensure consistency
-between the scale radii used to specify the size of the GSObject and between the pixel scale of the
-Image is acceptable.
+"""@file sersic.py
+This file implements the Sersic surface brightness profiles.  Also DeVaucouleurs, which is
+a subclass of Sersic.
 """
 
 import numpy as np
@@ -38,7 +26,8 @@ import math
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .angle import arcsec, radians, AngleUnit
+from .utilities import lazy_property
+from .position import PositionD
 
 class Sersic(GSObject):
     """A class describing a Sersic profile.
@@ -211,18 +200,62 @@ class Sersic(GSObject):
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
     def __init__(self, n, half_light_radius=None, scale_radius=None,
                  flux=1., trunc=0., flux_untruncated=False, gsparams=None):
+        self._n = float(n)
+        self._flux = float(flux)
+        self._trunc = float(trunc)
         self._gsparams = GSParams.check(gsparams)
-        self._sbp = _galsim.SBSersic(n, scale_radius, half_light_radius,flux, trunc,
-                                     flux_untruncated, self.gsparams._gsp)
+
+        # Parse the radius options
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius or half_light_radius may be " +
+                        "specified for Spergel")
+            self._hlr = float(half_light_radius)
+            if self._trunc == 0. or flux_untruncated:
+                self._r0 = self._hlr / self.calculateHLRFactor()
+            else:
+                if self._trunc <= math.sqrt(2.) * self._hlr:
+                    raise ValueError("Sersic trunc must be > sqrt(2) * half_light_radius")
+                self._r0 = _galsim.SersicTruncatedScale(self._n, self._hlr, self._trunc)
+        elif scale_radius is not None:
+            self._r0 = float(scale_radius)
+            self._hlr = 0.
+        else:
+            raise TypeError(
+                    "Either scale_radius or half_light_radius must be specified for Spergel")
+        if self._trunc > 0. and flux_untruncated:
+            # Then update the flux and hlr with the correct values
+            self._flux *= self.calculateIntegratedFlux(self._trunc)
+            self._hlr = 0.  # This will be updated by getHalfLightRadius if necessary.
+
+    def calculateIntegratedFlux(self, r):
+        """Return the fraction of the total flux enclosed within a given radius, r"""
+        return _galsim.SersicIntegratedFlux(self._n, float(r)/self._r0)
+
+    def calculateHLRFactor(self):
+        """Calculate the half-light-radius in units of the scale radius.
+        """
+        return _galsim.SersicHLR(self._n)
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBSersic(self._n, self._r0, self._flux, self._trunc, self.gsparams._gsp)
 
     @property
-    def n(self): return self._sbp.getN()
+    def n(self): return self._n
     @property
-    def scale_radius(self): return self._sbp.getScaleRadius()
+    def scale_radius(self): return self._r0
     @property
-    def half_light_radius(self): return self._sbp.getHalfLightRadius()
+    def trunc(self): return self._trunc
     @property
-    def trunc(self): return self._sbp.getTrunc()
+    def flux(self): return self._flux
+
+    @property
+    def half_light_radius(self):
+        if self._hlr == 0.:
+            self._hlr = self._sbp.getHalfLightRadius()
+        return self._hlr
 
     def __eq__(self, other):
         return (isinstance(other, Sersic) and
@@ -252,12 +285,63 @@ class Sersic(GSObject):
         s += ')'
         return s
 
-_galsim.SBSersic.__getinitargs__ = lambda self: (
-        self.getN(), self.getScaleRadius(), None, self.getFlux(), self.getTrunc(),
-        False, self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    # These are the GSObject functions that need to be overridden
+    def maxK(self):
+        return self._sbp.maxK()
+
+    def stepK(self):
+        return self._sbp.stepK()
+
+    def hasHardEdges(self):
+        return self._trunc != 0.;
+
+    def isAxisymmetric(self):
+        return True
+
+    def isAnalyticX(self):
+        return True
+
+    def isAnalyticK(self):
+        return True
+
+    def centroid(self):
+        return PositionD(0,0)
+
+    def getPositiveFlux(self):
+        return self.flux
+
+    def getNegativeFlux(self):
+        return 0.
+
+    def maxSB(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _drawReal(self, image):
+        return self._sbp.draw(image._image, image.scale)
+
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image
 
 
-class DeVaucouleurs(GSObject):
+class DeVaucouleurs(Sersic):
     """A class describing DeVaucouleurs profile objects.
 
     Surface brightness profile with I(r) ~ exp[-(r/scale_radius)^{1/4}].  This is completely
@@ -303,27 +387,10 @@ class DeVaucouleurs(GSObject):
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
-        self._gsparams = GSParams.check(gsparams)
-        self._sbp = _galsim.SBSersic(4, scale_radius, half_light_radius, flux,
-                                     trunc, flux_untruncated, self.gsparams._gsp)
-
-    @property
-    def scale_radius(self): return self._sbp.getScaleRadius()
-    @property
-    def half_light_radius(self): return self._sbp.getHalfLightRadius()
-    @property
-    def trunc(self): return self._sbp.getTrunc()
-
-    def __eq__(self, other):
-        return (isinstance(other, DeVaucouleurs) and
-                self.scale_radius == other.scale_radius and
-                self.trunc == other.trunc and
-                self.flux == other.flux and
-                self.gsparams == other.gsparams)
-
-    def __hash__(self):
-        return hash(("galsim.DeVaucouleurs", self.scale_radius, self.trunc, self.flux,
-                     self.gsparams))
+        super(DeVaucouleurs, self).__init__(n=4, half_light_radius=half_light_radius,
+                                            scale_radius=scale_radius, flux=flux,
+                                            trunc=trunc, flux_untruncated=flux_untruncated,
+                                            gsparams=gsparams)
 
     def __repr__(self):
         return 'galsim.DeVaucouleurs(scale_radius=%r, trunc=%r, flux=%r, gsparams=%r)'%(

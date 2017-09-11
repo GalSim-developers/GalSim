@@ -21,7 +21,6 @@
 #include "boost/python.hpp"
 
 #include "SBSersic.h"
-#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
@@ -30,41 +29,18 @@ namespace galsim {
     struct PySBSersic
     {
 
-        static SBSersic* construct(
-            double n, const bp::object& scale_radius, const bp::object& half_light_radius,
-            double flux, double trunc, bool flux_untruncated, GSParams gsparams)
-        {
-            double s = 1.0;
-            checkRadii(half_light_radius, scale_radius, bp::object());
-            SBSersic::RadiusType rType = SBSersic::HALF_LIGHT_RADIUS;
-            if (half_light_radius.ptr() != Py_None) {
-                s = bp::extract<double>(half_light_radius);
-            }
-            if (scale_radius.ptr() != Py_None) {
-                s = bp::extract<double>(scale_radius);
-                rType = SBSersic::SCALE_RADIUS;
-            }
-            return new SBSersic(n, s, rType, flux, trunc, flux_untruncated, gsparams);
-        }
-
         static void wrap()
         {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
-                .def("__init__",
-                     bp::make_constructor(
-                         &construct, bp::default_call_policies(),
-                         (bp::arg("n"), bp::arg("scale_radius"), bp::arg("half_light_radius"),
-                          bp::arg("flux"), bp::arg("trunc"), bp::arg("flux_untruncated"),
-                          bp::arg("gsparams"))
-                     )
-                )
-                .def(bp::init<const SBSersic &>())
-                .def("getN", &SBSersic::getN)
+                .def(bp::init<double,double,double,double, GSParams>(
+                         (bp::arg("n"), bp::arg("scale_radius"), bp::arg("flux"),
+                          bp::arg("trunc"), bp::arg("gsparams"))))
                 .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
-                .def("getScaleRadius", &SBSersic::getScaleRadius)
-                .def("getTrunc", &SBSersic::getTrunc)
-                .enable_pickling()
                 ;
+
+            bp::def("SersicTruncatedScale", &SersicTruncatedScale);
+            bp::def("SersicIntegratedFlux", &SersicIntegratedFlux);
+            bp::def("SersicHLR", &SersicHLR);
         }
     };
 

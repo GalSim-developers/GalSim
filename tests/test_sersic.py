@@ -33,22 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# Some values to use in multiple tests below:
-test_hlr = 1.8
-test_fwhm = 1.8
-test_sigma = 1.8
-test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
-test_scale = [1.8, 0.05, 0.002, 0.002]
-test_sersic_trunc = [0., 8.5]
-test_flux = 1.8
-
-if __name__ != "__main__":
-    # If doing a pytest run, we don't actually need to do all 4 sersic n values.
-    # Two should be enough to notice if there is a problem, and the full list will be tested
-    # when running python test_base.py to try to diagnose the problem.
-    test_sersic_n = [1.5, -4]
-    test_scale = [1.8, 0.002]
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -127,6 +111,7 @@ def test_sersic():
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
 
     # Use non-unity values.
+    test_flux = 1.8
     sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=2.3, trunc=5.9)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid, cen)
@@ -186,6 +171,16 @@ def test_sersic_radii():
     """Test initialization of Sersic with different types of radius specification.
     """
     import math
+    test_hlr = 1.8
+    test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+    test_scale = [1.8, 0.05, 0.002, 0.002]
+    if __name__ != "__main__":
+        # If doing a pytest run, we don't actually need to do all 4 sersic n values.
+        # Two should be enough to notice if there is a problem, and the full list will be tested
+        # when running python test_base.py to try to diagnose the problem.
+        test_sersic_n = [1.5, -4]
+        test_scale = [1.8, 0.002]
+
     for n, scale in zip(test_sersic_n, test_scale) :
 
         # Test constructor using half-light-radius
@@ -355,6 +350,12 @@ def test_sersic_flux_scaling():
     """
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
+    test_hlr = 1.8
+    test_flux = 17.9
+    test_sersic_trunc = [0., 8.5]
+    test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+    if __name__ != "__main__":
+        test_sersic_n = [1.5, -4]
 
     # loop through sersic n
     for test_n in test_sersic_n:
@@ -400,6 +401,7 @@ def test_sersic_05():
     """Test the equivalence of Sersic with n=0.5 and Gaussian
     """
     # hlr/sigma = sqrt(2 ln(2)) = 1.177410022515475
+    test_flux = 17.9
     hlr_sigma = 1.177410022515475
 
     # cf test_gaussian()
@@ -420,6 +422,7 @@ def test_sersic_05():
     do_kvalue(sersic,myImg,"n=0.5 Sersic")
 
     # cf test_gaussian_properties()
+    test_sigma = 1.8
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid, cen)
@@ -443,6 +446,7 @@ def test_sersic_1():
     """Test the equivalence of Sersic with n=1 and Exponential
     """
     # cf test_exponential()
+    test_flux = 17.9
     re = 1.0
     r0 = re/1.67839
     # The real value of re/r0 = 1.6783469900166605
@@ -461,18 +465,19 @@ def test_sersic_1():
     do_kvalue(sersic,myImg,"n=1 Sersic")
 
     # cf test_exponential_properties()
-    sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
+    test_scale = 1.8
+    sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid, cen)
     np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(sersic.flux, test_flux)
     import math
-    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
+    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale**2,
                                    decimal=5)
     np.testing.assert_almost_equal(sersic.xValue(cen), sersic.max_sb)
 
     # Also test some random values other than the center:
-    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
     for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
         pos = galsim.PositionD(x,y)
         np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)

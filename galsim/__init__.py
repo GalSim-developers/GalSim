@@ -121,7 +121,7 @@ from .airy import Airy
 from .kolmogorov import Kolmogorov
 from .box import Pixel, Box, TopHat
 from .exponential import Exponential
-from .base import Sersic, DeVaucouleurs
+from .sersic import Sersic, DeVaucouleurs
 from .spergel import Spergel
 from .deltafunction import DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy

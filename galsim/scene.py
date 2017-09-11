@@ -659,7 +659,7 @@ class COSMOSCatalog(object):
     def _buildParametric(record, sersic_prec, gsparams, chromatic, bandpass=None, sed=None):
         from .angle import radians
         from .exponential import Exponential
-        from .base import DeVaucouleurs, Sersic
+        from .sersic import DeVaucouleurs, Sersic
         # Get fit parameters.  For 'sersicfit', the result is an array of 8 numbers for each
         # galaxy:
         #     SERSICFIT[0]: intensity of light profile at the half-light radius.
