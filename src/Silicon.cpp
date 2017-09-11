@@ -24,14 +24,11 @@
  * Routines for integrating the CCD simulations into GalSim
  */
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <vector>
-
 #include <algorithm>
 
 // Uncomment this for debugging output

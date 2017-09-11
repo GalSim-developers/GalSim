@@ -19,17 +19,13 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/gamma.hpp>
-#include <boost/math/special_functions/bessel.hpp>
-
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/Bessel.h"
+#include "math/BesselRoots.h"
+#include "math/Gamma.h"
 #include "fmath/fmath.hpp"
 
 namespace galsim {
@@ -371,7 +367,7 @@ namespace galsim {
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
-        _gamma2n(boost::math::tgamma(2.*_n)),
+        _gamma2n(math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
         _ft(Table<double,double>::spline),
         _kderiv2(0.), _kderiv4(0.)
@@ -419,8 +415,7 @@ namespace galsim {
             if (_truncated) {
                 double z = fast_pow(_trunc, 1./_n);
                 // integrate from 0. to _trunc
-                double gamma2nz = boost::math::tgamma_lower(2.*_n, z);
-                _flux = gamma2nz / _gamma2n;  // _flux < 1
+                _flux = math::gamma_p(2.*_n, z);  // _flux < 1
                 dbg << "Flux fraction = " << _flux << std::endl;
             } else {
                 _flux = 1.;
@@ -460,7 +455,7 @@ namespace galsim {
         SersicHankel(double invn, double k): _invn(invn), _k(k) {}
 
         double operator()(double r) const
-        { return r*fmath::expd(-fast_pow(r, _invn))*j0(_k*r); }
+        { return r*fmath::expd(-fast_pow(r, _invn)) * math::j0(_k*r); }
 
     private:
         double _invn;
@@ -476,14 +471,14 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma4n = boost::math::tgamma(4.*_n);
-            gamma6n = boost::math::tgamma(6.*_n);
-            gamma8n = boost::math::tgamma(8.*_n);
+            gamma4n = math::tgamma(4.*_n);
+            gamma6n = math::tgamma(6.*_n);
+            gamma8n = math::tgamma(8.*_n);
         } else {
             double z = std::pow(_trunc, 1./_n);
-            gamma4n = boost::math::tgamma_lower(4.*_n, z);
-            gamma6n = boost::math::tgamma_lower(6.*_n, z);
-            gamma8n = boost::math::tgamma_lower(8.*_n, z);
+            gamma4n = math::gamma_p(4.*_n, z) * math::tgamma(4.*_n);
+            gamma6n = math::gamma_p(6.*_n, z) * math::tgamma(6.*_n);
+            gamma8n = math::gamma_p(8.*_n, z) * math::tgamma(8.*_n);
         }
         // The quadratic term of small-k expansion:
         _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
@@ -552,7 +547,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * integ_maxr) break;
                 reg.addSplit(root/k);
             }
@@ -646,7 +641,7 @@ namespace galsim {
         // Provide z = r^1/n, rather than r.
         double operator()(double z) const
         {
-            double f = boost::math::tgamma(_2n, z);  // integrates the tail from z to inf
+            double f = (1.-math::gamma_p(_2n, z)) * math::tgamma(_2n);
             xdbg<<"func("<<z<<") = "<<f<<"-"<<_target<<" = "<< f-_target<<std::endl;
             return f - _target;
         }
@@ -762,11 +757,11 @@ namespace galsim {
 
         double operator()(double b) const
         {
-            double f1 = boost::math::tgamma_lower(_2n, b);
-            double f2 = boost::math::tgamma_lower(_2n, _x*b);
+            double f1 = math::gamma_p(_2n, b);
+            double f2 = math::gamma_p(_2n, _x*b);
             // Solve for f1 = f2/2
             xdbg<<"func("<<b<<") = 2*"<<f1<<" - "<<f2<<" = "<< 2.*f1-f2<<std::endl;
-            return 2.*f1-f2;
+            return (2.*f1-f2) * math::tgamma(_2n);
         }
     private:
         double _2n;

@@ -17,27 +17,19 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
-
-namespace bp = boost::python;
+#include "Std.h"
 
 namespace galsim {
+namespace math {
 
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
+    void sincos(double theta, double& sint, double& cost)
+    {
+#ifdef _GLIBCXX_HAVE_SINCOS
+            ::sincos(theta,&sint,&cost);
+#else
+            sint = std::sin(theta);
+            cost = std::cos(theta);
+#endif
     }
-}
 
-void pyExportAngle()
-{
-    bp::def("sincos", &call_sincos);
-}
-
-} // namespace galsim
+}}

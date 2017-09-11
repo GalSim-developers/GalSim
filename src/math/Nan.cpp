@@ -17,27 +17,27 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
-
-namespace bp = boost::python;
+// This needs to be math.h, not cmath, since sometimes cmath puts isnan in the std
+// namespace and undefines the regular isnan.  But sometimes it doesn't.
+// So writing std::isnan is not portable.
+#include "math.h"
 
 namespace galsim {
+namespace math {
 
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
+    template <typename T>
+    bool isNan(T x)
+    {
+#ifdef isnan
+        return isnan(x);
+#else
+        // Depending on the IEEE conformity, at least one of these will always work to detect
+        // nans, but neither one by itself is completely reliable.
+        return (x != x) || !(x*x >= 0);
+#endif
     }
-}
 
-void pyExportAngle()
-{
-    bp::def("sincos", &call_sincos);
-}
+    template bool isNan(float x);
+    template bool isNan(double x);
 
-} // namespace galsim
+}}

@@ -17,27 +17,16 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
-
-namespace bp = boost::python;
+#ifndef GalSim_Math_Angle_H
+#define GalSim_Math_Angle_H
 
 namespace galsim {
+namespace math {
 
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
-    }
-}
+    // A function to compute sin and cos in one statement, possibly more efficiently than
+    // doing the two trig functions separately.
+    void sincos(double theta, double& sint, double& cost);
 
-void pyExportAngle()
-{
-    bp::def("sincos", &call_sincos);
-}
+}}
 
-} // namespace galsim
+#endif

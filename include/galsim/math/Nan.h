@@ -17,27 +17,17 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
-
-namespace bp = boost::python;
+#ifndef GalSim_Math_Nan_H
+#define GalSim_Math_Nan_H
 
 namespace galsim {
+namespace math {
 
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
-    }
-}
+    // Detect if a floating point number is NaN
+    // Note: don't use isnan for function name, since this might be a macro from math.h.
+    template <typename T>
+    bool isNan(T x);
 
-void pyExportAngle()
-{
-    bp::def("sincos", &call_sincos);
-}
+}}
 
-} // namespace galsim
+#endif

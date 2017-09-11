@@ -21,6 +21,7 @@
 
 #include "SBKolmogorov.h"
 #include "SBKolmogorovImpl.h"
+#include "math/Bessel.h"
 #include "fmath/fmath.hpp"
 
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
@@ -260,7 +261,7 @@ namespace galsim {
     public:
         KolmIntegrand(double r) : _r(r) {}
         double operator()(double k) const
-        { return k*fmath::expd(-fast_pow(k, 5./3.))*j0(k*_r); }
+        { return k*fmath::expd(-fast_pow(k, 5./3.)) * math::j0(k*_r); }
 
     private:
         double _r;

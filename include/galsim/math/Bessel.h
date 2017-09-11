@@ -16,12 +16,28 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE Main
 
-#include "galsim/IgnoreWarnings.h"
+#ifndef GalSim_Bessel_H
+#define GalSim_Bessel_H
+/**
+ * @file math/Bessel.h
+ * @brief Contains implementations of some bessel functions ported from netlib.
+ */
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/test/included/unit_test.hpp>
+namespace galsim {
+namespace math {
 
-//JAZ Nothing needs to go here - the test module definitions above create a main function.
+    // Functions defined in src/Bessel.cpp
+    double cyl_bessel_j(double nu, double x);
+    double cyl_bessel_y(double nu, double x);
+    double cyl_bessel_k(double nu, double x);
+    double cyl_bessel_i(double nu, double x);
+
+    // These are in math.h, but we put them here for better namespace encapsulation.
+    double j0(double x);
+    double j1(double x);
+
+} }
+
+#endif
+

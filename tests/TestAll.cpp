@@ -17,27 +17,27 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
+// Without a snazzy unit test framework, we need to register all the tests to be run here
+// by hand.
 
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
+#include <stdexcept>
+#include "Test.h"
 
-namespace bp = boost::python;
+extern void TestImage();
+extern void TestInteg();
+extern void TestVersion();
 
-namespace galsim {
-
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
-    }
-}
-
-void pyExportAngle()
+int main()
 {
-    bp::def("sincos", &call_sincos);
-}
+    try {
+        // Run them all here:
+        TestImage();
+        TestInteg();
+        TestVersion();
 
-} // namespace galsim
+    } catch (std::exception& e) {
+        std::cerr<<e.what()<<std::endl;
+        return 1;
+    }
+    return 0;
+}

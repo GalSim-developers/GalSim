@@ -1,6 +1,7 @@
 .sconf_temp
 .sconsign.dblite
 config.log
+tests.log
 *.so
 *.os
 *.pyc

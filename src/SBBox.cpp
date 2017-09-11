@@ -21,7 +21,9 @@
 
 #include "SBBox.h"
 #include "SBBoxImpl.h"
-#include "Interpolant.h"  // For sinc(x)
+#include "math/Sinc.h"
+#include "math/Angle.h"
+#include "math/Bessel.h"
 
 // cf. comments about USE_COS_SIN in SBGaussian.cpp
 #ifdef _INTEL_COMPILER
@@ -80,7 +82,7 @@ namespace galsim {
 
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(k.x*_wo2pi)*sinc(k.y*_ho2pi);
+        return _flux * math::sinc(k.x*_wo2pi)*math::sinc(k.y*_ho2pi);
     }
 
     template <typename T>
@@ -185,13 +187,13 @@ namespace galsim {
             std::vector<double> sinc_ky(n);
             typedef std::vector<double>::iterator It;
             It kxit = sinc_kx.begin();
-            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = sinc(kx0);
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = math::sinc(kx0);
 
             if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
                 sinc_ky = sinc_kx;
             } else {
                 It kyit = sinc_ky.begin();
-                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = sinc(ky0);
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = math::sinc(ky0);
             }
 
             for (int j=0; j<n; ++j,ptr+=skip) {
@@ -226,7 +228,7 @@ namespace galsim {
             double kx = kx0;
             double ky = ky0;
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
-                *ptr++ = _flux * sinc(kx) * sinc(ky);
+                *ptr++ = _flux * math::sinc(kx) * math::sinc(ky);
             }
         }
     }
@@ -311,7 +313,7 @@ namespace galsim {
             return _flux * (1. - kr0sq * ( (1./8.) + (1./192.) * kr0sq ));
         } else {
             double kr0 = sqrt(kr0sq);
-            return 2.*_flux * j1(kr0)/kr0;
+            return 2.*_flux * math::j1(kr0)/kr0;
         }
     }
 
@@ -473,7 +475,7 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            sincos(theta, sint, cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double r = sqrt(rsq) * _r0;;
             result->setPhoton(i, r*cost, r*sint, fluxPerPhoton);

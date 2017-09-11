@@ -21,6 +21,7 @@
 
 #include "SBExponential.h"
 #include "SBExponentialImpl.h"
+#include "math/Angle.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -608,7 +609,7 @@ namespace galsim {
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
             double sint,cost;
-            sincos(theta, sint, cost);
+            math::sincos(theta, sint, cost);
             double rFactor = r * _r0;
             result->setPhoton(i, rFactor * cost, rFactor * sint, fluxPerPhoton);
 #else

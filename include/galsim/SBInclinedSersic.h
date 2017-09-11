@@ -24,7 +24,6 @@
  * of sight.
  */
 
-#include "Angle.h"
 #include "SBProfile.h"
 #include "SBSersic.h"
 
@@ -96,7 +95,7 @@ namespace galsim {
         /// @brief Returns the Sersic index `n` of the profile.
         double getN() const;
 
-        /// @brief Returns the inclination angle of the profile as an Angle instance
+        /// @brief Returns the inclination angle of the profile in radians.
         double getInclination() const;
 
         /// @brief Returns the scale radius r0 of the Sersic profile.

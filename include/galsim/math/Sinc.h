@@ -17,27 +17,24 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
-#include "math/Angle.h"
-
-namespace bp = boost::python;
+#ifndef GalSim_Sinc_H
+#define GalSim_Sinc_H
+/**
+ * @file math/Sinc.h
+ * @brief Contains the sinc function as well as the integral of sin(t)/t
+ */
 
 namespace galsim {
+namespace math {
 
-namespace {
-    bp::tuple call_sincos(const double theta) {
-        double sint, cost;
-        math::sincos(theta, sint, cost);
-        return bp::make_tuple(sint, cost);
-    }
+    // sinc(x) is defined here as sin(Pi x) / (Pi x)
+    double sinc(double x);
+
+    // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
+    // does not have pi multiplying t.
+    double Si(double x);
+
+}
 }
 
-void pyExportAngle()
-{
-    bp::def("sincos", &call_sincos);
-}
-
-} // namespace galsim
+#endif

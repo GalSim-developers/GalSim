@@ -19,17 +19,16 @@
 
 //#define DEBUGLOGGING
 
-#include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/math/special_functions/bessel.hpp>
-#include <boost/math/special_functions/gamma.hpp>
+#include <cmath>
 
 #include "SBMoffat.h"
 #include "SBMoffatImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
-#include "bessel/Roots.h"
+#include "math/BesselRoots.h"
+#include "math/Bessel.h"
+#include "math/Gamma.h"
+#include "math/Angle.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -276,7 +275,7 @@ namespace galsim {
             _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
-            _knorm *= 4. / (boost::math::tgamma(beta-1.) * std::pow(2.,beta));
+            _knorm *= 4. / (math::tgamma(beta-1.) * std::pow(2.,beta));
         }
     }
 
@@ -324,7 +323,7 @@ namespace galsim {
         if (ksq == 0.) return 1.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(1,k) * k;
+            return math::cyl_bessel_k(1,k) * k;
         }
     }
 
@@ -339,7 +338,7 @@ namespace galsim {
         if (ksq == 0.) return 2.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(2,k) * ksq;
+            return math::cyl_bessel_k(2,k) * ksq;
         }
     }
 
@@ -354,7 +353,7 @@ namespace galsim {
         if (ksq == 0.) return 8.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(3,k) * k*ksq;
+            return math::cyl_bessel_k(3,k) * k*ksq;
         }
     }
 
@@ -363,7 +362,7 @@ namespace galsim {
         if (ksq == 0.) return _flux/_knorm;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(_beta-1,k) * fast_pow(k,_beta-1);
+            return math::cyl_bessel_k(_beta-1,k) * fast_pow(k,_beta-1);
         }
     }
 
@@ -525,7 +524,7 @@ namespace galsim {
                 // Solve for f(k) = maxk_threshold
                 //
                 double temp = (this->gsparams->maxk_threshold
-                               * boost::math::tgamma(_beta-1.)
+                               * math::tgamma(_beta-1.)
                                * std::pow(2.,_beta-0.5)
                                / (2. * sqrt(M_PI)));
                 // Solve k^(beta-1/2) exp(-k) = temp
@@ -585,7 +584,7 @@ namespace galsim {
         MoffatIntegrand(double beta, double k, double (*pb)(double, double)) :
             _beta(beta), _k(k), _pow_beta(pb) {}
         double operator()(double r) const
-        { return r/_pow_beta(1.+r*r, _beta)*j0(_k*r); }
+        { return r/_pow_beta(1.+r*r, _beta) * math::j0(_k*r); }
 
     private:
         double _beta;
@@ -632,7 +631,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             for (int s=1; s<=10; ++s) {
-                double root = bessel::getBesselRoot0(s);
+                double root = math::getBesselRoot0(s);
                 if (root > k * _maxRrD) break;
                 reg.addSplit(root/k);
             }
@@ -668,7 +667,7 @@ namespace galsim {
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
-            sincos(theta, sint, cost);
+            math::sincos(theta, sint, cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
