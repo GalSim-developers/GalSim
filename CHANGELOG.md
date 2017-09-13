@@ -89,6 +89,9 @@ Deprecated Features
 - Deprecated ability to create multiple PhaseScreenPSFs with single call
   to makePSF, since it is now just as efficient to call makePSF multiple
   times. (#824)
+- Deprecated `calculateFlux(bandpass=None)` for computing bolometric flux.
+  Users of this feature can still obtain a psuedo-bolometric flux by using
+  an explicit bolometric Bandpass. (#905)
 
 
 New Features
