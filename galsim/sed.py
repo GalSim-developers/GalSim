@@ -640,7 +640,8 @@ class SED(object):
             from galsim.deprecated import depr
             depr('Using calculateFlux(bandpass=None) to compute a bolometric flux', 1.5, '',
                  "If you need this functionality, you can use a pseudo-bolometric Bandpass created "
-                 "with:  bp = Bandpass('1', blue_limit=sed.blue_limit, red_limit=sed.red_limit)")
+                 "with:  bp = Bandpass('1', 'nm', blue_limit=sed.blue_limit, "
+                 "red_limit=sed.red_limit)")
             bp = galsim.Bandpass('1', 'nm', self.blue_limit, self.red_limit)
             return self.calculateFlux(bp)
         else: # do flux through bandpass
