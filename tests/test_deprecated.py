@@ -832,6 +832,10 @@ def test_dep_sed():
     np.testing.assert_almost_equal(d(x), x/a(x), 10,
                                    err_msg="Found wrong value in SED.__rdiv__")
 
+    sed = galsim.SED(lambda x: np.exp(-x**2), wave_type='nm', flux_type='fphotons')
+    boloflux = check_dep(sed.calculateFlux, None)
+    np.testing.assert_almost_equal(boloflux, np.sqrt(np.pi)/2)
+
 
 @timer
 def test_dep_shapelet():

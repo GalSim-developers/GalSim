@@ -228,9 +228,6 @@ class SED(object):
     def dimensionless(self):  # for convenience
         return not self.spectral
 
-    def _wavelength_intersection(self, other):
-        return max([self.blue_limit, other.blue_limit]), min([self.red_limit, other.red_limit])
-
     def _rest_nm_to_photons(self, wave):
         from astropy import units
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
@@ -644,7 +641,7 @@ class SED(object):
             depr('Using calculateFlux(bandpass=None) to compute a bolometric flux', 1.5, '',
                  "If you need this functionality, you can use a pseudo-bolometric Bandpass created "
                  "with:  bp = Bandpass('1', blue_limit=sed.blue_limit, red_limit=sed.red_limit)")
-            bp = galsim.Bandpass('1', self.blue_limit, self.red_limit)
+            bp = galsim.Bandpass('1', 'nm', self.blue_limit, self.red_limit)
             return self.calculateFlux(bp)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
