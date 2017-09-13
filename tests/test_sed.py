@@ -307,7 +307,8 @@ def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
-    bolo_flux = a.calculateFlux(bandpass=None)
+    bolo_bp = galsim.Bandpass('1', blue_limit=a.blue_limit, red_limit=a.red_limit, wave_type='nm')
+    bolo_flux = a.calculateFlux(bolo_bp)
     print('bolo_flux = ',bolo_flux)
     for z1, z2 in zip([-0.01, -0.02, 0.5, 1.0, 1.4], [-0.2, 0.2, 1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
@@ -465,7 +466,9 @@ def test_SED_withFlux():
             # Should be equivalent to multiplying an SED * Bandpass and computing the
             # "bolometric" flux.
             ab = a * rband
-            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+            bolo_bp = galsim.Bandpass('1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
+                                      wave_type='nm')
+            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
 
