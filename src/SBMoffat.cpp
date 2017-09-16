@@ -176,7 +176,7 @@ namespace galsim {
                                          const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _beta(beta), _flux(flux), _trunc(trunc),
-        _ft(Table<double,double>::spline),
+        _ft(Table::spline),
         _re(0.), // initially set to zero, may be updated by size or getHalfLightRadius().
         _stepk(0.), // calculated by stepK() and stored.
         _maxk(0.) // calculated by maxK() and stored.
@@ -595,7 +595,7 @@ namespace galsim {
     void SBMoffat::SBMoffatImpl::setupFT() const
     {
         assert(_trunc > 0.);
-        if (_ft.size() > 0) return;
+        if (_ft.finalized()) return;
 
         // Do a Hankel transform and store the results in a lookup table.
 
@@ -651,6 +651,7 @@ namespace galsim {
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
+        _ft.finalize();
         dbg<<"maxk = "<<_maxk<<std::endl;
     }
 

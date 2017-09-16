@@ -340,7 +340,7 @@ namespace galsim {
             const double uStep =
                 gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            _tab.reset(new TableBuilder(Table::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
                 double ft = uCalc(u);
 #ifdef DEBUGLOGGING
@@ -352,6 +352,7 @@ namespace galsim {
                 _tab->addEntry(u, ft);
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
+            _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
@@ -368,7 +369,7 @@ namespace galsim {
 #endif
     }
 
-    std::map<double,shared_ptr<Table<double,double> > > Cubic::_cache_tab;
+    std::map<double,shared_ptr<TableBuilder> > Cubic::_cache_tab;
     std::map<double,double> Cubic::_cache_umax;
 
     std::string Cubic::makeStr() const
@@ -491,7 +492,7 @@ namespace galsim {
             const double uStep =
                 gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            _tab.reset(new TableBuilder(Table::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
                 dbg<<"u = "<<u<<std::endl;
                 double ft = uCalc(u);
@@ -511,6 +512,7 @@ namespace galsim {
 #endif
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
+            _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
@@ -543,7 +545,7 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
     }
 
-    std::map<double,shared_ptr<Table<double,double> > > Quintic::_cache_tab;
+    std::map<double,shared_ptr<TableBuilder> > Quintic::_cache_tab;
     std::map<double,double> Quintic::_cache_umax;
 
     std::string Quintic::makeStr() const
@@ -860,17 +862,18 @@ namespace galsim {
         } else {
 #ifdef USE_TABLES
             // Build xtab = table of x values
-            _xtab.reset(new Table<double,double>(Table<double,double>::spline));
+            _xtab.reset(new TableBuidler(Table::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
             const double xStep1 =
                 gsparams.table_spacing * std::pow(gsparams.xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            _xtab->finalize();
 #endif
 
             // Build utab = table of u values
-            _utab.reset(new Table<double,double>(Table<double,double>::spline));
+            _utab.reset(new TableBuilder(Table::spline));
             const double uStep =
                 gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
@@ -879,6 +882,7 @@ namespace galsim {
                 _utab->addEntry(u, uval);
                 if (std::abs(uval) > _tolerance) _uMax = u;
             }
+            _utab->finalize();
             // Save these values in the cache.
 #ifdef USE_TABLES
             _cache_xtab[key] = _xtab;
@@ -888,8 +892,8 @@ namespace galsim {
         }
     }
 
-    std::map<Lanczos::KeyType,shared_ptr<Table<double,double> > > Lanczos::_cache_xtab;
-    std::map<Lanczos::KeyType,shared_ptr<Table<double,double> > > Lanczos::_cache_utab;
+    std::map<Lanczos::KeyType,shared_ptr<TableBuilder> > Lanczos::_cache_xtab;
+    std::map<Lanczos::KeyType,shared_ptr<TableBuilder> > Lanczos::_cache_utab;
     std::map<Lanczos::KeyType,double> Lanczos::_cache_umax;
 
     double Lanczos::xval(double x) const

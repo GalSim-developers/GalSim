@@ -84,7 +84,7 @@ namespace galsim {
         double _stepk; ///< Sampling in k space necessary to avoid folding
         double _maxk; ///< Maximum k value to use
 
-        TableDD _radial;  ///< Lookup table for Fourier transform of MTF.
+        TableBuilder _radial;  ///< Lookup table for Fourier transform of MTF.
 
         ///< Class that can sample radial distribution
         shared_ptr<OneDimensionalDeviate> _sampler;

@@ -369,7 +369,7 @@ namespace galsim {
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
         _gamma2n(math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _ft(Table<double,double>::spline),
+        _ft(Table::spline),
         _kderiv2(0.), _kderiv4(0.)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
@@ -436,7 +436,7 @@ namespace galsim {
     double SersicInfo::kValue(double ksq) const
     {
         assert(ksq >= 0.);
-        if (_ft.size() == 0) buildFT();
+        if (!_ft.finalized()) buildFT();
 
         if (ksq>=_ksq_max)
             return (_highk_a + _highk_b/sqrt(ksq))/ksq; // high-k asymptote
@@ -602,6 +602,7 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
+        _ft.finalize();
         // If didn't find a good approximation for large k, just use the largest k we put in
         // in the table.  (Need to use some approximation after this anyway!)
         if (_ksq_max <= 0.) _ksq_max = fmath::expd(2. * _ft.argMax());

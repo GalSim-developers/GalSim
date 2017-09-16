@@ -31,10 +31,11 @@ API Changes
   able to deprecate (and preserve the existing functionality) in advance of
   v2.0 are the `CelestialCoord.project` and `deproject` functions.  The new
   functionality has better units handing (taking and returning Angles rather
-  then PositionD instances).  We now move to the LSSTDESC.Coord functionality,
-  so if you have been using these functions, you should check the new doc
-  strings for the appropriate types and units for the parameters and return
-  values. (#809b)
+  then PositionD instances).  If you have been using these functions, you
+  should check the new doc strings for the appropriate types and units for the
+  parameters and return values. (#809b)
+- The return type of a LookupTable when given a list or tuple input is now a
+  numpy array rather than a list or tuple. (#809e)
 
 
 Bug Fixes

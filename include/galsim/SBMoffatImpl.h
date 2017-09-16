@@ -120,7 +120,7 @@ namespace galsim {
         double _maxRrD_sq;
         double _maxR_sq;
 
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+        mutable TableBuilder _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         mutable double _stepk;

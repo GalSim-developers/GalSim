@@ -478,14 +478,14 @@ namespace galsim {
         double _range;
 
         double _tolerance;
-        shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -525,14 +525,14 @@ namespace galsim {
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;
-        shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        shared_ptr<TableBuilder> _tab; // Tabulated Fourier transform
         double _uMax;  // Truncation point for Fourier transform
 
         // Calculate the FT from a direct integration.
         double uCalc(double u) const;
 
         // Store the tables in a map, so repeat constructions are quick.
-        static std::map<double,shared_ptr<Table<double,double> > > _cache_tab;
+        static std::map<double,shared_ptr<TableBuilder> > _cache_tab;
         static std::map<double,double> _cache_umax;
     };
 
@@ -590,8 +590,8 @@ namespace galsim {
         double _uMax;  // truncation point for Fourier transform
         std::vector<double> _K; // coefficients for flux correction in xval
         std::vector<double> _C; // coefficients for flux correction in uval
-        shared_ptr<Table<double,double> > _xtab; // Table for x values
-        shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+        shared_ptr<TableBuilder> _xtab; // Table for x values
+        shared_ptr<TableBuilder> _utab; // Table for Fourier transform
 
         double xCalc(double x) const;
         double uCalc(double u) const;
@@ -599,8 +599,8 @@ namespace galsim {
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
-        static std::map<KeyType,shared_ptr<Table<double,double> > > _cache_xtab;
-        static std::map<KeyType,shared_ptr<Table<double,double> > > _cache_utab;
+        static std::map<KeyType,shared_ptr<TableBuilder> > _cache_xtab;
+        static std::map<KeyType,shared_ptr<TableBuilder> > _cache_utab;
         static std::map<KeyType,double> _cache_umax;
     };
 

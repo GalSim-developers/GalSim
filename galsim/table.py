@@ -141,26 +141,31 @@ class LookupTable(object):
         f = np.array(f, dtype=float)
         self.x = np.ascontiguousarray(x[s])
         self.f = np.ascontiguousarray(f[s])
+
         self._x_min = self.x[0]
         self._x_max = self.x[-1]
+        if self._x_min == self._x_max:
+            raise ValueError("All x values are equal")
+
         self._make_table()
 
     def _make_table(self):
         # make and store table
-        x = self.x
-        f = self.f
+        self._x = self.x
+        self._f = self.f
         if self.x_log:
-            if x[0] <= 0.:
+            if self._x[0] <= 0.:
                 raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
-            x = np.log(x)
+            self._x = np.log(self._x)
         if self.f_log:
-            if np.any(f <= 0.):
+            if np.any(self._f <= 0.):
                 raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
-            f = np.log(f)
+            self._f = np.log(self._f)
 
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
         # as _LookupTable.  Note x must be sorted.
-        self._tab = _galsim._LookupTable(x.ctypes.data, f.ctypes.data, len(x), self.interpolant)
+        self._tab = _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                         len(self._x), self.interpolant)
 
     @property
     def x_min(self): return self._x_min
@@ -186,39 +191,44 @@ class LookupTable(object):
 
         @returns the interpolated `f(x)` value(s).
         """
-        # first, keep track of whether interpolation was done in x or log(x)
+        # Check that all x values are in the allowed range
+        self._check_range(x)
+
+        # Handle the log(x) if necessary
         if self.x_log:
             if np.any(np.array(x) <= 0.):
                 raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
-        # figure out what we received, and return the same thing
         # option 1: a NumPy array
         if isinstance(x, np.ndarray):
             xx = np.ascontiguousarray(x.ravel(), dtype=float)
             f = np.empty_like(xx, dtype=float)
             self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
             f = f.reshape(x.shape)
-        # option 2: a tuple
-        elif isinstance(x, tuple):
+        # option 2: a tuple or list
+        elif isinstance(x, (tuple, list)):
             xx = np.ascontiguousarray(x, dtype=float)
             f = np.empty_like(xx, dtype=float)
             self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
-            f = tuple(f)
-        # option 3: a list
-        elif isinstance(x, list):
-            xx = np.ascontiguousarray(x, dtype=float)
-            f = np.empty_like(xx, dtype=float)
-            self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
-            f = list(f)
-        # option 4: a single value
+        # option 3: a single value
         else:
-            f = self._tab(x)
+            xx = float(x)
+            f = self._tab(xx)
 
+        # Handle the log(f) if necessary
         if self.f_log:
             f = np.exp(f)
         return f
 
+    def _check_range(self, x):
+        slop = (self.x_max - self.x_min) * 1.e-6
+        if np.min(x) < self.x_min - slop:
+            raise ValueError("x value(s) below the range of the LookupTable: %s < %s"%(
+                             x, self.x_min))
+        if np.max(x) > self.x_max + slop:
+            raise ValueError("x value(s) above the range of the LookupTable: %s > %s"%(
+                             x, self.x_max))
     def getArgs(self):
         return self.x
 

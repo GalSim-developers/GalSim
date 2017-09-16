@@ -101,10 +101,10 @@ def test_table():
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
         try:
-            np.testing.assert_raises(RuntimeError,table1,args1[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table1,args1[-1]+0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
+            np.testing.assert_raises(ValueError,table1,args1[0]-0.01)
+            np.testing.assert_raises(ValueError,table1,args1[-1]+0.01)
+            np.testing.assert_raises(ValueError,table2,args2[0]-0.01)
+            np.testing.assert_raises(ValueError,table2,args2[-1]+0.01)
         except ImportError:
             print('The assert_raises tests require nose')
 
@@ -227,14 +227,12 @@ def test_log():
 @timer
 def test_roundoff():
     table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
+    # These should work without raising an exception
+    np.testing.assert_almost_equal(table1(1.0 - 1.e-7), 1.0, decimal=6)
+    np.testing.assert_almost_equal(table1(10.0 + 1.e-7), 10.0, decimal=6)
     try:
-        table1(1.0 - 1.e-7)
-        table1(10.0 + 1.e-7)
-    except:
-        raise ValueError("c++ LookupTable roundoff guard failed.")
-    try:
-        np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
-        np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
+        np.testing.assert_raises(ValueError, table1, 1.0-1.e5)
+        np.testing.assert_raises(ValueError, table1, 10.0+1.e5)
     except ImportError:
         print('The assert_raises tests require nose')
 

@@ -338,7 +338,7 @@ namespace galsim {
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
     KolmogorovInfo::KolmogorovInfo(GSParamsPtr gsparams) :
-        _radial(TableDD::spline)
+        _radial(Table::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";
 
@@ -388,6 +388,7 @@ namespace galsim {
             if (R == 0. && sum > thresh1) R = r;
             if (hlr == 0. && sum > thresh0) hlr = r;
         }
+        _radial.finalize();
         dbg<<"Done loop to build radial function.\n";
         dbg<<"R = "<<R<<std::endl;
         dbg<<"hlr = "<<hlr<<std::endl;

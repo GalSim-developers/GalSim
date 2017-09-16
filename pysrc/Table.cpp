@@ -27,26 +27,24 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    // We only export the Table<double,double>, so don't bother templatizing PyTable.
     struct PyTable {
 
-        static Table<double,double>* makeTable(
+        static Table* makeTable(
             size_t iargs, size_t ivals, int N, const std::string& interp)
         {
             const double* args = reinterpret_cast<double*>(iargs);
             const double* vals = reinterpret_cast<double*>(ivals);
 
-            Table<double,double>::interpolant i = Table<double,double>::linear;
-            if (interp == "spline") i = Table<double,double>::spline;
-            else if (interp == "floor") i = Table<double,double>::floor;
-            else if (interp == "ceil") i = Table<double,double>::ceil;
-            else if (interp == "nearest") i = Table<double,double>::nearest;
+            Table::interpolant i = Table::linear;
+            if (interp == "spline") i = Table::spline;
+            else if (interp == "floor") i = Table::floor;
+            else if (interp == "ceil") i = Table::ceil;
+            else if (interp == "nearest") i = Table::nearest;
 
-            return new Table<double,double>(args, vals, N, i);
+            return new Table(args, vals, N, i);
         }
 
-        static void interpMany(const Table<double,double>& table,
-                               size_t iargs, size_t ivals, int N)
+        static void interpMany(const Table& table, size_t iargs, size_t ivals, int N)
         {
             const double* args = reinterpret_cast<const double*>(iargs);
             double* vals = reinterpret_cast<double*>(ivals);
@@ -56,7 +54,7 @@ namespace {
         static void wrap()
         {
             // docstrings are in galsim/table.py
-            bp::class_<Table<double,double> > pyTable("_LookupTable", bp::no_init);
+            bp::class_<Table > pyTable("_LookupTable", bp::no_init);
             pyTable
                 .def("__init__",
                      bp::make_constructor(
@@ -64,10 +62,10 @@ namespace {
                          (bp::arg("args"), bp::arg("vals"), bp::args("N"), bp::arg("interp"))
                      )
                 )
-                .def(bp::init<const Table<double,double> &>(bp::args("other")))
+                .def(bp::init<const Table &>(bp::args("other")))
 
                 // Use version that throws expection if out of bounds
-                .def("__call__", &Table<double,double>::lookup)
+                .def("__call__", &Table::lookup)
                 .def("interpMany", &interpMany)
                 ;
         }
@@ -75,22 +73,22 @@ namespace {
     }; // struct PyTable
 
     struct PyTable2D{
-        static Table2D<double, double>* makeTable2D(
+        static Table2D* makeTable2D(
             size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
             const std::string& interp)
         {
             const double* x = reinterpret_cast<const double*>(ix);
             const double* y = reinterpret_cast<const double*>(iy);
             const double* vals = reinterpret_cast<const double*>(ivals);
-            Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
-            if (interp == "floor") i = Table2D<double,double>::floor;
-            else if (interp == "ceil") i = Table2D<double,double>::ceil;
-            else if (interp == "nearest") i = Table2D<double,double>::nearest;
+            Table2D::interpolant i = Table2D::linear;
+            if (interp == "floor") i = Table2D::floor;
+            else if (interp == "ceil") i = Table2D::ceil;
+            else if (interp == "nearest") i = Table2D::nearest;
 
-            return new Table2D<double,double>(x, y, vals, Nx, Ny, i);
+            return new Table2D(x, y, vals, Nx, Ny, i);
         }
 
-        static void interpMany(const Table2D<double,double>& table2d,
+        static void interpMany(const Table2D& table2d,
                                size_t ix, size_t iy, size_t ivals, int N)
         {
             const double* x = reinterpret_cast<const double*>(ix);
@@ -99,14 +97,14 @@ namespace {
             table2d.interpMany(x, y, vals, N);
         }
 
-        static void Gradient(const Table2D<double,double>& table2d,
+        static void Gradient(const Table2D& table2d,
                              double x, double y, size_t igrad)
         {
             double* grad = reinterpret_cast<double*>(igrad);
             table2d.gradient(x, y, grad[0], grad[1]);
         }
 
-        static void GradientMany(const Table2D<double,double>& table2d,
+        static void GradientMany(const Table2D& table2d,
                                  size_t ix, size_t iy, size_t idfdx, size_t idfdy, int N)
         {
             const double* x = reinterpret_cast<const double*>(ix);
@@ -118,7 +116,7 @@ namespace {
 
         static void wrap()
         {
-            bp::class_<Table2D<double,double> > pyTable2D("_LookupTable2D", bp::no_init);
+            bp::class_<Table2D > pyTable2D("_LookupTable2D", bp::no_init);
             pyTable2D
                 .def("__init__",
                     bp::make_constructor(
@@ -127,7 +125,7 @@ namespace {
                          bp::arg("Nx"), bp::arg("Ny"), bp::arg("interp"))
                     )
                 )
-                .def("__call__", &Table2D<double,double>::lookup)
+                .def("__call__", &Table2D::lookup)
                 .def("interpMany", &interpMany)
                 .def("gradient", &Gradient)
                 .def("gradientMany", &GradientMany)
