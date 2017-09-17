@@ -30,6 +30,7 @@ import numpy as np
 
 import galsim
 from . import _galsim
+from .utilities import lazy_property
 
 def Add(*args, **kwargs):
     """A function for adding 2 or more GSObject or ChromaticObject instances.
@@ -154,7 +155,7 @@ class Sum(galsim.GSObject):
         SBList = [obj._sbp for obj in args]
         self._sbp = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         # If any of the objects have a noise attribute, then we propagate the sum of the
         # noises (they add like variances) to the final sum.
@@ -437,7 +438,7 @@ class Convolution(galsim.GSObject):
         SBList = [ obj._sbp for obj in args ]
         self._sbp = galsim._galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.

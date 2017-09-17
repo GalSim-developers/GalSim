@@ -22,6 +22,7 @@ A class that handles affine tranformations of a profile including a possible flu
 import galsim
 import numpy as np
 from . import _galsim
+from .utilities import lazy_property
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
               gsparams=None):
@@ -154,7 +155,7 @@ class Transformation(galsim.GSObject):
         """
         return self._flux_ratio
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         if self.original.noise is None:
             return None

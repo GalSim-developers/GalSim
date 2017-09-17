@@ -23,6 +23,7 @@ Definitions of the various interpolants used by InterpolatedImage and Interpolat
 from past.builtins import basestring
 from . import _galsim
 from .gsparams import GSParams
+from .utilities import lazy_property
 
 class Interpolant(object):
     """A base class that defines how interpolation should be done.
@@ -92,12 +93,11 @@ class Interpolant(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_i']
+        d.pop('_i', None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._make_i()
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and repr(self) == repr(other)
@@ -108,7 +108,7 @@ class Interpolant(object):
     def __hash__(self):
         return hash(repr(self))
 
-    # Sub-classes should define _make_i, repr, and str
+    # Sub-classes should define _i property, repr, and str
 
 
 class Delta(Interpolant):
@@ -126,10 +126,10 @@ class Delta(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Delta(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Delta(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Delta(%r, %r)"%(self._tol, self._gsparams)
@@ -154,10 +154,10 @@ class Nearest(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Nearest(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Nearest(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Nearest(%r, %r)"%(self._tol, self._gsparams)
@@ -183,10 +183,10 @@ class SincInterpolant(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.SincInterpolant(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.SincInterpolant(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.SincInterpolant(%r, %r)"%(self._tol, self._gsparams)
@@ -210,10 +210,10 @@ class Linear(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Linear(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Linear(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Linear(%r, %r)"%(self._tol, self._gsparams)
@@ -235,10 +235,10 @@ class Cubic(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Cubic(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Cubic(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Cubic(%r, %r)"%(self._tol, self._gsparams)
@@ -260,10 +260,10 @@ class Quintic(Interpolant):
     def __init__(self, tol=1.e-4, gsparams=None):
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Quintic(self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Quintic(self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Quintic(%r, %r)"%(self._tol, self._gsparams)
@@ -295,10 +295,10 @@ class Lanczos(Interpolant):
         self._conserve_dc = bool(conserve_dc)
         self._tol = float(tol)
         self._gsparams = GSParams.check(gsparams)
-        self._make_i()
 
-    def _make_i(self):
-        self._i = _galsim.Lanczos(self._n, self._conserve_dc, self._tol, self._gsparams._gsp)
+    @lazy_property
+    def _i(self):
+        return _galsim.Lanczos(self._n, self._conserve_dc, self._tol, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Lanczos(%r, %r, %r, %r)"%(self._n, self._conserve_dc, self._tol,
