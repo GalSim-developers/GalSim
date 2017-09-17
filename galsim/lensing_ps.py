@@ -481,20 +481,6 @@ class PowerSpectrum(object):
         self.grid_spacing = grid_spacing // kmax_factor
         self.center = center
 
-        # We have to make an adjustment to the center value to account for how the xValue function
-        # of SBInterpolatedImage works.  xValue(0,0) gives the image value at the _nominal_
-        # image center.  i.e. the location you get from im.center().  However, for even-sized
-        # images, this isn't the true center, since it is constrained to be a PositionI,
-        # and the true center is halfway between two pixels.
-        # Therefore, we would want an input position of center to use xValue(-0.5, -0.5) in that
-        # case.  Or, equivalently, we want an input position of center + (0.5,0.5)*grid_spacing
-        # to use xValue(0,0).
-        if ngrid % 2 == 0:
-            self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing
-            self.adjust_center = True
-        else:
-            self.adjust_center = False
-
         # It is also convenient to store the bounds within which an input position is allowed.
         self.bounds = galsim.BoundsD( center.x - ngrid * grid_spacing / 2. ,
                                       center.x + ngrid * grid_spacing / 2. ,
@@ -583,11 +569,11 @@ class PowerSpectrum(object):
             self.grid_kappa = np.array(self.grid_kappa[s,s], copy=True, order='C')
 
         # Set up the images to be interpolated.
-        # Note: We don't make the SBInterpolatedImages yet, since it's not picklable.
+        # Note: We don't make the InterpolatedImages yet, since it's not picklable.
         #       So we wait to create them when we are actually going to use them.
-        self.im_g1 = galsim.ImageD(self.grid_g1)
-        self.im_g2 = galsim.ImageD(self.grid_g2)
-        self.im_kappa = galsim.ImageD(self.grid_kappa)
+        self.im_g1 = galsim.ImageD(self.grid_g1, scale=self.grid_spacing)
+        self.im_g2 = galsim.ImageD(self.grid_g2, scale=self.grid_spacing)
+        self.im_kappa = galsim.ImageD(self.grid_kappa, scale=self.grid_spacing)
 
         if get_convergence:
             return self.grid_g1, self.grid_g2, self.grid_kappa
@@ -638,15 +624,16 @@ class PowerSpectrum(object):
 
         # Make new array subsamples and turn them into Images
         self.im_g1 = galsim.ImageD(
-            np.ascontiguousarray(self.im_g1.array[::subsample_fac,::subsample_fac]))
+            np.ascontiguousarray(self.im_g1.array[::subsample_fac,::subsample_fac]),
+            scale=self.grid_spacing)
         self.im_g2 = galsim.ImageD(
-            np.ascontiguousarray(self.im_g2.array[::subsample_fac,::subsample_fac]))
+            np.ascontiguousarray(self.im_g2.array[::subsample_fac,::subsample_fac]),
+            scale=self.grid_spacing)
         self.im_kappa = galsim.ImageD(
-            np.ascontiguousarray(self.im_kappa.array[::subsample_fac,::subsample_fac]))
+            np.ascontiguousarray(self.im_kappa.array[::subsample_fac,::subsample_fac]),
+            scale=self.grid_spacing)
 
         # Update internal parameters: grid_spacing, center.
-        if self.adjust_center:
-            self.center += galsim.PositionD(0.5,0.5) * self.grid_spacing * (subsample_fac-1)
         self.grid_spacing *= subsample_fac
 
         if get_convergence:
@@ -916,7 +903,7 @@ class PowerSpectrum(object):
             raise RuntimeError("Periodic wrapping does not work with images this small!")
         expanded_bounds = im.bounds.withBorder(border)
         # Make new image with those bounds.
-        im_new = galsim.ImageD(expanded_bounds)
+        im_new = galsim.ImageD(expanded_bounds, scale=self.grid_spacing)
         # Make the central subarray equal to what we want.
         im_new[im.bounds] = galsim.Image(im)
         # Set the empty bits around the center properly.  There are four strips around the edge, and
@@ -1073,49 +1060,31 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
         kinterp = galsim.Quintic()
 
+        im_g1 = self.im_g1
+        im_g2 = self.im_g2
+
         if reduced:
             # get reduced shear (just discard magnification)
-            g1_r, g2_r, _ = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
-                                                               self.im_kappa.array)
-            g1_r = galsim.ImageD(g1_r)
-            g2_r = galsim.ImageD(g2_r)
-            # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
-            # However, if we are doing wrapped interpolation then we will want to manually stick the
-            # wrapped grid bits around the edges, because otherwise the interpolant will treat
-            # everything off the edges as zero.
-            if periodic:
-                # Make an expanded image.  We expand by 7 (default) to be safe, though most
-                # interpolants don't need that much.  Note that we do NOT overwrite the stored data
-                # in the PowerSpectrum instance with anything that is done here, so what's being
-                # done here must be redone in subsequent calls to getShear with periodic
-                # interpolation.
-                g1_r_new = self._wrap_image(g1_r)
-                g2_r_new = self._wrap_image(g2_r)
+            g1, g2, _ = galsim.lensing_ps.theoryToObserved(im_g1.array, im_g2.array,
+                                                           self.im_kappa.array)
+            im_g1 = galsim.ImageD(g1, scale=self.grid_spacing)
+            im_g2 = galsim.ImageD(g2, scale=self.grid_spacing)
 
-                # Then make the SBInterpolated image.
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new._image, xInterp=xinterp._i, kInterp=kinterp._i)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new._image, xInterp=xinterp._i, kInterp=kinterp._i)
-            else:
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r._image, xInterp=xinterp._i, kInterp=kinterp._i)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r._image, xInterp=xinterp._i, kInterp=kinterp._i)
-        else:
-            if periodic:
-                # Need to expand array here, as well.
-                g1_r_new = self._wrap_image(self.im_g1)
-                g2_r_new = self._wrap_image(self.im_g2)
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new._image, xInterp=xinterp._i, kInterp=kinterp._i)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new._image, xInterp=xinterp._i, kInterp=kinterp._i)
-            else:
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1._image, xInterp=xinterp._i,
-                                                             kInterp=kinterp._i)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2._image, xInterp=xinterp._i,
-                                                             kInterp=kinterp._i)
+        if periodic:
+            # Make an expanded image.  We expand by 7 (default) to be safe, though most
+            # interpolants don't need that much.  Note that we do NOT overwrite the stored data
+            # in the PowerSpectrum instance with anything that is done here, so what's being
+            # done here must be redone in subsequent calls to getShear with periodic
+            # interpolation.
+            im_g1 = self._wrap_image(im_g1)
+            im_g2 = self._wrap_image(im_g2)
+
+        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        ii_g1 = galsim._InterpolatedImage(im_g1, xinterp, kinterp) * self.grid_spacing**2
+        ii_g2 = galsim._InterpolatedImage(im_g2, xinterp, kinterp) * self.grid_spacing**2
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1125,30 +1094,29 @@ class PowerSpectrum(object):
 
         # interpolate if necessary
         g1,g2 = [], []
-        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+        for x,y in zip(pos_x, pos_y):
             # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(iter_pos):
+            xy = galsim.PositionD(x,y)
+            if not self.bounds.includes(xy):
                 if not periodic:
                     # We're not treating this as a periodic box, so issue a warning and set the
                     # shear to zero for positions that are outside the original grid.
                     import warnings
                     warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
                         "of the gridded shear values: " + str(self.bounds) +
                         ".  Returning a shear of (0,0) for this point.")
                     g1.append(0.)
                     g2.append(0.)
+                    continue
                 else:
                     # Treat this as a periodic box.
-                    wrap_pos = galsim.PositionD(
-                        (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
+                    xy = galsim.PositionD(
+                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
+                        (y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    g1.append(sbii_g1.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
-                    g2.append(sbii_g2.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
-            else:
-                g1.append(sbii_g1.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
-                g2.append(sbii_g2.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
+            g1.append(ii_g1._xValue(xy-self.center))
+            g2.append(ii_g2._xValue(xy-self.center))
 
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0]
@@ -1218,21 +1186,18 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
         kinterp = galsim.Quintic()
 
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
+        im_kappa = self.im_kappa
+
         if periodic:
             # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
             # interpolants don't need that much.
-            kappa_new = self._wrap_image(self.im_kappa)
+            im_kappa = self._wrap_image(im_kappa)
 
-            # Then make the SBInterpolated image.
-            sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                kappa_new._image, xInterp=xinterp._i, kInterp=kinterp._i)
-        else:
-            sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                self.im_kappa._image, xInterp=xinterp._i, kInterp=kinterp._i)
+        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        ii_kappa = galsim._InterpolatedImage(im_kappa, xinterp, kinterp) * self.grid_spacing**2
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1242,25 +1207,25 @@ class PowerSpectrum(object):
 
         # interpolate if necessary
         kappa = []
-        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+        for x,y in zip(pos_x, pos_y):
+            xy = galsim.PositionD(x,y)
             # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(iter_pos):
+            if not self.bounds.includes(xy):
                 if not periodic:
                     import warnings
                     warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
                         "of the gridded convergence values: " + str(self.bounds) +
                         ".  Returning a convergence of 0 for this point.")
                     kappa.append(0.)
+                    continue
                 else:
                     # Treat this as a periodic box.
-                    wrap_pos = galsim.PositionD(
-                        (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
+                    xy = galsim.PositionD(
+                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
+                        (y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    kappa.append(sbii_kappa.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
-            else:
-                kappa.append(sbii_kappa.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
+            kappa.append(ii_kappa._xValue(xy-self.center))
 
         if isinstance(pos, galsim.PositionD):
             return kappa[0]
@@ -1335,23 +1300,18 @@ class PowerSpectrum(object):
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                       self.im_kappa.array)
         # Interpolate mu-1, so the zero values off the edge are appropriate.
-        im_mu = galsim.ImageD(mu-1)
+        im_mu = galsim.ImageD(mu-1, scale=self.grid_spacing)
 
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
         if periodic:
             # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
             # interpolants don't need that much.
-            im_mu_new = self._wrap_image(im_mu)
+            im_mu = self._wrap_image(im_mu)
 
-            # Then make the SBInterpolated image.
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-        else:
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
+        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        ii_mu = galsim._InterpolatedImage(im_mu, xinterp, kinterp) * self.grid_spacing**2
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1361,26 +1321,25 @@ class PowerSpectrum(object):
 
         # interpolate if necessary
         mu = []
-        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+        for x,y in zip(pos_x, pos_y):
+            xy = galsim.PositionD(x,y)
             # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(iter_pos):
+            if not self.bounds.includes(xy):
                 if not periodic:
                     import warnings
                     warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
                         "of the gridded convergence values: " + str(self.bounds) +
                         ".  Returning a magnification of 1 for this point.")
                     mu.append(1.)
+                    continue
                 else:
                     # Treat this as a periodic box.
-                    wrap_pos = galsim.PositionD(
-                        (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
+                    xy = galsim.PositionD(
+                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
+                        (y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    mu.append(sbii_mu.xValue(((wrap_pos-self.center)/self.grid_spacing)._p)+1.)
-
-            else:
-                mu.append(sbii_mu.xValue(((iter_pos-self.center)/self.grid_spacing)._p)+1.)
+            mu.append(ii_mu._xValue(xy-self.center) + 1.)
 
         if isinstance(pos, galsim.PositionD):
             return mu[0]
@@ -1454,37 +1413,26 @@ class PowerSpectrum(object):
         kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
-        g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
-                                                            self.im_kappa.array)
-        im_g1_r = galsim.ImageD(g1_r)
-        im_g2_r = galsim.ImageD(g2_r)
-        im_mu = galsim.ImageD(mu-1)
+        g1, g2, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
+                                                        self.im_kappa.array)
+        im_g1 = galsim.ImageD(g1, scale=self.grid_spacing)
+        im_g2 = galsim.ImageD(g2, scale=self.grid_spacing)
+        im_mu = galsim.ImageD(mu-1, scale=self.grid_spacing)
 
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
-        # However, if we are doing wrapped interpolation then we will want to manually stick the
-        # wrapped grid bits around the edges, because otherwise the interpolant will treat
-        # everything off the edges as zero.
         if periodic:
             # Make an expanded bounds.  We expand by 7 (default) to be safe, though most
             # interpolants don't need that much.
-            im_mu_new = self._wrap_image(im_mu)
-            im_g1_new = self._wrap_image(im_g1_r)
-            im_g2_new = self._wrap_image(im_g2_r)
+            im_mu = self._wrap_image(im_mu)
+            im_g1 = self._wrap_image(im_g1)
+            im_g2 = self._wrap_image(im_g2)
 
-            # Then make the SBInterpolated image.
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-        else:
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu._image, xInterp=xinterp._i,
-                                                         kInterp=kinterp._i)
+        # Make an InterpolatedImage, which will do the heavy lifting for the interpolation.
+        # However, if we are doing wrapped interpolation then we will want to manually stick the
+        # wrapped grid bits around the edges, because otherwise the interpolant will treat
+        # everything off the edges as zero.
+        ii_g1 = galsim._InterpolatedImage(im_g1, xinterp, kinterp) * self.grid_spacing**2
+        ii_g2 = galsim._InterpolatedImage(im_g2, xinterp, kinterp) * self.grid_spacing**2
+        ii_mu = galsim._InterpolatedImage(im_mu, xinterp, kinterp) * self.grid_spacing**2
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1494,32 +1442,29 @@ class PowerSpectrum(object):
 
         # interpolate if necessary
         g1, g2, mu = [], [], []
-        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+        for x,y in zip(pos_x, pos_y):
+            xy = galsim.PositionD(x,y)
             # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(iter_pos):
+            if not self.bounds.includes(xy):
                 if not periodic:
                     import warnings
                     warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
                         "of the gridded values: " + str(self.bounds) +
                         ".  Returning 0 for lensing observables at this point.")
                     g1.append(0.)
                     g2.append(0.)
                     mu.append(1.)
+                    continue
                 else:
                     # Treat this as a periodic box.
-                    wrap_pos = galsim.PositionD(
-                        (iter_pos.x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (iter_pos.y-self.bounds.ymin) % dy + self.bounds.ymin
+                    xy = galsim.PositionD(
+                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
+                        (y-self.bounds.ymin) % dy + self.bounds.ymin
                         )
-                    g1.append(sbii_g1.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
-                    g2.append(sbii_g2.xValue(((wrap_pos-self.center)/self.grid_spacing)._p))
-                    mu.append(sbii_mu.xValue(((wrap_pos-self.center)/self.grid_spacing)._p)+1.)
-
-            else:
-                g1.append(sbii_g1.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
-                g2.append(sbii_g2.xValue(((iter_pos-self.center)/self.grid_spacing)._p))
-                mu.append(sbii_mu.xValue(((iter_pos-self.center)/self.grid_spacing)._p)+1.)
+            g1.append(ii_g1._xValue(xy-self.center))
+            g2.append(ii_g2._xValue(xy-self.center))
+            mu.append(ii_mu._xValue(xy-self.center) + 1.)
 
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0], mu[0]

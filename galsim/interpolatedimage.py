@@ -254,7 +254,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None,
                  _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
                  hdu=None):
 
@@ -342,8 +342,8 @@ class InterpolatedImage(GSObject):
             im_cen = self.image.bounds.center()
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
-        self.min_scale = local_wcs._minScale()
-        self.max_scale = local_wcs._maxScale()
+        min_scale = local_wcs._minScale()
+        max_scale = local_wcs._maxScale()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
@@ -351,7 +351,7 @@ class InterpolatedImage(GSObject):
             # Convert from arcsec to pixels according to the local wcs.
             # Use the minimum scale, since we want to make sure noise_pad_size is
             # as large as we need in any direction.
-            noise_pad_size = int(math.ceil(noise_pad_size / self.min_scale))
+            noise_pad_size = int(math.ceil(noise_pad_size / min_scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = galsim.Image.good_fft_size(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
@@ -409,14 +409,14 @@ class InterpolatedImage(GSObject):
         # below what is provided here, while maxK is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
-            _force_stepk *= self.min_scale
+            _force_stepk *= min_scale
         if _force_maxk > 0.:
             calculate_maxk = False
-            _force_maxk *= self.max_scale
+            _force_maxk *= max_scale
 
         # Due to floating point rounding errors, for pickling it's necessary to store the exact
         # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
-        # values before being scaled by self.min_scale and self.max_scale.  So we do that via the
+        # values before being scaled by min_scale and max_scale.  So we do that via the
         # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
         # pickling.
         if _serialize_stepk is not None:
@@ -462,8 +462,8 @@ class InterpolatedImage(GSObject):
 
         # Save this intermediate profile
         self._sbii = sbii
-        self._stepk = sbii.stepK() / self.min_scale
-        self._maxk = sbii.maxK() / self.max_scale
+        self._stepk = sbii.stepK() / min_scale
+        self._maxk = sbii.maxK() / max_scale
         self._flux = flux
 
         self._serialize_stepk = sbii.stepK()
@@ -580,6 +580,73 @@ class InterpolatedImage(GSObject):
                       offset=self._offset, use_true_center=False, gsparams=self.gsparams,
                       _serialize_stepk=self._serialize_stepk,
                       _serialize_maxk=self._serialize_maxk)
+
+
+def _InterpolatedImage(image, x_interpolant, k_interpolant,
+                       use_true_center=True, offset=None, gsparams=None,
+                       force_stepk=0., force_maxk=0.):
+    """Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.
+
+    Some notable reductions in functionality relative to InterpolatedImage:
+
+    1. There are no padding options. The image must be provided with all padding already applied.
+    2. The stepk and maxk values will not be calculated.  If you want to use values for these other
+       than the default, you may provide them as _force_stepk and _force_maxk.  Otherwise
+       stepk ~= 2pi / image_size and max_k ~= 2pi / pixel_scale.
+    3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
+    4. The input image must have a defined wcs.
+
+    @param image            The Image from which to construct the object.
+    @param x_interpolant    An Interpolant instance for real-space interpolation.
+    @param k_interpolant    An Interpolant instance for k-space interpolation.
+    @param use_true_center  Whether to use the true center of the provided image as the center
+                            of the profile. [default: True]
+    @param offset           The location in the input image to use as the center of the profile.
+                            [default: None]
+    @param gsparams         An optional GSParams argument. [default: None]
+    @param force_stepk      A stepk value to use rather than the default value. [default: 0.]
+    @param force_maxk       A maxk value to use rather than the default value. [default: 0.]
+
+    @returns an InterpolatedImage instance
+    """
+    ret = InterpolatedImage.__new__(InterpolatedImage)
+
+    # We need to set all the various attributes that are expected to be in an InterpolatedImage:
+    ret.image = image.copy()
+    ret.x_interpolant = x_interpolant
+    ret.k_interpolant = k_interpolant
+    ret.use_cache = True
+    ret._pad_image = image
+    ret._pad_factor = 1.
+    ret._gsparams = galsim.GSParams.check(gsparams)
+
+    if image.wcs.isLocal():
+        local_wcs = image.wcs
+    else:
+        im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
+        local_wcs = image.wcs.local(image_pos = im_cen)
+    min_scale = local_wcs._minScale()
+    max_scale = local_wcs._maxScale()
+    force_stepk *= min_scale
+    force_maxk *= max_scale
+
+    ret._sbp = _galsim.SBInterpolatedImage(
+            image._image, x_interpolant._i, k_interpolant._i, 1.,
+            force_stepk, force_maxk, ret._gsparams._gsp)
+
+    ret._flux = None
+    ret._stepk = ret._sbp.stepK() / min_scale
+    ret._maxk = ret._sbp.maxK() / max_scale
+    ret._serialize_stepk = ret._sbp.stepK()
+    ret._serialize_maxk = ret._sbp.maxK()
+
+    offset = ret._parse_offset(offset)
+    prof = ret._fix_center(ret.image.bounds, offset, use_true_center, reverse=True)
+    ret._offset = -prof.offset if hasattr(prof, 'offset') else None
+
+    prof = local_wcs._profileToWorld(prof)
+    ret._sbp = _galsim.SBAdd([prof._sbp], ret.gsparams._gsp)
+    return ret
 
 
 class InterpolatedKImage(GSObject):
