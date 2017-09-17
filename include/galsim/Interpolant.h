@@ -226,26 +226,26 @@ namespace galsim {
     /**
      * @brief An interpolant that is product of same 1d `Interpolant` in x and y
      *
-     * The 1d interpolant gets passed in by shared_ptr, so there is no need to worry about keeping
-     * the 1d interpolant in existence elsewhere.
+     * The 1d interpolant gets passed in by reference, so it needs to exist elsewhere.
+     * (Typically in Python layer.)
      */
     class InterpolantXY : public Interpolant2d
     {
     public:
-        InterpolantXY(shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
+        InterpolantXY(const Interpolant& i1d) : _i1d(i1d) {}
         ~InterpolantXY() {}
 
         // All of the calls below implement base class methods.
-        double xrange() const { return _i1d->xrange(); }
-        int ixrange() const { return _i1d->ixrange(); }
-        double urange() const { return _i1d->urange(); }
-        double getTolerance() const { return _i1d->getTolerance(); }
+        double xrange() const { return _i1d.xrange(); }
+        int ixrange() const { return _i1d.ixrange(); }
+        double urange() const { return _i1d.urange(); }
+        double getTolerance() const { return _i1d.getTolerance(); }
 
-        double xval(double x, double y) const { return _i1d->xval(x)*_i1d->xval(y); }
+        double xval(double x, double y) const { return _i1d.xval(x)*_i1d.xval(y); }
         double xvalWrapped(double x, double y, int N) const
-        { return _i1d->xvalWrapped(x,N)*_i1d->xvalWrapped(y,N); }
-        double uval(double u, double v) const { return _i1d->uval(u)*_i1d->uval(v); }
-        bool isExactAtNodes() const { return _i1d->isExactAtNodes(); }
+        { return _i1d.xvalWrapped(x,N)*_i1d.xvalWrapped(y,N); }
+        double uval(double u, double v) const { return _i1d.uval(u)*_i1d.uval(v); }
+        bool isExactAtNodes() const { return _i1d.isExactAtNodes(); }
 
         // Photon-shooting routines:
         double getPositiveFlux() const;
@@ -253,13 +253,13 @@ namespace galsim {
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         // Access the 1d interpolant functions for more efficient 2d interps:
-        double xval1d(double x) const { return _i1d->xval(x); }
-        double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
-        double uval1d(double u) const { return _i1d->uval(u); }
-        shared_ptr<Interpolant> get1d() const { return _i1d; }
+        double xval1d(double x) const { return _i1d.xval(x); }
+        double xvalWrapped1d(double x, int N) const { return _i1d.xvalWrapped(x,N); }
+        double uval1d(double u) const { return _i1d.uval(u); }
+        const Interpolant& get1d() const { return _i1d; }
 
     private:
-        shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
+        const Interpolant& _i1d;  // The 1d function used in both axes here.
     };
 
     /**

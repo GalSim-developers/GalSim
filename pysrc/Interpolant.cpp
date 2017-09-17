@@ -26,57 +26,46 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    template<typename T>
-    T *get_pointer(shared_ptr<T> p) { return p.get(); }
-
     struct PyInterpolant
     {
 
         static void wrap()
         {
-            bp::class_<Interpolant, shared_ptr<Interpolant>, boost::noncopyable>(
+            bp::class_<Interpolant, boost::noncopyable>(
                 "Interpolant", bp::no_init);
 
-            bp::class_<Delta, shared_ptr<Delta>, bp::bases<Interpolant> >("Delta", bp::no_init)
+            bp::class_<Delta, bp::bases<Interpolant> >("Delta", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
 
-            bp::class_<Nearest, shared_ptr<Nearest>, bp::bases<Interpolant> >(
+            bp::class_<Nearest, bp::bases<Interpolant> >(
                 "Nearest", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
 
-            bp::class_<SincInterpolant, shared_ptr<SincInterpolant>, bp::bases<Interpolant> >(
+            bp::class_<SincInterpolant, bp::bases<Interpolant> >(
                 "SincInterpolant", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
 
-            bp::class_<Lanczos, shared_ptr<Lanczos>, bp::bases<Interpolant> >(
+            bp::class_<Lanczos, bp::bases<Interpolant> >(
                 "Lanczos", bp::no_init)
                 .def(bp::init<int,bool,double,GSParams>(
                     (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4,
                      bp::arg("gsparams")=GSParams())));
 
-            bp::class_<Linear, shared_ptr<Linear>, bp::bases<Interpolant> >("Linear", bp::no_init)
+            bp::class_<Linear, bp::bases<Interpolant> >("Linear", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
 
-            bp::class_<Cubic, shared_ptr<Cubic>, bp::bases<Interpolant> >("Cubic", bp::no_init)
+            bp::class_<Cubic, bp::bases<Interpolant> >("Cubic", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
 
-            bp::class_<Quintic, shared_ptr<Quintic>, bp::bases<Interpolant> >(
+            bp::class_<Quintic, bp::bases<Interpolant> >(
                 "Quintic", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,
                                                 bp::arg("gsparams")=GSParams())));
-
-            bp::implicitly_convertible<shared_ptr<Delta>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<Nearest>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<SincInterpolant>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<Lanczos>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<Linear>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<Cubic>,shared_ptr<Interpolant> >();
-            bp::implicitly_convertible<shared_ptr<Quintic>,shared_ptr<Interpolant> >();
         }
 
     };

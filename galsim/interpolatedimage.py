@@ -851,6 +851,7 @@ class InterpolatedKImage(GSObject):
         # it will be through the normal pickling rules, rather than the repr.
         d = self.__dict__.copy()
         del d['_sbp']
+        del d['_sbiki']
         return d
 
     def __setstate__(self, d):
@@ -874,28 +875,3 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     return ret
 
 
-# A hack to get the image part of SBInterpolatedImage persisted properly when pickling.
-# Since SBInterpolatedImage (and KImage) needs a C++ image, if we just make it and pass it
-# in, the array will go out of scope, which means the data in the SBInterpolatedImage may be
-# deleted. The trick is to pull off the image part and make a real image, which we attach to the
-# SBInterpolatedImage as an attribute.  So it will live as long as the SBInterpolatedImage object.
-def new_sbi(cls):
-    return cls.__new__(cls)
-def sbi_setstate(self, state):
-    import galsim
-    from numpy import array
-    cls, args = state.split('(',1)
-    args = args[:-1]  # remove final paren
-    im, args = args.split('.image,',1)  # Get the image part separately
-    im = eval(im)
-    args = eval(args)
-    self.__class__ = eval(cls)
-    self.__init__(im._image, *args)
-    self._full_image = im  # Save the original image so it doesn't go out of scope
-
-_galsim.SBInterpolatedImage.__reduce__ = lambda self: (
-        new_sbi, (self.__class__,), self.__getstate__())
-_galsim.SBInterpolatedKImage.__reduce__ = lambda self: (
-        new_sbi, (self.__class__,), self.__getstate__())
-_galsim.SBInterpolatedImage.__setstate__ = sbi_setstate
-_galsim.SBInterpolatedKImage.__setstate__ = sbi_setstate

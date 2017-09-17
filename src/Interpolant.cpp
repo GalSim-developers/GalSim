@@ -92,12 +92,12 @@ namespace galsim {
 
     double InterpolantXY::getPositiveFlux() const
     {
-        return _i1d->getPositiveFlux()*_i1d->getPositiveFlux()
-            + _i1d->getNegativeFlux()*_i1d->getNegativeFlux();
+        return _i1d.getPositiveFlux()*_i1d.getPositiveFlux()
+            + _i1d.getNegativeFlux()*_i1d.getNegativeFlux();
     }
 
     double InterpolantXY::getNegativeFlux() const
-    { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
+    { return 2.*_i1d.getPositiveFlux()*_i1d.getNegativeFlux(); }
 
     void InterpolantXY::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
@@ -105,7 +105,7 @@ namespace galsim {
         dbg<<"Target flux = 1.\n";
         // Going to assume here that there is not a need to randomize any Interpolant
         // The 1d interpolants will populate x and y values separately.
-        _i1d->shoot(photons, ud);
+        _i1d.shoot(photons, ud);
         dbg<<"InterpolantXY Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 

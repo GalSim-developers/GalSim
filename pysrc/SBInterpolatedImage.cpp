@@ -33,7 +33,7 @@ namespace galsim {
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
-                     shared_ptr<Interpolant>, shared_ptr<Interpolant>,
+                     const Interpolant&, const Interpolant&,
                      double, double, double, GSParams>(
                          (bp::arg("image"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
@@ -54,11 +54,6 @@ namespace galsim {
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
                      bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK, bp::arg("max_maxk")=0.)
-                .def("getImage", &SBInterpolatedImage::getImage)
-                .def("getPaddedImage", &SBInterpolatedImage::getPaddedImage)
-                .def("getXInterp", &SBInterpolatedImage::getXInterp)
-                .def("getKInterp", &SBInterpolatedImage::getKInterp)
-                .def("getPadFactor", &SBInterpolatedImage::getPadFactor)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);
@@ -74,17 +69,8 @@ namespace galsim {
                 "SBInterpolatedKImage", bp::init<const SBInterpolatedKImage &>()
             );
             pySBInterpolatedKImage
-                .def(bp::init<const BaseImage<double> &,
-                              double, double, shared_ptr<Interpolant>, GSParams>(
-                                  (bp::arg("data"),
-                                   bp::arg("stepk"),
-                                   bp::arg("maxk"),
-                                   bp::arg("kInterp"),
-                                   bp::arg("gsparams")=GSParams())))
-                .def("getKInterp", &SBInterpolatedKImage::getKInterp)
-                .def("_getKData", &SBInterpolatedKImage::getKData)
                 .def(bp::init<const BaseImage<std::complex<double> > &,
-                              double, shared_ptr<Interpolant>, GSParams>(
+                              double, const Interpolant&, GSParams>(
                                   (bp::arg("kimage"),
                                    bp::arg("stepk"),
                                    bp::arg("kInterp"),

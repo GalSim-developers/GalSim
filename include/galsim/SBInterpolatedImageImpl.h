@@ -33,8 +33,8 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
-            shared_ptr<Interpolant> xInterp,
-            shared_ptr<Interpolant> kInterp,
+            const Interpolant& xInterp,
+            const Interpolant& kInterp,
             double pad_factor, double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
@@ -107,8 +107,8 @@ namespace galsim {
         //////////////////////////////
         // Additional subclass methods
 
-        shared_ptr<Interpolant> getXInterp() const;
-        shared_ptr<Interpolant> getKInterp() const;
+        const Interpolant& getXInterp() const;
+        const Interpolant& getKInterp() const;
         double getPadFactor() const { return _pad_factor; }
         ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
@@ -126,8 +126,8 @@ namespace galsim {
         double _xcentroid;
         double _ycentroid;
 
-        shared_ptr<InterpolantXY> _xInterp; ///< Interpolant used in real space.
-        shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
+        InterpolantXY _xInterp; ///< Interpolant used in real space.
+        InterpolantXY _kInterp; ///< Interpolant used in k space.
         shared_ptr<XTable> _xtab; ///< Final padded real-space image.
         mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         const double _pad_factor;
@@ -207,12 +207,12 @@ namespace galsim {
         template <typename T>
         SBInterpolatedKImageImpl(
             const BaseImage<T>& kimage, double stepk,
-            shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
+            const Interpolant& kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data, double stepk, double maxk,
-            shared_ptr<Interpolant> kInterp, const GSParams& gsparams);
+            const Interpolant& kInterp, const GSParams& gsparams);
 
         ~SBInterpolatedKImageImpl();
 
@@ -223,7 +223,7 @@ namespace galsim {
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
 
-        shared_ptr<Interpolant> getKInterp() const;
+        const Interpolant& getKInterp() const;
 
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
@@ -255,7 +255,7 @@ namespace galsim {
         mutable double _xcentroid;
         mutable double _ycentroid;
 
-        shared_ptr<InterpolantXY> _kInterp; ///< Interpolant used in k space.
+        InterpolantXY _kInterp; ///< Interpolant used in k space.
         shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
