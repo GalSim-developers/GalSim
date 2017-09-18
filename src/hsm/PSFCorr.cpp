@@ -161,6 +161,9 @@ namespace hsm {
         results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
         results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
         results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
+        results.moments_m_xx = m_xx;
+        results.moments_m_yy = m_yy;
+        results.moments_m_xy = m_xy;
         results.moments_status = 0;
 
         // and if that worked, try doing PSF correction
@@ -256,6 +259,9 @@ namespace hsm {
             results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
             results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
             results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
+            results.moments_m_xx = m_xx;
+            results.moments_m_yy = m_yy;
+            results.moments_m_xy = m_xy;
             results.moments_status = 0;
         }
         catch (char *err_msg) {
@@ -264,6 +270,9 @@ namespace hsm {
             results.moments_centroid.x = 0.0;
             results.moments_centroid.y = 0.0;
             results.moments_rho4 = -1.0;
+            results.moments_m_xx = 0.0;
+            results.moments_m_yy = 0.0;
+            results.moments_m_xy = 0.0;
             results.moments_n_iter = 0;
             dbg<<"Caught an error: "<<err_msg<<std::endl;
             throw HSMError(err_msg);
@@ -1849,6 +1858,6 @@ namespace hsm {
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
-        
+
 }
 }
