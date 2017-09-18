@@ -152,6 +152,9 @@ class ShapeData(object):
             self.moments_amp = data.moments_amp
             self.moments_centroid = data.moments_centroid
             self.moments_rho4 = data.moments_rho4
+            self.moments_m_xx = data.moments_m_xx
+            self.moments_m_yy = data.moments_m_yy
+            self.moments_m_xy = data.moments_m_xy
             self.moments_n_iter = data.moments_n_iter
             self.correction_status = data.correction_status
             self.corrected_e1 = data.corrected_e1
@@ -177,6 +180,9 @@ class ShapeData(object):
             self.moments_amp = -1.0
             self.moments_centroid = _galsim.PositionD()
             self.moments_rho4 = -1.0
+            self.moments_m_xx = -1.0
+            self.moments_m_yy = -1.0
+            self.moments_m_xy = -1.0
             self.moments_n_iter = 0
             self.correction_status = -1
             self.corrected_e1 = -10.
@@ -198,6 +204,9 @@ class ShapeData(object):
         self.moments_amp = kwargs.pop('moments_amp', self.moments_amp)
         self.moments_centroid = kwargs.pop('moments_centroid', self.moments_centroid)
         self.moments_rho4 = kwargs.pop('moments_rho4', self.moments_rho4)
+        self.moments_m_xx = kwargs.pop('moments_m_xx', self.moments_m_xx)
+        self.moments_m_yy = kwargs.pop('moments_m_yy', self.moments_m_yy)
+        self.moments_m_xy = kwargs.pop('moments_m_xy', self.moments_m_xy)
         self.moments_n_iter = kwargs.pop('moments_n_iter', self.moments_n_iter)
         self.correction_status = kwargs.pop('correction_status', self.correction_status)
         self.corrected_e1 = kwargs.pop('corrected_e1', self.corrected_e1)
@@ -226,6 +235,9 @@ class ShapeData(object):
         if self.moments_centroid != galsim.PositionD():
             s += ', moments_centroid=%r'%self.moments_centroid
         if self.moments_rho4 != -1: s += ', moments_rho4=%r'%self.moments_rho4
+        if self.moments_m_xx != -1: s += ', moments_m_xx=%r'%self.moments_m_xx
+        if self.moments_m_yy != -1: s += ', moments_m_yy=%r'%self.moments_m_yy
+        if self.moments_m_xy != -1: s += ', moments_m_xy=%r'%self.moments_m_xy
         if self.moments_n_iter != 0: s += ', moments_n_iter=%r'%self.moments_n_iter
         if self.correction_status != -1: s += ', correction_status=%r'%self.correction_status
         if self.corrected_e1 != -10.: s += ', corrected_e1=%r'%self.corrected_e1
@@ -251,6 +263,7 @@ class ShapeData(object):
 _galsim.CppShapeData.__getinitargs__ = lambda self: (
         self.image_bounds, self.moments_status, self.observed_e1, self.observed_e2,
         self.moments_sigma, self.moments_amp, self.moments_centroid, self.moments_rho4,
+        self.moments_m_xx, self.moments_m_yy, self.moments_m_xy,
         self.moments_n_iter, self.correction_status, self.corrected_e1, self.corrected_e2,
         self.corrected_g1, self.corrected_g2, self.meas_type, self.corrected_shape_err,
         self.correction_method, self.resolution_factor, self.psf_sigma,

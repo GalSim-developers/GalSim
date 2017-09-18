@@ -311,6 +311,15 @@ namespace hsm {
         /// @brief The weighted radial fourth moment of the image
         double moments_rho4;
 
+        /// @brief The second moment M_xx of the image
+        double moments_m_xx;
+
+        /// @brief The second moment M_yy of the image
+        double moments_m_yy;
+
+        /// @brief The second moment M_xy of the image
+        double moments_m_xy;
+
         /// @brief Number of iterations needed to get adaptive moments; 0 if not measured
         int moments_n_iter;
 
@@ -367,7 +376,8 @@ namespace hsm {
         // cf. http://stackoverflow.com/questions/4697859/mac-os-x-and-static-boost-libs-stdstring-fail
         CppShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_e1(0.), observed_e2(0.), moments_sigma(-1.), moments_amp(-1.),
-            moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
+            moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.),
+            moments_m_xx(0.), moments_m_yy(0.), moments_m_xy(0.), moments_n_iter(0),
             correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.),
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.),

@@ -19,7 +19,7 @@
 
 #include "galsim/IgnoreWarnings.h"
 
-#define BOOST_PYTHON_MAX_ARITY 22  // We have a function with 21 params here...
+#define BOOST_PYTHON_MAX_ARITY 25  // We have a function with 21 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
 
 #define BOOST_NO_CXX11_SMART_PTR
@@ -168,7 +168,11 @@ struct PyShapeData {
         float observed_e1, float observed_e2,
         float moments_sigma, float moments_amp,
         const galsim::Position<double>& moments_centroid,
-        double moments_rho4, int moments_n_iter,
+        double moments_rho4,
+        double moments_m_xx,
+        double moments_m_yy,
+        double moments_m_xy,
+        int moments_n_iter,
         int correction_status, float corrected_e1, float corrected_e2,
         float corrected_g1, float corrected_g2, std::string meas_type,
         float corrected_shape_err, std::string correction_method,
@@ -184,6 +188,9 @@ struct PyShapeData {
         data->moments_amp = moments_amp;
         data->moments_centroid = moments_centroid;
         data->moments_rho4 = moments_rho4;
+        data->moments_m_xx = moments_m_xx;
+        data->moments_m_yy = moments_m_yy;
+        data->moments_m_xy = moments_m_xy;
         data->moments_n_iter = moments_n_iter;
         data->correction_status = correction_status;
         data->corrected_e1 = corrected_e1;
@@ -239,7 +246,11 @@ struct PyShapeData {
                          bp::arg("observed_e1"), bp::arg("observed_e2"),
                          bp::arg("moments_sigma"), bp::arg("moments_amp"),
                          bp::arg("moments_centroid"),
-                         bp::arg("moments_rho4"), bp::arg("moments_n_iter"),
+                         bp::arg("moments_rho4"),
+                         bp::arg("moments_m_xx"),
+                         bp::arg("moments_m_yy"),
+                         bp::arg("moments_m_xy"),
+                         bp::arg("moments_n_iter"),
                          bp::arg("correction_status"),
                          bp::arg("corrected_e1"), bp::arg("corrected_e2"),
                          bp::arg("corrected_g1"), bp::arg("corrected_g2"), bp::arg("meas_type"),
@@ -257,6 +268,9 @@ struct PyShapeData {
             .def_readonly("moments_amp", &CppShapeData::moments_amp)
             .def_readonly("moments_centroid", &CppShapeData::moments_centroid)
             .def_readonly("moments_rho4", &CppShapeData::moments_rho4)
+            .def_readonly("moments_m_xx", &CppShapeData::moments_m_xx)
+            .def_readonly("moments_m_yy", &CppShapeData::moments_m_yy)
+            .def_readonly("moments_m_xy", &CppShapeData::moments_m_xy)
             .def_readonly("moments_n_iter", &CppShapeData::moments_n_iter)
             .def_readonly("correction_status", &CppShapeData::correction_status)
             .def_readonly("corrected_e1", &CppShapeData::corrected_e1)
