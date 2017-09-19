@@ -42,31 +42,6 @@ API Changes
   If you want a view, you should use the more intuitive image.view(). (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
-- Changed the Angle.rad method to a property, so now you should write
-  angle.rad rather than angle.rad() to get the value in radians.  Note: the
-  return value is a subclass of float, so angle.rad() still works but gives a
-  deprecation warning.  But it should work in all ways as a float. (#904)
-- Deprecated the functions HMS_Angle and DMS_Angle. These are now classmethods
-  of the Angle class: Angle.from_hms and Angle.from_dms, respectively. (#904)
-- Deprecated the function ShapeletSize and FitShapelet. This functionality
-  is not in classmethods of the Shapelet class: `Shapelet.size(order)` and
-  `Shapelet.fit(image)`. Also, direct use of LVector is deprecated, and it
-  will be removed in version 2.0. (#904)
-- The use of the Interpolant base class as a factory function is now deprecated.
-  Instead, use `Interpolant.from_name(name)`. (#904)
-- Use of the `SBProfile` attribute of GSObject is deprecated. The attribute
-  `_sbp` takes its place, but that should be considered an implementation
-  detail that users should not need to access, not part of the public API.
-  If you think you have a use case that is not covered by the public API
-  (either for functionality of efficiency), please open an issue. (#904)
-- Deprecated making a GSObject directly rather than making one of the
-  subclasses. Again, this should not be necessary, but if you have a use
-  case that you think requires this, please open an issue. (#904)
-- Use of the `image` attribute of Image is deprecated, being replaced by
-  `_image`, which is similarly now officially an implementation detail that
-  users should not need to access. (#904)
-- PhotonArray.addTo(image) now takes a regular galsim.Image for its argument,
-  not a C++-layer image object. (#904)
 
 
 Dependency Changes
@@ -108,6 +83,31 @@ Deprecated Features
 - Deprecated ability to create multiple PhaseScreenPSFs with single call
   to makePSF, since it is now just as efficient to call makePSF multiple
   times. (#824)
+- Changed the Angle.rad method to a property, so now you should write
+  angle.rad rather than angle.rad() to get the value in radians.  Note: the
+  return value is a subclass of float, so angle.rad() still works but gives a
+  deprecation warning.  But it should work in all ways as a float. (#904)
+- Deprecated the functions HMS_Angle and DMS_Angle. These are now classmethods
+  of the Angle class: Angle.from_hms and Angle.from_dms, respectively. (#904)
+- Deprecated the function ShapeletSize and FitShapelet. This functionality
+  is not in classmethods of the Shapelet class: `Shapelet.size(order)` and
+  `Shapelet.fit(image)`. Also, direct use of LVector is deprecated, and it
+  will be removed in version 2.0. (#904)
+- The use of the Interpolant base class as a factory function is now deprecated.
+  Instead, use `Interpolant.from_name(name)`. (#904)
+- Use of the `SBProfile` attribute of GSObject is deprecated. The attribute
+  `_sbp` takes its place, but that should be considered an implementation
+  detail that users should not need to access, not part of the public API.
+  If you think you have a use case that is not covered by the public API
+  (either for functionality of efficiency), please open an issue. (#904)
+- Deprecated making a GSObject directly rather than making one of the
+  subclasses. Again, this should not be necessary, but if you have a use
+  case that you think requires this, please open an issue. (#904)
+- Use of the `image` attribute of Image is deprecated, being replaced by
+  `_image`, which is similarly now officially an implementation detail that
+  users should not need to access. (#904)
+- PhotonArray.addTo(image) now takes a regular galsim.Image for its argument,
+  not a C++-layer image object. (#904)
 
 
 New Features
