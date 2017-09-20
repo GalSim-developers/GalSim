@@ -1012,7 +1012,7 @@ def test_shoot():
 
     # Test that shooting with 0.0 flux makes a zero-photons image.
     image4 = (obj*0).drawImage(method='phot')
-    np.testing.assert_equal(image4.array, image4.array*0)
+    np.testing.assert_equal(image4.array, 0)
 
 
 @timer
