@@ -318,11 +318,22 @@ class NFWHalo(object):
                             [default: galsim.arcsec]
         @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
-        @returns the reduced shears as a tuple `(g1,g2)`, which match the format of the input `pos`.
+        @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
+        return self._getShear(pos_x, pos_y, z_s, reduced)
 
+    def _getShear(self, pos_x, pos_y, z_s, reduced=True):
+        """Equivalent to getShear(pos.x, pos.y, z_s, galsim.arcsec, reduced)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param z_s          Source redshift(s).
+        @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
+
+        @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
+        """
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
@@ -339,24 +350,12 @@ class NFWHalo(object):
         dx = pos_x - self.halo_pos.x
         dy = pos_y - self.halo_pos.y
         drsq = dx*dx+dy*dy
-        drsq[drsq==0.] = 1. # Avoid division by 0
-        cos2phi = (dx*dx-dy*dy)/drsq
-        sin2phi = 2*dx*dy/drsq
+        # Avoid division by 0
+        cos2phi = np.divide(dx*dx-dy*dy, drsq, where=(drsq != 0.))
+        sin2phi = np.divide(2*dx*dy, drsq, where=(drsq != 0.))
         g1 = -g*cos2phi
         g2 = -g*sin2phi
-
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0]
-        if isinstance(pos[0], np.ndarray):
-            return g1, g2
-        elif len(g) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0]
-        else:
-            return g1.tolist(), g2.tolist()
+        return g1, g2
 
 
     def getConvergence(self, pos, z_s, units=galsim.arcsec):
@@ -376,31 +375,30 @@ class NFWHalo(object):
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the convergence, `kappa`, which matches the format of the input `pos`.
+        @returns the convergence as either a scalar or a numpy array
         """
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getKappa')
+        return self._getConvergence(pos_x, pos_y, z_s)
 
+    def _getConvergence(self, pos_x, pos_y, z_s):
+        """Equivalent to getConvergence(pos.x, pos.y, z_s, galsim.arcsec)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param z_s          Source redshift(s).
+
+        @returns the convergence as either a scalar or a numpy array
+        """
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
         if isinstance(z_s, np.ndarray) == False:
             ks = ks*np.ones_like(r)
         kappa = self.__kappa(r, ks)
+        return kappa
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return kappa[0]
-        elif isinstance(pos[0], np.ndarray):
-            return kappa
-        elif len(kappa) == 1 and not isinstance(pos[0], list):
-            return kappa[0]
-        else:
-            return kappa.tolist()
 
     def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
@@ -419,11 +417,21 @@ class NFWHalo(object):
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the magnification `mu`, which matches the format of the input `pos`.
+        @returns the magnification as either a scalar or a numpy array
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
+        return self._getMagnification(pos_x, pos_y, z_s)
 
+    def _getMagnification(self, pos_x, pos_y, z_s):
+        """Equivalent to getMagnification(pos.x, pos.y, z_s, galsim.arcsec)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param z_s          Source redshift(s).
+
+        @returns the magnification as either a scalar or a numpy array
+        """
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
@@ -433,19 +441,8 @@ class NFWHalo(object):
         kappa = self.__kappa(r, ks)
 
         mu = 1. / ( (1.-kappa)**2 - g**2 )
+        return mu
 
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return mu
-        elif len(mu) == 1 and not isinstance(pos[0],list):
-            return mu[0]
-        else:
-            return mu.tolist()
 
     def getLensing(self, pos, z_s, units=galsim.arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
@@ -464,12 +461,23 @@ class NFWHalo(object):
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the reduced shears and magnifications as a tuple `(g1,g2,mu)`, which match the
-                 format of the input `pos`.
+        @returns the reduced shears and magnifications as a tuple (g1,g2,mu) (each being
+                 either a scalar or a numpy array)
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
+        return self._getLensing(pos_x, pos_y, z_s)
 
+    def _getLensing(self, pos_x, pos_y, z_s):
+        """Equivalent to getLensing(pos.x, pos.y, z_s, galsim.arcsec)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param z_s          Source redshift(s).
+
+        @returns the reduced shears and magnifications as a tuple (g1,g2,mu) (each being
+                 either a scalar or a numpy array)
+        """
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
@@ -484,21 +492,9 @@ class NFWHalo(object):
         dx = pos_x - self.halo_pos.x
         dy = pos_y - self.halo_pos.y
         drsq = dx*dx+dy*dy
-        drsq[drsq==0.] = 1. # Avoid division by 0
-        cos2phi = (dx*dx-dy*dy)/drsq
-        sin2phi = 2*dx*dy/drsq
+        # Avoid division by 0
+        cos2phi = np.divide(dx*dx-dy*dy, drsq, where=(drsq != 0.))
+        sin2phi = np.divide(2*dx*dy, drsq, where=(drsq != 0.))
         g1 = -g*cos2phi
         g2 = -g*sin2phi
-
-        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
-        # (e.g., if given a NumPy array, return one as well).  But don't attempt to index "pos"
-        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (TypeError).
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0], mu[0]
-        elif isinstance(pos[0], np.ndarray):
-            return g1, g2, mu
-        elif len(mu) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0], mu[0]
-        else:
-            return g1.tolist(), g2.tolist(), m.tolist()
+        return g1, g2, mu

@@ -36,6 +36,8 @@ API Changes
   parameters and return values. (#809b)
 - The return type of a LookupTable when given a list or tuple input is now a
   numpy array rather than a list or tuple. (#809e)
+- Similarly, the output of getShear, getConvergence and similar methods of
+  NFWHalo and PowerSpectrum are always either scalars or numpy arrays. (#809e)
 
 
 Bug Fixes

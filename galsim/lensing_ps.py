@@ -37,39 +37,12 @@ def theoryToObserved(gamma1, gamma2, kappa):
     @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
     @param kappa        The convergence.
 
-    @returns the reduced shear and magnification as a tuple `(g1, g2, mu)` where each item has the
-             same form as the input gamma1, gamma2, and kappa.
+    @returns the reduced shear and magnification as a tuple (g1, g2, mu)
     """
-    # check nature of inputs to make sure they are appropriate
-    if type(gamma1) != type(gamma2):
-        raise ValueError("Input shear components must be of the same type!")
-    if type(kappa) != type(gamma1):
-        raise ValueError("Input shear and convergence must be of the same type!")
-    gamma1_tmp = np.array(gamma1)
-    gamma2_tmp = np.array(gamma2)
-    kappa_tmp = np.array(kappa)
-    if gamma1_tmp.shape != gamma2_tmp.shape:
-        raise ValueError("Shear arrays passed to theoryToObserved() do not have the same shape!")
-    if kappa_tmp.shape != gamma1_tmp.shape:
-        raise ValueError(
-           "Convergence and shear arrays passed to theoryToObserved() do not have the same shape!")
-
-    # Now convert to reduced shear and magnification
-    g1 = gamma1_tmp/(1.-kappa_tmp)
-    g2 = gamma2_tmp/(1.-kappa_tmp)
-    mu = 1./((1.-kappa_tmp)**2 - (gamma1_tmp**2 + gamma2_tmp**2))
-
-    # Put back into same format as inputs
-    if isinstance(gamma1, float):
-        return float(g1), float(g2), float(mu)
-    elif isinstance(gamma1, list):
-        return list(g1), list(g2), list(mu)
-    elif isinstance(gamma1, tuple):
-        return tuple(g1), tuple(g2), tuple(mu)
-    elif isinstance(gamma1, np.ndarray):
-        return g1, g2, mu
-    else:
-        raise ValueError("Unknown input type for shears, convergences: %s",type(gamma1))
+    g1 = gamma1/(1.-kappa)
+    g2 = gamma2/(1.-kappa)
+    mu = 1./((1.-kappa)**2 - (gamma1**2 + gamma2**2))
+    return g1, g2, mu
 
 class PowerSpectrum(object):
     """Class to represent a lensing shear field according to some power spectrum P(k).
@@ -1058,7 +1031,22 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
-        kinterp = galsim.Quintic()
+        return self._getShear(pos_x, pos_y, xinterp, reduced, periodic)
+
+    def _getShear(self, pos_x, pos_y, interpolant, reduced=True, periodic=False):
+        """Equivalent to getShear(pos.x, pos.y, interpolant, reduced, periodic)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            (Must be provided as a galsim.Interpolant instance.)
+        @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
+        @param periodic     Whether the interpolation should treat the positions as being defined
+                            with respect to a periodic grid. [default: False]
+
+        @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
+        """
+        kinterp = galsim.Quintic()  # Irrelevant, but required.
 
         im_g1 = self.im_g1
         im_g2 = self.im_g2
@@ -1083,49 +1071,43 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_g1 = galsim._InterpolatedImage(im_g1, xinterp, kinterp) * self.grid_spacing**2
-        ii_g2 = galsim._InterpolatedImage(im_g2, xinterp, kinterp) * self.grid_spacing**2
-
-        # Calculate some numbers that are useful to calculate before the loop over positions, but
-        # only if we are doing a periodic treatment of the box.
-        if periodic:
-            dx = self.bounds.xmax-self.bounds.xmin
-            dy = self.bounds.ymax-self.bounds.ymin
+        ii_g1 = galsim._InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
+        ii_g2 = galsim._InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
-        g1,g2 = [], []
-        for x,y in zip(pos_x, pos_y):
-            # Check that the position is in the bounds of the interpolated image
-            xy = galsim.PositionD(x,y)
-            if not self.bounds.includes(xy):
-                if not periodic:
-                    # We're not treating this as a periodic box, so issue a warning and set the
-                    # shear to zero for positions that are outside the original grid.
-                    import warnings
-                    warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                        "of the gridded shear values: " + str(self.bounds) +
-                        ".  Returning a shear of (0,0) for this point.")
-                    g1.append(0.)
-                    g2.append(0.)
-                    continue
-                else:
-                    # Treat this as a periodic box.
-                    xy = galsim.PositionD(
-                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (y-self.bounds.ymin) % dy + self.bounds.ymin
-                        )
-            g1.append(ii_g1._xValue(xy-self.center))
-            g2.append(ii_g2._xValue(xy-self.center))
-
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0]
-        elif isinstance(pos[0], np.ndarray):
+        try:
+            g1g2 = [ self._getSingleShear(x, y, ii_g1, ii_g2, periodic)
+                     for x,y in zip(pos_x, pos_y) ]
+            g1, g2 = zip(*g1g2)
             return np.array(g1), np.array(g2)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0]
-        else:
-            return g1, g2
+        except TypeError:
+            return self._getSingleShear(pos_x, pos_y, ii_g1, ii_g2, periodic)
+
+    def _getSingleShear(self, x, y, ii_g1, ii_g2, periodic):
+        """Helper function for _getShear"""
+        # Check that the position is in the bounds of the interpolated image
+        pos = galsim.PositionD(x,y)
+        if not self.bounds.includes(pos):
+            if not periodic:
+                # We're not treating this as a periodic box, so issue a warning and set the
+                # shear to zero for positions that are outside the original grid.
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
+                    "of the gridded shear values: " + str(self.bounds) +
+                    ".  Returning a shear of (0,0) for this point.")
+                return 0., 0.
+            else:
+                # Treat this as a periodic box.
+                dx = self.bounds.xmax-self.bounds.xmin
+                dy = self.bounds.ymax-self.bounds.ymin
+                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+
+        g1 = ii_g1._xValue(pos-self.center)
+        g2 = ii_g2._xValue(pos-self.center)
+        return g1, g2
+
 
     def getConvergence(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1166,7 +1148,7 @@ class PowerSpectrum(object):
                             Specifying an interpolant here does not change the one that is stored
                             as part of this PowerSpectrum instance. [default: None]
 
-        @returns the convergence, kappa.
+        @returns the convergence, kappa (either a scalar or a numpy array)
 
         If the input `pos` is given a single position, kappa is the convergence value.
         If the input `pos` is given a list of positions, kappa is a python list of values.
@@ -1184,7 +1166,21 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
-        kinterp = galsim.Quintic()
+        return self._getConvergence(pos_x, pos_y, xinterp, periodic)
+
+    def _getConvergence(self, pos_x, pos_y, interpolant, periodic=False):
+        """Equivalent to getConvergence(pos.x, pos.y, interpolant, periodic)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            (Must be provided as a galsim.Interpolant instance.)
+        @param periodic     Whether the interpolation should treat the positions as being defined
+                            with respect to a periodic grid. [default: False]
+
+        @returns the convergence, kappa (either a scalar or a numpy array)
+        """
+        kinterp = galsim.Quintic()  # Irrelevant, but required.
 
         im_kappa = self.im_kappa
 
@@ -1197,44 +1193,36 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_kappa = galsim._InterpolatedImage(im_kappa, xinterp, kinterp) * self.grid_spacing**2
-
-        # Calculate some numbers that are useful to calculate before the loop over positions, but
-        # only if we are doing a periodic treatment of the box.
-        if periodic:
-            dx = self.bounds.xmax-self.bounds.xmin
-            dy = self.bounds.ymax-self.bounds.ymin
+        ii_kappa = galsim._InterpolatedImage(im_kappa, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
-        kappa = []
-        for x,y in zip(pos_x, pos_y):
-            xy = galsim.PositionD(x,y)
-            # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(xy):
-                if not periodic:
-                    import warnings
-                    warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                        "of the gridded convergence values: " + str(self.bounds) +
-                        ".  Returning a convergence of 0 for this point.")
-                    kappa.append(0.)
-                    continue
-                else:
-                    # Treat this as a periodic box.
-                    xy = galsim.PositionD(
-                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (y-self.bounds.ymin) % dy + self.bounds.ymin
-                        )
-            kappa.append(ii_kappa._xValue(xy-self.center))
+        try:
+            k = [ self._getSingleConvergence(x, y, ii_kappa, periodic)
+                  for x,y in zip(pos_x, pos_y) ]
+            return np.array(k)
+        except TypeError:
+            return self._getSingleConvergence(pos_x, pos_y, ii_kappa, periodic)
 
-        if isinstance(pos, galsim.PositionD):
-            return kappa[0]
-        elif isinstance(pos[0], np.ndarray):
-            return np.array(kappa)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return kappa[0]
-        else:
-            return kappa
+    def _getSingleConvergence(self, x, y, ii_kappa, periodic):
+        """Helper function for _getConvergence"""
+        pos = galsim.PositionD(x,y)
+        # Check that the position is in the bounds of the interpolated image
+        if not self.bounds.includes(pos):
+            if not periodic:
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
+                    "of the gridded convergence values: " + str(self.bounds) +
+                    ".  Returning a convergence of 0 for this point.")
+                return 0.
+            else:
+                # Treat this as a periodic box.
+                dx = self.bounds.xmax-self.bounds.xmin
+                dy = self.bounds.ymax-self.bounds.ymin
+                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+
+        return ii_kappa._xValue(pos-self.center)
 
     def getMagnification(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1276,7 +1264,7 @@ class PowerSpectrum(object):
                                 used.  Specifying an interpolant here does not change the one that
                                 is stored as part of this PowerSpectrum instance. [default: None]
 
-        @returns the magnification, mu.
+        @returns the magnification, mu (either a scalar or a numpy array)
 
         If the input `pos` is given a single position, mu is the magnification value.
         If the input `pos` is given a list of positions, mu is a python list of values.
@@ -1294,7 +1282,21 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
-        kinterp = galsim.Quintic()
+        return self._getMagnification(pos_x, pos_y, xinterp, periodic)
+
+    def _getMagnification(self, pos_x, pos_y, interpolant, periodic=False):
+        """Equivalent to getMagnification(pos.x, pos.y, interpolant, periodic)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            (Must be provided as a galsim.Interpolant instance.)
+        @param periodic     Whether the interpolation should treat the positions as being defined
+                            with respect to a periodic grid. [default: False]
+
+        @returns the magnification, mu (either a scalar or a numpy array)
+        """
+        kinterp = galsim.Quintic()  # Irrelevant, but required.
 
         # Calculate the magnification based on the convergence and shear
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -1311,44 +1313,36 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_mu = galsim._InterpolatedImage(im_mu, xinterp, kinterp) * self.grid_spacing**2
-
-        # Calculate some numbers that are useful to calculate before the loop over positions, but
-        # only if we are doing a periodic treatment of the box.
-        if periodic:
-            dx = self.bounds.xmax-self.bounds.xmin
-            dy = self.bounds.ymax-self.bounds.ymin
+        ii_mu = galsim._InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
-        mu = []
-        for x,y in zip(pos_x, pos_y):
-            xy = galsim.PositionD(x,y)
-            # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(xy):
-                if not periodic:
-                    import warnings
-                    warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                        "of the gridded convergence values: " + str(self.bounds) +
-                        ".  Returning a magnification of 1 for this point.")
-                    mu.append(1.)
-                    continue
-                else:
-                    # Treat this as a periodic box.
-                    xy = galsim.PositionD(
-                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (y-self.bounds.ymin) % dy + self.bounds.ymin
-                        )
-            mu.append(ii_mu._xValue(xy-self.center) + 1.)
-
-        if isinstance(pos, galsim.PositionD):
-            return mu[0]
-        elif isinstance(pos[0], np.ndarray):
+        try:
+            mu = [ self._getSingleMagnification(x, y, ii_mu, periodic)
+                   for x,y in zip(pos_x, pos_y) ]
             return np.array(mu)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return mu[0]
-        else:
-            return mu
+        except TypeError:
+            return self._getSingleMagnification(pos_x, pos_y, ii_mu, periodic)
+
+    def _getSingleMagnification(self, x, y, ii_mu, periodic):
+        """Helper function for _getMagnification"""
+        pos = galsim.PositionD(x,y)
+        # Check that the position is in the bounds of the interpolated image
+        if not self.bounds.includes(pos):
+            if not periodic:
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
+                    "of the gridded convergence values: " + str(self.bounds) +
+                    ".  Returning a magnification of 1 for this point.")
+                return 1.
+            else:
+                # Treat this as a periodic box.
+                dx = self.bounds.xmax-self.bounds.xmin
+                dy = self.bounds.ymax-self.bounds.ymin
+                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+
+        return ii_mu._xValue(pos-self.center) + 1.
 
     def getLensing(self, pos, units=galsim.arcsec, periodic=False, interpolant=None):
         """
@@ -1391,14 +1385,9 @@ class PowerSpectrum(object):
                                 used.  Specifying an interpolant here does not change the one that
                                 is stored as part of this PowerSpectrum instance. [default: None]
 
-        @returns shear and magnification as a tuple (g1,g2,mu).
-
-        If the input `pos` is given a single position, the return values are the shear and
-        magnification values at that position.
-        If the input `pos` is given a list of positions, they are python lists of values.
-        If the input `pos` is given a NumPy array of positions, they are NumPy arrays.
+        @returns the reduced shear and magnification as a tuple (g1,g2,mu) (either scalars or
+                 numpy arrays)
         """
-
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getLensing")
 
@@ -1410,7 +1399,22 @@ class PowerSpectrum(object):
             xinterp = galsim.utilities.convert_interpolant(interpolant)
         else:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
-        kinterp = galsim.Quintic()
+        return self._getLensing(pos_x, pos_y, xinterp, periodic)
+
+    def _getLensing(self, pos_x, pos_y, interpolant, periodic=False):
+        """Equivalent to getLensing(pos.x, pos.y, interpolant, periodic)
+
+        @param pos_x        x position in arcsec (either a scalar or a numpy array)
+        @param pos_y        y position in arcsec (either a scalar or a numpy array)
+        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
+                            (Must be provided as a galsim.Interpolant instance.)
+        @param periodic     Whether the interpolation should treat the positions as being defined
+                            with respect to a periodic grid. [default: False]
+
+        @returns the reduced shear and magnification as a tuple (g1,g2,mu) (either scalars or
+                 numpy arrays)
+        """
+        kinterp = galsim.Quintic()  # Irrelevant, but required.
 
         # Calculate the magnification based on the convergence and shear
         g1, g2, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -1430,50 +1434,42 @@ class PowerSpectrum(object):
         # However, if we are doing wrapped interpolation then we will want to manually stick the
         # wrapped grid bits around the edges, because otherwise the interpolant will treat
         # everything off the edges as zero.
-        ii_g1 = galsim._InterpolatedImage(im_g1, xinterp, kinterp) * self.grid_spacing**2
-        ii_g2 = galsim._InterpolatedImage(im_g2, xinterp, kinterp) * self.grid_spacing**2
-        ii_mu = galsim._InterpolatedImage(im_mu, xinterp, kinterp) * self.grid_spacing**2
-
-        # Calculate some numbers that are useful to calculate before the loop over positions, but
-        # only if we are doing a periodic treatment of the box.
-        if periodic:
-            dx = self.bounds.xmax-self.bounds.xmin
-            dy = self.bounds.ymax-self.bounds.ymin
+        ii_g1 = galsim._InterpolatedImage(im_g1, interpolant, kinterp) * self.grid_spacing**2
+        ii_g2 = galsim._InterpolatedImage(im_g2, interpolant, kinterp) * self.grid_spacing**2
+        ii_mu = galsim._InterpolatedImage(im_mu, interpolant, kinterp) * self.grid_spacing**2
 
         # interpolate if necessary
-        g1, g2, mu = [], [], []
-        for x,y in zip(pos_x, pos_y):
-            xy = galsim.PositionD(x,y)
-            # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(xy):
-                if not periodic:
-                    import warnings
-                    warnings.warn(
-                        "Warning: position (%f,%f) not within the bounds "%(x,y) +
-                        "of the gridded values: " + str(self.bounds) +
-                        ".  Returning 0 for lensing observables at this point.")
-                    g1.append(0.)
-                    g2.append(0.)
-                    mu.append(1.)
-                    continue
-                else:
-                    # Treat this as a periodic box.
-                    xy = galsim.PositionD(
-                        (x-self.bounds.xmin) % dx + self.bounds.xmin,
-                        (y-self.bounds.ymin) % dy + self.bounds.ymin
-                        )
-            g1.append(ii_g1._xValue(xy-self.center))
-            g2.append(ii_g2._xValue(xy-self.center))
-            mu.append(ii_mu._xValue(xy-self.center) + 1.)
-
-        if isinstance(pos, galsim.PositionD):
-            return g1[0], g2[0], mu[0]
-        elif isinstance(pos[0], np.ndarray):
+        try:
+            g1g2mu = [ self._getSingleLensing(x, y, ii_g1, ii_g2, ii_mu, periodic)
+                       for x,y in zip(pos_x, pos_y) ]
+            g1, g2, mu = zip(*g1g2mu)
             return np.array(g1), np.array(g2), np.array(mu)
-        elif len(pos_x) == 1 and not isinstance(pos[0],list):
-            return g1[0], g2[0], mu[0]
-        else:
-            return g1, g2, mu
+        except TypeError:
+            return self._getSingleLensing(pos_x, pos_y, ii_g1, ii_g2, ii_mu, periodic)
+
+    def _getSingleLensing(self, x, y, ii_g1, ii_g2, ii_mu, periodic):
+        """Helper function for _getLensing"""
+        pos = galsim.PositionD(x,y)
+        # Check that the position is in the bounds of the interpolated image
+        if not self.bounds.includes(pos):
+            if not periodic:
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(x,y) +
+                    "of the gridded values: " + str(self.bounds) +
+                    ".  Returning 0 for lensing observables at this point.")
+                return 0., 0., 1.
+            else:
+                # Treat this as a periodic box.
+                dx = self.bounds.xmax-self.bounds.xmin
+                dy = self.bounds.ymax-self.bounds.ymin
+                pos = galsim.PositionD((x-self.bounds.xmin) % dx + self.bounds.xmin,
+                                       (y-self.bounds.ymin) % dy + self.bounds.ymin)
+
+        g1 = ii_g1._xValue(pos-self.center)
+        g2 = ii_g2._xValue(pos-self.center)
+        mu = ii_mu._xValue(pos-self.center) + 1.
+        return g1, g2, mu
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.

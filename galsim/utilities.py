@@ -259,8 +259,7 @@ def _convertPositions(pos, units, func):
     """
     # Check for PositionD or PositionI:
     if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
-        pos = [ np.array([pos.x], dtype='float'),
-                np.array([pos.y], dtype='float') ]
+        pos = [ pos.x, pos.y ]
 
     # Check for list of PositionD or PositionI:
     # The only other options allow pos[0], so if this is invalid, an exception
@@ -276,8 +275,7 @@ def _convertPositions(pos, units, func):
     else:
         # Check for (x,y):
         try:
-            pos = [ np.array([float(pos[0])], dtype='float'),
-                    np.array([float(pos[1])], dtype='float') ]
+            pos = [ float(pos[0]), float(pos[1]) ]
         except TypeError:
             # Only other valid option is ( xlist , ylist )
             pos = [ np.array(pos[0], dtype='float'),
