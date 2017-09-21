@@ -18,11 +18,12 @@
  */
 
 #include <sys/time.h>
-#include "Random.h"
 #include <fcntl.h>
 #include <string>
 #include <vector>
 #include <sstream>
+#include <unistd.h>
+#include "Random.h"
 
 #include "galsim/IgnoreWarnings.h"
 
