@@ -92,8 +92,8 @@ class Bounds(object):
     information.
     """
     def __init__(self):
-        raise NotImplemented("Cannot instantiate the base class.  " +
-                             "Use either BoundsD or BoundsI.")
+        raise NotImplementedError("Cannot instantiate the base class.  " +
+                                  "Use either BoundsD or BoundsI.")
 
     def _parse_args(self, *args, **kwargs):
         if len(kwargs) == 0:

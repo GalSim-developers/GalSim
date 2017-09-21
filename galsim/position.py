@@ -71,8 +71,8 @@ class Position(object):
     a PositionI by a float or add a PositionI to a PositionD.
     """
     def __init__(self):
-        raise NotImplemented("Cannot instantiate the base class.  " + 
-                             "Use either PositionD or PositionI.")
+        raise NotImplementedError("Cannot instantiate the base class.  " +
+                                  "Use either PositionD or PositionI.")
 
     def _parse_args(self, *args, **kwargs):
         if len(kwargs) == 0:
@@ -88,8 +88,8 @@ class Position(object):
                     try:
                         self.x, self.y = args[0]
                     except (TypeError, ValueError):
-                        raise TypeError("Single argument to %s must be either a Position "+
-                                        "or a tuple."%self.__class__)
+                        raise TypeError(("Single argument to %s must be either a Position "+
+                                         "or a tuple.")%self.__class__)
             else:
                 raise TypeError("%s takes at most 2 arguments (%d given)"%(
                         self.__class__, len(args)))
@@ -115,13 +115,13 @@ class Position(object):
     def __div__(self, other):
         self._check_scalar(other, 'divide')
         return self.__class__(self.x / other, self.y / other)
- 
+
     def __truediv__(self, other):
         return self.__div__(other)
- 
+
     def __neg__(self):
         return self.__class__(-self.x, -self.y)
- 
+
     def __add__(self, other):
         if not isinstance(other,Position):
             raise ValueError("Can only add a Position to a %s"%self.__class__.name())
@@ -129,7 +129,7 @@ class Position(object):
             return self.__class__(self.x + other.x, self.y + other.y)
         else:
             return PositionD(self.x + other.x, self.y + other.y)
- 
+
     def __sub__(self, other):
         if not isinstance(other,Position):
             raise ValueError("Can only subtract a Position from a %s"%self.__class__.name())
@@ -174,7 +174,7 @@ class PositionD(Position):
             if other == float(other): return
         except TypeError:
             pass
-        raise ValueError("Can only %s a PositionD by flaot values"%op)
+        raise ValueError("Can only %s a PositionD by float values"%op)
 
 
 class PositionI(Position):
@@ -191,8 +191,10 @@ class PositionI(Position):
         self.x = int(self.x)
         self.y = int(self.y)
 
+    # Note: We don't ever use this.  None of our C++ calls actually take a PositionI currently,
+    # but this is available if we ever do need it.
     @property
-    def _p(self):
+    def _p(self): # pragma: no cover
         return _galsim.PositionI(self.x, self.y)
 
     def _check_scalar(self, other, op):

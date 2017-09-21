@@ -36,6 +36,114 @@ decimal = 6     # Last decimal place used for checking equality of float arrays,
 
 
 @timer
+def test_pos():
+    """Simple tests of Position class
+    """
+    pi1 = galsim.PositionI(11,23)
+    assert pi1.x == 11
+    assert pi1.y == 23
+    assert isinstance(pi1.x, int)
+    assert isinstance(pi1.y, int)
+
+    pi2 = galsim.PositionI((11,23))
+    pi3 = galsim.PositionI(x=11.0, y=23.0)
+    pi4 = galsim.PositionI(pi1)
+    pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
+    assert pi2 == pi1
+    assert pi3 == pi1
+    assert pi4 == pi1
+    assert pi5 == pi1
+    assert isinstance(pi3.x, int)
+    assert isinstance(pi3.y, int)
+    assert isinstance(pi5.x, int)
+    assert isinstance(pi5.y, int)
+
+    pd1 = galsim.PositionD(11.,23.)
+    assert pd1.x == 11.
+    assert pd1.y == 23.
+    assert isinstance(pd1.x, float)
+    assert isinstance(pd1.y, float)
+
+    pd2 = galsim.PositionD((11,23))
+    pd3 = galsim.PositionD(x=11.0, y=23.0)
+    pd4 = galsim.PositionD(pd1)
+    pd5 = galsim.PositionD(pi1)
+    assert pd2 == pd1
+    assert pd3 == pd1
+    assert pd4 == pd1
+    assert pd5 == pd1
+    assert isinstance(pd3.x, float)
+    assert isinstance(pd3.y, float)
+    assert isinstance(pd5.x, float)
+    assert isinstance(pd5.y, float)
+
+    try:
+        np.testing.assert_raises(TypeError, galsim.PositionI, 11, 23, 9)
+        np.testing.assert_raises(TypeError, galsim.PositionI, x=11, z=23)
+        np.testing.assert_raises(TypeError, galsim.PositionI, x=11)
+        np.testing.assert_raises(TypeError, galsim.PositionI, 11)
+        np.testing.assert_raises(ValueError, galsim.PositionI, 11, 23.5)
+
+        np.testing.assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
+        np.testing.assert_raises(TypeError, galsim.PositionD, x=11, z=23)
+        np.testing.assert_raises(TypeError, galsim.PositionD, x=11)
+        np.testing.assert_raises(TypeError, galsim.PositionD, 11)
+        np.testing.assert_raises(ValueError, galsim.PositionD, 11, "blue")
+    except ImportError:
+        pass
+
+    # Check arithmetic
+    for p1 in [pi1, pd1]:
+
+        p2 = p1 * 2
+        assert p2.x == p1.x * 2
+        assert p2.y == p1.y * 2
+
+        p3 = p2 / 2
+        assert p3 == p1
+
+        p4 = 2 * p1
+        assert p4 == p2
+
+        p5 = -p1
+        assert p5.x == -p1.x
+        assert p5.y == -p1.y
+
+        p6 = p1 + p2
+        assert p6.x == 3 * p1.x
+        assert p6.y == 3 * p1.y
+
+        p7 = p2 - p1
+        assert p7.x == p1.x
+        assert p7.y == p1.y
+
+    # Cross type arithemetic -> PositionD
+    pd6 = pi1 + pd1
+    assert pd6 == 2*pd1
+    assert isinstance(pd6, galsim.PositionD)
+
+    pd7 = pd1 + pi1
+    assert pd7 == 2*pd1
+    assert isinstance(pd7, galsim.PositionD)
+
+    pd8 = pi1 - pd1
+    assert pd8 == 0*pd1
+    assert isinstance(pd8, galsim.PositionD)
+
+    pd9 = pd1 - pi1
+    assert pd9 == 0*pd1
+    assert isinstance(pd9, galsim.PositionD)
+
+    try:
+        np.testing.assert_raises(ValueError, pd1.__mul__, "11")
+        np.testing.assert_raises(ValueError, pd1.__div__, "11e")
+        np.testing.assert_raises(ValueError, pi1.__mul__, "11e")
+        np.testing.assert_raises(ValueError, pi1.__div__, 11.5)
+    except ImportError:
+        pass
+
+
+@timer
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
     """
@@ -629,6 +737,7 @@ def test_dol_to_lod():
 
 
 if __name__ == "__main__":
+    test_pos()
     test_roll2d_circularity()
     test_roll2d_fwdbck()
     test_roll2d_join()
