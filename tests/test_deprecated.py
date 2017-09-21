@@ -1903,6 +1903,25 @@ def test_dep_photon_array():
     print('sum = ',im1.array.sum())
     np.testing.assert_almost_equal(im1.array.sum(), 1.7)
 
+    np.testing.assert_array_equal(check_dep(photon_array.getXArray), photon_array.x)
+    np.testing.assert_array_equal(check_dep(photon_array.getYArray), photon_array.y)
+    np.testing.assert_array_equal(check_dep(photon_array.getFluxArray), photon_array.flux)
+    np.testing.assert_array_equal(check_dep(photon_array.getDXDZArray), photon_array.dxdz)
+    np.testing.assert_array_equal(check_dep(photon_array.getDYDZArray), photon_array.dydz)
+    np.testing.assert_array_equal(check_dep(photon_array.getWavelengthArray), photon_array.wavelength)
+
+    np.testing.assert_array_equal(check_dep(photon_array.getX, 0), photon_array.x[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getY, 0), photon_array.y[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getFlux, 0), photon_array.flux[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getDXDZ, 0), photon_array.dxdz[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getDYDZ, 0), photon_array.dydz[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getWavelength, 0), photon_array.wavelength[0])
+
+    check_dep(photon_array.setPhoton, 8, 17, 34, 1.8)
+    assert photon_array.x[8] == 17
+    assert photon_array.y[8] == 34
+    assert photon_array.flux[8] == 1.8
+
 
 if __name__ == "__main__":
     test_dep_bandpass()

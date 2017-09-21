@@ -213,8 +213,8 @@ def test_photon_angles():
         assigner = galsim.FRatioAngles(fratio, obscuration, rng)
         assigner.applyTo(photon_array)
 
-        dxdz = photon_array.getDXDZArray()
-        dydz = photon_array.getDYDZArray()
+        dxdz = photon_array.dxdz
+        dydz = photon_array.dydz
 
         phi = np.arctan2(dydz,dxdz)
         tantheta = np.sqrt(np.square(dxdz) + np.square(dydz))

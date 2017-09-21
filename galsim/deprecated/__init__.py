@@ -67,3 +67,4 @@ from . import random
 from . import sed
 from . import shapelet
 from . import shear
+from . import photon_array

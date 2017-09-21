@@ -108,6 +108,9 @@ Deprecated Features
   users should not need to access. (#904)
 - PhotonArray.addTo(image) now takes a regular galsim.Image for its argument,
   not a C++-layer image object. (#904)
+- Deprecated the various PhotonArray.get* functions as unwieldy equivalents
+  of the cleaner pa.x, pa,flux, etc. properties.  Similarly the setPhoton
+  function is deprecated in lieu of setting each value separately. (#904)
 
 
 New Features
