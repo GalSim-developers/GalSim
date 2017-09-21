@@ -129,6 +129,7 @@ class PhotonArray(object):
 
     @property
     def dxdz(self):
+        self.allocateAngles()
         return self._dxdz
     @dxdz.setter
     def dxdz(self, value):
@@ -137,6 +138,7 @@ class PhotonArray(object):
 
     @property
     def dydz(self):
+        self.allocateAngles()
         return self._dydz
     @dydz.setter
     def dydz(self, value):
@@ -145,65 +147,12 @@ class PhotonArray(object):
 
     @property
     def wavelength(self):
+        self.allocateWavelengths()
         return self._wave
     @wavelength.setter
     def wavelength(self, value):
         self.allocateWavelengths()
         self._wave[:] = value
-
-    # The next set are mostly for backwards compatibility, but no point in deprecating these
-    def getX(self, i):
-        "Get x for photon number i"
-        return self.x[i]
-    def getY(self, i):
-        "Get y for photon number i"
-        return self.y[i]
-    def getFlux(self, i):
-        "Get flux for photon number i"
-        return self.flux[i]
-    def getDXDZ(self, i):
-        "Get dxdy for photon number i"
-        if not self.hasAllocatedAngles():
-            raise RuntimeError("Angles are not allocated")
-        return self.dxdz[i]
-    def getDYDZ(self, i):
-        "Get dydy for photon number i"
-        if not self.hasAllocatedAngles():
-            raise RuntimeError("Angles are not allocated")
-        return self.dydz[i]
-    def getWavelength(self, i):
-        "Get wavelength for photon number i"
-        if not self.hasAllocatedWavelengths():
-            raise RuntimeError("Wavelengths are not allocated")
-        return self.wavelength[i]
-
-    def getXArray(self):
-        "Get numpy array of x positions"
-        return self._x
-    def getYArray(self):
-        "Get numpy array of y positions"
-        return self._y
-    def getFluxArrayx(self):
-        "Get numpy array of fluxes"
-        return self._flux
-    def getDXDZArray(self):
-        "Get numpy array of dxdz values"
-        self.allocateAngles()
-        return self._dxdz
-    def getDYDZArray(self):
-        "Get numpy array of dydz values"
-        self.allocateAngles()
-        return self._dydz
-    def getWavelengthArray(self):
-        "Get numpy array of wavelengths"
-        self.allocateWavelengths()
-        return self._wave
-
-    def setPhoton(self, i, x, y, flux):
-        "Set x,y,flux for photon number i"
-        self.x[i] = x
-        self.y[i] = y
-        self.flux[i] = flux
 
     def hasAllocatedAngles(self):
         return self._dxdz is not None and self._dydz is not None
@@ -243,15 +192,14 @@ class PhotonArray(object):
         if istart + rhs.size() > self.size():
             raise IndexError("The given rhs does not fit into this array starting at %d"%istart)
         s = slice(istart, istart + rhs.size())
-        self._x[s] = rhs._x
-        self._y[s] = rhs._y
-        self._flux[s] = rhs._flux
-        if rhs._dxdz is not None:
-            self._dxdz[s] = rhs._dxdz
-        if rhs._dydz is not None:
-            self._dydz[s] = rhs._dydz
-        if rhs._wave is not None:
-            self._wave[s] = rhs._wave
+        self.x[s] = rhs.x
+        self.y[s] = rhs.y
+        self.flux[s] = rhs.flux
+        if rhs.hasAllocatedAngles():
+            self.dxdz[s] = rhs.dxdz
+            self.dydz[s] = rhs.dydz
+        if rhs.hasAllocatedWavelengths():
+            self.wavelength[s] = rhs.wavelength
 
     def convolve(self, rhs, rng=None):
         "Convolve this PhotonArray with another."
@@ -485,8 +433,8 @@ class FRatioAngles(object):
     def applyTo(self, photon_array):
         """Assign directions to the photons in photon_array."""
 
-        dxdz = photon_array.getDXDZArray()
-        dydz = photon_array.getDYDZArray()
+        dxdz = photon_array.dxdz
+        dydz = photon_array.dydz
         n_photons = len(dxdz)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of
