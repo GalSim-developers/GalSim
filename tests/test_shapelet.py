@@ -148,6 +148,11 @@ def test_shapelet_properties():
 
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
+    assert shapelet.sigma == shapelet.getSigma() == sigma
+    assert shapelet.order == shapelet.getOrder() == order
+    np.testing.assert_array_equal(shapelet.bvec, bvec)
+    np.testing.assert_array_equal(shapelet.getBVec(), bvec)
+
     check_basic(shapelet, "Shapelet", approx_maxsb=True)
 
     # Check flux
