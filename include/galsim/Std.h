@@ -29,6 +29,7 @@
 #include <string>
 #include <cassert>
 #include <stdexcept>
+#include <cstddef>
 
 #ifdef _WIN32
 #include <Windows.h>
