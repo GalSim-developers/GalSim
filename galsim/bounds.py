@@ -397,11 +397,15 @@ class BoundsI(Bounds):
         if (self.xmin != int(self.xmin) or self.xmax != int(self.xmax) or
             self.ymin != int(self.ymin) or self.ymax != int(self.ymax)):
             raise ValueError("BoundsI must be initialized with integer values")
+        # Now make sure they are all ints
+        self.xmin = int(self.xmin)
+        self.xmax = int(self.xmax)
+        self.ymin = int(self.ymin)
+        self.ymax = int(self.ymax)
 
     @property
     def _b(self):
-        return _galsim.BoundsI(int(self.xmin), int(self.xmax),
-                               int(self.ymin), int(self.ymax))
+        return _galsim.BoundsI(self.xmin, self.xmax, self.ymin, self.ymax)
 
     def _check_scalar(self, x, name):
         try:
