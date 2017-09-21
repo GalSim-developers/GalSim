@@ -346,7 +346,6 @@ class HSMParams(object):
 
         self._nsig_rg = nsig_rg
         self._nsig_rg2 = nsig_rg2
-        self._nsig_rg2 = nsig_rg2
         self._max_moment_nsig2 = max_moment_nsig2
         self._regauss_too_small = regauss_too_small
         self._adapt_order = adapt_order
@@ -374,8 +373,6 @@ class HSMParams(object):
 
     @property
     def nsig_rg(self): return self._nsig_rg
-    @property
-    def nsig_rg2(self): return self._nsig_rg2
     @property
     def nsig_rg2(self): return self._nsig_rg2
     @property
@@ -414,8 +411,8 @@ class HSMParams(object):
         """
         if hsmparams is None:
             return default if default is not None else HSMParams.default
-        elif not isinstance(hsmparams, GSParams):
-            raise TypeError("Invalid GSParams: %s"%hsmparams)
+        elif not isinstance(hsmparams, HSMParams):
+            raise TypeError("Invalid HSMParams: %s"%hsmparams)
         else:
             return hsmparams
 
@@ -608,8 +605,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     gal_image = _convertImage(gal_image)
     PSF_image = _convertImage(PSF_image)
     weight = _convertMask(gal_image, weight=weight, badpix=badpix)
-    if hsmparams is None:
-        hsmparams = HSMParams.default
+    hsmparams = HSMParams.check(hsmparams)
 
     if guess_centroid is None:
         guess_centroid = gal_image.trueCenter()
@@ -721,8 +717,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     # prepare inputs to C++ routines: ImageF or ImageD for galaxy, PSF, and ImageI for weight map
     object_image = _convertImage(object_image)
     weight = _convertMask(object_image, weight=weight, badpix=badpix)
-    if hsmparams is None:
-        hsmparams = HSMParams.default
+    hsmparams = HSMParams.check(hsmparams)
 
     if guess_centroid is None:
         guess_centroid = object_image.trueCenter()
