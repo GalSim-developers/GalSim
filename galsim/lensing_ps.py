@@ -570,7 +570,10 @@ class PowerSpectrum(object):
             ntot += temp
         return int(ntot)
 
-    def subsampleGrid(self, subsample_fac, get_convergence=False):
+    # This function is not used or tested in the main code.
+    # The only use is in GalSim/devel/modules/lensing_engine_interpolants.py, so we leave it
+    # in the code base, but it should probably be considered suspect at this point...
+    def subsampleGrid(self, subsample_fac, get_convergence=False):  # pragma: no cover
         """Routine to use a regular subset of the grid points without a completely new call to
         buildGrid().
 

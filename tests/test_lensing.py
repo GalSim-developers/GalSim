@@ -21,6 +21,7 @@ import numpy as np
 import math
 import os
 import sys
+import warnings
 
 from galsim_test_helpers import *
 
@@ -579,6 +580,25 @@ def test_shear_get():
                                    err_msg="Magnifications from grid and getMagnification disagree!")
     np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
                                    err_msg="Magnifications from grid and getLensing disagree!")
+
+    # Test single position versions
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0])), (g1_r[0,0], g2_r[0,0]))
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0]), reduced=False),
+                                   (g1[0,0], g2[0,0]))
+    np.testing.assert_almost_equal(my_ps.getConvergence((x[0,0], y[0,0])), kappa[0,0])
+    np.testing.assert_almost_equal(my_ps.getMagnification((x[0,0], y[0,0])), mu[0,0])
+    np.testing.assert_almost_equal(my_ps.getLensing((x[0,0], y[0,0])),
+                                   (g1_r[0,0], g2_r[0,0], mu[0,0]))
+
+    # Test outside of bounds
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000)), (0,0))
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000), reduced=False), (0,0))
+        np.testing.assert_almost_equal(my_ps.getConvergence((5000,5000)), 0)
+        np.testing.assert_almost_equal(my_ps.getMagnification((5000,5000)), 1)
+        np.testing.assert_almost_equal(my_ps.getLensing((5000,5000)), (0,0,1))
+
 
 
 @timer
