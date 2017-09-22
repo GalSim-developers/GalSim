@@ -336,11 +336,7 @@ class InterpolatedImage(GSObject):
         if pad_factor <= 0.:
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
-        if use_true_center:
-            im_cen = self.image.bounds.trueCenter()
-        else:
-            im_cen = self.image.bounds.center()
-
+        im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
         local_wcs = self.image.wcs.local(image_pos = im_cen)
         min_scale = local_wcs._minScale()
         max_scale = local_wcs._maxScale()
@@ -620,11 +616,8 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._pad_factor = 1.
     ret._gsparams = galsim.GSParams.check(gsparams)
 
-    if image.wcs.isLocal():
-        local_wcs = image.wcs
-    else:
-        im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
-        local_wcs = image.wcs.local(image_pos = im_cen)
+    im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
+    local_wcs = image.wcs.local(image_pos = im_cen)
     min_scale = local_wcs._minScale()
     max_scale = local_wcs._maxScale()
     force_stepk *= min_scale
