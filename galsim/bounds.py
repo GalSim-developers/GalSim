@@ -149,7 +149,7 @@ class Bounds(object):
             if kwargs:
                 raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
 
-        if not (self.xmin <= self.xmax and self.ymin <= self.ymax):
+        if not (float(self.xmin) <= float(self.xmax) and float(self.ymin) <= float(self.ymax)):
             self._isdefined = False
 
     def area(self):
