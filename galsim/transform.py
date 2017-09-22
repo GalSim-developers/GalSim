@@ -261,7 +261,7 @@ class Transformation(galsim.GSObject):
         """
         # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
         if self._jac[0,1] == 0 and self._jac[1,0] == 0:
-            if self._jac[0,1] == 1 and self._jac[1,0] == 1:     # jac is (1,0,0,1)
+            if self._jac[0,0] == 1 and self._jac[1,1] == 1:     # jac is (1,0,0,1)
                 fwd = self._fwd_ident
                 det = 1
             else:                                               # jac is (a,0,0,b)

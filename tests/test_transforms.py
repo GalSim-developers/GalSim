@@ -861,45 +861,6 @@ def test_flip():
                     image2_x2.array.max(), flip3.shear(s).maxSB()*im.scale**2, rtol=0.2,
                     err_msg="maxSB did not match maximum pixel value")
 
-        # Identity transformation should be no op
-        ident = prof.transform(1, 0, 0, 1)
-        image2_x = ident.drawImage(image=im.copy(), method='no_pixel')
-        np.testing.assert_array_almost_equal(
-            image_x.array, image2_x.array, decimal=decimal,
-            err_msg="Identity transformation failed x test")
-        image2_x1 = ident.shear(q).drawImage(image=im.copy(), method='no_pixel')
-        np.testing.assert_array_almost_equal(
-            image_x1.array, image2_x1.array, decimal=decimal,
-            err_msg="Identity transformation failed x1 test")
-        image2_x2 = ident.shear(s).drawImage(image=im.copy(), method='no_pixel')
-        np.testing.assert_array_almost_equal(
-            image_x2.array, image2_x2.array, decimal=decimal,
-            err_msg="Identity transformation failed x2 test")
-        image2_k = ident.drawImage(image=im.copy())
-        np.testing.assert_array_almost_equal(
-            image_k.array, image2_k.array, decimal=decimal,
-            err_msg="Identity transformation failed k test")
-        image2_k1 = ident.shear(q).drawImage(image=im.copy())
-        np.testing.assert_array_almost_equal(
-            image_k1.array, image2_k1.array, decimal=decimal,
-            err_msg="Identity transformation failed k1 test")
-        image2_k2 = ident.shear(s).drawImage(image=im.copy())
-        np.testing.assert_array_almost_equal(
-            image_k2.array, image2_k2.array, decimal=decimal,
-            err_msg="Identity transformation failed k2 test")
-
-        if close_maxsb:
-            np.testing.assert_allclose(
-                    image2_x.array.max(), ident.maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
-            np.testing.assert_allclose(
-                    image2_x1.array.max(), ident.shear(q).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
-            np.testing.assert_allclose(
-                    image2_x2.array.max(), ident.shear(s).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
-
- 
         do_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
         do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
         do_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
