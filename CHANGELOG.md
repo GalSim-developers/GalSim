@@ -61,6 +61,9 @@ Bug Fixes
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
 - Fixed minor bug in shear == implementation. (#865)
 - Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
+- Added check to `SED.atRedshift` for valid redshifts. (#905)
+- Added exception for disjoint wave_list intersection in combine_wave_list.
+  (#905)
 
 
 Deprecated Features
@@ -111,6 +114,9 @@ Deprecated Features
 - Deprecated the various PhotonArray.get* functions as unwieldy equivalents
   of the cleaner pa.x, pa,flux, etc. properties.  Similarly the setPhoton
   function is deprecated in lieu of setting each value separately. (#904)
+- Deprecated `calculateFlux(bandpass=None)` for computing bolometric flux.
+  Users of this feature can still obtain a psuedo-bolometric flux by using
+  an explicit bolometric Bandpass. (#905)
 
 
 New Features
