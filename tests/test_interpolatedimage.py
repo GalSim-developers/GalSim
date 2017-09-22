@@ -142,10 +142,22 @@ def test_roundtrip():
     do_pickle(galsim.Quintic(), test_func)
     do_pickle(galsim.Quintic(tol=0.1), test_func)
     do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant.from_name('quintic'), test_func)
-    do_pickle(galsim.Interpolant.from_name('lanczos7'), test_func)
-    do_pickle(galsim.Interpolant.from_name('lanczos9F'), test_func)
-    do_pickle(galsim.Interpolant.from_name('lanczos8T'), test_func)
+    do_pickle(galsim.Interpolant.from_name('nearest'))
+    do_pickle(galsim.Interpolant.from_name('delta'))
+    do_pickle(galsim.Interpolant.from_name('linear'))
+    do_pickle(galsim.Interpolant.from_name('cubic'))
+    do_pickle(galsim.Interpolant.from_name('quintic'))
+    do_pickle(galsim.Interpolant.from_name('sinc'))
+    do_pickle(galsim.Interpolant.from_name('lanczos7'))
+    do_pickle(galsim.Interpolant.from_name('lanczos9F'))
+    do_pickle(galsim.Interpolant.from_name('lanczos8T'))
+
+    try:
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
+    except ImportError:
+        pass
 
 
 @timer

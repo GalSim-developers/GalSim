@@ -32,7 +32,7 @@ class Interpolant(object):
     an locations in between the integer pixel centers.
     """
     def __init__(self):
-        raise NotImplemented(
+        raise NotImplementedError(
             "The Interpolant bas class should not be instantiated directly. "+
             "Use one of the subclasses instead, or use the `from_name` factory function.")
 
