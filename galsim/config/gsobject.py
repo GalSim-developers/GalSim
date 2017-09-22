@@ -446,23 +446,6 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-def _GetMinimumBlock(config, base):
-    """Get the minimum number of objects that should be done on the same process for a
-    particular object configuration.
-
-    This function is only needed for backwards-compatibility support of gsobject type=Ring.
-
-    @param config       A dict with the configuration information.
-    @param base         The base dict of the configuration. [default: config]
-    """
-    type_name = config.get('type',None)
-    if type_name in block_gsobject_types: # pragma: no cover
-        num = galsim.config.ParseValue(config, 'num', base, int)[0]
-        return num
-    else:
-        return 1
-
-
 def RegisterObjectType(type_name, build_func, input_type=None):
     """Register an object type for use by the config apparatus.
 
