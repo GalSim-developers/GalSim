@@ -136,8 +136,10 @@ def test_pos():
 
     try:
         np.testing.assert_raises(ValueError, pd1.__mul__, "11")
+        np.testing.assert_raises(ValueError, pd1.__mul__, None)
         np.testing.assert_raises(ValueError, pd1.__div__, "11e")
         np.testing.assert_raises(ValueError, pi1.__mul__, "11e")
+        np.testing.assert_raises(ValueError, pi1.__mul__, None)
         np.testing.assert_raises(ValueError, pi1.__div__, 11.5)
     except ImportError:
         pass
@@ -167,10 +169,11 @@ def test_bounds():
     bi7 = galsim.BoundsI(bi1)
     bi8 = bi1 + galsim.BoundsI()
     bi9 = galsim.BoundsI() + bi1
-    bi10 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
-    bi11 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
-    bi12 = galsim._BoundsI(11,23,17,50)
-    for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12]:
+    bi10 = galsim.BoundsI() + galsim.PositionI(11,17) + galsim.PositionI(23,50)
+    bi11 = galsim.BoundsI(galsim.BoundsD(11.,23.,17.,50.))
+    bi12 = galsim.BoundsI(xmin=11,ymin=17,xmax=23,ymax=50)
+    bi13 = galsim._BoundsI(11,23,17,50)
+    for b in [bi1, bi2, bi3, bi4, bi5, bi6, bi7, bi8, bi9, bi10, bi11, bi12, bi13]:
         assert b.isDefined()
         assert b == bi1
         assert isinstance(b.xmin, int)
@@ -199,10 +202,11 @@ def test_bounds():
     bd7 = galsim.BoundsD(bd1)
     bd8 = bd1 + galsim.BoundsD()
     bd9 = galsim.BoundsD() + bd1
-    bd10 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
-    bd11 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
-    bd12 = galsim._BoundsD(11,23,17,50)
-    for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12]:
+    bd10 = galsim.BoundsD() + galsim.PositionD(11,17) + galsim.PositionD(23,50)
+    bd11 = galsim.BoundsD(galsim.BoundsI(11,23,17,50))
+    bd12 = galsim.BoundsD(xmin=11.0,ymin=17.0,xmax=23.0,ymax=50.0)
+    bd13 = galsim._BoundsD(11,23,17,50)
+    for b in [bd1, bd2, bd3, bd4, bd5, bd6, bd7, bd8, bd9, bd10, bd11, bd12, bd13]:
         assert b.isDefined()
         assert b == bd1
         assert isinstance(b.xmin, float)
@@ -252,8 +256,10 @@ def test_bounds():
         np.testing.assert_raises(ValueError, bi1.withBorder, 'blue')
         np.testing.assert_raises(ValueError, bi1.withBorder, 4.1)
         np.testing.assert_raises(ValueError, bi1.withBorder, '4')
+        np.testing.assert_raises(ValueError, bi1.withBorder, None)
         np.testing.assert_raises(ValueError, bd1.withBorder, 'blue')
         np.testing.assert_raises(ValueError, bd1.withBorder, '4.1')
+        np.testing.assert_raises(ValueError, bd1.withBorder, None)
     except ImportError:
         pass
 

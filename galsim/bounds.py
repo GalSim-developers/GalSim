@@ -377,15 +377,17 @@ class BoundsD(Bounds):
         self.ymin = float(self.ymin)
         self.ymax = float(self.ymax)
 
+    # Note: We don't ever use this.  None of our C++ calls actually take a BoundsD currently,
+    # but this is available if we ever do need it.
     @property
-    def _b(self):
+    def _b(self):  # pragma: no cover
         return _galsim.BoundsD(float(self.xmin), float(self.xmax),
                                float(self.ymin), float(self.ymax))
 
     def _check_scalar(self, x, name):
         try:
             if x == float(x): return
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         raise ValueError("%s must be a float value"%name)
 
@@ -423,7 +425,7 @@ class BoundsI(Bounds):
     def _check_scalar(self, x, name):
         try:
             if x == int(x): return
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         raise ValueError("%s must be a integer value"%name)
 

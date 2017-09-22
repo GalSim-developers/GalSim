@@ -175,7 +175,7 @@ class PositionD(Position):
     def _check_scalar(self, other, op):
         try:
             if other == float(other): return
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         raise ValueError("Can only %s a PositionD by float values"%op)
 
@@ -203,6 +203,6 @@ class PositionI(Position):
     def _check_scalar(self, other, op):
         try:
             if other == int(other): return
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         raise ValueError("Can only %s a PositionI by integer values"%op)
