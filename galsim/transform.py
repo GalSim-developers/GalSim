@@ -313,17 +313,3 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
     ret._offset = galsim.PositionD(ret._sbp.getOffset())
     ret._flux_ratio = ret._sbp.getFluxScaling()
     return ret
-
-def SBTransform_init(self):
-    obj = self.getObj()
-    _jac = np.empty(4, dtype=float)
-    self.getJac(_jac.ctypes.data)
-    dudx, dudy, dvdx, dvdy = _jac
-    offset = self.getOffset()
-    flux_ratio = self.getFluxScaling()
-    gsparams = self.getGSParams()
-    return (obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
-_galsim.SBTransform.__getinitargs__ = SBTransform_init
-_galsim.SBTransform.__getstate__ = lambda self: None
-_galsim.SBTransform.__repr__ = lambda self: \
-        'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
