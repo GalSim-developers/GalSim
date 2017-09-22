@@ -893,16 +893,6 @@ class StampBuilder(object):
         if prof is None:
             return False
 
-        # Check that we aren't on a second or later item in a Ring.
-        # This check can be removed once we do not need to support the deprecated gsobject
-        # type=Ring.
-        if 'gal' in base:  # pragma: no cover
-            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
-            if base['obj_num'] % block_size != 0:
-                # Don't reject, since the first item passed.
-                # If we reject now, it will mess things up.
-                return False
-
         if 'reject' in config:
             if galsim.config.ParseValue(config, 'reject', base, bool)[0]:
                 logger.info('obj %d: reject evaluated to True',base['obj_num'])
@@ -993,15 +983,7 @@ class StampBuilder(object):
 
         @returns a list of tasks
         """
-        # For backwards compatibility with the old Ring gsobject type, we actually check for that
-        # here and make a list of tasks that work for that.  This is undocumented though, since the
-        # gsobject type=Ring is now deprecated.
-        block_size = 1
-        if 'gal' in base:
-            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
-        tasks = [ [ (jobs[j], j) for j in range(k,min(k+block_size,len(jobs))) ]
-                    for k in range(0, len(jobs), block_size) ]
-        return tasks
+        return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
 
 def RegisterStampType(stamp_type, builder):
