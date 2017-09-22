@@ -105,6 +105,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
         self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the repr.
+        self._set_origin(origin)
 
         # Read the file if given.
         if file_name is not None:
@@ -160,14 +161,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             raise RuntimeError("AstropyWCS was unable to read the WCS specification in the header.")
 
         self._wcs = wcs
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
 
     def _load_from_header(self, header, hdu):
         import astropy.wcs
@@ -419,6 +412,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                  wcsinfo=None, origin=None):
         self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the repr.
+        self._set_origin(origin)
 
         # Read the file if given.
         if file_name is not None:
@@ -458,14 +452,6 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             galsim.fits.closeHDUList(hdu_list, fin)
 
         self._wcsinfo = wcsinfo
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
 
     def _load_from_header(self, header, hdu):
         import starlink.Atl
@@ -663,11 +649,14 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
 
     def __init__(self, file_name, dir=None, origin=None):
         self._color = None
+        self._set_origin(origin)
+
         import os
         if dir:
             file_name = os.path.join(dir, file_name)
         if not os.path.isfile(file_name):
             raise IOError('Cannot find file '+file_name)
+        self._file_name = file_name
 
         # Check wcstools is installed and that it can read the file.
         import subprocess
@@ -678,16 +667,6 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
         p.stdout.close()
         if len(results) == 0:
             raise IOError('wcstools (specifically xy2sky) was unable to read '+file_name)
-
-        self._file_name = file_name
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
 
     @property
     def file_name(self): return self._file_name

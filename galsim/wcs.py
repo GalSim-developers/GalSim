@@ -623,6 +623,25 @@ class BaseWCS(object):
         if color is None: color = self._color
         self._makeSkyImage(image, sky_level, color)
 
+
+    # A lot of classes will need these checks, so consolidate them here
+    def _set_origin(self, origin, world_origin=None):
+        if origin is None:
+            self._origin = galsim.PositionD(0,0)
+        else:
+            if isinstance(origin, galsim.PositionI):
+                origin = galsim.PositionD(origin)
+            elif not isinstance(origin, galsim.PositionD):
+                raise TypeError("origin must be a PositionD or PositionI argument")
+            self._origin = origin
+        if world_origin is None:
+            self._world_origin = galsim.PositionD(0,0)
+        else:
+            if not isinstance(world_origin, galsim.PositionD):
+                raise TypeError("world_origin must be a PositionD argument")
+            self._world_origin = world_origin
+
+
 def readFromFitsHeader(header):
     """Read a WCS function from a FITS header.
 
@@ -1618,22 +1637,9 @@ class OffsetWCS(UniformWCS):
 
     def __init__(self, scale, origin=None, world_origin=None):
         self._color = None
+        self._set_origin(origin, world_origin)
         self._scale = scale
         self._local_wcs = PixelScale(scale)
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
-        if world_origin is None:
-            self._world_origin = galsim.PositionD(0,0)
-        else:
-            if not isinstance(world_origin, galsim.PositionD):
-                raise TypeError("world_origin must be a PositionD argument")
-            self._world_origin = world_origin
 
     @property
     def scale(self): return self._scale
@@ -1710,25 +1716,11 @@ class OffsetShearWCS(UniformWCS):
 
     def __init__(self, scale, shear, origin=None, world_origin=None):
         self._color = None
+        self._set_origin(origin, world_origin)
         # The shear stuff is not too complicated, but enough so that it is worth
         # encapsulating in the ShearWCS class.  So here, we just create one of those
         # and we'll pass along any shear calculations to that.
         self._local_wcs = ShearWCS(scale, shear)
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
-        if world_origin is None:
-            self._world_origin = galsim.PositionD(0,0)
-        else:
-            if not isinstance(world_origin, galsim.PositionD):
-                raise TypeError("world_origin must be a PositionD argument")
-            self._world_origin = world_origin
-
 
     @property
     def scale(self): return self._local_wcs.scale
@@ -1815,22 +1807,9 @@ class AffineTransform(UniformWCS):
 
     def __init__(self, dudx, dudy, dvdx, dvdy, origin=None, world_origin=None):
         self._color = None
+        self._set_origin(origin, world_origin)
         # As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.
         self._local_wcs = JacobianWCS(dudx, dudy, dvdx, dvdy)
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
-        if world_origin is None:
-            self._world_origin = galsim.PositionD(0,0)
-        else:
-            if not isinstance(world_origin, galsim.PositionD):
-                raise TypeError("world_origin must be a PositionD argument")
-            self._world_origin = world_origin
 
     @property
     def dudx(self): return self._local_wcs.dudx
@@ -2123,6 +2102,7 @@ class UVFunction(EuclideanWCS):
     def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None,
                  uses_color=False):
         self._color = None
+        self._set_origin(origin, world_origin)
 
         # Keep these to use in copies, etc.
         self._orig_ufunc = ufunc
@@ -2133,21 +2113,6 @@ class UVFunction(EuclideanWCS):
 
         # Turn these into the real functions
         self._initialize_funcs()
-
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
-        if world_origin is None:
-            self._world_origin = galsim.PositionD(0,0)
-        else:
-            if not isinstance(world_origin, galsim.PositionD):
-                raise TypeError("world_origin must be a PositionD argument")
-            self._world_origin = world_origin
 
     def _initialize_funcs(self):
         if isinstance(self._orig_ufunc, str):
@@ -2344,6 +2309,7 @@ class RaDecFunction(CelestialWCS):
 
     def __init__(self, ra_func, dec_func=None, origin=None):
         self._color = None
+        self._set_origin(origin)
 
         # Keep these to use in copies, etc.
         self._orig_ra_func = ra_func
@@ -2351,15 +2317,6 @@ class RaDecFunction(CelestialWCS):
 
         # Turn these into the real functions
         self._initialize_funcs()
-
-        if origin is None:
-            self._origin = galsim.PositionD(0,0)
-        else:
-            if isinstance(origin, galsim.PositionI):
-                origin = galsim.PositionD(origin.x, origin.y)
-            elif not isinstance(origin, galsim.PositionD):
-                raise TypeError("origin must be a PositionD or PositionI argument")
-            self._origin = origin
 
     def _initialize_funcs(self):
         if self._orig_dec_func is None:
