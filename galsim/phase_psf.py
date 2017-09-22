@@ -1229,8 +1229,7 @@ class PhaseScreenPSF(GSObject):
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         del d['_sbp']
         del d['ii']
-        if '_dummy' in d:
-            del d['_dummy']
+        d.pop('_dummy', None)
         return d
 
     def __setstate__(self, d):
