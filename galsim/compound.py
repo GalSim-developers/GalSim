@@ -255,11 +255,6 @@ class Sum(galsim.GSObject):
         self.__init__(self._obj_list, gsparams=self.gsparams)
 
 
-_galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
-_galsim.SBAdd.__getstate__ = lambda self: None
-_galsim.SBAdd.__repr__ = lambda self: \
-        'galsim._galsim.SBAdd(%r, %r)'%self.__getinitargs__()
-
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObject or ChromaticObject instances.
@@ -522,13 +517,6 @@ class Convolution(galsim.GSObject):
         self.__init__(self._obj_list, real_space=self._real_space, gsparams=self.gsparams)
 
 
-_galsim.SBConvolve.__getinitargs__ = lambda self: (
-        self.getObjs(), self.isRealSpace(), self.getGSParams())
-_galsim.SBConvolve.__getstate__ = lambda self: None
-_galsim.SBConvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBConvolve(%r, %r, %r)'%self.__getinitargs__()
-
-
 def Deconvolve(obj, gsparams=None):
     """A function for deconvolving by either a GSObject or ChromaticObject.
 
@@ -621,13 +609,6 @@ class Deconvolution(galsim.GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.__init__(self._orig_obj, self._gsparams)
-
-
-
-_galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
-_galsim.SBDeconvolve.__getstate__ = lambda self: None
-_galsim.SBDeconvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBDeconvolve(%r, %r)'%self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -774,14 +755,6 @@ class AutoConvolution(galsim.GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.__init__(self._orig_obj, self._real_space, self._gsparams)
-
-
-
-_galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
-        self.getObj(), self.isRealSpace(), self.getGSParams())
-_galsim.SBAutoConvolve.__getstate__ = lambda self: None
-_galsim.SBAutoConvolve.__repr__ = lambda self: \
-        'galsim._galsim.SBAutoConvolve(%r, %r, %r)'%self.__getinitargs__()
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None):
@@ -939,14 +912,6 @@ class AutoCorrelation(galsim.GSObject):
         self.__init__(self._orig_obj, self._real_space, self._gsparams)
 
 
-
-_galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
-        self.getObj(), self.isRealSpace(), self.getGSParams())
-_galsim.SBAutoCorrelate.__getstate__ = lambda self: None
-_galsim.SBAutoCorrelate.__repr__ = lambda self: \
-        'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
-
-
 def FourierSqrt(obj, gsparams=None):
     """A function for computing the Fourier-space square root of either a GSObject or
     ChromaticObject.
@@ -1045,11 +1010,6 @@ class FourierSqrtProfile(galsim.GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.__init__(self._orig_obj, self._gsparams)
-
-_galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
-_galsim.SBFourierSqrt.__getstate__ = lambda self: None
-_galsim.SBFourierSqrt.__repr__ = lambda self: \
-        'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()
 
 
 class RandomWalk(galsim.GSObject):

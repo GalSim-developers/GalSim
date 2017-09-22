@@ -162,12 +162,6 @@ class Gaussian(GSObject):
 
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
-# SBProfile defines __getstate__ and __setstate__.  We don't actually want to use those here.
-# Just the __getinitargs__ is sufficient.  We need to define getstate to override the base class
-# definition.  (And then setstate will never be called for these, so don't need that one.)
-_galsim.SBGaussian.__getstate__ = lambda self: None
-_galsim.SBGaussian.__repr__ = lambda self: \
-        'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Moffat(GSObject):
@@ -289,9 +283,6 @@ class Moffat(GSObject):
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
         self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
         self.getFlux(), self.getGSParams())
-_galsim.SBMoffat.__getstate__ = lambda self: None
-_galsim.SBMoffat.__repr__ = lambda self: \
-        'galsim._galsim.SBMoffat(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Airy(GSObject):
@@ -465,9 +456,6 @@ class Airy(GSObject):
 
 _galsim.SBAiry.__getinitargs__ = lambda self: (
         self.getLamOverD(), self.getObscuration(), self.getFlux(), self.getGSParams())
-_galsim.SBAiry.__getstate__ = lambda self: None
-_galsim.SBAiry.__repr__ = lambda self: \
-        'galsim._galsim.SBAiry(%r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Kolmogorov(GSObject):
@@ -648,9 +636,6 @@ class Kolmogorov(GSObject):
 
 _galsim.SBKolmogorov.__getinitargs__ = lambda self: (
         self.getLamOverR0(), self.getFlux(), self.getGSParams())
-_galsim.SBKolmogorov.__getstate__ = lambda self: None
-_galsim.SBKolmogorov.__repr__ = lambda self: \
-        'galsim._galsim.SBKolmogorov(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Pixel(GSObject):
@@ -786,9 +771,6 @@ class Box(GSObject):
 
 _galsim.SBBox.__getinitargs__ = lambda self: (
         self.getWidth(), self.getHeight(), self.getFlux(), self.getGSParams())
-_galsim.SBBox.__getstate__ = lambda self: None
-_galsim.SBBox.__repr__ = lambda self: \
-        'galsim._galsim.SBBox(%r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class TopHat(GSObject):
@@ -851,9 +833,6 @@ class TopHat(GSObject):
 
 _galsim.SBTopHat.__getinitargs__ = lambda self: (
         self.getRadius(), self.getFlux(), self.getGSParams())
-_galsim.SBTopHat.__getstate__ = lambda self: None
-_galsim.SBTopHat.__repr__ = lambda self: \
-        'galsim._galsim.SBTopHat(%r, %r, %r)'%self.__getinitargs__()
 
 
 class Sersic(GSObject):
@@ -1091,9 +1070,6 @@ class Sersic(GSObject):
 _galsim.SBSersic.__getinitargs__ = lambda self: (
         self.getN(), self.getScaleRadius(), None, self.getFlux(), self.getTrunc(),
         False, self.getGSParams())
-_galsim.SBSersic.__getstate__ = lambda self: None
-_galsim.SBSersic.__repr__ = lambda self: \
-        'galsim._galsim.SBSersic(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Exponential(GSObject):
@@ -1187,9 +1163,6 @@ class Exponential(GSObject):
 
 _galsim.SBExponential.__getinitargs__ = lambda self: (
         self.getScaleRadius(), self.getFlux(), self.getGSParams())
-_galsim.SBExponential.__getstate__ = lambda self: None
-_galsim.SBExponential.__repr__ = lambda self: \
-        'galsim._galsim.SBExponential(%r, %r, %r)'%self.__getinitargs__()
 
 
 class DeVaucouleurs(GSObject):
@@ -1419,9 +1392,7 @@ class Spergel(GSObject):
 
 _galsim.SBSpergel.__getinitargs__ = lambda self: (
         self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
-_galsim.SBSpergel.__getstate__ = lambda self: None
-_galsim.SBSpergel.__repr__ = lambda self: \
-        'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%self.__getinitargs__()
+
 
 class DeltaFunction(GSObject):
     """A class describing a DeltaFunction surface brightness profile.
@@ -1478,6 +1449,3 @@ class DeltaFunction(GSObject):
 
 _galsim.SBDeltaFunction.__getinitargs__ = lambda self: (
         self.getFlux(), self.getGSParams())
-_galsim.SBDeltaFunction.__getstate__ = lambda self: None
-_galsim.SBDeltaFunction.__repr__ = lambda self: \
-        'galsim._galsim.SBDeltaFunction(%r, %r)'%self.__getinitargs__()

@@ -2075,49 +2075,5 @@ class GSObject(object):
         self._sbp.drawK(image._image, image.scale, add_to_image)
         return image
 
-
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self._sbp == other._sbp)
-
+    # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)
-
-# Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
-# Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
-# appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
-# convenient way to get the SBProfile to be the correct type in this case.
-# So, getstate just returns the repr string.  And setstate builds the right kind of object
-# by essentially doing `self = eval(repr)`.
-_galsim.SBProfile.__getstate__ = lambda self: self.serialize()
-def SBProfile_setstate(self, state):
-    import galsim
-    # In case the serialization uses these:
-    from numpy import array, int16, int32, float32, float64
-    # The serialization of an SBProfile object should eval to the right thing.
-    # We essentially want to do `self = eval(state)`.  But that doesn't work in python of course.
-    # Se we break up the serialization into the class and the args, then call init with that.
-    cls, args = state.split('(',1)
-    args = args[:-1]  # Remove final paren
-    args = eval(args)
-    self.__class__ = eval(cls)
-    self.__init__(*args)
-_galsim.SBProfile.__setstate__ = SBProfile_setstate
-
-def SBProfile_copy(self):
-    cls = self.__class__
-    if hasattr(self,'__getinitargs__'):
-        return cls(*self.__getinitargs__())
-    else:
-        new_obj = cls.__new__(cls)
-        new_obj.__setstate__(self.__getstate__())
-        return new_obj
-_galsim.SBProfile.__copy__ = SBProfile_copy
-_galsim.SBProfile.__deepcopy__ = lambda self, memo : self.__copy__()
-
-# Quick and dirty.  Just check serializations are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: (
-    isinstance(other,_galsim.SBProfile) and self.serialize() == other.serialize())
-_galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())

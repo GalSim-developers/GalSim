@@ -1064,22 +1064,6 @@ def dol_to_lod(dol, N=None):
                 raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
-def set_func_doc(func, doc):
-    """Dynamically set a docstring for a given function.
-
-    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
-    It turns out this tends to be easier than writing the doc strings in the C++ layer.
-
-    @param func     The function to which a docstring is to be added.
-    @param doc      The doc string to add.
-    """
-    try:
-        # Python3
-        func.__doc__ = doc
-    except AttributeError:
-        func.__func__.__doc__ = doc
-
-
 def structure_function(image):
     """Estimate the angularly-averaged structure function of a 2D random field.
 
