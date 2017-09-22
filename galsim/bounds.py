@@ -19,6 +19,7 @@
 A few adjustments to the Bounds class at the Python layer.
 """
 
+import math
 from . import _galsim
 from ._galsim import BoundsI, BoundsD
 from .position import Position, PositionI, PositionD
@@ -116,7 +117,7 @@ class Bounds(object):
                     self.ymin = self.ymax = args[0].y
                 else:
                     raise TypeError("Single argument to %s must be either a Bounds or a Position"%(
-                                    self.__class__))
+                                    self.__class__.__name__))
                 self._isdefined = True
             elif len(args) == 2:
                 if (isinstance(args[0], (Position, _galsim.PositionD, _galsim.PositionI)) and
@@ -128,13 +129,13 @@ class Bounds(object):
                     self.ymax = max(args[0].y, args[1].y)
                 else:
                     raise TypeError("Two arguments to %s must be either Positions"%(
-                                    self.__class__))
+                                    self.__class__.__name__))
             else:
                 raise TypeError("%s takes either 1, 2, or 4 arguments (%d given)"%(
-                                self.__class__,len(args)))
+                                self.__class__.__name__,len(args)))
         elif len(args) != 0:
             raise TypeError("Cannot provide both keywork and non-keyword arguments to %s"%(
-                self.__class__))
+                self.__class__.__name__))
         else:
             try:
                 self._isdefined = True
@@ -144,9 +145,12 @@ class Bounds(object):
                 self.ymax = kwargs.pop('ymax')
             except KeyError:
                 raise TypeError("Keyword arguments, xmin, xmax, ymin, ymax are required for %s"%(
-                    self.__class__))
+                    self.__class__.__name__))
             if kwargs:
                 raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
+
+        if not (self.xmin <= self.xmax and self.ymin <= self.ymax):
+            self._isdefined = False
 
     def area(self):
         """Return the area of the enclosed region.
@@ -182,6 +186,8 @@ class Bounds(object):
 
         For a BoundsD, this is equivalent to trueCenter().
         """
+        if not self.isDefined():
+            raise ValueError("center() is invalid for an undefined Bounds")
         return self._center()
 
     def trueCenter(self):
@@ -190,6 +196,8 @@ class Bounds(object):
         This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer BoundsI, where
         this may not necessarily be an integer PositionI.
         """
+        if not self.isDefined():
+            raise ValueError("trueCenter() is invalid for an undefined Bounds")
         return PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
 
     def includes(self, *args):
@@ -228,8 +236,8 @@ class Bounds(object):
         elif len(args) == 2:
             x, y = args
             return (self.isDefined() and
-                    self.xmin <= x <= self.xmax and
-                    self.ymin <= y <= self.ymax)
+                    self.xmin <= float(x) <= self.xmax and
+                    self.ymin <= float(y) <= self.ymax)
         elif len(args) == 0:
             raise TypeError("include takes at least 1 argument (0 given)")
         else:
@@ -240,8 +248,8 @@ class Bounds(object):
         dx = (self.xmax - self.xmin) * 0.5 * (factor-1.)
         dy = (self.ymax - self.ymin) * 0.5 * (factor-1.)
         if isinstance(self, BoundsI):
-            dx = int(ceil(dx))
-            dy = int(ceil(dy))
+            dx = int(math.ceil(dx))
+            dy = int(math.ceil(dy))
         return self.withBorder(dx,dy)
 
     def isDefined(self):
@@ -284,7 +292,7 @@ class Bounds(object):
 
     def __and__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError("other must be a %s instance"%self.__class__)
+            raise TypeError("other must be a %s instance"%self.__class__.__name__)
         if not self.isDefined() or not other.isDefined():
             return self.__class__()
         else:
@@ -319,7 +327,8 @@ class Bounds(object):
             else:
                 return self.__class__(other)
         else:
-            raise TypeError("other must be either a %s or a %s"%(self.__class__,self._pos_class))
+            raise TypeError("other must be either a %s or a %s"%(
+                    self.__class__.__name__,self._pos_class.__name__))
 
     def __repr__(self):
         if self.isDefined():
@@ -363,6 +372,10 @@ class BoundsD(Bounds):
         if (self.xmin != float(self.xmin) or self.xmax != float(self.xmax) or
             self.ymin != float(self.ymin) or self.ymax != float(self.ymax)):
             raise ValueError("BoundsD must be initialized with float values")
+        self.xmin = float(self.xmin)
+        self.xmax = float(self.xmax)
+        self.ymin = float(self.ymin)
+        self.ymax = float(self.ymax)
 
     @property
     def _b(self):
@@ -423,7 +436,10 @@ class BoundsI(Bounds):
 
     def _area(self):
         # Remember the + 1 this time to include the pixels on both edges of the bounds.
-        return (self.xmax - self.xmin + 1) * (self.ymax - self.ymin + 1)
+        if not self.isDefined():
+            return 0
+        else:
+            return (self.xmax - self.xmin + 1) * (self.ymax - self.ymin + 1)
 
     def _center(self):
         # Write it this way to make sure the integer rounding goes the same way regardless
@@ -441,10 +457,10 @@ def _BoundsD(xmin, xmax, ymin, ymax):
     """
     ret = BoundsD.__new__(BoundsD)
     ret._isdefined = True
-    ret.xmin = xmin
-    ret.xmax = xmax
-    ret.ymin = ymin
-    ret.ymax = ymax
+    ret.xmin = float(xmin)
+    ret.xmax = float(xmax)
+    ret.ymin = float(ymin)
+    ret.ymax = float(ymax)
     return ret
 
 
@@ -454,9 +470,9 @@ def _BoundsI(xmin, xmax, ymin, ymax):
     """
     ret = BoundsI.__new__(BoundsI)
     ret._isdefined = True
-    ret.xmin = xmin
-    ret.xmax = xmax
-    ret.ymin = ymin
-    ret.ymax = ymax
+    ret.xmin = int(xmin)
+    ret.xmax = int(xmax)
+    ret.ymin = int(ymin)
+    ret.ymax = int(ymax)
     return ret
 

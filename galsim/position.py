@@ -123,17 +123,20 @@ class Position(object):
         return self.__class__(-self.x, -self.y)
 
     def __add__(self, other):
-        if not isinstance(other,Position):
-            raise ValueError("Can only add a Position to a %s"%self.__class__.name())
-        if isinstance(other, self.__class__):
+        from .bounds import Bounds
+        if isinstance(other,Bounds):
+            return other + self
+        elif not isinstance(other,Position):
+            raise ValueError("Can only add a Position to a %s"%self.__class__.__name__)
+        elif isinstance(other, self.__class__):
             return self.__class__(self.x + other.x, self.y + other.y)
         else:
             return PositionD(self.x + other.x, self.y + other.y)
 
     def __sub__(self, other):
         if not isinstance(other,Position):
-            raise ValueError("Can only subtract a Position from a %s"%self.__class__.name())
-        if isinstance(other, self.__class__):
+            raise ValueError("Can only subtract a Position from a %s"%self.__class__.__name__)
+        elif isinstance(other, self.__class__):
             return self.__class__(self.x - other.x, self.y - other.y)
         else:
             return PositionD(self.x - other.x, self.y - other.y)
