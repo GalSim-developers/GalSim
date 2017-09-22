@@ -234,7 +234,3 @@ _galsim.GSParams.__getinitargs__ = lambda self: (
         self.integration_relerr, self.integration_abserr,
         self.shoot_accuracy, self.allowed_flux_variation,
         self.range_division_for_extrema, self.small_fraction_of_flux)
-_galsim.GSParams.__repr__ = lambda self: \
-        'galsim._galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'%\
-        self.__getinitargs__()
-_galsim.GSParams.__hash__ = lambda self: hash(repr(self))
