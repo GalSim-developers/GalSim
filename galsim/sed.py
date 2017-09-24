@@ -322,12 +322,7 @@ class SED(object):
 
         self._make_fast_spec()
 
-        if isinstance(wave, tuple):
-            return tuple(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        elif isinstance(wave, list):
-            return list(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        else:  # ndarray or scalar
-            return self._fast_spec(wave / (1.0 + self.redshift))
+        return self._fast_spec(wave / (1.0 + self.redshift))
 
     def _call_slow(self, wave):
         """ Return flux in photons / sec / cm^2 / nm or dimensionless normalization.
@@ -361,13 +356,7 @@ class SED(object):
             out = out * self.flux_type
             out = out.to(_photons, units.spectral_density(rest_wave_quantity)).value
 
-        # Return same format as received (except Quantity -> ndarray)
-        if isinstance(wave_in, tuple):
-            return tuple(out)
-        elif isinstance(wave_in, list):
-            return list(out)
-        else:
-            return out # Works for np.ndarray, Quantity, or scalar.
+        return out
 
     def __call__(self, wave):
         """ Return photon flux density or dimensionless normalization at wavelength `wave`.
@@ -376,11 +365,20 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         wavelength outside the defined range is passed as an argument.
 
-        @param wave     Wavelength in nanometers at which to evaluate the SED.
+        @param wave     Wavelength in nanometers at which to evaluate the SED. May be a scalara,
+                        a numpy.array, or an astropy.units.Quantity
 
         @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or
                  dimensionless normalization if self.dimensionless.
         """
+        # Convert list-like things to numpy arrays
+        try:
+            len(wave)
+        except TypeError:
+            pass
+        else:
+            wave = np.array(wave)
+
         if self.fast:
             return self._call_fast(wave)
         else:
