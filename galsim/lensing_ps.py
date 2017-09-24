@@ -425,17 +425,8 @@ class PowerSpectrum(object):
                 raise ValueError("kmax_factor must be an integer")
             kmax_factor = int(kmax_factor)
 
-        # Check if center is a Position
-        if isinstance(center,galsim.PositionD):
-            pass  # This is what it should be
-        elif isinstance(center,galsim.PositionI):
-            # Convert to a PositionD
-            center = galsim.PositionD(center.x, center.y)
-        elif isinstance(center, tuple) and len(center) == 2:
-            # Convert (x,y) tuple to PositionD
-            center = galsim.PositionD(center[0], center[1])
-        else:
-            raise TypeError("Unable to parse the input center argument for buildGrid")
+        # Make sure center is a PositionD
+        center = galsim.PositionD(center)
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
@@ -861,9 +852,8 @@ class PowerSpectrum(object):
     def _hard_cutoff(self, k, k_max):
         if isinstance(k, float):
             return float(k < k_max)
-        elif isinstance(k, list) or isinstance(k, tuple):
-            return (np.array(k) < k_max).astype(float)
-        else: return (k < k_max).astype(float)
+        else:
+            return (k < k_max).astype(float)
 
     def _wrap_image(self, im, border=7):
         """
