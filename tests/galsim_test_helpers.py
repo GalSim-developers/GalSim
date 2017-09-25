@@ -265,7 +265,7 @@ def do_shoot(prof, img, name):
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print('nphot -> ',nphot)
-    if 'InterpolatedImage' in name:
+    if 'InterpolatedImage' in name or 'PhaseScreen' in name:
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
