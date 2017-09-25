@@ -407,6 +407,10 @@ class ChromaticObject(object):
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
+            if len(wave_list) < 2:
+                raise AttributeError(
+                    "Cannot use SampleIntegrator when Bandpass and SED are both "
+                    "analytic.")
             bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
                                                           interpolant='linear'), 'nm')
 

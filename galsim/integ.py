@@ -187,7 +187,16 @@ class SampleIntegrator(ImageIntegrator):
                             galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     """
     def __init__(self, rule):
+        if rule == midpt:
+            from galsim.deprecated import depr
+            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
+            rule = midptRule
+        elif rule == np.trapz:
+            from galsim.deprecated import depr
+            depr('galsim.integ.trapz', 1.5, 'galsim.integ.trapzRule')
+            rule = trapzRule
         self.rule = rule
+
     def calculateWaves(self, bandpass):
         if len(bandpass.wave_list) < 0:
             raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
@@ -219,9 +228,18 @@ class ContinuousIntegrator(ImageIntegrator):
                         set to False in this case.  [default: True]
     """
     def __init__(self, rule, N=250, use_endpoints=True):
-        self.N = N
+        if rule == midpt:
+            from galsim.deprecated import depr
+            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
+            rule = midptRule
+        elif rule == np.trapz:
+            from galsim.deprecated import depr
+            depr('galsim.integ.trapz', 1.5, 'galsim.integ.trapzRule')
+            rule = trapzRule
         self.rule = rule
+        self.N = N
         self.use_endpoints = use_endpoints
+
     def calculateWaves(self, bandpass):
         h = (bandpass.red_limit*1.0 - bandpass.blue_limit)/self.N
         if self.use_endpoints:

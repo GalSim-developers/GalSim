@@ -1196,6 +1196,15 @@ def test_analytic_integrator():
     np.testing.assert_array_almost_equal(kimage1.array, kimage3.array, 5,
                                          "Analytic integrator doesn't match sample integrator")
 
+    # Test that attempting to use SampleIntegrator with analytic sed, bandpass raises an Error:
+    try:
+        np.testing.assert_raises(
+            AttributeError, final1.drawImage, band1,
+            integrator=galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule))
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
 
 @timer
 def test_gsparam():
