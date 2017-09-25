@@ -516,7 +516,8 @@ namespace galsim {
         double uval(double u) const;
 
         // Override numerical calculation with known analytic integral
-        // (Not as simple as the Cubic one, but still a straightforward integral for Maple.)
+        // Not as simple as the Cubic one, but still a straightforward integral for Maple.
+        // For the curious, the + flux is (13018561 / 11595672) + (17267 / 14494590) * sqrt(31).
         double getPositiveFlux() const { return 1.1293413499280066555; }
         double getNegativeFlux() const { return 0.1293413499280066555; }
 
