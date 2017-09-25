@@ -248,7 +248,7 @@ namespace galsim {
     { return SumIX<T,T>(im,x); }
 
     template <typename T>
-    inline ImageView<T> operator+=(ImageView<T> im, T x)
+    inline ImageView<T> operator+=(ImageView<T> im, const T& x)
     { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
 
     template <typename T>
@@ -281,7 +281,7 @@ namespace galsim {
     { return SumIX<T,T>(im,-x); }
 
     template <typename T>
-    inline ImageView<T> operator-=(ImageView<T> im, T x)
+    inline ImageView<T> operator-=(ImageView<T> im, const T& x)
     { im += T(-x); return im; }
 
     template <typename T>
@@ -327,7 +327,7 @@ namespace galsim {
     { return ProdIX<T,T>(im,x); }
 
     template <typename T>
-    inline ImageView<T> operator*=(ImageView<T> im, T x)
+    inline ImageView<T> operator*=(ImageView<T> im, const T& x)
     { transform_pixel(im, MultiplyConstant<T,T>(x)); return im; }
 
     template <typename T>
@@ -383,7 +383,7 @@ namespace galsim {
     { return QuotIX<T,T>(im,x); }
 
     template <typename T>
-    inline ImageView<T> operator/=(ImageView<T> im, T x)
+    inline ImageView<T> operator/=(ImageView<T> im, const T& x)
     { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
 
     template <typename T>
