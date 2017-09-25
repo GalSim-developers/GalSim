@@ -144,9 +144,9 @@ class ImageIntegrator(object):
     # subclasses must define
     # 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to
     #    evaluate the integrand
-    # 2) an function attribute `.rule` which takes a list of integrand evaluations as its first
+    # 2) an function attribute `.rule` which takes a integrand function as its first
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
-    #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
+    #    an approximation to the integral.  (E.g., the function midptRule above)
 
     def __call__(self, evaluateAtWavelength, bandpass, image, drawImageKwargs, doK=False):
         """
@@ -156,7 +156,7 @@ class ImageIntegrator(object):
         @param image                Image used to set size and scale of output
         @param drawImageKwargs      dict with other kwargs to send to drawImage function.
         @param doK                  Integrate up results of drawKImage instead of results of
-                                    drawImage.
+                                    drawImage.  [default: False]
 
         @returns the result of integral as an Image
         """
@@ -183,15 +183,15 @@ class SampleIntegrator(ImageIntegrator):
 
     @param rule         Which integration rule to apply to the wavelength and monochromatic surface
                         brightness samples.  Options include:
-                            galsim.integ.midpt  --  Use the midpoint integration rule
-                            numpy.trapz         --  Use the trapezoidal integration rule
+                            galsim.integ.midptRule  --  Use the midpoint integration rule
+                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     """
     def __init__(self, rule):
         self.rule = rule
     def calculateWaves(self, bandpass):
         if len(bandpass.wave_list) < 0:
             raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
-                                 "midpt_sample_integrator.")
+                                 "SampleIntegrator.")
         return bandpass.wave_list
 
 
@@ -206,8 +206,8 @@ class ContinuousIntegrator(ImageIntegrator):
 
     @param rule         Which integration rule to apply to the wavelength and monochromatic
                         surface brightness samples.  Options include:
-                            galsim.integ.midpt  --  Use the midpoint integration rule
-                            numpy.trapz         --  Use the trapezoidal integration rule
+                            galsim.integ.midptRule  --  Use the midpoint integration rule
+                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     @param N            Number of equally-wavelength-spaced monochromatic surface brightness
                         samples to evaluate. [default: 250]
     @param use_endpoints  Whether to sample the endpoints `bandpass.blue_limit` and
