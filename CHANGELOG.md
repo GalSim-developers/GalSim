@@ -45,6 +45,10 @@ API Changes
   If you want a view, you should use the more intuitive image.view().  (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
+- Changed the type of acceptable integration rules for
+  galsim.integ.ImageIntegrator subclasses.  This should be transparent if you
+  have been using strings to specify integrators for chromatic object
+  drawImage.  (#887).
 
 
 Dependency Changes

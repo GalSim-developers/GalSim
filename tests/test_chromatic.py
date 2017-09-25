@@ -164,7 +164,7 @@ def test_draw_add_commutativity():
     chromatic_kimage = galsim.ImageCD(stamp_size, stamp_size, scale=pixel_scale)
     # use chromatic parent class to draw without ChromaticConvolution acceleration...
     t4 = time.time()
-    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midpt, N=N, use_endpoints=False)
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midptRule, N=N, use_endpoints=False)
     # NB. You cannot use ChromaticObject.drawImage() here, since it will automatically farm out to
     #     the ChromaticConvolution version of drawImage rather than respecting the
     #     ChromaticObject specification.  Using super() doesn't seem to work either.  So I just
@@ -178,6 +178,20 @@ def test_draw_add_commutativity():
     t5 = time.time()
     print('ChromaticObject drawImage, drawKImage took {0} seconds.'.format(t5-t4))
     # plotme(chromatic_image)
+
+    # Check error handling of too few sample points
+    try:
+        integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midptRule, N=1,
+                                                       use_endpoints=False)
+        np.testing.assert_raises(ValueError, chromatic_final.drawImage, bandpass,
+                                 integrator=integrator)
+        integrator = galsim.integ.ContinuousIntegrator(galsim.integ.trapzRule, N=1,
+                                                       use_endpoints=False)
+        np.testing.assert_raises(ValueError, chromatic_final.drawImage, bandpass,
+                                 integrator=integrator)
+    except ImportError:
+        print("The assert_raises tests require nose")
+
 
     peak = chromatic_image.array.max()
     printval(GS_image, chromatic_image)

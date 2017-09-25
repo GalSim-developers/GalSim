@@ -313,6 +313,26 @@ class ChromaticObject(object):
         """Boolean indicating if ChromaticObject is dimensionless."""
         return self.SED.dimensionless
 
+    @staticmethod
+    def _get_integrator(integrator, wave_list):
+        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
+        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
+        # of `wave_list`.
+        if isinstance(integrator, str):
+            if integrator == 'trapezoidal':
+                rule = galsim.integ.trapzRule
+            elif integrator == 'midpoint':
+                rule = galsim.integ.midptRule
+            else:
+                raise TypeError("Unrecognized integration rule: %s"%integrator)
+            if len(wave_list) > 0:
+                integrator = galsim.integ.SampleIntegrator(rule)
+            else:
+                integrator = galsim.integ.ContinuousIntegrator(rule)
+        if not isinstance(integrator, galsim.integ.ImageIntegrator):
+            raise TypeError("Invalid type passed in for integrator!")
+        return integrator
+
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
 
@@ -326,19 +346,20 @@ class ChromaticObject(object):
 
         Several integrators are available in galsim.integ to do this integration when using the
         first method (non-interpolated integration).  By default,
-        `galsim.integ.SampleIntegrator(rule=np.trapz)` will be used if either
+        `galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule)` will be used if either
         `bandpass.wave_list` or `self.wave_list` have len() > 0.  If lengths of both are zero, which
         may happen if both the bandpass throughput and the SED associated with `self` are analytic
-        python functions, for example, then `galsim.integ.ContinuousIntegrator(rule=np.trapz)`
+        python functions, for example, then
+        `galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule)`
         will be used instead.  This latter case by default will evaluate the integrand at 250
         equally-spaced wavelengths between `bandpass.blue_limit` and `bandpass.red_limit`.
 
         By default, the above two integrators will use the trapezoidal rule for integration.  The
         midpoint rule for integration can be specified instead by passing an integrator that has
-        been initialized with the `rule=galsim.integ.midpt` argument.  When creating a
+        been initialized with the `rule=galsim.integ.midptRule` argument.  When creating a
         ContinuousIntegrator, the number of samples `N` is also an argument.  For example:
 
-            >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midpt, N=100)
+            >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midptRule, N=100)
             >>> image = chromatic_obj.drawImage(bandpass, integrator=integrator)
 
         Finally, this method uses a cache to avoid recomputing the integral over the product of
@@ -382,23 +403,7 @@ class ChromaticObject(object):
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
-        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
-        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
-        # of `wave_list`.
-        if isinstance(integrator, str):
-            if integrator == 'trapezoidal':
-                rule = np.trapz
-            elif integrator == 'midpoint':
-                rule = galsim.integ.midpt
-            else:
-                raise TypeError("Unrecognized integration rule: %s"%integrator)
-            if len(wave_list) > 0:
-                integrator = galsim.integ.SampleIntegrator(rule)
-            else:
-                integrator = galsim.integ.ContinuousIntegrator(rule)
-        if not isinstance(integrator, galsim.integ.SampleIntegrator) and \
-                not isinstance(integrator, galsim.integ.ContinuousIntegrator):
-            raise TypeError("Invalid type passed in for integrator!")
+        integrator = self._get_integrator(integrator, wave_list)
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
@@ -471,23 +476,7 @@ class ChromaticObject(object):
             image = prof0.drawKImage(image=image, **kwargs)
             return image
 
-        # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
-        # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
-        # of `wave_list`.
-        if isinstance(integrator, str):
-            if integrator == 'trapezoidal':
-                rule = np.trapz
-            elif integrator == 'midpoint':
-                rule = galsim.integ.midpt
-            else:
-                raise TypeError("Unrecognized integration rule: %s"%integrator)
-            if len(wave_list) > 0:
-                integrator = galsim.integ.SampleIntegrator(rule)
-            else:
-                integrator = galsim.integ.ContinuousIntegrator(rule)
-        if not isinstance(integrator, galsim.integ.SampleIntegrator) and \
-                not isinstance(integrator, galsim.integ.ContinuousIntegrator):
-            raise TypeError("Invalid type passed in for integrator!")
+        integrator = self._get_integrator(integrator, wave_list)
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):

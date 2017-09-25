@@ -102,6 +102,42 @@ def trapz(func, min, max, points=10000):
     return np.trapz(func(points),points)
 
 
+def midptRule(f, xs):
+    """Midpoint rule for integration.
+
+    @param f   Function to integrate.
+    @param xs  Locations at which to evaluate f.
+
+    @returns  Midpoint rule approximation to the integral.
+    """
+    if len(xs) < 2:
+        raise ValueError("Not enough points for midptRule integration")
+    x, xp = xs[:2]
+    result = f(x)*(xp-x)
+    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
+        result += 0.5*f(xp)*(xpp-x)
+    result += f(xpp)*(xpp-xp)
+    return result
+
+
+def trapzRule(f, xs):
+    """Trapezoidal rule for integration.
+
+    @param f   Function to integrate.
+    @param xs  Locations at which to evaluate f.
+
+    @returns  Trapezoidal rule approximation to the integral.
+    """
+    if len(xs) < 2:
+        raise ValueError("Not enough points for trapzRule integration")
+    x, xp = xs[:2]
+    result = 0.5*f(x)*(xp-x)
+    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
+        result += 0.5*f(xp)*(xpp-x)
+    result += 0.5*f(xpp)*(xpp-xp)
+    return result
+
+
 class ImageIntegrator(object):
     def __init__(self):
         raise NotImplementedError("Must instantiate subclass of ImageIntegrator")
@@ -124,17 +160,18 @@ class ImageIntegrator(object):
 
         @returns the result of integral as an Image
         """
-        images = []
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)
         drawImageKwargs.pop('add_to_image', None) # Make sure add_to_image isn't in kwargs
-        for w in waves:
+
+        def integrand(w):
             prof = evaluateAtWavelength(w) * bandpass(w)
             if not doK:
-                images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
+                return prof.drawImage(image=image.copy(), **drawImageKwargs)
             else:
-                images.append(prof.drawKImage(image=image.copy(), **drawImageKwargs))
-        return self.rule(images, waves)
+                return prof.drawKImage(image=image.copy(), **drawImageKwargs)
+        return self.rule(integrand, waves)
+
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
@@ -156,6 +193,7 @@ class SampleIntegrator(ImageIntegrator):
             raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
                                  "midpt_sample_integrator.")
         return bandpass.wave_list
+
 
 class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
