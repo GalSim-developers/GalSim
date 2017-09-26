@@ -45,10 +45,6 @@ API Changes
   If you want a view, you should use the more intuitive image.view().  (#873)
 - Changed behaviour of the `preload` option in RealGalaxyCatalog and
   COSMOSCatalog to preload data in memory, not just the fits HDUs (#884)
-- Changed the type of acceptable integration rules for
-  galsim.integ.ImageIntegrator subclasses.  This should be transparent if you
-  have been using strings to specify integrators for chromatic object
-  drawImage.  (#887).
 
 
 Dependency Changes
@@ -96,6 +92,9 @@ Deprecated Features
 - Deprecated `calculateFlux(bandpass=None)` for computing bolometric flux.
   Users of this feature can still obtain a psuedo-bolometric flux by using
   an explicit bolometric Bandpass. (#905)
+- Deprecated the use of `np.trapz` and `galsim.integ.mipdt` as valid
+  integration rules for use by `ImageIntegrator`s, replaced by
+  `galsim.integ.trapzRule` and `galsim.integ.midptRule`. (#887)
 
 
 New Features
@@ -200,6 +199,7 @@ New Features
 - Added `recenter` option to drawKImage to optionally not recenter the input
   image at (0,0).  The default `recenter=True` is consistent with how this
   function has worked in previous versions. (#873)
+- Drawing chromatic objects now uses significantly less RAM. (#887)
 
 
 New config features
