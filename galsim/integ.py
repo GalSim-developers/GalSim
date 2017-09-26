@@ -193,7 +193,7 @@ class SampleIntegrator(ImageIntegrator):
             rule = midptRule
         elif rule == np.trapz:
             from galsim.deprecated import depr
-            depr('galsim.integ.trapz', 1.5, 'galsim.integ.trapzRule')
+            depr('np.trapz', 1.5, 'galsim.integ.trapzRule')
             rule = trapzRule
         self.rule = rule
 
