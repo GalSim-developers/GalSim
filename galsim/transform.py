@@ -48,7 +48,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
 
     @returns a Transformation or ChromaticTransformation instance as appropriate.
     """
-    from .compound import Sum, Convolution
+    from .sum import Sum
+    from .compound import Convolution
     from .chromatic import ChromaticObject
     from .chromatic import ChromaticSum, ChromaticConvolution, ChromaticTransformation
     if not (isinstance(obj, GSObject) or isinstance(obj, ChromaticObject)):

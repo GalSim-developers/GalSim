@@ -1836,7 +1836,7 @@ class ChromaticSum(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import Add
+        from .sum import Add
         return Add([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                    gsparams=self.gsparams)
 

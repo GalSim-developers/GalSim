@@ -248,12 +248,12 @@ class GSObject(object):
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
     def __add__(self, other):
-        from .compound import Add
+        from .sum import Add
         return Add([self, other])
 
     # op- is unusual, but allowed.  It subtracts off one profile from another.
     def __sub__(self, other):
-        from .compound import Add
+        from .sum import Add
         return Add([self, (-1. * other)])
 
     # Make op* work to adjust the flux of an object

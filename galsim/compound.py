@@ -18,7 +18,6 @@
 """@file compound.py
 Some compound GSObject classes that contain other GSObject instances:
 
-Sum = sum of multiple profiles
 Convolution = convolution of multiple profiles
 Deconvolution = deconvolution by a given profile
 AutoConvolution = convolution of a profile by itself
@@ -31,233 +30,8 @@ import numpy as np
 from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
-from .chromatic import ChromaticObject, ChromaticSum, ChromaticConvolution
+from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property
-
-def Add(*args, **kwargs):
-    """A function for adding 2 or more GSObject or ChromaticObject instances.
-
-    This function will inspect its input arguments to decide if a Sum object or a
-    ChromaticSum object is required to represent the sum of surface brightness profiles.
-
-    Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
-    operator, which returns a Sum:
-
-        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
-        >>> disk = galsim.Exponential(half_light_radius=1.4)
-        >>> gal = bulge + disk
-        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
-
-    If one of the items is chromatic, it will return a ChromaticSum
-
-        >>> disk = galsim.Exponential(half_light_radius=1.4) * galsim.SED(sed_file)
-        >>> gal = bulge + disk
-
-    @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-
-    @returns a Sum or ChromaticSum instance as appropriate.
-    """
-    if len(args) == 0:
-        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
-    elif len(args) == 1:
-        # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], (GSObject, ChromaticObject)):
-            args = [args[0]]
-        elif isinstance(args[0], list) or isinstance(args[0], tuple):
-            args = args[0]
-        else:
-            raise TypeError("Single input argument must be a GSObject, ChromaticObject or "
-                            + "a (possibly mixed) list of them.")
-    # else args is already the list of objects
-
-    if any([isinstance(a, ChromaticObject) for a in args]):
-        return ChromaticSum(*args, **kwargs)
-    else:
-        return Sum(*args, **kwargs)
-
-
-class Sum(GSObject):
-    """A class for adding 2 or more GSObject instances.
-
-    The Sum class is used to represent the sum of multiple GSObject instances.  For example, it
-    might be used to represent a multiple-component galaxy as the sum of an Exponential and a
-    DeVaucouleurs, or to represent a PSF as the sum of multiple Gaussian objects.
-
-    Initialization
-    --------------
-
-    Typically, you do not need to construct a Sum object explicitly.  Normally, you would just
-    use the + operator, which returns a Sum:
-
-        >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
-        >>> disk = galsim.Exponential(half_light_radius=1.4)
-        >>> gal = bulge + disk
-        >>> psf = galsim.Gaussian(sigma=0.3, flux=0.3) + galsim.Gaussian(sigma=0.8, flux=0.7)
-
-    You can also use the Add() factory function, which returns a Sum object if none of the
-    individual objects are chromatic:
-
-        >>> gal = galsim.Add([bulge,disk])
-
-    @param args             Unnamed args should be a list of objects to add.
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
-
-    Note: if `gsparams` is unspecified (or None), then the Sum instance inherits the same GSParams
-    as the first item in the list.  Also, note that parameters related to the Fourier-space
-    calculations must be set when initializing the individual GSObject instances that go into the
-    Sum, NOT when creating the Sum (at which point the accuracy and threshold parameters will simply
-    be ignored).
-
-    Methods
-    -------
-
-    There are no additional methods for Sum beyond the usual GSObject methods.
-    """
-    def __init__(self, *args, **kwargs):
-
-        # Check kwargs first:
-        gsparams = kwargs.pop("gsparams", None)
-
-        # Make sure there is nothing left in the dict.
-        if kwargs:
-            raise TypeError(
-                "Sum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
-
-        if len(args) == 0:
-            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
-        elif len(args) == 1:
-            # 1 argument.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], GSObject):
-                args = [args[0]]
-            elif isinstance(args[0], list) or isinstance(args[0], tuple):
-                args = args[0]
-            else:
-                raise TypeError("Single input argument must be a GSObject or list of them.")
-        # else args is already the list of objects
-
-        # Consolidate args for Sums of Sums...
-        new_args = []
-        for a in args:
-            if isinstance(a, Sum):
-                new_args.extend(a._obj_list)
-            else:
-                new_args.append(a)
-        args = new_args
-
-        # Save the list as an attribute, so it can be inspected later if necessary.
-        self._obj_list = args
-
-        for obj in args:
-            if not isinstance(obj, GSObject):
-                raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
-        self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
-        SBList = [obj._sbp for obj in args]
-        self._sbp = _galsim.SBAdd(SBList, self.gsparams._gsp)
-
-    @lazy_property
-    def noise(self):
-        # If any of the objects have a noise attribute, then we propagate the sum of the
-        # noises (they add like variances) to the final sum.
-        _noise = None
-        for obj in self._obj_list:
-            if obj.noise is not None:
-                if _noise is None:
-                    _noise = obj.noise
-                else:
-                    _noise += obj.noise
-        return _noise
-
-    @property
-    def obj_list(self): return self._obj_list
-
-    def __eq__(self, other):
-        return (isinstance(other, Sum) and
-                self.obj_list == other.obj_list and
-                self.gsparams == other.gsparams)
-
-    def __hash__(self):
-        return hash(("galsim.Sum", tuple(self.obj_list), self.gsparams))
-
-    def __repr__(self):
-        return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self.gsparams)
-
-    def __str__(self):
-        str_list = [ str(obj) for obj in self.obj_list ]
-        return '(' + ' + '.join(str_list) + ')'
-        #return 'galsim.Sum([%s])'%', '.join(str_list)
-
-    def _prepareDraw(self):
-        for obj in self._obj_list:
-            obj._prepareDraw()
-        SBList = [obj._sbp for obj in self._obj_list]
-        self._sbp = _galsim.SBAdd(SBList, self.gsparams._gsp)
-
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
-
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .photon_array import PhotonArray
-        from .random import UniformDeviate, BinomialDeviate
-        if n_photons == 0:
-            return PhotonArray(0)
-        ud = UniformDeviate(rng)
-
-        remainingAbsoluteFlux = self.positive_flux + self.negative_flux
-        fluxPerPhoton = remainingAbsoluteFlux / n_photons
-
-        # Initialize the output array
-        photons = PhotonArray(n_photons)
-
-        remainingN = n_photons
-        istart = 0  # The location in the photons array where we assign the component arrays.
-
-        # Get photons from each summand, using BinomialDeviate to randomize
-        # the distribution of photons among summands
-        for i, obj in enumerate(self.obj_list):
-            thisAbsoluteFlux = obj.positive_flux + obj.negative_flux
-
-            # How many photons to shoot from this summand?
-            thisN = remainingN  # All of what's left, if this is the last summand...
-            if i < len(self.obj_list)-1:
-                # otherwise, allocate a randomized fraction of the remaining photons to summand.
-                bd = BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
-                thisN = int(bd())
-            if thisN > 0:
-                thisPA = obj.shoot(thisN, ud)
-                # Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
-                # whereas the shoot() routine would have made them each nominally
-                # thisAbsoluteFlux/thisN
-                thisPA.scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux)
-                photons.assignAt(istart, thisPA)
-                istart += thisN
-            remainingN -= thisN
-            remainingAbsoluteFlux -= thisAbsoluteFlux
-        assert remainingN == 0
-        assert np.isclose(remainingAbsoluteFlux, 0.0)
-
-        # This process produces correlated photons, so mark the resulting array as such.
-        if len(self.obj_list) > 1:
-            photons.setCorrelated()
-        return photons
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sbp']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.__init__(self._obj_list, gsparams=self.gsparams)
-
 
 
 def Convolve(*args, **kwargs):
@@ -339,9 +113,9 @@ class Convolution(GSObject):
 
     Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same
     GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
-    space calculations must be set when initializing the individual GSObjects that go into the Sum,
-    NOT when creating the Sum (at which point the accuracy and threshold parameters will simply be
-    ignored).
+    space calculations must be set when initializing the individual GSObjects that go into the
+    Convolution, NOT when creating the Convolution (at which point the accuracy and threshold
+    parameters will simply be ignored).
 
     Methods
     -------
@@ -390,6 +164,8 @@ class Convolution(GSObject):
                 real_space = hard_edge
             else:
                 real_space = False
+        elif bool(real_space) != real_space:
+            raise TypeError("real_space must be a boolean")
 
         # Warn if doing DFT convolution for objects with hard edges
         if not real_space and hard_edge:
@@ -430,13 +206,13 @@ class Convolution(GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self._real_space = real_space
+        self._real_space = bool(real_space)
         self._obj_list = args
         self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj._sbp for obj in args ]
-        self._sbp = _galsim.SBConvolve(SBList, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     @lazy_property
     def noise(self):
@@ -679,6 +455,8 @@ class AutoConvolution(GSObject):
         if real_space is None:
             # The automatic determination is to use real_space if obj has hard edges.
             real_space = hard_edge
+        elif bool(real_space) != real_space:
+            raise TypeError("real_space must be a boolean")
 
         # Warn if doing DFT convolution for objects with hard edges.
         if not real_space and hard_edge:
@@ -700,11 +478,11 @@ class AutoConvolution(GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self._real_space = real_space
+        self._real_space = bool(real_space)
         self._orig_obj = obj
         self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = _galsim.SBAutoConvolve(obj._sbp, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBAutoConvolve(obj._sbp, self._real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
@@ -831,6 +609,8 @@ class AutoCorrelation(GSObject):
         if real_space is None:
             # The automatic determination is to use real_space if obj has hard edges.
             real_space = hard_edge
+        elif bool(real_space) != real_space:
+            raise TypeError("real_space must be a boolean")
 
         # Warn if doing DFT convolution for objects with hard edges.
         if not real_space and hard_edge:
@@ -852,11 +632,11 @@ class AutoCorrelation(GSObject):
 
         # Save the construction parameters (as they are at this point) as attributes so they
         # can be inspected later if necessary.
-        self._real_space = real_space
+        self._real_space = bool(real_space)
         self._orig_obj = obj
         self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = _galsim.SBAutoCorrelate(obj._sbp, real_space, self.gsparams._gsp)
+        self._sbp = _galsim.SBAutoCorrelate(obj._sbp, self._real_space, self.gsparams._gsp)
         if obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
@@ -889,7 +669,7 @@ class AutoCorrelation(GSObject):
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
         self._sbp = _galsim.SBAutoCorrelate(self._orig_obj._sbp,
-                                                   self._real_space, self.gsparams._gsp)
+                                            self._real_space, self.gsparams._gsp)
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
