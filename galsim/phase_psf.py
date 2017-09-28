@@ -559,7 +559,7 @@ class Aperture(object):
     def __getstate__(self):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
-        d = self.__dict__
+        d = self.__dict__.copy()
         for k in ['_rho', '_u', '_v', '_rsqr']:
             d.pop(k, None)
         return d
