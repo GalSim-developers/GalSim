@@ -1430,6 +1430,10 @@ class GSObject(object):
                 raise ValueError("surface_ops are only relevant for method='phot'")
             if save_photons:
                 raise ValueError("save_photons is only valid for method='phot'")
+        else:
+            # If we want to save photons, it doesn't make sense to limit the number per shoot call.
+            if save_photons and maxN is not None:
+                raise ValueError("Setting maxN is incompatible with save_photons=True")
 
         # Do any delayed computation needed by fft or real_space drawing.
         if method != 'phot':
