@@ -138,7 +138,7 @@ from .sum import Add, Sum
 from .compound import Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .fouriersqrt import FourierSqrt, FourierSqrtProfile
-from .compound import RandomWalk
+from .randwalk import RandomWalk
 from .transform import Transform, Transformation, _Transform
 
 # Chromatic
