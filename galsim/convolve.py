@@ -15,14 +15,13 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file compound.py
+"""@file convolve.py
 Some compound GSObject classes that contain other GSObject instances:
 
 Convolution = convolution of multiple profiles
 Deconvolution = deconvolution by a given profile
 AutoConvolution = convolution of a profile by itself
 AutoCorrelation = convolution of a profile by its reflection
-FourierSqrt = Fourier-space square root of a profile
 """
 
 import numpy as np
@@ -210,16 +209,28 @@ class Convolution(GSObject):
         self._obj_list = args
         self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
 
-        # Then finally initialize the SBProfile using the objects' SBProfiles.
-        SBList = [ obj._sbp for obj in args ]
-        self._sbp = _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
+    @property
+    def obj_list(self): return self._obj_list
+
+    @property
+    def real_space(self): return self._real_space
+
+    @lazy_property
+    def flux(self):
+        flux_list = [obj.flux for obj in self.obj_list]
+        return np.prod(flux_list)
+
+    @lazy_property
+    def _sbp(self):
+        SBList = [obj._sbp for obj in self.obj_list]
+        return _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     @lazy_property
     def noise(self):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.
         _noise = None
-        for i, obj in enumerate(self._obj_list):
+        for i, obj in enumerate(self.obj_list):
             if obj.noise is not None:
                 if _noise is not None:
                     import warnings
@@ -227,18 +238,13 @@ class Convolution(GSObject):
                                   "multiple objects have noise attribute")
                     break
                 _noise = obj.noise
-                others = [ obj2 for k, obj2 in enumerate(self._obj_list) if k != i ]
+                others = [ obj2 for k, obj2 in enumerate(self.obj_list) if k != i ]
                 assert len(others) > 0
                 if len(others) == 1:
                     _noise = _noise.convolvedWith(others[0])
                 else:
                     _noise = _noise.convolvedWith(Convolve(others))
         return _noise
-
-    @property
-    def obj_list(self): return self._obj_list
-    @property
-    def real_space(self): return self._real_space
 
     def __eq__(self, other):
         return (isinstance(other, Convolution) and
@@ -262,41 +268,124 @@ class Convolution(GSObject):
         return s
 
     def _prepareDraw(self):
-        for obj in self._obj_list:
+        for obj in self.obj_list:
             obj._prepareDraw()
-        SBList = [obj._sbp for obj in self._obj_list]
-        self._sbp = _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    def maxK(self):
+        maxk_list = [obj.maxK() for obj in self.obj_list]
+        return np.min(maxk_list)
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .random import UniformDeviate
-        ud = UniformDeviate(rng)
+    def stepK(self):
+        # This is approximate.  stepk ~ 2pi/R
+        # Assume R_final^2 = Sum(R_i^2)
+        # So 1/stepk^2 = 1/Sum(1/stepk_i^2)
+        inv_stepksq_list = [obj.stepK()**(-2) for obj in self.obj_list]
+        return np.sum(inv_stepksq_list)**(-0.5)
 
-        photon_array = self._obj_list[0].shoot(n_photons, ud)
+    def hasHardEdges(self):
+        return len(self.obj_list) == 1 and self.obj_list[0].hasHardEdges()
+
+    def isAxisymmetric(self):
+        axi_list = [obj.isAxisymmetric() for obj in self.obj_list]
+        return bool(np.all(axi_list))
+
+    def isAnalyticX(self):
+        if self.real_space and len(self.obj_list) <= 2:
+            ax_list = [obj.isAnalyticX() for obj in self.obj_list]
+            return bool(np.all(ax_list))
+        else:
+            return False
+
+    def isAnalyticK(self):
+        ak_list = [obj.isAnalyticK() for obj in self.obj_list]
+        return bool(np.all(ak_list))
+
+    @property
+    def centroid(self):
+        cen_list = [obj.centroid for obj in self.obj_list]
+        return sum(cen_list[1:], cen_list[0])
+
+    def getPositiveFlux(self):
+        pflux_list = [obj.getPositiveFlux() for obj in self.obj_list]
+        return np.prod(pflux_list)
+
+    def getNegativeFlux(self):
+        pflux_list = [obj.getNegativeFlux() for obj in self.obj_list]
+        return np.prod(pflux_list)
+
+    def maxSB(self):
+        # This one is probably the least accurate of all the estimates of maxSB.
+        # The calculation is based on the exact value for Gaussians.
+        #     maxSB = flux / 2pi sigma^2
+        # When convolving multiple Gaussians together, the sigma^2 values add:
+        #     sigma_final^2 = Sum_i sigma_i^2
+        # from which we can calculate
+        #     maxSB = flux_final / 2pi sigma_final^2
+        # or
+        #     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
+        #
+        # For non-Gaussians, this procedure will tend to produce an over-estimate of the
+        # true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed
+        # more than the Gaussian does.  So this is likely to be too high, which is acceptable.
+        area_list = [obj.flux / obj.maxSB() for obj in self.obj_list]
+        return self.flux / np.sum(area_list)
+
+    def _xValue(self, pos):
+        if len(self.obj_list) == 1:
+            return self.obj_list[0]._xValue(pos)
+        elif len(self.obj_list) == 2:
+            try:
+                return self._sbp.xValue(pos._p)
+            except AttributeError:
+                raise ValueError("Cannot use real_space convolution for these profiles")
+        else:
+            raise ValueError("Cannot use real_space convolution for >2 profiles")
+
+    def _kValue(self, pos):
+        kv_list = [obj.kValue(pos) for obj in self.obj_list]
+        return np.prod(kv_list)
+
+    def _drawReal(self, image):
+        if len(self.obj_list) == 1:
+            return self.obj_list[0]._drawReal(image)
+        elif len(self.obj_list) == 2:
+            try:
+                return self._sbp.draw(image._image, image.scale)
+            except AttributeError:
+                raise ValueError("Cannot use real_space convolution for these profiles")
+        else:
+            raise ValueError("Cannot use real_space convolution for >2 profiles")
+
+    def _shoot(self, photons, ud):
+        from .photon_array import PhotonArray
+
+        self.obj_list[0]._shoot(photons, ud)
         # It may be necessary to shuffle when convolving because we do not have a
         # gaurantee that the convolvee's photons are uncorrelated, e.g., they might
         # both have their negative ones at the end.
         # However, this decision is now made by the convolve method.
-        for obj in self._obj_list[1:]:
-            photon_array.convolve(obj.shoot(n_photons, ud), ud)
-        return photon_array
+        for obj in self.obj_list[1:]:
+            p1 = PhotonArray(len(photons))
+            obj._shoot(p1, ud)
+            photons.convolve(p1, ud)
+
+    def _drawKImage(self, image):
+        self.obj_list[0]._drawKImage(image)
+        if len(self.obj_list) > 1:
+            im1 = image.copy()
+            for obj in self.obj_list[1:]:
+                obj._drawKImage(im1)
+                image *= im1
+        return image
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_sbp']
+        d.pop('_sbp',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._obj_list, real_space=self._real_space, gsparams=self.gsparams)
+
 
 
 def Deconvolve(obj, gsparams=None):
@@ -357,14 +446,26 @@ class Deconvolution(GSObject):
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
         self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
+        self._min_acc_kvalue = obj.flux * self.gsparams.kvalue_accuracy
+        self._inv_min_acc_kvalue = 1./self._min_acc_kvalue
 
-        self._sbp = _galsim.SBDeconvolve(obj._sbp, self.gsparams._gsp)
-        if obj.noise is not None:
-            import warnings
-            warnings.warn("Unable to propagate noise in galsim.Deconvolution")
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBDeconvolve(self.orig_obj._sbp, self.gsparams._gsp)
 
     @property
     def orig_obj(self): return self._orig_obj
+
+    @lazy_property
+    def flux(self):
+        return 1./self.orig_obj.flux
+
+    @property
+    def noise(self):
+        if self.orig_obj.noise is not None:
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.Deconvolution")
+        return None
 
     def __eq__(self, other):
         return (isinstance(other, Deconvolution) and
@@ -381,17 +482,84 @@ class Deconvolution(GSObject):
         return 'galsim.Deconvolve(%s)'%self.orig_obj
 
     def _prepareDraw(self):
-        self._orig_obj._prepareDraw()
-        self._sbp = _galsim.SBDeconvolve(self._orig_obj._sbp, self.gsparams._gsp)
+        self.orig_obj._prepareDraw()
+
+    def maxK(self):
+        return self.orig_obj.maxK()
+
+    def stepK(self):
+        return self.orig_obj.stepK()
+
+    def hasHardEdges(self):
+        return False
+
+    def isAxisymmetric(self):
+        return self.orig_obj.isAxisymmetric()
+
+    def isAnalyticX(self):
+        return False
+
+    def isAnalyticK(self):
+        return self.orig_obj.isAnalyticK()
+
+    @property
+    def centroid(self):
+        return -self.orig_obj.centroid
+
+    def getPositiveFlux(self):
+        return 1./self.orig_obj.getPositiveFlux()
+
+    def getNegativeFlux(self):
+        return 1./self.orig_obj.getNegativeFlux()
+
+    def maxSB(self):
+        # The only way to really give this any meaning is to consider it in the context
+        # of being part of a larger convolution with other components.  The calculation
+        # of maxSB for Convolve is
+        #     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
+        #
+        # A deconvolution will contribute a -sigma^2 to the sum, so a logical choice for
+        # maxSB is to have flux / maxSB = -flux_adaptee / maxSB_adaptee, so its contribution
+        # to the Sum_i 2pi sigma^2 is to subtract its adaptee's value of sigma^2.
+        #
+        # maxSB = -flux * maxSB_adaptee / flux_adaptee
+        #       = -maxSB_adaptee / flux_adaptee^2
+        #
+        return -self.orig_obj.maxSB() / self.orig_obj.flux**2
+
+    def _xValue(self, pos):
+        raise NotImplementedError("Cannot evaluate a Deconvolution in real space")
+
+    def _kValue(self, pos):
+        # Really, for very low original kvalues, this gets very high, which can be unstable
+        # in the presence of noise.  So if the original value is less than min_acc_kvalue,
+        # we instead just return 1/min_acc_kvalue rather than the real inverse.
+        kval = self.orig_obj._kValue(pos)
+        if abs(kval) < self._min_acc_kvalue:
+            return self._inv_min_acc_kvalue
+        else:
+            return 1./kval
+
+    def _drawReal(self, image):
+        raise NotImplementedError("Cannot draw a Deconvolution in real space")
+
+    def _shoot(self, photons, ud):
+        raise NotImplementedError("Cannot draw a Deconvolution with photon shooting")
+
+    def _drawKImage(self, image):
+        self.orig_obj._drawKImage(image)
+        do_inverse = image.array > self._min_acc_kvalue
+        image.array[do_inverse] = 1./image.array[do_inverse]
+        image.array[~do_inverse] = self._inv_min_acc_kvalue
+        return image
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_sbp']
+        d.pop('_sbp',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._orig_obj, self._gsparams)
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -419,7 +587,7 @@ def AutoConvolve(obj, real_space=None, gsparams=None):
         raise TypeError("Argument to AutoConvolve must be either a GSObject or a ChromaticObject.")
 
 
-class AutoConvolution(GSObject):
+class AutoConvolution(Convolution):
     """A special class for convolving a GSObject with itself.
 
     It is equivalent in functionality to `Convolve([obj,obj])`, but takes advantage of
@@ -482,15 +650,24 @@ class AutoConvolution(GSObject):
         self._orig_obj = obj
         self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = _galsim.SBAutoConvolve(obj._sbp, self._real_space, self.gsparams._gsp)
-        if obj.noise is not None:
-            import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
+        # So we can use Convolve methods when there is no advantage to overloading.
+        self._obj_list = [obj, obj]
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBAutoConvolve(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+
+    @property
+    def noise(self):
+        if self.orig_obj.noise is not None:
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
+        return None
 
     def __eq__(self, other):
         return (isinstance(other, AutoConvolution) and
@@ -513,35 +690,14 @@ class AutoConvolution(GSObject):
         return s
 
     def _prepareDraw(self):
-        self._orig_obj._prepareDraw()
-        self._sbp = _galsim.SBAutoConvolve(self._orig_obj._sbp, self._real_space,
-                                                  self.gsparams._gsp)
+        self.orig_obj._prepareDraw()
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
-
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .random import UniformDeviate
-        ud = UniformDeviate(rng)
-
-        photon_array = self._orig_obj.shoot(n_photons, ud)
-        photon_array.convolve(self._orig_obj.shoot(n_photons, ud), ud)
-        return photon_array
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sbp']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.__init__(self._orig_obj, self._real_space, self._gsparams)
+    def _shoot(self, photons, ud):
+        from .photon_array import PhotonArray
+        self.orig_obj._shoot(photons, ud)
+        photons2 = PhotonArray(len(photons))
+        self.orig_obj._shoot(photons2, ud)
+        photons.convolve(photons2, ud)
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None):
@@ -569,7 +725,7 @@ def AutoCorrelate(obj, real_space=None, gsparams=None):
         raise TypeError("Argument to AutoCorrelate must be either a GSObject or a ChromaticObject.")
 
 
-class AutoCorrelation(GSObject):
+class AutoCorrelation(Convolution):
     """A special class for correlating a GSObject with itself.
 
     It is equivalent in functionality to
@@ -616,7 +772,7 @@ class AutoCorrelation(GSObject):
         if not real_space and hard_edge:
             import warnings
             msg = """
-            Doing auto-convolution of object with hard edges.
+            Doing auto-correlation of object with hard edges.
             This might be more accurate and/or faster using real_space=True"""
             warnings.warn(msg)
 
@@ -624,7 +780,7 @@ class AutoCorrelation(GSObject):
         if real_space and not obj.is_analytic_x:
             import warnings
             msg = """
-            Object to be auto-convolved is not analytic in real space.
+            Object to be auto-correlated is not analytic in real space.
             Cannot use real space convolution.
             Switching to DFT method."""
             warnings.warn(msg)
@@ -636,15 +792,24 @@ class AutoCorrelation(GSObject):
         self._orig_obj = obj
         self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
-        self._sbp = _galsim.SBAutoCorrelate(obj._sbp, self._real_space, self.gsparams._gsp)
-        if obj.noise is not None:
-            import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
+        # So we can use Convolve methods when there is no advantage to overloading.
+        self._obj_list = [obj, obj.transform(-1,0,0,-1)]
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBAutoCorrelate(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+
+    @property
+    def noise(self):
+        if self.orig_obj.noise is not None:
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
+        return None
 
     def __eq__(self, other):
         return (isinstance(other, AutoCorrelation) and
@@ -668,36 +833,14 @@ class AutoCorrelation(GSObject):
 
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
-        self._sbp = _galsim.SBAutoCorrelate(self._orig_obj._sbp,
-                                            self._real_space, self.gsparams._gsp)
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
-
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .random import UniformDeviate
-        ud = UniformDeviate(rng)
-
-        photons = self._orig_obj.shoot(n_photons, ud)
-        photons2 = self._orig_obj.shoot(n_photons, ud)
+    def _shoot(self, photons, ud):
+        from .photon_array import PhotonArray
+        self.orig_obj._shoot(photons, ud)
+        photons2 = PhotonArray(len(photons))
+        self.orig_obj._shoot(photons2, ud)
 
         # Flip sign of (x, y) in one of the results
         photons2.scaleXY(-1)
 
         photons.convolve(photons2, ud)
-        return photons
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sbp']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.__init__(self._orig_obj, self._real_space, self._gsparams)

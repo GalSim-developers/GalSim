@@ -187,7 +187,7 @@ class RealGalaxy(GSObject):
         from .random import BaseDeviate, UniformDeviate
         from .correlatednoise import UncorrelatedNoise, _BaseCorrelatedNoise
         from .interpolatedimage import InterpolatedImage
-        from .compound import Convolve, Deconvolve
+        from .convolve import Convolve, Deconvolve
 
         if rng is None:
             rng = BaseDeviate()
@@ -392,7 +392,7 @@ class RealGalaxy(GSObject):
         return d
 
     def __setstate__(self, d):
-        from .compound import Convolve, Deconvolve
+        from .convolve import Convolve, Deconvolve
         self.__dict__ = d
         psf_inv = Deconvolve(self.original_psf, gsparams=self._gsparams)
         self._conv = Convolve([self.original_gal, psf_inv], gsparams=self._gsparams)

@@ -2047,7 +2047,7 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import Convolve
+        from .convolve import Convolve
         return Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                         gsparams=self.gsparams)
 
@@ -2082,7 +2082,7 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns the drawn Image.
         """
-        from .compound import Convolve
+        from .convolve import Convolve
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -2207,7 +2207,7 @@ class ChromaticConvolution(ChromaticObject):
 
     @property
     def noise(self):
-        from .compound import Convolve
+        from .convolve import Convolve
         # Condition for being able to propagate noise:
         # Exactly one of the convolutants has a .covspec attribute.
         covspecs = [ obj.covspec for obj in self.obj_list if hasattr(obj, 'covspec') ]
@@ -2279,7 +2279,7 @@ class ChromaticDeconvolution(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import Deconvolve
+        from .convolve import Deconvolve
         return Deconvolve(self._obj.evaluateAtWavelength(wave), **self.kwargs)
 
 
@@ -2335,7 +2335,7 @@ class ChromaticAutoConvolution(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import AutoConvolve
+        from .convolve import AutoConvolve
         return AutoConvolve(self._obj.evaluateAtWavelength(wave), **self.kwargs)
 
 
@@ -2392,7 +2392,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import AutoCorrelate
+        from .convolve import AutoCorrelate
         return AutoCorrelate(self._obj.evaluateAtWavelength(wave), **self.kwargs)
 
 

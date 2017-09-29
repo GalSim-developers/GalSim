@@ -617,7 +617,7 @@ class _BaseCorrelatedNoise(object):
 
         @returns the new CorrelatedNoise of the convolved profile.
         """
-        from .compound import Convolve, AutoCorrelate
+        from .convolve import Convolve, AutoCorrelate
         conv = Convolve([self._profile, AutoCorrelate(gsobject)], gsparams=gsparams)
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
@@ -1469,7 +1469,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, variance, rng=None, scale=None, wcs=None, gsparams=None):
         from .wcs import BaseWCS, PixelScale
         from .box import Pixel
-        from .compound import AutoConvolve
+        from .convolve import AutoConvolve
         if variance < 0:
             raise ValueError("Input keyword variance must be zero or positive.")
 
@@ -1554,7 +1554,7 @@ class CovarianceSpectrum(object):
         @returns  CorrelatedNoise object.
         """
         import numpy as np
-        from .compound import Convolve
+        from .convolve import Convolve
         from .box import Pixel
         from .interpolatedimage import InterpolatedKImage
         NSED = len(self.SEDs)

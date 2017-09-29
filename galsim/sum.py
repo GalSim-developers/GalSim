@@ -159,8 +159,8 @@ class Sum(GSObject):
 
     @lazy_property
     def flux(self):
-        flux_list = [obj.flux for obj in self.obj_list]
-        return np.sum(flux_list)
+        pflux_list = [obj.flux for obj in self.obj_list]
+        return np.sum(pflux_list)
 
     @lazy_property
     def noise(self):
@@ -254,7 +254,7 @@ class Sum(GSObject):
 
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
-        from .random import UniformDeviate, BinomialDeviate
+        from .random import BinomialDeviate
 
         remainingAbsoluteFlux = self.positive_flux + self.negative_flux
         fluxPerPhoton = remainingAbsoluteFlux / len(photons)

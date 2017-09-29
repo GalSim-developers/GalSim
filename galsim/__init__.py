@@ -135,8 +135,8 @@ from .interpolant import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpola
 from .interpolatedimage import InterpolatedImage, _InterpolatedImage
 from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
 from .sum import Add, Sum
-from .compound import Convolve, Convolution, Deconvolve, Deconvolution
-from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+from .convolve import Convolve, Convolution, Deconvolve, Deconvolution
+from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .fouriersqrt import FourierSqrt, FourierSqrtProfile
 from .randwalk import RandomWalk
 from .transform import Transform, Transformation, _Transform

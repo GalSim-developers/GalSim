@@ -16,11 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 """@file randwalk.py
-RandomWalk i
-Deconvolution = deconvolution by a given profile
-AutoConvolution = convolution of a profile by itself
-AutoCorrelation = convolution of a profile by its reflection
-FourierSqrt = Fourier-space square root of a profile
+RandomWalk is a profile that models knots of star formation tracing out the
+profile of a disk with delta functions.
 """
 
 import numpy as np

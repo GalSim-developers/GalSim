@@ -23,14 +23,28 @@ objects (galaxies, PSFs, pixel response), which defines the top-level interface 
 of these classes.  The following other files include the implementations of various subclasses
 which define specific surface brightness profiles:
 
-    base.py defines simple objects like Gaussian, Moffat, Exponential, Sersic, etc.
-    compound.py defines combinations of multiple GSObjects like Sum, Convolution, etc.
-    inclinedexponential.py defines a 3D exponential disk at a specified inclination angle.
-    interpolatedimage.py defines a surface brightness profile from an arbitrary image.
-    phase_psf.py defines PSF profiles from the wavefront at the pupil plane.
-    real.py defines RealGalaxy, which uses HST images of real observed galaxies.
-    shapelet.py defines a profile from its shapelet (aka Gauss-Laguerre) decomposition.
-    transform.py defines how other profiles can be sheared, rotated, shifted, etc.
+    gaussian.py: a simple Gaussian profile.
+    moffat.py: a Moffat PSF profile.
+    airy.py: a (possibly obscurated) Airy profile.
+    kolmogorov.py: a Kolmogorov atmospheric PSF profile.
+    exponential.py: an Exponential disc.
+    sersic.py: a Sersic profile, along with DeVaucouleurs as a special case.
+    box.py: Box and Pixel, which are 2D box profiles and TopHat a radial top-hat profile.
+    sum.py: Add, Sum, which allow adding two profiles together.
+    convolve.py: Convolve, Convolution which convolve two profiles together, along with special
+                 cases AutoConvolution and AutoCorrelation, and Deconvolve, Deconvolution.
+    transform.py: Transform, Transformation, which allows profiles to be sheared, rotated,
+                  dilated, shifted, or scaled in flux.
+    fourierprofile.py: FourierProfile, which implements a square root in fourier-space.
+    inclinedexponential.py: InclinedExponential, an inclined 3D exponential disk.
+    inclinedsersic.py: InclinedSersic, an inclined 3D sersic profile.
+    interpolatedimage.py: InterpolatedImage, a surface brightness profile from an arbitrary image.
+    phase_psf.py: PhasePSF, OpticalPSF, PSF profiles from the wavefront at the pupil plane.
+    real.py: RealGalaxy, which uses HST images of real observed galaxies.
+    shapelet.py: a Shapelet profile, aka Gauss-Laguerre decomposition.
+    spergel.py: a Spergel profile, which is qualitatively similar to a Sersic profile, but is
+                analytic in k-space.
+    randwalk.py: RandomWalk, which models knots of star formation.
 
 All these classes have associated methods to (a) retrieve information (like the flux, half-light
 radius, or intensity at a particular point); (b) carry out common operations, like shearing,
@@ -187,7 +201,7 @@ class GSObject(object):
         >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
-    Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
+    Note that for compound objects such as Convolution or Sum, not all GSParams can be
     changed when the compound object is created.  In the example given here, it is possible to
     change parameters related to the drawing, but not the Fourier space parameters for the
     components that go into the Convolution.  To get better sampling in Fourier space, for example,
@@ -1382,7 +1396,7 @@ class GSObject(object):
         @returns the drawn Image.
         """
         from .image import Image, ImageD
-        from .compound import Convolve, Convolution, Deconvolve
+        from .convolve import Convolve, Convolution, Deconvolve
         from .box import Pixel
         from .wcs import PixelScale
         from .random import UniformDeviate
