@@ -137,7 +137,7 @@ from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
 from .sum import Add, Sum
 from .compound import Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from .compound import FourierSqrt, FourierSqrtProfile
+from .fouriersqrt import FourierSqrt, FourierSqrtProfile
 from .compound import RandomWalk
 from .transform import Transform, Transformation, _Transform
 

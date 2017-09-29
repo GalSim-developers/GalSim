@@ -250,6 +250,7 @@ class Kolmogorov(GSObject):
     def isAnalyticK(self):
         return True
 
+    @property
     def centroid(self):
         return PositionD(0,0)
 

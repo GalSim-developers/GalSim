@@ -780,79 +780,6 @@ def test_ne():
 
 
 @timer
-def test_fourier_sqrt():
-    """Test that the FourierSqrt operator is the inverse of auto-convolution.
-    """
-    dx = 0.4
-    myImg1 = galsim.ImageF(80,80, scale=dx)
-    myImg1.setCenter(0,0)
-    myImg2 = galsim.ImageF(80,80, scale=dx)
-    myImg2.setCenter(0,0)
-
-    # Test trivial case, where we could (but don't) analytically collapse the
-    # chain of profiles by recognizing that FourierSqrt is the inverse of
-    # AutoConvolve.
-    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    psf.drawImage(myImg1, method='no_pixel')
-    sqrt1 = galsim.FourierSqrt(psf)
-    psf2 = galsim.AutoConvolve(sqrt1)
-    np.testing.assert_almost_equal(psf.stepk, psf2.stepk)
-    psf2.drawImage(myImg2, method='no_pixel')
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Moffat sqrt convolved with self disagrees with original")
-
-    check_basic(sqrt1, "FourierSqrt", do_x=False)
-
-    # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
-    a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test
-    b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
-    check = galsim.Sum([a, b])
-    sqrt = galsim.FourierSqrt(
-        galsim.Sum([
-            galsim.AutoConvolve(a),
-            galsim.AutoConvolve(b),
-            2*galsim.Convolve([a, b])
-        ])
-    )
-    np.testing.assert_almost_equal(check.stepk, sqrt.stepk)
-    check.drawImage(myImg1, method='no_pixel')
-    sqrt.drawImage(myImg2, method='no_pixel')
-    np.testing.assert_almost_equal(check.centroid.x, sqrt.centroid.x)
-    np.testing.assert_almost_equal(check.centroid.y, sqrt.centroid.y)
-    np.testing.assert_almost_equal(check.flux, sqrt.flux)
-    np.testing.assert_almost_equal(check.xValue(check.centroid), check.max_sb)
-    print('check.max_sb = ',check.max_sb)
-    print('sqrt.max_sb = ',sqrt.max_sb)
-    # This isn't super accurate...
-    np.testing.assert_allclose(check.max_sb, sqrt.max_sb, rtol=0.1)
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Fourier square root of expanded square disagrees with original")
-
-    # Check picklability
-    do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(sqrt1)
-
-    # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
-    except ImportError:
-        pass
-
-@timer
 def test_compound_noise():
     """Test that noise propagation works properly for compount objects.
     """
@@ -914,5 +841,4 @@ if __name__ == "__main__":
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
-    test_fourier_sqrt()
     test_compound_noise()

@@ -2451,7 +2451,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
 
         @returns the monochromatic object at the given wavelength.
         """
-        from .compound import FourierSqrt
+        from .fouriersqrt import FourierSqrt
         return FourierSqrt(self._obj.evaluateAtWavelength(wave), **self.kwargs)
 
 

@@ -218,8 +218,9 @@ class Sum(GSObject):
         ak_list = [obj.isAnalyticK() for obj in self.obj_list]
         return np.all(ak_list)
 
+    @property
     def centroid(self):
-        cen_list = [obj.centroid() * obj.flux for obj in self.obj_list]
+        cen_list = [obj.centroid * obj.flux for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0]) / self.flux
 
     def getPositiveFlux(self):

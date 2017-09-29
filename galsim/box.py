@@ -124,6 +124,7 @@ class Box(GSObject):
     def isAnalyticK(self):
         return True
 
+    @property
     def centroid(self):
         return PositionD(0,0)
 
@@ -289,6 +290,7 @@ class TopHat(GSObject):
     def isAnalyticK(self):
         return True
 
+    @property
     def centroid(self):
         return PositionD(0,0)
 
