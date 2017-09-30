@@ -370,6 +370,13 @@ def Angle_rad_property(self):
 
 Angle.rad = property(Angle_rad_property)
 
+def _Angle(theta):
+    """Equivalent to ``Angle(theta, coord.radians)``, but without the normal overhead (which isn't
+    much to be honest, but this is nonetheless slightly quicker).
+
+    :param theta:   The numerical value of the angle in radians.
+    """
+    return Angle(theta, galsim.radians)
 
 set_func_doc(Angle.wrap, """Wrap Angle to lie in the range [-pi, pi) radians.
 

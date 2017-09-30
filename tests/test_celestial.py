@@ -47,12 +47,14 @@ def test_angle():
     theta3 = 3 * galsim.hours
     theta4 = 45 * 60 * galsim.arcmin
     theta5 = galsim.Angle(45 * 3600 , galsim.arcsec) # Check explicit installation too.
+    theta6 = galsim._Angle(numpy.pi/4.)  # Underscore constructor implicitly uses radians
 
     assert theta1.rad == numpy.pi/4.
     numpy.testing.assert_almost_equal(theta2.rad, numpy.pi/4., decimal=12)
     numpy.testing.assert_almost_equal(theta3.rad, numpy.pi/4., decimal=12)
     numpy.testing.assert_almost_equal(theta4.rad, numpy.pi/4., decimal=12)
     numpy.testing.assert_almost_equal(theta5.rad, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad, numpy.pi/4., decimal=12)
 
     # Check wrapping
     theta6 = (45 + 360) * galsim.degrees
