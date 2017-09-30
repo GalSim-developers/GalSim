@@ -138,17 +138,23 @@ class Transformation(galsim.GSObject):
     def getJac(self):
         """Return the Jacobian of the transformation.
         """
-        return self._jac
+        from .deprecated import depr
+        depr("transform.getJac()", 1.5, "transform.jac.ravel()")
+        return self.jac.ravel()
 
     def getOffset(self):
         """Return the offset of the transformation.
         """
-        return self._offset
+        from .deprecated import depr
+        depr("transform.getOffset()", 1.5, "transform.offset")
+        return self.offset
 
     def getFluxRatio(self):
         """Return the flux ratio of the transformation.
         """
-        return self._flux_ratio
+        from .deprecated import depr
+        depr("transform.getFluxRatio()", 1.5, "transform.flux_radio")
+        return self.flux_ratio
 
     @galsim.utilities.lazy_property
     def noise(self):
@@ -230,10 +236,10 @@ class Transformation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._original._prepareDraw()
-        dudx, dudy, dvdx, dvdy = self.getJac()
+        dudx, dudy, dvdx, dvdy = self._jac
         self._sbp = galsim._galsim.SBTransform(self._original._sbp,
                                                dudx, dudy, dvdx, dvdy,
-                                               self.getOffset(), self.getFluxRatio(),
+                                               self.offset, self.flux_ratio,
                                                self._gsparams)
 
     def _fwd_ident(self, x, y):

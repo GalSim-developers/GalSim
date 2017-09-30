@@ -117,6 +117,10 @@ Deprecated Features
 - Deprecated `calculateFlux(bandpass=None)` for computing bolometric flux.
   Users of this feature can still obtain a psuedo-bolometric flux by using
   an explicit bolometric Bandpass. (#905)
+- Deprecated the various `get*` methods that are equivalent to a property.
+  e.g. obj.getFlux() -> obj.flux, gaussian.getSigma() -> gaussian.sigma.
+  There were many such methods, especially in the various kinds of GSObjects,
+  as well as Shear, and the Noise classes. (#904)
 
 
 New Features

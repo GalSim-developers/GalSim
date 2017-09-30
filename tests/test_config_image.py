@@ -261,7 +261,7 @@ def test_reject():
             assert isinstance(gal, galsim.Transformation)
             gal = gal.original
             assert isinstance(gal, galsim.Sersic)
-            reject = gal.getN() > 2
+            reject = gal.n > 2
         # The second item in the return tuple is "safe", which means is this value safe to
         # cache and reuse (potentially saving calculation time for complex objects).
         # Not really applicable here, so return False.

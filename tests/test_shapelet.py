@@ -63,8 +63,8 @@ def test_shapelet_gaussian():
                     gauss.maxSB(), shapelet.maxSB(), 5,
                     err_msg="Shapelet maxSB did not match Gaussian maxSB")
             np.testing.assert_almost_equal(
-                    gauss.getFlux(), shapelet.getFlux(), 5,
-                    err_msg="Shapelet getFlux did not match Gaussian getFlux")
+                    gauss.flux, shapelet.flux, 5,
+                    err_msg="Shapelet flux did not match Gaussian flux")
 
 
 @timer
@@ -152,7 +152,7 @@ def test_shapelet_properties():
 
     # Check flux
     flux = bvec[0] + bvec[5] + bvec[14]
-    np.testing.assert_almost_equal(shapelet.getFlux(), flux, 10)
+    np.testing.assert_almost_equal(shapelet.flux, flux, 10)
     # The maxSB is not very accurate for Shapelet, but in this case it is still ok (matching
     # xValue(0,0), which isn't actually the maximum) to 2 digits.
     np.testing.assert_almost_equal(
@@ -196,8 +196,8 @@ def test_shapelet_fit():
         #print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
-        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
-        np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
+        print('flux = ',shapelet.flux,'  cf. ',flux)
+        np.testing.assert_almost_equal(shapelet.flux / flux, 1., 1,
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid

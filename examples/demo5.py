@@ -136,7 +136,7 @@ def main(argv):
     # you can get any size out even if it wasn't the way the object was constructed.
     # In this case, we extract the half-light radius, even though we built it with fwhm.
     # We'll use this later to set the galaxy's half-light radius in terms of a resolution.
-    psf_re = psf.getHalfLightRadius()
+    psf_re = psf.half_light_radius
 
     psf = psf.shear(e1=psf_e1,e2=psf_e2)
     logger.debug('Made PSF profile')

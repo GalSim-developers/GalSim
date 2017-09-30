@@ -98,13 +98,17 @@ class Shapelet(GSObject):
 
     After construction, the `sigma`, `order`, and `bvec` are available as attributes.
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Shapelet has the following access methods:
+    In addition to the usual GSObject methods, Shapelet has the following access methods and
+    properties:
 
-        >>> b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
-        >>> b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+        >>> sigma = shapelet.sigma
+        >>> order = shapelet.order
+        >>> bvec = shapelet.bvec
+        >>> b_pq = shapelet.getPQ(p,q)      # Get b_pq.  Returned as tuple (re, im) (even if p==q).
+        >>> b_Nm = shapelet.getNM(N,m)      # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
 
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
@@ -132,20 +136,26 @@ class Shapelet(GSObject):
         self._gsparams = gsparams
 
     def getSigma(self):
-        return self._sbp.getSigma()
+        from .deprecated import depr
+        depr("shapelet.getSigma()", 1.5, "shapelet.sigma")
+        return self.sigma
 
     def getOrder(self):
-        return self._sbp.getBVec().order
+        from .deprecated import depr
+        depr("shapelet.getOrder()", 1.5, "shapelet.order")
+        return self.order
 
     def getBVec(self):
-        return self._sbp.getBVec().array
+        from .deprecated import depr
+        depr("shapelet.getBVec()", 1.5, "shapelet.bvec")
+        return self.bvec
 
     @property
-    def sigma(self): return self.getSigma()
+    def sigma(self): return self._sbp.getSigma()
     @property
-    def order(self): return self.getOrder()
+    def order(self): return self._sbp.getBVec().order
     @property
-    def bvec(self): return self.getBVec()
+    def bvec(self): return self._sbp.getBVec().array
 
     def getPQ(self,p,q):
         return self._sbp.getBVec().getPQ(p,q)

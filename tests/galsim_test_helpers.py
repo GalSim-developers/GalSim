@@ -205,7 +205,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
-    print('prof.getFlux = ',prof.getFlux())
+    print('prof.flux = ',prof.flux)
     print('flux_max = ',flux_max)
     flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
@@ -228,7 +228,7 @@ def do_shoot(prof, img, name):
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print('prof.getFlux => ',prof.getFlux())
+    print('prof.flux => ',prof.flux)
     print('img.sum => ',img.array.sum(dtype=float))
     print('img.max => ',img.array.max())
     print('nphot = ',nphot)
@@ -521,7 +521,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         # image, which implies flux can be lost off of the edges of the image, we don't expect
         # it's accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
-        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).getFlux(), desired,
+        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
         # Don't bother trying to draw a deconvolution.
         if isinstance(obj, galsim.ChromaticDeconvolution):

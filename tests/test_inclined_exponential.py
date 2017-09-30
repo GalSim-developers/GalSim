@@ -362,19 +362,13 @@ def test_sanity():
 
         # Check accessing construction args
         np.testing.assert_equal(test_profile.inclination, inc_angle * galsim.radians)
-        np.testing.assert_equal(test_profile.getInclination(), inc_angle * galsim.radians)
         np.testing.assert_equal(test_profile.scale_radius, scale_radius)
-        np.testing.assert_equal(test_profile.getScaleRadius(), scale_radius)
         np.testing.assert_equal(test_profile.scale_height, scale_height)
-        np.testing.assert_equal(test_profile.getScaleHeight(), scale_height)
         np.testing.assert_equal(test_profile.flux, flux)
-        np.testing.assert_equal(test_profile.getFlux(), flux)
 
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_allclose(test_profile.scale_height / test_profile.scale_radius,
                                        test_profile.scale_h_over_r, rtol=1e-4)
-        np.testing.assert_allclose(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
-                                       test_profile.getScaleHOverR(), rtol=1e-4)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)

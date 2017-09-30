@@ -112,7 +112,6 @@ def test_convolve():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv.centroid(), cen)
-    np.testing.assert_almost_equal(conv.getFlux(), psf.flux * pixel.flux)
     np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
     # Not almost_equal.  Convolutions don't give a very good estimate.
     # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
@@ -180,14 +179,14 @@ def test_convolve_flux_scaling():
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj *= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj /= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -195,11 +194,11 @@ def test_convolve_flux_scaling():
     obj2 = obj * 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -207,11 +206,11 @@ def test_convolve_flux_scaling():
     obj2 = 2. * obj
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -219,11 +218,11 @@ def test_convolve_flux_scaling():
     obj2 = obj / 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
@@ -517,7 +516,6 @@ def test_add():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(sum_gauss.centroid(), cen)
-    np.testing.assert_almost_equal(sum_gauss.getFlux(), gauss1.flux + gauss2.flux)
     np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
     np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
 
@@ -642,46 +640,46 @@ def test_add_flux_scaling():
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj *= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj /= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj * 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = 2. * obj
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj / 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
@@ -707,7 +705,6 @@ def test_deconvolve():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(inv_psf.centroid(), cen)
-    np.testing.assert_almost_equal(inv_psf.getFlux(), 1./psf.flux)
     np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
     # This doesn't really have any meaning, but this is what we've assigned to a deconvolve maxSB.
     np.testing.assert_almost_equal(inv_psf.maxSB(), -psf.maxSB() / psf.flux**2)
@@ -728,7 +725,6 @@ def test_deconvolve():
             err_msg="Image of Deconvolve of asymmetric sum of Gaussians doesn't match obj alone")
 
     np.testing.assert_equal(inv_obj.centroid(), -obj.centroid())
-    np.testing.assert_almost_equal(inv_obj.getFlux(), 1./obj.flux)
     np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
     np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
 
@@ -753,7 +749,6 @@ def test_deconvolve():
             err_msg="Transformed Deconvolve didn't cancel transformed original")
 
     np.testing.assert_equal(transformed_inv_obj.centroid(), -transformed_obj.centroid())
-    np.testing.assert_almost_equal(transformed_inv_obj.getFlux(), 1./transformed_obj.flux)
     np.testing.assert_almost_equal(transformed_inv_obj.flux, 1./transformed_obj.flux)
     np.testing.assert_almost_equal(transformed_inv_obj.maxSB(),
                                    -transformed_obj.maxSB() / transformed_obj.flux**2)
@@ -815,7 +810,6 @@ def test_autoconvolve():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv2.centroid(), cen)
-    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
     np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
@@ -849,7 +843,6 @@ def test_autoconvolve():
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv2.centroid(), cen)
-    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
     np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
@@ -870,7 +863,6 @@ def test_autoconvolve():
 
     cen = 2. * add.centroid()
     np.testing.assert_equal(autoconv.centroid(), cen)
-    np.testing.assert_almost_equal(autoconv.getFlux(), add.flux**2)
     np.testing.assert_almost_equal(autoconv.flux, add.flux**2)
     np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
 
@@ -1033,7 +1025,7 @@ def test_fourier_sqrt():
     sqrt.drawImage(myImg2, method='no_pixel')
     np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
     np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
-    np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
+    np.testing.assert_almost_equal(check.flux, sqrt.flux)
     np.testing.assert_almost_equal(check.xValue(check.centroid()), check.maxSB())
     print('check.maxSB = ',check.maxSB())
     print('sqrt.maxSB = ',sqrt.maxSB())

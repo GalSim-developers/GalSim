@@ -132,10 +132,12 @@ def test_dep_base():
     np.testing.assert_almost_equal(check_dep(g.nyquistDx), g.nyquistScale())
 
     check_dep(g.setFlux,flux=1.7)
-    np.testing.assert_almost_equal(g.getFlux(), 1.7)
+    np.testing.assert_almost_equal(check_dep(g.getFlux), 1.7)
 
+    g2 = g.withScaledFlux(1.9)
     check_dep(g.scaleFlux,flux_ratio=1.9)
-    np.testing.assert_almost_equal(g.getFlux(), 1.7 * 1.9)
+    np.testing.assert_almost_equal(check_dep(g.getFlux), g2.flux)
+    assert check_dep(g2.getFluxRatio) == g2.flux_ratio
 
     g2 = g.expand(4.3)
     g3 = check_dep(g.createExpanded,scale=4.3)
@@ -185,10 +187,12 @@ def test_dep_base():
 
     check_dep(g.applyTransformation, dudx=0.1, dudy=1.09, dvdx=-1.32, dvdy=-0.09)
     gsobject_compare(g,g2)
+    np.testing.assert_array_equal(check_dep(g2.getJac), g2.jac.ravel())
 
     g2 = g.shift(0.16, -0.79)
     g3 = check_dep(g.createShifted,dx=0.16, dy=-0.79)
     gsobject_compare(g3,g2)
+    assert check_dep(g2.getOffset) == g2.offset
 
     check_dep(g.applyShift,dx=0.16, dy=-0.79)
     gsobject_compare(g,g2)
@@ -226,32 +230,116 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, gsp2.folding_threshold)
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
-    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    test_gal = galsim.Gaussian(flux=1.7, half_light_radius = test_hlr)
     test_gal_copy = check_dep(test_gal.copy)
-    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getSigma) == test_gal.sigma
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+
+    test_gal = galsim.Exponential(flux=1.7, scale_radius = test_scale[0])
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
 
     for n, scale in zip(test_sersic_n, test_scale) :
         if n == -4:
-            test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+            test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.7)
         else:
-            test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
-        test_gal_copy = check_dep(test_gal1.copy)
+            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.7)
+        test_gal_copy = check_dep(test_gal.copy)
+        assert check_dep(test_gal.getFlux) == test_gal.flux
+        assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+        if n > 0:
+            assert check_dep(test_gal.getN) == test_gal.n
+        assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+        assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+        assert check_dep(test_gal.getTrunc) == test_gal.trunc
 
-    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
+    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.7)
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getLamOverD) == test_gal.lam_over_diam
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getObscuration) == test_gal.obscuration
 
     test_beta = 2.
-    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
+    test_gal = galsim.Moffat(flux=1.7, beta=test_beta, trunc=2.*test_fwhm,
                              fwhm = test_fwhm)
     test_gal_copy = check_dep(test_gal.copy)
-    test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getBeta) == test_gal.beta
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getTrunc) == test_gal.trunc
+
+    test_gal = galsim.Kolmogorov(flux=1.7, fwhm = test_fwhm)
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getLamOverR0) == test_gal.lam_over_r0
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+
+    test_gal = galsim.Box(flux=1.7, width=0.5, height=0.9)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getWidth) == test_gal.width
+    assert check_dep(test_gal.getHeight) == test_gal.height
+
+    test_gal = galsim.Pixel(flux=1.7, scale=0.3)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScale) == test_gal.scale
+
+    test_gal = galsim.TopHat(flux=1.7, radius=0.8)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getRadius) == test_gal.radius
 
     for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
-        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
+        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.7)
         test_gal_copy = check_dep(test_gal.copy)
+        assert check_dep(test_gal.getFlux) == test_gal.flux
+        assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+        assert check_dep(test_gal.getNu) == test_gal.nu
+        assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+        assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
 
+    test_gal = galsim.InclinedExponential(flux=1.7, scale_radius=test_scale[0],
+                                          inclination=17*galsim.degrees, scale_height=0.4)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getScaleHeight) == test_gal.scale_height
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getInclination) == test_gal.inclination
+    assert check_dep(test_gal.getScaleHOverR) == test_gal.scale_h_over_r
+
+    test_gal = galsim.InclinedSersic(flux=1.7, n=1.5, scale_radius=test_scale[0],
+                                     inclination=17*galsim.degrees, scale_height=0.4)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getN) == test_gal.n
+    assert check_dep(test_gal.getScaleHeight) == test_gal.scale_height
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getInclination) == test_gal.inclination
+    assert check_dep(test_gal.getScaleHOverR) == test_gal.scale_h_over_r
+    assert check_dep(test_gal.getTrunc) == test_gal.trunc
+ 
     # Check that GSObject(sbp) works but raises a deprecation warning
     gso = check_dep(galsim.GSObject, g._sbp)
     sbp = check_dep(getattr, gso, 'SBProfile')
@@ -891,6 +979,9 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setSigma disagrees with reference Shapelet")
+    assert check_dep(shapelet.getSigma) == shapelet.sigma
+    assert check_dep(shapelet.getFlux) == shapelet.flux
+    assert check_dep(shapelet.getGSParams) == shapelet.gsparams
 
     # Test setBVec
     shapelet = galsim.Shapelet(sigma=sigma, order=order)
@@ -899,6 +990,7 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setBVec disagrees with reference Shapelet")
+    np.testing.assert_array_equal(check_dep(shapelet.getBVec), shapelet.bvec)
 
     # Test setOrder
     shapelet = galsim.Shapelet(sigma=sigma, order=2)
@@ -908,31 +1000,32 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setOrder disagrees with reference Shapelet")
+    assert check_dep(shapelet.getOrder) == shapelet.order
 
     # Test that changing the order preserves the values to the extent possible.
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     check_dep(shapelet.setOrder,10)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:28], bvec,
+        check_dep(shapelet.getBVec)[0:28], bvec,
         err_msg="Shapelet setOrder to larger doesn't preserve existing values.")
     np.testing.assert_array_equal(
-        shapelet.getBVec()[28:66], np.zeros(66-28),
+        check_dep(shapelet.getBVec)[28:66], np.zeros(66-28),
         err_msg="Shapelet setOrder to larger doesn't fill with zeros.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec(), bvec,
+        check_dep(shapelet.getBVec), bvec,
         err_msg="Shapelet setOrder back to original from larger doesn't preserve existing values.")
     check_dep(shapelet.setOrder,3)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10],
+        check_dep(shapelet.getBVec)[0:10], bvec[0:10],
         err_msg="Shapelet setOrder to smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10],
+        check_dep(shapelet.getBVec)[0:10], bvec[0:10],
         err_msg="Shapelet setOrder back to original from smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[10:28], np.zeros(28-10),
+        check_dep(shapelet.getBVec)[10:28], np.zeros(28-10),
         err_msg="Shapelet setOrder back to original from smaller doesn't fill with zeros.")
 
     # Test that setting a Shapelet with setNM gives the right profile
@@ -973,7 +1066,7 @@ def test_dep_shapelet():
     s1 = galsim.Shapelet(sigma=sigma, order=10)
     check_dep(s1.fitImage, image=im)
     s2 = check_dep(galsim.FitShapelet, sigma=sigma, order=10, image=im)
-    np.testing.assert_array_almost_equal(s1.getBVec(), s2.getBVec())
+    np.testing.assert_array_almost_equal(check_dep(s1.getBVec), check_dep(s2.getBVec))
 
 
 @timer
@@ -995,8 +1088,8 @@ def test_dep_shapelet_fit():
         #print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
-        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
-        np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
+        print('flux = ',shapelet.flux,'  cf. ',flux)
+        np.testing.assert_almost_equal(check_dep(shapelet.getFlux) / flux, 1., 1,
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
@@ -1574,7 +1667,7 @@ def test_dep_drawKImage_Gaussian():
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        check_dep(gal.getFlux), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -1617,7 +1710,7 @@ def test_dep_kroundtrip():
             err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
                      .format(kx, ky)))
 
-    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+    np.testing.assert_almost_equal(check_dep(a.getFlux), check_dep(b.getFlux), 6) #Fails at 7th decimal
 
     real_b, imag_b = check_dep_tuple2(check_dep(b.drawKImage, real_a.copy(), imag_a.copy()))
     # Fails at 4th decimal
@@ -1640,7 +1733,7 @@ def test_dep_kroundtrip():
                                           scale=real_a.scale))
         b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
-        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        np.testing.assert_almost_equal(check_dep(a.getFlux), check_dep(b.getFlux), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
         # One of these fails at 6th decimal
         np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)

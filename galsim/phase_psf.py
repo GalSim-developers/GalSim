@@ -1099,7 +1099,8 @@ class PhaseScreenPSF(GSObject):
 
         self._screen_list._delayCalculation(self)
 
-    def getFlux(self):
+    @property
+    def flux(self):
         return self._flux
 
     def __str__(self):
@@ -1591,7 +1592,8 @@ class OpticalPSF(GSObject):
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
         self._sbp = self._psf._sbp
 
-    def getFlux(self):
+    @property
+    def flux(self):
         return self._flux
 
     def __str__(self):

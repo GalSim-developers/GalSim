@@ -168,7 +168,7 @@ def test_fluxnorm():
 
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
-    np.testing.assert_almost_equal(total_flux, interp.getFlux(), decimal=9,
+    np.testing.assert_almost_equal(total_flux, interp.flux, decimal=9,
                                    err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
     im2 = interp.drawImage(scale = im_scale, method='no_pixel')
@@ -198,7 +198,7 @@ def test_fluxnorm():
     # Finally make an InterpolatedImage but give it some other flux value
     interp_flux = galsim.InterpolatedImage(im, flux=test_flux)
     # Check that it has that flux
-    np.testing.assert_equal(test_flux, interp_flux.getFlux(),
+    np.testing.assert_equal(test_flux, interp_flux.flux,
                             err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
     im5 = interp_flux.drawImage(scale = im_scale, method='no_pixel')
@@ -1009,7 +1009,7 @@ def test_kroundtrip():
             err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
                      .format(kx, ky)))
 
-    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+    np.testing.assert_almost_equal(a.flux, b.flux, 6) #Fails at 7th decimal
 
     kim_b = b.drawKImage(kim_a.copy())
     # Fails at 4th decimal
@@ -1034,7 +1034,7 @@ def test_kroundtrip():
         kim_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=kim_a.scale)
         b = galsim.InterpolatedKImage(kim_a)
 
-        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        np.testing.assert_almost_equal(a.flux, b.flux, 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
         # One of these fails at 6th decimal
         np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)

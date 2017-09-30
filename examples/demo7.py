@@ -269,7 +269,7 @@ def main(argv):
                 final.drawImage(fft_image, method='fft')
 
                 logger.debug('      Drew fft image.  Total drawn flux = %f.  .flux = %f',
-                             fft_image.array.sum(),final.getFlux())
+                             fft_image.array.sum(),final.flux)
                 t3 = time.time()
 
                 # Add Poisson noise
