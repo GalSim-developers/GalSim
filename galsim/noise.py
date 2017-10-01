@@ -91,10 +91,6 @@ galsim.Image.addNoiseSNR = addNoiseSNR
 # Then add docstrings for C++ layer Noise classes
 
 # BaseNoise methods used by derived classes
-set_func_doc(_galsim.BaseNoise.getRNG, """
-Get the BaseDeviate used to generate random numbers for the current noise model.
-""")
-
 set_func_doc(_galsim.BaseNoise.getVariance, "Get variance in current noise model.")
 
 def Noise_withVariance(self, variance):
@@ -193,8 +189,6 @@ def GaussianNoise_applyTo(self, image):
     self.applyToView(image._image.view())
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
-set_func_doc(_galsim.GaussianNoise.getSigma, "Get `sigma` in current noise model.")
-
 def GaussianNoise_copy(self, rng=None):
     """Returns a copy of the Gaussian noise model.
 
@@ -204,7 +198,7 @@ def GaussianNoise_copy(self, rng=None):
         >>> noise_copy = noise.copy(rng=new_rng)
     """
     if rng is None: rng = self.rng
-    return _galsim.GaussianNoise(rng, self.getSigma())
+    return _galsim.GaussianNoise(rng, self.sigma)
 
 _galsim.GaussianNoise.copy = GaussianNoise_copy
 
@@ -262,8 +256,6 @@ def PoissonNoise_applyTo(self, image):
     self.applyToView(image._image.view())
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
-set_func_doc(_galsim.PoissonNoise.getSkyLevel, "Get sky level in current noise model.")
-
 def PoissonNoise_copy(self, rng=None):
     """Returns a copy of the Poisson noise model.
 
@@ -273,7 +265,7 @@ def PoissonNoise_copy(self, rng=None):
         >>> noise_copy = noise.copy(rng=new_rng)
     """
     if rng is None: rng = self.rng
-    return _galsim.PoissonNoise(rng, self.getSkyLevel())
+    return _galsim.PoissonNoise(rng, self.sky_level)
 
 _galsim.PoissonNoise.copy = PoissonNoise_copy
 
@@ -354,10 +346,6 @@ def CCDNoise_applyTo(self, image):
     self.applyToView(image._image.view())
 _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 
-set_func_doc(_galsim.CCDNoise.getSkyLevel, "Get sky level in current noise model.")
-set_func_doc(_galsim.CCDNoise.getGain, "Get gain in current noise model.")
-set_func_doc(_galsim.CCDNoise.getReadNoise, "Get read noise in current noise model.")
-
 def CCDNoise_copy(self, rng=None):
     """Returns a copy of the CCD noise model.
 
@@ -367,7 +355,7 @@ def CCDNoise_copy(self, rng=None):
         >>> noise_copy = noise.copy(rng=new_rng)
     """
     if rng is None: rng = self.rng
-    return _galsim.CCDNoise(rng, self.getSkyLevel(), self.getGain(), self.getReadNoise())
+    return _galsim.CCDNoise(rng, self.sky_level, self.gain, self.read_noise)
 
 _galsim.CCDNoise.copy = CCDNoise_copy
 
@@ -489,16 +477,10 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def applyToView(self, image_view):
         self._noise.applyToView(image_view)
 
-    def getVarImage(self):
-        return self.var_image
-
-    def getRNG(self):
-        return self.rng
-
     @property
-    def rng(self): return self._noise.getRNG()
+    def rng(self): return self._noise.rng
     @property
-    def var_image(self): return galsim.Image(self._noise.getVarImage())
+    def var_image(self): return galsim.Image(self._noise.var_image)
 
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.
@@ -509,7 +491,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
             >>> noise_copy = noise.copy(rng=new_rng)
         """
         if rng is None: rng = self.rng
-        return VariableGaussianNoise(rng, self.getVarImage())
+        return VariableGaussianNoise(rng, self.var_image)
 
     def getVariance(self):
         raise RuntimeError("No single variance value for VariableGaussianNoise")
@@ -520,12 +502,6 @@ class VariableGaussianNoise(_galsim.BaseNoise):
     def withScaledVariance(self, variance):
         # This one isn't undefined like withVariance, but it's inefficient.  Better to
         # scale the values in the image before constructing VariableGaussianNoise.
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
-
-    def setVariance(self, variance):
-        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
-
-    def scaleVariance(self, variance):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
     def __repr__(self):

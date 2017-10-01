@@ -758,31 +758,35 @@ def test_dep_noise():
     np.testing.assert_almost_equal(gn.getVariance(), 1.7 * 1.9)
 
     check_dep(gn.setSigma, 2.3)
-    np.testing.assert_almost_equal(gn.getSigma(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gn.getSigma), 2.3)
 
     pn = galsim.PoissonNoise(rng=rng, sky_level=0.3)
     check_dep(pn.setSkyLevel, 2.3)
-    np.testing.assert_almost_equal(pn.getSkyLevel(), 2.3)
+    np.testing.assert_almost_equal(check_dep(pn.getSkyLevel), 2.3)
 
     cn = galsim.CCDNoise(rng=rng, gain=1.7, read_noise=0.5, sky_level=0.3)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 0.3)
-    np.testing.assert_almost_equal(cn.getGain(), 1.7)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 0.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 1.7)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setSkyLevel, 2.3)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 1.7)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 1.7)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setGain, 0.9)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 0.9)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 0.9)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setReadNoise, 11)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 0.9)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 11)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 0.9)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 11)
+
+    noise_image = galsim.Image(10,10, init_value=12)
+    vn = galsim.VariableGaussianNoise(rng, noise_image)
+    np.testing.assert_almost_equal(check_dep(vn.getVarImage).array, noise_image.array)
 
 
 @timer
