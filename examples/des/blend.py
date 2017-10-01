@@ -300,7 +300,7 @@ class DeblendBuilder(galsim.config.ExtraOutputBuilder):
         for obj_num in obj_nums:
             # Subtract off the images we made of the (noise-free) neighbors
             neighbor_image = self.scratch[obj_num]
-            b = neighbor_image.bounds & image.getBounds()
+            b = neighbor_image.bounds & image.bounds
             if b.isDefined():
                 image[b] -= neighbor_image[b]
         # Save this in the list of images to write out.

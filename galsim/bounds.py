@@ -153,10 +153,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     set_func_doc(Class.expand, "Grow the Bounds by the supplied factor about the center.")
     set_func_doc(Class.isDefined, "Test whether Bounds rectangle is defined.")
-    set_func_doc(Class.getXMin, "Get the value of xmin.")
-    set_func_doc(Class.getXMax, "Get the value of xmax.")
-    set_func_doc(Class.getYMin, "Get the value of ymin.")
-    set_func_doc(Class.getYMax, "Get the value of ymax.")
     set_func_doc(Class.shift, """Shift the Bounds instance by a supplied position
 
     Calling Examples

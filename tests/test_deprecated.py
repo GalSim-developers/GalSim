@@ -668,11 +668,11 @@ def test_dep_image():
         im1 = check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)(ncol,nrow)
         bounds = galsim.BoundsI(1,ncol,1,nrow)
 
-        assert im1.getXMin() == 1
-        assert im1.getXMax() == ncol
-        assert im1.getYMin() == 1
-        assert im1.getYMax() == nrow
-        assert im1.getBounds() == bounds
+        assert check_dep(im1.getXMin) == 1
+        assert check_dep(im1.getXMax) == ncol
+        assert check_dep(im1.getYMin) == 1
+        assert check_dep(im1.getYMax) == nrow
+        assert check_dep(im1.getBounds) == bounds
         assert im1.bounds == bounds
 
         # Check basic constructor from ncol, nrow
@@ -681,10 +681,10 @@ def test_dep_image():
         im2 = image_type(bounds)
         im2_view = im2.view()
 
-        assert im2_view.getXMin() == 1
-        assert im2_view.getXMax() == ncol
-        assert im2_view.getYMin() == 1
-        assert im2_view.getYMax() == nrow
+        assert check_dep(im2_view.getXMin) == 1
+        assert check_dep(im2_view.getXMax) == ncol
+        assert check_dep(im2_view.getYMin) == 1
+        assert check_dep(im2_view.getYMax) == nrow
         assert im2_view.bounds == bounds
 
         # Check various ways to set and get values

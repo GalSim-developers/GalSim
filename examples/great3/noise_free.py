@@ -39,7 +39,7 @@ class NoiseFreeBuilder(galsim.config.ExtraOutputBuilder):
             image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
             for obj_num in obj_nums:
                 stamp = self.scratch[obj_num]
-                b = stamp.bounds & image.getBounds()
+                b = stamp.bounds & image.bounds
                 if b.isDefined():
                     image.setSubImage(b, image.subImage(b) + stamp[b])
         else:

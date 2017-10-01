@@ -512,11 +512,6 @@ class Image(with_metaclass(MetaImage, object)):
     def ymin(self): return self._image.bounds.ymin
     @property
     def ymax(self): return self._image.bounds.ymax
-    def getXMin(self): return self._image.getXMin()
-    def getXMax(self): return self._image.getXMax()
-    def getYMin(self): return self._image.getYMin()
-    def getYMax(self): return self._image.getYMax()
-    def getBounds(self): return self._image.getBounds()
 
     def getOuterBounds(self):
         """Get the bounds of the outer edge of the pixels.

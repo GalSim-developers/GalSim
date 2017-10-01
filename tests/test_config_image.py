@@ -701,11 +701,11 @@ def test_scattered():
             config['image']['index_convention'] = convention
 
             image = galsim.config.BuildImage(config)
-            np.testing.assert_equal(image.getXMin(), convention)
-            np.testing.assert_equal(image.getYMin(), convention)
+            np.testing.assert_equal(image.xmin, convention)
+            np.testing.assert_equal(image.ymin, convention)
 
-            xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
-                                       np.arange(size) + image.getYMin())
+            xgrid, ygrid = np.meshgrid(np.arange(size) + image.xmin,
+                                       np.arange(size) + image.ymin)
             obs_flux = np.sum(image.array, dtype=float)
             cenx = np.sum(xgrid * image.array) / flux
             ceny = np.sum(ygrid * image.array) / flux

@@ -118,8 +118,8 @@ def test_shapelet_drawImage():
             # setCenter doesn't actually set the center to the true center of the image
             # (since it falls between pixels).
             im.setCenter(0,0)
-            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(),
-                              np.arange(im.array.shape[1]).astype(float) + im.getYMin())
+            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.xmin,
+                              np.arange(im.array.shape[1]).astype(float) + im.ymin)
             x *= scale
             y *= scale
             flux = im.array.sum()

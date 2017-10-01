@@ -120,11 +120,10 @@ def test_Image_basic():
         np.testing.assert_array_equal(im1.array, 23.)
 
         bounds = galsim.BoundsI(1,ncol,1,nrow)
-        assert im1.getXMin() == 1
-        assert im1.getXMax() == ncol
-        assert im1.getYMin() == 1
-        assert im1.getYMax() == nrow
-        assert im1.getBounds() == bounds
+        assert im1.xmin == 1
+        assert im1.xmax == ncol
+        assert im1.ymin == 1
+        assert im1.ymax == nrow
         assert im1.bounds == bounds
         assert im1.getOuterBounds() == galsim.BoundsD(0.5, ncol+0.5, 0.5, nrow+0.5)
 
@@ -136,16 +135,16 @@ def test_Image_basic():
         # Adding on xmin, ymin allows you to set an origin other than (1,1)
         im1a = galsim.Image(ncol, nrow, dtype=array_type, xmin=4, ymin=7)
         im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, xmin=0, ymin=0)
-        assert im1a.getXMin() == 4
-        assert im1a.getXMax() == ncol+3
-        assert im1a.getYMin() == 7
-        assert im1a.getYMax() == nrow+6
+        assert im1a.xmin == 4
+        assert im1a.xmax == ncol+3
+        assert im1a.ymin == 7
+        assert im1a.ymax == nrow+6
         assert im1a.bounds == galsim.BoundsI(4,ncol+3,7,nrow+6)
         assert im1a.getOuterBounds() == galsim.BoundsD(3.5, ncol+3.5, 6.5, nrow+6.5)
-        assert im1b.getXMin() == 0
-        assert im1b.getXMax() == ncol-1
-        assert im1b.getYMin() == 0
-        assert im1b.getYMax() == nrow-1
+        assert im1b.xmin == 0
+        assert im1b.xmax == ncol-1
+        assert im1b.ymin == 0
+        assert im1b.ymax == nrow-1
         assert im1b.bounds == galsim.BoundsI(0,ncol-1,0,nrow-1)
         assert im1b.getOuterBounds() == galsim.BoundsD(-0.5, ncol-0.5, -0.5, nrow-0.5)
 
@@ -156,17 +155,17 @@ def test_Image_basic():
         im2_cview = im2.view(make_const=True)
         im2_conj = im2.conjugate()
 
-        assert im2_view.getXMin() == 1
-        assert im2_view.getXMax() == ncol
-        assert im2_view.getYMin() == 1
-        assert im2_view.getYMax() == nrow
+        assert im2_view.xmin == 1
+        assert im2_view.xmax == ncol
+        assert im2_view.ymin == 1
+        assert im2_view.ymax == nrow
         assert im2_view.bounds == bounds
         assert im2_view.array.dtype.type == np_array_type
 
-        assert im2_cview.getXMin() == 1
-        assert im2_cview.getXMax() == ncol
-        assert im2_cview.getYMin() == 1
-        assert im2_cview.getYMax() == nrow
+        assert im2_cview.xmin == 1
+        assert im2_cview.xmax == ncol
+        assert im2_cview.ymin == 1
+        assert im2_cview.ymax == nrow
         assert im2_cview.bounds == bounds
         assert im2_cview.array.dtype.type == np_array_type
 
@@ -1701,8 +1700,8 @@ def test_Image_subImage():
             err_msg="image[bounds] = im2 does not set correctly for dtype = "+str(types[i]))
         for xpos in range(1,test_shape[0]+1):
             for ypos in range(1,test_shape[1]+1):
-                if (xpos >= bounds.getXMin() and xpos <= bounds.getXMax() and
-                    ypos >= bounds.getYMin() and ypos <= bounds.getYMax()):
+                if (xpos >= bounds.xmin and xpos <= bounds.xmax and
+                    ypos >= bounds.ymin and ypos <= bounds.ymax):
                     value = ref_array[ypos-1,xpos-1] + 100
                 else:
                     value = ref_array[ypos-1,xpos-1]

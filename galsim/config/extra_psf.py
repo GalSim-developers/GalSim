@@ -117,9 +117,9 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         # Make sure to only use the stamps for objects in this image.
         for obj_num in obj_nums:
             stamp = self.scratch[obj_num]
-            b = stamp.bounds & image.getBounds()
+            b = stamp.bounds & image.bounds
             logger.debug('image %d: psf image at b = %s = %s & %s',
-                         base['image_num'],b,stamp.bounds,image.getBounds())
+                         base['image_num'],b,stamp.bounds,image.bounds)
             if b.isDefined(): # pragma: no branch  (We normally guard against this already.)
                 image[b] += stamp[b]
                 logger.debug('obj %d: added psf image to main image',base.get('obj_num',0))
