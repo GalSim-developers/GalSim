@@ -248,9 +248,6 @@ def test_shear_methods():
         # check !=
         np.testing.assert_equal(s != s2, False, err_msg = "Failed to check for equality")
 
-    # note: we don't have to check all the getWhatever methods because they were implicitly checked
-    # in test_shear_initialization, where we checked the values directly
-
 
 @timer
 def test_shear_matrix():

@@ -1164,6 +1164,18 @@ def test_dep_shear():
     np.testing.assert_almost_equal(s.eta, 0.19)
     np.testing.assert_almost_equal(s.beta / galsim.degrees, 52)
 
+    assert check_dep(s.getG1) == s.g1
+    assert check_dep(s.getG2) == s.g2
+    assert check_dep(s.getG) == s.g
+    assert check_dep(s.getBeta) == s.beta
+
+    assert check_dep(s.getE1) == s.e1
+    assert check_dep(s.getE2) == s.e2
+    assert check_dep(s.getE) == s.e
+    assert check_dep(s.getESq) == s.esq
+
+    assert check_dep(s.getEta) == s.eta
+    assert check_dep(s.getShear) == s.shear
 
 
 @timer

@@ -490,15 +490,15 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         self._noise.applyToView(image_view)
 
     def getVarImage(self):
-        return galsim.Image(self._noise.getVarImage())
+        return self.var_image
 
     def getRNG(self):
-        return self._noise.getRNG()
+        return self.rng
 
     @property
-    def rng(self): return self.getRNG()
+    def rng(self): return self._noise.getRNG()
     @property
-    def var_image(self): return self.getVarImage()
+    def var_image(self): return galsim.Image(self._noise.getVarImage())
 
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.

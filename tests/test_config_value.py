@@ -1076,47 +1076,47 @@ def test_shear_value():
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(val1.getG1(), 0.2)
-    np.testing.assert_almost_equal(val1.getG2(), 0.3)
+    np.testing.assert_almost_equal(val1.g1, 0.2)
+    np.testing.assert_almost_equal(val1.g2, 0.3)
 
     val2 = galsim.config.ParseValue(config,'val2',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(val2.getE1(), 0.1)
-    np.testing.assert_almost_equal(val2.getE2(), 0.)
+    np.testing.assert_almost_equal(val2.e1, 0.1)
+    np.testing.assert_almost_equal(val2.e2, 0.)
 
     # Test various direct types
     s1 = galsim.config.ParseValue(config,'s1',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(s1.getE1(), 0.5)
-    np.testing.assert_almost_equal(s1.getE2(), -0.1)
+    np.testing.assert_almost_equal(s1.e1, 0.5)
+    np.testing.assert_almost_equal(s1.e2, -0.1)
 
     s2 = galsim.config.ParseValue(config,'s2',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(s2.getE(), 0.5)
-    np.testing.assert_almost_equal(s2.getBeta().rad, 0.1)
+    np.testing.assert_almost_equal(s2.e, 0.5)
+    np.testing.assert_almost_equal(s2.beta.rad, 0.1)
 
     s3 = galsim.config.ParseValue(config,'s3',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(s3.getG1(), 0.5)
-    np.testing.assert_almost_equal(s3.getG2(), -0.1)
+    np.testing.assert_almost_equal(s3.g1, 0.5)
+    np.testing.assert_almost_equal(s3.g2, -0.1)
 
     s4 = galsim.config.ParseValue(config,'s4',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(s4.getG(), 0.5)
-    np.testing.assert_almost_equal(s4.getBeta().rad, 0.1)
+    np.testing.assert_almost_equal(s4.g, 0.5)
+    np.testing.assert_almost_equal(s4.beta.rad, 0.1)
 
     s5 = galsim.config.ParseValue(config,'s5',config, galsim.Shear)[0]
-    eta = s5.getEta()
-    e = s5.getE()
-    eta1 = s5.getE1() * eta/e
-    eta2 = s5.getE2() * eta/e
+    eta = s5.eta
+    e = s5.e
+    eta1 = s5.e1 * eta/e
+    eta2 = s5.e2 * eta/e
     np.testing.assert_almost_equal(eta1, 0.5)
     np.testing.assert_almost_equal(eta2, -0.1)
 
     s6 = galsim.config.ParseValue(config,'s6',config, galsim.Shear)[0]
-    np.testing.assert_almost_equal(s6.getEta(), 0.5)
-    np.testing.assert_almost_equal(s6.getBeta().rad, 0.1)
+    np.testing.assert_almost_equal(s6.eta, 0.5)
+    np.testing.assert_almost_equal(s6.beta.rad, 0.1)
 
     s7 = galsim.config.ParseValue(config,'s7',config, galsim.Shear)[0]
-    g = s7.getG()
+    g = s7.g
     q = (1-g)/(1+g)
     np.testing.assert_almost_equal(q, 0.5)
-    np.testing.assert_almost_equal(s7.getBeta().rad, 0.1)
+    np.testing.assert_almost_equal(s7.beta.rad, 0.1)
 
     # Test values taken from a List
     list1 = []
@@ -1125,23 +1125,23 @@ def test_shear_value():
         config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0])
 
-    np.testing.assert_almost_equal(list1[0].getG1(), 0.2)
-    np.testing.assert_almost_equal(list1[0].getG2(), -0.3)
-    np.testing.assert_almost_equal(list1[1].getG1(), -0.5)
-    np.testing.assert_almost_equal(list1[1].getG2(), 0.2)
-    np.testing.assert_almost_equal(list1[2].getG1(), 0.1)
-    np.testing.assert_almost_equal(list1[2].getG2(), 0.0)
-    np.testing.assert_almost_equal(list1[3].getG1(), 0.2)
-    np.testing.assert_almost_equal(list1[3].getG2(), -0.3)
-    np.testing.assert_almost_equal(list1[4].getG1(), -0.5)
-    np.testing.assert_almost_equal(list1[4].getG2(), 0.2)
+    np.testing.assert_almost_equal(list1[0].g1, 0.2)
+    np.testing.assert_almost_equal(list1[0].g2, -0.3)
+    np.testing.assert_almost_equal(list1[1].g1, -0.5)
+    np.testing.assert_almost_equal(list1[1].g2, 0.2)
+    np.testing.assert_almost_equal(list1[2].g1, 0.1)
+    np.testing.assert_almost_equal(list1[2].g2, 0.0)
+    np.testing.assert_almost_equal(list1[3].g1, 0.2)
+    np.testing.assert_almost_equal(list1[3].g2, -0.3)
+    np.testing.assert_almost_equal(list1[4].g1, -0.5)
+    np.testing.assert_almost_equal(list1[4].g2, 0.2)
 
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Shear)[0]
     s = galsim.Shear(g1=0.2, g2=-0.3)
     s += galsim.Shear(g1=-0.5, g2=0.2)
     s += galsim.Shear(g1=0.1, g2=0.0)
-    np.testing.assert_almost_equal(sum1.getG1(), s.getG1())
-    np.testing.assert_almost_equal(sum1.getG2(), s.getG2())
+    np.testing.assert_almost_equal(sum1.g1, s.g1)
+    np.testing.assert_almost_equal(sum1.g2, s.g2)
 
     # Test NFWHaloShear
     galsim.config.ProcessInput(config)

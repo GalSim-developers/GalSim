@@ -1577,7 +1577,7 @@ class ChromaticTransformation(ChromaticObject):
                         single = '.rotate(%s)'%theta
                     else:
                         single = 0
-                if shear.getG() > 1.e-12:
+                if shear.g > 1.e-12:
                     if single is None:
                         single = '.shear(%s)'%shear
                     else:

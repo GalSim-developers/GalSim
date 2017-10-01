@@ -508,7 +508,7 @@ def do_jac_decomp(wcs, name):
 
     # The minLinearScale is scale * (1-g) / sqrt(1-g^2)
     import math
-    g = shear.getG()
+    g = shear.g
     min_scale = scale * (1.-g) / math.sqrt(1.-g**2)
     np.testing.assert_almost_equal(wcs.minLinearScale(), min_scale, 6, "minLinearScale")
     # The maxLinearScale is scale * (1+g) / sqrt(1-g^2)
@@ -524,7 +524,7 @@ def do_jac_decomp(wcs, name):
         np.testing.assert_almost_equal(theta.rad, theta2.rad, 6, "inverse theta")
     else:
         np.testing.assert_almost_equal(theta.rad, -theta2.rad, 6, "inverse theta")
-    np.testing.assert_almost_equal(shear.getG(), shear2.getG(), 6, "inverse shear")
+    np.testing.assert_almost_equal(shear.g, shear2.g, 6, "inverse shear")
     # There is no simple relation between the directions of the shear in the two cases.
     # The shear direction gets mixed up by the rotation if that is non-zero.
 
