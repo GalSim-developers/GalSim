@@ -485,7 +485,7 @@ def test_gaussian():
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getMean(), x.getSigma()))
+    do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
     do_pickle(gn, drawNoise)
@@ -622,7 +622,7 @@ def test_binomial():
             err_msg='Wrong binomial random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
+    do_pickle(b, lambda x: (x.serialize(), x.n, x.p))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(b), drawNoise)
     do_pickle(b)
@@ -858,7 +858,7 @@ def test_poisson():
             err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
 
     # Check picklability
-    do_pickle(p, lambda x: (x.serialize(), x.getMean()))
+    do_pickle(p, lambda x: (x.serialize(), x.mean))
     do_pickle(p, lambda x: (x(), x(), x(), x()))
     do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
     do_pickle(pn, drawNoise)
@@ -1102,7 +1102,7 @@ def test_weibull():
             err_msg='Wrong weibull random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
+    do_pickle(w, lambda x: (x.serialize(), x.a, x.b))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(w), drawNoise)
     do_pickle(w)
@@ -1234,7 +1234,7 @@ def test_gamma():
             err_msg='Wrong gamma random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
+    do_pickle(g, lambda x: (x.serialize(), x.k, x.theta))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(g), drawNoise)
     do_pickle(g)
@@ -1366,7 +1366,7 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(c, lambda x: (x.serialize(), x.getN()))
+    do_pickle(c, lambda x: (x.serialize(), x.n))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(c), drawNoise)
     do_pickle(c)

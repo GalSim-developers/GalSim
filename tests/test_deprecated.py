@@ -796,69 +796,69 @@ def test_dep_random():
     rng = galsim.BaseDeviate(123)
 
     gd = galsim.GaussianDeviate(rng, mean=0.5, sigma=1.7)
-    np.testing.assert_almost_equal(gd.getMean(), 0.5)
-    np.testing.assert_almost_equal(gd.getSigma(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.5)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 1.7)
 
     check_dep(gd.setMean, 0.9)
-    np.testing.assert_almost_equal(gd.getMean(), 0.9)
-    np.testing.assert_almost_equal(gd.getSigma(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 1.7)
 
     check_dep(gd.setSigma, 2.3)
-    np.testing.assert_almost_equal(gd.getMean(), 0.9)
-    np.testing.assert_almost_equal(gd.getSigma(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 2.3)
 
 
     bd = galsim.BinomialDeviate(rng, N=7, p=0.7)
-    np.testing.assert_almost_equal(bd.getN(), 7)
-    np.testing.assert_almost_equal(bd.getP(), 0.7)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 7)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.7)
 
     check_dep(bd.setN, 9)
-    np.testing.assert_almost_equal(bd.getN(), 9)
-    np.testing.assert_almost_equal(bd.getP(), 0.7)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 9)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.7)
 
     check_dep(bd.setP, 0.3)
-    np.testing.assert_almost_equal(bd.getN(), 9)
-    np.testing.assert_almost_equal(bd.getP(), 0.3)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 9)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.3)
 
 
     pd = galsim.PoissonDeviate(rng, mean=0.5)
-    np.testing.assert_almost_equal(pd.getMean(), 0.5)
+    np.testing.assert_almost_equal(check_dep(pd.getMean), 0.5)
 
     check_dep(pd.setMean, 0.9)
-    np.testing.assert_almost_equal(pd.getMean(), 0.9)
+    np.testing.assert_almost_equal(check_dep(pd.getMean), 0.9)
 
 
     wd = galsim.WeibullDeviate(rng, a=0.5, b=1.7)
-    np.testing.assert_almost_equal(wd.getA(), 0.5)
-    np.testing.assert_almost_equal(wd.getB(), 1.7)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.5)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 1.7)
 
     check_dep(wd.setA, 0.9)
-    np.testing.assert_almost_equal(wd.getA(), 0.9)
-    np.testing.assert_almost_equal(wd.getB(), 1.7)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.9)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 1.7)
 
     check_dep(wd.setB, 2.3)
-    np.testing.assert_almost_equal(wd.getA(), 0.9)
-    np.testing.assert_almost_equal(wd.getB(), 2.3)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.9)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 2.3)
 
 
     gd = galsim.GammaDeviate(rng, k=0.5, theta=1.7)
-    np.testing.assert_almost_equal(gd.getK(), 0.5)
-    np.testing.assert_almost_equal(gd.getTheta(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.5)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 1.7)
 
     check_dep(gd.setK, 0.9)
-    np.testing.assert_almost_equal(gd.getK(), 0.9)
-    np.testing.assert_almost_equal(gd.getTheta(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 1.7)
 
     check_dep(gd.setTheta, 2.3)
-    np.testing.assert_almost_equal(gd.getK(), 0.9)
-    np.testing.assert_almost_equal(gd.getTheta(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 2.3)
 
 
     cd = galsim.Chi2Deviate(rng, n=5)
-    np.testing.assert_almost_equal(cd.getN(), 5)
+    np.testing.assert_almost_equal(check_dep(cd.getN), 5)
 
     check_dep(cd.setN, 9)
-    np.testing.assert_almost_equal(cd.getN(), 9)
+    np.testing.assert_almost_equal(check_dep(cd.getN), 9)
 
 
 @timer
