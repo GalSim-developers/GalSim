@@ -1010,6 +1010,10 @@ def test_shoot():
     # It's not exactly the same, since the rngs are realized in a different order.
     np.testing.assert_allclose(image3.array, image1.array, rtol=0.25)
 
+    # Test that shooting with 0.0 flux makes a zero-photons image.
+    image4 = (obj*0).drawImage(method='phot')
+    np.testing.assert_equal(image4.array, 0)
+
 
 @timer
 def test_drawImage_area_exptime():

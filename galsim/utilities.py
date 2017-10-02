@@ -1145,6 +1145,8 @@ def combine_wave_list(*args):
             red_limit = min(red_limit, obj.red_limit)
         wave_list = np.union1d(wave_list, obj.wave_list)
     wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    if blue_limit > red_limit:
+        raise RuntimeError("Empty wave_list intersection.")
     return wave_list, blue_limit, red_limit
 
 def functionize(f):

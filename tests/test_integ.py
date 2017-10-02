@@ -214,6 +214,13 @@ def test_midpoint_basic():
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
 
+    # Also test midptRule
+    result = galsim.integ.midptRule(lambda x:x**2, x)
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=2, verbose=True,
+        err_msg='Simple test of midptRule() method failed for f(x)=x^2 from 0 to 10')
+
+
 @timer
 def test_trapz_basic():
     """Test the basic functionality of the trapz() method.
@@ -231,6 +238,12 @@ def test_trapz_basic():
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
+
+    #Also test trapzRule
+    result = galsim.integ.trapzRule(func, np.linspace(0, 1, 100000))
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Test of trapzRule() with points failed for f(x)=x^2 from 0 to 1')
 
 
 if __name__ == "__main__":

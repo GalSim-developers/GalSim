@@ -1707,6 +1707,8 @@ class GSObject(object):
         #
 
         flux = self.SBProfile.getFlux()
+        if flux == 0.0:
+            return 0, 1.0
         posflux = self.SBProfile.getPositiveFlux()
         negflux = self.SBProfile.getNegativeFlux()
         eta = negflux / (posflux + negflux)
