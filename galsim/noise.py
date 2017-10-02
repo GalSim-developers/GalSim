@@ -456,7 +456,9 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         var_image = galsim.ImageF(var_image)
 
         # Make the _noise object using the image._image as needed in the C++ layer.
-        self._noise = _galsim.VarGaussianNoise(rng, var_image._image)
+        self._rng = rng
+        self._var_image = var_image
+        self._noise = _galsim.VarGaussianNoise(self._rng, self._var_image._image)
 
     def applyTo(self, image):
         """
@@ -478,9 +480,9 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         self._noise.applyToView(image_view)
 
     @property
-    def rng(self): return self._noise.rng
+    def rng(self): return self._rng
     @property
-    def var_image(self): return galsim.Image(self._noise.var_image)
+    def var_image(self): return self._var_image
 
     def copy(self, rng=None):
         """Returns a copy of the variable Gaussian noise model.
@@ -509,6 +511,9 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
     def __str__(self):
         return 'galsim.VariableGaussianNoise(var_image%s)'%(self.var_image)
+
+    def __getinitargs__(self):
+        return self.rng, self.var_image
 
 # Enable pickling of the boost-python wrapped classes
 _galsim.GaussianNoise.__getinitargs__ = lambda self: (self.rng, self.sigma)

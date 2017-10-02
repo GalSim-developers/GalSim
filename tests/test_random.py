@@ -2011,6 +2011,113 @@ def test_ne():
     assert repr(d1) == repr(d2)
     assert d1 != d2
 
+@timer
+def test_variable_gaussian_noise():
+    """Test VariableGaussian random number generator
+    """
+    # Make a checkerboard image with two values for the variance
+    gSigma1 = 1.7
+    gSigma2 = 2.85
+    var_image = galsim.ImageD(galsim.BoundsI(0,29,0,29))
+    coords = np.ogrid[0:30, 0:30]
+    mask1 = (coords[0] + coords[1]) % 2 == 0
+    mask2 = (coords[0] + coords[1]) % 2 == 1
+    var_image.array[mask1] = gSigma1**2
+    var_image.array[mask2] = gSigma2**2
+    print('var_image.array = ',var_image.array)
+
+    # Test filling an image
+    vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), var_image)
+    testimage = galsim.ImageD(30,30)
+    testimage.addNoise(vgn)
+    print('rms1 = ',np.std(testimage.array[mask1]))
+    print('rms2 = ',np.std(testimage.array[mask2]))
+    np.testing.assert_almost_equal(np.std(testimage.array[mask1])/10, gSigma1/10, decimal=1)
+    np.testing.assert_almost_equal(np.std(testimage.array[mask2])/100, gSigma2/100, decimal=1)
+
+    # Test filling an image with Fortran ordering
+    vgn.rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((30,30)).T)
+    testimage.addNoise(vgn)
+    print('rms1 = ',np.std(testimage.array[mask1]))
+    print('rms2 = ',np.std(testimage.array[mask2]))
+    np.testing.assert_almost_equal(np.std(testimage.array[mask1])/10, gSigma1/10, decimal=1)
+    np.testing.assert_almost_equal(np.std(testimage.array[mask2])/100, gSigma2/100, decimal=1)
+
+    # Check var_image property
+    np.testing.assert_almost_equal(
+            vgn.var_image.array, var_image.array, 5,
+            err_msg="VariableGaussianNoise var_image returns wrong var_image")
+
+    # Check the measured variance vs the nominal variance.  And go bigger to be more precise.
+    big_var_image = galsim.ImageD(galsim.BoundsI(0,2047,0,2047))
+    big_coords = np.ogrid[0:2048, 0:2048]
+    mask1 = (big_coords[0] + big_coords[1]) % 2 == 0
+    mask2 = (big_coords[0] + big_coords[1]) % 2 == 1
+    big_var_image.array[mask1] = gSigma1**2
+    big_var_image.array[mask2] = gSigma2**2
+    big_vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), big_var_image)
+
+    big_im = galsim.Image(2048,2048,dtype=float)
+    big_im.addNoise(big_vgn)
+    var = np.var(big_im.array)
+    print('variance = ',var)
+    print('mean of var_image = ',big_vgn.var_image.array.mean())
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='Realized variance for VariableGaussianNoise did not match var_image')
+
+    # Check that VariableGaussianNoise adds to the image, not overwrites the image.
+    gal = galsim.Exponential(half_light_radius=2.3, flux=1.e4)
+    gal.drawImage(image=big_im)
+    big_vgn.rng.seed(testseed)
+    big_im.addNoise(big_vgn)
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
+
+    # Check that DeviateNoise adds to the image, not overwrites the image.
+    gal.drawImage(image=big_im)
+    big_vgn.rng.seed(testseed)
+    big_im.addNoise(big_vgn)
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='DeviateNoise wrong when already an object drawn on the image')
+
+    # Check picklability
+    do_pickle(vgn, lambda x: (x.rng.serialize(), x.var_image))
+    do_pickle(vgn)
+
+    # Check copy, eq and ne
+    vgn2 = galsim.VariableGaussianNoise(vgn.rng.duplicate(), var_image)
+    vgn3 = vgn.copy()
+    vgn4 = vgn.copy(rng=galsim.BaseDeviate(11))
+    vgn5 = galsim.VariableGaussianNoise(vgn.rng, 2.*var_image)
+    assert vgn == vgn2
+    assert vgn == vgn3
+    assert vgn != vgn4
+    assert vgn != vgn5
+    assert vgn.rng.raw() == vgn2.rng.raw()
+    assert vgn == vgn2
+    assert vgn == vgn3
+    vgn.rng.raw()
+    assert vgn != vgn2
+    assert vgn == vgn3
+
+    try:
+        np.testing.assert_raises(TypeError, noise.applyTo(23))
+        np.testing.assert_raises(ValueError, noise.applyTo(galsim.ImageF(3,3)))
+        np.testing.assert_raises(RuntimeError, noise.getVariance())
+        np.testing.assert_raises(RuntimeError, noise.withVariance(23))
+        np.testing.assert_raises(RuntimeError, noise.withScaledVariance(23))
+    except:
+        pass
+
+
 
 if __name__ == "__main__":
     test_uniform()
@@ -2028,3 +2135,4 @@ if __name__ == "__main__":
     test_addnoisesnr()
     test_permute()
     test_ne()
+    test_variable_gaussian_noise()

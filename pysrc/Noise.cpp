@@ -109,6 +109,7 @@ namespace galsim {
                 .def("_setRNG", &BaseNoise::setRNG)
                 .def("_setVariance", &BaseNoise::setVariance)
                 .def("_scaleVariance", &BaseNoise::scaleVariance)
+                .enable_pickling()
                 ;
             wrapTemplates<double>(pyBaseNoise);
             wrapTemplates<float>(pyBaseNoise);
