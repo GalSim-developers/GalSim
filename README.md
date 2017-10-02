@@ -288,9 +288,20 @@ Summary of planned future development
 We plan to add the following additional capabilities in future versions of
 GalSim:
 
-* Simulating more sophisticated detector defects and image artifacts.
+* Easier installation -- removing the boost dependency in particular.  We are
+  planning to have v2.0 be pip installable, rather than using SCons, which
+  will make it much easier to install for many systems.  This requires ripping
+  out the Boost Python wrapping and replacing with either cffi or pybind11
+  (probably the latter, but still TBD).  This effort is proceeding in issue
+  #809, with changes being merged to branch "noboost".
 
-* Support for flexion.  (cf. Issue #361)
+* Wavelength-dependent photon shooting.  Currently, the chromatic functionality
+  is only available for FFT rendering, which is quite slow.  For most use
+  cases, photon shooting should be orders of magnitude faster, so this is
+  a near-term priority to get done.  (cf. Issue #540.)
+
+* Simulating more sophisticated detector defects and image artifacts.  E.g.
+  cosmic rays, saturation, bleeding, ...
 
 There are many others as well.  Please see
 

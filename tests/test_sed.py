@@ -307,9 +307,10 @@ def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
     """
     a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
-    bolo_flux = a.calculateFlux(bandpass=None)
+    bolo_bp = galsim.Bandpass('1', blue_limit=a.blue_limit, red_limit=a.red_limit, wave_type='nm')
+    bolo_flux = a.calculateFlux(bolo_bp)
     print('bolo_flux = ',bolo_flux)
-    for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
+    for z1, z2 in zip([-0.01, -0.02, 0.5, 1.0, 1.4], [-0.2, 0.2, 1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
         c = b.atRedshift(z1) # same redshift, so should be no change
         d = c.atRedshift(z2) # do a relative redshifting from z1 to z2
@@ -329,6 +330,36 @@ def test_SED_atRedshift():
                                            err_msg="error redshifting SED")
             np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
+    try:
+        np.testing.assert_raises(ValueError, a.atRedshift, -1.1)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
+@timer
+def test_combine_wave_list():
+    class A(object):
+        def __init__(self, wave_list):
+            self.wave_list = wave_list
+            if self.wave_list:
+                self.blue_limit = np.min(self.wave_list)
+                self.red_limit = np.max(self.wave_list)
+    a = A([1, 3, 5])
+    b = A([2, 4, 6])
+    c = A([2, 3, 4, 5])
+    d = A([7, 8, 9])
+
+    for a1, a2 in zip([a, a, b], [b, c, c]):
+        wave_list, blue_limit, red_limit = (
+            galsim.utilities.combine_wave_list(a1, a2))
+        np.testing.assert_equal(wave_list, c.wave_list)
+        np.testing.assert_equal(blue_limit, c.blue_limit)
+        np.testing.assert_equal(red_limit, c.red_limit)
+    try:
+        np.testing.assert_raises(
+            RuntimeError, galsim.utilities.combine_wave_list, a, d)
+    except ImportError:
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -435,7 +466,9 @@ def test_SED_withFlux():
             # Should be equivalent to multiplying an SED * Bandpass and computing the
             # "bolometric" flux.
             ab = a * rband
-            np.testing.assert_array_almost_equal(ab.calculateFlux(None), 1.0, 5,
+            bolo_bp = galsim.Bandpass('1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
+                                      wave_type='nm')
+            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
 
@@ -518,6 +551,25 @@ def test_SED_calculateMagnitude():
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         thresh = 0.3 if filter_name == 'u' else 0.1
         assert (abs((AB_mag - vega_mag) - conversion) < thresh)
+
+
+@timer
+def test_redshift_calculateFlux():
+    sed = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+                     wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass(galsim.LookupTable([4,6], [1,1], interpolant='linear'),
+                         wave_type='nm')
+
+    for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
+        sedz = sed.atRedshift(z)
+        if sedz.blue_limit > bp.blue_limit or sedz.red_limit < bp.red_limit:
+            try:
+                np.testing.assert_raises(ValueError, sedz.calculateFlux, bp)
+            except ImportError:
+                print('The assert_raises tests require nose')
+        else:
+            print('z = {} flux = {}'.format(z, sedz.calculateFlux(bp)))
+
 
 @timer
 def test_SED_calculateDCRMomentShifts():
@@ -751,11 +803,13 @@ if __name__ == "__main__":
     test_SED_mul()
     test_SED_div()
     test_SED_atRedshift()
+    test_combine_wave_list()
     test_SED_roundoff_guard()
     test_SED_init()
     test_SED_withFlux()
     test_SED_withFluxDensity()
     test_SED_calculateMagnitude()
+    test_redshift_calculateFlux()
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentRatio()
     test_SED_sampleWavelength()

@@ -1751,7 +1751,9 @@ class GSObject(object):
         # Returns the total flux placed inside the image bounds by photon shooting.
         #
 
-        flux = self.getFlux()
+        flux = self.flux
+        if flux == 0.0:
+            return 0, 1.0
         posflux = self.getPositiveFlux()
         negflux = self.getNegativeFlux()
         eta = negflux / (posflux + negflux)

@@ -46,6 +46,5 @@ def check_dep(f, *args, **kwargs):
     assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
-
 if __name__ == "__main__":
     pass
