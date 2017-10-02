@@ -1380,10 +1380,8 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
 
 
 def check_share_file(filename, subdir):
-    """Find SED or Bandpass file, possibly adding share dir or raising deprecation warning if old
-    share dir was specified.
+    """Find SED or Bandpass file, possibly adding share_dir/subdir.
     """
-    from .deprecated import depr
     import os
 
     if os.path.isfile(filename):
@@ -1391,14 +1389,6 @@ def check_share_file(filename, subdir):
 
     new_filename = os.path.join(galsim.meta_data.share_dir, subdir, filename)
     if os.path.isfile(new_filename):
-        return True, new_filename
-
-    dirname, basename = os.path.split(filename)
-    new_filename = os.path.join(dirname, subdir, basename)
-    if os.path.isfile(new_filename):
-        depr("Filename os.path.join(galsim.meta_data.share_dir, {0})".format(basename),
-             1.5,
-             "os.path.join(galsim.meta_data.share_dir, '{0}', {1})".format(subdir, basename))
         return True, new_filename
 
     return False, ''

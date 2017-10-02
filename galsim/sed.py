@@ -636,25 +636,16 @@ class SED(object):
         """
         if self.dimensionless:
             raise TypeError("Cannot calculate flux of dimensionless SED.")
-        if bandpass is None: # do bolometric flux
-            from galsim.deprecated import depr
-            depr('Using calculateFlux(bandpass=None) to compute a bolometric flux', 1.5, '',
-                 "If you need this functionality, you can use a pseudo-bolometric Bandpass created "
-                 "with:  bp = Bandpass('1', 'nm', blue_limit=sed.blue_limit, "
-                 "red_limit=sed.red_limit)")
-            bp = galsim.Bandpass('1', 'nm', self.blue_limit, self.red_limit)
-            return self.calculateFlux(bp)
-        else: # do flux through bandpass
-            if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-                slop = 1e-6 # nm
-                if (self.blue_limit > bandpass.blue_limit + slop
-                        or self.red_limit < bandpass.red_limit - slop):
-                    raise ValueError("SED undefined within Bandpass")
-                x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
-                return np.trapz(bandpass(x) * self(x), x)
-            else:
-                return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
-                                          bandpass.blue_limit, bandpass.red_limit)
+        if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+            slop = 1e-6 # nm
+            if (self.blue_limit > bandpass.blue_limit + slop
+                    or self.red_limit < bandpass.red_limit - slop):
+                raise ValueError("SED undefined within Bandpass")
+            x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
+            return np.trapz(bandpass(x) * self(x), x)
+        else:
+            return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
+                                      bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
         """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires
