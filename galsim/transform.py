@@ -140,21 +140,6 @@ class Transformation(galsim.GSObject):
         self._offset = galsim.PositionD(self._sbp.getOffset())
         self._flux_ratio = self._sbp.getFluxScaling()
 
-    def getJac(self):
-        """Return the Jacobian of the transformation.
-        """
-        return self._jac
-
-    def getOffset(self):
-        """Return the offset of the transformation.
-        """
-        return self._offset
-
-    def getFluxRatio(self):
-        """Return the flux ratio of the transformation.
-        """
-        return self._flux_ratio
-
     @lazy_property
     def noise(self):
         if self.original.noise is None:
@@ -208,7 +193,7 @@ class Transformation(galsim.GSObject):
                     single = '.rotate(%s)'%theta
                 else:
                     single = 0
-            if shear.getG() > 1.e-12:
+            if shear.g > 1.e-12:
                 if single is None:
                     single = '.shear(%s)'%shear
                 else:
@@ -237,7 +222,7 @@ class Transformation(galsim.GSObject):
         dudx, dudy, dvdx, dvdy = self._jac.ravel()
         self._sbp = galsim._galsim.SBTransform(self._original._sbp,
                                                dudx, dudy, dvdx, dvdy,
-                                               self.getOffset()._p, self.getFluxRatio(),
+                                               self.offset._p, self.flux_ratio,
                                                self.gsparams._gsp)
 
     def _fwd_ident(self, x, y):

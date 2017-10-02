@@ -299,14 +299,6 @@ class GaussianDeviate(BaseDeviate):
     def sigma(self):
         return self._rng_args[1]
 
-    def getMean(self):
-        """Get current distribution's mean"""
-        return self.mean
-
-    def getSigma(self):
-        """Get current distribution's sigma"""
-        return self.sigma
-
     def __call__(self):
         """Draw a new random number from the distribution.
 
@@ -360,20 +352,12 @@ class BinomialDeviate(BaseDeviate):
         self.reset(seed)
 
     @property
-    def N(self):
+    def n(self):
         return self._rng_args[0]
 
     @property
     def p(self):
         return self._rng_args[1]
-
-    def getN(self):
-        """Get current distribution's N"""
-        return self.N
-
-    def getP(self):
-        """Get current distribution's p"""
-        return self.p
 
     def __call__(self):
         """Draw a new random number from the distribution.
@@ -417,10 +401,6 @@ class PoissonDeviate(BaseDeviate):
     @property
     def mean(self):
         return self._rng_args[0]
-
-    def getMean(self):
-        """Get current distribution's mean"""
-        return self.mean
 
     def __call__(self):
         """Draw a new random number from the distribution.
@@ -485,14 +465,6 @@ class WeibullDeviate(BaseDeviate):
     def b(self):
         return self._rng_args[1]
 
-    def getA(self):
-        """Get current distribution's shape parameter a."""
-        return self.a
-
-    def getB(self):
-        """Get current distribution's shape parameter b."""
-        return self.b
-
     def __call__(self):
         """Draw a new random number from the distribution.
 
@@ -541,14 +513,6 @@ class GammaDeviate(BaseDeviate):
     def theta(self):
         return self._rng_args[1]
 
-    def getK(self):
-        """Get current distribution's shape parameter k."""
-        return self.k
-
-    def getTheta(self):
-        """Get current distribution's shape parameter theta."""
-        return self.theta
-
     def __call__(self):
         """Draw a new random number from the distribution.
 
@@ -593,10 +557,6 @@ class Chi2Deviate(BaseDeviate):
     @property
     def n(self):
         return self._rng_args[0]
-
-    def getN(self):
-        """Get current distribution's number of degrees of freedom."""
-        return self.n
 
     def __call__(self):
         """Draw a new random number from the distribution.
@@ -896,4 +856,3 @@ _galsim.WeibullDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), sel
 _galsim.GammaDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getK(),
         self.getTheta())
 _galsim.Chi2DeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getN())
-

@@ -124,6 +124,9 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof.xValue(x,y), rtol=1.e-5,
                 err_msg="%s profile sb image does not match xValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
+                err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
 
 def check_basic_k(prof, name):
     """Check drawKImage
@@ -155,6 +158,9 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof.kValue(kx,ky), rtol=1.e-5,
                 err_msg="%s profile kimage does not match kValue at %d,%d"%(name,i,j))
+        np.testing.assert_allclose(
+                kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
+                err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
@@ -204,7 +210,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
-    print('prof.getFlux = ',prof.getFlux())
+    print('prof.flux = ',prof.flux)
     print('flux_max = ',flux_max)
     flux_tot = img.array.sum(dtype=float)
     print('flux_tot = ',flux_tot)
@@ -227,7 +233,7 @@ def do_shoot(prof, img, name):
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print('prof.getFlux => ',prof.getFlux())
+    print('prof.flux => ',prof.flux)
     print('img.sum => ',img.array.sum(dtype=float))
     print('img.max => ',img.array.max())
     print('nphot = ',nphot)
@@ -436,7 +442,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
             # Special case: can't change size of LVector or PhotonArray without changing array
-            if classname in ['LVector', 'PhotonArray'] and i == 0:
+            if classname in ['LVector', 'PhotonArray'] and i == 0 or i == 2:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=np.inf):
                 try:
@@ -520,7 +526,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         # image, which implies flux can be lost off of the edges of the image, we don't expect
         # it's accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
-        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).getFlux(), desired,
+        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
         # Don't bother trying to draw a deconvolution.
         if isinstance(obj, galsim.ChromaticDeconvolution):

@@ -173,7 +173,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
         try:
-            param['saved_re'] = gsobject.getHalfLightRadius()
+            param['saved_re'] = gsobject.half_light_radius
         except AttributeError:
             pass
 

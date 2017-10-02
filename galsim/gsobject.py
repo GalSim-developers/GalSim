@@ -94,10 +94,10 @@ class GSObject(object):
     Access Methods
     --------------
 
-    There are some access methods that are available for all GSObjects.  Again, see the docstrings
-    for each method for more details.
+    There are some access methods and properties that are available for all GSObjects.
+    Again, see the docstrings for each method for more details.
 
-        >>> flux = obj.getFlux()
+        >>> flux = obj.flux
         >>> centroid = obj.centroid()
         >>> f_xy = obj.xValue(x,y)
         >>> fk_xy = obj.kValue(kx,ky)
@@ -321,11 +321,6 @@ class GSObject(object):
         """
         return galsim.PositionD(self._sbp.centroid())
 
-    def getFlux(self):
-        """Returns the flux of the object.
-        """
-        return self._sbp.getFlux()
-
     def getPositiveFlux(self):
         """Returns the expectation value of flux in positive photons.
 
@@ -373,11 +368,6 @@ class GSObject(object):
         rather than the maximum value.  For most profiles, these are the same thing.
         """
         return self._sbp.maxSB()
-
-    def getGSParams(self):
-        """Returns the GSParams for the object.
-        """
-        return self._gsparams
 
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
@@ -558,9 +548,9 @@ class GSObject(object):
 
 
     @property
-    def flux(self): return self.getFlux()
+    def flux(self): return self._sbp.getFlux()
     @property
-    def gsparams(self): return self.getGSParams()
+    def gsparams(self): return self._gsparams
 
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
@@ -624,7 +614,7 @@ class GSObject(object):
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
 
-        This function is equivalent to `obj.withScaledFlux(flux / obj.getFlux())`.
+        This function is equivalent to `obj.withScaledFlux(flux / obj.flux)`.
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location rescaled such that the total flux will be
@@ -635,18 +625,17 @@ class GSObject(object):
 
         @returns the object with the new flux
         """
-        return self.withScaledFlux(flux / self.getFlux())
+        return self.withScaledFlux(flux / self.flux)
 
     def withScaledFlux(self, flux_ratio):
         """Create a version of the current object with the flux scaled by the given `flux_ratio`.
 
-        This function is equivalent to `obj.withFlux(flux_ratio * obj.getFlux())`.  However, this
-        function is the more efficient one, since it doesn't actually require the call to
-        getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
+        This function is equivalent to `obj.withFlux(flux_ratio * obj.flux)`.  Indeed, withFlux()
+        is implemented in terms of this one.
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.  If `flux_ratio` is an SED,
-        then the returned object is a `ChromaticObject` with an SED multiplied by obj.getFlux().
+        then the returned object is a `ChromaticObject` with an SED multiplied by obj.flux.
         Note that in this case the `.flux` attribute of the GSObject being scaled gets interpreted
         as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The
         photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely
@@ -1187,7 +1176,7 @@ class GSObject(object):
         large enough image to catch most of the flux.  For example:
 
             >>> obj.drawImage(image)
-            >>> assert image.added_flux > 0.99 * obj.getFlux()
+            >>> assert image.added_flux > 0.99 * obj.flux
 
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object,
@@ -1884,7 +1873,7 @@ class GSObject(object):
             else: poisson_flux = False
 
         # Check that either n_photons is set to something or flux is set to something
-        if n_photons == 0. and self.getFlux() == 1.:
+        if n_photons == 0. and self.flux == 1.:
             import warnings
             warnings.warn(
                     "Warning: drawImage for object with flux == 1, area == 1, and "

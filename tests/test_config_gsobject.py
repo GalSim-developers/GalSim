@@ -447,7 +447,7 @@ def test_sersic():
                                  conv=galsim.Gaussian(sigma=1))
 
         # For the maximum_fft_size test, we need to do things a little differently
-        # We lower maximum_fft_size below the size that SBProfile wants this to be,
+        # We lower maximum_fft_size below the size that it normally wants this to be,
         # and we check to make sure an exception is thrown.  Of course, this isn't how you
         # would normally use maximum_fft_size.  Normally, you would raise it when the default
         # is too small.  But to construct the test that way would require a lot of memory

@@ -167,8 +167,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     else:
         pa_obsy = PA
         pa_fpa = PA + 90.*galsim.degrees + theta_fpa
-    cos_pa = np.cos(pa_fpa.rad)
-    sin_pa = np.sin(pa_fpa.rad)
+    cos_pa = np.cos(pa_fpa)
+    sin_pa = np.sin(pa_fpa)
 
     # Figure out tangent-plane positions for FPA center:
     xc_fpa_tp, yc_fpa_tp = _det_to_tangplane_positions(xc_fpa, yc_fpa)
@@ -256,8 +256,8 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         b11 = b_sip[i_sca,0,1]
 
         # Rotate by pa_fpa.
-        cos_pa_sca = np.cos(pa_sca.rad)
-        sin_pa_sca = np.sin(pa_sca.rad)
+        cos_pa_sca = np.cos(pa_sca)
+        sin_pa_sca = np.sin(pa_sca)
         header['CD1_1'] = (cos_pa_sca * a10 + sin_pa_sca * b10,
                            "partial of first axis coordinate w.r.t. x")
         header['CD1_2'] = (cos_pa_sca * a11 + sin_pa_sca * b11,

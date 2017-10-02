@@ -305,7 +305,7 @@ class RealGalaxy(GSObject):
                 flux_rescale = 1.0
             flux_rescale /= area_norm
             if flux is not None:
-                flux_rescale *= flux/self.original_gal.getFlux()
+                flux_rescale *= flux/self.original_gal.flux
             self.original_gal *= flux_rescale
             self.noise *= flux_rescale**2
 
@@ -338,10 +338,6 @@ class RealGalaxy(GSObject):
         var = xi.getVariance()
         psf_image = PSF.drawImage(method='no_pixel')
         return RealGalaxy((image, psf_image, noise_image, pixel_scale, var))
-
-    def getHalfLightRadius(self):
-        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
-                                   +"objects.")
 
     def __eq__(self, other):
         return (isinstance(other, galsim.RealGalaxy) and
@@ -386,7 +382,7 @@ class RealGalaxy(GSObject):
         return 'galsim.RealGalaxy(index=%s, flux=%s)'%(self.index, self.flux)
 
     def __getstate__(self):
-        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # The _sbp is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
         del d['_sbp']

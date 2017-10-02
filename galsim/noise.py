@@ -117,10 +117,6 @@ class BaseNoise(object):
     def rng(self):
         return self._rng
 
-    def getRNG(self):
-        """Get the BaseDeviate used to generate random numbers for the current noise model."""
-        return self._rng
-
     def getVariance(self):
         """Get variance in current noise model."""
         return self._getVariance()
@@ -239,10 +235,6 @@ class GaussianNoise(BaseNoise):
     def sigma(self):
         return self._sigma
 
-    def getSigma(self):
-        """Get sigma of current noise model"""
-        return self._sigma
-
     def _applyTo(self, image):
         self._gd.clearCache()
         noise_array = np.empty(np.prod(image.array.shape), dtype=float)
@@ -317,10 +309,6 @@ class PoissonNoise(BaseNoise):
 
     @property
     def sky_level(self):
-        return self._sky_level
-
-    def getSkyLevel(self):
-        """Get sky_level of current noise model"""
         return self._sky_level
 
     def _applyTo(self, image):
@@ -445,24 +433,12 @@ class CCDNoise(BaseNoise):
     def sky_level(self):
         return self._sky_level
 
-    def getSkyLevel(self):
-        """Get sky_level of current noise model"""
-        return self._sky_level
-
     @property
     def gain(self):
         return self._gain
 
-    def getGain(self):
-        """Get gain of current noise model"""
-        return self._gain
-
     @property
     def read_noise(self):
-        return self._read_noise
-
-    def getReadNoise(self):
-        """Get read_noise of current noise model"""
         return self._read_noise
 
     def _applyTo(self, image):
@@ -635,9 +611,6 @@ class VariableGaussianNoise(BaseNoise):
     def var_image(self):
         return self._var_image
 
-    def getVarImage(self):
-        return self._var_image
-
     # Repeat this here, since we want to add an extra sanity check, which should go in the
     # non-underscore version.
     def applyTo(self, image):
@@ -662,7 +635,7 @@ class VariableGaussianNoise(BaseNoise):
             >>> noise_copy = noise.copy(rng=new_rng)
         """
         if rng is None: rng = self.rng
-        return VariableGaussianNoise(rng, self.getVarImage())
+        return VariableGaussianNoise(rng, self.var_image)
 
     def _getVariance(self):
         raise RuntimeError("No single variance value for VariableGaussianNoise")
@@ -680,6 +653,3 @@ class VariableGaussianNoise(BaseNoise):
 
     def __str__(self):
         return 'galsim.VariableGaussianNoise(var_image%s)'%(self.var_image)
-
-
-

@@ -432,7 +432,7 @@ class InterpolatedImage(GSObject):
                 pad_image._image, self.x_interpolant._i, self.k_interpolant._i, pad_factor,
                 _force_stepk, _force_maxk, self.gsparams._gsp)
 
-        # I think the only things that will mess up if getFlux() == 0 are the
+        # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
         if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
             raise RuntimeError("This input image has zero total flux. "
@@ -866,5 +866,3 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
                               galsim._galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
     ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
     return ret
-
-

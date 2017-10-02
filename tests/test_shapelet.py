@@ -63,8 +63,8 @@ def test_shapelet_gaussian():
                     gauss.maxSB(), shapelet.maxSB(), 5,
                     err_msg="Shapelet maxSB did not match Gaussian maxSB")
             np.testing.assert_almost_equal(
-                    gauss.getFlux(), shapelet.getFlux(), 5,
-                    err_msg="Shapelet getFlux did not match Gaussian getFlux")
+                    gauss.flux, shapelet.flux, 5,
+                    err_msg="Shapelet flux did not match Gaussian flux")
 
 
 @timer
@@ -118,8 +118,8 @@ def test_shapelet_drawImage():
             # setCenter doesn't actually set the center to the true center of the image
             # (since it falls between pixels).
             im.setCenter(0,0)
-            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(),
-                              np.arange(im.array.shape[1]).astype(float) + im.getYMin())
+            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.xmin,
+                              np.arange(im.array.shape[1]).astype(float) + im.ymin)
             x *= scale
             y *= scale
             flux = im.array.sum()
@@ -148,16 +148,15 @@ def test_shapelet_properties():
 
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
-    assert shapelet.sigma == shapelet.getSigma() == sigma
-    assert shapelet.order == shapelet.getOrder() == order
+    assert shapelet.sigma == sigma
+    assert shapelet.order == order
     np.testing.assert_array_equal(shapelet.bvec, bvec)
-    np.testing.assert_array_equal(shapelet.getBVec(), bvec)
 
     check_basic(shapelet, "Shapelet", approx_maxsb=True)
 
     # Check flux
     flux = bvec[0] + bvec[5] + bvec[14]
-    np.testing.assert_almost_equal(shapelet.getFlux(), flux, 10)
+    np.testing.assert_almost_equal(shapelet.flux, flux, 10)
     # The maxSB is not very accurate for Shapelet, but in this case it is still ok (matching
     # xValue(0,0), which isn't actually the maximum) to 2 digits.
     np.testing.assert_almost_equal(
@@ -199,8 +198,8 @@ def test_shapelet_fit():
         print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
-        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
-        np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
+        print('flux = ',shapelet.flux,'  cf. ',flux)
+        np.testing.assert_almost_equal(shapelet.flux / flux, 1., 1,
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
@@ -236,7 +235,7 @@ def test_shapelet_fit():
         offset = galsim.PositionD(0.3,1.4)
         shapelet.drawImage(im2, method=method, offset=offset)
         shapelet2 = galsim.Shapelet.fit(sigma, 10, im2, normalization=norm,
-                                       center=im2.trueCenter() + offset)
+                                        center=im2.trueCenter() + offset)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,

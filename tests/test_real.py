@@ -195,7 +195,7 @@ def test_real_galaxy_makeFromImage():
     obj2 = galsim.Convolve(psf, rg_2)
     im1 = obj1.drawImage(scale=0.2, nx=12, ny=12)
     im2 = obj2.drawImage(image=im1.copy())
-    atol = obj1.getFlux()*3e-5
+    atol = obj1.flux*3e-5
     np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=atol)
 
 

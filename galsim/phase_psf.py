@@ -900,25 +900,8 @@ class PhaseScreenList(object):
                                    attempt to find a good value automatically.  See also
                                    `oversampling` for adjusting the pupil size.  [default: None]
         """
-        # Determine if theta is a single 2-tuple of Angles (okay) or an iterable of 2-tuples of
-        # Angles (deprecated).
         theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
-
-        # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
-        # generator of pointings we need to look at the first item.  If the first item is
-        # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
-        # replace the consumed tuple at the beginning of the generator and go on.  If the first
-        # item is scalar, then assume that it's the x-component of a single field angle.
-        theta = iter(theta)
-        th0 = next(theta)
-        if not hasattr(th0, '__iter__'):
-            theta = [th0, next(theta)]
-            return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
-        else:
-            from .deprecated import depr
-            depr('list of `theta`s', 1.5, '[psl.makePSF(..., theta=th) for th in theta]')
-            theta = chain([th0], theta)
-            return [PhaseScreenPSF(self, lam, theta=th, **kwargs) for th in theta]
+        return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
 
     @property
     def r0_500_effective(self):
@@ -1085,7 +1068,7 @@ class PhaseScreenPSF(GSObject):
         self._geometric_shooting = geometric_shooting
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
-        # self._sbp.stepK(), still work.
+        # self.stepK(), still work.
         array = np.array([[self._flux]], dtype=np.float)
         bounds = galsim._BoundsI(1, 1, 1, 1)
         wcs = galsim.PixelScale(self.scale)
@@ -1099,7 +1082,8 @@ class PhaseScreenPSF(GSObject):
 
         self._screen_list._delayCalculation(self)
 
-    def getFlux(self):
+    @property
+    def flux(self):
         return self._flux
 
     def __str__(self):
@@ -1580,7 +1564,8 @@ class OpticalPSF(GSObject):
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
         self._sbp = self._psf._sbp
 
-    def getFlux(self):
+    @property
+    def flux(self):
         return self._flux
 
     def __str__(self):

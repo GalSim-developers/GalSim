@@ -492,8 +492,8 @@ def do_jac_decomp(wcs, name):
     # First see if we can recreate the right matrix from this:
     S = np.matrix( [ [ 1.+shear.g1, shear.g2 ],
                      [ shear.g2, 1.-shear.g1 ] ] ) / np.sqrt(1.-shear.g1**2-shear.g2**2)
-    R = np.matrix( [ [ np.cos(theta.rad), -np.sin(theta.rad) ],
-                     [ np.sin(theta.rad), np.cos(theta.rad) ] ] )
+    R = np.matrix( [ [ np.cos(theta), -np.sin(theta) ],
+                     [ np.sin(theta), np.cos(theta) ] ] )
     if flip:
         F = np.matrix( [ [ 0, 1 ],
                          [ 1, 0 ] ] )
@@ -508,7 +508,7 @@ def do_jac_decomp(wcs, name):
 
     # The minLinearScale is scale * (1-g) / sqrt(1-g^2)
     import math
-    g = shear.getG()
+    g = shear.g
     min_scale = scale * (1.-g) / math.sqrt(1.-g**2)
     np.testing.assert_almost_equal(wcs.minLinearScale(), min_scale, 6, "minLinearScale")
     # The maxLinearScale is scale * (1+g) / sqrt(1-g^2)
@@ -524,7 +524,7 @@ def do_jac_decomp(wcs, name):
         np.testing.assert_almost_equal(theta.rad, theta2.rad, 6, "inverse theta")
     else:
         np.testing.assert_almost_equal(theta.rad, -theta2.rad, 6, "inverse theta")
-    np.testing.assert_almost_equal(shear.getG(), shear2.getG(), 6, "inverse shear")
+    np.testing.assert_almost_equal(shear.g, shear2.g, 6, "inverse shear")
     # There is no simple relation between the directions of the shear in the two cases.
     # The shear direction gets mixed up by the rotation if that is non-zero.
 
@@ -1492,8 +1492,8 @@ def test_radecfunction():
                     angle = 180 * galsim.degrees - A - B
 
                     # Now we can use this angle to correct the jacobian from test_wcs.
-                    c = math.cos(angle.rad)
-                    s = math.sin(angle.rad)
+                    c = np.cos(angle)
+                    s = np.sin(angle)
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
                     rot_dudy = c*jac2.dudy + s*jac2.dvdy
                     rot_dvdx = -s*jac2.dudx + c*jac2.dvdx

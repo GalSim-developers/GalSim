@@ -750,7 +750,7 @@ def test_drawKImage_Gaussian():
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        gal.flux, gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -792,7 +792,7 @@ def test_drawKImage_Exponential_Moffat():
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        gal.flux, gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)

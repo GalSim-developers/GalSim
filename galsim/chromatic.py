@@ -136,7 +136,7 @@ class ChromaticObject(object):
     # - Objects should define the attributes/properties:
     #   * .SED, .separable, .wave_list, .interpolated, .deinterpolated, .spectral, .dimensionless
     # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
-    #   == obj.evaluateAtWavelength(lam).getFlux()
+    #   == obj.evaluateAtWavelength(lam).flux
     # - if obj.spectral:
     #       obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass)
     #       == obj.drawImage(bandpass).array.sum()
@@ -622,7 +622,7 @@ class ChromaticObject(object):
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             w, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
             objs = [self.evaluateAtWavelength(ww) for ww in w]
-            fluxes = [o.getFlux() for o in objs]
+            fluxes = [o.flux for o in objs]
             centroids = [o.centroid() for o in objs]
             xcentroids = np.array([c.x for c in centroids])
             ycentroids = np.array([c.y for c in centroids])
@@ -632,13 +632,13 @@ class ChromaticObject(object):
             ycentroid = np.trapz(bp * fluxes * ycentroids, w) / flux
             return galsim.PositionD(xcentroid, ycentroid)
         else:
-            flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
+            flux_integrand = lambda w: self.evaluateAtWavelength(w).flux * bandpass(w)
             def xcentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
-                return mono.centroid().x * mono.getFlux() * bandpass(w)
+                return mono.centroid().x * mono.flux * bandpass(w)
             def ycentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
-                return mono.centroid().y * mono.getFlux() * bandpass(w)
+                return mono.centroid().y * mono.flux * bandpass(w)
             flux = galsim.integ.int1d(flux_integrand, bandpass.blue_limit, bandpass.red_limit)
             xcentroid = 1./flux * galsim.integ.int1d(xcentroid_integrand,
                                                      bandpass.blue_limit,
@@ -1042,7 +1042,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # `no_pixel` is used (we want the object on its own, without a pixel response).
         self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
                      for obj in objs ]
-        self.fluxes = [ obj.getFlux() for obj in objs ]
+        self.fluxes = [ obj.flux for obj in objs ]
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedChromaticObject) and
@@ -1572,7 +1572,7 @@ class ChromaticTransformation(ChromaticObject):
                         single = '.rotate(%s)'%theta
                     else:
                         single = 0
-                if shear.getG() > 1.e-12:
+                if shear.g > 1.e-12:
                     if single is None:
                         single = '.shear(%s)'%shear
                     else:

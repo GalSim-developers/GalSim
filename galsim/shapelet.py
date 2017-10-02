@@ -90,20 +90,24 @@ class Shapelet(GSObject):
     There is also a factory function that measures the shapelet decomposition of a given
     image
 
-        >>> shapelet = galsim.FitShapelet(sigma, order, image)
+        >>> shapelet = galsim.Shapelet.fit(sigma, order, image)
 
     Attributes
     ----------
 
     After construction, the `sigma`, `order`, and `bvec` are available as attributes.
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Shapelet has the following access methods:
+    In addition to the usual GSObject methods, Shapelet has the following access methods and
+    properties:
 
-        >>> b_pq = getPQ(p,q)         # Get b_pq.  Returned as tuple (re, im) (even if p==q).
-        >>> b_Nm = getNM(N,m)         # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+        >>> sigma = shapelet.sigma
+        >>> order = shapelet.order
+        >>> bvec = shapelet.bvec
+        >>> b_pq = shapelet.getPQ(p,q)      # Get b_pq.  Returned as tuple (re, im) (even if p==q).
+        >>> b_Nm = shapelet.getNM(N,m)      # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
 
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
@@ -134,10 +138,6 @@ class Shapelet(GSObject):
     @classmethod
     def size(cls, order):
         return (order+1)*(order+2)//2;
-
-    def getSigma(self): return self._sigma
-    def getOrder(self): return self._order
-    def getBVec(self): return self._bvec
 
     @property
     def sigma(self): return self._sigma

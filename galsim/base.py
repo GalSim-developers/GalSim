@@ -70,14 +70,14 @@ class Gaussian(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Gaussian has the following access methods:
+    In addition to the usual GSObject methods, Gaussian has the following access properties:
 
-        >>> sigma = gauss.getSigma()
-        >>> fwhm = gauss.getFWHM()
-        >>> hlr = gauss.getHalfLightRadius()
+        >>> sigma = gauss.sigma
+        >>> fwhm = gauss.fwhm
+        >>> hlr = gauss.half_light_radius
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.
@@ -118,27 +118,12 @@ class Gaussian(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBGaussian(sigma, flux, self.gsparams._gsp)
 
-    def getSigma(self):
-        """Return the sigma scale length for this Gaussian profile.
-        """
-        return self._sbp.getSigma()
-
-    def getFWHM(self):
-        """Return the FWHM for this Gaussian profile.
-        """
-        return self._sbp.getSigma() * Gaussian._fwhm_factor
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Gaussian profile.
-        """
-        return self._sbp.getSigma() * Gaussian._hlr_factor
-
     @property
-    def sigma(self): return self.getSigma()
+    def sigma(self): return self._sbp.getSigma()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self.sigma * Gaussian._hlr_factor
     @property
-    def fwhm(self): return self.getFWHM()
+    def fwhm(self): return self.sigma * Gaussian._fwhm_factor
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Gaussian) and
@@ -195,15 +180,15 @@ class Moffat(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Moffat has the following access methods:
+    In addition to the usual GSObject methods, Moffat has the following access properties:
 
-        >>> beta = moffat_obj.getBeta()
-        >>> rD = moffat_obj.getScaleRadius()
-        >>> fwhm = moffat_obj.getFWHM()
-        >>> hlr = moffat_obj.getHalfLightRadius()
+        >>> beta = moffat_obj.beta
+        >>> rD = moffat_obj.scale_radius
+        >>> fwhm = moffat_obj.fwhm
+        >>> hlr = moffat_obj.half_light_radius
     """
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
@@ -219,41 +204,16 @@ class Moffat(GSObject):
         self._sbp = _galsim.SBMoffat(beta, scale_radius, half_light_radius, fwhm,
                                      trunc, flux, self.gsparams._gsp)
 
-    def getBeta(self):
-        """Return the beta parameter for this Moffat profile.
-        """
-        return self._sbp.getBeta()
-
-    def getScaleRadius(self):
-        """Return the scale radius for this Moffat profile.
-        """
-        return self._sbp.getScaleRadius()
-
-    def getFWHM(self):
-        """Return the FWHM for this Moffat profile.
-        """
-        return self._sbp.getFWHM()
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Moffat profile.
-        """
-        return self._sbp.getHalfLightRadius()
-
-    def getTrunc(self):
-        """Return the truncation radius for this Moffat profile.
-        """
-        return self._sbp.getTrunc()
-
     @property
-    def beta(self): return self.getBeta()
+    def beta(self): return self._sbp.getBeta()
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self._sbp.getHalfLightRadius()
     @property
-    def fwhm(self): return self.getFWHM()
+    def fwhm(self): return self._sbp.getFWHM()
     @property
-    def trunc(self): return self.getTrunc()
+    def trunc(self): return self._sbp.getTrunc()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Moffat) and
@@ -339,14 +299,14 @@ class Airy(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Airy has the following access methods:
+    In addition to the usual GSObject methods, Airy has the following access properties:
 
-        >>> lam_over_diam = airy_obj.getLamOverD()
-        >>> fwhm = airy_obj.getFWHM()
-        >>> hlr = airy_obj.getHalfLightRadius()
+        >>> lam_over_diam = airy_obj.lam_over_diam
+        >>> fwhm = airy_obj.fwhm
+        >>> hlr = airy_obj.half_light_radius
 
     The latter two are only available if the obscuration is 0.
     """
@@ -387,48 +347,32 @@ class Airy(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBAiry(lam_over_diam, obscuration, flux, self.gsparams._gsp)
 
-    def getHalfLightRadius(self):
-        """Return the half light radius of this Airy profile (only supported for
-        obscuration = 0.).
-        """
-        if self.getObscuration() == 0.:
-            return self.getLamOverD() * Airy._hlr_factor
+    @property
+    def lam_over_diam(self): return self._sbp.getLamOverD()
+    @property
+    def obscuration(self): return self._sbp.getObscuration()
+
+    @property
+    def half_light_radius(self):
+        if self.obscuration == 0.:
+            return self.lam_over_diam * Airy._hlr_factor
         else:
             # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
             raise NotImplementedError("Half light radius calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
-    def getFWHM(self):
-        """Return the FWHM of this Airy profile (only supported for obscuration = 0.).
-        """
+    @property
+    def fwhm(self):
         # As above, likewise, FWHM only easy to define for unobscured Airy
-        if self.getObscuration() == 0.:
-            return self.getLamOverD() * Airy._fwhm_factor
+        if self.obscuration == 0.:
+            return self.lam_over_diam * Airy._fwhm_factor
         else:
             # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
             raise NotImplementedError("FWHM calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
-    def getLamOverD(self):
-        """Return the `lam_over_diam` parameter of this Airy profile.
-        """
-        return self._sbp.getLamOverD()
-
-    def getObscuration(self):
-        """Return the `obscuration` parameter of this Airy profile.
-        """
-        return self._sbp.getObscuration()
-
-    @property
-    def lam_over_diam(self): return self.getLamOverD()
-    @property
-    def half_light_radius(self): return self.getHalfLightRadius()
-    @property
-    def fwhm(self): return self.getFWHM()
-    @property
-    def obscuration(self): return self.getObscuration()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Airy) and
@@ -533,14 +477,14 @@ class Kolmogorov(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Kolmogorov has the following access methods:
+    In addition to the usual GSObject methods, Kolmogorov has the following access properties:
 
-        >>> lam_over_r0 = kolm.getLamOverR0()
-        >>> fwhm = kolm.getFWHM()
-        >>> hlr = kolm.getHalfLightRadius()
+        >>> lam_over_r0 = kolm.lam_over_r0
+        >>> fwhm = kolm.fwhm
+        >>> hlr = kolm.half_light_radius
     """
     _req_params = {}
     _opt_params = { "flux" : float, "r0" : float, "r0_500" : float, "scale_unit" : str }
@@ -592,27 +536,12 @@ class Kolmogorov(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBKolmogorov(lam_over_r0, flux, self.gsparams._gsp)
 
-    def getLamOverR0(self):
-        """Return the `lam_over_r0` parameter of this Kolmogorov profile.
-        """
-        return self._sbp.getLamOverR0()
-
-    def getFWHM(self):
-        """Return the FWHM of this Kolmogorov profile.
-        """
-        return self._sbp.getLamOverR0() * Kolmogorov._fwhm_factor
-
-    def getHalfLightRadius(self):
-        """Return the half light radius of this Kolmogorov profile.
-        """
-        return self._sbp.getLamOverR0() * Kolmogorov._hlr_factor
-
     @property
-    def lam_over_r0(self): return self.getLamOverR0()
+    def lam_over_r0(self): return self._sbp.getLamOverR0()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self.lam_over_r0 * Kolmogorov._hlr_factor
     @property
-    def fwhm(self): return self.getFWHM()
+    def fwhm(self): return self.lam_over_r0 * Kolmogorov._fwhm_factor
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Kolmogorov) and
@@ -654,12 +583,12 @@ class Pixel(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Pixel has the following access method:
+    In addition to the usual GSObject methods, Pixel has the following access property:
 
-        >>> scale = pixel.getScale()
+        >>> scale = pixel.scale
 
     """
     _req_params = { "scale" : float }
@@ -671,13 +600,8 @@ class Pixel(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBBox(scale, scale, flux, self.gsparams._gsp)
 
-    def getScale(self):
-        """Return the pixel scale.
-        """
-        return self._sbp.getWidth()
-
     @property
-    def scale(self): return self.getScale()
+    def scale(self): return self._sbp.getWidth()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Pixel) and
@@ -713,13 +637,13 @@ class Box(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Box has the following access methods:
+    In addition to the usual GSObject methods, Box has the following access properties:
 
-        >>> width = box.getWidth()
-        >>> height = box.getHeight()
+        >>> width = box.width
+        >>> height = box.height
 
     """
     _req_params = { "width" : float, "height" : float }
@@ -733,20 +657,10 @@ class Box(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBBox(width, height, flux, self.gsparams._gsp)
 
-    def getWidth(self):
-        """Return the width of the box in the x dimension.
-        """
-        return self._sbp.getWidth()
-
-    def getHeight(self):
-        """Return the height of the box in the y dimension.
-        """
-        return self._sbp.getHeight()
-
     @property
-    def width(self): return self.getWidth()
+    def width(self): return self._sbp.getWidth()
     @property
-    def height(self): return self.getHeight()
+    def height(self): return self._sbp.getHeight()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Box) and
@@ -785,12 +699,12 @@ class TopHat(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, TopHat has the following access method:
+    In addition to the usual GSObject methods, TopHat has the following access property:
 
-        >>> radius = tophat.getRadius()
+        >>> radius = tophat.radius
 
     """
     _req_params = { "radius" : float }
@@ -803,13 +717,8 @@ class TopHat(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBTopHat(radius, flux=flux, gsparams=self.gsparams._gsp)
 
-    def getRadius(self):
-        """Return the radius of the tophat profile.
-        """
-        return self._sbp.getRadius()
-
     @property
-    def radius(self): return self.getRadius()
+    def radius(self): return self._sbp.getRadius()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.TopHat) and
@@ -898,9 +807,9 @@ class Sersic(GSObject):
     If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
     to the version without truncation up to the truncation radius, beyond which it drops to 0.
     In this case, the actual half-light radius will be different from the specified half-light
-    radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
+    radius.  The half_light_radius property will return the true half-light radius.  Similarly,
     the actual flux will not be the same as the specified value; the true flux is also returned
-    by the getFlux() method.
+    by the flux property.
 
     Example:
 
@@ -923,25 +832,25 @@ class Sersic(GSObject):
         >>> sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
         0.0
 
-        >>> sersic_obj1.getHalfLightRadius()
+        >>> sersic_obj1.half_light_radius
         2.5
-        >>> sersic_obj2.getHalfLightRadius()
+        >>> sersic_obj2.half_light_radius
         2.5
-        >>> sersic_obj3.getHalfLightRadius()
+        >>> sersic_obj3.half_light_radius
         1.9795101383056892    # The true half-light radius is smaller than the specified value
 
-        >>> sersic_obj1.getFlux()
+        >>> sersic_obj1.flux
         40.0
-        >>> sersic_obj2.getFlux()
+        >>> sersic_obj2.flux
         40.0
-        >>> sersic_obj3.getFlux()
+        >>> sersic_obj3.flux
         34.56595186009519     # Flux is missing due to truncation
 
-        >>> sersic_obj1.getScaleRadius()
+        >>> sersic_obj1.scale_radius
         0.003262738739834598
-        >>> sersic_obj2.getScaleRadius()
+        >>> sersic_obj2.scale_radius
         0.004754602453641744  # the scale radius needed adjustment to accommodate HLR
-        >>> sersic_obj3.getScaleRadius()
+        >>> sersic_obj3.scale_radius
         0.003262738739834598  # the scale radius is still identical to the untruncated case
 
     When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
@@ -967,35 +876,35 @@ class Sersic(GSObject):
         >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
         1.010507575186637
 
-        >>> sersic_obj1.getHalfLightRadius()
+        >>> sersic_obj1.half_light_radius
         38.311372735390016
-        >>> sersic_obj2.getHalfLightRadius()
+        >>> sersic_obj2.half_light_radius
         5.160062547614234
-        >>> sersic_obj3.getHalfLightRadius()
+        >>> sersic_obj3.half_light_radius
         5.160062547614234     # For the truncated cases, the half-light radii are the same
 
-        >>> sersic_obj1.getFlux()
+        >>> sersic_obj1.flux
         40.0
-        >>> sersic_obj2.getFlux()
+        >>> sersic_obj2.flux
         40.0
-        >>> sersic_obj3.getFlux()
+        >>> sersic_obj3.flux
         6.985044085834393     # Flux is missing due to truncation
 
-        >>> sersic_obj1.getScaleRadius()
+        >>> sersic_obj1.scale_radius
         0.05
-        >>> sersic_obj2.getScaleRadius()
+        >>> sersic_obj2.scale_radius
         0.05
-        >>> sersic_obj3.getScaleRadius()
+        >>> sersic_obj3.scale_radius
         0.05
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Sersic has the following access methods:
+    In addition to the usual GSObject methods, Sersic has the following access properties:
 
-        >>> n = sersic_obj.getN()
-        >>> r0 = sersic_obj.getScaleRadius()
-        >>> hlr = sersic_obj.getHalfLightRadius()
+        >>> n = sersic_obj.n
+        >>> r0 = sersic_obj.scale_radius
+        >>> hlr = sersic_obj.half_light_radius
     """
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
@@ -1010,34 +919,14 @@ class Sersic(GSObject):
         self._sbp = _galsim.SBSersic(n, scale_radius, half_light_radius,flux, trunc,
                                      flux_untruncated, self.gsparams._gsp)
 
-    def getN(self):
-        """Return the Sersic index `n` for this profile.
-        """
-        return self._sbp.getN()
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Sersic profile.
-        """
-        return self._sbp.getHalfLightRadius()
-
-    def getScaleRadius(self):
-        """Return the scale radius for this Sersic profile.
-        """
-        return self._sbp.getScaleRadius()
-
-    def getTrunc(self):
-        """Return the truncation radius for this Sersic profile.
-        """
-        return self._sbp.getTrunc()
-
     @property
-    def n(self): return self.getN()
+    def n(self): return self._sbp.getN()
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self._sbp.getHalfLightRadius()
     @property
-    def trunc(self): return self.getTrunc()
+    def trunc(self): return self._sbp.getTrunc()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Sersic) and
@@ -1093,20 +982,22 @@ class Exponential(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, Exponential has the following access methods:
+    In addition to the usual GSObject methods, Exponential has the following access properties:
 
-        >>> r0 = exp_obj.getScaleRadius()
-        >>> hlr = exp_obj.getHalfLightRadius()
+        >>> r0 = exp_obj.scale_radius
+        >>> hlr = exp_obj.half_light_radius
     """
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
-    # The half-light-radius is not analytic, but can be calculated numerically.
+    # The half-light radius Factor is not analytic, but can be calculated by iterative solution
+    # of the equation:
+    #     (re / r0) = ln[(re / r0) + 1] + ln(2)
     _hlr_factor = 1.6783469900166605
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
@@ -1124,22 +1015,10 @@ class Exponential(GSObject):
         self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBExponential(scale_radius, flux, self.gsparams._gsp)
 
-    def getScaleRadius(self):
-        """Return the scale radius for this Exponential profile.
-        """
-        return self._sbp.getScaleRadius()
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Exponential profile.
-        """
-        # Factor not analytic, but can be calculated by iterative solution of equation:
-        #  (re / r0) = ln[(re / r0) + 1] + ln(2)
-        return self._sbp.getScaleRadius() * Exponential._hlr_factor
-
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self.scale_radius * Exponential._hlr_factor
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Exponential) and
@@ -1196,13 +1075,13 @@ class DeVaucouleurs(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, DeVaucouleurs has the following access methods:
+    In addition to the usual GSObject methods, DeVaucouleurs has the following access properties:
 
-        >>> r0 = devauc_obj.getScaleRadius()
-        >>> hlr = devauc_obj.getHalfLightRadius()
+        >>> r0 = devauc_obj.scale_radius
+        >>> hlr = devauc_obj.half_light_radius
     """
     _req_params = {}
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
@@ -1215,27 +1094,12 @@ class DeVaucouleurs(GSObject):
         self._sbp = _galsim.SBSersic(4, scale_radius, half_light_radius, flux,
                                      trunc, flux_untruncated, self.gsparams._gsp)
 
-    def getHalfLightRadius(self):
-        """Return the half light radius for this DeVaucouleurs profile.
-        """
-        return self._sbp.getHalfLightRadius()
-
-    def getScaleRadius(self):
-        """Return the scale radius for this DeVaucouleurs profile.
-        """
-        return self._sbp.getScaleRadius()
-
-    def getTrunc(self):
-        """Return the truncation radius for this DeVaucouleurs profile.
-        """
-        return self._sbp.getTrunc()
-
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self._sbp.getHalfLightRadius()
     @property
-    def trunc(self): return self.getTrunc()
+    def trunc(self): return self._sbp.getTrunc()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.DeVaucouleurs) and
@@ -1319,14 +1183,15 @@ class Spergel(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, the Spergel profile has the following access methods:
+    In addition to the usual GSObject methods, the Spergel profile has the following access
+    properties:
 
-        >>> nu = spergel_obj.getNu()
-        >>> r0 = spergel_obj.getScaleRadius()
-        >>> hlr = spergel_obj.getHalfLightRadius()
+        >>> nu = spergel_obj.nu
+        >>> r0 = spergel_obj.scale_radius
+        >>> hlr = spergel_obj.half_light_radius
     """
     _req_params = { "nu" : float }
     _opt_params = { "flux" : float}
@@ -1339,21 +1204,6 @@ class Spergel(GSObject):
         self._sbp = _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
                                       self.gsparams._gsp)
 
-    def getNu(self):
-        """Return the Spergel index `nu` for this profile.
-        """
-        return self._sbp.getNu()
-
-    def getHalfLightRadius(self):
-        """Return the half light radius for this Spergel profile.
-        """
-        return self._sbp.getHalfLightRadius()
-
-    def getScaleRadius(self):
-        """Return the scale radius for this Spergel profile.
-        """
-        return self._sbp.getScaleRadius()
-
     def calculateIntegratedFlux(self, r):
         """Return the integrated flux out to a given radius, r"""
         return self._sbp.calculateIntegratedFlux(float(r))
@@ -1363,11 +1213,11 @@ class Spergel(GSObject):
         return self._sbp.calculateFluxRadius(float(f))
 
     @property
-    def nu(self): return self.getNu()
+    def nu(self): return self._sbp.getNu()
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self._sbp.getHalfLightRadius()
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Spergel) and
@@ -1409,10 +1259,10 @@ class DeltaFunction(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    DeltaFunction simply has the usual GSObject methods.
+    DeltaFunction simply has the usual GSObject properties.
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.
