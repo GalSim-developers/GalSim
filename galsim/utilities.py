@@ -1362,7 +1362,7 @@ def rand_with_replacement(n, n_choices, rng, weight=None, _n_rng_calls=False):
 
 
 def check_share_file(filename, subdir):
-    """Find SED or Bandpass file, possibly adding share dir
+    """Find SED or Bandpass file, possibly adding share_dir/subdir.
     """
     import os
 

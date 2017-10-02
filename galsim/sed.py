@@ -643,7 +643,7 @@ class SED(object):
             return np.trapz(bandpass(x) * self(x), x)
         else:
             return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
-                                        bandpass.blue_limit, bandpass.red_limit)
+                                      bandpass.blue_limit, bandpass.red_limit)
 
     def calculateMagnitude(self, bandpass):
         """ Return the SED magnitude through a Bandpass `bandpass`.  Note that this requires

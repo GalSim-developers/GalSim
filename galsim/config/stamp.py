@@ -983,7 +983,7 @@ class StampBuilder(object):
 
         @returns a list of tasks
         """
-        return [ [ (job, k) ] for k, job in enumerate(jobs) ]
+        return [ [(job, k)] for k, job in enumerate(jobs) ]
 
 
 def RegisterStampType(stamp_type, builder):
