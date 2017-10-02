@@ -24,6 +24,7 @@ import numpy as np
 
 from .gsobject import GSObject
 from .gsparams import GSParams
+from .image import Image
 from . import _galsim
 
 class Shapelet(GSObject):
@@ -108,9 +109,6 @@ class Shapelet(GSObject):
         >>> bvec = shapelet.bvec
         >>> b_pq = shapelet.getPQ(p,q)      # Get b_pq.  Returned as tuple (re, im) (even if p==q).
         >>> b_Nm = shapelet.getNM(N,m)      # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
-
-    Furthermore, there are specializations of the rotate() and expand() methods that let
-    them be performed more efficiently than the usual GSObject implementation.
     """
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
@@ -157,24 +155,6 @@ class Shapelet(GSObject):
 
     def getNM(self,N,m):
         return self.getPQ((N+m)//2,(N-m)//2)
-
-    # These act directly on the bvector, so they may be a bit more efficient than the
-    # regular methods in GSObject
-    def rotate(self, theta):
-        from .angle import Angle
-        if not isinstance(theta, Angle):
-            raise TypeError("Input theta should be an Angle")
-        ret = Shapelet(self.sigma, self.order, self.bvec.copy())
-        ret._sbp.rotate(theta.rad)
-        return ret
-
-    def expand(self, scale):
-        sigma = self.sigma * scale
-        return Shapelet(sigma, self.order, self.bvec * scale**2)
-
-    def dilate(self, scale):
-        sigma = self.sigma * scale
-        return Shapelet(sigma, self.order, self.bvec)
 
     def __eq__(self, other):
         return (isinstance(other, Shapelet) and
@@ -251,6 +231,10 @@ class Shapelet(GSObject):
             # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
             raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                         "with a non-trivial WCS.")
+
+        # Make it double precision if it is not.
+        if image.dtype is not np.float64:
+            image = Image(image, dtype=np.float64)
 
         _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
                                  image._image, image.scale, center._p)

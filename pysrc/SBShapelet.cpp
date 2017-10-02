@@ -28,27 +28,18 @@ namespace galsim {
 
     struct PySBShapelet
     {
-        template <typename U>
-        struct wrapImageTemplates {
-            static void fit(double sigma, int order, size_t idata,
-                     const BaseImage<U>& image, double scale,
-                     const Position<double>& center)
-            {
-                LVector bvec(order);
-                ShapeletFitImage(sigma, bvec, image, scale, center);
+        static void fit(double sigma, int order, size_t idata,
+                        const BaseImage<double>& image, double scale,
+                        const Position<double>& center)
+        {
+            LVector bvec(order);
+            ShapeletFitImage(sigma, bvec, image, scale, center);
 
-                double* data = reinterpret_cast<double*>(idata);
-                int size = PQIndex::size(order);
-                tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
-                v = bvec.rVector();
-            }
-
-            static void wrap() {
-                bp::def("ShapeletFitImage", &fit,
-                        bp::args("sigma","order","idata","image","scale","center"),
-                        "Fit a Shapelet decomposition to the provided image");
-            }
-        };
+            double* data = reinterpret_cast<double*>(idata);
+            int size = PQIndex::size(order);
+            tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
+            v = bvec.rVector();
+        }
 
         static SBShapelet* construct(double sigma, int order, size_t idata, GSParams gsparams)
         {
@@ -63,16 +54,11 @@ namespace galsim {
                 .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("sigma"), bp::arg("order"),  bp::arg("idata"),
-                         bp::arg("gsparams"))))
-                .def("rotate", &SBShapelet::rotate)
-                .enable_pickling()
-                ;
-            wrapImageTemplates<float>::wrap();
-            wrapImageTemplates<double>::wrap();
-            wrapImageTemplates<int16_t>::wrap();
-            wrapImageTemplates<int32_t>::wrap();
-            wrapImageTemplates<uint16_t>::wrap();
-            wrapImageTemplates<uint32_t>::wrap();
+                         bp::arg("gsparams"))));
+
+            bp::def("ShapeletFitImage", &fit,
+                    bp::args("sigma","order","idata","image","scale","center"),
+                    "Fit a Shapelet decomposition to the provided image");
         }
     };
 
