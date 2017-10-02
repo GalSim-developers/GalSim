@@ -29,10 +29,9 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyGSParams {
-
+    struct PyGSParams
+    {
         static void wrap() {
-
             bp::class_<GSParams> ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
@@ -174,7 +173,6 @@ namespace galsim {
         }
 
     };
-
 
     void pyExportSBProfile()
     {

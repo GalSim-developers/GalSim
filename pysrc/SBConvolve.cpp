@@ -19,7 +19,6 @@
 
 #include "galsim/IgnoreWarnings.h"
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBConvolve.h"
 
@@ -29,12 +28,13 @@ namespace galsim {
 
     struct PySBConvolve
     {
-        // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBConvolve* construct(const bp::object& iterable, bool real_space,
-                                     GSParams gsparams)
+        static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
         {
-            bp::stl_input_iterator<SBProfile> begin(iterable), end;
-            std::list<SBProfile> plist(begin, end);
+            std::list<SBProfile> plist;
+            int n = len(slist);
+            for(int i=0; i<n; ++i) {
+                plist.push_back(bp::extract<const SBProfile&>(slist[i]));
+            }
             return new SBConvolve(plist, real_space, gsparams);
         }
 
@@ -58,7 +58,6 @@ namespace galsim {
                         (bp::arg("adaptee"), bp::arg("real_space"),
                          bp::arg("gsparams"))));
         }
-
     };
 
     struct PySBAutoCorrelate

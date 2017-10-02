@@ -34,7 +34,6 @@ namespace galsim {
                 .def(bp::init<const SBProfile &, GSParams>(
                         (bp::arg("adaptee"), bp::arg("gsparams"))));
         }
-
     };
 
     void pyExportSBDeconvolve()
