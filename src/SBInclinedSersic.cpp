@@ -35,21 +35,20 @@ namespace galsim {
     // Helper functor to solve for the proper _maxk
     class SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicKValueFunctor
     {
-        public:
-            SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
-        double target_k_value);
+    public:
+        SBInclinedSersicKValueFunctor(const SBInclinedSersic::SBInclinedSersicImpl * p_owner,
+                                      double target_k_value);
         double operator() (double k) const;
-        private:
+    private:
         const SBInclinedSersic::SBInclinedSersicImpl * _p_owner;
         double _target_k_value;
     };
 
-    SBInclinedSersic::SBInclinedSersic(double n, double inclination, double size,
-                                       SBInclinedSersic::RadiusType rType,
-            double height, SBInclinedSersic::HeightType hType, double flux,
-            double trunc, bool flux_untruncated, const GSParams& gsparams) :
-        SBProfile(new SBInclinedSersicImpl(n, inclination, size, rType, height, hType, flux, trunc,
-                flux_untruncated, gsparams)) {}
+    SBInclinedSersic::SBInclinedSersic(double n, double inclination, double scale_radius,
+                                       double height, double flux, double trunc,
+                                       const GSParams& gsparams) :
+        SBProfile(new SBInclinedSersicImpl(n, inclination, scale_radius, height, flux, trunc,
+                                           gsparams)) {}
 
     SBInclinedSersic::SBInclinedSersic(const SBInclinedSersic& rhs) : SBProfile(rhs) {}
 
@@ -103,97 +102,37 @@ namespace galsim {
     }
 
     SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(
-        double n, double inclination, double size, RadiusType rType,
-        double height, HeightType hType, double flux,
-        double trunc, bool flux_untruncated, const GSParams& gsparams) :
+        double n, double inclination, double scale_radius,
+        double height, double flux, double trunc, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _n(n),
         _inclination(inclination),
         _flux(flux),
+        _r0(scale_radius),
+        _h0(height),
         _trunc(trunc),
         _cosi(std::abs(std::cos(inclination))),
         _trunc_sq(trunc*trunc),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, 0., GSParamsPtr(this->gsparams))))
+        _info(SBSersic::SBSersicImpl::cache.get(MakeTuple(_n, _trunc/_r0,
+                                                          GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBInclinedSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"inclination = "<<_inclination<<std::endl;
-        dbg<<"size = "<<size<<"  rType = "<<rType<<std::endl;
+        dbg<<"scale_radius = "<<scale_radius<<std::endl;
+        dbg<<"height = "<<height<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
-        dbg<<"trunc = "<<_trunc<<"  flux_untruncated = "<<flux_untruncated<<std::endl;
+        dbg<<"trunc = "<<_trunc<<std::endl;
 
-        _truncated = (_trunc > 0.);
-
-        // Set size of this instance according to type of size given in constructor
-        switch (rType) {
-          case HALF_LIGHT_RADIUS:
-               {
-                   _re = size;
-                   if (_truncated) {
-                       if (flux_untruncated) {
-                           // Then given HLR and flux are the values for the untruncated profile.
-                           _r0 = _re / _info->getHLR(); // getHLR() is in units of r0.
-                       } else {
-                           // This is the one case that is a bit complicated, since the
-                           // half-light radius and trunc are both given in physical units,
-                           // so we need to solve for what scale radius this corresponds to.
-                           _r0 = _info->calculateScaleForTruncatedHLR(_re, _trunc);
-                       }
-
-                       // Update _info with the correct truncated version.
-                       _info = SBSersic::SBSersicImpl::cache.get(
-                           MakeTuple(_n, _trunc/_r0, GSParamsPtr(this->gsparams)));
-
-                       if (flux_untruncated) {
-                           // Update the stored _flux and _re with the correct values
-                           _flux *= _info->getFluxFraction();
-                           _re = _r0 * _info->getHLR();
-                       }
-                   } else {
-                       // Then given HLR and flux are the values for the untruncated profile.
-                       _r0 = _re / _info->getHLR();
-                   }
-               }
-               break;
-          case SCALE_RADIUS:
-              {
-                  _r0 = size;
-                  if (_truncated) {
-                      // Update _info with the correct truncated version.
-                      _info = SBSersic::SBSersicImpl::cache.get(
-                          MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
-                       if (flux_untruncated) {
-                          // Update the stored _flux with the correct value
-                          _flux *= _info->getFluxFraction();
-                      }
-                  }
-                  // In all cases, _re is the real HLR
-                  _re = _r0 * _info->getHLR();
-              }
-              break;
-          default:
-              throw SBError("Unknown SBInclinedSersic::RadiusType");
-        }
+        _re = _r0 * _info->getHLR();
         dbg << "hlr = " <<_re << std::endl;
         dbg << "r0 = " <<_r0 << std::endl;
 
         _inv_r0 = 1./_r0;
         dbg << "inv_r0 = " << _inv_r0 << std::endl;
-
-        // Get the scale height, depending on what height parameter we were given
-        switch (hType) {
-        case SCALE_H_OVER_R:
-            _h0 = height * _r0;
-            break;
-        case SCALE_HEIGHT:
-            _h0 = height;
-            break;
-        default:
-            throw SBError("Unknown SBInclinedSersic::HeightType");
-        }
 
         dbg << "scale height = "<<_h0<<std::endl;
 

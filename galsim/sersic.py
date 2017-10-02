@@ -213,6 +213,7 @@ class Sersic(GSObject):
                         "specified for Spergel")
             self._hlr = float(half_light_radius)
             if self._trunc == 0. or flux_untruncated:
+                self._flux_fraction = 1.
                 self._r0 = self._hlr / self.calculateHLRFactor()
             else:
                 if self._trunc <= math.sqrt(2.) * self._hlr:
@@ -224,10 +225,15 @@ class Sersic(GSObject):
         else:
             raise TypeError(
                     "Either scale_radius or half_light_radius must be specified for Spergel")
-        if self._trunc > 0. and flux_untruncated:
-            # Then update the flux and hlr with the correct values
-            self._flux *= self.calculateIntegratedFlux(self._trunc)
-            self._hlr = 0.  # This will be updated by getHalfLightRadius if necessary.
+
+        if self._trunc > 0.:
+            self._flux_fraction = self.calculateIntegratedFlux(self._trunc)
+            if flux_untruncated:
+                # Then update the flux and hlr with the correct values
+                self._flux *= self._flux_fraction
+                self._hlr = 0.  # This will be updated by getHalfLightRadius if necessary.
+        else:
+            self._flux_fraction = 1.
 
     def calculateIntegratedFlux(self, r):
         """Return the fraction of the total flux enclosed within a given radius, r"""
@@ -236,7 +242,7 @@ class Sersic(GSObject):
     def calculateHLRFactor(self):
         """Calculate the half-light-radius in units of the scale radius.
         """
-        return _galsim.SersicHLR(self._n)
+        return _galsim.SersicHLR(self._n, self._flux_fraction)
 
     @lazy_property
     def _sbp(self):
@@ -254,7 +260,7 @@ class Sersic(GSObject):
     @property
     def half_light_radius(self):
         if self._hlr == 0.:
-            self._hlr = self._sbp.getHalfLightRadius()
+            self._hlr = self._r0 * self.calculateHLRFactor()
         return self._hlr
 
     def __eq__(self, other):

@@ -705,9 +705,9 @@ namespace galsim {
         dbg<<"re is "<<_re<<std::endl;
     }
 
-    double SersicHLR(double n)
+    double SersicHLR(double n, double flux_fraction)
     {
-        double b = CalculateB(n, 1./n, math::tgamma(2*n), 1.);
+        double b = CalculateB(n, 1./n, math::tgamma(2*n), flux_fraction);
         return std::pow(b,n);
     }
 

@@ -441,6 +441,8 @@ def test_sanity():
                          flux_untruncated=True)
         
         np.testing.assert_almost_equal(prof1a.flux, prof1b.flux, 9)
+        print(flux, trunc_factor, trunc)
+        print("   ", prof1a.flux, prof1b.flux, prof2.flux)
         if trunc > 0:
             assert(prof1a.flux > prof2.flux)
 

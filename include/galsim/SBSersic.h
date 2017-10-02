@@ -27,7 +27,7 @@
 
 namespace galsim {
 
-    double SersicHLR(double n);
+    double SersicHLR(double n, double flux_fraction);
     double SersicIntegratedFlux(double n, double r);
     double SersicTruncatedScale(double n, double hlr, double trunc);
 
