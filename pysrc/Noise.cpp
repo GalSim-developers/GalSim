@@ -93,7 +93,7 @@ namespace galsim {
         static void wrapTemplates(W& wrapper) {
             typedef void (BaseNoise::* applyTo_func_type)(ImageView<U>);
             wrapper
-                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView),
+                .def("_applyToView", applyTo_func_type(&BaseNoise::applyToView),
                      (bp::arg("image")))
                 ;
         }

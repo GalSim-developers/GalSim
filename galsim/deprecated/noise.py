@@ -43,10 +43,15 @@ def Noise_getRNG(self):
     depr("noise.getRNG()", 1.5, "noise.rng")
     return self.rng
 
+def Noise_applyToView(self, im_view):
+    depr("noise.applyToView(image.image.view())", 1.5, "noise.applyTo(image)")
+    self._applyToView(im_view)
+
 galsim._galsim.BaseNoise.setRNG = Noise_setRNG
 galsim._galsim.BaseNoise.setVariance = Noise_setVariance
 galsim._galsim.BaseNoise.scaleVariance = Noise_scaleVariance
 galsim._galsim.BaseNoise.getRNG = Noise_getRNG
+galsim._galsim.BaseNoise.applyToView = Noise_applyToView
 
 def GaussianNoise_setSigma(self, sigma):
     """Deprecated method to set the value of sigma

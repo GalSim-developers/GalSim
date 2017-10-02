@@ -823,6 +823,19 @@ def test_dep_noise():
     vn = galsim.VariableGaussianNoise(rng, noise_image)
     np.testing.assert_almost_equal(check_dep(vn.getVarImage).array, noise_image.array)
 
+    im1 = galsim.Image(10,10)
+    im2 = galsim.Image(10,10)
+    gn1 = galsim.GaussianNoise(rng.duplicate(), sigma=0.3)
+    gn2 = galsim.GaussianNoise(rng.duplicate(), sigma=0.3)
+    check_dep(gn1.applyToView, im1._image.view())
+    gn2.applyTo(im2)
+    np.testing.assert_almost_equal(im1.array, im2.array)
+
+    vn1 = galsim.VariableGaussianNoise(rng.duplicate(), noise_image)
+    vn2 = galsim.VariableGaussianNoise(rng.duplicate(), noise_image)
+    check_dep(vn1.applyToView, im1._image.view())
+    vn2.applyTo(im2)
+    np.testing.assert_almost_equal(im1.array, im2.array)
 
 @timer
 def test_dep_random():

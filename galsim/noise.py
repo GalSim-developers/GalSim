@@ -186,7 +186,7 @@ def GaussianNoise_applyTo(self, image):
 
     Note: The syntax `image.addNoise(gaussian_noise)` is preferred.
     """
-    self.applyToView(image._image.view())
+    self._applyToView(image._image.view())
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
 def GaussianNoise_copy(self, rng=None):
@@ -253,7 +253,7 @@ def PoissonNoise_applyTo(self, image):
 
     Note: the syntax `image.addNoise(poisson_noise)` is preferred.
     """
-    self.applyToView(image._image.view())
+    self._applyToView(image._image.view())
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
 def PoissonNoise_copy(self, rng=None):
@@ -343,7 +343,7 @@ def CCDNoise_applyTo(self, image):
 
     Note: the syntax `image.addNoise(ccd_noise)` is preferred.
     """
-    self.applyToView(image._image.view())
+    self._applyToView(image._image.view())
 _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 
 def CCDNoise_copy(self, rng=None):
@@ -401,7 +401,7 @@ def DeviateNoise_applyTo(self, image):
 
     To add deviates to every element of an image, the syntax `image.addNoise()` is preferred.
     """
-    self.applyToView(image._image.view())
+    self._applyToView(image._image.view())
 _galsim.DeviateNoise.applyTo = DeviateNoise_applyTo
 
 def DeviateNoise_copy(self, rng=None):
@@ -474,10 +474,10 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
         Note: The syntax `image.addNoise(variable_noise)` is preferred.
         """
-        self._noise.applyToView(image._image.view())
+        self._noise._applyToView(image._image.view())
 
-    def applyToView(self, image_view):
-        self._noise.applyToView(image_view)
+    def _applyToView(self, image_view):
+        self._noise._applyToView(image_view)
 
     @property
     def rng(self): return self._rng
