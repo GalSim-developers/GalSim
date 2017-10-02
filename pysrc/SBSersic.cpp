@@ -28,7 +28,6 @@ namespace galsim {
 
     struct PySBSersic
     {
-
         static void wrap()
         {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)

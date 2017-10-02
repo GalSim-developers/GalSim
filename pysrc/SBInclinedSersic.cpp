@@ -34,9 +34,7 @@ namespace galsim {
                 .def(bp::init<double,double,double,double,double,double, GSParams>(
                          (bp::arg("n"), bp::arg("inclination"), bp::arg("scale_radius"),
                           bp::arg("scale_height"), bp::arg("flux"), bp::arg("trunc"),
-                          bp::arg("gsparams"))))
-                .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
-                ;
+                          bp::arg("gsparams"))));
         }
     };
 

@@ -28,17 +28,12 @@ namespace galsim {
 
     struct PySBFourierSqrt
     {
-
         static void wrap()
         {
             bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
                 .def(bp::init<const SBProfile &, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("gsparams"))))
-                .def("getObj", &SBFourierSqrt::getObj)
-                .def(bp::init<const SBFourierSqrt &>())
-                ;
+                        (bp::arg("adaptee"), bp::arg("gsparams"))));
         }
-
     };
 
     void pyExportSBFourierSqrt()

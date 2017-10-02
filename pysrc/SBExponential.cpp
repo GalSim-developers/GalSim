@@ -32,8 +32,7 @@ namespace galsim {
         {
             bp::class_<SBExponential,bp::bases<SBProfile> >("SBExponential", bp::no_init)
                 .def(bp::init<double,double, GSParams>(
-                        (bp::arg("scale_radius"), bp::arg("flux"), bp::arg("gsparams"))))
-                ;
+                        (bp::arg("scale_radius"), bp::arg("flux"), bp::arg("gsparams"))));
         }
     };
 

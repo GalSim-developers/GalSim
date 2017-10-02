@@ -29,7 +29,6 @@ namespace galsim {
 
     struct PySBConvolve
     {
-
         // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
         static SBConvolve* construct(const bp::object& iterable, bool real_space,
                                      GSParams gsparams)
@@ -37,15 +36,6 @@ namespace galsim {
             bp::stl_input_iterator<SBProfile> begin(iterable), end;
             std::list<SBProfile> plist(begin, end);
             return new SBConvolve(plist, real_space, gsparams);
-        }
-
-        static bp::list getObjs(const SBConvolve& sbp)
-        {
-            const std::list<SBProfile>& objs = sbp.getObjs();
-            std::list<SBProfile>::const_iterator it = objs.begin();
-            bp::list l;
-            for (; it != objs.end(); ++it) l.append(*it);
-            return l;
         }
 
         static void wrap()
@@ -56,14 +46,8 @@ namespace galsim {
                 .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("slist"), bp::arg("real_space"),
-                         bp::arg("gsparams")))
-                )
-                .def(bp::init<const SBConvolve&>())
-                .def("getObjs", getObjs)
-                .def("isRealSpace", &SBConvolve::isRealSpace)
-                ;
+                         bp::arg("gsparams"))));
         }
-
     };
 
     struct PySBAutoConvolve
@@ -72,11 +56,7 @@ namespace galsim {
             bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
                 .def(bp::init<const SBProfile&, bool, GSParams>(
                         (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBAutoConvolve&>())
-                .def("getObj", &SBAutoConvolve::getObj)
-                .def("isRealSpace", &SBAutoConvolve::isRealSpace)
-                ;
+                         bp::arg("gsparams"))));
         }
 
     };
@@ -87,11 +67,7 @@ namespace galsim {
             bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
                 .def(bp::init<const SBProfile&, bool, GSParams>(
                         (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBAutoCorrelate&>())
-                .def("getObj", &SBAutoCorrelate::getObj)
-                .def("isRealSpace", &SBAutoCorrelate::isRealSpace)
-                ;
+                         bp::arg("gsparams"))));
         }
 
     };
