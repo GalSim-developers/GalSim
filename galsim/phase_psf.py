@@ -1238,25 +1238,12 @@ class PhaseScreenPSF(GSObject):
                                     gsparams=self._gsparams)
         self._sbp = self.ii._sbp
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
-
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .random import UniformDeviate
-        from .photon_array import PhotonArray
-
+    def _shoot(self, photons, ud):
         if not self._geometric_shooting:
             self._prepareDraw()
-            return self.ii.shoot(n_photons, rng)
+            return self.ii._shoot(photons, ud)
 
-        ud = UniformDeviate(rng)
-
+        n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
         ud.generate(t)
         t *= self.exptime
@@ -1271,10 +1258,9 @@ class PhaseScreenPSF(GSObject):
         v = v[pick]
 
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        x *= 1e-9 * radians / arcsec  # convert from nm/m to arcsec.
-        y *= 1e-9 * radians / arcsec
-
-        return PhotonArray(n_photons, x=x, y=y, flux=self._flux/n_photons)
+        photons.x = x * 1e-9 * radians / arcsec  # convert from nm/m to arcsec.
+        photons.y = y * 1e-9 * radians / arcsec
+        photons.flux = self._flux / n_photons
 
 
 class OpticalPSF(GSObject):
@@ -1659,14 +1645,5 @@ class OpticalPSF(GSObject):
         self._psf._prepareDraw()
         self._sbp = self._psf._sbp
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
-
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        return self._psf.shoot(n_photons, rng)
+    def _shoot(self, photons, ud):
+        self._psf._shoot(photons, ud)
