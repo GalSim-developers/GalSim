@@ -88,7 +88,7 @@ def test_airy():
     # Check some properties
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(airy.centroid(), cen)
+    np.testing.assert_equal(airy.centroid, cen)
     np.testing.assert_almost_equal(airy.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy.flux, test_flux)
     np.testing.assert_almost_equal(airy.xValue(cen), airy.maxSB())
@@ -97,7 +97,7 @@ def test_airy():
 
     # Check with obscuration == 0
     airy0 = galsim.Airy(lam_over_diam=1./0.7, flux=test_flux)
-    np.testing.assert_equal(airy0.centroid(), cen)
+    np.testing.assert_equal(airy0.centroid, cen)
     np.testing.assert_almost_equal(airy0.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy0.flux, test_flux)
     np.testing.assert_almost_equal(airy0.xValue(cen), airy0.maxSB())

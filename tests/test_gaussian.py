@@ -145,7 +145,7 @@ def test_gaussian_properties():
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(gauss.centroid(), cen)
+    np.testing.assert_equal(gauss.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
     np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)

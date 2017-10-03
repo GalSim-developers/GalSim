@@ -1080,11 +1080,11 @@ class PhaseScreenPSF(GSObject):
         wcs = PixelScale(self.scale)
         image = _Image(array, bounds, wcs)
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
-        self._dummy = InterpolatedImage(
+        self.ii = InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
-        self._sbp = self._dummy._sbp
+        self._sbp = self.ii._sbp
 
         self._screen_list._delayCalculation(self)
 
@@ -1134,7 +1134,6 @@ class PhaseScreenPSF(GSObject):
     def maxk(self):
         """The value of k beyond which aliasing can be neglected.
         """
-        self._prepareDraw()
         return self.ii.maxk
 
     @property
@@ -1149,7 +1148,6 @@ class PhaseScreenPSF(GSObject):
     def stepk(self):
         """The sampling in k space necessary to avoid folding of image in x space.
         """
-        self._prepareDraw()
         return self.ii.stepk
 
     @property
@@ -1202,7 +1200,6 @@ class PhaseScreenPSF(GSObject):
                 _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
-
         self._sbp = self.ii._sbp
 
         if not self._suppress_warning:
@@ -1225,7 +1222,6 @@ class PhaseScreenPSF(GSObject):
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         del d['_sbp']
         del d['ii']
-        d.pop('_dummy', None)
         return d
 
     def __setstate__(self, d):

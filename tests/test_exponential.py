@@ -115,7 +115,7 @@ def test_exponential_properties():
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(expon.centroid(), cen)
+    np.testing.assert_equal(expon.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale)
     np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale)

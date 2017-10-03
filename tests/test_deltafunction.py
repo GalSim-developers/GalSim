@@ -119,7 +119,7 @@ def test_deltaFunction_properties():
     delta = galsim.DeltaFunction(flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(delta.centroid(), cen)
+    np.testing.assert_equal(delta.centroid, cen)
     offcen = galsim.PositionD(1,1)
     # Check Fourier properties
     np.testing.assert_equal(delta.kValue(cen), (1+0j) * test_flux)

@@ -145,7 +145,7 @@ def test_spergel_properties():
     spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.centroid, cen)
     # # Check Fourier properties
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
     maxk = spergel.maxK()
@@ -303,7 +303,7 @@ def test_spergel_05():
     # cf test_exponential_properties()
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale * hlr_r0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.centroid, cen)
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(spergel.flux, test_flux)
     import math

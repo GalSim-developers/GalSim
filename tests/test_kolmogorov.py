@@ -155,7 +155,7 @@ def test_kolmogorov_properties():
     psf = galsim.Kolmogorov(lam_over_r0=lor, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
     np.testing.assert_almost_equal(psf.stepK(), 0.36982048503361376, 9)

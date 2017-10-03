@@ -111,7 +111,7 @@ def test_moffat():
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(moffat.centroid(), cen)
+        np.testing.assert_equal(moffat.centroid, cen)
         np.testing.assert_almost_equal(moffat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(moffat.flux, test_flux)
         np.testing.assert_almost_equal(moffat.xValue(cen), moffat.maxSB())
@@ -145,7 +145,7 @@ def test_moffat_properties():
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 11.613036117918105)
     np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795873)
@@ -160,7 +160,7 @@ def test_moffat_properties():
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(psf.centroid, cen)
     np.testing.assert_almost_equal(psf.maxK(), 11.613036112206663)
     np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795862)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)

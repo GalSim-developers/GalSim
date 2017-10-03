@@ -106,7 +106,7 @@ def test_box():
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(box.centroid(), cen)
+        np.testing.assert_equal(box.centroid, cen)
         np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(box.flux, test_flux)
         np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
@@ -208,7 +208,7 @@ def test_tophat():
         do_kvalue(conv,im, "TopHat convolved with pixel in real space")
 
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(tophat.centroid(), cen)
+        np.testing.assert_equal(tophat.centroid, cen)
         np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(tophat.flux, test_flux)
         np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
