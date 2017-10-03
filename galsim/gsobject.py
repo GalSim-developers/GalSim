@@ -798,7 +798,7 @@ class GSObject(object):
         @returns the sheared object.
         """
         from .transform import _Transform
-        new_obj = _Transform(self, *shear.getMatrix().ravel().tolist())
+        new_obj = _Transform(self, shear.getMatrix())
         return new_obj
 
     def lens(self, g1, g2, mu):

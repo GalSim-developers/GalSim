@@ -28,32 +28,13 @@ namespace galsim {
 
     struct PySBTransform
     {
-        static void getJac(const SBTransform& self, size_t idata)
-        {
-            double* data = reinterpret_cast<double*>(idata);
-            self.getJac(data[0], data[1], data[2], data[3]);
-        }
-
         static void wrap()
         {
-            static char const * doc =
-                "SBTransform is an affine transformation of another SBProfile.\n"
-                "Origin of original shape will now appear at x0.\n"
-                "Flux is NOT conserved in transformation - SB is preserved."
-                ;
-
-            bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", doc, bp::no_init)
+            bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", bp::no_init)
                 .def(bp::init<const SBProfile &, double, double, double, double,
                      Position<double>, double, GSParams>(
                          (bp::args("sbin", "mA", "mB", "mC", "mD"),
-                          bp::arg("x0"), bp::arg("fluxScaling"), bp::arg("gsparams"))))
-                .def(bp::init<const SBTransform &>())
-                .def("getObj", &SBTransform::getObj)
-                .def("getJac", getJac)
-                .def("getOffset", &SBTransform::getOffset)
-                .def("getFluxScaling", &SBTransform::getFluxScaling)
-                .enable_pickling()
-                ;
+                          bp::arg("x0"), bp::arg("fluxScaling"), bp::arg("gsparams"))));
         }
 
     };

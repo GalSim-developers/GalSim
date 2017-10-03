@@ -1185,12 +1185,12 @@ class PixelScale(LocalWCS):
 
     def _profileToWorld(self, image_profile):
         from .transform import _Transform
-        return _Transform(image_profile, self._scale, 0., 0., self._scale,
+        return _Transform(image_profile, (self._scale, 0., 0., self._scale),
                           flux_ratio=self._scale**-2)
 
     def _profileToImage(self, world_profile):
         from .transform import _Transform
-        return _Transform(world_profile, 1./self._scale, 0., 0., 1./self._scale,
+        return _Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
                           flux_ratio=self._scale**2)
 
     def _pixelArea(self):
@@ -1442,13 +1442,14 @@ class JacobianWCS(LocalWCS):
 
     def _profileToWorld(self, image_profile):
         from .transform import _Transform
-        return _Transform(image_profile, self._dudx, self._dudy, self._dvdx, self._dvdy,
+        return _Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
                           flux_ratio=1./self._pixelArea())
 
     def _profileToImage(self, world_profile):
         from .transform import _Transform
-        return _Transform(world_profile, self._dvdy/self._det, -self._dudy/self._det,
-                          -self._dvdx/self._det, self._dudx/self._det,
+        return _Transform(world_profile,
+                          (self._dvdy/self._det, -self._dudy/self._det,
+                           -self._dvdx/self._det, self._dudx/self._det),
                           flux_ratio=self._pixelArea())
 
     def _pixelArea(self):

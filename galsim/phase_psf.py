@@ -1253,9 +1253,10 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
-        x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        photons.x = x * 1e-9 * radians / arcsec  # convert from nm/m to arcsec.
-        photons.y = y * 1e-9 * radians / arcsec
+        nm_to_arcsec = 1.e-9 * radians / arcsec
+        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
+        photons.x *= nm_to_arcsec
+        photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
 
 
