@@ -411,8 +411,9 @@ class Transformation(GSObject):
     def isAnalyticK(self):
         return self._original.isAnalyticK()
 
+    @property
     def centroid(self):
-        cen = self._original.centroid()
+        cen = self._original.centroid
         cen = PositionD(self._fwd(cen.x, cen.y))
         cen += self._offset
         return cen

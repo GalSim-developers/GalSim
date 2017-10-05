@@ -213,6 +213,7 @@ class InclinedExponential(GSObject):
     def isAnalyticK(self):
         return True
 
+    @property
     def centroid(self):
         return PositionD(0,0)
 
@@ -472,6 +473,7 @@ class InclinedSersic(GSObject):
     def isAnalyticK(self):
         return True
 
+    @property
     def centroid(self):
         return PositionD(0,0)
 
