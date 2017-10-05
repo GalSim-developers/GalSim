@@ -86,6 +86,7 @@ class Image(object):
     --------------
 
     There are several ways to construct an Image:
+    (Optional arguments are shown with their default values after the = sign.)
 
         Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)
 
@@ -106,17 +107,24 @@ class Image(object):
                 specify it.  You can also optionally provide an initial value for the pixels, which
                 defaults to 0.
 
-        Image(array, xmin=1, ymin=1, make_const=False, ...)
+        Image(array, xmin=1, ymin=1, make_const=False, copy=False ...)
 
                 This views an existing NumPy array as an Image, where updates to either the image
-                or the original array will affect the other one.  (To avoid this, you could use
-                `Image(array.copy(), ...)`.) The dtype is taken from `array.dtype`, which must be
-                one of the allowed types listed above.  You can also optionally set the origin
-                `xmin, ymin` if you want it to be something other than (1,1).  You can also
-                optionally force the Image to be read-only with `make_const=True`, though if the
-                original NumPy array is modified then the contents of `Image.array` will change.
+                or the original array will affect the other one.  The dtype is taken from
+                `array.dtype`, which must be one of the allowed types listed above.  You can also
+                optionally set the origin `xmin, ymin` if you want it to be something other than
+                (1,1).
 
-        Image(image, dtype=dtype)
+                You can also optionally force the Image to be read-only with `make_const=True`,
+                though if the original NumPy array is modified then the contents of `Image.array`
+                will change.
+
+                If you want to make a copy of the input array, rather than just view the existing
+                array, you can force a copy with
+
+                    >>> image = galsim.Image(array, copy=True)
+
+        Image(image, dtype=image.dtype, copy=True)
 
                 This creates a copy of an Image, possibly changing the type.  e.g.
 
@@ -127,6 +135,11 @@ class Image(object):
                 Without the `dtype` argument, this is equivalent to `image.copy()`, which makes
                 a deep copy.  If you want a copy that shares data with the original, see
                 the image.view() method.
+
+                If you only want to enforce the image to have a given type and not make a copy
+                if the array is already the correct type, you can use, e.g.
+
+                    >>> image_double = galsim.Image(image, dtype=numpy.float64, copy=False)
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -282,6 +295,7 @@ class Image(object):
         init_value = kwargs.pop('init_value', None)
         scale = kwargs.pop('scale', None)
         wcs = kwargs.pop('wcs', None)
+        copy = kwargs.pop('copy', None)
 
         # Check that we got them all
         if kwargs:
@@ -295,18 +309,21 @@ class Image(object):
         if array is not None:
             if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
+            if copy is None: copy = False
             if dtype is None:
                 dtype = array.dtype.type
                 if dtype in Image._alias_dtypes:
                     dtype = Image._alias_dtypes[dtype]
-                    array = array.astype(dtype)
+                    array = array.astype(dtype, copy=copy)
                 elif dtype not in Image._cpp_valid_dtypes:
                     raise ValueError(
                         "array's dtype.type must be one of "+str(Image._cpp_valid_dtypes)+
                         ".  Instead got "+str(array.dtype.type)+".  Or can set "+
                         "dtype explicitly.")
-            elif dtype != array.dtype.type:
-                array = array.astype(dtype)
+                elif copy:
+                    array = np.array(array)
+            else:
+                array = array.astype(dtype, copy=copy)
             # Be careful here: we have to watch out for little-endian / big-endian issues.
             # The path of least resistance is to check whether the array.dtype is equal to the
             # native one (using the dtype.isnative flag), and if not, make a new array that has a
@@ -360,8 +377,11 @@ class Image(object):
                 # e.g. im = ImageF(...)
                 #      im2 = ImageD(im)
                 self._dtype = dtype
-            self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
-            self._array[:,:] = image.array[:,:]
+            if copy is False:
+                self._array = image.array.astype(self._dtype, copy=False)
+            else:
+                self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
+                self._array[:,:] = image.array[:,:]
         else:
             self._array = np.empty(shape=(1,1), dtype=self._dtype)
             self._bounds = BoundsI()

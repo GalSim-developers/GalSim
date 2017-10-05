@@ -233,8 +233,7 @@ class Shapelet(GSObject):
                                         "with a non-trivial WCS.")
 
         # Make it double precision if it is not.
-        if image.dtype is not np.float64:
-            image = Image(image, dtype=np.float64)
+        image = Image(image, dtype=np.float64, copy=False)
 
         _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
                                  image._image, image.scale, center._p)
