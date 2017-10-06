@@ -344,8 +344,13 @@ class InterpolatedImage(GSObject):
         if pad_factor <= 0.:
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
-        im_cen = self._image.true_center if use_true_center else self._image.center
-        local_wcs = self._image.wcs.local(image_pos=im_cen)
+        # Figure out the offset to apply based on the original image (not the padded one).
+        # We will apply this below in _sbp.
+        offset = self._parse_offset(offset)
+        self._offset = self._fix_offset(self._image.bounds, offset, use_true_center)
+
+        im_cen = image.true_center if use_true_center else image.center
+        local_wcs = self._image.wcs.local(image_pos = im_cen)
         min_scale = local_wcs._minScale()
         max_scale = local_wcs._maxScale()
 
@@ -409,8 +414,8 @@ class InterpolatedImage(GSObject):
         # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
         # stepk and maxk should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
-        # images (see the ._fix_center step below) leads to automatic reduction of stepk slightly
-        # below what is provided here, while maxk is preserved.
+        # images (see the ._fix_offset step below) leads to automatic reduction of stepK slightly
+        # below what is provided here, while maxK is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
             _force_stepk *= min_scale
@@ -464,9 +469,6 @@ class InterpolatedImage(GSObject):
         if flux is None and normalization.lower() in ['surface brightness','sb']:
             flux = sbii.getFlux() * local_wcs.pixelArea()
 
-        # Make sure offset is a PositionD
-        self._offset = self._parse_offset(offset)
-
         # Save this intermediate profile
         self._stepk = sbii.stepK() / min_scale
         self._maxk = sbii.maxK() / max_scale
@@ -474,7 +476,6 @@ class InterpolatedImage(GSObject):
         self._serialize_stepk = sbii.stepK()
         self._serialize_maxk = sbii.maxK()
         self._sbii = sbii
-        self._use_true_center = use_true_center
         self._wcs = local_wcs
 
 
@@ -490,18 +491,10 @@ class InterpolatedImage(GSObject):
 
         self._sbp = self._sbii  # Temporary.  Will overwrite this later.
 
-        # Apply the offset, and possibly fix the centering for even-sized images
-        # Note reverse=True, since we want to fix the center in the opposite sense of what the
-        # draw function does.
-        prof = self._fix_center(self._image.bounds, self._offset, self._use_true_center,
-                                reverse=True)
-
-        # Save the corrected offset
-        if hasattr(prof, 'offset'):
-            self._offset = -prof.offset
-        else:
-            self._offset = PositionD(0,0)
-        self._use_true_center = False
+        # Apply the offset
+        prof = self
+        if self._offset != PositionD(0,0):
+            prof = prof._shift(-self._offset)  # Opposite direction of what drawImage does.
 
         # Bring the profile from image coordinates into world coordinates
         prof = self._wcs._profileToWorld(prof)
@@ -573,7 +566,6 @@ class InterpolatedImage(GSObject):
                 self._pad_factor == other._pad_factor and
                 self._flux == other._flux and
                 self._offset == other._offset and
-                self._use_true_center == other._use_true_center and
                 self.gsparams == other.gsparams and
                 self._stepk == other._stepk and
                 self._maxk == other._maxk)
@@ -582,7 +574,7 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self._pad_factor, self._flux, self._offset, self._use_true_center,
+                               self._pad_factor, self._flux, self._offset,
                                self.gsparams, self._stepk, self._maxk))
             self._hash ^= hash(tuple(self._pad_image.array.ravel()))
             self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
@@ -646,6 +638,8 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._pad_factor = 1.
     ret._gsparams = GSParams.check(gsparams)
 
+    offset = ret._parse_offset(offset)
+    ret._offset = ret._fix_offset(ret._image.bounds, offset, use_true_center)
     im_cen = image.true_center if use_true_center else image.center
     local_wcs = image.wcs.local(image_pos = im_cen)
     min_scale = local_wcs._minScale()
@@ -663,9 +657,7 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._serialize_stepk = sbii.stepK()
     ret._serialize_maxk = sbii.maxK()
     ret._sbii = sbii
-    ret._use_true_center = use_true_center
     ret._wcs = local_wcs
-    ret._offset = ret._parse_offset(offset)
     return ret
 
 

@@ -1005,7 +1005,7 @@ class GSObject(object):
         else:
             return BoundsI()
 
-    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
+    def _fix_offset(self, new_bounds, offset, use_true_center):
         # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -1018,15 +1018,7 @@ class GSObject(object):
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
             offset = PositionD(dx,dy)
-
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse:
-            offset = -offset
-
-        if offset == PositionD(0,0):
-            return self
-        else:
-            return self._shift(offset)
+        return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         from .wcs import BaseWCS, PixelScale
@@ -1493,7 +1485,9 @@ class GSObject(object):
                             real_space=real_space, gsparams=self.gsparams)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+        offset = prof._fix_offset(new_bounds, offset, use_true_center)
+        if offset != PositionD(0,0):
+            prof = prof._shift(offset)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
@@ -1527,7 +1521,8 @@ class GSObject(object):
                             prof_no_pixel,
                             Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
                             real_space=real_space, gsparams=self.gsparams)
-                    prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+                    if offset != PositionD(0,0):
+                        prof = prof._shift(offset)
                 elif n_subsample != 1:
                     # We can't just pull off the pixel-free version, so we need to deconvolve
                     # by the original pixel and reconvolve by the smaller one.
