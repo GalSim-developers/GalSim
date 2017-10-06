@@ -398,6 +398,21 @@ def test_undefined_image():
         if types[i] == np.complex128:
             assert im8 == im1
 
+        im9 = galsim.Image(0, 0)
+        assert not im9.bounds.isDefined()
+        assert im9.array.shape == (1,1)
+        assert im9 == im1
+
+        im10 = galsim.Image(10, 0)
+        assert not im10.bounds.isDefined()
+        assert im10.array.shape == (1,1)
+        assert im10 == im1
+
+        im11 = galsim.Image(0, 19)
+        assert not im11.bounds.isDefined()
+        assert im11.array.shape == (1,1)
+        assert im11 == im1
+
         try:
             np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
             np.testing.assert_raises(RuntimeError,im1.__call__,0,0)

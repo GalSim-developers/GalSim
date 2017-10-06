@@ -394,6 +394,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision and truncation threshold for testing.
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
+        #print('obj1 = ',repr(obj1))
+        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:

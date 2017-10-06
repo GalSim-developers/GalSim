@@ -346,13 +346,14 @@ class Image(object):
             nrow = int(nrow)
             self._array = self._make_empty(shape=(nrow,ncol), dtype=self._dtype)
             self._bounds = BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
-            self.fill(init_value)
+            if init_value:
+                self.fill(init_value)
         elif bounds is not None:
             if not isinstance(bounds, BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self._array = self._make_empty(bounds.numpyShape(), dtype=self._dtype)
             self._bounds = bounds
-            if bounds.isDefined():
+            if init_value:
                 self.fill(init_value)
         elif array is not None:
             self._array = array.view()
@@ -383,7 +384,7 @@ class Image(object):
                 self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
                 self._array[:,:] = image.array[:,:]
         else:
-            self._array = np.empty(shape=(1,1), dtype=self._dtype)
+            self._array = np.zeros(shape=(1,1), dtype=self._dtype)
             self._bounds = BoundsI()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
@@ -578,7 +579,10 @@ class Image(object):
         """
         # cf. http://stackoverflow.com/questions/9895787/memory-alignment-for-fast-fft-in-python-using-shared-arrrays
         nbytes = shape[0] * shape[1] * np.dtype(dtype).itemsize
-        buf = np.empty(nbytes + 16, dtype=np.uint8)
+        if nbytes == 0:
+            # Make degenerate images have 1 element.  Otherwise things get weird.
+            return np.zeros(shape=(1,1), dtype=self._dtype)
+        buf = np.zeros(nbytes + 16, dtype=np.uint8)
         start_index = -buf.ctypes.data % 16
         a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
         assert a.ctypes.data % 16 == 0
@@ -1282,7 +1286,6 @@ class Image(object):
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to set values of an undefined image")
-        if value is None: value = 0
         self._fill(value)
 
     def _fill(self, value):
