@@ -22,12 +22,16 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 
 from past.builtins import basestring
 import numpy as np
+import math
+
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .image import Image
+from .bounds import _BoundsI
 from .position import PositionD
 from .interpolant import Quintic, Interpolant
 from .utilities import convert_interpolant, lazy_property
+from .random import BaseDeviate
 from . import _galsim
 from . import fits
 
@@ -264,7 +268,6 @@ class InterpolatedImage(GSObject):
                  hdu=None):
 
         from .wcs import BaseWCS, PixelScale
-        from .random import BaseDeviate
 
         # If the "image" is not actually an image, try to read the image as a file.
         if not isinstance(image, Image):
@@ -298,7 +301,8 @@ class InterpolatedImage(GSObject):
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
         self._image = image._view()
-        self._use_cache = use_cache
+        self._image.setCenter(0,0)
+        self._gsparams = GSParams.check(gsparams)
 
         # Set the wcs if necessary
         if scale is not None:
@@ -312,99 +316,16 @@ class InterpolatedImage(GSObject):
         elif self._image.wcs is None:
             raise ValueError("No information given with Image or keywords about pixel scale!")
 
-        # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
-        # of a valid type.
-        if rng is None:
-            if noise_pad: rng = BaseDeviate()
-        elif not isinstance(rng, BaseDeviate):
-            raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
-
-        # Check that given pad_image is valid:
-        if pad_image:
-            if isinstance(pad_image, basestring):
-                pad_image = fits.read(pad_image)
-            if not isinstance(pad_image, Image):
-                raise ValueError("Supplied pad_image is not an Image!")
-            if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
-                raise ValueError("Supplied pad_image is not one of the allowed types!")
-
-        # Check that the given noise_pad is valid:
-        try:
-            noise_pad = float(noise_pad)
-        except (TypeError, ValueError):
-            pass
-        if isinstance(noise_pad, float):
-            if noise_pad < 0.:
-                raise ValueError("Noise variance cannot be negative!")
-        # There are other options for noise_pad, the validity of which will be checked in
-        # the helper function self.buildNoisePadImage()
-
-        # This will be passed to SBInterpolatedImage, so make sure it is the right type.
-        pad_factor = float(pad_factor)
-        if pad_factor <= 0.:
-            raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
-
         # Figure out the offset to apply based on the original image (not the padded one).
         # We will apply this below in _sbp.
         offset = self._parse_offset(offset)
         self._offset = self._fix_offset(self._image.bounds, offset, use_true_center)
 
         im_cen = image.true_center if use_true_center else image.center
-        local_wcs = self._image.wcs.local(image_pos = im_cen)
-        min_scale = local_wcs._minScale()
-        max_scale = local_wcs._maxScale()
+        self._wcs = self._image.wcs.local(image_pos=im_cen)
 
-        # Make sure the image fits in the noise pad image:
-        if noise_pad_size:
-            import math
-            # Convert from arcsec to pixels according to the local wcs.
-            # Use the minimum scale, since we want to make sure noise_pad_size is
-            # as large as we need in any direction.
-            noise_pad_size = int(math.ceil(noise_pad_size / min_scale))
-            # Round up to a good size for doing FFTs
-            noise_pad_size = Image.good_fft_size(noise_pad_size)
-            if noise_pad_size <= min(self._image.array.shape):
-                # Don't need any noise padding in this case.
-                noise_pad_size = 0
-            elif noise_pad_size < max(self._image.array.shape):
-                noise_pad_size = max(self._image.array.shape)
-
-        # See if we need to pad out the image with either a pad_image or noise_pad
-        if noise_pad_size:
-            new_pad_image = self.buildNoisePadImage(noise_pad_size, noise_pad, rng)
-
-            if pad_image:
-                # if both noise_pad and pad_image are set, then we need to build up a larger
-                # pad_image and place the given pad_image in the center.
-
-                # We will change the bounds here, so make a new view to avoid modifying the
-                # input pad_image.
-                pad_image = pad_image._view()
-                pad_image.setCenter(0,0)
-                new_pad_image.setCenter(0,0)
-                if new_pad_image.bounds.includes(pad_image.bounds):
-                    new_pad_image[pad_image.bounds] = pad_image
-                else:
-                    new_pad_image = pad_image
-
-            pad_image = new_pad_image
-
-        elif pad_image:
-            # Just make sure pad_image is the right type
-            pad_image = Image(pad_image, dtype=image.dtype)
-
-        # Now place the given image in the center of the padding image:
-        if pad_image:
-            pad_image.setCenter(0,0)
-            self._image.setCenter(0,0)
-            if pad_image.bounds.includes(self._image.bounds):
-                pad_image[self._image.bounds] = self._image
-                pad_image.wcs = self._image.wcs
-            else:
-                # If padding was smaller than original image, just use the original image.
-                pad_image = self._image
-        else:
-            pad_image = self._image
+        # Build the fully padded real-space image according to the various pad options.
+        self._buildRealImage(pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache)
 
         # GalSim cannot automatically know what stepk and maxk are appropriate for the
         # input image.  So it is usually worth it to do a manual calculation (below).
@@ -416,6 +337,8 @@ class InterpolatedImage(GSObject):
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
         # images (see the ._fix_offset step below) leads to automatic reduction of stepK slightly
         # below what is provided here, while maxK is preserved.
+        min_scale = self._wcs._minScale()
+        max_scale = self._wcs._maxScale()
         if _force_stepk > 0.:
             calculate_stepk = False
             _force_stepk *= min_scale
@@ -435,14 +358,9 @@ class InterpolatedImage(GSObject):
             calculate_maxk = False
             _force_maxk = _serialize_maxk
 
-        # Save these values
-        self._pad_image = pad_image
-        self._pad_factor = pad_factor
-        self._gsparams = GSParams.check(gsparams)
-
         # Make the SBInterpolatedImage out of the image.
         sbii = _galsim.SBInterpolatedImage(
-                pad_image._image, self._x_interpolant._i, self._k_interpolant._i, pad_factor,
+                self._xim._image, self._x_interpolant._i, self._k_interpolant._i,
                 _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if flux == 0 are the
@@ -467,29 +385,25 @@ class InterpolatedImage(GSObject):
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
         if flux is None and normalization.lower() in ['surface brightness','sb']:
-            flux = sbii.getFlux() * local_wcs.pixelArea()
+            flux = sbii.getFlux() * self._wcs.pixelArea()
 
-        # Save this intermediate profile
         self._stepk = sbii.stepK() / min_scale
         self._maxk = sbii.maxK() / max_scale
         self._flux = flux
         self._serialize_stepk = sbii.stepK()
         self._serialize_maxk = sbii.maxK()
         self._sbii = sbii
-        self._wcs = local_wcs
 
 
     @lazy_property
     def _sbp(self):
         if not hasattr(self, '_sbii'):
             self._sbii = _galsim.SBInterpolatedImage(
-                    self._pad_image._image, self._x_interpolant._i, self._k_interpolant._i,
-                    self._pad_factor, self._serialize_stepk, self._serialize_maxk,
+                    self._xim._image, self._x_interpolant._i, self._k_interpolant._i,
+                    self._serialize_stepk, self._serialize_maxk,
                     self.gsparams._gsp)
-        if not hasattr(self, '_image'):
-            self._image = self._pad_image
 
-        self._sbp = self._sbii  # Temporary.  Will overwrite this later.
+        self._sbp = self._sbii  # Temporary.  Will overwrite this with the return value.
 
         # Apply the offset
         prof = self
@@ -517,53 +431,134 @@ class InterpolatedImage(GSObject):
         return self._k_interpolant
 
     @property
-    def use_cache(self):
-        return self._use_cache
-
-    @property
     def image(self):
         return self._image
 
-    def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
+    def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
+
+        # Check that given pad_image is valid:
+        if pad_image:
+            if isinstance(pad_image, basestring):
+                pad_image = fits.read(pad_image)
+            else:
+                pad_image = pad_image._view()
+            if not isinstance(pad_image, Image):
+                raise ValueError("Supplied pad_image is not an Image!")
+            if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
+                raise ValueError("Supplied pad_image is not one of the allowed types!")
+
+        if pad_factor <= 0.:
+            raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
+
+        # Convert noise_pad_size from arcsec to pixels according to the local wcs.
+        # Use the minimum scale, since we want to make sure noise_pad_size is
+        # as large as we need in any direction.
+        if noise_pad_size:
+            noise_pad_size = int(math.ceil(noise_pad_size / self._wcs._minScale()))
+            noise_pad_size = Image.good_fft_size(noise_pad_size)
+
+        # The size of the final padded image is the largest of the various size specifications
+        pad_size = max(self._image.array.shape)
+        if pad_factor > 1.:
+            pad_size = int(math.ceil(pad_factor * pad_size))
+        if noise_pad_size:
+            pad_size = max(pad_size, noise_pad_size)
+        if pad_image:
+            pad_image.setCenter(0,0)
+            pad_size = max(pad_size, *pad_image.array.shape)
+        # And round up to a good fft size
+        pad_size = Image.good_fft_size(pad_size)
+
+        self._xim = Image(pad_size, pad_size, dtype=self._image.dtype, wcs=self._wcs)
+        self._xim.setCenter(0,0)
+
+        # If requested, fill (some of) this image with noise padding.
+        nz_bounds = self._image.bounds
+        if noise_pad_size > 0 and noise_pad is not None:
+            # This is a bit involved, so pass this off to another helper function.
+            b = self._buildNoisePadImage(noise_pad_size, noise_pad, rng, use_cache)
+            nz_bounds += b
+
+        # The the user gives us a pad image to use, fill the relevane portion with that.
+        if pad_image:
+            assert self._xim.bounds.includes(pad_image.bounds)
+            self._xim[pad_image.bounds] = pad_image
+            nz_bounds += pad_image.bounds
+
+        # Now place the given image in the center of the padding image:
+        assert self._xim.bounds.includes(self._image.bounds)
+        self._xim[self._image.bounds] = self._image
+        self._xim.wcs = self._wcs
+
+        # And update the _image to be that portion of the full real image rather than the
+        # input image.
+        self._image = self._xim[self._image.bounds]
+
+        # These next two allow for easy pickling/repring.  We don't need to serialize all the
+        # zeros around the edge.  But we do need to keep any non-zero padding as a pad_image.
+        self._pad_image = self._xim[nz_bounds]
+        #self._pad_factor = (max(self._xim.array.shape)-1.e-6) / max(self._image.array.shape)
+        self._pad_factor = pad_factor
+
+        #print("Done buildReal")
+        #print("xim = ",str(self._xim))
+        #print("image = ",str(self._image))
+        #print("pad_image = ",str(self._pad_image))
+        #print("pad_factor = ",self._pad_factor)
+
+    def _buildNoisePadImage(self, noise_pad_size, noise_pad, rng, use_cache):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
         """
+        from .random import BaseDeviate
         from .noise import GaussianNoise
         from .correlatednoise import _BaseCorrelatedNoise, CorrelatedNoise
-        # Make it with the same dtype as the image
-        pad_image = Image(noise_pad_size, noise_pad_size, dtype=self.image.dtype)
+
+        # Make sure we make rng a BaseDeviate if rng is None
+        rng = BaseDeviate(rng)
 
         # Figure out what kind of noise to apply to the image
-        if isinstance(noise_pad, float):
+        try:
+            noise_pad = float(noise_pad)
+            if noise_pad < 0.:
+                raise ValueError("Noise variance cannot be negative!")
             noise = GaussianNoise(rng, sigma = np.sqrt(noise_pad))
-        elif isinstance(noise_pad, _BaseCorrelatedNoise):
-            noise = noise_pad.copy(rng=rng)
-        elif isinstance(noise_pad, Image):
-            noise = CorrelatedNoise(noise_pad, rng)
-        elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
-            noise = InterpolatedImage._cache_noise_pad[noise_pad]
-            if rng:
-                # Make sure that we are using a specified RNG by resetting that in this cached
-                # CorrelatedNoise instance, otherwise preserve the cached RNG
-                noise = noise.copy(rng=rng)
-        elif isinstance(noise_pad, basestring):
-            noise = CorrelatedNoise(fits.read(noise_pad), rng)
-            if self.use_cache:
-                InterpolatedImage._cache_noise_pad[noise_pad] = noise
-        else:
-            raise ValueError(
-                "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
-                "containing an image to use to make a CorrelatedNoise!")
-        # Add the noise
-        pad_image.addNoise(noise)
 
-        return pad_image
+        except (TypeError, ValueError):
+            if isinstance(noise_pad, _BaseCorrelatedNoise):
+                noise = noise_pad.copy(rng=rng)
+            elif isinstance(noise_pad, Image):
+                noise = CorrelatedNoise(noise_pad, rng)
+            elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
+                noise = InterpolatedImage._cache_noise_pad[noise_pad]
+                if rng:
+                    # Make sure that we are using a specified RNG by resetting that in this cached
+                    # CorrelatedNoise instance, otherwise preserve the cached RNG
+                    noise = noise.copy(rng=rng)
+            elif isinstance(noise_pad, basestring):
+                noise = CorrelatedNoise(fits.read(noise_pad), rng)
+                if use_cache:
+                    InterpolatedImage._cache_noise_pad[noise_pad] = noise
+            else:
+                raise ValueError(
+                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
+                    "containing an image to use to make a CorrelatedNoise!")
+
+        # Find the portion of xim to fill with noise.
+        # It's allowed for the noise padding to not cover the whole pad image
+        half_size = noise_pad_size // 2
+        b = _BoundsI(-half_size, -half_size + noise_pad_size-1,
+                     -half_size, -half_size + noise_pad_size-1)
+        assert self._xim.bounds.includes(b)
+        noise_image = self._xim[b]
+        # Add the noise
+        noise_image.addNoise(noise)
+        return b
 
     def __eq__(self, other):
         return (isinstance(other, InterpolatedImage) and
-                self._pad_image == other._pad_image and
+                self._xim == other._xim and
                 self.x_interpolant == other.x_interpolant and
                 self.k_interpolant == other.k_interpolant and
-                self._pad_factor == other._pad_factor and
                 self._flux == other._flux and
                 self._offset == other._offset and
                 self.gsparams == other.gsparams and
@@ -574,30 +569,46 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self._pad_factor, self._flux, self._offset,
-                               self.gsparams, self._stepk, self._maxk))
+                               self._flux, self._offset, self.gsparams, self._stepk, self._maxk))
             self._hash ^= hash(tuple(self._pad_image.array.ravel()))
-            self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
+            self._hash ^= hash((self._xim.bounds, self._xim.wcs))
         return self._hash
 
     def __repr__(self):
-        return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
-                'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
-                self._pad_image, self.x_interpolant, self.k_interpolant,
-                self._pad_factor, self._flux, self._offset, self.gsparams,
-                self._stepk, self._maxk)
+        s = 'galsim.InterpolatedImage(%r, %r, %r'%(
+                self._image, self.x_interpolant, self.k_interpolant)
+        # Most things we keep even if not required, but the pad_image is large, so skip it
+        # if it's really just the same as the main image.
+        if self._pad_image.bounds != self._image.bounds:
+            s += ', pad_image=%r'%(self._pad_image)
+        s += ', pad_factor=%f, flux=%r, offset=%r'%(self._pad_factor, self._flux, self._offset)
+        s += ', use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)'%(
+                self.gsparams, self._stepk, self._maxk)
+        return s
 
     def __str__(self): return 'galsim.InterpolatedImage(image=%s, flux=%s)'%(self.image, self.flux)
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('_image',None)
         d.pop('_sbii',None)
         d.pop('_sbp',None)
+        # Only pickle _pad_image.  Not _xim or _image
+        d['_xim_bounds'] = self._xim.bounds
+        d['_image_bounds'] = self._image.bounds
+        d.pop('_xim',None)
+        d.pop('_image',None)
         return d
 
     def __setstate__(self, d):
+        xim_bounds = d.pop('_xim_bounds')
+        image_bounds = d.pop('_image_bounds')
         self.__dict__ = d
+        if self._pad_factor <= 1.:
+            self._xim = self._pad_image
+        else:
+            self._xim = Image(xim_bounds, wcs=self._wcs, dtype=self._pad_image.dtype)
+            self._xim[self._pad_image.bounds] = self._pad_image
+        self._image = self._xim[image_bounds]
 
 
 def _InterpolatedImage(image, x_interpolant, k_interpolant,
@@ -630,34 +641,33 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
     # We need to set all the various attributes that are expected to be in an InterpolatedImage:
-    ret._image = image.copy()
     ret._x_interpolant = x_interpolant
     ret._k_interpolant = k_interpolant
-    ret._use_cache = True
-    ret._pad_image = image
-    ret._pad_factor = 1.
+    ret._image = image._view()
     ret._gsparams = GSParams.check(gsparams)
 
     offset = ret._parse_offset(offset)
     ret._offset = ret._fix_offset(ret._image.bounds, offset, use_true_center)
-    im_cen = image.true_center if use_true_center else image.center
-    local_wcs = image.wcs.local(image_pos = im_cen)
-    min_scale = local_wcs._minScale()
-    max_scale = local_wcs._maxScale()
+    im_cen = ret._image.true_center if use_true_center else ret._image.center
+    ret._wcs = ret._image.wcs.local(image_pos = im_cen)
+    ret._xim = ret._image
+    ret._pad_image = ret._image
+    ret._pad_factor = 1.
+    min_scale = ret._wcs._minScale()
+    max_scale = ret._wcs._maxScale()
     force_stepk *= min_scale
     force_maxk *= max_scale
 
     sbii = _galsim.SBInterpolatedImage(
-            image._image, x_interpolant._i, k_interpolant._i, 1.,
+            image._image, x_interpolant._i, k_interpolant._i,
             force_stepk, force_maxk, ret._gsparams._gsp)
 
-    ret._flux = None
     ret._stepk = sbii.stepK() / min_scale
     ret._maxk = sbii.maxK() / max_scale
+    ret._flux = None
     ret._serialize_stepk = sbii.stepK()
     ret._serialize_maxk = sbii.maxK()
     ret._sbii = sbii
-    ret._wcs = local_wcs
     return ret
 
 
@@ -744,7 +754,6 @@ class InterpolatedKImage(GSObject):
 
     def __init__(self, kimage=None, k_interpolant=None, stepk=None, gsparams=None,
                  real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):
-        from .bounds import _BoundsI
         if kimage is None:
             if real_kimage is None or imag_kimage is None:
                 raise ValueError("Must provide either kimage or real_kimage/imag_kimage")

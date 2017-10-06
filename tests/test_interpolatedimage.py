@@ -425,7 +425,6 @@ def test_operations_simple():
               irreprable=irreprable)
     do_pickle(test_int_im, irreprable=irreprable)
 
-
 @timer
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
@@ -528,6 +527,7 @@ def test_uncorr_padding():
     int_im.drawImage(big_img, scale=1., method='no_pixel')
     # check that variance is same as original - here, we cannot be too precise because the padded
     # region is not huge and the comparison will be, well, noisy.
+    print('measured var = ',np.var(big_img.array))
     np.testing.assert_almost_equal(
         np.var(big_img.array), noise_var, decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with noise')
@@ -552,7 +552,8 @@ def test_uncorr_padding():
 
     # Finally check inputs: what if we give it an input variance that is neg?  A list?
     try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, orig_img, noise_pad=-1.,
+                                 noise_pad_size=20)
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -701,7 +702,8 @@ def test_corr_padding():
     # Finally, check inputs:
     # what if we give it a screwy way of defining the image padding?
     try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, orig_img, noise_pad=-1.,
+                                 noise_pad_size=20)
     except ImportError:
         print('The assert_raises tests require nose')
     # also, check that whether we give it a string, image, or cn, it gives the same noise field

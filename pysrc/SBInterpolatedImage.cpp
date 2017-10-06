@@ -34,10 +34,9 @@ namespace galsim {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
                      const Interpolant&, const Interpolant&,
-                     double, double, double, GSParams>(
+                     double, double, GSParams>(
                          (bp::arg("image"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
-                          bp::arg("pad_factor")=4.,
                           bp::arg("stepk")=0., bp::arg("maxk")=0.,
                           bp::arg("gsparams")=GSParams())
                      )

@@ -33,9 +33,8 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
-            const Interpolant& xInterp,
-            const Interpolant& kInterp,
-            double pad_factor, double stepk, double maxk, const GSParams& gsparams);
+            const Interpolant& xInterp, const Interpolant& kInterp,
+            double stepk, double maxk, const GSParams& gsparams);
 
         ~SBInterpolatedImageImpl();
 
@@ -70,7 +69,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
-        double getFlux() const { return _flux; }
+        double getFlux() const;
         double maxSB() const;
 
         /**
@@ -109,9 +108,7 @@ namespace galsim {
 
         const Interpolant& getXInterp() const;
         const Interpolant& getKInterp() const;
-        double getPadFactor() const { return _pad_factor; }
         ConstImageView<double> getImage() const;
-        ConstImageView<double> getPaddedImage() const;
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
@@ -123,17 +120,16 @@ namespace galsim {
         int _Ninitial, _Ninitx, _Ninity;
         int _Nk;
         Bounds<int> _init_bounds;
-        double _xcentroid;
-        double _ycentroid;
 
         InterpolantXY _xInterp; ///< Interpolant used in real space.
         InterpolantXY _kInterp; ///< Interpolant used in k space.
-        shared_ptr<XTable> _xtab; ///< Final padded real-space image.
+        shared_ptr<XTable> _xtab; ///< Final real-space image.
         mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
-        const double _pad_factor;
         mutable double _stepk;
         mutable double _maxk;
-        double _flux;
+        mutable double _flux;
+        mutable double _xcentroid;
+        mutable double _ycentroid;
 
         double _maxk1; ///< maxk based just on the xInterp urange
         double _uscale; ///< conversion from k to u for xInterpolant
