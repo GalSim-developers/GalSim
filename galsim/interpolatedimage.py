@@ -360,7 +360,8 @@ class InterpolatedImage(GSObject):
 
         # Make the SBInterpolatedImage out of the image.
         sbii = _galsim.SBInterpolatedImage(
-                self._xim._image, self._x_interpolant._i, self._k_interpolant._i,
+                self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
+                self._x_interpolant._i, self._k_interpolant._i,
                 _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if flux == 0 are the
@@ -399,7 +400,8 @@ class InterpolatedImage(GSObject):
     def _sbp(self):
         if not hasattr(self, '_sbii'):
             self._sbii = _galsim.SBInterpolatedImage(
-                    self._xim._image, self._x_interpolant._i, self._k_interpolant._i,
+                    self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
+                    self._x_interpolant._i, self._k_interpolant._i,
                     self._serialize_stepk, self._serialize_maxk,
                     self.gsparams._gsp)
 
@@ -661,7 +663,7 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     force_maxk *= max_scale
 
     sbii = _galsim.SBInterpolatedImage(
-            image._image, x_interpolant._i, k_interpolant._i,
+            image._image, image.bounds._b, image.bounds._b, x_interpolant._i, k_interpolant._i,
             force_stepk, force_maxk, ret._gsparams._gsp)
 
     ret._stepk = sbii.stepK() / min_scale

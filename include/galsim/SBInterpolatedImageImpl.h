@@ -33,6 +33,7 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImageImpl(
             const BaseImage<T>& image,
+            const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
             const Interpolant& xInterp, const Interpolant& kInterp,
             double stepk, double maxk, const GSParams& gsparams);
 
@@ -108,6 +109,8 @@ namespace galsim {
 
         const Interpolant& getXInterp() const;
         const Interpolant& getKInterp() const;
+        ConstImageView<double> getPaddedImage() const;
+        ConstImageView<double> getNonZeroImage() const;
         ConstImageView<double> getImage() const;
 
         void calculateMaxK(double max_stepk) const;
@@ -117,9 +120,10 @@ namespace galsim {
 
     private:
 
-        int _Ninitial, _Ninitx, _Ninity;
         int _Nk;
+        Bounds<int> _image_bounds;
         Bounds<int> _init_bounds;
+        Bounds<int> _nonzero_bounds;
 
         InterpolantXY _xInterp; ///< Interpolant used in real space.
         InterpolantXY _kInterp; ///< Interpolant used in k space.

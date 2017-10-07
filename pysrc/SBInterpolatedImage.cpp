@@ -32,10 +32,10 @@ namespace galsim {
         static void wrapTemplates(W& wrapper)
         {
             wrapper
-                .def(bp::init<const BaseImage<U> &,
+                .def(bp::init<const BaseImage<U> &, const Bounds<int>&, const Bounds<int>&,
                      const Interpolant&, const Interpolant&,
                      double, double, GSParams>(
-                         (bp::arg("image"),
+                         (bp::arg("image"), bp::arg("init_bounds"), bp::arg("nonzero_bounds"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
                           bp::arg("stepk")=0., bp::arg("maxk")=0.,
                           bp::arg("gsparams")=GSParams())

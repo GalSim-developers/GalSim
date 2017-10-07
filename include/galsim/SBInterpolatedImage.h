@@ -70,6 +70,8 @@ namespace galsim {
          * image.
          *
          * @param[in] image       Input Image (ImageF or ImageD).
+         * @param[in] init_bounds The bounds of the original unpadded image.
+         * @param[in] nonzero_bounds  The bounds in which the padded image is non-zero.
          * @param[in] xInterp     Interpolation scheme to adopt between pixels
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] stepk       If > 0, force stepk to this value.
@@ -80,6 +82,7 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImage(
             const BaseImage<T>& image,
+            const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
             const Interpolant& xInterp, const Interpolant& kInterp,
             double stepk, double maxk, const GSParams& gsparams);
 
@@ -109,8 +112,9 @@ namespace galsim {
          */
         void calculateMaxK(double max_maxk=0.) const;
 
-        ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
+        ConstImageView<double> getNonZeroImage() const;
+        ConstImageView<double> getImage() const;
 
     protected:
 
