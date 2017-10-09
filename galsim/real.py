@@ -1294,10 +1294,10 @@ class ChromaticRealGalaxy(ChromaticSum):
         coef = np.transpose(coef, (2,0,1))
         Sigma = np.transpose(Sigma, (2,3,0,1))
 
-        # Set up objlist as required of ChromaticSum subclass.
-        objlist = []
+        # Set up obj_list as required of ChromaticSum subclass.
+        obj_list = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim._InterpolatedKImage(
+            obj_list.append(sed * galsim._InterpolatedKImage(
                     galsim.ImageCD(coef[i], scale=stepk),
                     k_interpolant=self._k_interpolant,
                     gsparams=self._gsparams))
@@ -1314,7 +1314,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
-        ChromaticSum.__init__(self, objlist)
+        ChromaticSum.__init__(self, obj_list)
 
     @staticmethod
     def _poly_SEDs(bands):

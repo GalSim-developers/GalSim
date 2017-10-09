@@ -125,6 +125,11 @@ Deprecated Features
   obj.flux, gaussian.getSigma() -> gaussian.sigma, shear.getG1() -> shear.g1.
   There were many such methods, especially in the various kinds of GSObjects,
   as well as in Image, Bounds, Shear, and the Noise classes. (#904)
+- Deprecated ChromaticObject.obj -> _obj and is now an implementation detail,
+  not something that users should need to use. (#904)
+- Changed the objlist attribute of ChromaticSum and ChromaticConvolution to
+  obj_list to conform to similar attributes in other classes. (#904)
+
 
 
 New Features

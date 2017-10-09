@@ -1119,10 +1119,10 @@ def structure_function(image):
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
 def combine_wave_list(*args):
-    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    """Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
     red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
 
-    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @param obj_list  List of SED, Bandpass, or ChromaticObject objects.
     @returns        wave_list, blue_limit, red_limit
     """
     if len(args) == 1:

@@ -59,7 +59,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # Don't transform ChromaticSum object, better to just transform the arguments.
         if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
             new_obj = galsim.ChromaticSum(
-                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
+                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
                 dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
                 new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
@@ -71,8 +71,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
               and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
               and offset == galsim.PositionD(0.,0.)):
-            first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
-            return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
+            first = Transform(obj.obj_list[0],flux_ratio=flux_ratio,gsparams=gsparams)
+            return galsim.ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
             return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)

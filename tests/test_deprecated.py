@@ -447,6 +447,12 @@ def test_dep_chromatic():
         obj.drawImage(band, integrator=integrator2).array
     )
 
+    cgal = galsim.ChromaticObject(g)
+    assert check_dep(getattr, cgal, 'obj') == cgal._obj
+    csum = galsim.ChromaticSum(cgal)
+    assert check_dep(getattr, csum, 'objlist') == csum.obj_list
+    cconv = galsim.ChromaticConvolution(cgal)
+    assert check_dep(getattr, cconv, 'objlist') == cconv.obj_list
 
 
 @timer

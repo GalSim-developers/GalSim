@@ -690,7 +690,7 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     e = galsim.Convolve(a, b)
     f = galsim.Convolve(c, d)
     g = galsim.Convolve(e, f)
-    if any(isinstance(h, galsim.ChromaticConvolution) for h in g.objlist):
+    if any(isinstance(h, galsim.ChromaticConvolution) for h in g.obj_list):
         raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
 
 
@@ -1294,7 +1294,7 @@ def test_separable_ChromaticSum():
     if cgal3.separable:
         raise AssertionError("failed to identify inseparable ChromaticSum")
     # check that its objlist contains a separable Chromatic and a separable ChromaticSum
-    types = dict((o.__class__, o) for o in cgal3.objlist)
+    types = dict((o.__class__, o) for o in cgal3.obj_list)
     if galsim.ChromaticTransformation not in types or galsim.ChromaticSum not in types:
         raise AssertionError("failed to process list of objects with repeated SED")
 
@@ -2033,7 +2033,6 @@ def test_ne():
     # ChromaticObject.  Only param is the GSObject to chromaticize.
     # The following should test unequal:
     gals = [cgal1, cgal2]
-
     all_obj_diff(gals)
 
     # # Check that setifying doesn't remove any duplicate items.
@@ -2168,6 +2167,21 @@ def test_ne():
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # Check that all the various combinations are properly unequal
+    gals = [cgal1, 
+            galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50)),
+            galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),
+            gal1 * sed1,
+            galsim.ChromaticTransformation(cgal1),
+            galsim.ChromaticSum(cgal1),
+            galsim.ChromaticConvolution(cgal1),
+            galsim.ChromaticDeconvolution(cgal1),
+            galsim.ChromaticAutoConvolution(cgal1),
+            galsim.ChromaticAutoCorrelation(cgal1),
+            galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
+            galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0)]
     all_obj_diff(gals)
 
 
