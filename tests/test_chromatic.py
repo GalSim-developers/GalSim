@@ -1885,6 +1885,10 @@ def test_chromatic_invariant():
     chrom1 = galsim.ChromaticObject(gsobj) * bulge_SED
     chrom2 = gsobj * bulge_SED
     chrom3 = galsim.ChromaticObject(gsobj * bulge_SED)
+    do_pickle(chrom1)
+    do_pickle(chrom2)
+    do_pickle(chrom3)
+    do_pickle(galsim.ChromaticObject(gsobj))
 
     check_chromatic_invariant(chrom1)
     check_chromatic_invariant(chrom2)
@@ -1960,6 +1964,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(deconv)
     #do_pickle(deconv)
     repr(deconv) # gratuitous coverage of repr until do_pickle works.
+    str(deconv)
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
@@ -1982,6 +1987,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(four2)
     #do_pickle(four1)
     repr(four1) # gratuitous coverage of repr until do_pickle works.
+    str(four1)
 
     # And a few transforms too...
     # ChromaticTransformation
