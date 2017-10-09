@@ -1390,6 +1390,9 @@ def test_dep_phase_psf():
             img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
+    optical_screen = galsim.OpticalScreen(diam=1.0)
+    assert check_dep(getattr, optical_screen, 'coef_array') == optical_screen._coef_array
+
 @timer
 def test_dep_wmult():
     """Test drawImage with wmult parameter.
