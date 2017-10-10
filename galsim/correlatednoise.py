@@ -224,7 +224,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
         rootps = self._get_update_rootps(image.array.shape, wcs)
@@ -321,7 +321,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
@@ -413,7 +413,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
         # and the total variance of the combination.
@@ -722,7 +722,7 @@ class _BaseCorrelatedNoise(object):
             self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
-            var = newcf(newcf.bounds.center())
+            var = newcf(newcf.bounds.center)
             self._variance_stored = var
 
             if var <= 0.:
@@ -1224,7 +1224,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         elif scale is not None:
             cf_image.scale = scale
         elif image is not None and image.wcs is not None:
-            cf_image.wcs = image.wcs.local(image.trueCenter())
+            cf_image.wcs = image.wcs.local(image.true_center)
 
         # If wcs is still None at this point or is a PixelScale <= 0., use scale=1.
         if cf_image.wcs is None or (cf_image.wcs.isPixelScale() and cf_image.wcs.scale <= 0):

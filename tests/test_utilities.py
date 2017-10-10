@@ -407,7 +407,7 @@ def test_interleaveImages():
         np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
         assert im_list_1[k].wcs == im_list[k].wcs
 
-        assert im_list[k].origin() == img.origin()
+        assert im_list[k].origin == img.origin
         assert im_list[k].bounds == im_list_1[k].bounds
 
     # Checking for non-default flux option
@@ -544,8 +544,8 @@ def test_unweighted_moments():
     assert shape == shape2
 
     # Object should show up at the image true center.
-    np.testing.assert_almost_equal(mom['Mx'], img1.trueCenter().x)
-    np.testing.assert_almost_equal(mom['My'], img1.trueCenter().y)
+    np.testing.assert_almost_equal(mom['Mx'], img1.true_center.x)
+    np.testing.assert_almost_equal(mom['My'], img1.true_center.y)
     # And have the right sigma = rsqr/2
     np.testing.assert_almost_equal(mom['Mxx']*scale**2, sigma**2)
     np.testing.assert_almost_equal(mom['Myy']*scale**2, sigma**2)
@@ -567,8 +567,8 @@ def test_unweighted_moments():
     shape4 = galsim.utilities.unweighted_shape(img2)
     assert shape3 == shape4
 
-    np.testing.assert_almost_equal(mom2['Mx'], img2.trueCenter().x)
-    np.testing.assert_almost_equal(mom2['My'], img2.trueCenter().y)
+    np.testing.assert_almost_equal(mom2['Mx'], img2.true_center.x)
+    np.testing.assert_almost_equal(mom2['My'], img2.true_center.y)
     np.testing.assert_almost_equal(shape3['e1'], e1)
     np.testing.assert_almost_equal(shape3['e2'], e2)
 
@@ -584,9 +584,9 @@ def test_unweighted_moments():
     for key in shape3:
         np.testing.assert_almost_equal(shape3[key], shape5[key])
 
-    # Test unweighted_moments origin keyword.  Using origin=trueCenter should make centroid result
+    # Test unweighted_moments origin keyword.  Using origin=true_center should make centroid result
     # (0.0, 0.0)
-    mom4 = galsim.utilities.unweighted_moments(img2, origin=img2.trueCenter())
+    mom4 = galsim.utilities.unweighted_moments(img2, origin=img2.true_center)
     np.testing.assert_almost_equal(mom4['Mx'], 0.0)
     np.testing.assert_almost_equal(mom4['My'], 0.0)
 

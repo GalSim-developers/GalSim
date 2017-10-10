@@ -229,7 +229,7 @@ class Shapelet(GSObject):
                             N=p+q included in the decomposition.
         @param image        The Image for which to fit the shapelet decomposition
         @param center       The position in pixels to use for the center of the decomposition.
-                            [default: image.bounds.trueCenter()]
+                            [default: image.true_center]
         @param normalization  The normalization to assume for the image.
                             [default: "flux"]
         @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
@@ -238,7 +238,7 @@ class Shapelet(GSObject):
         @returns the fitted Shapelet profile
         """
         if not center:
-            center = image.bounds.trueCenter()
+            center = image.true_center
         # convert from PositionI if necessary
         center = galsim.PositionD(center.x,center.y)
 

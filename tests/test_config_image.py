@@ -1512,7 +1512,7 @@ def test_multirng():
         wcs = galsim.OffsetWCS(scale=0.1, world_origin=galsim.PositionD(centeru,centerv),
                                origin=galsim.PositionD(128.5,128.5))
         im = galsim.ImageF(256, 256, wcs=wcs)
-        world_center = im.wcs.toWorld(im.trueCenter())
+        world_center = im.wcs.toWorld(im.true_center)
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=30, rng=rng, center=world_center, variance=0.1)
         ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
         if n % 3 == 0:

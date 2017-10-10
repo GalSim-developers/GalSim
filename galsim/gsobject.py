@@ -43,49 +43,6 @@ import numpy as np
 import galsim
 from . import _galsim
 
-class centroid_type(galsim.PositionD):
-    """The return type of GSObject.centroid
-
-    A special type that works in most ways as a PositionD, but which allows the use of
-    GSObject.centroid() as a function rather than a property, but raising a deprecation warning.
-
-    If you have trouble using this type as a PostionD, you can write
-
-        >>> cen = gsobj.centroid.pos
-
-    to explicitly turn it into a regular PositionD.  This won't be necessary in version 2.0
-    (an it's probably not ever necessary now).
-    """
-    def __init__(self, pos):
-        self.pos = pos
-
-    def __str__(self): return str(self.pos)
-    def __repr__(self): return repr(self.pos)
-    def __eq__(self, other): return self.pos == other
-    def __ne__(self, other): return self.pos != other
-    def __hash__(self): return hash(self.pos)
-
-    @property
-    def x(self): return self.pos.x
-    @property
-    def y(self): return self.pos.y
-
-    def __mul__(self, other): return self.pos * other
-    def __div__(self, other): return self.pos / other
-    def __truediv__(self, other): return self.pos / other
-    def __rmul__(self, other): return other * self.pos
-    def __neg__(self): return -self.pos
-    def __add__(self, other): return self.pos + other
-    def __sub__(self, other): return self.pos - other
-
-    def __call__(self):
-        from .deprecated import depr
-        depr("gsobj.centroid()", 1.5, "gsobj.centroid",
-             "centroid is now a property rather than a function.  Although note that the return "+
-             "type is not a PositionD (so you can get this message), but acts in most ways like "+
-             "a PositionD and is convertible into one with gsobj.centroid.pos if needed.")
-        return galsim.PositionD(self.pos.x, self.pos.y)
-
 
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
@@ -381,7 +338,8 @@ class GSObject(object):
     def centroid(self):
         """The (x, y) centroid of an object as a Position.
         """
-        return centroid_type(self._sbp.centroid())
+        from .position import dep_posd_type
+        return dep_posd_type(self._sbp.centroid(), 'obj', 'centroid')
 
     @property
     def positive_flux(self):
@@ -548,7 +506,7 @@ class GSObject(object):
         offset = galsim.PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
 
 
@@ -621,7 +579,7 @@ class GSObject(object):
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         im = self.drawImage(nx=size, ny=size, scale=scale, dtype=float)
 
-        center = im.trueCenter() + centroid/scale
+        center = im.true_center + centroid/scale
         return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
 
 
@@ -670,7 +628,7 @@ class GSObject(object):
             im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
             Imax = im1(1,1)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateFWHM(center=center, Imax=Imax)
 
 
@@ -1052,9 +1010,9 @@ class GSObject(object):
         if not bounds.isDefined():
             raise ValueError("Cannot provide non-local wcs with automatically sized image")
         elif use_true_center:
-            obj_cen = bounds.trueCenter()
+            obj_cen = bounds.true_center
         else:
-            obj_cen = bounds.center()
+            obj_cen = bounds.center
             # Convert from PositionI to PositionD
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
@@ -1272,7 +1230,7 @@ class GSObject(object):
         central pixels of an even-sized image.  There are two parameters that can affect this
         behavior.  If you want the nominal center to always fall at the center of a pixel, you can
         use `use_true_center=False`.  This will put the object's center at the position
-        `image.center()` which is an integer pixel value, and is not the true center of an
+        `image.center` which is an integer pixel value, and is not the true center of an
         even-sized image.  You can also arbitrarily offset the profile from the image center with
         the `offset` parameter to handle any sub-pixel dithering you want.
 
@@ -1412,9 +1370,9 @@ class GSObject(object):
                             Note: This requires that `image` be provided and that it have defined
                             bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                            of the image (using the function image.bounds.trueCenter()).
-                            If you would rather use the integer center (given by
-                            image.bounds.center()), set this to `False`.  [default: True]
+                            of the image (using the property image.true_center).
+                            If you would rather use the integer center (given by image.center),
+                            set this to `False`.  [default: True]
         @param offset       The location in pixel coordinates at which to center the profile being
                             drawn relative to the center of the image (either the true center if
                             `use_true_center=True` or nominal center if `use_true_center=False`).
@@ -2213,12 +2171,12 @@ class GSObject(object):
                                            odd=True, wmult=wmult)
 
         # Can't both recenter a provided image and add to it.
-        if recenter and image.center() != galsim.PositionI(0,0) and add_to_image:
+        if recenter and image.center != galsim.PositionI(0,0) and add_to_image:
             raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
 
         # Set the center to 0,0 if appropriate
-        if recenter and image.center() != galsim.PositionI(0,0):
-            image._shift(-image.center())
+        if recenter and image.center != galsim.PositionI(0,0):
+            image._shift(-image.center)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
@@ -2234,8 +2192,8 @@ class GSObject(object):
             im._image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
             re.scale = image.scale
             im.scale = image.scale
-            re.setOrigin(image.origin())
-            im.setOrigin(image.origin())
+            re.setOrigin(image.origin)
+            im.setOrigin(image.origin)
 
         if setup_only:
             return image

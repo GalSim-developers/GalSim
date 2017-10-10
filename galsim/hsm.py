@@ -90,7 +90,7 @@ class ShapeData(object):
       units of pixels.  The indexing convention is defined with respect to the BoundsI object
       defining the bounds of the input Image, i.e., the center of the lower left pixel is
       `(image.xmin, image.ymin)`.  An object drawn at the center of the image should generally have
-      moments_centroid equal to image.trueCenter().
+      moments_centroid equal to image.true_center.
 
     - moments_rho4: the weighted radial fourth moment of the image.
 
@@ -429,7 +429,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                             case it is not located at the center, which is used if this keyword is
                             not set).  The convention for centroids is such that the center of
                             the lower-left pixel is (image.xmin, image.ymin).
-                            [default: gal_image.trueCenter()]
+                            [default: gal_image.true_center]
     @param strict           Whether to require success. If `strict=True`, then there will be a
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output
@@ -446,7 +446,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
-        guess_centroid = gal_image.trueCenter()
+        guess_centroid = gal_image.true_center
     try:
         result = _galsim._EstimateShearView(gal_image_view, PSF_image_view, weight_view,
                                             sky_var = sky_var,
@@ -539,7 +539,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             located at the center, which is used if this keyword is not set).  The
                             convention for centroids is such that the center of the lower-left pixel
                             is (image.xmin, image.ymin).
-                            [default: object_image.trueCenter()]
+                            [default: object_image.true_center]
     @param strict           Whether to require success. If `strict=True`, then there will be a
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output
@@ -555,7 +555,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
-        guess_centroid = object_image.trueCenter()
+        guess_centroid = object_image.true_center
 
     try:
         result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,

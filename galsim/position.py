@@ -90,3 +90,110 @@ def _new_PositionI_init(self, *args, **kwargs):
             raise ValueError("PositionI must be initialized with integer values")
         _orig_PositionI_init(self, int(x), int(y), **kwargs)
 PositionI.__init__ = _new_PositionI_init
+
+
+class dep_posd_type(PositionD):
+    """The return type of a property that used to be a method returning a PostionD instance.
+
+    A special type that works in most ways as a PositionD, but which allows the use of (e.g.)
+    GSObject.centroid() as a function rather than a property, but raising a deprecation warning.
+
+    If you have trouble using this type as a PostionD, you can write
+
+        >>> cen = gsobj.centroid.pos
+        >>> cen = image.center.pos
+        >>> origin = image.origin.pos
+
+    to explicitly turn it into a regular PositionD.  This won't be necessary in version 2.0
+    (an it's probably not ever necessary now).
+    """
+    def __init__(self, pos, obj, name):
+        self.pos = pos
+        self._obj = obj
+        self._name = name
+
+    def __str__(self): return str(self.pos)
+    def __repr__(self): return repr(self.pos)
+    def __eq__(self, other): return self.pos == other
+    def __ne__(self, other): return self.pos != other
+    def __hash__(self): return hash(self.pos)
+    def __getinitargs__(self): return (self.pos, self._obj, self._name)
+
+    @property
+    def x(self): return self.pos.x
+    @property
+    def y(self): return self.pos.y
+
+    def __mul__(self, other): return self.pos * other
+    def __div__(self, other): return self.pos / other
+    def __truediv__(self, other): return self.pos / other
+    def __rmul__(self, other): return other * self.pos
+    def __neg__(self): return -self.pos
+    def __add__(self, other): return self.pos + other
+    def __sub__(self, other): return self.pos - other
+    def __radd__(self, other): return other + self.pos
+    def __rsub__(self, other): return other - self.pos
+
+    def __call__(self):
+        from .deprecated import depr
+        depr("%s.%s()"%(self._obj,self._name), 1.5, "%s.%s"%(self._obj,self._name),
+             "%s is now a property rather than a function.  "%self._name +
+             "Although note that the return type is not a PositionD (so you can get this "+
+             "message), but acts in most ways like a PositionD and is convertible into one "+
+             "using %s.%s.pos if needed."%(self._obj,self._name))
+        return PositionD(self.pos.x, self.pos.y)
+
+# There's probably a clever way to avoid this code duplication, but for this purpose, it just
+# seems easier to go ahead and repeat this with the different base class.
+class dep_posi_type(PositionI):
+    """The return type of a property that used to be a method returning a PostionI instance.
+
+    A special type that works in most ways as a PositionI, but which allows the use of (e.g.)
+    GSObject.centroid() as a function rather than a property, but raising a deprecation warning.
+
+    If you have trouble using this type as a PostionI, you can write
+
+        >>> cen = gsobj.centroid.pos
+        >>> cen = image.center.pos
+        >>> origin = image.origin.pos
+
+    to explicitly turn it into a regular PositionI.  This won't be necessary in version 2.0
+    (an it's probably not ever necessary now).
+    """
+    def __init__(self, pos, obj, name):
+        self.pos = pos
+        self._obj = obj
+        self._name = name
+
+    def __str__(self): return str(self.pos)
+    def __repr__(self): return repr(self.pos)
+    def __eq__(self, other): return self.pos == other
+    def __ne__(self, other): return self.pos != other
+    def __hash__(self): return hash(self.pos)
+    def __getinitargs__(self): return (self.pos, self._obj, self._name)
+
+    @property
+    def x(self): return self.pos.x
+    @property
+    def y(self): return self.pos.y
+
+    def __mul__(self, other): return self.pos * other
+    def __div__(self, other): return self.pos / other
+    def __truediv__(self, other): return self.pos / other
+    def __rmul__(self, other): return other * self.pos
+    def __neg__(self): return -self.pos
+    def __add__(self, other): return self.pos + other
+    def __sub__(self, other): return self.pos - other
+    def __radd__(self, other): return other + self.pos
+    def __rsub__(self, other): return other - self.pos
+
+    def __call__(self):
+        from .deprecated import depr
+        depr("%s.%s()"%(self._obj,self._name), 1.5, "%s.%s"%(self._obj,self._name),
+             "%s is now a property rather than a function.  "%self._name +
+             "Although note that the return type is not a PositionI (so you can get this "+
+             "message), but acts in most ways like a PositionI and is convertible into one "+
+             "using %s.%s.pos if needed."%(self._obj,self._name))
+        return PositionI(self.pos.x, self.pos.y)
+
+

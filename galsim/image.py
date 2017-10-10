@@ -513,12 +513,11 @@ class Image(with_metaclass(MetaImage, object)):
     @property
     def ymax(self): return self._image.bounds.ymax
 
-    def getOuterBounds(self):
-        """Get the bounds of the outer edge of the pixels.
+    @property
+    def outer_bounds(self):
+        """The bounds of the outer edge of the pixels.
 
         Equivalent to galsim.BoundsD(im.xmin-0.5, im.xmax+0.5, im.ymin-0.5, im.ymax+0.5)
-
-        @returns a BoundsD instance
         """
         return galsim.BoundsD(self.xmin-0.5, self.xmax+0.5, self.ymin-0.5, self.ymax+0.5)
 
@@ -544,6 +543,7 @@ class Image(with_metaclass(MetaImage, object)):
         """
         return _Image(self.array.imag, self.bounds, self.wcs)
 
+    @property
     def conjugate(self):
         """Return the complex conjugate of an image.
 
@@ -1063,7 +1063,7 @@ class Image(with_metaclass(MetaImage, object)):
             galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
-        self._shift(cen - self.bounds.center())
+        self._shift(cen - self.bounds.center)
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -1099,52 +1099,61 @@ class Image(with_metaclass(MetaImage, object)):
             galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
          """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
-        self._shift(origin - self.bounds.origin())
+        self._shift(origin - self.bounds.origin)
 
+    @property
     def center(self):
-        """Return the current nominal center (xcen,ycen) of the image as a PositionI instance.
+        """The current nominal center (xcen,ycen) of the image as a PositionI instance.
 
         In terms of the rows and columns, xcen is the x value for the central column, and ycen
         is the y value of the central row.  For even-sized arrays, there is no central column
         or row, so the convention we adopt in this case is to round up.  For example:
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
-            >>> im.center()
+            >>> im.center
             galsim.PositionI(x=3, y=3)
-            >>> im(im.center())
+            >>> im(im.center)
             10.0
             >>> im.setCenter(56,72)
-            >>> im.center()
+            >>> im.center
             galsim.PositionI(x=56, y=72)
-            >>> im(im.center())
+            >>> im(im.center)
             10.0
         """
-        return self.bounds.center()
+        from .position import dep_posi_type
+        return dep_posi_type(self.bounds.center, 'image', 'center')
 
-    def trueCenter(self):
-        """Return the current true center of the image as a PositionD instance.
+    @property
+    def true_center(self):
+        """The current true center of the image as a PositionD instance.
 
-        Unline the nominal center returned by im.center(), this value may be half-way between
+        Unline the nominal center returned by im.center, this value may be half-way between
         two pixels if the image has an even number of rows or columns.  It gives the position
         (x,y) at the exact center of the image, regardless of whether this is at the center of
         a pixel (integer value) or halfway between two (half-integer).  For example:
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
-            >>> im.center()
+            >>> im.center
             galsim.PositionI(x=3, y=3)
-            >>> im.trueCenter()
+            >>> im.true_center
             galsim.PositionI(x=2.5, y=2.5)
             >>> im.setCenter(56,72)
-            >>> im.center()
+            >>> im.center
             galsim.PositionI(x=56, y=72)
-            >>> im.trueCenter()
+            >>> im.true_center
             galsim.PositionD(x=55.5, y=71.5)
             >>> im.setOrigin(0,0)
-            >>> im.trueCenter()
+            >>> im.true_center
             galsim.PositionD(x=1.5, y=1.5)
         """
-        return self.bounds.trueCenter()
+        return self.bounds.true_center
+    
+    def trueCenter(self):
+        from .deprecated import depr
+        depr('image.trueCenter()', 1.5, 'image.true_center')
+        return self.true_center
 
+    @property
     def origin(self):
         """Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.
 
@@ -1152,21 +1161,22 @@ class Image(with_metaclass(MetaImage, object)):
         first row of the array.  For example:
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
-            >>> im.origin()
+            >>> im.origin
             galsim.PositionI(x=1, y=1)
-            >>> im(im.origin())
+            >>> im(im.origin)
             0.0
             >>> im.setOrigin(23,45)
-            >>> im.origin()
+            >>> im.origin
             galsim.PositionI(x=23, y=45)
-            >>> im(im.origin())
+            >>> im(im.origin)
             0.0
             >>> im(23,45)
             0.0
             >>> im.bounds
             galsim.BoundsI(xmin=23, xmax=26, ymin=45, ymax=48)
         """
-        return self.bounds.origin()
+        from .position import dep_posi_type
+        return dep_posi_type(self.bounds.origin, 'image', 'origin')
 
     def __call__(self, *args, **kwargs):
         """Get the pixel value at given position
@@ -1253,7 +1263,7 @@ class Image(with_metaclass(MetaImage, object)):
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
         @param center       The position in pixels to use for the center, r=0.
-                            [default: self.trueCenter()]
+                            [default: self.true_center]
         @param flux         The total flux.  [default: sum(self.array)]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
                             [default: 0.5]
@@ -1261,7 +1271,7 @@ class Image(with_metaclass(MetaImage, object)):
         @returns an estimate of the half-light radius in physical units defined by the pixel scale.
         """
         if center is None:
-            center = self.trueCenter()
+            center = self.true_center
 
         if flux is None:
             flux = np.sum(self.array, dtype=float)
@@ -1308,7 +1318,7 @@ class Image(with_metaclass(MetaImage, object)):
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
         @param center       The position in pixels to use for the center, r=0.
-                            [default: self.trueCenter()]
+                            [default: self.true_center]
         @param flux         The total flux.  [default: sum(self.array)]
         @param rtype        There are three options for this parameter:
                             - 'trace' means return sqrt(T/2)
@@ -1323,7 +1333,7 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
 
         if center is None:
-            center = self.trueCenter()
+            center = self.true_center
 
         if flux is None:
             flux = np.sum(self.array, dtype=float)
@@ -1369,7 +1379,7 @@ class Image(with_metaclass(MetaImage, object)):
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
         @param center       The position in pixels to use for the center, r=0.
-                            [default: self.trueCenter()]
+                            [default: self.true_center]
         @param Imax         The maximum surface brightness.  [default: max(self.array)]
                             Note: If Imax is provided, and the maximum pixel value is larger than
                             this value, Imax will be updated to use the larger value.
@@ -1378,7 +1388,7 @@ class Image(with_metaclass(MetaImage, object)):
                  pixel scale.
         """
         if center is None:
-            center = self.trueCenter()
+            center = self.true_center
 
         # If the full image has a larger maximum, use that.
         Imax2 = np.max(self.array)

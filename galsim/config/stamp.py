@@ -745,7 +745,7 @@ class StampBuilder(object):
             # Set the origin appropriately
             stamp_center = base['stamp_center']
             if stamp_center:
-                bounds = bounds.shift(stamp_center - bounds.center())
+                bounds = bounds.shift(stamp_center - bounds.center)
             else:
                 bounds = bounds.shift(base.get('image_origin',galsim.PositionI(1,1)) -
                                       galsim.PositionI(bounds.xmin, bounds.ymin))

@@ -491,7 +491,7 @@ def test_k_limits():
                                       scale=pixel_scale)
             test_profile.drawImage(test_image)
 
-            image_center = test_image.center()
+            image_center = test_image.center
 
             # Get an array of indices within the limits
             image_shape = np.shape(test_image.array)

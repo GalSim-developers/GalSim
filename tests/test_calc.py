@@ -135,7 +135,7 @@ def test_hlr():
     bounds = galsim.BoundsI(-1234, -1234+2048, 8234, 8234+2099)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateHLR(center=im.trueCenter()+offset)
+    test_hlr = im.calculateHLR(center=im.true_center+offset)
     print('im.calculateHLR() = ',test_hlr)
     print('ratio - 1 = ',test_hlr/e1.half_light_radius-1)
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
@@ -269,7 +269,7 @@ def test_sigma():
     bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateMomentRadius(center=im.trueCenter()+offset)
+    test_hlr = im.calculateMomentRadius(center=im.true_center+offset)
     print('im.calculateMomentRadius() = ',test_sigma)
     print('ratio - 1 = ',test_sigma/e1_sigma-1)
     np.testing.assert_almost_equal(
@@ -364,7 +364,7 @@ def test_fwhm():
     bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset, method='sb')
-    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0), center=im.trueCenter()+offset)
+    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0), center=im.true_center+offset)
     print('im.calculateFWHM() = ',test_fwhm)
     print('ratio - 1 = ',test_fwhm/e1_fwhm-1)
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,

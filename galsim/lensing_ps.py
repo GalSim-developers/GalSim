@@ -483,7 +483,7 @@ class PowerSpectrum(object):
 
         # We have to make an adjustment to the center value to account for how the xValue function
         # of SBInterpolatedImage works.  xValue(0,0) gives the image value at the _nominal_
-        # image center.  i.e. the location you get from im.center().  However, for even-sized
+        # image center.  i.e. the location you get from im.center.  However, for even-sized
         # images, this isn't the true center, since it is constrained to be a PositionI,
         # and the true center is halfway between two pixels.
         # Therefore, we would want an input position of center to use xValue(-0.5, -0.5) in that

@@ -498,7 +498,7 @@ def test_drawKImage():
                                    "Measured wrong scale after obj.drawKImage()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0))
+    np.testing.assert_equal(im1.bounds.center, galsim.PositionI(0,0))
     np.testing.assert_almost_equal(im1(0,0), test_flux, 2,
                                    "obj.drawKImage() produced image with wrong flux")
     # Imaginary component should all be 0.
@@ -846,13 +846,13 @@ def test_offset():
         cenx = (nx+1.)/2.
         ceny = (ny+1.)/2.
         im = galsim.ImageD(nx,ny, scale=scale)
-        true_center = im.bounds.trueCenter()
+        true_center = im.bounds.true_center
         np.testing.assert_almost_equal(
                 cenx, true_center.x, 6,
-                "im.bounds.trueCenter().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.true_center.x is wrong for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
                 ceny, true_center.y, 6,
-                "im.bounds.trueCenter().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.true_center.y is wrong for (nx,ny) = %d,%d"%(nx,ny))
 
         # Check that the default draw command puts the centroid in the center of the image.
         obj.drawImage(im, method='sb')
@@ -950,13 +950,13 @@ def test_offset():
         # Chcek the image's definition of the nominal center
         nom_cenx = (nx+2)//2
         nom_ceny = (ny+2)//2
-        nominal_center = im.bounds.center()
+        nominal_center = im.bounds.center
         np.testing.assert_almost_equal(
                 nom_cenx, nominal_center.x, 6,
-                "im.bounds.center().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.center.x is wrong for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
                 nom_ceny, nominal_center.y, 6,
-                "im.bounds.center().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.center.y is wrong for (nx,ny) = %d,%d"%(nx,ny))
 
         # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
         obj.drawImage(im, method='sb', use_true_center=False)

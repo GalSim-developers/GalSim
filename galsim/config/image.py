@@ -241,8 +241,8 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Just in case these changed from their initial values, make sure they are correct now:
     if image is not None:
-        config['image_origin'] = image.origin()
-        config['image_center'] = image.trueCenter()
+        config['image_origin'] = image.origin
+        config['image_center'] = image.true_center
         config['image_bounds'] = image.bounds
     logger.debug('image %d: image_origin => %s',image_num,config['image_origin'])
     logger.debug('image %d: image_center => %s',image_num,config['image_center'])

@@ -217,7 +217,7 @@ class InterpolatedImage(GSObject):
     @param use_true_center  Similar to the same parameter in the GSObject.drawImage() function,
                             this sets whether to use the true center of the provided image as the
                             center of the profile (if `use_true_center=True`) or the nominal
-                            center returned by image.bounds.center() (if `use_true_center=False`)
+                            center given by image.center (if `use_true_center=False`)
                             [default: True]
     @param offset           The location in the input image to use as the center of the profile.
                             This should be specified relative to the center of the input image
@@ -345,9 +345,9 @@ class InterpolatedImage(GSObject):
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
         if use_true_center:
-            im_cen = self.image.bounds.trueCenter()
+            im_cen = self.image.true_center
         else:
-            im_cen = self.image.bounds.center()
+            im_cen = self.image.center
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
         self.min_scale = local_wcs._minScale()

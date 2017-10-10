@@ -233,7 +233,7 @@ def test_shapelet_fit():
         offset = galsim.PositionD(0.3,1.4)
         shapelet.drawImage(im2, method=method, offset=offset)
         shapelet2 = galsim.Shapelet.fit(sigma, 10, im2, normalization=norm,
-                                        center=im2.trueCenter() + offset)
+                                        center=im2.true_center + offset)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,

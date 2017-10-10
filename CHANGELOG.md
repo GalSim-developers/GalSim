@@ -147,6 +147,12 @@ Deprecated Features
 - Renamed the ChromaticObject.centroid(bandpass) method to calculateCentroid
   to be more clear that a calculation is required and to avoid confusion with
   the centroid property of (non-chromatic) GSObjects. (#904)
+- Changed a few Image methods to properties to be more pythonic:
+    - image.center() -> image.center
+    - image.trueCenter() -> image.true_center
+    - image.origin() -> image.origin
+  Likewise, the same named methods for Bounds have also been similarly changed.
+  The method versions still work for now, but are deprecated. (#904)
 
 
 New Features
