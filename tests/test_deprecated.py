@@ -402,6 +402,22 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b2.ymin, 199)
         np.testing.assert_almost_equal(b2.ymax, 503)
 
+        assert check_dep(b.center) == b.center
+        assert check_dep(b.origin) == b.origin
+        assert check_dep(b.trueCenter) == b.true_center
+        do_pickle(b.center)
+
+        p1 = b.center
+        p2 = galsim.PositionI(p1.x,p1.y) if b == bi else galsim.PositionD(p1.x, p1.y)
+        assert p1 + p1 == p2 + p2
+        assert p1 + p2 == p2 + p2
+        assert p2 + p1 == p2 + p2
+        assert p1 - p1 == p2 - p2
+        assert p1 - p2 == p2 - p2
+        assert p2 - p1 == p2 - p2
+        assert p1 / 2 == p2 / 2
+        assert p1 * 2 == p2 * 2
+        assert 2 * p1 == 2 * p2
 
 @timer
 def test_dep_chromatic():
