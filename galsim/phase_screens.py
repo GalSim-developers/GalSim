@@ -213,9 +213,9 @@ class AtmosphericScreen(object):
             self._ys = self._xs
             self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
-    # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
+    # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def stepK(self, **kwargs):
+    def _stepK(self, **kwargs):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
@@ -227,7 +227,7 @@ class AtmosphericScreen(object):
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
-        return obj.stepK()
+        return obj.stepk
 
     def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront due to atmospheric phase screen.
@@ -799,25 +799,25 @@ class OpticalScreen(object):
         return hash(("galsim.OpticalScreen", self.diam, self.obscuration, self.annular_zernike,
                      tuple((self.aberrations*self.lam_0).ravel())))
 
-    # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
+    # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def stepK(self, **kwargs):
-        """Return an appropriate stepK for this phase screen.
+    def _stepK(self, **kwargs):
+        """Return an appropriate stepk for this phase screen.
 
         @param lam         Wavelength in nanometers.
         @param diam        Aperture diameter in meters.
         @param obscuration Fractional linear aperture obscuration. [default: 0.0]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
-        @returns  stepK in inverse arcsec.
+        @returns stepk in inverse arcsec.
         """
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
         gsparams = kwargs.get('gsparams', None)
-        # Use an Airy for get appropriate stepK.
+        # Use an Airy for get appropriate stepk.
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
-        return obj.stepK()
+        return obj.stepk
 
     def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.

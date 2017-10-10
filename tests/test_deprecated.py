@@ -129,7 +129,7 @@ def test_dep_base():
     """
     g = galsim.Gaussian(sigma=0.34)
 
-    np.testing.assert_almost_equal(check_dep(g.nyquistDx), g.nyquistScale())
+    np.testing.assert_almost_equal(check_dep(g.nyquistDx), check_dep(g.nyquistScale))
 
     check_dep(g.setFlux,flux=1.7)
     np.testing.assert_almost_equal(check_dep(g.getFlux), 1.7)
@@ -238,6 +238,18 @@ def test_dep_base():
     assert check_dep(test_gal.getFWHM) == test_gal.fwhm
     assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
 
+    assert check_dep(test_gal.maxK) == test_gal.maxk
+    assert check_dep(test_gal.nyquistScale) == test_gal.nyquist_scale
+    assert check_dep(test_gal.stepK) == test_gal.stepk
+    assert check_dep(test_gal.hasHardEdges) == test_gal.has_hard_edges
+    assert check_dep(test_gal.isAxisymmetric) == test_gal.is_axisymmetric
+    assert check_dep(test_gal.isAnalyticX) == test_gal.is_analytic_x
+    assert check_dep(test_gal.isAnalyticK) == test_gal.is_analytic_k
+    assert check_dep(test_gal.getPositiveFlux) == test_gal.positive_flux
+    assert check_dep(test_gal.getNegativeFlux) == test_gal.negative_flux
+    assert check_dep(test_gal.maxSB) == test_gal.max_sb
+    assert check_dep(test_gal.centroid) == test_gal.centroid
+ 
     test_gal = galsim.Exponential(flux=1.7, scale_radius = test_scale[0])
     test_gal_copy = check_dep(test_gal.copy)
     assert check_dep(test_gal.getFlux) == test_gal.flux
@@ -339,7 +351,7 @@ def test_dep_base():
     assert check_dep(test_gal.getInclination) == test_gal.inclination
     assert check_dep(test_gal.getScaleHOverR) == test_gal.scale_h_over_r
     assert check_dep(test_gal.getTrunc) == test_gal.trunc
- 
+
     # Check that GSObject(sbp) works but raises a deprecation warning
     gso = check_dep(galsim.GSObject, g._sbp)
     sbp = check_dep(getattr, gso, 'SBProfile')
@@ -453,6 +465,16 @@ def test_dep_chromatic():
     assert check_dep(getattr, csum, 'objlist') == csum.obj_list
     cconv = galsim.ChromaticConvolution(cgal)
     assert check_dep(getattr, cconv, 'objlist') == cconv.obj_list
+
+    # Check centroid -> calculateCentroid
+    sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
+    shift_fn = lambda w: (w, 0)
+    gal = sed * galsim.Gaussian(fwhm=1)
+    gal = gal.shift(shift_fn)
+    cen = check_dep(gal.centroid, bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.centroid() failed")
 
 
 @timer
@@ -1151,10 +1173,10 @@ def test_dep_shapelet_fit():
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
-        print('centroid = ',shapelet.centroid(),'  cf. ',conv.centroid())
-        np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
+        print('centroid = ',check_dep(shapelet.centroid),'  cf. ',check_dep(conv.centroid))
+        np.testing.assert_almost_equal(check_dep(shapelet.centroid).x, check_dep(conv.centroid).x, 2,
                 err_msg="Fitted shapelet has the wrong centroid (x)")
-        np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
+        np.testing.assert_almost_equal(check_dep(shapelet.centroid).y, check_dep(conv.centroid).y, 2,
                 err_msg="Fitted shapelet has the wrong centroid (y)")
 
         # Test drawing image from shapelet
@@ -1403,7 +1425,7 @@ def test_dep_wmult():
     obj = galsim.Exponential(flux=test_flux, scale_radius=2)
     im1 = obj.drawImage(method='no_pixel')
     obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
-    nyq_scale = obj2.nyquistScale()
+    nyq_scale = check_dep(obj2.nyquistScale)
     scale = 0.51   # Just something different from 1 or dx_nyq
     im3 = galsim.ImageD(56,56)
     im5 = galsim.ImageD()
@@ -1484,8 +1506,8 @@ def test_dep_drawKImage():
             "obj.drawKImage() produced image with wrong bounds")
     assert im1.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage() produced image with wrong bounds")
-    nyq_scale = obj.nyquistScale()
-    stepk = obj.stepK()
+    nyq_scale = check_dep(obj.nyquistScale)
+    stepk = check_dep(obj.stepK)
     np.testing.assert_almost_equal(re1.scale, stepk, 9,
                                    "obj.drawKImage() produced real image with wrong scale")
     np.testing.assert_almost_equal(im1.scale, stepk, 9,
@@ -1823,16 +1845,16 @@ def test_dep_kroundtrip():
     # Does the stepk parameter do anything?
     a = final
     b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
-    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
-    np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
-    np.testing.assert_almost_equal(b.maxK(), c.maxK())
+    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*check_dep(b.stepK))
+    np.testing.assert_almost_equal(2*check_dep(b.stepK), check_dep(c.stepK))
+    np.testing.assert_almost_equal(check_dep(b.maxK), check_dep(c.maxK))
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
         b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
-        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
-        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+        np.testing.assert_almost_equal(check_dep(a.centroid).x, check_dep(b.centroid).x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(check_dep(a.centroid).y, check_dep(b.centroid).y, 4)
 
     # Test convolution with another object.
     a = final

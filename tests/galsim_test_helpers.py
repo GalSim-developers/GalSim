@@ -88,13 +88,13 @@ def convertToShear(e1,e2):
 def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     """Test drawImage using sb method.
     """
-    #print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
+    #print('  nyquist_scale, stepk, maxk = ', prof.nyquist_scale, prof.stepk, prof.maxk)
     image = prof.drawImage(method='sb', scale=scale, use_true_center=False)
     image.setCenter(0,0)
     dx = image.scale
     #print('  image scale,bounds = ',dx,image.bounds)
     if scale is None:
-        assert image.scale == prof.nyquistScale()
+        assert image.scale == prof.nyquist_scale
     print('  flux: ',prof.flux, image.array.sum(dtype=float)*dx**2, image.added_flux)
     np.testing.assert_allclose(
             image.array.sum(dtype=float) * dx**2, image.added_flux, 1.e-5,
@@ -102,16 +102,16 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
-    print('  maxsb: ',prof.maxSB(), image.array.max())
+    print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:
         np.testing.assert_array_less(
-                image.array.max(), prof.maxSB() * 1.4,
-                err_msg="%s profile maxSB smaller than maximum pixel value"%name)
+                image.array.max(), prof.max_sb * 1.4,
+                err_msg="%s profile max_sb smaller than maximum pixel value"%name)
     else:
         np.testing.assert_allclose(
-                image.array.max(), prof.maxSB(), rtol=1.e-5,
-                err_msg="%s profile maxSB did not match maximum pixel value"%name)
+                image.array.max(), prof.max_sb, rtol=1.e-5,
+                err_msg="%s profile max_sb did not match maximum pixel value"%name)
     for i,j in ( (2,3), (-4,1), (0,-5), (-3,-3) ):
         x = i*dx
         y = j*dx
@@ -126,11 +126,11 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
 def check_basic_k(prof, name):
     """Check drawKImage
     """
-    print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
-    if prof.maxK()/prof.stepK() > 2000.:
+    print('  nyquist_scale, stepk, maxk = ', prof.nyquist_scale, prof.stepk, prof.maxk)
+    if prof.maxk/prof.stepk > 2000.:
         # Don't try to draw huge images!
         kimage = prof.drawKImage(nx=2000,ny=2000)
-    elif prof.maxK()/prof.stepK() < 12.:
+    elif prof.maxk/prof.stepk < 12.:
         # or extremely small ones.
         kimage = prof.drawKImage(nx=12,ny=12)
     else:
@@ -138,7 +138,7 @@ def check_basic_k(prof, name):
     kimage.setCenter(0,0)
     dk = kimage.scale
     print('  kimage scale,bounds = ',dk,kimage.bounds)
-    assert kimage.scale == prof.stepK()
+    assert kimage.scale == prof.stepk
     print('  k flux: ',prof.flux, prof.kValue(0,0), kimage(0,0))
     np.testing.assert_allclose(
             prof.kValue(0,0), prof.flux, rtol=1.e-10,
@@ -161,9 +161,9 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     """Do some basic sanity checks that should work for all profiles.
     """
     print('Testing',name)
-    if do_x and prof.isAnalyticX():
+    if do_x and prof.is_analytic_x:
         check_basic_x(prof, name, approx_maxsb, scale)
-    if do_k and prof.isAnalyticK():
+    if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
 
     # Repeat for a rotated version of the profile.
@@ -174,9 +174,9 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     prof = prof.rotate(17*galsim.degrees)
     name = "Rotated " + name
     print('Testing',name)
-    if do_x and prof.isAnalyticX():
+    if do_x and prof.is_analytic_x:
         check_basic_x(prof, name, approx_maxsb, scale)
-    if do_k and prof.isAnalyticK():
+    if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
 
 
@@ -260,8 +260,8 @@ def do_shoot(prof, img, name):
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
-    # maxSB is not always very accurate, but it should be an overestimate if wrong.
-    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, "maxSB for %s is too small."%name
+    # max_sb is not always very accurate, but it should be an overestimate if wrong.
+    assert img.array.max() <= prof.max_sb*dx**2 * 1.4, "max_sb for %s is too small."%name
 
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
@@ -273,9 +273,9 @@ def do_shoot(prof, img, name):
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
-    print('img.max = ',img.array.max(),'  cf. ',prof.maxSB()*dx**2)
-    print('ratio = ',img.array.max() / (prof.maxSB()*dx**2))
-    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, \
+    print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
+    print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
+    assert img.array.max() <= prof.max_sb*dx**2 * 1.4, \
             "Photon shooting for %s produced too high max pixel."%name
 
 
@@ -300,7 +300,7 @@ def radial_integrate(prof, minr, maxr):
     """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
        for an axially symmetric profile.
     """
-    assert prof.isAxisymmetric()
+    assert prof.is_axisymmetric
     # In this tight loop, it is worth optimizing away the parse_pos_args step.
     # It makes a rather significant difference in the running time of this function.
     # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )

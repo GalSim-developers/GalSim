@@ -81,8 +81,8 @@ def test_smallshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), gauss2.maxSB(), 5,
-            err_msg="sheared profile maxSB did not match maximum pixel value")
+            myImg.array.max(), gauss2.max_sb, 5,
+            err_msg="sheared profile max_sb did not match maximum pixel value")
 
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
@@ -133,8 +133,8 @@ def test_largeshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), devauc2.maxSB(), 5,
-            err_msg="sheared profile maxSB did not match maximum pixel value")
+            myImg.array.max(), devauc2.max_sb, 5,
+            err_msg="sheared profile max_sb did not match maximum pixel value")
 
     # Check with default_params
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=default_params)
@@ -187,8 +187,8 @@ def test_rotate():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject rotate disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), gal.maxSB(), 5,
-            err_msg="rotated profile maxSB did not match maximum pixel value")
+            myImg.array.max(), gal.max_sb, 5,
+            err_msg="rotated profile max_sb did not match maximum pixel value")
 
     # Check with default_params
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=default_params)
@@ -241,8 +241,8 @@ def test_mag():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject dilate disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), gal.maxSB(), 5,
-            err_msg="dilated profile maxSB did not match maximum pixel value")
+            myImg.array.max(), gal.max_sb, 5,
+            err_msg="dilated profile max_sb did not match maximum pixel value")
 
     # Check with default_params
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
@@ -271,8 +271,8 @@ def test_mag():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject magnify disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), gal.maxSB(), 5,
-            err_msg="magnified profile maxSB did not match maximum pixel value")
+            myImg.array.max(), gal.max_sb, 5,
+            err_msg="magnified profile max_sb did not match maximum pixel value")
 
     # Use lens
     gal = galsim.Exponential(flux=1, scale_radius=r0)
@@ -283,8 +283,8 @@ def test_mag():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject lens disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), gal.maxSB(), 5,
-            err_msg="lensed profile maxSB did not match maximum pixel value")
+            myImg.array.max(), gal.max_sb, 5,
+            err_msg="lensed profile max_sb did not match maximum pixel value")
 
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal = gal.magnify(1.5**2) # area rescaling factor
@@ -340,8 +340,8 @@ def test_shift():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shift disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), pixel.maxSB(), 5,
-            err_msg="shifted profile maxSB did not match maximum pixel value")
+            myImg.array.max(), pixel.max_sb, 5,
+            err_msg="shifted profile max_sb did not match maximum pixel value")
 
     # Check with default_params
     pixel = galsim.Pixel(scale=dx, gsparams=default_params)
@@ -390,8 +390,8 @@ def test_rescale():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject withFlux disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.max(), sersic.withFlux(2).maxSB(), 5,
-            err_msg="rescaled profile maxSB did not match maximum pixel value")
+            myImg.array.max(), sersic.withFlux(2).max_sb, 5,
+            err_msg="rescaled profile max_sb did not match maximum pixel value")
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
@@ -719,7 +719,7 @@ def test_flip():
     for prof in prof_list:
         print('prof = ',prof)
 
-        # Not all profiles are expected to have a maxSB() value close to the maximum pixel value,
+        # Not all profiles are expected to have a max_sb value close to the maximum pixel value,
         # so mark the ones where we don't want to require this to be true.
         close_maxsb = True
         name = str(prof)
@@ -743,14 +743,14 @@ def test_flip():
 
         if close_maxsb:
             np.testing.assert_allclose(
-                    image_x.array.max(), prof.maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image_x.array.max(), prof.max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image_x1.array.max(), prof.shear(q).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image_x1.array.max(), prof.shear(q).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image_x2.array.max(), prof.shear(s).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image_x2.array.max(), prof.shear(s).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
 
         # Flip around y axis (i.e. x -> -x)
         flip1 = prof.transform(-1, 0, 0, 1)
@@ -781,14 +781,14 @@ def test_flip():
 
         if close_maxsb:
             np.testing.assert_allclose(
-                    image2_x.array.max(), flip1.maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x.array.max(), flip1.max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x1.array.max(), flip1.shear(q).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x1.array.max(), flip1.shear(q).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x2.array.max(), flip1.shear(s).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x2.array.max(), flip1.shear(s).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
 
         # Flip around x axis (i.e. y -> -y)
         flip2 = prof.transform(1, 0, 0, -1)
@@ -819,14 +819,14 @@ def test_flip():
 
         if close_maxsb:
             np.testing.assert_allclose(
-                    image2_x.array.max(), flip2.maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x.array.max(), flip2.max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x1.array.max(), flip2.shear(q).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x1.array.max(), flip2.shear(q).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x2.array.max(), flip2.shear(s).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x2.array.max(), flip2.shear(s).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
 
         # Flip around x=y (i.e. y -> x, x -> y)
         flip3 = prof.transform(0, 1, 1, 0)
@@ -857,14 +857,14 @@ def test_flip():
 
         if close_maxsb:
             np.testing.assert_allclose(
-                    image2_x.array.max(), flip3.maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x.array.max(), flip3.max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x1.array.max(), flip3.shear(q).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x1.array.max(), flip3.shear(q).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
             np.testing.assert_allclose(
-                    image2_x2.array.max(), flip3.shear(s).maxSB()*im.scale**2, rtol=0.2,
-                    err_msg="maxSB did not match maximum pixel value")
+                    image2_x2.array.max(), flip3.shear(s).max_sb*im.scale**2, rtol=0.2,
+                    err_msg="max_sb did not match maximum pixel value")
 
         do_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
         do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
@@ -933,10 +933,10 @@ def test_compound():
 
     # Note: these are not equal.  gal5 lost track of the overall transformation and thinks it
     # needs a bit larger maxk, smaller stepk.  ~10% different.
-    print('gal3.stepK = ',gal3.stepK())
-    print('gal5.stepK = ',gal5.stepK())
-    print('gal3.maxK = ',gal3.maxK())
-    print('gal5.maxK = ',gal5.maxK())
+    print('gal3.stepk = ',gal3.stepk)
+    print('gal5.stepk = ',gal5.stepk)
+    print('gal3.maxk = ',gal3.maxk)
+    print('gal5.maxk = ',gal5.maxk)
 
     gal3.drawImage(image=im3_d, method='sb', scale=0.2)
     gal5.drawImage(image=im5_d, method='sb', scale=0.2)

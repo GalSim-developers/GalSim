@@ -162,15 +162,15 @@ def test_gaussian_properties():
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(gauss.centroid(), cen)
+    np.testing.assert_equal(gauss.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
-    np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
+    np.testing.assert_almost_equal(gauss.maxk, 3.7169221888498383 / test_sigma)
+    np.testing.assert_almost_equal(gauss.stepk, 0.533644625664 / test_sigma)
     np.testing.assert_almost_equal(gauss.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(gauss.flux, test_flux)
     import math
     np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
-    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.maxSB())
+    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
@@ -421,15 +421,15 @@ def test_exponential_properties():
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(expon.centroid(), cen)
+    np.testing.assert_equal(expon.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale[0])
-    np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale[0])
+    np.testing.assert_almost_equal(expon.maxk, 10 / test_scale[0])
+    np.testing.assert_almost_equal(expon.stepk, 0.37436747851 / test_scale[0])
     np.testing.assert_almost_equal(expon.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(expon.flux, test_flux)
     import math
     np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2)
-    np.testing.assert_almost_equal(expon.xValue(cen), expon.maxSB())
+    np.testing.assert_almost_equal(expon.xValue(cen), expon.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
@@ -600,10 +600,10 @@ def test_sersic():
     # Use non-unity values.
     sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=2.3, trunc=5.9)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_equal(sersic.centroid, cen)
     np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(sersic.flux, test_flux)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.max_sb)
 
     check_basic(sersic, "Truncated Sersic")
 
@@ -893,13 +893,13 @@ def test_sersic_05():
     # cf test_gaussian_properties()
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_equal(sersic.centroid, cen)
     np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(sersic.flux, test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.max_sb)
 
     # Also test some random values other than the center:
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
@@ -934,13 +934,13 @@ def test_sersic_1():
     # cf test_exponential_properties()
     sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_equal(sersic.centroid, cen)
     np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(sersic.flux, test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.max_sb)
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
@@ -987,19 +987,19 @@ def test_airy():
     # Check some properties
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(airy.centroid(), cen)
+    np.testing.assert_equal(airy.centroid, cen)
     np.testing.assert_almost_equal(airy.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy.flux, test_flux)
-    np.testing.assert_almost_equal(airy.xValue(cen), airy.maxSB())
+    np.testing.assert_almost_equal(airy.xValue(cen), airy.max_sb)
 
     check_basic(airy, "Airy obscuration=0.1")
 
     # Check with obscuration == 0
     airy0 = galsim.Airy(lam_over_diam=1./0.7, flux=test_flux)
-    np.testing.assert_equal(airy0.centroid(), cen)
+    np.testing.assert_equal(airy0.centroid, cen)
     np.testing.assert_almost_equal(airy0.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy0.flux, test_flux)
-    np.testing.assert_almost_equal(airy0.xValue(cen), airy0.maxSB())
+    np.testing.assert_almost_equal(airy0.xValue(cen), airy0.max_sb)
     np.testing.assert_array_almost_equal(
             airy0.lam_over_diam, 1./0.7, 5,
             err_msg="Airy getLamOverD returned wrong value")
@@ -1196,10 +1196,10 @@ def test_box():
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(box.centroid(), cen)
+        np.testing.assert_equal(box.centroid, cen)
         np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(box.flux, test_flux)
-        np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
+        np.testing.assert_almost_equal(box.xValue(cen), box.max_sb)
         np.testing.assert_array_equal(
                 box.width, width,
                 err_msg="Box width returned wrong value")
@@ -1223,10 +1223,10 @@ def test_box():
         do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(box)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(box.centroid(), cen)
+    np.testing.assert_equal(box.centroid, cen)
     np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(box.flux, test_flux)
-    np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
+    np.testing.assert_almost_equal(box.xValue(cen), box.max_sb)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
@@ -1297,10 +1297,10 @@ def test_tophat():
         do_kvalue(conv,im, "TopHat convolved with pixel in real space")
 
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(tophat.centroid(), cen)
+        np.testing.assert_equal(tophat.centroid, cen)
         np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(tophat.flux, test_flux)
-        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
+        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.max_sb)
 
 
     # Check picklability
@@ -1319,10 +1319,10 @@ def test_tophat():
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(tophat.centroid(), cen)
+    np.testing.assert_equal(tophat.centroid, cen)
     np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(tophat.flux, test_flux)
-    np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
+    np.testing.assert_almost_equal(tophat.xValue(cen), tophat.max_sb)
 
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
@@ -1396,10 +1396,10 @@ def test_moffat():
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
         cen = galsim.PositionD(0, 0)
-        np.testing.assert_equal(moffat.centroid(), cen)
+        np.testing.assert_equal(moffat.centroid, cen)
         np.testing.assert_almost_equal(moffat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(moffat.flux, test_flux)
-        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.maxSB())
+        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.max_sb)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -1429,31 +1429,31 @@ def test_moffat_properties():
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxK(), 11.613036117918105)
-    np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795873)
+    np.testing.assert_almost_equal(psf.maxk, 11.613036117918105)
+    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795873)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
     np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
-    np.testing.assert_equal(psf.centroid(), cen)
-    np.testing.assert_almost_equal(psf.maxK(), 11.613036112206663)
-    np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795862)
+    np.testing.assert_equal(psf.centroid, cen)
+    np.testing.assert_almost_equal(psf.maxk, 11.613036112206663)
+    np.testing.assert_almost_equal(psf.stepk, 0.62831853071795862)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.half_light_radius, 1.0)
     np.testing.assert_almost_equal(psf.fwhm, fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
@@ -1820,10 +1820,10 @@ def test_kolmogorov_properties():
     psf = galsim.Kolmogorov(lam_over_r0=lor, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
-    np.testing.assert_almost_equal(psf.stepK(), 0.36982048503361376, 9)
+    np.testing.assert_almost_equal(psf.maxk, 8.6440505245909858, 9)
+    np.testing.assert_almost_equal(psf.stepk, 0.36982048503361376, 9)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.lam_over_r0, lor)
     np.testing.assert_almost_equal(psf.half_light_radius, lor * 0.554811)
@@ -1831,7 +1831,7 @@ def test_kolmogorov_properties():
     np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     lors = [1, 0.5, 2, 5]
@@ -2056,19 +2056,19 @@ def test_spergel_properties():
     spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.centroid, cen)
     # # Check Fourier properties
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    maxk = spergel.maxK()
+    maxk = spergel.maxk
     np.testing.assert_array_less(spergel.kValue(maxk,0)/test_flux, galsim.GSParams().maxk_threshold)
     np.testing.assert_almost_equal(spergel.flux, test_flux)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
         outFlux = spergel.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
-        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
 
 
 @timer
@@ -2205,13 +2205,13 @@ def test_spergel_05():
     # cf test_exponential_properties()
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(spergel.centroid(), cen)
+    np.testing.assert_equal(spergel.centroid, cen)
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(spergel.flux, test_flux)
     import math
     np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
@@ -2269,7 +2269,7 @@ def test_deltaFunction():
     # Test simple translation of DeltaFunction
     delta2 = delta.shift(1.,2.)
     offcen = galsim.PositionD(1, 2)
-    np.testing.assert_equal(delta2.centroid(), offcen)
+    np.testing.assert_equal(delta2.centroid, offcen)
     assert delta2.xValue(offcen) > 1.e10
     np.testing.assert_almost_equal(delta2.xValue(galsim.PositionD(0,0)), 0)
 
@@ -2290,7 +2290,7 @@ def test_deltaFunction_properties():
     delta = galsim.DeltaFunction(flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(delta.centroid(), cen)
+    np.testing.assert_equal(delta.centroid, cen)
     offcen = galsim.PositionD(1,1)
     # Check Fourier properties
     np.testing.assert_equal(delta.kValue(cen), (1+0j) * test_flux)
@@ -2298,8 +2298,8 @@ def test_deltaFunction_properties():
     import math
     assert delta.xValue(cen) > 1.e10
     np.testing.assert_almost_equal(delta.xValue(offcen), 0)
-    assert delta.maxK() > 1.e10
-    assert delta.stepK() > 1.e10
+    assert delta.maxk > 1.e10
+    assert delta.stepk > 1.e10
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         delta = galsim.DeltaFunction(flux=inFlux)

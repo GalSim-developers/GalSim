@@ -405,16 +405,16 @@ class InterpolatedImage(GSObject):
         else:
             pad_image = self.image
 
-        # GalSim cannot automatically know what stepK and maxK are appropriate for the
+        # GalSim cannot automatically know what stepk and maxk are appropriate for the
         # input image.  So it is usually worth it to do a manual calculation (below).
         #
-        # However, there is also a hidden option to force it to use specific values of stepK and
-        # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
+        # However, there is also a hidden option to force it to use specific values of stepk and
+        # maxk (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
         # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
-        # stepK and maxK should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
+        # stepk and maxk should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
-        # images (see the ._fix_center step below) leads to automatic reduction of stepK slightly
-        # below what is provided here, while maxK is preserved.
+        # images (see the ._fix_center step below) leads to automatic reduction of stepk slightly
+        # below what is provided here, while maxk is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
             _force_stepk *= self.min_scale

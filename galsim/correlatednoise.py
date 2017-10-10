@@ -518,7 +518,7 @@ class _BaseCorrelatedNoise(object):
         """
         # Test whether we can simply return the zero-lag correlation function value, which gives the
         # variance of an image of noise generated according to this model
-        if self._profile.isAnalyticX():
+        if self._profile.is_analytic_x:
             variance = self._profile.xValue(galsim.PositionD(0., 0.))
         else:
             # If the profile has changed since last time (or if we have never been here before),
@@ -1555,10 +1555,10 @@ class CovarianceSpectrum(object):
         """
         import numpy as np
         NSED = len(self.SEDs)
-        maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxK(),
-                       PSF.evaluateAtWavelength(bandpass.red_limit).maxK()])
-        stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepK(),
-                        PSF.evaluateAtWavelength(bandpass.red_limit).stepK()])
+        maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxk,
+                       PSF.evaluateAtWavelength(bandpass.red_limit).maxk])
+        stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepk,
+                        PSF.evaluateAtWavelength(bandpass.red_limit).stepk])
         nk = 2*int(np.ceil(maxk/stepk))
 
         PSF_eff_kimgs = np.empty((NSED, nk, nk), dtype=np.complex128)

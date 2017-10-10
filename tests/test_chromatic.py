@@ -392,9 +392,9 @@ def test_dcr_moments():
     dR_analytic = (R_bulge[1] - R_disk[1]) * 180.0/np.pi * 3600
     dV_analytic = (V_bulge[1,1] - V_disk[1,1]) * (180.0/np.pi * 3600)**2
 
-    # also compute dR_analytic using ChromaticObject.centroid()
-    centroid1 = final1.centroid(bandpass)
-    centroid2 = final2.centroid(bandpass)
+    # also compute dR_analytic using ChromaticObject.calculateCentroid()
+    centroid1 = final1.calculateCentroid(bandpass)
+    centroid2 = final2.calculateCentroid(bandpass)
     dR_centroid = (centroid1 - centroid2).y
 
     print('image delta R:    {0}'.format(dR_image))
@@ -406,7 +406,7 @@ def test_dcr_moments():
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
     np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
                                    err_msg="direct dRbar calculation doesn't match"
-                                           +" ChromaticObject.centroid()")
+                                           +" ChromaticObject.calculateCentroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
                                    err_msg="dV Shift from DCR doesn't match analytic formula")
 
@@ -1332,7 +1332,7 @@ def test_separable_ChromaticSum():
 
 @timer
 def test_centroid():
-    """Test the ChromaticObject.centroid function."""
+    """Test the ChromaticObject.calculateCentroid function."""
     sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
     shift_fn = lambda w: (w, 0)
@@ -1342,15 +1342,15 @@ def test_centroid():
     # galaxy.  The shift function contributes an additional factor of wavelength to the x-centroid
     # integrand.  The end result is that the x-centroid should be:
     # int(w^3, 0, 1) / int(w^2, 0, 1) = (1/4)/(1/3) = 3/4.
-    centroid = gal.centroid(bp)
-    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
-    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+    cen = gal.calculateCentroid(bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.calculateCentroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
 
     # Now check the centroid sampling integrator...
     gal.wave_list = np.linspace(0.0, 1.0, 500)
-    centroid = gal.centroid(bp)
-    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
-    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+    cen = gal.calculateCentroid(bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.calculateCentroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
 
 
 @timer

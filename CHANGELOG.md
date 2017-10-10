@@ -131,6 +131,22 @@ Deprecated Features
   obj_list to conform to similar attributes in other classes. (#904)
 - Deprecated OpticalScreen.coef_array -> _coef_array, which is now an
   implementation detail. (#904)
+- Changed a number of GSObject methods to properties to be more pythonic:
+    - obj.stepK() -> obj.stepk
+    - obj.maxK() -> obj.maxk
+    - obj.nyquistScale() -> obj.nyquist_scale
+    - obj.centroid() -> obj.centroid
+    - obj.getPositiveFlux() -> obj.positive_flux
+    - obj.getNegativeFlux() -> obj.negative_flux
+    - obj.maxSB() -> obj.max_sb
+    - obj.isAxisymmetric() -> obj.is_axisymmetric
+    - obj.isAnalyticX() -> obj.is_analytic_x
+    - obj.isAnalyticK() -> obj.is_analytic_k
+    - obj.hasHardEdges() -> obj.has_hard_edges
+  The method versions still work for now, but are deprecated. (#904)
+- Renamed the ChromaticObject.centroid(bandpass) method to calculateCentroid
+  to be more clear that a calculation is required and to avoid confusion with
+  the centroid property of (non-chromatic) GSObjects. (#904)
 
 
 New Features

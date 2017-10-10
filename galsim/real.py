@@ -287,14 +287,14 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
-        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # Use the stepk value of the PSF as a maximum value for stepk of the galaxy.
         # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_gal = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 pad_factor=pad_factor, noise_pad_size=noise_pad_size,
-                calculate_stepk=self.original_psf.stepK(),
-                calculate_maxk=self.original_psf.maxK(),
+                calculate_stepk=self.original_psf.stepk,
+                calculate_maxk=self.original_psf.maxk,
                 noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_gal',use_index)
@@ -1237,10 +1237,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                          for PSF in PSFs for band in bands]
         marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit)
                           for PSF in PSFs for band in bands]
-        psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
+        psf_maxk = np.min([p.maxk for p in marginal_PSFs])
 
         # In practice, the output PSF should almost always cut off at smaller maxk than obtained
-        # above.  In this case, the user can set the maxK keyword argument for improved efficiency.
+        # above.  In this case, the user can set the maxk keyword argument for improved efficiency.
         if maxk is None:
             maxk = np.min([img_maxk, psf_maxk])
         else:

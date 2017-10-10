@@ -206,7 +206,7 @@ class Sum(galsim.GSObject):
             return galsim._galsim.PhotonArray(0)
         ud = galsim.UniformDeviate(rng)
 
-        remainingAbsoluteFlux = self.getPositiveFlux() + self.getNegativeFlux()
+        remainingAbsoluteFlux = self.positive_flux + self.negative_flux
         fluxPerPhoton = remainingAbsoluteFlux / n_photons
 
         # Initialize the output array
@@ -218,7 +218,7 @@ class Sum(galsim.GSObject):
         # Get photons from each summand, using BinomialDeviate to randomize
         # the distribution of photons among summands
         for i, obj in enumerate(self.obj_list):
-            thisAbsoluteFlux = obj.getPositiveFlux() + obj.getNegativeFlux()
+            thisAbsoluteFlux = obj.positive_flux + obj.negative_flux
 
             # How many photons to shoot from this summand?
             thisN = remainingN  # All of what's left, if this is the last summand...
@@ -309,7 +309,7 @@ class Convolution(galsim.GSObject):
 
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
     both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
-    that case, the highest frequency `maxK` for each component is quite large since the ringing dies
+    that case, the highest frequency `maxk` for each component is quite large since the ringing dies
     off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
     real-space convolution tends to be more accurate in this case as well.
 
@@ -382,7 +382,7 @@ class Convolution(galsim.GSObject):
         for obj in args:
             if not isinstance(obj, galsim.GSObject):
                 raise TypeError("Arguments to Convolution must be GSObjects, not %s"%obj)
-            if not obj.hasHardEdges():
+            if not obj.has_hard_edges:
                 hard_edge = False
 
         if real_space is None:
@@ -419,7 +419,7 @@ class Convolution(galsim.GSObject):
             # Also can't do real space if any object is not analytic, so check for that.
             else:
                 for obj in args:
-                    if not obj.isAnalyticX():
+                    if not obj.is_analytic_x:
                         import warnings
                         msg = """
                         A component to be convolved is not analytic in real space.
@@ -684,7 +684,7 @@ class AutoConvolution(galsim.GSObject):
 
         # Check whether to perform real space convolution...
         # Start by checking if obj has a hard edge.
-        hard_edge = obj.hasHardEdges()
+        hard_edge = obj.has_hard_edges
 
         if real_space is None:
             # The automatic determination is to use real_space if obj has hard edges.
@@ -699,7 +699,7 @@ class AutoConvolution(galsim.GSObject):
             warnings.warn(msg)
 
         # Can't do real space if object is not analytic, so check for that.
-        if real_space and not obj.isAnalyticX():
+        if real_space and not obj.is_analytic_x:
             import warnings
             msg = """
             Object to be auto-convolved is not analytic in real space.
@@ -842,7 +842,7 @@ class AutoCorrelation(galsim.GSObject):
 
         # Check whether to perform real space convolution...
         # Start by checking if obj has a hard edge.
-        hard_edge = obj.hasHardEdges()
+        hard_edge = obj.has_hard_edges
 
         if real_space is None:
             # The automatic determination is to use real_space if obj has hard edges.
@@ -857,7 +857,7 @@ class AutoCorrelation(galsim.GSObject):
             warnings.warn(msg)
 
         # Can't do real space if object is not analytic, so check for that.
-        if real_space and not obj.isAnalyticX():
+        if real_space and not obj.is_analytic_x:
             import warnings
             msg = """
             Object to be auto-convolved is not analytic in real space.

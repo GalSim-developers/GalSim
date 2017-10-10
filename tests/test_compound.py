@@ -111,11 +111,11 @@ def test_convolve():
                 "expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv.centroid(), cen)
+    np.testing.assert_equal(conv.centroid, cen)
     np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
     # Not almost_equal.  Convolutions don't give a very good estimate.
-    # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
-    np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
+    # They are almost always too high, which is actually ok for how we use max_sb for phot shooting.
+    np.testing.assert_array_less(conv.xValue(cen), conv.max_sb)
 
     check_basic(conv, "Moffat * Pixel")
 
@@ -515,9 +515,9 @@ def test_add():
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(sum_gauss.centroid(), cen)
+    np.testing.assert_equal(sum_gauss.centroid, cen)
     np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
+    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.max_sb)
 
     # Check with default_params
     sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)
@@ -704,10 +704,10 @@ def test_deconvolve():
             err_msg="Image of Deconvolve * obj^2 doesn't match obj alone")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(inv_psf.centroid(), cen)
+    np.testing.assert_equal(inv_psf.centroid, cen)
     np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
-    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve maxSB.
-    np.testing.assert_almost_equal(inv_psf.maxSB(), -psf.maxSB() / psf.flux**2)
+    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve max_sb.
+    np.testing.assert_almost_equal(inv_psf.max_sb, -psf.max_sb / psf.flux**2)
 
     check_basic(inv_psf, "Deconvolve(Moffat)", do_x=False)
 
@@ -724,9 +724,9 @@ def test_deconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Image of Deconvolve of asymmetric sum of Gaussians doesn't match obj alone")
 
-    np.testing.assert_equal(inv_obj.centroid(), -obj.centroid())
+    np.testing.assert_equal(inv_obj.centroid, -obj.centroid)
     np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
-    np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
+    np.testing.assert_almost_equal(inv_obj.max_sb, -obj.max_sb / obj.flux**2)
 
     check_basic(inv_obj, "Deconvolve(asym)", do_x=False)
 
@@ -748,10 +748,10 @@ def test_deconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Transformed Deconvolve didn't cancel transformed original")
 
-    np.testing.assert_equal(transformed_inv_obj.centroid(), -transformed_obj.centroid())
+    np.testing.assert_equal(transformed_inv_obj.centroid, -transformed_obj.centroid)
     np.testing.assert_almost_equal(transformed_inv_obj.flux, 1./transformed_obj.flux)
-    np.testing.assert_almost_equal(transformed_inv_obj.maxSB(),
-                                   -transformed_obj.maxSB() / transformed_obj.flux**2)
+    np.testing.assert_almost_equal(transformed_inv_obj.max_sb,
+                                   -transformed_obj.max_sb / transformed_obj.flux**2)
 
     check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
 
@@ -809,9 +809,9 @@ def test_autoconvolve():
     check_basic(conv, "AutoConvolve(Moffat)")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_equal(conv2.centroid, cen)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
-    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.max_sb)
 
     # Check picklability
     do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
@@ -842,9 +842,9 @@ def test_autoconvolve():
             err_msg="Using AutoCorrelate with GSParams() disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_equal(conv2.centroid, cen)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
-    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.max_sb)
 
     # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
@@ -861,10 +861,10 @@ def test_autoconvolve():
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
 
-    cen = 2. * add.centroid()
-    np.testing.assert_equal(autoconv.centroid(), cen)
+    cen = 2. * add.centroid
+    np.testing.assert_equal(autoconv.centroid, cen)
     np.testing.assert_almost_equal(autoconv.flux, add.flux**2)
-    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
+    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.max_sb)
 
     check_basic(autoconv, "AutoConvolve(asym)")
 
@@ -999,7 +999,7 @@ def test_fourier_sqrt():
     psf.drawImage(myImg1, method='no_pixel')
     sqrt1 = galsim.FourierSqrt(psf)
     psf2 = galsim.AutoConvolve(sqrt1)
-    np.testing.assert_almost_equal(psf.stepK(), psf2.stepK())
+    np.testing.assert_almost_equal(psf.stepk, psf2.stepk)
     psf2.drawImage(myImg2, method='no_pixel')
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
@@ -1010,7 +1010,7 @@ def test_fourier_sqrt():
 
     # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
     a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
+    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test
     b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
     check = galsim.Sum([a, b])
     sqrt = galsim.FourierSqrt(
@@ -1020,17 +1020,17 @@ def test_fourier_sqrt():
             2*galsim.Convolve([a, b])
         ])
     )
-    np.testing.assert_almost_equal(check.stepK(), sqrt.stepK())
+    np.testing.assert_almost_equal(check.stepk, sqrt.stepk)
     check.drawImage(myImg1, method='no_pixel')
     sqrt.drawImage(myImg2, method='no_pixel')
-    np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
-    np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
+    np.testing.assert_almost_equal(check.centroid.x, sqrt.centroid.x)
+    np.testing.assert_almost_equal(check.centroid.y, sqrt.centroid.y)
     np.testing.assert_almost_equal(check.flux, sqrt.flux)
-    np.testing.assert_almost_equal(check.xValue(check.centroid()), check.maxSB())
-    print('check.maxSB = ',check.maxSB())
-    print('sqrt.maxSB = ',sqrt.maxSB())
+    np.testing.assert_almost_equal(check.xValue(check.centroid), check.max_sb)
+    print('check.max_sb = ',check.max_sb)
+    print('sqrt.max_sb = ',sqrt.max_sb)
     # This isn't super accurate...
-    np.testing.assert_allclose(check.maxSB(), sqrt.maxSB(), rtol=0.1)
+    np.testing.assert_allclose(check.max_sb, sqrt.max_sb, rtol=0.1)
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,

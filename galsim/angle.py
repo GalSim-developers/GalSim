@@ -351,7 +351,8 @@ class rad_type(float):
 
         >>> x = float(angle.rad)
 
-    to explicitly turn it into a regular float.  This won't be necessary in version 2.0.
+    to explicitly turn it into a regular float.  This won't be necessary in version 2.0
+    (and it's probably not ever necessary now).
     """
     def __init__(self, x):
         float.__init__(x)
@@ -360,8 +361,8 @@ class rad_type(float):
         from .deprecated import depr
         depr("angle.rad()", 1.5, "angle.rad",
              "rad is now a property rather than a function.  Although note that the return "+
-             "type is not a float (so you can get this message), but acts in most ways like "+
-             "a float and is convertible into a real float with float(angle.rad) if needed.")
+             "type is not exactly a float (so you can get this message), but acts in most ways "+
+             "list one and is convertible into a real float with float(angle.rad) if needed.")
         return float(self)
 
 Angle_rad_function = Angle.rad

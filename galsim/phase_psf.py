@@ -249,7 +249,7 @@ class Aperture(object):
         # obscuration than without.  The GSParams settings indicate how much aliasing we're
         # willing to tolerate, so it's required here.)  To pick a good sampling interval, we start
         # with the interval that would be used for an obscured Airy GSObject profile.  If the
-        # `screen_list` argument was supplied, then we also check its .stepK() method, which
+        # `screen_list` argument was supplied, then we also check its .stepk propertry, which
         # aggregates a good sampling interval from all of the wrapped PhaseScreens, and keep the
         # smaller stepk.
         if lam is None:
@@ -258,11 +258,11 @@ class Aperture(object):
             # appropriately, but it's easier to just arbitrarily set `lam=500` if it wasn't set.
             lam = 500.0
         airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
-        stepk = airy.stepK()
+        stepk = airy.stepk
         if screen_list is not None:
             screen_list = galsim.PhaseScreenList(screen_list)
             stepk = min(stepk,
-                        screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
+                        screen_list._stepK(lam=lam, diam=diam, obscuration=obscuration,
                                           gsparams=self._gsparams))
         good_pupil_scale = (stepk * lam * 1.e-9 * (galsim.radians / galsim.arcsec)
                             / (2 * np.pi * pad_factor))
@@ -560,14 +560,14 @@ class Aperture(object):
 
     # Some quick notes for Josh:
     # - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)
-    #   and corresponding (fast) Fourier grid with size 2*maxK and pitch stepK (dimensions of
+    #   and corresponding (fast) Fourier grid with size 2*maxk and pitch stepk (dimensions of
     #   inverse angle):
-    #     stepK = 2*pi/theta
-    #     maxK = pi/dtheta
+    #     stepk = 2*pi/theta
+    #     maxk = pi/dtheta
     # - Relation between aperture of size L and pitch dL (dimensions of length, not angle!) and
     #   (fast) Fourier grid:
-    #     dL = stepK * lambda / (2 * pi)
-    #     L = maxK * lambda / pi
+    #     dL = stepk * lambda / (2 * pi)
+    #     L = maxk * lambda / pi
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
@@ -925,23 +925,23 @@ class PhaseScreenList(object):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
 
-    def stepK(self, **kwargs):
-        """Return an appropriate stepK for this list of phase screens.
+    def _stepK(self, **kwargs):
+        """Return an appropriate stepk for this list of phase screens.
 
         The required set of parameters depends on the types of the individual PhaseScreens in the
         PhaseScreenList.  See the documentation for the individual PhaseScreen.pupil_plane_scale
         methods for more details.
 
-        @returns  stepK.
+        @returns  stepk.
         """
-        # Generically, GalSim propagates stepK() for convolutions using
+        # Generically, GalSim propagates stepk for convolutions using
         #   stepk = sum(s**-2 for s in stepks)**(-0.5)
         # We're not actually doing convolution between screens here, though.  In fact, the right
         # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return np.sum([layer.stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
+        return np.sum([layer._stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -1085,7 +1085,7 @@ class PhaseScreenPSF(GSObject):
         self._geometric_shooting = geometric_shooting
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
-        # self.stepK(), still work.
+        # self.stepk, still work.
         array = np.array([[self._flux]], dtype=np.float)
         bounds = galsim._BoundsI(1, 1, 1, 1)
         wcs = galsim.PixelScale(self.scale)
@@ -1141,36 +1141,41 @@ class PhaseScreenPSF(GSObject):
         self._screen_list._prepareDraw()
 
     # A few items which need the InterpolatedImage to have been prepared before accessing.
-    def maxK(self):
-        """Returns value of k beyond which aliasing can be neglected.
+    @property
+    def maxk(self):
+        """The value of k beyond which aliasing can be neglected.
         """
         self._prepareDraw()
-        return self.ii.maxK()
+        return self.ii.maxk
 
-    def nyquistScale(self):
-        """Returns Image pixel spacing that does not alias maxK.
+    @property
+    def nyquist_scale(self):
+        """The Image pixel spacing that does not alias maxk.
         """
         # Use this instead of self.ii.nyquistScale() so we don't need to _prepareDraw when
         # photon-shooting into an automatically-sized image.
         return np.pi/self.aper._maxK(self.lam, self.scale_unit)
 
-    def stepK(self):
-        """Returns sampling in k space necessary to avoid folding of image in x space.
+    @property
+    def stepk(self):
+        """The sampling in k space necessary to avoid folding of image in x space.
         """
         self._prepareDraw()
-        return self.ii.stepK()
+        return self.ii.stepk
 
+    @property
     def centroid(self):
-        """Returns the (x, y) centroid of an object as a Position.
+        """The (x, y) centroid of an object as a Position.
         """
         self._prepareDraw()
-        return self.ii.centroid()
+        return self.ii.centroid
 
-    def maxSB(self):
-        """Returns an estimate of the maximum surface brightness of the object.
+    @property
+    def max_sb(self):
+        """An estimate of the maximum surface brightness of the object.
 
         Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how to
+        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
         calculate this value without just drawing the image and checking what the maximum value is.
         Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
         which will generally be conservative on the high side.
@@ -1183,7 +1188,7 @@ class PhaseScreenPSF(GSObject):
         rather than the maximum value.  For most profiles, these are the same thing.
         """
         self._prepareDraw()
-        return self.ii.maxSB()
+        return self.ii.max_sb
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1212,7 +1217,7 @@ class PhaseScreenPSF(GSObject):
 
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
-            observed_stepk = self.ii.stepK()
+            observed_stepk = self.ii.stepk
 
             if observed_stepk < specified_stepk:
                 import warnings

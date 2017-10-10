@@ -120,7 +120,7 @@ class ChromaticObject(object):
 
     Also, ChromaticObject has most of the same methods as GSObjects with the following exceptions:
 
-    The GSObject access methods (e.g. xValue(), maxK(), etc.) are not available.  Instead,
+    The GSObject access methods (e.g. xValue(), maxk, etc.) are not available.  Instead,
     you would need to evaluate the profile at a particular wavelength and access what you want
     from that.
 
@@ -618,7 +618,7 @@ class ChromaticObject(object):
         factor = target_flux_density / current_flux_density
         return self * factor
 
-    def centroid(self, bandpass):
+    def calculateCentroid(self, bandpass):
         """ Determine the centroid of the wavelength-integrated surface brightness profile.
 
         @param bandpass  The bandpass through which the observation is made.
@@ -631,7 +631,7 @@ class ChromaticObject(object):
             w, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
             objs = [self.evaluateAtWavelength(ww) for ww in w]
             fluxes = [o.flux for o in objs]
-            centroids = [o.centroid() for o in objs]
+            centroids = [o.centroid for o in objs]
             xcentroids = np.array([c.x for c in centroids])
             ycentroids = np.array([c.y for c in centroids])
             bp = bandpass(w)
@@ -643,10 +643,10 @@ class ChromaticObject(object):
             flux_integrand = lambda w: self.evaluateAtWavelength(w).flux * bandpass(w)
             def xcentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
-                return mono.centroid().x * mono.flux * bandpass(w)
+                return mono.centroid.x * mono.flux * bandpass(w)
             def ycentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
-                return mono.centroid().y * mono.flux * bandpass(w)
+                return mono.centroid.y * mono.flux * bandpass(w)
             flux = galsim.integ.int1d(flux_integrand, bandpass.blue_limit, bandpass.red_limit)
             xcentroid = 1./flux * galsim.integ.int1d(xcentroid_integrand,
                                                      bandpass.blue_limit,
@@ -656,6 +656,11 @@ class ChromaticObject(object):
                                                      bandpass.red_limit)
             return galsim.PositionD(xcentroid, ycentroid)
 
+    def centroid(self, bandpass):
+        from .deprecated import depr
+        depr("chrom.centroid(bandpass)", 1.5, "chrom.calculateCentroid(bandpass)")
+        return self.calculateCentroid(bandpass)
+ 
     def calculateFlux(self, bandpass):
         """ Return the flux (photons/cm^2/s) of the ChromaticObject through the bandpass.
 
@@ -1033,7 +1038,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
-        nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
+        nyquist_scale_vals = [ obj.nyquist_scale for obj in objs ]
         scale = np.min(nyquist_scale_vals) / oversample_fac
 
         # Find the suggested image size for each object given the choice of scale, and use the
@@ -1041,10 +1046,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in objs ]
         im_size = np.max(possible_im_sizes)
 
-        # Find the stepK and maxK values for each object.  These will be used later on, so that we
+        # Find the stepk and maxk values for each object.  These will be used later on, so that we
         # can force these values when instantiating InterpolatedImages before drawing.
-        self.stepK_vals = [ obj.stepK() for obj in objs ]
-        self.maxK_vals = [ obj.maxK() for obj in objs ]
+        self.stepk_vals = [ obj.stepk for obj in objs ]
+        self.maxk_vals = [ obj.maxk for obj in objs ]
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
@@ -1094,10 +1099,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         # images were originally tabulated.
         lower_idx, frac = _findWave(self.waves, wave)
 
-        # Actually do the interpolation for the image, stepK, and maxK.
+        # Actually do the interpolation for the image, stepk, and maxk.
         im = _linearInterp(self.ims, frac, lower_idx)
-        stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
-        maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
+        stepk = _linearInterp(self.stepk_vals, frac, lower_idx)
+        maxk = _linearInterp(self.maxk_vals, frac, lower_idx)
 
         # Rescale to use the exact flux or normalization if requested.
         if self.use_exact_SED:
@@ -1208,14 +1213,14 @@ class InterpolatedChromaticObject(ChromaticObject):
         # Do the integral as a weighted sum.
         integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
 
-        # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
+        # Figure out stepk and maxk using the minimum and maximum (respectively) that have nonzero
         # weight.  This is the most conservative possible choice, since it's possible that some of
         # the images that have non-zero weights might have such tiny weights that they don't change
         # the effective stepk and maxk we should use.
-        stepk = np.min(np.array(self.stepK_vals)[weight_fac>0])
-        maxk = np.max(np.array(self.maxK_vals)[weight_fac>0])
+        stepk = np.min(np.array(self.stepk_vals)[weight_fac>0])
+        maxk = np.max(np.array(self.maxk_vals)[weight_fac>0])
 
-        # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
+        # Instantiate the InterpolatedImage, using these conservative stepk and maxk choices.
         return galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
@@ -1988,7 +1993,7 @@ class ChromaticConvolution(ChromaticObject):
     def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams, wmult):
         # Find scale at which to draw effective profile
         _, prof0 = insep_obj._fiducial_profile(bandpass)
-        iiscale = prof0.nyquistScale()
+        iiscale = prof0.nyquist_scale
         if iimult is not None:
             iiscale /= iimult
 
