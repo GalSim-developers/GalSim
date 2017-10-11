@@ -221,7 +221,7 @@ class GSObject(object):
         from .deprecated import depr
         depr("gsobject.SBProfile", 1.5, "gsobject._sbp",
              "Note however that this is now officially an implementation detail, and not "+
-             "part of the public API.  Therefore, it's usage may change without notice.")
+             "part of the public API.  Therefore, its usage may change without notice.")
         return self._sbp
 
     @galsim.utilities.lazy_property
@@ -676,7 +676,7 @@ class GSObject(object):
         PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
         arguments).
 
-        Techinically, kValue() is available if and only if the given obj has `obj.is_analytic_k
+        Technically, kValue() is available if and only if the given obj has `obj.is_analytic_k
         == True`, but this is the case for all GSObjects currently, so that should never be an
         issue (unlike for xValue()).
 
