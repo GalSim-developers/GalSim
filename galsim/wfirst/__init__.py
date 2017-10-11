@@ -16,10 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 """
-The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST-AFTA
+The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST
 project.
 
-This module contains numbers and routines for the WFIRST-AFTA project.  There is also a demo
+This module contains numbers and routines for the WFIRST project.  There is also a demo
 illustrating the use of most of this functionality, demo13.py.  Some of the parameters below relate
 to the entire wide-field imager.  Others, especially the return values of the functions to get the
 PSF and WCS, are specific to each SCA (Sensor Chip Assembly, the equivalent of a chip for an optical
@@ -35,7 +35,8 @@ inferred based on the capacitance.  To use a common language with that for CCDs,
 to quantities measured in units of e-/pixel, but for some detector non-idealities, it is important
 to keep in mind that it is voltage that is sensed.
 
-Currently, the module includes the following numbers:
+Currently, the module includes the following numbers, which were updated in October 2017 in
+preparation for the release of GalSim v1.5:
 
     gain - The gain for all SCAs (sensor chip assemblies) is expected to be the roughly the same,
            and we currently have no information about how different they will be, so this is a
@@ -88,7 +89,7 @@ Currently, the module includes the following numbers:
                           bandpasses can be obtained using the getBandpasses() routine described
                           below).
 
-    pupil_plane_file - The name of the file containing the image of the pupil plane for WFIRST-AFTA,
+    pupil_plane_file - The name of the file containing the image of the pupil plane for WFIRST,
                        to be used when constructing PSFs.  If using the galsim.wfirst.getPSF()
                        routine, users will not need to supply this filename, since the routine
                        already knows about it.
@@ -126,8 +127,8 @@ the detectors are subject to change as further lab tests are done.
 This module also contains the following routines:
 
     getBandpasses() - A utility to get a dictionary containing galsim.Bandpass objects for each of
-                      the WFIRST-AFTA imaging bandpasses, which by default will have their zero
-                      point set for the WFIRST-AFTA effective diameter and typical exposure time.
+                      the WFIRST imaging bandpasses, which by default will have their zero
+                      point set for the WFIRST effective diameter and typical exposure time.
 
     getSkyLevel() - A utility to find the expected sky level due to zodiacal light at a given
                     position, in a given band.

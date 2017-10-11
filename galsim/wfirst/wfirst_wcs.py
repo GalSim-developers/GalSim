@@ -45,7 +45,6 @@ prog_version = "0.4"
 # SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
 # between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
 # were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
-# TODO: update pic on wiki page to reflect this.
 sca_xc_mm = np.array([0., 21.44, 21.44, 21.44, 67.32, 67.32, 67.32, 113.20, 113.20,
                       113.20, -21.44, -21.44, -21.44,  -67.32, -67.32, -67.32, -113.20,
                       -113.20, -113.20])
@@ -83,7 +82,9 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
     equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
     used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
-    `SCAs` option.
+    `SCAs` option.  The basic instrument parameters used to create the WCS correspond to those in
+    Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
+    the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.
 
     The user must specify a position for observation, at which the center of the focal plane array
     will point.  This must be supplied as a CelestialCoord `world_pos`.  In general, only certain
