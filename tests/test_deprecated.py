@@ -318,6 +318,41 @@ def test_dep_chromatic():
     np.testing.assert_equal(im1.bounds, im2.bounds)
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
+    # Test that deprecated integrator rules yield same results as new integrator rules.
+    # Make obj non-separable to trigger ImageIntegrator
+    obj = obj.dilate(lambda w:(w/700.0**1.05))
+
+    integrator1 = check_dep(galsim.integ.ContinuousIntegrator, rule=np.trapz, N=10)
+    integrator2 = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=10)
+    np.testing.assert_array_almost_equal(
+        obj.drawImage(band, integrator=integrator1).array,
+        obj.drawImage(band, integrator=integrator2).array
+    )
+
+    integrator1 = check_dep(galsim.integ.ContinuousIntegrator, rule=galsim.integ.midpt, N=10)
+    integrator2 = galsim.integ.ContinuousIntegrator(rule=galsim.integ.midptRule, N=10)
+    np.testing.assert_array_almost_equal(
+        obj.drawImage(band, integrator=integrator1).array,
+        obj.drawImage(band, integrator=integrator2).array
+    )
+
+    # Artificially add wave_list so we can check SampleIntegrator
+    band.wave_list = np.array([600.0, 700.0, 800.0])
+    integrator1 = check_dep(galsim.integ.SampleIntegrator, rule=np.trapz)
+    integrator2 = galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule)
+    np.testing.assert_array_almost_equal(
+        obj.drawImage(band, integrator=integrator1).array,
+        obj.drawImage(band, integrator=integrator2).array
+    )
+
+    integrator1 = check_dep(galsim.integ.SampleIntegrator, rule=galsim.integ.midpt)
+    integrator2 = galsim.integ.SampleIntegrator(rule=galsim.integ.midptRule)
+    np.testing.assert_array_almost_equal(
+        obj.drawImage(band, integrator=integrator1).array,
+        obj.drawImage(band, integrator=integrator2).array
+    )
+
+
 
 @timer
 def test_dep_correlatednoise():
@@ -831,6 +866,10 @@ def test_dep_sed():
     d = check_dep(a.__rdiv__, x)
     np.testing.assert_almost_equal(d(x), x/a(x), 10,
                                    err_msg="Found wrong value in SED.__rdiv__")
+
+    sed = galsim.SED(lambda x: np.exp(-x**2), wave_type='nm', flux_type='fphotons')
+    boloflux = check_dep(sed.calculateFlux, None)
+    np.testing.assert_almost_equal(boloflux, np.sqrt(np.pi)/2)
 
 
 @timer

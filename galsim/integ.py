@@ -102,15 +102,51 @@ def trapz(func, min, max, points=10000):
     return np.trapz(func(points),points)
 
 
+def midptRule(f, xs):
+    """Midpoint rule for integration.
+
+    @param f   Function to integrate.
+    @param xs  Locations at which to evaluate f.
+
+    @returns  Midpoint rule approximation to the integral.
+    """
+    if len(xs) < 2:
+        raise ValueError("Not enough points for midptRule integration")
+    x, xp = xs[:2]
+    result = f(x)*(xp-x)
+    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
+        result += 0.5*f(xp)*(xpp-x)
+    result += f(xpp)*(xpp-xp)
+    return result
+
+
+def trapzRule(f, xs):
+    """Trapezoidal rule for integration.
+
+    @param f   Function to integrate.
+    @param xs  Locations at which to evaluate f.
+
+    @returns  Trapezoidal rule approximation to the integral.
+    """
+    if len(xs) < 2:
+        raise ValueError("Not enough points for trapzRule integration")
+    x, xp = xs[:2]
+    result = 0.5*f(x)*(xp-x)
+    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
+        result += 0.5*f(xp)*(xpp-x)
+    result += 0.5*f(xpp)*(xpp-xp)
+    return result
+
+
 class ImageIntegrator(object):
     def __init__(self):
         raise NotImplementedError("Must instantiate subclass of ImageIntegrator")
     # subclasses must define
     # 1) a method `.calculateWaves(bandpass)` which will return the wavelengths at which to
     #    evaluate the integrand
-    # 2) an function attribute `.rule` which takes a list of integrand evaluations as its first
+    # 2) an function attribute `.rule` which takes a integrand function as its first
     #    argument, and a list of evaluation wavelengths as its second argument, and returns
-    #    an approximation to the integral.  (E.g., the function midpt above, or numpy.trapz)
+    #    an approximation to the integral.  (E.g., the function midptRule above)
 
     def __call__(self, evaluateAtWavelength, bandpass, image, drawImageKwargs, doK=False):
         """
@@ -120,21 +156,22 @@ class ImageIntegrator(object):
         @param image                Image used to set size and scale of output
         @param drawImageKwargs      dict with other kwargs to send to drawImage function.
         @param doK                  Integrate up results of drawKImage instead of results of
-                                    drawImage.
+                                    drawImage.  [default: False]
 
         @returns the result of integral as an Image
         """
-        images = []
         waves = self.calculateWaves(bandpass)
         self.last_n_eval = len(waves)
         drawImageKwargs.pop('add_to_image', None) # Make sure add_to_image isn't in kwargs
-        for w in waves:
+
+        def integrand(w):
             prof = evaluateAtWavelength(w) * bandpass(w)
             if not doK:
-                images.append(prof.drawImage(image=image.copy(), **drawImageKwargs))
+                return prof.drawImage(image=image.copy(), **drawImageKwargs)
             else:
-                images.append(prof.drawKImage(image=image.copy(), **drawImageKwargs))
-        return self.rule(images, waves)
+                return prof.drawKImage(image=image.copy(), **drawImageKwargs)
+        return self.rule(integrand, waves)
+
 
 class SampleIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
@@ -146,16 +183,26 @@ class SampleIntegrator(ImageIntegrator):
 
     @param rule         Which integration rule to apply to the wavelength and monochromatic surface
                         brightness samples.  Options include:
-                            galsim.integ.midpt  --  Use the midpoint integration rule
-                            numpy.trapz         --  Use the trapezoidal integration rule
+                            galsim.integ.midptRule  --  Use the midpoint integration rule
+                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     """
     def __init__(self, rule):
+        if rule == midpt:
+            from galsim.deprecated import depr
+            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
+            rule = midptRule
+        elif rule == np.trapz:
+            from galsim.deprecated import depr
+            depr('np.trapz', 1.5, 'galsim.integ.trapzRule')
+            rule = trapzRule
         self.rule = rule
+
     def calculateWaves(self, bandpass):
         if len(bandpass.wave_list) < 0:
             raise AttributeError("Bandpass does not have attribute `wave_list` needed by " +
-                                 "midpt_sample_integrator.")
+                                 "SampleIntegrator.")
         return bandpass.wave_list
+
 
 class ContinuousIntegrator(ImageIntegrator):
     """Create a chromatic surface brightness profile integrator, which will integrate over
@@ -168,8 +215,8 @@ class ContinuousIntegrator(ImageIntegrator):
 
     @param rule         Which integration rule to apply to the wavelength and monochromatic
                         surface brightness samples.  Options include:
-                            galsim.integ.midpt  --  Use the midpoint integration rule
-                            numpy.trapz         --  Use the trapezoidal integration rule
+                            galsim.integ.midptRule  --  Use the midpoint integration rule
+                            galsim.integ.trapzRule  --  Use the trapezoidal integration rule
     @param N            Number of equally-wavelength-spaced monochromatic surface brightness
                         samples to evaluate. [default: 250]
     @param use_endpoints  Whether to sample the endpoints `bandpass.blue_limit` and
@@ -181,9 +228,18 @@ class ContinuousIntegrator(ImageIntegrator):
                         set to False in this case.  [default: True]
     """
     def __init__(self, rule, N=250, use_endpoints=True):
-        self.N = N
+        if rule == midpt:
+            from galsim.deprecated import depr
+            depr('galsim.integ.midpt', 1.5, 'galsim.integ.midptRule')
+            rule = midptRule
+        elif rule == np.trapz:
+            from galsim.deprecated import depr
+            depr('galsim.integ.trapz', 1.5, 'galsim.integ.trapzRule')
+            rule = trapzRule
         self.rule = rule
+        self.N = N
         self.use_endpoints = use_endpoints
+
     def calculateWaves(self, bandpass):
         h = (bandpass.red_limit*1.0 - bandpass.blue_limit)/self.N
         if self.use_endpoints:

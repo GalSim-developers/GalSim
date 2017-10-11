@@ -64,6 +64,9 @@ Bug Fixes
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
 - Fixed minor bug in shear == implementation. (#865)
 - Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
+- Added check to `SED.atRedshift` for valid redshifts. (#905)
+- Added exception for disjoint wave_list intersection in combine_wave_list.
+  (#905)
 
 
 Deprecated Features
@@ -86,6 +89,12 @@ Deprecated Features
 - Deprecated ability to create multiple PhaseScreenPSFs with single call
   to makePSF, since it is now just as efficient to call makePSF multiple
   times. (#824)
+- Deprecated `calculateFlux(bandpass=None)` for computing bolometric flux.
+  Users of this feature can still obtain a psuedo-bolometric flux by using
+  an explicit bolometric Bandpass. (#905)
+- Deprecated the use of `np.trapz` and `galsim.integ.mipdt` as valid
+  integration rules for use by `ImageIntegrator`s, replaced by
+  `galsim.integ.trapzRule` and `galsim.integ.midptRule`. (#887)
 
 
 New Features
@@ -190,6 +199,7 @@ New Features
 - Added `recenter` option to drawKImage to optionally not recenter the input
   image at (0,0).  The default `recenter=True` is consistent with how this
   function has worked in previous versions. (#873)
+- Drawing chromatic objects now uses significantly less RAM. (#887)
 
 
 New config features

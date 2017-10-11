@@ -20,7 +20,7 @@ compiler:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran ffmpeg
+    - sudo apt-get install -y python-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran libav-tools
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
