@@ -56,6 +56,7 @@ Dependency Changes
 Bug Fixes
 ---------
 
+- Fixed parity mistake in configuration of WFIRST focal plane. (#675)
 - Added checks to `SED`s and `ChromaticObject`s for dimensional sanity. (#789)
 - Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)
 - Fixed bug when whitening noise in images based on COSMOS training datasets
@@ -109,6 +110,8 @@ New Features
 - Updated packaged bandpasses and SEDs and associated download scripts (#640)
 - Added HST bandpasses covering AEGIS and CANDELS surveys (#640)
 - Added `drawKImage` method for `ChromaticObject` and `CorrelatedNoise` (#640)
+- Updated WFIRST WCS (focal plane location, orientation, configuration) to
+  reflect WFIRST Cycle 7 design (#675)
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models
   the repulsion of incoming electrons by the electrons already accumulated on
