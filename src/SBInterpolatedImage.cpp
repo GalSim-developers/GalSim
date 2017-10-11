@@ -101,6 +101,8 @@ namespace galsim {
         _readyToShoot(false)
     {
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"init bounds = "<<_init_bounds<<std::endl;
+        dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
 
         int Ninitx = image.getXMax()-image.getXMin()+1;
         int Ninity = image.getYMax()-image.getYMin()+1;
@@ -456,6 +458,35 @@ namespace galsim {
         return _flux;
     }
 
+    template <typename T>
+    double CalculateSizeContainingFlux(const BaseImage<T>& im, double target_flux)
+    {
+        dbg<<"Start CalculateSizeWithFlux\n";
+        dbg<<"Find box that encloses flux = "<<target_flux<<std::endl;
+
+        const Bounds<int> b = im.getBounds();
+        int dmax = std::min((b.getXMax()-b.getXMin())/2, (b.getYMax()-b.getYMin())/2);
+        dbg<<"dmax = "<<dmax<<std::endl;
+        double flux = im(0,0);
+        int d=1;
+        for (; d<=dmax; ++d) {
+            xdbg<<"d = "<<d<<std::endl;
+            xdbg<<"flux = "<<flux<<std::endl;
+            // Add the left, right, top and bottom sides of box:
+            for(int x = -d; x < d; ++x) {
+                // Note: All 4 corners are added exactly once by including x=-d but omitting
+                // x=d from the loop.
+                flux += im(x,-d);  // bottom
+                flux += im(d,x);   // right
+                flux += im(-x,d);  // top
+                flux += im(-d,-x); // left
+            }
+            if (flux >= target_flux) break;
+        }
+        dbg<<"Done: flux = "<<flux<<", d = "<<d<<std::endl;
+        return d + 0.5;
+    }
+
     // We provide an option to update the stepk value by directly calculating what
     // size region around the center encloses (1-folding_threshold) of the total flux.
     // This can be useful if you make the image bigger than you need to, just to be
@@ -471,37 +502,9 @@ namespace galsim {
         double fluxTot = getFlux();
         double thresh = (1.-this->gsparams.folding_threshold) * fluxTot;
         dbg<<"thresh = "<<thresh<<std::endl;
+        double R = CalculateSizeContainingFlux(im, thresh);
 
-        double flux = im(0,0);
-        const Bounds<int> b = _init_bounds;
-        dbg<<"b = "<<b<<std::endl;
-        int dmax = std::min((b.getXMax()-b.getXMin())/2, (b.getYMax()-b.getYMin())/2);
-        int d=1;
-        dbg<<"dmax = "<<dmax<<std::endl;
-        for (; d<=dmax; ++d) {
-            xdbg<<"d = "<<d<<std::endl;
-            xdbg<<"flux = "<<flux<<std::endl;
-            // Add the left, right, top and bottom sides of box:
-            for(int x = -d; x < d; ++x) {
-                // Note: All 4 corners are added exactly once by including x=-d but omitting
-                // x=d from the loop.
-                flux += im(x,-d);  // bottom
-                flux += im(d,x);   // right
-                flux += im(-x,d);  // top
-                flux += im(-d,-x); // left
-            }
-            if (flux > thresh) break;
-        }
-        dbg<<"Done: flux = "<<flux<<", d = "<<d<<std::endl;
-
-        if (d == dmax) {
-            dbg<<"No smaller radius found.  Keep current value of stepk\n";
-            return;
-        }
-        // (Note: Since this isn't a radial profile, R isn't really a radius, but rather
-        //        the size of the square box that is enclosing (1-alias_thresh) of the flux.)
-        double R = (d+0.5);
-        dbg<<"d = "<<d<<" => R = "<<R<<std::endl;
+        dbg<<"R = "<<R<<std::endl;
         // Add xInterp range in quadrature just like convolution:
         double R2 = _xInterp.xrange();
         dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
@@ -936,4 +939,8 @@ namespace galsim {
     template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<cdouble>& kimage, double stepk,
         const Interpolant& kInterp, const GSParams& gsparams);
+
+    template double CalculateSizeContainingFlux(const BaseImage<double>& im, double target_flux);
+    template double CalculateSizeContainingFlux(const BaseImage<float>& im, double target_flux);
+
 } // namespace galsim

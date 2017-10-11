@@ -38,10 +38,11 @@ namespace galsim {
                          (bp::arg("image"), bp::arg("init_bounds"), bp::arg("nonzero_bounds"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
                           bp::arg("stepk")=0., bp::arg("maxk")=0.,
-                          bp::arg("gsparams")=GSParams())
-                     )
-                )
-                ;
+                          bp::arg("gsparams")=GSParams())));
+
+            typedef double (*cscf_func_type)(const BaseImage<U>&, double);
+            bp::def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux),
+                    (bp::arg("image"), bp::arg("flux")));
         }
 
         static void wrap()
@@ -50,8 +51,6 @@ namespace galsim {
                 "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
             );
             pySBInterpolatedImage
-                .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
-                     bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK, bp::arg("max_maxk")=0.)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);

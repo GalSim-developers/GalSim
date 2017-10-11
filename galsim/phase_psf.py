@@ -1051,15 +1051,8 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        self._serialize_stepk = _force_stepk
-        self._serialize_maxk = _force_maxk
-
-        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
-        # scale.
-        if self._serialize_stepk is not None:
-            self._serialize_stepk *= self.scale
-        if self._serialize_maxk is not None:
-            self._serialize_maxk *= self.scale
+        self._stepk = _force_stepk
+        self._maxk = _force_maxk
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1082,8 +1075,7 @@ class PhaseScreenPSF(GSObject):
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
         self.ii = InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
-                _serialize_stepk=self._serialize_stepk,
-                _serialize_maxk=self._serialize_maxk)
+                _force_stepk=self._stepk, _force_maxk=self._maxk)
         self._sbp = self.ii._sbp
 
         self._screen_list._delayCalculation(self)
@@ -1114,16 +1106,15 @@ class PhaseScreenPSF(GSObject):
                 self.time_step == other.time_step and
                 self._flux == other._flux and
                 self.interpolant == other.interpolant and
-                self._serialize_stepk == other._serialize_stepk and
-                self._serialize_maxk == other._serialize_maxk and
+                self._stepk == other._stepk and
+                self._maxk == other._maxk and
                 self._ii_pad_factor == other._ii_pad_factor and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
-                     self._serialize_stepk, self._serialize_maxk, self._ii_pad_factor,
-                     self.gsparams))
+                     self._stepk, self._maxk, self._ii_pad_factor, self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
@@ -1197,7 +1188,7 @@ class PhaseScreenPSF(GSObject):
 
         self.ii = InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
-                _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                _force_stepk=self._stepk, _force_maxk=self._maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
         self._sbp = self.ii._sbp
@@ -1229,8 +1220,8 @@ class PhaseScreenPSF(GSObject):
         self.ii = InterpolatedImage(self.img, x_interpolant=self.interpolant,
                                     use_true_center=False,
                                     pad_factor=self._ii_pad_factor,
-                                    _serialize_stepk=self._serialize_stepk,
-                                    _serialize_maxk=self._serialize_maxk,
+                                    _force_stepk=self._stepk,
+                                    _force_maxk=self._maxk,
                                     gsparams=self._gsparams)
         self._sbp = self.ii._sbp
 

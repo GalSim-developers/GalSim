@@ -20,6 +20,7 @@
 Definitions of the various interpolants used by InterpolatedImage and InterpolatedKImage
 """
 
+import math
 from past.builtins import basestring
 from . import _galsim
 from .gsparams import GSParams
@@ -137,6 +138,14 @@ class Delta(Interpolant):
     def __str__(self):
         return "galsim.Delta(%s)"%(self._tol)
 
+    @property
+    def xrange(self):
+        return 0.
+
+    @property
+    def krange(self):
+        return 2. * math.pi / self._tol
+
 
 class Nearest(Interpolant):
     """Nearest-neighbor interpolation (boxcar).
@@ -164,6 +173,14 @@ class Nearest(Interpolant):
 
     def __str__(self):
         return "galsim.Nearest(%s)"%(self._tol)
+
+    @property
+    def xrange(self):
+        return 0.5
+
+    @property
+    def krange(self):
+        return 2. / self._tol
 
 
 class SincInterpolant(Interpolant):
@@ -194,6 +211,15 @@ class SincInterpolant(Interpolant):
     def __str__(self):
         return "galsim.SincInterpolant(%s)"%(self._tol)
 
+    @property
+    def xrange(self):
+        # Technically infinity, but truncated by the tolerance.
+        return 1./(math.pi * self._tol)
+
+    @property
+    def krange(self):
+        return math.pi
+
 
 class Linear(Interpolant):
     """Linear interpolation
@@ -221,6 +247,15 @@ class Linear(Interpolant):
     def __str__(self):
         return "galsim.Linear(%s)"%(self._tol)
 
+    @property
+    def xrange(self):
+        # Reduce range slightly so not including points with zero weight.
+        return 1. - 0.1*self._tol
+
+    @property
+    def krange(self):
+        return 2. / self._tol**0.5
+
 
 class Cubic(Interpolant):
     """Cubic interpolation
@@ -246,6 +281,15 @@ class Cubic(Interpolant):
     def __str__(self):
         return "galsim.Cubic(%s)"%(self._tol)
 
+    @property
+    def xrange(self):
+        return 2. - 0.1*self._tol
+
+    @property
+    def krange(self):
+        # kmax = 2 * (3sqrt(3)/8 tol)^1/3
+        return 1.7320508075688774 / self._tol**(1./3.)
+
 
 class Quintic(Interpolant):
     """Fifth order interpolation
@@ -270,6 +314,15 @@ class Quintic(Interpolant):
 
     def __str__(self):
         return "galsim.Quintic(%s)"%(self._tol)
+
+    @property
+    def xrange(self):
+        return 3. - 0.1*self._tol
+
+    @property
+    def krange(self):
+        # kmax = 2 * (25sqrt(5)/108 tol)^1/3
+        return 1.6058208066649935 / self._tol**(1./3.)
 
 
 class Lanczos(Interpolant):
@@ -307,3 +360,10 @@ class Lanczos(Interpolant):
     def __str__(self):
         return "galsim.Lanczos(%s, %s)"%(self._n, self._tol)
 
+    @property
+    def xrange(self):
+        return self._n - 0.1*self._tol
+
+    @property
+    def krange(self):
+        return 2. * math.pi * self._i.urange()

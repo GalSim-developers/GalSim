@@ -52,7 +52,8 @@ namespace galsim {
                 "Lanczos", bp::no_init)
                 .def(bp::init<int,bool,double,GSParams>(
                     (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1e-4,
-                     bp::arg("gsparams")=GSParams())));
+                     bp::arg("gsparams")=GSParams())))
+                .def("urange", &Lanczos::urange);
 
             bp::class_<Linear, bp::bases<Interpolant> >("Linear", bp::no_init)
                 .def(bp::init<double,GSParams>((bp::arg("tol")=1e-4,

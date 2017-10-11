@@ -264,8 +264,7 @@ class InterpolatedImage(GSObject):
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None,
-                 _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
-                 hdu=None):
+                 _force_stepk=0., _force_maxk=0., hdu=None):
 
         from .wcs import BaseWCS, PixelScale
 
@@ -326,84 +325,30 @@ class InterpolatedImage(GSObject):
 
         # Build the fully padded real-space image according to the various pad options.
         self._buildRealImage(pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache)
-
-        # GalSim cannot automatically know what stepk and maxk are appropriate for the
-        # input image.  So it is usually worth it to do a manual calculation (below).
-        #
-        # However, there is also a hidden option to force it to use specific values of stepk and
-        # maxk (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
-        # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
-        # stepk and maxk should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
-        # units required by the C++ layer below.  Also note that profile recentering for even-sized
-        # images (see the ._fix_offset step below) leads to automatic reduction of stepK slightly
-        # below what is provided here, while maxK is preserved.
-        min_scale = self._wcs._minScale()
-        max_scale = self._wcs._maxScale()
-        if _force_stepk > 0.:
-            calculate_stepk = False
-            _force_stepk *= min_scale
-        if _force_maxk > 0.:
-            calculate_maxk = False
-            _force_maxk *= max_scale
-
-        # Due to floating point rounding errors, for pickling it's necessary to store the exact
-        # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
-        # values before being scaled by min_scale and max_scale.  So we do that via the
-        # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
-        # pickling.
-        if _serialize_stepk is not None:
-            calculate_stepk = False
-            _force_stepk = _serialize_stepk
-        if _serialize_maxk is not None:
-            calculate_maxk = False
-            _force_maxk = _serialize_maxk
-
-        # Make the SBInterpolatedImage out of the image.
-        sbii = _galsim.SBInterpolatedImage(
-                self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
-                self._x_interpolant._i, self._k_interpolant._i,
-                _force_stepk, _force_maxk, self.gsparams._gsp)
+        self._image_flux = np.sum(self._image.array, dtype=float)
 
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
-        if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
+        if (calculate_stepk or calculate_maxk or flux is not None) and self._image_flux == 0.:
             raise RuntimeError("This input image has zero total flux. "
                                "It does not define a valid surface brightness profile.")
 
-        if calculate_stepk:
-            if calculate_stepk is True:
-                sbii.calculateStepK()
-            else:
-                # If not a bool, then value is max_stepk
-                sbii.calculateStepK(max_stepk=calculate_stepk)
-        if calculate_maxk:
-            if calculate_maxk is True:
-                sbii.calculateMaxK()
-            else:
-                # If not a bool, then value is max_maxk
-                sbii.calculateMaxK(max_maxk=calculate_maxk)
-
-        # If the user specified a surface brightness normalization for the input Image, then
-        # need to rescale flux by the pixel area to get proper normalization.
-        if flux is None and normalization.lower() in ['surface brightness','sb']:
-            flux = sbii.getFlux() * self._wcs.pixelArea()
-
-        self._stepk = sbii.stepK() / min_scale
-        self._maxk = sbii.maxK() / max_scale
-        self._flux = flux
-        self._serialize_stepk = sbii.stepK()
-        self._serialize_maxk = sbii.maxK()
-        self._sbii = sbii
+        # Process the different options for flux, stepk, maxk
+        self._flux = self._getFlux(flux, normalization)
+        self._stepk = self._getStepK(calculate_stepk, _force_stepk)
+        self._maxk = self._getMaxK(calculate_maxk, _force_maxk)
 
 
     @lazy_property
     def _sbp(self):
-        if not hasattr(self, '_sbii'):
-            self._sbii = _galsim.SBInterpolatedImage(
-                    self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
-                    self._x_interpolant._i, self._k_interpolant._i,
-                    self._serialize_stepk, self._serialize_maxk,
-                    self.gsparams._gsp)
+        min_scale = self._wcs._minScale()
+        max_scale = self._wcs._maxScale()
+        self._sbii = _galsim.SBInterpolatedImage(
+                self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
+                self._x_interpolant._i, self._k_interpolant._i,
+                self._stepk*min_scale,
+                self._maxk*max_scale,
+                self.gsparams._gsp)
 
         self._sbp = self._sbii  # Temporary.  Will overwrite this with the return value.
 
@@ -416,8 +361,8 @@ class InterpolatedImage(GSObject):
         prof = self._wcs._profileToWorld(prof)
 
         # If the user specified a flux, then set to that flux value.
-        if self._flux is not None:
-            prof = prof.withFlux(float(self._flux))
+        if self._flux != self._image_flux:
+            prof *= self._flux / self._image_flux
 
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
@@ -435,6 +380,16 @@ class InterpolatedImage(GSObject):
     @property
     def image(self):
         return self._image
+
+    @property
+    def flux(self):
+        return self._flux
+
+    def maxK(self):
+        return self._maxk
+
+    def stepK(self):
+        return self._stepk
 
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
 
@@ -502,12 +457,6 @@ class InterpolatedImage(GSObject):
         #self._pad_factor = (max(self._xim.array.shape)-1.e-6) / max(self._image.array.shape)
         self._pad_factor = pad_factor
 
-        #print("Done buildReal")
-        #print("xim = ",str(self._xim))
-        #print("image = ",str(self._image))
-        #print("pad_image = ",str(self._pad_image))
-        #print("pad_factor = ",self._pad_factor)
-
     def _buildNoisePadImage(self, noise_pad_size, noise_pad, rng, use_cache):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
         """
@@ -556,12 +505,74 @@ class InterpolatedImage(GSObject):
         noise_image.addNoise(noise)
         return b
 
+    def _getFlux(self, flux, normalization):
+        # If the user specified a surface brightness normalization for the input Image, then
+        # need to rescale flux by the pixel area to get proper normalization.
+        if flux is None:
+            flux = self._image_flux
+            if normalization.lower() in ['surface brightness','sb']:
+                flux *= self._wcs.pixelArea()
+        return flux
+
+    def _getStepK(self, calculate_stepk, _force_stepk):
+        # GalSim cannot automatically know what stepK and maxK are appropriate for the
+        # input image.  So it is usually worth it to do a manual calculation (below).
+        #
+        # However, there is also a hidden option to force it to use specific values of stepK and
+        # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
+        # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
+        # stepK and maxK should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
+        # units required by the C++ layer below.  Also note that profile recentering for even-sized
+        # images (see the ._fix_offset step below) leads to automatic reduction of stepK slightly
+        # below what is provided here, while maxK is preserved.
+        if _force_stepk > 0.:
+            return _force_stepk
+        elif calculate_stepk:
+            if calculate_stepk is True:
+                im = self._image
+            else:
+                # If not a bool, then value is max_stepk
+                R = int(math.ceil(math.pi / calculate_stepk))
+                b = _BoundsI(-R, R, -R, R)
+                b = self._image.bounds & b
+                im = self._image[b]
+            thresh = (1.-self.gsparams.folding_threshold) * self._image_flux
+            R = _galsim.CalculateSizeContainingFlux(self._image._image, thresh)
+        else:
+            R = np.max(self._image.array.shape) / 2. - 0.5
+        return self._getSimpleStepK(R)
+
+    def _getSimpleStepK(self, R):
+        min_scale = self._wcs._minScale()
+        # Add xInterp range in quadrature just like convolution:
+        R2 = self._x_interpolant.xrange
+        R = math.hypot(R, R2)
+        stepk = math.pi / (R * min_scale)
+        return stepk
+
+    def _getMaxK(self, calculate_maxk, _force_maxk):
+        max_scale = self._wcs._maxScale()
+        if _force_maxk > 0.:
+            return _force_maxk
+        elif calculate_maxk:
+            self._maxk = 0.
+            self._sbp
+            if calculate_maxk is True:
+                self._sbii.calculateMaxK()
+            else:
+                # If not a bool, then value is max_maxk
+                self._sbii.calculateMaxK(max_maxk=calculate_maxk)
+            self.__dict__.pop('_sbp')  # Need to remake it.
+            return self._sbii.maxK() / max_scale
+        else:
+            return self._x_interpolant.krange / max_scale
+ 
     def __eq__(self, other):
         return (isinstance(other, InterpolatedImage) and
                 self._xim == other._xim and
                 self.x_interpolant == other.x_interpolant and
                 self.k_interpolant == other.k_interpolant and
-                self._flux == other._flux and
+                self.flux == other.flux and
                 self._offset == other._offset and
                 self.gsparams == other.gsparams and
                 self._stepk == other._stepk and
@@ -571,7 +582,7 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self._flux, self._offset, self.gsparams, self._stepk, self._maxk,
+                               self.flux, self._offset, self.gsparams, self._stepk, self._maxk,
                                self._xim.bounds, self._xim.wcs))
             # Just hash the diagonal.  Much faster, and usually is unique enough.
             # (Let python handle collisions as needed if multiple similar IIs are used as keys.)
@@ -585,7 +596,7 @@ class InterpolatedImage(GSObject):
         # if it's really just the same as the main image.
         if self._pad_image.bounds != self._image.bounds:
             s += ', pad_image=%r'%(self._pad_image)
-        s += ', pad_factor=%f, flux=%r, offset=%r'%(self._pad_factor, self._flux, self._offset)
+        s += ', pad_factor=%f, flux=%r, offset=%r'%(self._pad_factor, self.flux, self._offset)
         s += ', use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)'%(
                 self.gsparams, self._stepk, self._maxk)
         return s
@@ -613,6 +624,46 @@ class InterpolatedImage(GSObject):
             self._xim = Image(xim_bounds, wcs=self._wcs, dtype=self._pad_image.dtype)
             self._xim[self._pad_image.bounds] = self._pad_image
         self._image = self._xim[image_bounds]
+
+    def hasHardEdges(self):
+        return False
+
+    def isAxisymmetric(self):
+        return False
+
+    def isAnalyticX(self):
+        return True
+
+    def isAnalyticK(self):
+        return True
+
+    def centroid(self):
+        return self._sbp.centroid()
+
+    def getPositiveFlux(self):
+        return self._sbp.getPositiveFlux()
+
+    def getNegativeFlux(self):
+        return self._sbp.getNegativeFlux()
+
+    def maxSB(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image
 
 
 def _InterpolatedImage(image, x_interpolant, k_interpolant,
@@ -657,21 +708,10 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._xim = ret._image
     ret._pad_image = ret._image
     ret._pad_factor = 1.
-    min_scale = ret._wcs._minScale()
-    max_scale = ret._wcs._maxScale()
-    force_stepk *= min_scale
-    force_maxk *= max_scale
-
-    sbii = _galsim.SBInterpolatedImage(
-            image._image, image.bounds._b, image.bounds._b, x_interpolant._i, k_interpolant._i,
-            force_stepk, force_maxk, ret._gsparams._gsp)
-
-    ret._stepk = sbii.stepK() / min_scale
-    ret._maxk = sbii.maxK() / max_scale
-    ret._flux = None
-    ret._serialize_stepk = sbii.stepK()
-    ret._serialize_maxk = sbii.maxK()
-    ret._sbii = sbii
+    ret._image_flux = np.sum(ret._image.array, dtype=float)
+    ret._flux = ret._image_flux
+    ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)
+    ret._maxk = ret._x_interpolant.krange / ret._wcs._maxScale()
     return ret
 
 

@@ -29,6 +29,9 @@
 
 namespace galsim {
 
+    template <typename T>
+    double CalculateSizeContainingFlux(const BaseImage<T>& im, double target_flux);
+
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
      * tables/images.

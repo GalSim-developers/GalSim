@@ -1145,13 +1145,13 @@ def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
     """
-    obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
+    obj1 = galsim.InterpolatedImage(ref_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
     # repr string will report.
     perturb_image = ref_image.copy()
     perturb_image.array[64, 64] *= 1000
-    obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
+    obj2 = galsim.InterpolatedImage(perturb_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
     # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
     import sys
