@@ -110,8 +110,10 @@ New Features
 - Updated packaged bandpasses and SEDs and associated download scripts (#640)
 - Added HST bandpasses covering AEGIS and CANDELS surveys (#640)
 - Added `drawKImage` method for `ChromaticObject` and `CorrelatedNoise` (#640)
-- Updated WFIRST WCS (focal plane location, orientation, configuration) to
-  reflect WFIRST Cycle 7 design (#675)
+- Updated WFIRST WCS (focal plane location, orientation, configuration) and
+  some other basic numbers in the module to reflect WFIRST Cycle 7 design.  A
+  detailed listing of what was and was not updated can be found in the issue
+  page (#675)
 - Added support for reading in of unsigned int Images (#715)
 - Added a new Sensor class hierarchy, including SiliconSensor, which models
   the repulsion of incoming electrons by the electrons already accumulated on
