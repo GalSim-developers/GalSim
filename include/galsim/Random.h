@@ -134,14 +134,13 @@ namespace galsim {
          */
         BaseDeviate(const char * str_c) : _rng(new rng_type())
         {
-            std::string str;
             if (str_c==NULL) {
-                str="";
+                seed(0);
             } else {
-                str=str_c;
+                std::string str=str_c;
+                std::istringstream iss(str);
+                iss >> *_rng;
             }
-            std::istringstream iss(str);
-            iss >> *_rng;
         }
 
         /**
