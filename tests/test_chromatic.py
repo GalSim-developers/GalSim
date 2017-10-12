@@ -2177,6 +2177,7 @@ def test_ne():
 
     # Check that all the various combinations are properly unequal
     gals = [cgal1, 
+            galsim.ChromaticObject(gal1),
             galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50)),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),
             gal1 * sed1,
