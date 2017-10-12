@@ -416,7 +416,7 @@ namespace hsm {
         const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
         const BaseImage<int> &gal_mask_image,
         float sky_var = 0.0, const char *shear_est = "REGAUSS",
-        const std::string& recompute_flux = "FIT",
+        const char* recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
         galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
@@ -475,7 +475,7 @@ namespace hsm {
     unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         ObjectData& gal_data, ObjectData& PSF_data,
-        const std::string& shear_est, unsigned long flags,
+        const char* shear_est, unsigned long flags,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
