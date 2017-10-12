@@ -59,7 +59,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # Don't transform ChromaticSum object, better to just transform the arguments.
         if isinstance(obj, galsim.ChromaticSum) or isinstance(obj, galsim.Sum):
             new_obj = galsim.ChromaticSum(
-                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.objlist ])
+                [ Transform(o,jac,offset,flux_ratio,gsparams) for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
                 dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
                 new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
@@ -71,8 +71,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
               and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
               and offset == galsim.PositionD(0.,0.)):
-            first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
-            return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
+            first = Transform(obj.obj_list[0],flux_ratio=flux_ratio,gsparams=gsparams)
+            return galsim.ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
             return galsim.ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams)
@@ -127,37 +127,42 @@ class Transformation(galsim.GSObject):
             self._original = obj.original
         else:
             self._original = obj
-        sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                  gsparams)
-        galsim.GSObject.__init__(self, sbt)
+        self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
+                                        gsparams)
 
-        self._jac = np.asarray(sbt.getJac())
-        self._offset = sbt.getOffset()
-        self._flux_ratio = sbt.getFluxScaling()
+        self._jac = np.asarray(self._sbp.getJac())
+        self._offset = self._sbp.getOffset()
+        self._flux_ratio = self._sbp.getFluxScaling()
         self._gsparams = gsparams
 
     def getJac(self):
         """Return the Jacobian of the transformation.
         """
-        return self._jac
+        from .deprecated import depr
+        depr("transform.getJac()", 1.5, "transform.jac.ravel()")
+        return self.jac.ravel()
 
     def getOffset(self):
         """Return the offset of the transformation.
         """
-        return self._offset
+        from .deprecated import depr
+        depr("transform.getOffset()", 1.5, "transform.offset")
+        return self.offset
 
     def getFluxRatio(self):
         """Return the flux ratio of the transformation.
         """
-        return self._flux_ratio
+        from .deprecated import depr
+        depr("transform.getFluxRatio()", 1.5, "transform.flux_radio")
+        return self.flux_ratio
 
     @galsim.utilities.lazy_property
     def noise(self):
         if self.original.noise is None:
             return None
         else:
-            jac = self.SBProfile.getJac()
-            flux_ratio = self.SBProfile.getFluxScaling()
+            jac = self._jac
+            flux_ratio = self._flux_ratio
             return galsim.correlatednoise._BaseCorrelatedNoise(
                     self.original.noise.rng,
                     galsim._Transform(self.original.noise._profile,
@@ -200,12 +205,12 @@ class Transformation(galsim.GSObject):
             single = None
             if flip:
                 single = 0  # Special value indicating to just use transform.
-            if abs(theta.rad()) > 1.e-12:
+            if abs(theta.rad) > 1.e-12:
                 if single is None:
                     single = '.rotate(%s)'%theta
                 else:
                     single = 0
-            if shear.getG() > 1.e-12:
+            if shear.g > 1.e-12:
                 if single is None:
                     single = '.shear(%s)'%shear
                 else:
@@ -231,11 +236,11 @@ class Transformation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._original._prepareDraw()
-        dudx, dudy, dvdx, dvdy = self.getJac()
-        self.SBProfile = galsim._galsim.SBTransform(self._original.SBProfile,
-                                                    dudx, dudy, dvdx, dvdy,
-                                                    self.getOffset(), self.getFluxRatio(),
-                                                    self._gsparams)
+        dudx, dudy, dvdx, dvdy = self._jac
+        self._sbp = galsim._galsim.SBTransform(self._original._sbp,
+                                               dudx, dudy, dvdx, dvdy,
+                                               self.offset, self.flux_ratio,
+                                               self._gsparams)
 
     def _fwd_ident(self, x, y):
         return x, y
@@ -283,7 +288,7 @@ class Transformation(galsim.GSObject):
         # repr, which is not the most efficient serialization.  Especially for things like
         # SBInterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
@@ -302,12 +307,10 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
         ret._original = obj.original
     else:
         ret._original = obj
-    sbt = _galsim.SBTransform(obj.SBProfile, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                              gsparams)
-    galsim.GSObject.__init__(ret, sbt)
-    ret._jac = np.asarray(sbt.getJac())
-    ret._offset = sbt.getOffset()
-    ret._flux_ratio = sbt.getFluxScaling()
+    ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
+    ret._jac = np.asarray(ret._sbp.getJac())
+    ret._offset = ret._sbp.getOffset()
+    ret._flux_ratio = ret._sbp.getFluxScaling()
     ret._gsparams = gsparams
     return ret
 

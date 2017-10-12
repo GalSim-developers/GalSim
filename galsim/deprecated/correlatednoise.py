@@ -172,7 +172,7 @@ def CN_calculateCovarianceMatrix(self, bounds, scale):
     depr('calculateCovarianceMatrix',1.3,'',
          'This functionality has been removed. If you have a need for it, please open '+
          'an issue requesting the functionality.')
-    return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
+    return galsim._galsim._calculateCovarianceMatrix(self._profile._sbp, bounds, scale)
 
 galsim.correlatednoise._BaseCorrelatedNoise.applyWhiteningTo = CN_applyWhiteningTo
 galsim.correlatednoise._BaseCorrelatedNoise.createExpanded = CN_createExpanded

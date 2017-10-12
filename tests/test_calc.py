@@ -37,7 +37,7 @@ def test_hlr():
 
     print('g1 native hlr = ',g1.half_light_radius)
     print('g1.calculateHLR = ',g1.calculateHLR())
-    print('nyquist scale = ',g1.nyquistScale())
+    print('nyquist scale = ',g1.nyquist_scale)
     # These should be exactly equal.
     np.testing.assert_equal(g1.half_light_radius, g1.calculateHLR(),
                             err_msg="Gaussian.calculateHLR() returned wrong value.")
@@ -72,7 +72,7 @@ def test_hlr():
 
     print('e1 native hlr = ',e1.half_light_radius)
     print('e1.calculateHLR = ',e1.calculateHLR())
-    print('nyquist scale = ',e1.nyquistScale())
+    print('nyquist scale = ',e1.nyquist_scale)
     # These should be exactly equal.
     np.testing.assert_equal(e1.half_light_radius, e1.calculateHLR(),
                             err_msg="Exponential.calculateHLR() returned wrong value.")
@@ -107,8 +107,8 @@ def test_hlr():
                                    err_msg="shifted Exponential HLR is not accurate.")
 
     # Can set a centroid manually.  This should be equivalent to the default.
-    print('e3.centroid = ',e3.centroid())
-    test_hlr = e3.calculateHLR(scale=0.1, centroid=e3.centroid())
+    print('e3.centroid = ',e3.centroid)
+    test_hlr = e3.calculateHLR(scale=0.1, centroid=e3.centroid)
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
                                    err_msg="shifted HLR with explicit centroid is not accurate.")
 
@@ -135,7 +135,7 @@ def test_hlr():
     bounds = galsim.BoundsI(-1234, -1234+2048, 8234, 8234+2099)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateHLR(center=im.trueCenter()+offset)
+    test_hlr = im.calculateHLR(center=im.true_center+offset)
     print('im.calculateHLR() = ',test_hlr)
     print('ratio - 1 = ',test_hlr/e1.half_light_radius-1)
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
@@ -249,8 +249,8 @@ def test_sigma():
             err_msg="shifted Exponential MomentRadius is not accurate.")
 
     # Can set a centroid manually.  This should be equivalent to the default.
-    print('e3.centroid = ',e3.centroid())
-    test_sigma = e3.calculateMomentRadius(scale=0.1, size=2000, centroid=e3.centroid())
+    print('e3.centroid = ',e3.centroid)
+    test_sigma = e3.calculateMomentRadius(scale=0.1, size=2000, centroid=e3.centroid)
     np.testing.assert_almost_equal(
             test_sigma/e1_sigma, 1.0, decimal=4,
             err_msg="shifted MomentRadius with explicit centroid is not accurate.")
@@ -269,7 +269,7 @@ def test_sigma():
     bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
-    test_hlr = im.calculateMomentRadius(center=im.trueCenter()+offset)
+    test_hlr = im.calculateMomentRadius(center=im.true_center+offset)
     print('im.calculateMomentRadius() = ',test_sigma)
     print('ratio - 1 = ',test_sigma/e1_sigma-1)
     np.testing.assert_almost_equal(
@@ -347,8 +347,8 @@ def test_fwhm():
                                    err_msg="shifted Exponential FWHM is not accurate.")
 
     # Can set a centroid manually.  This should be equivalent to the default.
-    print('e3.centroid = ',e3.centroid())
-    test_fwhm = e3.calculateFWHM(scale=0.1, centroid=e3.centroid())
+    print('e3.centroid = ',e3.centroid)
+    test_fwhm = e3.calculateFWHM(scale=0.1, centroid=e3.centroid)
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="shifted FWHM with explicit centroid is not accurate.")
 
@@ -364,7 +364,7 @@ def test_fwhm():
     bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
     offset = galsim.PositionD(29,1)
     im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset, method='sb')
-    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0), center=im.trueCenter()+offset)
+    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0), center=im.true_center+offset)
     print('im.calculateFWHM() = ',test_fwhm)
     print('ratio - 1 = ',test_fwhm/e1_fwhm-1)
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,

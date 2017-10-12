@@ -57,7 +57,7 @@ test_scale = 1.8
 
 @timer
 def test_convolve():
-    """Test the convolution of a Moffat and a Box SBProfile against a known result.
+    """Test the convolution of a Moffat and a Box profile against a known result.
     """
     dx = 0.2
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
@@ -111,12 +111,11 @@ def test_convolve():
                 "expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv.centroid(), cen)
-    np.testing.assert_almost_equal(conv.getFlux(), psf.flux * pixel.flux)
+    np.testing.assert_equal(conv.centroid, cen)
     np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
     # Not almost_equal.  Convolutions don't give a very good estimate.
-    # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
-    np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
+    # They are almost always too high, which is actually ok for how we use max_sb for phot shooting.
+    np.testing.assert_array_less(conv.xValue(cen), conv.max_sb)
 
     check_basic(conv, "Moffat * Pixel")
 
@@ -132,6 +131,7 @@ def test_convolve():
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
+    do_pickle(single._sbp)
     do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
@@ -179,14 +179,14 @@ def test_convolve_flux_scaling():
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj *= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj /= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -194,11 +194,11 @@ def test_convolve_flux_scaling():
     obj2 = obj * 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -206,11 +206,11 @@ def test_convolve_flux_scaling():
     obj2 = 2. * obj
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -218,17 +218,17 @@ def test_convolve_flux_scaling():
     obj2 = obj / 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
 @timer
 def test_shearconvolve():
-    """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
+    """Test the convolution of a sheared Gaussian and a Box profile against a known result.
     """
     e1 = 0.04
     e2 = 0.0
@@ -280,7 +280,7 @@ def test_shearconvolve():
 
 @timer
 def test_realspace_convolve():
-    """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
+    """Test the real-space convolution of a Moffat and a Box profile against a known result.
     """
     dx = 0.2
     # Note: Using an image created from Maple "exact" calculations.
@@ -342,10 +342,9 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"Truncated Moffat*Box")
 
     # Check picklability
-    do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
+    do_pickle(conv._sbp)
 
     # Check some warnings that should be raised
 
@@ -370,13 +369,13 @@ def test_realspace_convolve():
     check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
+    do_pickle(conv._sbp)
 
     conv = galsim.AutoCorrelate(psf,real_space=True)
     check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv.SBProfile)
+    do_pickle(conv._sbp)
 
     try:
         np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
@@ -447,7 +446,7 @@ def test_realspace_distorted_convolve():
 
 @timer
 def test_realspace_shearconvolve():
-    """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a
+    """Test the real-space convolution of a sheared Gaussian and a Box profile against a
        known result.
     """
     e1 = 0.04
@@ -516,10 +515,9 @@ def test_add():
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(sum_gauss.centroid(), cen)
-    np.testing.assert_almost_equal(sum_gauss.getFlux(), gauss1.flux + gauss2.flux)
+    np.testing.assert_equal(sum_gauss.centroid, cen)
     np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
+    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.max_sb)
 
     # Check with default_params
     sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)
@@ -580,10 +578,9 @@ def test_add():
     do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum_gauss.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
     do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
     do_pickle(sum_gauss)
-    do_pickle(sum_gauss.SBProfile)
+    do_pickle(sum_gauss._sbp)
 
     # Sum of just one argument should be equivalent to that argument.
     single = galsim.Add(gauss1)
@@ -643,46 +640,46 @@ def test_add_flux_scaling():
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj *= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj /= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj * 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = 2. * obj
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj / 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
@@ -707,11 +704,10 @@ def test_deconvolve():
             err_msg="Image of Deconvolve * obj^2 doesn't match obj alone")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(inv_psf.centroid(), cen)
-    np.testing.assert_almost_equal(inv_psf.getFlux(), 1./psf.flux)
+    np.testing.assert_equal(inv_psf.centroid, cen)
     np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
-    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve maxSB.
-    np.testing.assert_almost_equal(inv_psf.maxSB(), -psf.maxSB() / psf.flux**2)
+    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve max_sb.
+    np.testing.assert_almost_equal(inv_psf.max_sb, -psf.max_sb / psf.flux**2)
 
     check_basic(inv_psf, "Deconvolve(Moffat)", do_x=False)
 
@@ -728,16 +724,15 @@ def test_deconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Image of Deconvolve of asymmetric sum of Gaussians doesn't match obj alone")
 
-    np.testing.assert_equal(inv_obj.centroid(), -obj.centroid())
-    np.testing.assert_almost_equal(inv_obj.getFlux(), 1./obj.flux)
+    np.testing.assert_equal(inv_obj.centroid, -obj.centroid)
     np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
-    np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
+    np.testing.assert_almost_equal(inv_obj.max_sb, -obj.max_sb / obj.flux**2)
 
     check_basic(inv_obj, "Deconvolve(asym)", do_x=False)
 
     # Check picklability
     do_pickle(inv_obj)
-    do_pickle(inv_obj.SBProfile)
+    do_pickle(inv_obj._sbp)
 
     # And a significantly transformed deconvolve object
     jac = (0.3, -0.8, -0.7, 0.4)
@@ -753,17 +748,15 @@ def test_deconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Transformed Deconvolve didn't cancel transformed original")
 
-    np.testing.assert_equal(transformed_inv_obj.centroid(), -transformed_obj.centroid())
-    np.testing.assert_almost_equal(transformed_inv_obj.getFlux(), 1./transformed_obj.flux)
+    np.testing.assert_equal(transformed_inv_obj.centroid, -transformed_obj.centroid)
     np.testing.assert_almost_equal(transformed_inv_obj.flux, 1./transformed_obj.flux)
-    np.testing.assert_almost_equal(transformed_inv_obj.maxSB(),
-                                   -transformed_obj.maxSB() / transformed_obj.flux**2)
+    np.testing.assert_almost_equal(transformed_inv_obj.max_sb,
+                                   -transformed_obj.max_sb / transformed_obj.flux**2)
 
     check_basic(transformed_inv_obj, "transformed Deconvolve(asym)", do_x=False)
 
     # Check picklability
     do_pickle(transformed_inv_obj)
-    do_pickle(transformed_inv_obj.SBProfile)
 
     # Should raise an exception for invalid arguments
     try:
@@ -816,16 +809,14 @@ def test_autoconvolve():
     check_basic(conv, "AutoConvolve(Moffat)")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv2.centroid(), cen)
-    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_equal(conv2.centroid, cen)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
-    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.max_sb)
 
     # Check picklability
-    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(conv2)
-    do_pickle(conv2.SBProfile)
+    do_pickle(conv2._sbp)
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
@@ -851,10 +842,9 @@ def test_autoconvolve():
             err_msg="Using AutoCorrelate with GSParams() disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(conv2.centroid(), cen)
-    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_equal(conv2.centroid, cen)
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
-    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.max_sb)
 
     # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
@@ -871,11 +861,10 @@ def test_autoconvolve():
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
 
-    cen = 2. * add.centroid()
-    np.testing.assert_equal(autoconv.centroid(), cen)
-    np.testing.assert_almost_equal(autoconv.getFlux(), add.flux**2)
+    cen = 2. * add.centroid
+    np.testing.assert_equal(autoconv.centroid, cen)
     np.testing.assert_almost_equal(autoconv.flux, add.flux**2)
-    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
+    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.max_sb)
 
     check_basic(autoconv, "AutoConvolve(asym)")
 
@@ -929,10 +918,9 @@ def test_autocorrelate():
     do_shoot(corr,myImg2,"AutoCorrelate")
 
     # Check picklability
-    do_pickle(corr.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
     do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(corr)
-    do_pickle(corr.SBProfile)
+    do_pickle(corr._sbp)
 
     # Should raise an exception for invalid arguments
     try:
@@ -1005,13 +993,13 @@ def test_fourier_sqrt():
     myImg2.setCenter(0,0)
 
     # Test trivial case, where we could (but don't) analytically collapse the
-    # chain of SBProfiles by recognizing that FourierSqrt is the inverse of
+    # chain of profiles by recognizing that FourierSqrt is the inverse of
     # AutoConvolve.
     psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
     psf.drawImage(myImg1, method='no_pixel')
     sqrt1 = galsim.FourierSqrt(psf)
     psf2 = galsim.AutoConvolve(sqrt1)
-    np.testing.assert_almost_equal(psf.stepK(), psf2.stepK())
+    np.testing.assert_almost_equal(psf.stepk, psf2.stepk)
     psf2.drawImage(myImg2, method='no_pixel')
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
@@ -1022,7 +1010,7 @@ def test_fourier_sqrt():
 
     # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
     a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
+    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test
     b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
     check = galsim.Sum([a, b])
     sqrt = galsim.FourierSqrt(
@@ -1032,27 +1020,26 @@ def test_fourier_sqrt():
             2*galsim.Convolve([a, b])
         ])
     )
-    np.testing.assert_almost_equal(check.stepK(), sqrt.stepK())
+    np.testing.assert_almost_equal(check.stepk, sqrt.stepk)
     check.drawImage(myImg1, method='no_pixel')
     sqrt.drawImage(myImg2, method='no_pixel')
-    np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
-    np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
-    np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
-    np.testing.assert_almost_equal(check.xValue(check.centroid()), check.maxSB())
-    print('check.maxSB = ',check.maxSB())
-    print('sqrt.maxSB = ',sqrt.maxSB())
+    np.testing.assert_almost_equal(check.centroid.x, sqrt.centroid.x)
+    np.testing.assert_almost_equal(check.centroid.y, sqrt.centroid.y)
+    np.testing.assert_almost_equal(check.flux, sqrt.flux)
+    np.testing.assert_almost_equal(check.xValue(check.centroid), check.max_sb)
+    print('check.max_sb = ',check.max_sb)
+    print('sqrt.max_sb = ',sqrt.max_sb)
     # This isn't super accurate...
-    np.testing.assert_allclose(check.maxSB(), sqrt.maxSB(), rtol=0.1)
+    np.testing.assert_allclose(check.max_sb, sqrt.max_sb, rtol=0.1)
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
             err_msg="Fourier square root of expanded square disagrees with original")
 
     # Check picklability
-    do_pickle(sqrt1.SBProfile, lambda x: (repr(x.getObj()), x.getGSParams()))
     do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sqrt1)
-    do_pickle(sqrt1.SBProfile)
+    do_pickle(sqrt1._sbp)
 
     # Should raise an exception for invalid arguments
     try:

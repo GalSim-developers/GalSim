@@ -131,8 +131,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     bounds by the specified width.
     """)
 
-    set_func_doc(Class.center, "Return the central point of the Bounds as a Position.")
-
     set_func_doc(Class.includes, """Test whether a supplied `(x,y)` pair, Position, or Bounds
     lie within a defined Bounds rectangle of this instance.
 
@@ -153,24 +151,51 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     set_func_doc(Class.expand, "Grow the Bounds by the supplied factor about the center.")
     set_func_doc(Class.isDefined, "Test whether Bounds rectangle is defined.")
-    set_func_doc(Class.getXMin, "Get the value of xmin.")
-    set_func_doc(Class.getXMax, "Get the value of xmax.")
-    set_func_doc(Class.getYMin, "Get the value of ymin.")
-    set_func_doc(Class.getYMax, "Get the value of ymax.")
-    set_func_doc(Class.shift, """Shift the Bounds instance by a supplied position
-
-    Calling Examples
-    ----------------
-    The input shift takes either a PositionI or PositionD instance, which must match
-    the type of the Bounds instance:
-
-        >>> bounds = BoundsI(1,32,1,32)
-        >>> bounds = bounds.shift(galsim.PositionI(3, 2))
-        >>> bounds = BoundsD(0, 37.4, 0, 49.9)
-        >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
-    """)
 
 del Class    # cleanup public namespace
+
+def BoundsD_center(self):
+    "The nominal center of the Bounds as a Position."
+    from .position import dep_posd_type
+    return dep_posd_type(self._center(), 'bounds', 'center')
+
+def BoundsD_true_center(self):
+    "The true center of the Bounds as a PositionD."
+    return self._trueCenter()
+
+def BoundsD_origin(self):
+    "The origin (lower-left corner) of the Bounds as a Position."
+    from .position import dep_posd_type
+    return dep_posd_type(self._origin(), 'bounds', 'origin')
+
+def BoundsI_center(self):
+    "The nominal center of the Bounds as a Position."
+    from .position import dep_posi_type
+    return dep_posi_type(self._center(), 'bounds', 'center')
+
+def BoundsI_true_center(self):
+    "The true center of the Bounds as a PositionD."
+    return self._trueCenter()
+
+def BoundsI_origin(self):
+    "The origin (lower-left corner) of the Bounds as a Position."
+    from .position import dep_posi_type
+    return dep_posi_type(self._origin(), 'bounds', 'origin')
+
+def Bounds_trueCenter(self):
+    from .deprecated import depr
+    depr('bounds.trueCenter()', 1.5, 'bounds.true_center')
+    return self.true_center
+
+_galsim.BoundsD.center = property(BoundsD_center)
+_galsim.BoundsD.true_center = property(BoundsD_true_center)
+_galsim.BoundsD.trueCenter = Bounds_trueCenter  # deprecated
+_galsim.BoundsD.origin = property(BoundsD_origin)
+
+_galsim.BoundsI.center = property(BoundsI_center)
+_galsim.BoundsI.true_center = property(BoundsI_true_center)
+_galsim.BoundsI.trueCenter = Bounds_trueCenter  # deprecated
+_galsim.BoundsI.origin = property(BoundsI_origin)
 
 # Force the input args to BoundsI to be `int` (correctly handles elements of int arrays)
 _orig_BoundsI_init = BoundsI.__init__

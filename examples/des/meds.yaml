@@ -303,6 +303,6 @@ output:
             # is just an index into the list of galaxies that pass our cuts.
             alt_cosmos_index: gal.items.0.index
 
-            theta: "$(@gal.rotate).rad()"
+            theta: "$(@gal.rotate).rad"
             g1: "$(@gal.shear).g1"
             g2: "$(@gal.shear).g2"

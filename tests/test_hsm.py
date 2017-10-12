@@ -629,7 +629,7 @@ def test_hsmparams_nodefault():
                                  tot_psf_image, hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
         np.testing.assert_raises(
             RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
-            guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
+            guess_centroid=galsim.PositionD(47., tot_gal_image.true_center.y),
             hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
     except ImportError:
         print('The assert_raises tests require nose')
@@ -708,10 +708,10 @@ def test_bounds_centroid():
     obj.drawImage(image=im, scale=test_scale, method='no_pixel')
     mom = im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of even-sized image')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of even-sized image')
 
     # Draw the same object into odd-sized image with non-trivial bounds.
@@ -721,20 +721,20 @@ def test_bounds_centroid():
     obj.drawImage(image=im, scale=test_scale, method='no_pixel')
     mom = im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of odd-sized image')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of odd-sized image')
 
     # Check that it still works with a symmetric sub-image.
     sub_im = im[galsim.BoundsI(b2.xmin+2, b2.xmax-2, b2.ymin+2, b2.ymax-2)]
     mom = sub_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(
-        mom.moments_centroid.x, sub_im.trueCenter().x, decimal=7,
+        mom.moments_centroid.x, sub_im.true_center.x, decimal=7,
         err_msg='Moments x centroid differs from true center of odd-sized subimage')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, sub_im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, sub_im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of odd-sized subimage')
 
     # Check that we can take a weird/asymmetric sub-image, and it fails because of centroid shift.
@@ -748,12 +748,12 @@ def test_bounds_centroid():
     # stringent than some of the previous ones, because our subimage cut off a decent part of the
     # light profile in the x direction, affecting the x centroid estimate.  But the y centroid test
     # is the same precision as before.
-    mom = sub_im.FindAdaptiveMom(guess_centroid=im.trueCenter())
+    mom = sub_im.FindAdaptiveMom(guess_centroid=im.true_center)
     np.testing.assert_approx_equal(
-        mom.moments_centroid.x, im.trueCenter().x, significant=4,
+        mom.moments_centroid.x, im.true_center.x, significant=4,
         err_msg='Moments x centroid differs from true center of asymmetric subimage')
     np.testing.assert_almost_equal(
-        mom.moments_centroid.y, im.trueCenter().y, decimal=7,
+        mom.moments_centroid.y, im.true_center.y, decimal=7,
         err_msg='Moments y centroid differs from true center of asymmetric subimage')
 
 

@@ -392,9 +392,9 @@ def test_dcr_moments():
     dR_analytic = (R_bulge[1] - R_disk[1]) * 180.0/np.pi * 3600
     dV_analytic = (V_bulge[1,1] - V_disk[1,1]) * (180.0/np.pi * 3600)**2
 
-    # also compute dR_analytic using ChromaticObject.centroid()
-    centroid1 = final1.centroid(bandpass)
-    centroid2 = final2.centroid(bandpass)
+    # also compute dR_analytic using ChromaticObject.calculateCentroid()
+    centroid1 = final1.calculateCentroid(bandpass)
+    centroid2 = final2.calculateCentroid(bandpass)
     dR_centroid = (centroid1 - centroid2).y
 
     print('image delta R:    {0}'.format(dR_image))
@@ -406,7 +406,7 @@ def test_dcr_moments():
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
     np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
                                    err_msg="direct dRbar calculation doesn't match"
-                                           +" ChromaticObject.centroid()")
+                                           +" ChromaticObject.calculateCentroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
                                    err_msg="dV Shift from DCR doesn't match analytic formula")
 
@@ -690,7 +690,7 @@ def test_ChromaticConvolution_of_ChromaticConvolution():
     e = galsim.Convolve(a, b)
     f = galsim.Convolve(c, d)
     g = galsim.Convolve(e, f)
-    if any(isinstance(h, galsim.ChromaticConvolution) for h in g.objlist):
+    if any(isinstance(h, galsim.ChromaticConvolution) for h in g.obj_list):
         raise AssertionError("ChromaticConvolution did not expand ChromaticConvolution argument")
 
 
@@ -923,11 +923,11 @@ def test_ChromaticObject_rotate():
     # mxx = int(dw (1 + 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # myy = int(dw (1 - 0.3 cos(2theta(w))) * F(w))  / int(dw F(w))
     # mxy = int(dw 0.3 sin(2theta(w)) * F(w))  / int(dw F(w))
-    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxx = galsim.integ.int1d(lambda w: (1.+0.3*np.cos(2*rotation(w))) * bp(w),500,700)
     rot_mxx /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w).rad())) * bp(w),500,700)
+    rot_myy = galsim.integ.int1d(lambda w: (1.-0.3*np.cos(2*rotation(w))) * bp(w),500,700)
     rot_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w).rad())) * bp(w),500,700)
+    rot_mxy = galsim.integ.int1d(lambda w: (0.3*np.sin(2*rotation(w))) * bp(w),500,700)
     rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
     rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
@@ -942,10 +942,10 @@ def test_ChromaticObject_rotate():
 
     # Repeat using transform rather than rotate
     gal3 = cgal.transform(
-                lambda w: np.cos(rotation(w).rad()),
-                lambda w: -np.sin(rotation(w).rad()),
-                lambda w: np.sin(rotation(w).rad()),
-                lambda w: np.cos(rotation(w).rad()) )
+                lambda w: np.cos(rotation(w)),
+                lambda w: -np.sin(rotation(w)),
+                lambda w: np.sin(rotation(w)),
+                lambda w: np.cos(rotation(w)) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mom = galsim.utilities.unweighted_moments(im3)
     np.testing.assert_almost_equal((mom['Mxx']-mom['Myy'])/(mom['Mxx']+mom['Myy']), rot_e1, decimal=4)
@@ -1294,7 +1294,7 @@ def test_separable_ChromaticSum():
     if cgal3.separable:
         raise AssertionError("failed to identify inseparable ChromaticSum")
     # check that its objlist contains a separable Chromatic and a separable ChromaticSum
-    types = dict((o.__class__, o) for o in cgal3.objlist)
+    types = dict((o.__class__, o) for o in cgal3.obj_list)
     if galsim.ChromaticTransformation not in types or galsim.ChromaticSum not in types:
         raise AssertionError("failed to process list of objects with repeated SED")
 
@@ -1332,7 +1332,7 @@ def test_separable_ChromaticSum():
 
 @timer
 def test_centroid():
-    """Test the ChromaticObject.centroid function."""
+    """Test the ChromaticObject.calculateCentroid function."""
     sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
     shift_fn = lambda w: (w, 0)
@@ -1342,15 +1342,15 @@ def test_centroid():
     # galaxy.  The shift function contributes an additional factor of wavelength to the x-centroid
     # integrand.  The end result is that the x-centroid should be:
     # int(w^3, 0, 1) / int(w^2, 0, 1) = (1/4)/(1/3) = 3/4.
-    centroid = gal.centroid(bp)
-    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
-    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+    cen = gal.calculateCentroid(bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.calculateCentroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
 
     # Now check the centroid sampling integrator...
     gal.wave_list = np.linspace(0.0, 1.0, 500)
-    centroid = gal.centroid(bp)
-    np.testing.assert_almost_equal(centroid.x, 0.75, 5, "ChromaticObject.centroid() failed")
-    np.testing.assert_almost_equal(centroid.y, 0.0, 5, "ChromaticObject.centroid() failed")
+    cen = gal.calculateCentroid(bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.calculateCentroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.calculateCentroid() failed")
 
 
 @timer
@@ -1885,6 +1885,10 @@ def test_chromatic_invariant():
     chrom1 = galsim.ChromaticObject(gsobj) * bulge_SED
     chrom2 = gsobj * bulge_SED
     chrom3 = galsim.ChromaticObject(gsobj * bulge_SED)
+    do_pickle(chrom1)
+    do_pickle(chrom2)
+    do_pickle(chrom3)
+    do_pickle(galsim.ChromaticObject(gsobj))
 
     check_chromatic_invariant(chrom1)
     check_chromatic_invariant(chrom2)
@@ -1960,6 +1964,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(deconv)
     #do_pickle(deconv)
     repr(deconv) # gratuitous coverage of repr until do_pickle works.
+    str(deconv)
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
@@ -1982,6 +1987,7 @@ def test_chromatic_invariant():
     check_chromatic_invariant(four2)
     #do_pickle(four1)
     repr(four1) # gratuitous coverage of repr until do_pickle works.
+    str(four1)
 
     # And a few transforms too...
     # ChromaticTransformation
@@ -2033,7 +2039,6 @@ def test_ne():
     # ChromaticObject.  Only param is the GSObject to chromaticize.
     # The following should test unequal:
     gals = [cgal1, cgal2]
-
     all_obj_diff(gals)
 
     # # Check that setifying doesn't remove any duplicate items.
@@ -2058,8 +2063,8 @@ def test_ne():
     # and H2O_pressure.
 
     # Some params to test the celestial coords inputs.
-    ra = galsim.HMS_Angle("14:03:13") # hours : minutes : seconds
-    dec = galsim.DMS_Angle("54:20:57") # degrees : minutes : seconds
+    ra = galsim.Angle.from_hms("14:03:13") # hours : minutes : seconds
+    dec = galsim.Angle.from_dms("54:20:57") # degrees : minutes : seconds
     m101 = galsim.CelestialCoord(ra, dec)
     latitude = 19.8207 * galsim.degrees # latitude of Mauna Kea
     HA = -1.0 * galsim.hours # Hour angle = one hour before transit
@@ -2168,6 +2173,22 @@ def test_ne():
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, flux=1.1),
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # Check that all the various combinations are properly unequal
+    gals = [cgal1, 
+            galsim.ChromaticObject(gal1),
+            galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50)),
+            galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),
+            gal1 * sed1,
+            galsim.ChromaticTransformation(cgal1),
+            galsim.ChromaticSum(cgal1),
+            galsim.ChromaticConvolution(cgal1),
+            galsim.ChromaticDeconvolution(cgal1),
+            galsim.ChromaticAutoConvolution(cgal1),
+            galsim.ChromaticAutoCorrelation(cgal1),
+            galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
+            galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0)]
     all_obj_diff(gals)
 
 

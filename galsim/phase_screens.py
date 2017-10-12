@@ -213,9 +213,9 @@ class AtmosphericScreen(object):
             self._ys = self._xs
             self._tab2d = galsim.LookupTable2D(self._xs, self._ys, self._screen, edge_mode='wrap')
 
-    # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
+    # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def stepK(self, **kwargs):
+    def _stepK(self, **kwargs):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
@@ -227,7 +227,7 @@ class AtmosphericScreen(object):
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
-        return obj.stepK()
+        return obj.stepk
 
     def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront due to atmospheric phase screen.
@@ -756,15 +756,22 @@ class OpticalScreen(object):
         jmax = len(self.aberrations)-1
         maxn = _noll_to_zern(jmax)[0]
         shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
-        self.coef_array = np.zeros(shape, dtype=np.complex128)
+        self._coef_array = np.zeros(shape, dtype=np.complex128)
 
         noll_coef = _noll_coef_array(jmax, self.obscuration, self.annular_zernike)
-        self.coef_array = np.dot(noll_coef, self.aberrations[1:])
+        self._coef_array = np.dot(noll_coef, self.aberrations[1:])
         # Convert from unit disk coefficients to full aperture (diam != 2) coefficients.
-        self.coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+        self._coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
 
         self.dynamic = False
         self.reversible = True
+
+    @property
+    def coef_array(self):
+        from .deprecated import depr
+        depr('optical_screen.coef_array', 1.5, 'optical_screen._coef_array',
+             'This is officially an implementation detail that users should not need to use.')
+        return self._coef_array
 
     def __str__(self):
         return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)
@@ -792,25 +799,25 @@ class OpticalScreen(object):
         return hash(("galsim.OpticalScreen", self.diam, self.obscuration, self.annular_zernike,
                      tuple((self.aberrations*self.lam_0).ravel())))
 
-    # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
+    # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def stepK(self, **kwargs):
-        """Return an appropriate stepK for this phase screen.
+    def _stepK(self, **kwargs):
+        """Return an appropriate stepk for this phase screen.
 
         @param lam         Wavelength in nanometers.
         @param diam        Aperture diameter in meters.
         @param obscuration Fractional linear aperture obscuration. [default: 0.0]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
-        @returns  stepK in inverse arcsec.
+        @returns stepk in inverse arcsec.
         """
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
         gsparams = kwargs.get('gsparams', None)
-        # Use an Airy for get appropriate stepK.
+        # Use an Airy for get appropriate stepk.
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
-        return obj.stepK()
+        return obj.stepk
 
     def wavefront(self, u, v, t=None, theta=None):
         """ Compute wavefront due to optical phase screen.
@@ -837,7 +844,7 @@ class OpticalScreen(object):
         # Note, this phase screen is actually independent of time and theta.
         r = u + 1j*v
         rsqr = np.abs(r)**2
-        return galsim.utilities.horner2d(rsqr, r, self.coef_array, dtype=complex).real * self.lam_0
+        return galsim.utilities.horner2d(rsqr, r, self._coef_array, dtype=complex).real * self.lam_0
 
     def wavefront_gradient(self, u, v, t=None, theta=None):
         """ Compute gradient of wavefront due to atmospheric phase screen.

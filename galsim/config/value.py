@@ -483,7 +483,7 @@ def _GenerateFromRTheta(config, base, value_type):
     theta = kwargs['theta']
     import math
     #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
-    return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
+    return galsim.PositionD(r*math.cos(theta.rad), r*math.sin(theta.rad)), safe
 
 def _GenerateFromRADec(config, base, value_type):
     """@brief Return a CelestialCoord constructed from given (ra,dec)

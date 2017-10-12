@@ -156,12 +156,12 @@ def test_wfirst_wcs():
     pos = galsim.CelestialCoord(90.*galsim.degrees, 0.*galsim.degrees)
     test_date = datetime.datetime(2025,3,20,9,2)
     pa = galsim.wfirst.bestPA(pos, test_date)
-    np.testing.assert_almost_equal(pa.rad(), 0., decimal=3)
+    np.testing.assert_almost_equal(pa.rad, 0., decimal=3)
     # Now make it look at the same RA as the sun but quite different declination.  It wants +Z
     # pointing North toward Sun, so we'll get a -90 degree angle for the PA.
     pos = galsim.CelestialCoord(0.*galsim.degrees, -70.*galsim.degrees)
     pa = galsim.wfirst.bestPA(pos, test_date)
-    np.testing.assert_almost_equal(pa.rad(), -np.pi/2, decimal=3)
+    np.testing.assert_almost_equal(pa.rad, -np.pi/2, decimal=3)
 
 
 @timer

@@ -105,7 +105,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     # And latitude symmetries:
     if ecliptic_lat/galsim.degrees < 0.:
         ecliptic_lat = abs(ecliptic_lat/galsim.degrees)*galsim.degrees
-    sin_ecliptic_lat = np.sin(ecliptic_lat.rad())
+    sin_ecliptic_lat = np.sin(ecliptic_lat)
 
     # Take the lookup table, and turn negative numbers (indicating failure because of proximity to
     # sun) to large positive values so that we can identify them as bad after interpolation.

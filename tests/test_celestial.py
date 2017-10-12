@@ -47,44 +47,46 @@ def test_angle():
     theta3 = 3 * galsim.hours
     theta4 = 45 * 60 * galsim.arcmin
     theta5 = galsim.Angle(45 * 3600 , galsim.arcsec) # Check explicit installation too.
+    theta6 = galsim._Angle(numpy.pi/4.)  # Underscore constructor implicitly uses radians
 
-    assert theta1.rad() == numpy.pi/4.
-    numpy.testing.assert_almost_equal(theta2.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta3.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta4.rad(), numpy.pi/4., decimal=12)
-    numpy.testing.assert_almost_equal(theta5.rad(), numpy.pi/4., decimal=12)
+    assert theta1.rad == numpy.pi/4.
+    numpy.testing.assert_almost_equal(theta2.rad, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta3.rad, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta4.rad, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta5.rad, numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad, numpy.pi/4., decimal=12)
 
     # Check wrapping
     theta6 = (45 + 360) * galsim.degrees
-    assert abs(theta6.rad() - theta1.rad()) > 6.
-    numpy.testing.assert_almost_equal(theta6.wrap().rad(), theta1.rad(), decimal=12)
+    assert abs(theta6.rad - theta1.rad) > 6.
+    numpy.testing.assert_almost_equal(theta6.wrap().rad, theta1.rad, decimal=12)
 
     theta7 = (45 - 360) * galsim.degrees
-    assert abs(theta7.rad() - theta1.rad()) > 6.
-    numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
+    assert abs(theta7.rad - theta1.rad) > 6.
+    numpy.testing.assert_almost_equal(theta7.wrap().rad, theta1.rad, decimal=12)
 
     # Check wrapping with non-default center
     pi_rad = pi * galsim.radians
-    numpy.testing.assert_almost_equal(theta6.wrap(pi_rad).rad(), theta1.rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(2*pi_rad).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.rad(), theta1.wrap(3*pi_rad).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-pi_rad).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.rad(), theta1.wrap(-2*pi_rad).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta6.wrap(27*galsim.radians).rad(),
-                                      theta1.wrap(27*galsim.radians).rad(), decimal=12)
-    numpy.testing.assert_almost_equal(theta7.wrap(-127*galsim.radians).rad(),
-                                      theta1.wrap(-127*galsim.radians).rad(), decimal=12)
+    numpy.testing.assert_almost_equal(theta6.wrap(pi_rad).rad, theta1.rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad, theta1.wrap(2*pi_rad).rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta6.rad, theta1.wrap(3*pi_rad).rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad, theta1.wrap(-pi_rad).rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta7.rad, theta1.wrap(-2*pi_rad).rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta6.wrap(27*galsim.radians).rad,
+                                      theta1.wrap(27*galsim.radians).rad, decimal=12)
+    numpy.testing.assert_almost_equal(theta7.wrap(-127*galsim.radians).rad,
+                                      theta1.wrap(-127*galsim.radians).rad, decimal=12)
 
     # Make a new AngleUnit as described in the AngleUnit docs
     gradians = galsim.AngleUnit(2. * numpy.pi / 400.)
     theta8 = 50 * gradians
-    numpy.testing.assert_almost_equal(theta8.rad(), numpy.pi/4., decimal=12)
+    numpy.testing.assert_almost_equal(theta8.rad, numpy.pi/4., decimal=12)
 
     # Check simple math
-    numpy.testing.assert_almost_equal((theta1 + theta2).rad(), numpy.pi/2., decimal=12)
-    numpy.testing.assert_almost_equal((4*theta3).rad(), numpy.pi, decimal=12)
-    numpy.testing.assert_almost_equal((4*theta4 - theta2).rad(), 0.75 * numpy.pi, decimal=12)
-    numpy.testing.assert_almost_equal((theta5/2.).rad(), numpy.pi / 8., decimal=12)
+    numpy.testing.assert_almost_equal((theta1 + theta2).rad, numpy.pi/2., decimal=12)
+    numpy.testing.assert_almost_equal((4*theta3).rad, numpy.pi, decimal=12)
+    numpy.testing.assert_almost_equal((4*theta4 - theta2).rad, 0.75 * numpy.pi, decimal=12)
+    numpy.testing.assert_almost_equal((theta5/2.).rad, numpy.pi / 8., decimal=12)
 
     numpy.testing.assert_almost_equal(theta3 / galsim.radians, numpy.pi/4., decimal=12)
     numpy.testing.assert_almost_equal(theta1 / galsim.hours, 3., decimal=12)
@@ -112,8 +114,8 @@ def test_celestialcoord_basic():
     """Basic tests of CelestialCoord construction. etc.
     """
     c1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)
-    numpy.testing.assert_almost_equal(c1.ra.rad(), 0., decimal=12)
-    numpy.testing.assert_almost_equal(c1.dec.rad(), 0., decimal=12)
+    numpy.testing.assert_almost_equal(c1.ra.rad, 0., decimal=12)
+    numpy.testing.assert_almost_equal(c1.dec.rad, 0., decimal=12)
 
     c2 = galsim.CelestialCoord(11. * galsim.hours, -37. * galsim.degrees)
     numpy.testing.assert_almost_equal(c2.ra / galsim.hours, 11., decimal=12)
@@ -127,8 +129,8 @@ def test_celestialcoord_basic():
     numpy.testing.assert_almost_equal(c4.ra / galsim.hours, 11., decimal=12)
     numpy.testing.assert_almost_equal(c4.dec / galsim.degrees, -37., decimal=12)
 
-    numpy.testing.assert_almost_equal(c2.distanceTo(c3).rad(), 0., decimal=12)
-    numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad(), 0., decimal=12)
+    numpy.testing.assert_almost_equal(c2.distanceTo(c3).rad, 0., decimal=12)
+    numpy.testing.assert_almost_equal(c2.distanceTo(c4).rad, 0., decimal=12)
 
     x, y, z = c1.get_xyz()
     print('c1 is at x,y,z = ',x,y,z)
@@ -170,19 +172,19 @@ def test_celestialcoord_distance():
     north_pole = galsim.CelestialCoord(0. * galsim.radians, pi/2. * galsim.radians)  # north pole
     south_pole = galsim.CelestialCoord(0. * galsim.radians, -pi/2. * galsim.radians) # south pole
 
-    numpy.testing.assert_almost_equal(eq1.distanceTo(eq2).rad(), 1.)
-    numpy.testing.assert_almost_equal(eq2.distanceTo(eq1).rad(), 1.)
-    numpy.testing.assert_almost_equal(eq1.distanceTo(eq3).rad(), pi)
-    numpy.testing.assert_almost_equal(eq2.distanceTo(eq3).rad(), pi-1.)
+    numpy.testing.assert_almost_equal(eq1.distanceTo(eq2).rad, 1.)
+    numpy.testing.assert_almost_equal(eq2.distanceTo(eq1).rad, 1.)
+    numpy.testing.assert_almost_equal(eq1.distanceTo(eq3).rad, pi)
+    numpy.testing.assert_almost_equal(eq2.distanceTo(eq3).rad, pi-1.)
 
-    numpy.testing.assert_almost_equal(north_pole.distanceTo(south_pole).rad(), pi)
+    numpy.testing.assert_almost_equal(north_pole.distanceTo(south_pole).rad, pi)
 
-    numpy.testing.assert_almost_equal(eq1.distanceTo(north_pole).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq2.distanceTo(north_pole).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq3.distanceTo(north_pole).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq1.distanceTo(south_pole).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq2.distanceTo(south_pole).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq3.distanceTo(south_pole).rad(), pi/2.)
+    numpy.testing.assert_almost_equal(eq1.distanceTo(north_pole).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq2.distanceTo(north_pole).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq3.distanceTo(north_pole).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq1.distanceTo(south_pole).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq2.distanceTo(south_pole).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq3.distanceTo(south_pole).rad, pi/2.)
 
     # Some random point
     c1 = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
@@ -193,10 +195,10 @@ def test_celestialcoord_distance():
     # Different point on opposide meridian
     c4 = galsim.CelestialCoord((pi + 0.234) * galsim.radians, 0.832 * galsim.radians)
 
-    numpy.testing.assert_almost_equal(c1.distanceTo(c1).rad(), 0.)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c2).rad(), 1.435)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c3).rad(), pi)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c4).rad(), pi-1.174)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c1).rad, 0.)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c2).rad, 1.435)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c3).rad, pi)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c4).rad, pi-1.174)
 
     # Now some that require spherical trig calculations.
     # Importantly, this uses the more straightforward spherical trig formula, the cosine rule.
@@ -207,7 +209,7 @@ def test_celestialcoord_distance():
     # The standard formula is:
     # cos(d) = sin(dec1) sin(dec2) + cos(dec1) cos(dec2) cos(delta ra)
     d = arccos(sin(0.342) * sin(-0.723) + cos(0.342) * cos(-0.723) * cos(1.832 - 0.234))
-    numpy.testing.assert_almost_equal(c1.distanceTo(c5).rad(), d)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c5).rad, d)
 
     # Tiny displacements should have dsq = (dra^2 cos^2 dec) + (ddec^2)
     c6 = galsim.CelestialCoord((0.234 + 1.7e-9) * galsim.radians, 0.342 * galsim.radians)
@@ -222,9 +224,9 @@ def test_celestialcoord_distance():
     d = arccos(sin(0.342) * sin(0.342) + cos(0.342) * cos(0.342) * cos(1.2e-9))
     true_d = sqrt( (2.3e-9 * cos(0.342))**2 + 1.2e-9**2)
     print('d(c7) = ',true_d, c1.distanceTo(c8), d)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c6).rad()/(1.7e-9 * cos(0.342)), 1.0)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c7).rad()/1.9e-9, 1.0)
-    numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad()/true_d, 1.0)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c6).rad/(1.7e-9 * cos(0.342)), 1.0)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c7).rad/1.9e-9, 1.0)
+    numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad/true_d, 1.0)
 
 
 @timer
@@ -237,17 +239,17 @@ def test_celestialcoord_angleBetween():
     north_pole = galsim.CelestialCoord(0. * galsim.radians, pi/2. * galsim.radians)  # north pole
     south_pole = galsim.CelestialCoord(0. * galsim.radians, -pi/2. * galsim.radians) # south pole
 
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq1,eq2).rad(), -1.)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq1).rad(), 1.)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq3).rad(), 1.-pi)
-    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq3,eq2).rad(), pi-1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq1,eq2).rad(), 1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq1).rad(), -1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq3).rad(), pi-1.)
-    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq3,eq2).rad(), 1.-pi)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq1,eq2).rad, -1.)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq1).rad, 1.)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq2,eq3).rad, 1.-pi)
+    numpy.testing.assert_almost_equal(north_pole.angleBetween(eq3,eq2).rad, pi-1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq1,eq2).rad, 1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq1).rad, -1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq2,eq3).rad, pi-1.)
+    numpy.testing.assert_almost_equal(south_pole.angleBetween(eq3,eq2).rad, 1.-pi)
 
-    numpy.testing.assert_almost_equal(eq1.angleBetween(north_pole,eq2).rad(), pi/2.)
-    numpy.testing.assert_almost_equal(eq2.angleBetween(north_pole,eq1).rad(), -pi/2.)
+    numpy.testing.assert_almost_equal(eq1.angleBetween(north_pole,eq2).rad, pi/2.)
+    numpy.testing.assert_almost_equal(eq2.angleBetween(north_pole,eq1).rad, -pi/2.)
 
     numpy.testing.assert_almost_equal(north_pole.area(eq1,eq2), 1.)
     numpy.testing.assert_almost_equal(north_pole.area(eq2,eq1), 1.)
@@ -260,12 +262,12 @@ def test_celestialcoord_angleBetween():
     cB = galsim.CelestialCoord(-0.193 * galsim.radians, 0.882 * galsim.radians)
     cC = galsim.CelestialCoord(0.721 * galsim.radians, -0.561 * galsim.radians)
 
-    a = cB.distanceTo(cC).rad()
-    b = cC.distanceTo(cA).rad()
-    c = cA.distanceTo(cB).rad()
-    A = cA.angleBetween(cB,cC).rad()
-    B = cB.angleBetween(cC,cA).rad()
-    C = cC.angleBetween(cA,cB).rad()
+    a = cB.distanceTo(cC).rad
+    b = cC.distanceTo(cA).rad
+    c = cA.distanceTo(cB).rad
+    A = cA.angleBetween(cB,cC).rad
+    B = cB.angleBetween(cC,cA).rad
+    C = cC.angleBetween(cA,cB).rad
     E = abs(A)+abs(B)+abs(C)-pi
     s = (a+b+c)/2.
 
@@ -307,12 +309,12 @@ def test_projection():
     cC = galsim.CelestialCoord((-0.193 - 2.4e-6) * galsim.radians,
                                (0.882 + 3.1e-6) * galsim.radians)
 
-    a = cB.distanceTo(cC).rad()
-    b = cC.distanceTo(cA).rad()
-    c = cA.distanceTo(cB).rad()
-    A = cA.angleBetween(cB,cC).rad()
-    B = cB.angleBetween(cC,cA).rad()
-    C = cC.angleBetween(cA,cB).rad()
+    a = cB.distanceTo(cC).rad
+    b = cC.distanceTo(cA).rad
+    c = cA.distanceTo(cB).rad
+    A = cA.angleBetween(cB,cC).rad
+    B = cB.angleBetween(cC,cA).rad
+    C = cC.angleBetween(cA,cB).rad
     E = cA.area(cB,cC)
 
     #
@@ -338,16 +340,16 @@ def test_projection():
     numpy.testing.assert_almost_equal(area / E, 1, decimal=5)
 
     # Check that project_rad does the same thing
-    pA2 = center.project_rad(cA.ra.rad(), cA.dec.rad(), projection='lambert')
+    pA2 = center.project_rad(cA.ra.rad, cA.dec.rad, projection='lambert')
     numpy.testing.assert_array_almost_equal(pA.x, pA2[0])
     numpy.testing.assert_array_almost_equal(pA.y, pA2[1])
 
     # Check the deprojection
     cA2 = center.deproject(pA, projection='lambert')
-    numpy.testing.assert_almost_equal(cA.ra.rad(), cA2.ra.rad())
-    numpy.testing.assert_almost_equal(cA.dec.rad(), cA2.dec.rad())
+    numpy.testing.assert_almost_equal(cA.ra.rad, cA2.ra.rad)
+    numpy.testing.assert_almost_equal(cA.dec.rad, cA2.dec.rad)
     cA3 = center.deproject_rad(pA.x, pA.y, projection='lambert')
-    numpy.testing.assert_array_almost_equal( [cA.ra.rad(), cA.dec.rad()], cA3 )
+    numpy.testing.assert_array_almost_equal( [cA.ra.rad, cA.dec.rad], cA3 )
 
     # The angles are not preserved
     a = sqrt( (pB.x-pC.x)**2 + (pB.y-pC.y)**2 )
@@ -399,16 +401,16 @@ def test_projection():
     numpy.testing.assert_almost_equal(cosC,cos(C), decimal=5)
 
     # Check that project_rad does the same thing
-    pA2 = center.project_rad(cA.ra.rad(), cA.dec.rad(), projection='stereographic')
+    pA2 = center.project_rad(cA.ra.rad, cA.dec.rad, projection='stereographic')
     numpy.testing.assert_array_almost_equal(pA.x, pA2[0])
     numpy.testing.assert_array_almost_equal(pA.y, pA2[1])
 
     # Check the deprojection
     cA2 = center.deproject(pA, projection='stereographic')
-    numpy.testing.assert_almost_equal(cA.ra.rad(), cA2.ra.rad())
-    numpy.testing.assert_almost_equal(cA.dec.rad(), cA2.dec.rad())
+    numpy.testing.assert_almost_equal(cA.ra.rad, cA2.ra.rad)
+    numpy.testing.assert_almost_equal(cA.dec.rad, cA2.dec.rad)
     cA3 = center.deproject_rad(pA.x, pA.y, projection='stereographic')
-    numpy.testing.assert_array_almost_equal( [cA.ra.rad(), cA.dec.rad()], cA3 )
+    numpy.testing.assert_array_almost_equal( [cA.ra.rad, cA.dec.rad], cA3 )
 
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
@@ -438,16 +440,16 @@ def test_projection():
     pC = center.project(cC, projection='gnomonic')
 
     # Check that project_rad does the same thing
-    pA2 = center.project_rad(cA.ra.rad(), cA.dec.rad(), projection='gnomonic')
+    pA2 = center.project_rad(cA.ra.rad, cA.dec.rad, projection='gnomonic')
     numpy.testing.assert_array_almost_equal(pA.x, pA2[0])
     numpy.testing.assert_array_almost_equal(pA.y, pA2[1])
 
     # Check the deprojection
     cA2 = center.deproject(pA, projection='gnomonic')
-    numpy.testing.assert_almost_equal(cA.ra.rad(), cA2.ra.rad())
-    numpy.testing.assert_almost_equal(cA.dec.rad(), cA2.dec.rad())
+    numpy.testing.assert_almost_equal(cA.ra.rad, cA2.ra.rad)
+    numpy.testing.assert_almost_equal(cA.dec.rad, cA2.dec.rad)
     cA3 = center.deproject_rad(pA.x, pA.y, projection='gnomonic')
-    numpy.testing.assert_array_almost_equal( [cA.ra.rad(), cA.dec.rad()], cA3 )
+    numpy.testing.assert_array_almost_equal( [cA.ra.rad, cA.dec.rad], cA3 )
 
     # The angles are not preserved
     a = sqrt( (pB.x-pC.x)**2 + (pB.y-pC.y)**2 )
@@ -498,16 +500,16 @@ def test_projection():
     numpy.testing.assert_almost_equal( dC, center.distanceTo(cC) / galsim.arcsec )
 
     # Check that project_rad does the same thing
-    pA2 = center.project_rad(cA.ra.rad(), cA.dec.rad(), projection='postel')
+    pA2 = center.project_rad(cA.ra.rad, cA.dec.rad, projection='postel')
     numpy.testing.assert_array_almost_equal(pA.x, pA2[0])
     numpy.testing.assert_array_almost_equal(pA.y, pA2[1])
 
     # Check the deprojection
     cA2 = center.deproject(pA, projection='postel')
-    numpy.testing.assert_almost_equal(cA.ra.rad(), cA2.ra.rad())
-    numpy.testing.assert_almost_equal(cA.dec.rad(), cA2.dec.rad())
+    numpy.testing.assert_almost_equal(cA.ra.rad, cA2.ra.rad)
+    numpy.testing.assert_almost_equal(cA.dec.rad, cA2.dec.rad)
     cA3 = center.deproject_rad(pA.x, pA.y, projection='postel')
-    numpy.testing.assert_array_almost_equal( [cA.ra.rad(), cA.dec.rad()], cA3 )
+    numpy.testing.assert_array_almost_equal( [cA.ra.rad, cA.dec.rad], cA3 )
 
     # The angles are not preserved
     a = sqrt( (pB.x-pC.x)**2 + (pB.y-pC.y)**2 )
@@ -542,15 +544,15 @@ def test_precess():
 
     # First the trivial case of no precession.
     c0 = orig.precess(2000., 2000.)
-    numpy.testing.assert_almost_equal(c0.ra.rad(), orig.ra.rad())
-    numpy.testing.assert_almost_equal(c0.dec.rad(), orig.dec.rad())
+    numpy.testing.assert_almost_equal(c0.ra.rad, orig.ra.rad)
+    numpy.testing.assert_almost_equal(c0.dec.rad, orig.dec.rad)
 
     # Now to 1950 and back (via 1900).
     c1 = orig.precess(2000., 1950.)
     c2 = c1.precess(1950., 1900.)
     c3 = c2.precess(1900., 2000.)
-    numpy.testing.assert_almost_equal(c3.ra.rad(), orig.ra.rad())
-    numpy.testing.assert_almost_equal(c3.dec.rad(), orig.dec.rad())
+    numpy.testing.assert_almost_equal(c3.ra.rad, orig.ra.rad)
+    numpy.testing.assert_almost_equal(c3.dec.rad, orig.dec.rad)
 
     # I found a website that does precession calculations, so check that we are
     # consistent with them.
@@ -559,15 +561,15 @@ def test_precess():
     ddec_1950 = -(16. + 16.3/60.)/60. * galsim.degrees / galsim.radians
     print('delta from website: ',dra_1950,ddec_1950)
     print('delta from precess: ',(c1.ra-orig.ra),(c1.dec-orig.dec))
-    numpy.testing.assert_almost_equal(dra_1950, c1.ra.rad()-orig.ra.rad(), decimal=5)
-    numpy.testing.assert_almost_equal(ddec_1950, c1.dec.rad()-orig.dec.rad(), decimal=5)
+    numpy.testing.assert_almost_equal(dra_1950, c1.ra.rad-orig.ra.rad, decimal=5)
+    numpy.testing.assert_almost_equal(ddec_1950, c1.dec.rad-orig.dec.rad, decimal=5)
 
     dra_1900 = -(5. + 17.74/60.)/60. * galsim.hours / galsim.radians
     ddec_1900 = -(32. + 35.4/60.)/60. * galsim.degrees / galsim.radians
     print('delta from website: ',dra_1900,ddec_1900)
     print('delta from precess: ',(c2.ra-orig.ra),(c2.dec-orig.dec))
-    numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad()-orig.ra.rad(), decimal=5)
-    numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad()-orig.dec.rad(), decimal=5)
+    numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad-orig.ra.rad, decimal=5)
+    numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad-orig.dec.rad, decimal=5)
 
 
 @timer
@@ -575,30 +577,51 @@ def test_galactic():
     """Test the conversion from equatorial to galactic coordinates."""
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
-    center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
+    # But I get more precise values from https://arxiv.org/pdf/1010.3773.pdf
+    center = galsim.CelestialCoord(
+        galsim.Angle.from_hms('17:45:37.1991'),
+        galsim.Angle.from_dms('-28:56:10.2207'))
     print('center.galactic = ',center.galactic())
     el,b = center.galactic()
-    numpy.testing.assert_almost_equal(el.rad(), 0., decimal=3)
-    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
+    np.testing.assert_almost_equal(el.wrap().rad, 0., decimal=8)
+    np.testing.assert_almost_equal(b.rad, 0., decimal=8)
 
-    # The north pole is at 12h:51.4m, 27.13d
-    north = galsim.CelestialCoord( (12.+51.4/60.) * galsim.hours, 27.13 * galsim.degrees)
+    # Go back from galactic coords to CelestialCoord
+    center2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(center2.ra.rad, center.ra.rad)
+    np.testing.assert_allclose(center2.dec.rad, center.dec.rad)
+
+    # The north pole is at 12h:51.4m, 27.13d again with more precise values from the above paper.
+    north = galsim.CelestialCoord(
+        galsim.Angle.from_hms('12:51:26.27549'),
+        galsim.Angle.from_dms('27:07:41.7043'))
     print('north.galactic = ',north.galactic())
     el,b = north.galactic()
-    numpy.testing.assert_almost_equal(b.rad(), pi/2., decimal=3)
+    np.testing.assert_allclose(b.rad, pi/2.)
+    north2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(north2.ra.rad, north.ra.rad)
+    np.testing.assert_allclose(north2.dec.rad, north.dec.rad)
 
-    # The south pole is at 0h:51.4m, -27.13d
-    south = galsim.CelestialCoord( (0.+51.4/60.) * galsim.hours, -27.13 * galsim.degrees)
+    south = galsim.CelestialCoord(
+        galsim.Angle.from_hms('00:51:26.27549'),
+        galsim.Angle.from_dms('-27:07:41.7043'))
     print('south.galactic = ',south.galactic())
     el,b = south.galactic()
-    numpy.testing.assert_almost_equal(b.rad(), -pi/2., decimal=3)
+    np.testing.assert_allclose(b.rad, -pi/2.)
+    south2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(south2.ra.rad, south.ra.rad)
+    np.testing.assert_allclose(south2.dec.rad, south.dec.rad)
 
-    # The anti-center is at 5h:42.6m, 28.92d
-    anticenter = galsim.CelestialCoord( (5.+45.6/60.) * galsim.hours, 28.94 * galsim.degrees)
+    anticenter = galsim.CelestialCoord(
+        galsim.Angle.from_hms('05:45:37.1991'),
+        galsim.Angle.from_dms('28:56:10.2207'))
     print('anticenter.galactic = ',anticenter.galactic())
     el,b = anticenter.galactic()
-    numpy.testing.assert_almost_equal(el.rad(), pi, decimal=3)
-    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
+    np.testing.assert_almost_equal(el.rad, pi, decimal=8)
+    np.testing.assert_almost_equal(b.rad, 0., decimal=8)
+    anticenter2 = galsim.CelestialCoord.from_galactic(el,b)
+    np.testing.assert_allclose(anticenter2.ra.rad, anticenter.ra.rad)
+    np.testing.assert_allclose(anticenter2.dec.rad, anticenter.dec.rad)
 
 
 @timer
@@ -606,29 +629,29 @@ def test_ecliptic():
     """Test the conversion from equatorial to ecliptic coordinates."""
     # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
     north_pole = galsim.CelestialCoord(
-        galsim.HMS_Angle('18:00:00.00'),
-        galsim.DMS_Angle('66:33:38.55'))
+        galsim.Angle.from_hms('18:00:00.00'),
+        galsim.Angle.from_dms('66:33:38.55'))
     el, b = north_pole.ecliptic()
     # North pole should have b=90 degrees, with el being completely arbitrary.
-    numpy.testing.assert_almost_equal(b.rad(), pi/2, decimal=6)
+    numpy.testing.assert_almost_equal(b.rad, pi/2, decimal=6)
 
     south_pole = galsim.CelestialCoord(
-        galsim.HMS_Angle('06:00:00.00'),
-        galsim.DMS_Angle('-66:33:38.55'))
+        galsim.Angle.from_hms('06:00:00.00'),
+        galsim.Angle.from_dms('-66:33:38.55'))
     el, b = south_pole.ecliptic()
     # South pole should have b=-90 degrees, with el being completely arbitrary.
-    numpy.testing.assert_almost_equal(b.rad(), -pi/2, decimal=6)
+    numpy.testing.assert_almost_equal(b.rad, -pi/2, decimal=6)
 
     # Also confirm that positions that should be the same in equatorial and ecliptic coordinates are
     # actually the same:
     vernal_equinox = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
     el, b = vernal_equinox.ecliptic()
-    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
-    numpy.testing.assert_almost_equal(el.rad(), 0., decimal=6)
+    numpy.testing.assert_almost_equal(b.rad, 0., decimal=6)
+    numpy.testing.assert_almost_equal(el.rad, 0., decimal=6)
     autumnal_equinox = galsim.CelestialCoord(pi*galsim.radians, 0.*galsim.radians)
     el, b = autumnal_equinox.ecliptic()
-    numpy.testing.assert_almost_equal(el.rad(), pi, decimal=6)
-    numpy.testing.assert_almost_equal(b.rad(), 0., decimal=6)
+    numpy.testing.assert_almost_equal(el.rad, pi, decimal=6)
+    numpy.testing.assert_almost_equal(b.rad, 0., decimal=6)
 
     # Finally, test the results of using a date to get ecliptic coordinates with respect to the sun,
     # instead of absolute ones. For this, use dates and times of vernal and autumnal equinox
@@ -641,44 +664,52 @@ def test_ecliptic():
     el, b = vernal_equinox.ecliptic(epoch=2014)
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     # Vernal equinox: should have (el, b) = (el_rel, b_rel) = 0.0
-    numpy.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
-    numpy.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
+    numpy.testing.assert_almost_equal(el_rel.rad, el.rad, decimal=3)
+    numpy.testing.assert_almost_equal(b_rel.rad, b.rad, decimal=6)
+    vernal2 = galsim.CelestialCoord.from_ecliptic(el_rel, b_rel, date=vernal_eq_date)
+    np.testing.assert_almost_equal(vernal2.ra.wrap().rad, vernal_equinox.ra.rad, decimal=8)
+    np.testing.assert_almost_equal(vernal2.dec.rad, vernal_equinox.dec.rad, decimal=8)
+
     # Now do the autumnal equinox: should have (el, b) = (pi, 0) = (el_rel, b_rel) when we look at
     # the time of the vernal equinox.
     el, b = autumnal_equinox.ecliptic(epoch=2014)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), el.rad(), decimal=3)
-    numpy.testing.assert_almost_equal(b_rel.rad(), b.rad(), decimal=6)
+    numpy.testing.assert_almost_equal(el_rel.rad, el.rad, decimal=3)
+    numpy.testing.assert_almost_equal(b_rel.rad, b.rad, decimal=6)
+    autumnal2 = galsim.CelestialCoord.from_ecliptic(el_rel, b_rel, date=vernal_eq_date)
+    np.testing.assert_almost_equal(autumnal2.ra.wrap(pi*galsim.radians).rad,
+                                   autumnal_equinox.ra.wrap(pi*galsim.radians).rad, decimal=8)
+    np.testing.assert_almost_equal(autumnal2.dec.rad, autumnal_equinox.dec.rad, decimal=8)
+
     # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
     # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
     autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), -pi, decimal=3)
-    numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
+    numpy.testing.assert_almost_equal(el_rel.rad, -pi, decimal=3)
+    numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
+
     # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
-    numpy.testing.assert_almost_equal(el_rel.rad(), pi, decimal=3)
-    numpy.testing.assert_almost_equal(b_rel.rad(), 0., decimal=6)
+    numpy.testing.assert_almost_equal(el_rel.rad, pi, decimal=3)
+    numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
 
     # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
-    # results are the same.  This includes use of a function that isn't available to users, but we
-    # use it for a few things so we should still make sure it's working properly.
-    from galsim.celestial import _ecliptic_to_equatorial
-    north_pole_2 = _ecliptic_to_equatorial(north_pole.ecliptic(epoch=2014), 2014)
-    numpy.testing.assert_almost_equal(north_pole.ra.rad(), north_pole_2.ra.rad(), decimal=6)
-    numpy.testing.assert_almost_equal(north_pole.dec.rad(), north_pole_2.dec.rad(), decimal=6)
-    south_pole_2 = _ecliptic_to_equatorial(south_pole.ecliptic(epoch=2014), 2014)
-    numpy.testing.assert_almost_equal(south_pole.ra.rad(), south_pole_2.ra.rad(), decimal=6)
-    numpy.testing.assert_almost_equal(south_pole.dec.rad(), south_pole_2.dec.rad(), decimal=6)
-    vernal_equinox_2 = _ecliptic_to_equatorial(vernal_equinox.ecliptic(epoch=2014), 2014)
-    numpy.testing.assert_almost_equal(vernal_equinox.ra.rad(), vernal_equinox_2.ra.rad(), decimal=6)
-    numpy.testing.assert_almost_equal(vernal_equinox.dec.rad(), vernal_equinox_2.dec.rad(),
+    # results are the same.
+    north_pole_2 = galsim.CelestialCoord.from_ecliptic(*north_pole.ecliptic(epoch=2014), epoch=2014)
+    numpy.testing.assert_almost_equal(north_pole.ra.rad, north_pole_2.ra.rad, decimal=6)
+    numpy.testing.assert_almost_equal(north_pole.dec.rad, north_pole_2.dec.rad, decimal=6)
+    south_pole_2 = galsim.CelestialCoord.from_ecliptic(*south_pole.ecliptic(epoch=2014), epoch=2014)
+    numpy.testing.assert_almost_equal(south_pole.ra.rad, south_pole_2.ra.rad, decimal=6)
+    numpy.testing.assert_almost_equal(south_pole.dec.rad, south_pole_2.dec.rad, decimal=6)
+    vernal_equinox_2 = galsim.CelestialCoord.from_ecliptic(*vernal_equinox.ecliptic(epoch=2014), epoch=2014)
+    numpy.testing.assert_almost_equal(vernal_equinox.ra.rad, vernal_equinox_2.ra.rad, decimal=6)
+    numpy.testing.assert_almost_equal(vernal_equinox.dec.rad, vernal_equinox_2.dec.rad,
                                       decimal=6)
-    autumnal_equinox_2 = _ecliptic_to_equatorial(autumnal_equinox.ecliptic(epoch=2014), 2014)
-    numpy.testing.assert_almost_equal(autumnal_equinox.ra.rad(), autumnal_equinox_2.ra.rad(),
+    autumnal_equinox_2 = galsim.CelestialCoord.from_ecliptic(*autumnal_equinox.ecliptic(epoch=2014), epoch=2014)
+    numpy.testing.assert_almost_equal(autumnal_equinox.ra.rad, autumnal_equinox_2.ra.rad,
                                       decimal=6)
-    numpy.testing.assert_almost_equal(autumnal_equinox.dec.rad(), autumnal_equinox_2.dec.rad(),
+    numpy.testing.assert_almost_equal(autumnal_equinox.dec.rad, autumnal_equinox_2.dec.rad,
                                       decimal=6)
 
 

@@ -503,11 +503,11 @@ class BaseWCS(object):
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
         centered at the center of an image, you could write:
 
-            >>> wcs = galsim.PixelScale(scale).withOrigin(im.center())
+            >>> wcs = galsim.PixelScale(scale).withOrigin(im.center)
 
         This is equivalent to the following:
 
-            >>> wcs = galsim.OffsetWCS(scale, origin=im.center())
+            >>> wcs = galsim.OffsetWCS(scale, origin=im.center)
 
         For non-local WCS types, the origin defines the location in the image coordinate system
         should mean the same thing as (x,y) = (0,0) does for the current WCS.  The following
@@ -865,7 +865,7 @@ class EuclideanWCS(BaseWCS):
         dvdy = 0.5 * (v[2:ny,1:nx-1] - v[0:ny-2,1:nx-1])
 
         area = np.abs(dudx * dvdy - dvdx * dudy)
-        image.image.array[:,:] = area * sky_level
+        image.array[:,:] = area * sky_level
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
     def __ne__(self, other): return not self.__eq__(other)
@@ -1044,7 +1044,7 @@ class CelestialWCS(BaseWCS):
 
         area = np.abs(dudx * dvdy - dvdx * dudy)
         factor = galsim.radians / galsim.arcsec
-        image.image.array[:,:] = area * sky_level * factor**2
+        image.array[:,:] = area * sky_level * factor**2
 
 
     # Simple.  Just call _radec.
@@ -1060,8 +1060,8 @@ class CelestialWCS(BaseWCS):
 
     # Also simple if _xy is implemented.  However, it is allowed to raise a NotImplementedError.
     def _posToImage(self, world_pos, color):
-        ra = world_pos.ra.rad()
-        dec = world_pos.dec.rad()
+        ra = world_pos.ra.rad
+        dec = world_pos.dec.rad
         x, y = self._xy(ra,dec,color)
         return galsim.PositionD(x,y) + self.origin
 
@@ -2240,7 +2240,7 @@ class UVFunction(EuclideanWCS):
         _writeFuncToHeader(self._orig_xfunc, 'X', header)
         _writeFuncToHeader(self._orig_yfunc, 'Y', header)
 
-        return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
+        return self.affine(bounds.true_center)._writeLinearWCS(header, bounds)
 
     @staticmethod
     def _readHeader(header):
@@ -2396,7 +2396,7 @@ class RaDecFunction(CelestialWCS):
         _writeFuncToHeader(self._orig_ra_func, 'R', header)
         _writeFuncToHeader(self._orig_dec_func, 'D', header)
 
-        return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
+        return self.affine(bounds.true_center)._writeLinearWCS(header, bounds)
 
     @staticmethod
     def _readHeader(header):
