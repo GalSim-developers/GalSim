@@ -31,8 +31,10 @@ namespace galsim {
     struct PyInterpolant
     {
 
-        static Interpolant* ConstructInterpolant(std::string str, double tol)
+        static Interpolant* ConstructInterpolant(const char* str_c, double tol)
         {
+            std::string str = str_c;
+
             // Make it lowercase
             std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
