@@ -35,8 +35,11 @@ namespace {
     struct PyTable {
 
         static Table<double,double>* makeTable(
-            const bp::object& args, const bp::object& vals, const std::string& interp)
+            const bp::object& args, const bp::object& vals, const char * interp_c)
         {
+
+            const std::string interp = interp_c;
+
             std::vector<double> vargs, vvals;
             try {
                 bp::stl_input_iterator<double> args_it(args);
