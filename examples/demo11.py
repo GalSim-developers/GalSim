@@ -215,8 +215,8 @@ def main(argv):
     dudy = -numpy.sin(theta) * pixel_scale
     dvdx = numpy.sin(theta) * pixel_scale
     dvdy = numpy.cos(theta) * pixel_scale
-    image_center = full_image.trueCenter()
-    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=full_image.trueCenter())
+    image_center = full_image.true_center
+    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=full_image.true_center)
 
     # We can also put it on the celestial sphere to give it a bit more realism.
     # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
