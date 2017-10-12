@@ -287,14 +287,14 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
-        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # Use the stepk value of the PSF as a maximum value for stepk of the galaxy.
         # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_gal = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 pad_factor=pad_factor, noise_pad_size=noise_pad_size,
-                calculate_stepk=self.original_psf.stepK(),
-                calculate_maxk=self.original_psf.maxK(),
+                calculate_stepk=self.original_psf.stepk,
+                calculate_maxk=self.original_psf.maxk,
                 noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_gal',use_index)
@@ -1124,10 +1124,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                          for PSF in PSFs for band in bands]
         marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit)
                           for PSF in PSFs for band in bands]
-        psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
+        psf_maxk = np.min([p.maxk for p in marginal_PSFs])
 
         # In practice, the output PSF should almost always cut off at smaller maxk than obtained
-        # above.  In this case, the user can set the maxK keyword argument for improved efficiency.
+        # above.  In this case, the user can set the maxk keyword argument for improved efficiency.
         if maxk is None:
             maxk = np.min([img_maxk, psf_maxk])
         else:
@@ -1181,10 +1181,10 @@ class ChromaticRealGalaxy(ChromaticSum):
         coef = np.transpose(coef, (2,0,1))
         Sigma = np.transpose(Sigma, (2,3,0,1))
 
-        # Set up objlist as required of ChromaticSum subclass.
-        objlist = []
+        # Set up obj_list as required of ChromaticSum subclass.
+        obj_list = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim._InterpolatedKImage(
+            obj_list.append(sed * galsim._InterpolatedKImage(
                     galsim.ImageCD(coef[i], scale=stepk),
                     k_interpolant=self._k_interpolant,
                     gsparams=self._gsparams))
@@ -1201,7 +1201,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
-        ChromaticSum.__init__(self, objlist)
+        ChromaticSum.__init__(self, obj_list)
 
     @staticmethod
     def _poly_SEDs(bands):

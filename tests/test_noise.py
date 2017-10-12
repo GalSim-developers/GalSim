@@ -153,7 +153,7 @@ def test_gaussian_noise():
             err_msg="GaussianNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
             gn.sigma, gSigma, precision,
-            err_msg="GaussianNoise getSigma returns wrong value")
+            err_msg="GaussianNoise sigma returns wrong value")
 
     # Check that the noise model really does produce this variance.
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -315,7 +315,7 @@ def test_variable_gaussian_noise():
 
     # Check var_image property
     np.testing.assert_almost_equal(
-            vgn.var_image.array, var_image.array,
+            vgn.var_image.array, var_image.array, precision,
             err_msg="VariableGaussianNoise var_image returns wrong var_image")
 
     # Check that the noise model really does produce this variance.
@@ -432,7 +432,7 @@ def test_poisson_noise():
             err_msg="PoissonNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
             pn.sky_level, pMean, precision,
-            err_msg="PoissonNoise getSkyLevel returns wrong value")
+            err_msg="PoissonNoise sky_level returns wrong value")
 
     # Check that the noise model really does produce this variance.
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -462,7 +462,7 @@ def test_poisson_noise():
             err_msg="PoissonNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
             pn.sky_level, 9., precision,
-            err_msg="PoissonNoise withVariance results in wrong skyLevel")
+            err_msg="PoissonNoise withVariance results in wrong sky_level")
 
     # Check withScaledVariance
     pn = pn.withScaledVariance(4.)
@@ -471,7 +471,7 @@ def test_poisson_noise():
             err_msg="PoissonNoise withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
             pn.sky_level, 36., precision,
-            err_msg="PoissonNoise withScaledVariance results in wrong skyLevel")
+            err_msg="PoissonNoise withScaledVariance results in wrong sky_level")
 
     # Check arithmetic
     pn = pn.withVariance(0.5)
@@ -513,14 +513,14 @@ def test_poisson_noise():
             err_msg="PoissonNoise().withVariance results in wrong variance")
     np.testing.assert_almost_equal(
             pn.sky_level, 9., precision,
-            err_msg="PoissonNoise().withVariance results in wrong skyLevel")
+            err_msg="PoissonNoise().withVariance results in wrong sky_level")
     pn = pn.withScaledVariance(4.)
     np.testing.assert_almost_equal(
             pn.getVariance(), 36, precision,
             err_msg="PoissonNoise().withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
             pn.sky_level, 36., precision,
-            err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
+            err_msg="PoissonNoise().withScaledVariance results in wrong sky_level")
 
     # Check picklability
     do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
@@ -630,13 +630,13 @@ def test_ccdnoise():
             err_msg="CCDNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, sky, precision,
-            err_msg="CCDNoise getSkyLevel returns wrong value")
+            err_msg="CCDNoise sky_level returns wrong value")
     np.testing.assert_almost_equal(
             ccdnoise.gain, gain, precision,
-            err_msg="CCDNoise getGain returns wrong value")
+            err_msg="CCDNoise gain returns wrong value")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, read_noise, precision,
-            err_msg="CCDNoise getReadNoise returns wrong value")
+            err_msg="CCDNoise read_noise returns wrong value")
 
     # Check that the noise model really does produce this variance.
     # NB. If default float32 is used here, older versions of numpy will compute the variance
@@ -681,13 +681,13 @@ def test_ccdnoise():
             err_msg="CCDNoise getVariance returns wrong variance with gain=0")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, 0., precision,
-            err_msg="CCDNoise getSkyLevel returns wrong value with gain=0")
+            err_msg="CCDNoise sky_level returns wrong value with gain=0")
     np.testing.assert_almost_equal(
             ccdnoise.gain, 0., precision,
-            err_msg="CCDNoise getGain returns wrong value with gain=0")
+            err_msg="CCDNoise gain returns wrong value with gain=0")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, read_noise, precision,
-            err_msg="CCDNoise getReadNoise returns wrong value with gain=0")
+            err_msg="CCDNoise read_noise returns wrong value with gain=0")
     big_im.fill(0)
     big_im.addNoise(ccdnoise)
     var = np.var(big_im.array)
@@ -702,10 +702,10 @@ def test_ccdnoise():
             err_msg="CCDNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, (9./var1)*sky, precision,
-            err_msg="CCDNoise withVariance results in wrong SkyLevel")
+            err_msg="CCDNoise withVariance results in wrong sky_level")
     np.testing.assert_almost_equal(
             ccdnoise.gain, gain, precision,
-            err_msg="CCDNoise withVariance results in wrong Gain")
+            err_msg="CCDNoise withVariance results in wrong gain")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, np.sqrt(9./var1) * read_noise, precision,
             err_msg="CCDNoise withVariance results in wrong ReadNoise")
@@ -717,10 +717,10 @@ def test_ccdnoise():
             err_msg="CCDNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, (36./var1)*sky, precision,
-            err_msg="CCDNoise withVariance results in wrong SkyLevel")
+            err_msg="CCDNoise withVariance results in wrong sky_level")
     np.testing.assert_almost_equal(
             ccdnoise.gain, gain, precision,
-            err_msg="CCDNoise withVariance results in wrong Gain")
+            err_msg="CCDNoise withVariance results in wrong gain")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, np.sqrt(36./var1) * read_noise, precision,
             err_msg="CCDNoise withVariance results in wrong ReadNoise")
@@ -765,10 +765,10 @@ def test_ccdnoise():
             err_msg="CCDNoise().withVariance results in wrong variance")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, 9., precision,
-            err_msg="CCDNoise().withVariance results in wrong SkyLevel")
+            err_msg="CCDNoise().withVariance results in wrong sky_level")
     np.testing.assert_almost_equal(
             ccdnoise.gain, 1., precision,
-            err_msg="CCDNoise().withVariance results in wrong Gain")
+            err_msg="CCDNoise().withVariance results in wrong gain")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, 0., precision,
             err_msg="CCDNoise().withVariance results in wrong ReadNoise")
@@ -778,10 +778,10 @@ def test_ccdnoise():
             err_msg="CCDNoise().withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
             ccdnoise.sky_level, 36., precision,
-            err_msg="CCDNoise().withScaledVariance results in wrong SkyLevel")
+            err_msg="CCDNoise().withScaledVariance results in wrong sky_level")
     np.testing.assert_almost_equal(
             ccdnoise.gain, 1., precision,
-            err_msg="CCDNoise().withScaledVariance results in wrong Gain")
+            err_msg="CCDNoise().withScaledVariance results in wrong gain")
     np.testing.assert_almost_equal(
             ccdnoise.read_noise, 0., precision,
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")

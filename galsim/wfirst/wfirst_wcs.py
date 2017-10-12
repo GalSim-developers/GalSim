@@ -507,7 +507,7 @@ def allowedPos(world_pos, date):
     """
     # Find the Sun's location on the sky on this date.
     lam = coord.util.sun_position_ecliptic(date)
-    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*coord.radians, date.year)
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
 
     # Find the angle between that and the supplied position
     angle_deg = abs(world_pos.distanceTo(sun)/galsim.degrees)
@@ -540,8 +540,7 @@ def bestPA(world_pos, date):
     # Find the location of the sun on this date.  +X_observatory points out into the sky, towards
     # world_pos, while +Z is in the plane of the sky pointing towards the sun as much as possible.
     lam = coord.util.sun_position_ecliptic(date)
-    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*coord.radians, date.year)
-
+    sun = galsim.CelestialCoord.from_ecliptic(lam, 0*galsim.radians, date.year)
     # Now we do a projection onto the sky centered at world_pos to find the (u, v) for the Sun.
     sun_tp_x, sun_tp_y = world_pos.project(sun, 'gnomonic')
 

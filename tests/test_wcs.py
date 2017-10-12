@@ -234,15 +234,15 @@ def do_wcs_image(wcs, name, approx=False):
     dir = 'fits_files'
     file_name = 'blankimg.fits'
     im = galsim.fits.read(file_name, dir=dir)
-    np.testing.assert_equal(im.origin().x, 1, "initial origin is not 1,1 as expected")
-    np.testing.assert_equal(im.origin().y, 1, "initial origin is not 1,1 as expected")
+    np.testing.assert_equal(im.origin.x, 1, "initial origin is not 1,1 as expected")
+    np.testing.assert_equal(im.origin.y, 1, "initial origin is not 1,1 as expected")
     im.wcs = wcs
-    world1 = im.wcs.toWorld(im.origin())
-    value1 = im(im.origin())
-    world2 = im.wcs.toWorld(im.center())
-    value2 = im(im.center())
+    world1 = im.wcs.toWorld(im.origin)
+    value1 = im(im.origin)
+    world2 = im.wcs.toWorld(im.center)
+    value2 = im(im.center)
     offset = galsim.PositionI(11,13)
-    image_pos = im.origin() + offset
+    image_pos = im.origin + offset
     world3 = im.wcs.toWorld(image_pos)
     value3 = im(image_pos)
 
@@ -258,15 +258,15 @@ def do_wcs_image(wcs, name, approx=False):
         digits2 = 1
     else:
         digits2 = digits
-    np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
-    np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
+    np.testing.assert_equal(im2.origin.x, im.origin.x, "origin changed after write/read")
+    np.testing.assert_equal(im2.origin.y, im.origin.y, "origin changed after write/read")
+    check_world(im2.wcs.toWorld(im.origin), world1, digits2,
                 "World position of origin is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
+    np.testing.assert_almost_equal(im2(im.origin), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
+    check_world(im2.wcs.toWorld(im.center), world2, digits2,
                 "World position of center is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.center()), value2, digits,
+    np.testing.assert_almost_equal(im2(im.center), value2, digits,
                                    "Image value at center is wrong after write/read.")
     check_world(im2.wcs.toWorld(image_pos), world3, digits2,
                 "World position of image_pos is wrong after write/read.")
@@ -279,9 +279,9 @@ def do_wcs_image(wcs, name, approx=False):
         hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
         affine = galsim.AffineTransform._readHeader(hdu.header)
         galsim.fits.closeHDUList(hdu_list, fin)
-        check_world(affine.toWorld(im.origin()), world1, digits2,
+        check_world(affine.toWorld(im.origin), world1, digits2,
                     "World position of origin is wrong after write/read.")
-        check_world(affine.toWorld(im.center()), world2, digits2,
+        check_world(affine.toWorld(im.center), world2, digits2,
                     "World position of center is wrong after write/read.")
         check_world(affine.toWorld(image_pos), world3, digits2,
                     "World position of image_pos is wrong after write/read.")
@@ -291,16 +291,16 @@ def do_wcs_image(wcs, name, approx=False):
     dx = 3
     dy = 9
     im.shift(dx,dy)
-    image_pos = im.origin() + offset
-    np.testing.assert_equal(im.origin().x, 1+dx, "shift set origin to wrong value")
-    np.testing.assert_equal(im.origin().y, 1+dy, "shift set origin to wrong value")
-    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+    image_pos = im.origin + offset
+    np.testing.assert_equal(im.origin.x, 1+dx, "shift set origin to wrong value")
+    np.testing.assert_equal(im.origin.y, 1+dy, "shift set origin to wrong value")
+    check_world(im.wcs.toWorld(im.origin), world1, digits,
                 "World position of origin after shift is wrong.")
-    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+    np.testing.assert_almost_equal(im(im.origin), value1, digits,
                                    "Image value at origin after shift is wrong.")
-    check_world(im.wcs.toWorld(im.center()), world2, digits,
+    check_world(im.wcs.toWorld(im.center), world2, digits,
                 "World position of center after shift is wrong.")
-    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+    np.testing.assert_almost_equal(im(im.center), value2, digits,
                                    "Image value at center after shift is wrong.")
     check_world(im.wcs.toWorld(image_pos), world3, digits,
                 "World position of image_pos after shift is wrong.")
@@ -311,16 +311,16 @@ def do_wcs_image(wcs, name, approx=False):
     # Also test parsing a position as a tuple.
     new_origin = (-3432, 1907)
     im.setOrigin(new_origin)
-    image_pos = im.origin() + offset
-    np.testing.assert_equal(im.origin().x, new_origin[0], "setOrigin set origin to wrong value")
-    np.testing.assert_equal(im.origin().y, new_origin[1], "setOrigin set origin to wrong value")
-    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+    image_pos = im.origin + offset
+    np.testing.assert_equal(im.origin.x, new_origin[0], "setOrigin set origin to wrong value")
+    np.testing.assert_equal(im.origin.y, new_origin[1], "setOrigin set origin to wrong value")
+    check_world(im.wcs.toWorld(im.origin), world1, digits,
                 "World position of origin after setOrigin is wrong.")
-    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+    np.testing.assert_almost_equal(im(im.origin), value1, digits,
                                    "Image value at origin after setOrigin is wrong.")
-    check_world(im.wcs.toWorld(im.center()), world2, digits,
+    check_world(im.wcs.toWorld(im.center), world2, digits,
                 "World position of center after setOrigin is wrong.")
-    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+    np.testing.assert_almost_equal(im(im.center), value2, digits,
                                    "Image value at center after setOrigin is wrong.")
     check_world(im.wcs.toWorld(image_pos), world3, digits,
                 "World position of image_pos after setOrigin is wrong.")
@@ -331,16 +331,16 @@ def do_wcs_image(wcs, name, approx=False):
     # Also test parsing a position as a PositionI object.
     new_center = galsim.PositionI(0,0)
     im.setCenter(new_center)
-    image_pos = im.origin() + offset
-    np.testing.assert_equal(im.center().x, new_center.x, "setCenter set center to wrong value")
-    np.testing.assert_equal(im.center().y, new_center.y, "setCenter set center to wrong value")
-    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+    image_pos = im.origin + offset
+    np.testing.assert_equal(im.center.x, new_center.x, "setCenter set center to wrong value")
+    np.testing.assert_equal(im.center.y, new_center.y, "setCenter set center to wrong value")
+    check_world(im.wcs.toWorld(im.origin), world1, digits,
                 "World position of origin after setCenter is wrong.")
-    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+    np.testing.assert_almost_equal(im(im.origin), value1, digits,
                                    "Image value at origin after setCenter is wrong.")
-    check_world(im.wcs.toWorld(im.center()), world2, digits,
+    check_world(im.wcs.toWorld(im.center), world2, digits,
                 "World position of center after setCenter is wrong.")
-    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+    np.testing.assert_almost_equal(im(im.center), value2, digits,
                                    "Image value at center after setCenter is wrong.")
     check_world(im.wcs.toWorld(image_pos), world3, digits,
                 "World position of image_pos after setCenter is wrong.")
@@ -359,7 +359,7 @@ def do_wcs_image(wcs, name, approx=False):
                  (im.bounds.xmax, im.bounds.ymin),
                  (im.bounds.xmin, im.bounds.ymax),
                  (im.bounds.xmax, im.bounds.ymax),
-                 (im.center().x, im.center().y) ]:
+                 (im.center.x, im.center.y) ]:
         val = im(x,y)
         area = wcs.pixelArea(galsim.PositionD(x,y))
         np.testing.assert_almost_equal(val/(area*sky_level), 1., digits,
@@ -661,7 +661,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
             image_profile.drawImage(im2, method='no_pixel', use_true_center=True)
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
-                    'world_profile at center() and image_profile differed when drawn for '+name)
+                    'world_profile at center and image_profile differed when drawn for '+name)
 
             # Can also pass in wcs as a parameter to drawImage.
             world_profile.drawImage(im1, method='no_pixel', wcs=wcs.fixColor(color))
@@ -1428,7 +1428,7 @@ def test_radecfunction():
                 # The distances aren't expected to match.  Instead, for a Lambert projection,
                 # d1 should match the straight line distance through the sphere.
                 import math
-                d2 = 2.*math.sin(d2.rad/2.) * galsim.radians / galsim.arcsec
+                d2 = 2.*np.sin(d2/2.) * galsim.radians / galsim.arcsec
                 np.testing.assert_almost_equal(
                         d2, d1, digits, 'deprojected dist does not match expected value.')
 
@@ -1440,7 +1440,7 @@ def test_radecfunction():
                     origin = test_wcs.toWorld(galsim.PositionD(0.,0.))
                     d3 = np.sqrt( world_pos1.x**2 + world_pos1.y**2 )
                     d4 = center.distanceTo(world_pos2)
-                    d4 = 2.*math.sin(d4.rad/2) * galsim.radians / galsim.arcsec
+                    d4 = 2.*np.sin(d4/2) * galsim.radians / galsim.arcsec
                     np.testing.assert_almost_equal(
                             d3, d1, digits, 'UV '+name+' dist does not match expected value.')
                     np.testing.assert_almost_equal(
@@ -1492,8 +1492,7 @@ def test_radecfunction():
                     angle = 180 * galsim.degrees - A - B
 
                     # Now we can use this angle to correct the jacobian from test_wcs.
-                    c = np.cos(angle)
-                    s = np.sin(angle)
+                    s,c = angle.sincos()
                     rot_dudx = c*jac2.dudx + s*jac2.dvdx
                     rot_dudy = c*jac2.dudy + s*jac2.dvdy
                     rot_dvdx = -s*jac2.dudx + c*jac2.dvdx
@@ -1680,7 +1679,7 @@ def test_wcstools():
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
         # off the image.
         im = galsim.fits.read(file_name, dir=dir)
-        wcs = wcs.withOrigin(origin = -im.bounds.center())
+        wcs = wcs.withOrigin(origin = -im.center)
 
         do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name)
 
@@ -1929,7 +1928,7 @@ def test_coadd():
                               int(p[1])-N/2+1, int(p[1])+N/2) for p in pos ]
 
     # Calculate the offset from the center
-    offset = [ galsim.PositionD(*p) - b.trueCenter() for (p,b) in zip(pos,bounds) ]
+    offset = [ galsim.PositionD(*p) - b.true_center for (p,b) in zip(pos,bounds) ]
 
     # Construct the WCSs
     wcs = [ galsim.TanWCS(affine=galsim.AffineTransform(*j, origin=galsim.PositionD(*p)),
@@ -1971,7 +1970,7 @@ def test_coadd():
 
     for p, im in zip(pos,images):
         # Make sure we tell the profile where we think the center of the object is on the image.
-        offset = galsim.PositionD(*p) - im.trueCenter()
+        offset = galsim.PositionD(*p) - im.true_center
         interp = galsim.InterpolatedImage(im, offset=offset)
         # Here the no_pixel is required.  The InterpolatedImage already has pixels so we
         # don't want to convovle by a pixel response again.

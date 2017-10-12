@@ -215,7 +215,7 @@ class InterpolatedImage(GSObject):
     @param use_true_center  Similar to the same parameter in the GSObject.drawImage() function,
                             this sets whether to use the true center of the provided image as the
                             center of the profile (if `use_true_center=True`) or the nominal
-                            center returned by image.bounds.center() (if `use_true_center=False`)
+                            center given by image.center (if `use_true_center=False`)
                             [default: True]
     @param offset           The location in the input image to use as the center of the profile.
                             This should be specified relative to the center of the input image
@@ -336,7 +336,8 @@ class InterpolatedImage(GSObject):
         if pad_factor <= 0.:
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
-        im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
+        im_cen = self.image.bounds.true_center if use_true_center else self.image.center
+
         local_wcs = self.image.wcs.local(image_pos = im_cen)
         min_scale = local_wcs._minScale()
         max_scale = local_wcs._maxScale()
@@ -393,16 +394,16 @@ class InterpolatedImage(GSObject):
         else:
             pad_image = self.image
 
-        # GalSim cannot automatically know what stepK and maxK are appropriate for the
+        # GalSim cannot automatically know what stepk and maxk are appropriate for the
         # input image.  So it is usually worth it to do a manual calculation (below).
         #
-        # However, there is also a hidden option to force it to use specific values of stepK and
-        # maxK (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
+        # However, there is also a hidden option to force it to use specific values of stepk and
+        # maxk (caveat user!).  The values of _force_stepk and _force_maxk should be provided in
         # terms of physical scale, e.g., for images that have a scale length of 0.1 arcsec, the
-        # stepK and maxK should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
+        # stepk and maxk should be provided in units of 1/arcsec.  Then we convert to the 1/pixel
         # units required by the C++ layer below.  Also note that profile recentering for even-sized
-        # images (see the ._fix_center step below) leads to automatic reduction of stepK slightly
-        # below what is provided here, while maxK is preserved.
+        # images (see the ._fix_center step below) leads to automatic reduction of stepk slightly
+        # below what is provided here, while maxk is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
             _force_stepk *= min_scale
@@ -616,7 +617,7 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._pad_factor = 1.
     ret._gsparams = galsim.GSParams.check(gsparams)
 
-    im_cen = image.bounds.trueCenter() if use_true_center else image.bounds.center()
+    im_cen = image.true_center if use_true_center else image.center
     local_wcs = image.wcs.local(image_pos = im_cen)
     min_scale = local_wcs._minScale()
     max_scale = local_wcs._maxScale()

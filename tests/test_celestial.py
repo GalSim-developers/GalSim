@@ -64,8 +64,6 @@ def test_angle():
     # Check wrapping
     theta6 = (45 + 360) * galsim.degrees
     assert abs(theta6.rad - theta1.rad) > 6.
-    print('theta1 = ',theta1,' => ',theta1.wrap())
-    print('theta6 = ',theta6,' => ',theta6.wrap())
     numpy.testing.assert_almost_equal(theta6.wrap().rad, theta1.rad, decimal=12)
 
     # Check trig calls
@@ -631,7 +629,6 @@ def test_galactic():
         galsim.Angle.from_dms('-28:56:10.2207'))
     print('center.galactic = ',center.galactic())
     el,b = center.galactic()
-
     np.testing.assert_almost_equal(el.wrap().rad, 0., decimal=8)
     np.testing.assert_almost_equal(b.rad, 0., decimal=8)
 
@@ -742,11 +739,6 @@ def test_ecliptic():
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.wrap(pi*galsim.radians).rad, pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
-
-    # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
-    # results are the same.  This includes use of a function that isn't available to users, but we
-    # use it for a few things so we should still make sure it's working properly.
-
 
     # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
     # results are the same.

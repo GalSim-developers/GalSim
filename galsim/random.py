@@ -362,7 +362,7 @@ class BinomialDeviate(BaseDeviate):
     def __call__(self):
         """Draw a new random number from the distribution.
 
-        Returns a Binomial deviate with the given N and p.
+        Returns a Binomial deviate with the given n and p.
         """
         return self._rng.generate1()
 
@@ -820,7 +820,6 @@ class DistDeviate(BaseDeviate):
                 self._interpolant, self._npoints)
 
 
-
 def permute(rng, *args):
     """Randomly permute one or more lists.
 
@@ -846,13 +845,9 @@ def permute(rng, *args):
 # Some functions to enable pickling of deviates
 _galsim.BaseDeviateImpl.__getinitargs__ = lambda self: (self.serialize(),)
 _galsim.UniformDeviateImpl.__getinitargs__ = lambda self: (self.serialize(),)
-_galsim.GaussianDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getMean(),
-        self.getSigma())
-_galsim.BinomialDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getN(),
-        self.getP())
-_galsim.PoissonDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
-_galsim.WeibullDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getA(),
-        self.getB())
-_galsim.GammaDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getK(),
-        self.getTheta())
-_galsim.Chi2DeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.getN())
+_galsim.GaussianDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.mean, self.sigma)
+_galsim.BinomialDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.n, self.p)
+_galsim.PoissonDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.mean)
+_galsim.WeibullDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.a, self.b)
+_galsim.GammaDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.k, self.theta)
+_galsim.Chi2DeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.n)

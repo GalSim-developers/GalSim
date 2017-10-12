@@ -125,7 +125,7 @@ def test_Image_basic():
         assert im1.ymin == 1
         assert im1.ymax == nrow
         assert im1.bounds == bounds
-        assert im1.getOuterBounds() == galsim.BoundsD(0.5, ncol+0.5, 0.5, nrow+0.5)
+        assert im1.outer_bounds == galsim.BoundsD(0.5, ncol+0.5, 0.5, nrow+0.5)
 
         # Same thing if ncol,nrow are kwargs.  Also can give init_value
         im1b = galsim.Image(ncol=ncol, nrow=nrow, dtype=array_type, init_value=23)
@@ -140,20 +140,20 @@ def test_Image_basic():
         assert im1a.ymin == 7
         assert im1a.ymax == nrow+6
         assert im1a.bounds == galsim.BoundsI(4,ncol+3,7,nrow+6)
-        assert im1a.getOuterBounds() == galsim.BoundsD(3.5, ncol+3.5, 6.5, nrow+6.5)
+        assert im1a.outer_bounds == galsim.BoundsD(3.5, ncol+3.5, 6.5, nrow+6.5)
         assert im1b.xmin == 0
         assert im1b.xmax == ncol-1
         assert im1b.ymin == 0
         assert im1b.ymax == nrow-1
         assert im1b.bounds == galsim.BoundsI(0,ncol-1,0,nrow-1)
-        assert im1b.getOuterBounds() == galsim.BoundsD(-0.5, ncol-0.5, -0.5, nrow-0.5)
+        assert im1b.outer_bounds == galsim.BoundsD(-0.5, ncol-0.5, -0.5, nrow-0.5)
 
         # Also test alternate name of image type: ImageD, ImageF, etc.
         image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
         im2 = image_type(bounds, init_value=23)
         im2_view = im2.view()
         im2_cview = im2.view(make_const=True)
-        im2_conj = im2.conjugate()
+        im2_conj = im2.conjugate
 
         assert im2_view.xmin == 1
         assert im2_view.xmax == ncol
@@ -209,11 +209,11 @@ def test_Image_basic():
                 assert im2(x,y) == value
                 assert im2_view(x,y) == value
                 assert im2_cview(x,y) == value
-                assert im1.conjugate()(x,y) == value
+                assert im1.conjugate(x,y) == value
                 if tchar[i][0] == 'C':
                     # complex conjugate is not a view into the original.
                     assert im2_conj(x,y) == 23
-                    assert im2.conjugate()(x,y) == value
+                    assert im2.conjugate(x,y) == value
                 else:
                     assert im2_conj(x,y) == value
 
@@ -2316,7 +2316,7 @@ def test_complex_image():
         im2 = galsim.Image(ncol, nrow, init_value=23, dtype=dtype)
         im2_view = im2.view()
         im2_cview = im2.view(make_const=True)
-        im2_conj = im2.conjugate()
+        im2_conj = im2.conjugate
 
         # Check various ways to set and get values
         for y in range(1,nrow+1):
@@ -2333,11 +2333,11 @@ def test_complex_image():
                 assert im2(x,y) == value
                 assert im2_view(x,y) == value
                 assert im2_cview(x,y) == value
-                assert im1.conjugate()(x,y) == np.conjugate(value)
+                assert im1.conjugate(x,y) == np.conjugate(value)
 
                 # complex conjugate is not a view into the original.
                 assert im2_conj(x,y) == 23
-                assert im2.conjugate()(x,y) == np.conjugate(value)
+                assert im2.conjugate(x,y) == np.conjugate(value)
 
                 value2 = 10*x + y + 20j*x + 2j*y
                 im1.setValue(x,y, value2)
@@ -2361,8 +2361,8 @@ def test_complex_image():
                 assert im2.imag(x,y) == value2.imag
                 assert im2_view.imag(x,y) == value2.imag
                 assert im2_cview.imag(x,y) == value2.imag
-                assert im1.conjugate()(x,y) == np.conjugate(value2)
-                assert im2.conjugate()(x,y) == np.conjugate(value2)
+                assert im1.conjugate(x,y) == np.conjugate(value2)
+                assert im2.conjugate(x,y) == np.conjugate(value2)
 
                 rvalue3 = 12*x + y
                 ivalue3 = x + 21*y
@@ -2377,8 +2377,8 @@ def test_complex_image():
                 assert im2(x,y) == value3
                 assert im2_view(x,y) == value3
                 assert im2_cview(x,y) == value3
-                assert im1.conjugate()(x,y) == np.conjugate(value3)
-                assert im2.conjugate()(x,y) == np.conjugate(value3)
+                assert im1.conjugate(x,y) == np.conjugate(value3)
+                assert im2.conjugate(x,y) == np.conjugate(value3)
 
         # Check view of given data
         im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
@@ -3028,17 +3028,17 @@ def test_bin():
     # Next do nx != ny.  And wcs = JacobianWCS
     wcs1 = galsim.JacobianWCS(0.6, 0.14, 0.15, 0.7)
     im1 = obj.drawImage(nx=11, ny=15, wcs=wcs1, dtype=float)
-    im1.wcs = im1.wcs.withOrigin(im1.trueCenter(), galsim.PositionD(200,300))
-    center1 = im1.wcs.toWorld(im1.trueCenter())
+    im1.wcs = im1.wcs.withOrigin(im1.true_center, galsim.PositionD(200,300))
+    center1 = im1.wcs.toWorld(im1.true_center)
     print('center1 = ',center1)
 
     wcs2 = galsim.JacobianWCS(0.2, 0.07, 0.05, 0.35)
     im2 = obj.drawImage(nx=33, ny=30, wcs=wcs2, dtype=float)
-    im2.wcs = im2.wcs.withOrigin(im2.trueCenter(), galsim.PositionD(200,300))
-    center2 = im2.wcs.toWorld(im2.trueCenter())
+    im2.wcs = im2.wcs.withOrigin(im2.true_center, galsim.PositionD(200,300))
+    center2 = im2.wcs.toWorld(im2.true_center)
     print('center2 = ',center2)
     im3 = im2.bin(3,2)
-    center3 = im2.wcs.toWorld(im2.trueCenter())
+    center3 = im2.wcs.toWorld(im2.true_center)
     print('center3 = ',center3)
     ar2 = im2.array
     ar3b = (ar2[0::2,0::3] + ar2[0::2,1::3] + ar2[0::2,2::3] +
@@ -3058,7 +3058,7 @@ def test_bin():
     im4 = im2.subsample(3,2)
     np.testing.assert_almost_equal(im4.array.sum(), im2.array.sum(), 6,
                                    "subsample didn't preserve the total flux")
-    center4 = im4.wcs.toWorld(im4.trueCenter())
+    center4 = im4.wcs.toWorld(im4.true_center)
     print('center4 = ',center4)
     np.testing.assert_almost_equal((center4.x, center4.y), (center1.x, center1.y), 6,
                                    "3x2 subsampled image wcs is wrong")
@@ -3066,7 +3066,7 @@ def test_bin():
     im5 = im4.bin(3,2)
     np.testing.assert_almost_equal(im5.array, im2.array, 6,
                                    "Round trip subsample then bin 3x2 doesn't match original")
-    center5 = im5.wcs.toWorld(im5.trueCenter())
+    center5 = im5.wcs.toWorld(im5.true_center)
     print('center5 = ',center5)
     np.testing.assert_almost_equal((center5.x, center5.y), (center1.x, center1.y), 6,
                                    "Round trip 3x2 image wcs is wrong")

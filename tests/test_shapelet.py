@@ -60,8 +60,8 @@ def test_shapelet_gaussian():
                     err_msg="Shapelet with (only) b00=1 disagrees with Gaussian result"
                             "for flux=%f, sigma=%f, order=%d"%(test_flux,sigma,order))
             np.testing.assert_almost_equal(
-                    gauss.maxSB(), shapelet.maxSB(), 5,
-                    err_msg="Shapelet maxSB did not match Gaussian maxSB")
+                    gauss.max_sb, shapelet.max_sb, 5,
+                    err_msg="Shapelet max_sb did not match Gaussian max_sb")
             np.testing.assert_almost_equal(
                     gauss.flux, shapelet.flux, 5,
                     err_msg="Shapelet flux did not match Gaussian flux")
@@ -110,8 +110,8 @@ def test_shapelet_drawImage():
             np.testing.assert_almost_equal(flux / test_flux, 1., 4,
                     err_msg="Flux normalization for Shapelet disagrees with expected result")
             np.testing.assert_allclose(
-                    im.array.max(), shapelet.maxSB() * im.scale**2, rtol=0.1,
-                    err_msg="Shapelet maxSB did not match maximum pixel")
+                    im.array.max(), shapelet.max_sb * im.scale**2, rtol=0.1,
+                    err_msg="Shapelet max_sb did not match maximum pixel")
 
             # Test centroid
             # Note: this only works if the image has odd sizes.  If they are even, then
@@ -126,10 +126,10 @@ def test_shapelet_drawImage():
             mx = (x*im.array).sum() / flux
             my = (y*im.array).sum() / flux
             conv = galsim.Convolve([shapelet, galsim.Pixel(scale)])
-            print('centroid = ',mx,my,' cf. ',conv.centroid())
-            np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
+            print('centroid = ',mx,my,' cf. ',conv.centroid)
+            np.testing.assert_almost_equal(mx, shapelet.centroid.x, 3,
                     err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
-            np.testing.assert_almost_equal(my, shapelet.centroid().y, 3,
+            np.testing.assert_almost_equal(my, shapelet.centroid.y, 3,
                     err_msg="Measured centroid (y) for Shapelet disagrees with expected result")
 
 
@@ -157,19 +157,19 @@ def test_shapelet_properties():
     # Check flux
     flux = bvec[0] + bvec[5] + bvec[14]
     np.testing.assert_almost_equal(shapelet.flux, flux, 10)
-    # The maxSB is not very accurate for Shapelet, but in this case it is still ok (matching
+    # The max_sb is not very accurate for Shapelet, but in this case it is still ok (matching
     # xValue(0,0), which isn't actually the maximum) to 2 digits.
     np.testing.assert_almost_equal(
-            shapelet.xValue(0,0), shapelet.maxSB(), 2,
-            err_msg="Shapelet maxSB did not match maximum pixel value")
+            shapelet.xValue(0,0), shapelet.max_sb, 2,
+            err_msg="Shapelet max_sb did not match maximum pixel value")
     # Check centroid
     cen = galsim.PositionD(bvec[1],-bvec[2]) + np.sqrt(2.) * galsim.PositionD(bvec[8],-bvec[9])
     cen *= 2. * sigma / flux
-    np.testing.assert_almost_equal(shapelet.centroid().x, cen.x, 10)
-    np.testing.assert_almost_equal(shapelet.centroid().y, cen.y, 10)
+    np.testing.assert_almost_equal(shapelet.centroid.x, cen.x, 10)
+    np.testing.assert_almost_equal(shapelet.centroid.y, cen.y, 10)
     # Check Fourier properties
-    np.testing.assert_almost_equal(shapelet.maxK(), 4.61738371186, 10)
-    np.testing.assert_almost_equal(shapelet.stepK(), 0.195133742529, 10)
+    np.testing.assert_almost_equal(shapelet.maxk, 4.61738371186, 10)
+    np.testing.assert_almost_equal(shapelet.stepk, 0.195133742529, 10)
     # Check image values in real and Fourier space
     zero = galsim.PositionD(0., 0.)
     np.testing.assert_almost_equal(shapelet.kValue(zero), flux+0j, 10)
@@ -203,10 +203,10 @@ def test_shapelet_fit():
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
-        print('centroid = ',shapelet.centroid(),'  cf. ',conv.centroid())
-        np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
+        print('centroid = ',shapelet.centroid,'  cf. ',conv.centroid)
+        np.testing.assert_almost_equal(shapelet.centroid.x, conv.centroid.x, 2,
                 err_msg="Fitted shapelet has the wrong centroid (x)")
-        np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
+        np.testing.assert_almost_equal(shapelet.centroid.y, conv.centroid.y, 2,
                 err_msg="Fitted shapelet has the wrong centroid (y)")
 
         # Test drawing image from shapelet
@@ -235,7 +235,7 @@ def test_shapelet_fit():
         offset = galsim.PositionD(0.3,1.4)
         shapelet.drawImage(im2, method=method, offset=offset)
         shapelet2 = galsim.Shapelet.fit(sigma, 10, im2, normalization=norm,
-                                        center=im2.trueCenter() + offset)
+                                        center=im2.true_center + offset)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,

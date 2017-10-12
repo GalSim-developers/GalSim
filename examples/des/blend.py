@@ -191,7 +191,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_images = []
             for prof in profiles:
                 im = galsim.ImageF(bounds=bounds, wcs=wcs)
-                galsim.config.DrawBasic(prof, im, method, offset-im.trueCenter(), config, base,
+                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base,
                                         logger)
                 self.full_images.append(im)
 

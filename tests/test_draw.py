@@ -69,10 +69,10 @@ def test_drawImage():
     # First test drawImage() with method='no_pixel'.  It should:
     #   - create a new image
     #   - return the new image
-    #   - set the scale to obj.nyquistScale()
+    #   - set the scale to obj.nyquist_scale
     #   - set the size large enough to contain 99.5% of the flux
     im1 = obj.drawImage(method='no_pixel')
-    nyq_scale = obj.nyquistScale()
+    nyq_scale = obj.nyquist_scale
     np.testing.assert_almost_equal(im1.scale, nyq_scale, 9,
                                    "obj.drawImage() produced image with wrong scale")
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(1,56,1,56),
@@ -84,7 +84,7 @@ def test_drawImage():
     # convoled with a pixel:
     obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
     im2 = obj2.drawImage(method='no_pixel')
-    nyq_scale = obj2.nyquistScale()
+    nyq_scale = obj2.nyquist_scale
     np.testing.assert_almost_equal(im2.scale, nyq_scale, 9,
                                    "obj2.drawImage() produced image with wrong scale")
     np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
@@ -107,7 +107,7 @@ def test_drawImage():
     # Test if we provide an image argument.  It should:
     #   - write to the existing image
     #   - also return that image
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     #   - zero out any existing data
     im3 = galsim.ImageD(56,56)
     im4 = obj.drawImage(im3)
@@ -131,7 +131,7 @@ def test_drawImage():
     # Test if we provide an image with undefined bounds.  It should:
     #   - resize the provided image
     #   - also return that image
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     im5 = galsim.ImageD()
     obj.drawImage(im5)
     np.testing.assert_almost_equal(im5.scale, nyq_scale, 9,
@@ -176,7 +176,7 @@ def test_drawImage():
 
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     im9.scale = -scale
     im9.setZero()
     obj.drawImage(im9)
@@ -213,7 +213,7 @@ def test_drawImage():
 
     # Test if we provide an image and dx <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     im9.scale = 0.73
     im9.setZero()
     obj.drawImage(im9, scale=-scale)
@@ -268,7 +268,7 @@ def test_drawImage():
 
     # Test if we provide nx, ny, and no scale.  It should:
     #   - create a new image with the right size
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     im10 = obj.drawImage(nx=nx, ny=ny)
     np.testing.assert_equal(im10.array.shape, (ny, nx),
                                    "obj.drawImage(nx,ny) produced image with wrong size")
@@ -324,7 +324,7 @@ def test_drawImage():
 
     # Test if we provide bounds and no scale.  It should:
     #   - create a new image with the right size
-    #   - set the scale to obj2.nyquistScale()
+    #   - set the scale to obj2.nyquist_scale
     bounds = galsim.BoundsI(1,nx,1,ny+1)
     im10 = obj.drawImage(bounds=bounds)
     np.testing.assert_equal(im10.array.shape, (ny+1, nx),
@@ -486,19 +486,19 @@ def test_drawKImage():
     # First test drawKImage() with no kwargs.  It should:
     #   - create new images
     #   - return the new images
-    #   - set the scale to 2pi/(N*obj.nyquistScale())
+    #   - set the scale to 2pi/(N*obj.nyquist_scale)
     im1 = obj.drawKImage()
     N = 1162
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
-    stepk = obj.stepK()
+    stepk = obj.stepk
     np.testing.assert_almost_equal(im1.scale, stepk, 9,
                                    "obj.drawKImage() produced image with wrong scale")
     np.testing.assert_almost_equal(CalculateScale(im1), 2, 1,
                                    "Measured wrong scale after obj.drawKImage()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_equal(im1.bounds.center(), galsim.PositionI(0,0))
+    np.testing.assert_equal(im1.bounds.center, galsim.PositionI(0,0))
     np.testing.assert_almost_equal(im1(0,0), test_flux, 2,
                                    "obj.drawKImage() produced image with wrong flux")
     # Imaginary component should all be 0.
@@ -508,7 +508,7 @@ def test_drawKImage():
     # Test if we provide an image argument.  It should:
     #   - write to the existing image
     #   - also return that image
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     #   - zero out any existing data
     im3 = galsim.ImageCD(1149,1149)
     im4 = obj.drawKImage(im3)
@@ -529,7 +529,7 @@ def test_drawKImage():
     # Test if we provide an image with undefined bounds.  It should:
     #   - resize the provided image
     #   - also return that image
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     im5 = galsim.ImageCD()
     obj.drawKImage(im5)
     np.testing.assert_almost_equal(im5.scale, stepk, 9,
@@ -578,7 +578,7 @@ def test_drawKImage():
 
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     im3.scale = -scale
     im3.setZero()
     obj.drawKImage(im3)
@@ -623,7 +623,7 @@ def test_drawKImage():
 
     # Test if we provide an image and scale <= 0.  It should:
     #   - write to the existing image
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     im3.scale = scale + 0.3
     im3.setZero()
     obj.drawKImage(im3, scale=-scale)
@@ -668,7 +668,7 @@ def test_drawKImage():
 
     # Test if we provide nx, ny, and no scale.  It should:
     #   - create a new image with the right size
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     im4 = obj.drawKImage(nx=nx, ny=ny)
     np.testing.assert_almost_equal(
             im4.scale, stepk, 9,
@@ -679,7 +679,7 @@ def test_drawKImage():
 
     # Test if we provide bounds and no scale.  It should:
     #   - create a new image with the right size
-    #   - set the scale to obj.stepK()
+    #   - set the scale to obj.stepk
     bounds = galsim.BoundsI(1,nx,1,ny)
     im4 = obj.drawKImage(bounds=bounds)
     np.testing.assert_almost_equal(
@@ -846,13 +846,13 @@ def test_offset():
         cenx = (nx+1.)/2.
         ceny = (ny+1.)/2.
         im = galsim.ImageD(nx,ny, scale=scale)
-        true_center = im.bounds.trueCenter()
+        true_center = im.bounds.true_center
         np.testing.assert_almost_equal(
                 cenx, true_center.x, 6,
-                "im.bounds.trueCenter().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.true_center.x is wrong for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
                 ceny, true_center.y, 6,
-                "im.bounds.trueCenter().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.true_center.y is wrong for (nx,ny) = %d,%d"%(nx,ny))
 
         # Check that the default draw command puts the centroid in the center of the image.
         obj.drawImage(im, method='sb')
@@ -950,13 +950,13 @@ def test_offset():
         # Chcek the image's definition of the nominal center
         nom_cenx = (nx+2)//2
         nom_ceny = (ny+2)//2
-        nominal_center = im.bounds.center()
+        nominal_center = im.bounds.center
         np.testing.assert_almost_equal(
                 nom_cenx, nominal_center.x, 6,
-                "im.bounds.center().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.center.x is wrong for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
                 nom_ceny, nominal_center.y, 6,
-                "im.bounds.center().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+                "im.bounds.center.y is wrong for (nx,ny) = %d,%d"%(nx,ny))
 
         # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
         obj.drawImage(im, method='sb', use_true_center=False)
@@ -1141,7 +1141,7 @@ def test_fft():
               #     calculation needs to be different when N/2 is odd.
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
-    nyq_scale = obj.nyquistScale()
+    nyq_scale = obj.nyquist_scale
 
     # If we inverse_fft the above automatic image, it should match the automatic real image
     # for method = 'sb' and use_true_center=False.

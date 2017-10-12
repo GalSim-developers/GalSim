@@ -208,9 +208,9 @@ def make_movie(args):
                     ztext[j-1].set_text("Z{:d} = {:5.3f}".format(j+1, ab))
 
                 # Calculate simple estimate of ellipticity
-                mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.trueCenter())
+                mom_fft = galsim.utilities.unweighted_moments(fft_img, origin=fft_img.true_center)
                 mom_geom = galsim.utilities.unweighted_moments(geom_img,
-                                                               origin=geom_img.trueCenter())
+                                                               origin=geom_img.true_center)
                 e_fft = galsim.utilities.unweighted_shape(mom_fft)
                 e_geom = galsim.utilities.unweighted_shape(mom_geom)
 

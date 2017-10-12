@@ -44,6 +44,7 @@ import galsim
 from . import _galsim
 from .utilities import lazy_property
 
+
 class GSObject(object):
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
 
@@ -97,16 +98,17 @@ class GSObject(object):
     There are some access methods and properties that are available for all GSObjects.
     Again, see the docstrings for each method for more details.
 
-        >>> flux = obj.flux
-        >>> centroid = obj.centroid()
-        >>> f_xy = obj.xValue(x,y)
-        >>> fk_xy = obj.kValue(kx,ky)
-        >>> nyq = obj.nyquistScale()
-        >>> stepk = obj.stepK()
-        >>> maxk = obj.maxK()
-        >>> hard = obj.hasHardEdges()
-        >>> axisym = obj.isAxisymmetric()
-        >>> analytic = obj.isAnalyticX()
+        >>> obj.flux
+        >>> obj.centroid
+        >>> obj.nyquist_scale
+        >>> obj.stepk
+        >>> obj.maxk
+        >>> obj.has_hard_edges
+        >>> obj.is_axisymmetric
+        >>> obj.is_analytic_x
+        >>> obj.is_analytic_k
+        >>> obj.xValue(x,y) or obj.xValue(pos)
+        >>> obj.kValue(kx,ky) os obj.kValue(kpos)
 
     Most subclasses have additional methods that are available for values that are particular to
     that specific surface brightness profile.  e.g. `sigma = gauss.getSigma()`.  However, note
@@ -176,7 +178,7 @@ class GSObject(object):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof._sbp.draw(imview.image)
+            image.added_flux = prof._sbp.draw(imview._image)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
@@ -277,52 +279,60 @@ class GSObject(object):
         return -1. * self
 
     # Now define direct access to all SBProfile methods via calls to self._sbp.method_name()
-    #
-    def maxK(self):
-        """Returns value of k beyond which aliasing can be neglected.
+    @property
+    def maxk(self):
+        """The value of k beyond which aliasing can be neglected.
         """
         return self._sbp.maxK()
 
-    def nyquistScale(self):
-        """Returns Image pixel spacing that does not alias maxK.
-        """
-        return self._sbp.nyquistDx()
-
-    def stepK(self):
-        """Returns sampling in k space necessary to avoid folding of image in x space.
+    @property
+    def stepk(self):
+        """The sampling in k space necessary to avoid folding of image in x space.
         """
         return self._sbp.stepK()
 
-    def hasHardEdges(self):
-        """Returns True if there are any hard edges in the profile, which would require very small k
+    @property
+    def nyquist_scale(self):
+        """The Image pixel spacing that does not alias maxk.
+        """
+        return self._sbp.nyquistDx()
+
+    @property
+    def has_hard_edges(self):
+        """Whether there are any hard edges in the profile, which would require very small k
         spacing when working in the Fourier domain.
         """
         return self._sbp.hasHardEdges()
 
-    def isAxisymmetric(self):
-        """Returns True if axially symmetric: affects efficiency of evaluation.
+    @property
+    def is_axisymmetric(self):
+        """Wthether the profile is axially symmetric; affects efficiency of evaluation.
         """
         return self._sbp.isAxisymmetric()
 
-    def isAnalyticX(self):
-        """Returns True if real-space values can be determined immediately at any position without
+    @property
+    def is_analytic_x(self):
+        """Whether the real-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
         return self._sbp.isAnalyticX()
 
-    def isAnalyticK(self):
-        """Returns True if k-space values can be determined immediately at any position without
+    @property
+    def is_analytic_k(self):
+        """Whether the k-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
         return self._sbp.isAnalyticK()
 
+    @property
     def centroid(self):
-        """Returns the (x, y) centroid of an object as a Position.
+        """The (x, y) centroid of an object as a Position.
         """
         return galsim.PositionD(self._sbp.centroid())
 
-    def getPositiveFlux(self):
-        """Returns the expectation value of flux in positive photons.
+    @property
+    def positive_flux(self):
+        """The expectation value of flux in positive photons.
 
         Some profiles, when rendered with photon shooting, need to shoot both positive- and
         negative-flux photons.  For such profiles, this method returns the total flux
@@ -330,13 +340,14 @@ class GSObject(object):
 
         For profiles that don't have this complication, this is equivalent to getFlux().
 
-        It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
-        thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
         return self._sbp.getPositiveFlux()
 
-    def getNegativeFlux(self):
+    @property
+    def negative_flux(self):
         """Returns the expectation value of flux in negative photons.
 
         Some profiles, when rendered with photon shooting, need to shoot both positive- and
@@ -345,17 +356,18 @@ class GSObject(object):
 
         For profiles that don't have this complication, this returns 0.
 
-        It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the same
-        thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy in
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
         return self._sbp.getNegativeFlux()
 
-    def maxSB(self):
-        """Returns an estimate of the maximum surface brightness of the object.
+    @property
+    def max_sb(self):
+        """An estimate of the maximum surface brightness of the object.
 
         Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how to
+        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
         calculate this value without just drawing the image and checking what the maximum value is.
         Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
         which will generally be conservative on the high side.
@@ -369,6 +381,7 @@ class GSObject(object):
         """
         return self._sbp.maxSB()
 
+    # Some calculations that can be done for all GSObjects.
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
 
@@ -400,8 +413,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            0.5 * self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            0.5 * self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
                             [default: 0.5]
 
@@ -411,17 +424,17 @@ class GSObject(object):
             return self.half_light_radius
 
         if scale is None:
-            scale = self.nyquistScale() * 0.5
+            scale = self.nyquist_scale * 0.5
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
         offset = galsim.PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
 
 
@@ -466,8 +479,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
         @param rtype        There are three options for this parameter:
                             - 'trace' means return sqrt(T/2)
                             - 'det' means return det(Q)^1/4
@@ -486,15 +499,15 @@ class GSObject(object):
                 return self.sigma
 
         if scale is None:
-            scale = self.nyquistScale()
+            scale = self.nyquist_scale
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         im = self.drawImage(nx=size, ny=size, scale=scale, dtype=float)
 
-        center = im.trueCenter() + centroid/scale
+        center = im.true_center + centroid/scale
         return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
 
 
@@ -515,8 +528,8 @@ class GSObject(object):
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
-                            self.nyquistScale()]
-        @param centroid     The position to use for the centroid. [default: self.centroid()]
+                            self.nyquist_scale]
+        @param centroid     The position to use for the centroid. [default: self.centroid]
 
         @returns an estimate of the full-width half-maximum in physical units
         """
@@ -524,10 +537,10 @@ class GSObject(object):
             return self.fwhm
 
         if scale is None:
-            scale = self.nyquistScale()
+            scale = self.nyquist_scale
 
         if centroid is None:
-            centroid = self.centroid()
+            centroid = self.centroid
 
         # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
         # raw surface brightness profile, not integrated over pixels.
@@ -537,13 +550,13 @@ class GSObject(object):
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb', dtype=float)
 
         # Get the maximum value, assuming the maximum is at the centroid.
-        if self.isAnalyticX():
+        if self.is_analytic_x:
             Imax = self.xValue(centroid)
         else:
             im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
             Imax = im1(1,1)
 
-        center = im.trueCenter() + offset + centroid/scale
+        center = im.true_center + offset + centroid/scale
         return im.calculateFWHM(center=center, Imax=Imax)
 
 
@@ -565,7 +578,7 @@ class GSObject(object):
         Not all GSObject classes can use this method.  Classes like Convolution that require a
         Discrete Fourier Transform to determine the real space values will not do so for a single
         position.  Instead a RuntimeError will be raised.  The xValue() method is available if and
-        only if `obj.isAnalyticX() == True`.
+        only if `obj.is_analytic_x == True`.
 
         Users who wish to use the xValue() method for an object that is the convolution of other
         profiles can do so by drawing the convolved profile into an image, using the image to
@@ -595,7 +608,7 @@ class GSObject(object):
         PositionD or PositionI argument, or it may be given as kx,ky (either as a tuple or as two
         arguments).
 
-        Techinically, kValue() is available if and only if the given obj has `obj.isAnalyticK()
+        Technically, kValue() is available if and only if the given obj has `obj.is_analytic_k
         == True`, but this is the case for all GSObjects currently, so that should never be an
         issue (unlike for xValue()).
 
@@ -929,9 +942,9 @@ class GSObject(object):
         if not bounds.isDefined():
             raise ValueError("Cannot provide non-local wcs with automatically sized image")
         elif use_true_center:
-            obj_cen = bounds.trueCenter()
+            obj_cen = bounds.true_center
         else:
-            obj_cen = bounds.center()
+            obj_cen = bounds.center
             # Convert from PositionI to PositionD
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
@@ -998,7 +1011,7 @@ class GSObject(object):
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
         if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
             if default_wcs is None:
-                wcs = galsim.PixelScale(self.nyquistScale())
+                wcs = galsim.PixelScale(self.nyquist_scale)
             else:
                 wcs = default_wcs
 
@@ -1149,7 +1162,7 @@ class GSObject(object):
         central pixels of an even-sized image.  There are two parameters that can affect this
         behavior.  If you want the nominal center to always fall at the center of a pixel, you can
         use `use_true_center=False`.  This will put the object's center at the position
-        `image.center()` which is an integer pixel value, and is not the true center of an
+        `image.center` which is an integer pixel value, and is not the true center of an
         even-sized image.  You can also arbitrarily offset the profile from the image center with
         the `offset` parameter to handle any sub-pixel dithering you want.
 
@@ -1289,9 +1302,9 @@ class GSObject(object):
                             Note: This requires that `image` be provided and that it have defined
                             bounds. [default: False]
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
-                            of the image (using the function image.bounds.trueCenter()).
-                            If you would rather use the integer center (given by
-                            image.bounds.center()), set this to `False`.  [default: True]
+                            of the image (using the property image.true_center).
+                            If you would rather use the integer center (given by image.center),
+                            set this to `False`.  [default: True]
         @param offset       The location in pixel coordinates at which to center the profile being
                             drawn relative to the center of the image (either the true center if
                             `use_true_center=True` or nominal center if `use_true_center=False`).
@@ -1483,7 +1496,7 @@ class GSObject(object):
                 draw_image = imview
                 add = add_to_image
 
-            if prof.isAnalyticX():
+            if prof.is_analytic_x:
                 added_photons = prof.drawReal(draw_image, add)
             else:
                 added_photons = prof.drawFFT(draw_image, add)
@@ -1594,7 +1607,7 @@ class GSObject(object):
 
         dk = 2.*np.pi / (N * image.scale)
 
-        maxk = self.maxK()
+        maxk = self.maxk
         if N*dk/2 > maxk:
             Nk = N
         else:
@@ -1743,8 +1756,8 @@ class GSObject(object):
         flux = self.flux
         if flux == 0.0:
             return 0, 1.0
-        posflux = self.getPositiveFlux()
-        negflux = self.getNegativeFlux()
+        posflux = self.positive_flux
+        negflux = self.negative_flux
         eta = negflux / (posflux + negflux)
         eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
         mod_flux = flux/(eta_factor*eta_factor)
@@ -1780,7 +1793,7 @@ class GSObject(object):
         if n_photons == 0.:
             n_photons = mod_flux
             if max_extra_noise > 0.:
-                gfactor = 1. + max_extra_noise / self.maxSB()
+                gfactor = 1. + max_extra_noise / self.max_sb
                 n_photons /= gfactor
                 g *= gfactor
 
@@ -2013,17 +2026,17 @@ class GSObject(object):
         # The input scale (via scale or image.scale) is really a dk value, so call it that for
         # clarity here, since we also need the real-space pixel scale, which we will call dx.
         if scale is None or scale <= 0:
-            dk = self.stepK()
+            dk = self.stepk
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
             dx = np.pi/( max(image.array.shape) // 2 * dk )
         elif scale is None or scale <= 0:
-            dx = self.nyquistScale()
+            dx = self.nyquist_scale
         else:
-            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
+            # Then dk = scale, which implies that we need to have dx smaller than nyquist_scale
             # by a factor of (dk/stepk)
-            dx = self.nyquistScale() * dk / self.stepK()
+            dx = self.nyquist_scale * dk / self.stepk
 
         # If the profile needs to be constructed from scratch, the _setup_image function will
         # do that, but only if the profile is in image coordinates for the real space image.
@@ -2034,12 +2047,12 @@ class GSObject(object):
             image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, odd=True)
 
         # Can't both recenter a provided image and add to it.
-        if recenter and image.center() != galsim.PositionI(0,0) and add_to_image:
+        if recenter and image.center != galsim.PositionI(0,0) and add_to_image:
             raise ValueError("Cannot recenter a non-centered image when add_to_image=True")
 
         # Set the center to 0,0 if appropriate
-        if recenter and image.center() != galsim.PositionI(0,0):
-            image._shift(-image.center())
+        if recenter and image.center != galsim.PositionI(0,0):
+            image._shift(-image.center)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
@@ -2047,7 +2060,8 @@ class GSObject(object):
         if setup_only:
             return image
 
-        return self._drawKImage(image, add_to_image)
+        self._drawKImage(image, add_to_image)
+        return image
 
     def _drawKImage(self, image, add_to_image=False):
         """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal

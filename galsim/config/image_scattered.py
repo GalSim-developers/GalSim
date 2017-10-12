@@ -131,7 +131,7 @@ class ScatteredImageBuilder(ImageBuilder):
             else:
                 logger.info(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
-                        stamps[k].bounds.center().x, stamps[k].bounds.center().y) +
+                        stamps[k].center.x, stamps[k].center.y) +
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))

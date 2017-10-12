@@ -174,30 +174,33 @@ class Bounds(object):
             self._check_scalar(dy, "dy")
         return self.__class__(self.xmin-dx, self.xmax+dx, self.ymin-dy, self.ymax+dy)
 
+    @property
     def origin(self):
-        "Return the lower left position of the Bounds."
+        "The lower left position of the Bounds."
         return self._pos_class(self.xmin, self.ymin)
 
+    @property
     def center(self):
-        """Return the central position of the Bounds.
+        """The central position of the Bounds.
 
         For a BoundsI, this will return an integer PositionI, which will be above and/or to
         the right of the true center if the x or y ranges have an even number of pixels.
 
-        For a BoundsD, this is equivalent to trueCenter().
+        For a BoundsD, this is equivalent to true_center.
         """
         if not self.isDefined():
-            raise ValueError("center() is invalid for an undefined Bounds")
-        return self._center()
+            raise ValueError("center is invalid for an undefined Bounds")
+        return self._center
 
-    def trueCenter(self):
-        """Return the central position of the Bounds as a PositionD.
+    @property
+    def true_center(self):
+        """The central position of the Bounds as a PositionD.
 
         This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer BoundsI, where
         this may not necessarily be an integer PositionI.
         """
         if not self.isDefined():
-            raise ValueError("trueCenter() is invalid for an undefined Bounds")
+            raise ValueError("true_center is invalid for an undefined Bounds")
         return PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
 
     def includes(self, *args):
@@ -394,6 +397,7 @@ class BoundsD(Bounds):
     def _area(self):
         return (self.xmax - self.xmin) * (self.ymax - self.ymin)
 
+    @property
     def _center(self):
         return PositionD( (self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2. )
 
@@ -443,6 +447,7 @@ class BoundsI(Bounds):
         else:
             return (self.xmax - self.xmin + 1) * (self.ymax - self.ymin + 1)
 
+    @property
     def _center(self):
         # Write it this way to make sure the integer rounding goes the same way regardless
         # of whether the values are positive or negative.

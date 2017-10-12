@@ -38,7 +38,7 @@ New features introduced in this demo:
 - ccdnoise = galsim.CCDNoise(ud)
 - image *= scalar
 - bounds = galsim.BoundsI(xmin, xmax, ymin, ymax)
-- pos = bounds.center()
+- pos = bounds.center
 - pos.x, pos.y
 - sub_image = image[bounds]
 
@@ -273,8 +273,8 @@ def main(argv):
                             g_to_e*psf_shape.observed_shape.e1,
                             g_to_e*psf_shape.observed_shape.e2, psf_shape.moments_sigma)
 
-            x = b.center().x
-            y = b.center().y
+            x = b.center.x
+            y = b.center.y
             logger.info('Galaxy (%d,%d): center = (%.0f,%0.f)  (e,beta) = (%.4f,%.3f)',
                         ix,iy,x,y,ellip,beta/galsim.radians)
             k = k+1
