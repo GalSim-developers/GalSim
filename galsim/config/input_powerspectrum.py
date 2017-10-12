@@ -198,7 +198,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
         # power spectrum is defined.  So if we do get this and the position is not on the image,
         # we probably don't care.  In that case, just log it as debug, not warn.
         log_level = (logging.WARNING if 'current_image' in base and
-                                        base['current_image'].getOuterBounds().includes(pos)
+                                        base['current_image'].outer_bounds.includes(pos)
                      else logging.DEBUG)
         for ww in w:
             logger.log(log_level, 'obj %d: %s',base['obj_num'], ww.message)
@@ -233,7 +233,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
         mu = power_spectrum.getMagnification(pos)
     if len(w) > 0:
         log_level = (logging.WARNING if 'current_image' in base and
-                                        base['current_image'].getOuterBounds().includes(pos)
+                                        base['current_image'].outer_bounds.includes(pos)
                      else logging.DEBUG)
         for ww in w:
             logger.log(log_level, 'obj %d: %s',base['obj_num'], ww.message)

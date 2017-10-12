@@ -154,7 +154,7 @@ def main(argv):
 
     # Update the image WCS to use the image center as the origin of the WCS.
     # The class that acts like a PixelScale except for this offset is called OffsetWCS.
-    im_center = gal_image.bounds.trueCenter()
+    im_center = gal_image.true_center
     wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
     gal_image.wcs = wcs
     psf_image.wcs = wcs
@@ -196,7 +196,7 @@ def main(argv):
         sub_gal_image = gal_image[b]
         sub_psf_image = psf_image[b]
 
-        pos = wcs.toWorld(b.trueCenter())
+        pos = wcs.toWorld(b.true_center)
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
         rsq = (pos.x**2 + pos.y**2)
@@ -280,7 +280,7 @@ def main(argv):
         sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
         # Add the truth values to the truth catalog
-        row = [ k, b.trueCenter().x, b.trueCenter().y,
+        row = [ k, b.true_center.x, b.true_center.y,
                 psf_shape.e1, psf_shape.e2, psf_fwhm,
                 id_list[index], cosmos_index[index], (theta_deg % 360.),
                 alt_g1, alt_g2, dx, dy ]

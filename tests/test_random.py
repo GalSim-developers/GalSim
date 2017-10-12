@@ -383,7 +383,7 @@ def test_gaussian():
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getMean(), x.getSigma()))
+    do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(g)
 
@@ -515,7 +515,7 @@ def test_binomial():
             err_msg='Wrong binomial random number sequence from generate.')
 
     # Check picklability
-    do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
+    do_pickle(b, lambda x: (x.serialize(), x.n, x.p))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
     do_pickle(b)
 
@@ -663,7 +663,7 @@ def test_poisson():
             err_msg='Wrong poisson random number sequence from generate_from_expectation.')
 
     # Check picklability
-    do_pickle(p, lambda x: (x.serialize(), x.getMean()))
+    do_pickle(p, lambda x: (x.serialize(), x.mean))
     do_pickle(p, lambda x: (x(), x(), x(), x()))
     do_pickle(p)
 
@@ -766,8 +766,8 @@ def test_poisson_highmean():
                 pn.getVariance(), mean, rtol=1.e-8,
                 err_msg="PoissonNoise getVariance returns wrong variance")
         np.testing.assert_allclose(
-                pn.getSkyLevel(), mean, rtol=1.e-8,
-                err_msg="PoissonNoise getSkyLevel returns wrong value")
+                pn.sky_level, mean, rtol=1.e-8,
+                err_msg="PoissonNoise sky_level returns wrong value")
 
         # Check that the noise model really does produce this variance.
         big_im = galsim.Image(2048,2048,dtype=float)
@@ -902,7 +902,7 @@ def test_weibull():
             err_msg='Wrong weibull random number sequence from generate.')
 
     # Check picklability
-    do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
+    do_pickle(w, lambda x: (x.serialize(), x.a, x.b))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
     do_pickle(w)
 
@@ -1032,7 +1032,7 @@ def test_gamma():
             err_msg='Wrong gamma random number sequence from generate.')
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
+    do_pickle(g, lambda x: (x.serialize(), x.k, x.theta))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(g)
 
@@ -1162,7 +1162,7 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence from generate.')
 
     # Check picklability
-    do_pickle(c, lambda x: (x.serialize(), x.getN()))
+    do_pickle(c, lambda x: (x.serialize(), x.n))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
     do_pickle(c)
 

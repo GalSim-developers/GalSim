@@ -394,17 +394,17 @@ def test_stepk_maxk():
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
-    stepk = psf.stepK()
-    maxk = psf.maxK()
+    stepk = psf.stepk
+    maxk = psf.maxk
 
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
                                  _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
     np.testing.assert_almost_equal(
-            psf2.stepK(), stepk/1.5, decimal=7,
-            err_msg="PhaseScreenPSF did not adopt forced value for stepK")
+            psf2.stepk, stepk/1.5, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for stepk")
     np.testing.assert_almost_equal(
-            psf2.maxK(), maxk*2.0, decimal=7,
-            err_msg="PhaseScreenPSF did not adopt forced value for maxK")
+            psf2.maxk, maxk*2.0, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for maxk")
     do_pickle(psf)
     do_pickle(psf2)
 
@@ -413,8 +413,8 @@ def test_stepk_maxk():
     img = galsim.Image(32, 32, scale=0.2)
     do_shoot(psf3, img, "PhaseScreenPSF")
     # Also make sure a few other methods at least run
-    psf3.centroid()
-    psf3.maxSB()
+    psf3.centroid
+    psf3.max_sb
 
 
 @timer
@@ -483,8 +483,8 @@ def test_ne():
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
-    stepk = objs[0].stepK()
-    maxk = objs[0].maxK()
+    stepk = objs[0].stepk
+    maxk = objs[0].maxk
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_stepk=stepk/1.5)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_maxk=maxk*2.0)]
     all_obj_diff(objs)

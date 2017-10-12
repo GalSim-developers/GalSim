@@ -329,14 +329,14 @@ def test_OpticalPSF_flux_scaling():
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj *= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
     obj = galsim.OpticalPSF(
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj /= 2.
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.OpticalPSF(
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
@@ -344,11 +344,11 @@ def test_OpticalPSF_flux_scaling():
     obj2 = obj * 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.OpticalPSF(
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
@@ -356,11 +356,11 @@ def test_OpticalPSF_flux_scaling():
     obj2 = 2. * obj
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        obj2.flux, test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.OpticalPSF(
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
@@ -368,11 +368,11 @@ def test_OpticalPSF_flux_scaling():
     obj2 = obj / 2.
     # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
+        obj.flux, test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
     # Then test new obj2 flux
     np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
@@ -829,16 +829,16 @@ def test_stepk_maxk_iipad():
     t0 = time.time()
     psf = galsim.OpticalPSF(lam=lam, diam=diam)
     print("Time for OpticalPSF with default ii_pad_factor=4 {0:6.4f}".format(time.time()-t0))
-    stepk = psf.stepK()
-    maxk = psf.maxK()
+    stepk = psf.stepk
+    maxk = psf.maxk
 
     psf2 = galsim.OpticalPSF(lam=lam, diam=diam, _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
     np.testing.assert_almost_equal(
-            psf2.stepK(), stepk/1.5, decimal=7,
-            err_msg="OpticalPSF did not adopt forced value for stepK")
+            psf2.stepk, stepk/1.5, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for stepk")
     np.testing.assert_almost_equal(
-            psf2.maxK(), maxk*2.0, decimal=7,
-            err_msg="OpticalPSF did not adopt forced value for maxK")
+            psf2.maxk, maxk*2.0, decimal=7,
+            err_msg="OpticalPSF did not adopt forced value for maxk")
 
     do_pickle(psf2)
 
@@ -890,8 +890,8 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, ii_pad_factor=2.)]
-    stepk = objs[0].stepK()
-    maxk = objs[0].maxK()
+    stepk = objs[0].stepk
+    maxk = objs[0].maxk
     objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
              galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_maxk=maxk*2)]
 

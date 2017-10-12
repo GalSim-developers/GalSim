@@ -43,6 +43,19 @@ def Bounds_initargs(self):
     else:
         return ()
 
+def Bounds_center(self):
+    "The nominal center of the Bounds as a Position."
+    return self._center()
+
+def Bounds_true_center(self):
+    "The true center of the Bounds as a PositionD."
+    return self._trueCenter()
+
+def Bounds_origin(self):
+    "The origin (lower-left corner) of the Bounds as a Position."
+    return self._origin()
+
+
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.__repr__ = Bounds_repr
     Class.__str__ = Bounds_str
@@ -131,8 +144,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     bounds by the specified width.
     """)
 
-    set_func_doc(Class.center, "Return the central point of the Bounds as a Position.")
-
     set_func_doc(Class.includes, """Test whether a supplied `(x,y)` pair, Position, or Bounds
     lie within a defined Bounds rectangle of this instance.
 
@@ -153,22 +164,10 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     set_func_doc(Class.expand, "Grow the Bounds by the supplied factor about the center.")
     set_func_doc(Class.isDefined, "Test whether Bounds rectangle is defined.")
-    set_func_doc(Class.getXMin, "Get the value of xmin.")
-    set_func_doc(Class.getXMax, "Get the value of xmax.")
-    set_func_doc(Class.getYMin, "Get the value of ymin.")
-    set_func_doc(Class.getYMax, "Get the value of ymax.")
-    set_func_doc(Class.shift, """Shift the Bounds instance by a supplied position
 
-    Calling Examples
-    ----------------
-    The input shift takes either a PositionI or PositionD instance, which must match
-    the type of the Bounds instance:
-
-        >>> bounds = BoundsI(1,32,1,32)
-        >>> bounds = bounds.shift(galsim.PositionI(3, 2))
-        >>> bounds = BoundsD(0, 37.4, 0, 49.9)
-        >>> bounds = bounds.shift(galsim.PositionD(3.9, 2.1))
-    """)
+    Class.center = property(Bounds_center)
+    Class.true_center = property(Bounds_true_center)
+    Class.origin = property(Bounds_origin)
 
 del Class    # cleanup public namespace
 

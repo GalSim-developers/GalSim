@@ -144,9 +144,9 @@ def test_roundtrip():
     do_pickle(galsim.Quintic(), test_func)
     do_pickle(galsim.Quintic(tol=0.1), test_func)
     do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant('quintic'), test_func)
-    do_pickle(galsim.Interpolant('lanczos7'), test_func)
-    do_pickle(galsim.Interpolant('lanczos9F'), test_func)
+    do_pickle(galsim.Interpolant.from_name('quintic'), test_func)
+    do_pickle(galsim.Interpolant.from_name('lanczos7'), test_func)
+    do_pickle(galsim.Interpolant.from_name('lanczos9F',1.e-6), test_func)
 
 
 @timer
@@ -169,7 +169,7 @@ def test_fluxnorm():
 
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
-    np.testing.assert_almost_equal(total_flux, interp.getFlux(), decimal=9,
+    np.testing.assert_almost_equal(total_flux, interp.flux, decimal=9,
                                    err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
     im2 = interp.drawImage(scale = im_scale, method='no_pixel')
@@ -190,8 +190,8 @@ def test_fluxnorm():
     np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
     np.testing.assert_almost_equal(
-            im4.array.max(), interp_sb.maxSB(), 5,
-            err_msg="InterpolatedImage maxSB did not match maximum pixel value")
+            im4.array.max(), interp_sb.max_sb, 5,
+            err_msg="InterpolatedImage max_sb did not match maximum pixel value")
 
     do_pickle(interp_sb, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(interp_sb)
@@ -199,7 +199,7 @@ def test_fluxnorm():
     # Finally make an InterpolatedImage but give it some other flux value
     interp_flux = galsim.InterpolatedImage(im, flux=test_flux)
     # Check that it has that flux
-    np.testing.assert_equal(test_flux, interp_flux.getFlux(),
+    np.testing.assert_equal(test_flux, interp_flux.flux,
                             err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
     im5 = interp_flux.drawImage(scale = im_scale, method='no_pixel')
@@ -971,18 +971,18 @@ def test_stepk_maxk():
     im = obj.drawImage(image=im, scale=scale)
     int_im = galsim.InterpolatedImage(im)
 
-    step_k_val = int_im.stepK()
-    max_k_val = int_im.maxK()
+    step_k_val = int_im.stepk
+    max_k_val = int_im.maxk
 
     mult_val = 0.9
     new_int_im = galsim.InterpolatedImage(im, _force_stepk=mult_val*step_k_val,
                                           _force_maxk=mult_val*max_k_val)
     numpy.testing.assert_almost_equal(
-        new_int_im.stepK(), mult_val*step_k_val, decimal=7,
-        err_msg='InterpolatedImage did not adopt forced value for stepK')
+        new_int_im.stepk, mult_val*step_k_val, decimal=7,
+        err_msg='InterpolatedImage did not adopt forced value for stepk')
     numpy.testing.assert_almost_equal(
-        new_int_im.maxK(), mult_val*max_k_val, decimal=7,
-        err_msg='InterpolatedImage did not adopt forced value for maxK')
+        new_int_im.maxk, mult_val*max_k_val, decimal=7,
+        err_msg='InterpolatedImage did not adopt forced value for maxk')
 
     do_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
@@ -1010,7 +1010,7 @@ def test_kroundtrip():
             err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
                      .format(kx, ky)))
 
-    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+    np.testing.assert_almost_equal(a.flux, b.flux, 6) #Fails at 7th decimal
 
     kim_b = b.drawKImage(kim_a.copy())
     # Fails at 4th decimal
@@ -1035,7 +1035,7 @@ def test_kroundtrip():
         kim_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=kim_a.scale)
         b = galsim.InterpolatedKImage(kim_a)
 
-        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        np.testing.assert_almost_equal(a.flux, b.flux, 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
         # One of these fails at 6th decimal
         np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)
@@ -1053,27 +1053,27 @@ def test_kroundtrip():
     a = final
     kim_a = a.drawKImage()
     b = galsim.InterpolatedKImage(kim_a)
-    c = galsim.InterpolatedKImage(kim_a, stepk=2*b.stepK())
-    np.testing.assert_almost_equal(b.stepK(), kim_a.scale)
-    np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
-    np.testing.assert_almost_equal(b.maxK(), c.maxK())
+    c = galsim.InterpolatedKImage(kim_a, stepk=2*b.stepk)
+    np.testing.assert_almost_equal(b.stepk, kim_a.scale)
+    np.testing.assert_almost_equal(2*b.stepk, c.stepk)
+    np.testing.assert_almost_equal(b.maxk, c.maxk)
 
     # Smaller stepk is overridden.
     try:
         d = np.testing.assert_warns(UserWarning,
-                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepK())
+                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepk)
     except ImportError:
         with warnings.catch_warnings(UserWarning):
-            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepK())
-    np.testing.assert_almost_equal(b.stepK(), d.stepK())
-    np.testing.assert_almost_equal(b.maxK(), d.maxK())
+            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
+    np.testing.assert_almost_equal(b.stepk, d.stepk)
+    np.testing.assert_almost_equal(b.maxk, d.maxk)
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
         b = galsim.InterpolatedKImage(a.drawKImage())
-        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
-        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+        np.testing.assert_almost_equal(a.centroid.x, b.centroid.x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(a.centroid.y, b.centroid.y, 4)
 
     # Test convolution with another object.
     a = final

@@ -21,4 +21,3 @@ We just import the LSSTDESC.Coord Angle class and related things into our namesp
 
 from coord import AngleUnit, Angle, _Angle
 from coord import radians, hours, degrees, arcmin, arcsec
-

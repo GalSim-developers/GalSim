@@ -261,7 +261,7 @@ def test_reject():
             assert isinstance(gal, galsim.Transformation)
             gal = gal.original
             assert isinstance(gal, galsim.Sersic)
-            reject = gal.getN() > 2
+            reject = gal.n > 2
         # The second item in the return tuple is "safe", which means is this value safe to
         # cache and reuse (potentially saving calculation time for complex objects).
         # Not really applicable here, so return False.
@@ -701,11 +701,11 @@ def test_scattered():
             config['image']['index_convention'] = convention
 
             image = galsim.config.BuildImage(config)
-            np.testing.assert_equal(image.getXMin(), convention)
-            np.testing.assert_equal(image.getYMin(), convention)
+            np.testing.assert_equal(image.xmin, convention)
+            np.testing.assert_equal(image.ymin, convention)
 
-            xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
-                                       np.arange(size) + image.getYMin())
+            xgrid, ygrid = np.meshgrid(np.arange(size) + image.xmin,
+                                       np.arange(size) + image.ymin)
             obs_flux = np.sum(image.array, dtype=float)
             cenx = np.sum(xgrid * image.array) / flux
             ceny = np.sum(ygrid * image.array) / flux
@@ -1511,7 +1511,7 @@ def test_multirng():
         wcs = galsim.OffsetWCS(scale=0.1, world_origin=galsim.PositionD(centeru,centerv),
                                origin=galsim.PositionD(128.5,128.5))
         im = galsim.ImageF(256, 256, wcs=wcs)
-        world_center = im.wcs.toWorld(im.trueCenter())
+        world_center = im.wcs.toWorld(im.true_center)
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=30, rng=rng, center=world_center, variance=0.1)
         ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
         if n % 3 == 0:

@@ -120,7 +120,7 @@ from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
-from .shapelet import Shapelet, ShapeletSize, FitShapelet
+from .shapelet import Shapelet
 from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant

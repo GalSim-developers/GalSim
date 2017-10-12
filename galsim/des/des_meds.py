@@ -160,7 +160,7 @@ class MultiExposureObject(object):
         if wcs is not None:
             self.wcs = wcs
         else:
-            self.wcs = [ im.wcs.affine(image_pos=im.trueCenter()) for im in self.images ]
+            self.wcs = [ im.wcs.affine(image_pos=im.true_center) for im in self.images ]
 
         # psf is not required, so leave it as None if not provided.
         self.psf = psf

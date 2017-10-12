@@ -97,36 +97,21 @@ namespace {
                 .def(bp::init<int>(bp::args("N")))
                 .def("size", &PhotonArray::size,
                      "Return the number of photons")
-                .def("setPhoton", &PhotonArray::setPhoton,
-                     (bp::arg("i"), bp::arg("x"), bp::arg("y"), bp::arg("flux")),
-                     "Set x,y,flux for photon number i")
-                .def("getX", &PhotonArray::getX, (bp::arg("i")),
-                     "Get x for photon number i")
-                .def("getY", &PhotonArray::getY, (bp::arg("i")),
-                     "Get y for photon number i")
-                .def("getFlux", &PhotonArray::getFlux, (bp::arg("i")),
-                     "Get flux for photon number i")
-                .def("getDXDZ", &PhotonArray::getDXDZ, (bp::arg("i")),
-                     "Get dxdz for photon number i")
-                .def("getDYDZ", &PhotonArray::getDYDZ, (bp::arg("i")),
-                     "Get dydz for photon number i")
-                .def("getWavelength", &PhotonArray::getWavelength, (bp::arg("i")),
-                     "Get wavelength for photon number i")
-                .def("getXArray", GetXArray,
+                .def("_getXArray", GetXArray,
                      "Get numpy array of x positions")
-                .def("getYArray", GetYArray,
+                .def("_getYArray", GetYArray,
                      "Get numpy array of y positions")
-                .def("getFluxArray", GetFluxArray,
+                .def("_getFluxArray", GetFluxArray,
                      "Get numpy array of fluxes")
                 .def("hasAllocatedAngles", &PhotonArray::hasAllocatedAngles,
                      "Returns whether the dxdz and dydz arrays are allocated")
                 .def("hasAllocatedWavelengths", &PhotonArray::hasAllocatedWavelengths,
                      "Returns whether the wavelength arrays are allocated")
-                .def("getDXDZArray", GetDXDZArray,
+                .def("_getDXDZArray", GetDXDZArray,
                      "Get numpy array of dxdz values")
-                .def("getDYDZArray", GetDYDZArray,
+                .def("_getDYDZArray", GetDYDZArray,
                      "Get numpy array of dydz values")
-                .def("getWavelengthArray", GetWavelengthArray,
+                .def("_getWavelengthArray", GetWavelengthArray,
                      "Get numpy array of wavelengths")
                 .def("getTotalFlux", &PhotonArray::getTotalFlux,
                      "Return the total flux of all photons")

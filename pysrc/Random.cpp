@@ -193,8 +193,8 @@ namespace galsim {
                 .def("generate1", &GaussianDeviate::generate1)
                 .def("generate_from_variance", &GenerateFromVariance,
                      bp::arg("N"), bp::arg("idata"))
-                .def("getMean", &GaussianDeviate::getMean)
-                .def("getSigma", &GaussianDeviate::getSigma)
+                .add_property("mean", &GaussianDeviate::getMean)
+                .add_property("sigma", &GaussianDeviate::getSigma)
                 .enable_pickling()
                 ;
         }
@@ -227,8 +227,8 @@ namespace galsim {
                 ))
                 .def("duplicate", &BinomialDeviate::duplicate)
                 .def("generate1", &BinomialDeviate::generate1)
-                .def("getN", &BinomialDeviate::getN)
-                .def("getP", &BinomialDeviate::getP)
+                .add_property("n", &BinomialDeviate::getN)
+                .add_property("p", &BinomialDeviate::getP)
                 .enable_pickling()
                 ;
         }
@@ -263,7 +263,7 @@ namespace galsim {
                 .def("generate1", &PoissonDeviate::generate1)
                 .def("generate_from_expectation", &GenerateFromExpectation,
                      bp::arg("N"), bp::arg("idata"))
-                .def("getMean", &PoissonDeviate::getMean)
+                .add_property("mean", &PoissonDeviate::getMean)
                 .enable_pickling()
                 ;
         }
@@ -297,8 +297,8 @@ namespace galsim {
                 ))
                 .def("duplicate", &WeibullDeviate::duplicate)
                 .def("generate1", &WeibullDeviate::generate1)
-                .def("getA", &WeibullDeviate::getA)
-                .def("getB", &WeibullDeviate::getB)
+                .add_property("a", &WeibullDeviate::getA)
+                .add_property("b", &WeibullDeviate::getB)
                 .enable_pickling()
                 ;
         }
@@ -331,8 +331,8 @@ namespace galsim {
                 ))
                 .def("duplicate", &GammaDeviate::duplicate)
                 .def("generate1", &GammaDeviate::generate1)
-                .def("getK", &GammaDeviate::getK)
-                .def("getTheta", &GammaDeviate::getTheta)
+                .add_property("k", &GammaDeviate::getK)
+                .add_property("theta", &GammaDeviate::getTheta)
                 .enable_pickling()
                 ;
         }
@@ -365,7 +365,7 @@ namespace galsim {
                 ))
                 .def("duplicate", &Chi2Deviate::duplicate)
                 .def("generate1", &Chi2Deviate::generate1)
-                .def("getN", &Chi2Deviate::getN)
+                .add_property("n", &Chi2Deviate::getN)
                 .enable_pickling()
                 ;
         }

@@ -269,7 +269,7 @@ def main(argv):
                 final.drawImage(fft_image, method='fft')
 
                 logger.debug('      Drew fft image.  Total drawn flux = %f.  .flux = %f',
-                             fft_image.array.sum(),final.getFlux())
+                             fft_image.array.sum(),final.flux)
                 t3 = time.time()
 
                 # Add Poisson noise
@@ -310,7 +310,7 @@ def main(argv):
 
                 k = k+1
                 logger.info('      %d: flux = %.2e, hlr = %.2f, ellip = (%.2f,%.2f)',
-                            k, flux, hlr, gal_shape.getE1(), gal_shape.getE2())
+                            k, flux, hlr, gal_shape.e1, gal_shape.e2)
                 logger.debug('      Times: %f, %f, %f, %f, %f',t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
                 psf_times[ipsf] += t6-t1

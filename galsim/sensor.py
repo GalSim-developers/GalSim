@@ -54,7 +54,7 @@ class Sensor(object):
         @param photons      A PhotonArray instance describing the incident photons.
         @param image        The image into which the photons should be accumuated.
         """
-        return photons.addTo(image.image)
+        return photons.addTo(image)
 
     def __repr__(self):
         return 'galsim.Sensor()'
@@ -184,7 +184,7 @@ class SiliconSensor(Sensor):
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
         """
-        return self._silicon.accumulate(photons, self.rng._rng, image.image)
+        return self._silicon.accumulate(photons, self.rng._rng, image._image)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for
