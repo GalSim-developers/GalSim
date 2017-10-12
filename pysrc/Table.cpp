@@ -153,8 +153,11 @@ namespace {
     struct PyTable2D{
         static Table2D<double, double>* makeTable2D(
             const bp::object& x, const bp::object& y, const bp::object& f,
-            const std::string& interp)
+            const char* interp_c)
         {
+
+            const std::string interp = interp_c;
+
             const int Nx = GetNumpyArrayDim(f.ptr(), 0);
             const int Ny = GetNumpyArrayDim(f.ptr(), 1);
             const int Nx2 = GetNumpyArrayDim(x.ptr(), 0);
