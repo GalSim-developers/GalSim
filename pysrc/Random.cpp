@@ -40,7 +40,7 @@ namespace galsim {
     public:
         BaseDeviateCallBack(long lseed=0) : BaseDeviate(lseed) {}
         BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
-        BaseDeviateCallBack(std::string& str) : BaseDeviate(str) {}
+        BaseDeviateCallBack(const char * str) : BaseDeviate(str) {}
         ~BaseDeviateCallBack() {}
 
     protected:
@@ -72,7 +72,7 @@ namespace galsim {
         static BaseDeviateCallBack* construct(const bp::object& seed) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct BaseDeviate from given seed.");
-            return new BaseDeviateCallBack(0);
+            return new BaseDeviateCallBack( (long)0);
         }
 
         static void wrap() {
@@ -83,7 +83,7 @@ namespace galsim {
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
                 .def(bp::init<long>(bp::arg("seed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
-                .def(bp::init<std::string>(bp::arg("seed")))
+                .def(bp::init<const char *>(bp::arg("seed")))
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
                      (bp::arg("seed")=0))
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
@@ -144,7 +144,7 @@ namespace galsim {
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
                 .def(bp::init<long>(bp::arg("seed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
-                .def(bp::init<std::string>(bp::arg("seed")))
+                .def(bp::init<const char *>(bp::arg("seed")))
                 .def("duplicate", &UniformDeviate::duplicate)
                 .def("__call__", &UniformDeviate::operator())
                 .enable_pickling()
@@ -174,7 +174,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
@@ -210,7 +210,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, int, double>(
                         (bp::arg("seed"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-                .def(bp::init<std::string, int, double>(
+                .def(bp::init<const char *, int, double>(
                         (bp::arg("seed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
                 .def("duplicate", &BinomialDeviate::duplicate)
@@ -246,7 +246,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("seed"), bp::arg("mean")=1.)
                 ))
-                .def(bp::init<std::string, double>(
+                .def(bp::init<const char *, double>(
                         (bp::arg("seed")=0, bp::arg("mean")=1.)
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
@@ -281,7 +281,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
                 .def("duplicate", &WeibullDeviate::duplicate)
@@ -317,7 +317,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def("duplicate", &GammaDeviate::duplicate)
@@ -353,7 +353,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("seed"), bp::arg("n")=1.)
                 ))
-                .def(bp::init<std::string, double>(
+                .def(bp::init<const char *, double>(
                         (bp::arg("seed")=0, bp::arg("n")=1.)
                 ))
                 .def("duplicate", &Chi2Deviate::duplicate)
