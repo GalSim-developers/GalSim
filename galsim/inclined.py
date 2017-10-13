@@ -199,11 +199,12 @@ class InclinedExponential(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return self._sbp.maxK()
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return self._sbp.stepK()
 
     @property
@@ -443,11 +444,12 @@ class InclinedSersic(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return self._sbp.maxK()
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return self._sbp.stepK()
 
     @property

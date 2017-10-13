@@ -303,13 +303,13 @@ class GSObject(object):
     def maxk(self):
         """The value of k beyond which aliasing can be neglected.
         """
-        return self._sbp.maxK()
+        return self._maxk
 
     @property
     def stepk(self):
         """The sampling in k space necessary to avoid folding of image in x space.
         """
-        return self._sbp.stepK()
+        return self._stepk
 
     @property
     def nyquist_scale(self):

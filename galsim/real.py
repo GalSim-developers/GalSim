@@ -404,6 +404,14 @@ class RealGalaxy(GSObject):
         self._sbp = self._conv._sbp
 
     @property
+    def _maxk(self):
+        return self._sbp.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
     def _centroid(self):
         return self._sbp.centroid()
 

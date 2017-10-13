@@ -194,12 +194,14 @@ class Sum(GSObject):
         for obj in self.obj_list:
             obj._prepareDraw()
 
-    def maxK(self):
-        maxk_list = [obj.maxK() for obj in self.obj_list]
+    @property
+    def _maxk(self):
+        maxk_list = [obj.maxk for obj in self.obj_list]
         return np.max(maxk_list)
 
-    def stepK(self):
-        stepk_list = [obj.stepK() for obj in self.obj_list]
+    @property
+    def _stepk(self):
+        stepk_list = [obj.stepk for obj in self.obj_list]
         return np.min(stepk_list)
 
     @property

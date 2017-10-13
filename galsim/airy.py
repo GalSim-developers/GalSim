@@ -213,11 +213,12 @@ class Airy(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return 2.*math.pi / self._lod
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return self._sbp.stepK()
 
     @property

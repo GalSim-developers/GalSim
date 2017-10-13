@@ -390,12 +390,6 @@ class InterpolatedImage(GSObject):
     def flux(self):
         return self._flux
 
-    def maxK(self):
-        return self._maxk
-
-    def stepK(self):
-        return self._stepk
-
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
 
         # Check that given pad_image is valid:
@@ -924,6 +918,10 @@ class InterpolatedKImage(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self.gsparams)
+
+    @property
+    def _maxk(self):
+        return self._sbp.maxK()
 
     @property
     def _centroid(self):

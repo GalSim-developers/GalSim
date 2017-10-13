@@ -178,12 +178,13 @@ class Spergel(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         # (1+k^2)^(-1-nu) = maxk_threshold
         return math.sqrt(self._gsparams.maxk_threshold ** (-1./(1.+self._nu)) - 1.0) / self._r0
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold) * self._r0
         # Go to at least 5*hlr
         R = max(R, self.gsparams.stepk_minimum_hlr * self.half_light_radius)

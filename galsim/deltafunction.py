@@ -97,11 +97,12 @@ class DeltaFunction(GSObject):
         s += ')'
         return s
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return self._mock_inf
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return self._mock_inf
 
     @property

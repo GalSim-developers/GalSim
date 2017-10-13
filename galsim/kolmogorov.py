@@ -235,12 +235,13 @@ class Kolmogorov(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         # exp(-k^(5/3)) = kvalue_accuracy
         return (-math.log(self.gsparams.kvalue_accuracy)) ** 0.6 * self._k0
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return self._sbp.stepK()
 
     @property

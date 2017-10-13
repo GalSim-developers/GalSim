@@ -153,11 +153,12 @@ class Gaussian(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return math.sqrt(-2.*math.log(self.gsparams.maxk_threshold))/self.sigma
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         R = max(math.sqrt(-2.*math.log(self.gsparams.folding_threshold)),
                 self.gsparams.stepk_minimum_hlr*self._hlr_factor)
         return math.pi / (R * self.sigma)

@@ -127,8 +127,8 @@ def test_deltaFunction_properties():
     import math
     assert delta.xValue(cen) > 1.e10
     np.testing.assert_almost_equal(delta.xValue(offcen), 0)
-    assert delta.maxK() > 1.e10
-    assert delta.stepK() > 1.e10
+    assert delta.maxk > 1.e10
+    assert delta.stepk > 1.e10
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         delta = galsim.DeltaFunction(flux=inFlux)

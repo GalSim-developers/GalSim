@@ -377,24 +377,23 @@ class Transformation(GSObject):
             if self._major < self._minor:
                 self._major, self._minor = self._minor, self._major
 
-    def maxK(self):
-        if not hasattr(self, '_maxk'):
-            self._major_minor()
-            self._maxk = self._original.maxK() / self._minor
-        return self._maxk
+    @lazy_property
+    def _maxk(self):
+        self._major_minor()
+        return self._original.maxk / self._minor
 
-    def stepK(self):
-        if not hasattr(self, '_stepk'):
-            self._major_minor()
-            self._stepk = self._original.stepK() / self._major
-            # If we have a shift, we need to further modify stepk
-            #     stepk = Pi/R
-            #     R <- R + |shift|
-            #     stepk <- Pi/(Pi/stepk + |shift|)
-            if self._offset != PositionD(0.,0.):
-                dr = math.hypot(self._offset.x, self._offset.y)
-                self._stepk = math.pi / (math.pi/self._stepk + dr)
-        return self._stepk
+    @lazy_property
+    def _stepk(self):
+        self._major_minor()
+        stepk = self._original.stepk / self._major
+        # If we have a shift, we need to further modify stepk
+        #     stepk = Pi/R
+        #     R <- R + |shift|
+        #     stepk <- Pi/(Pi/stepk + |shift|)
+        if self._offset != PositionD(0.,0.):
+            dr = math.hypot(self._offset.x, self._offset.y)
+            stepk = math.pi / (math.pi/stepk + dr)
+        return stepk
 
     @property
     def _has_hard_edges(self):

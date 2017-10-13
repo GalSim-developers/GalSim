@@ -110,11 +110,12 @@ class Box(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return 2. / (self.gsparams.maxk_threshold * min(self.width, self.height))
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return math.pi / max(self.width, self.height)
 
     @property
@@ -260,11 +261,12 @@ class TopHat(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
 
-    # These are the GSObject functions that need to be overridden
-    def maxK(self):
+    @property
+    def _maxk(self):
         return self._sbp.maxK()
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         return math.pi / self._radius
 
     @property

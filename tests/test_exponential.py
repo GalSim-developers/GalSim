@@ -117,8 +117,8 @@ def test_exponential_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(expon.centroid, cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale)
-    np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale)
+    np.testing.assert_almost_equal(expon.maxk, 10 / test_scale)
+    np.testing.assert_almost_equal(expon.stepk, 0.37436747851 / test_scale)
     np.testing.assert_almost_equal(expon.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(expon.flux, test_flux)
     import math

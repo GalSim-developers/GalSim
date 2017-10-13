@@ -271,15 +271,17 @@ class Convolution(GSObject):
         for obj in self.obj_list:
             obj._prepareDraw()
 
-    def maxK(self):
-        maxk_list = [obj.maxK() for obj in self.obj_list]
+    @property
+    def _maxk(self):
+        maxk_list = [obj.maxk for obj in self.obj_list]
         return np.min(maxk_list)
 
-    def stepK(self):
+    @property
+    def _stepk(self):
         # This is approximate.  stepk ~ 2pi/R
         # Assume R_final^2 = Sum(R_i^2)
         # So 1/stepk^2 = 1/Sum(1/stepk_i^2)
-        inv_stepksq_list = [obj.stepK()**(-2) for obj in self.obj_list]
+        inv_stepksq_list = [obj.stepk**(-2) for obj in self.obj_list]
         return np.sum(inv_stepksq_list)**(-0.5)
 
     @property
@@ -494,12 +496,13 @@ class Deconvolution(GSObject):
     def _prepareDraw(self):
         self.orig_obj._prepareDraw()
 
-    def maxK(self):
-        return self.orig_obj.maxK()
+    @property
+    def _maxk(self):
+        return self.orig_obj.maxk
 
-    def stepK(self):
-        return self.orig_obj.stepK()
-
+    @property
+    def _stepk(self):
+        return self.orig_obj.stepk
 
     @property
     def _is_axisymmetric(self):

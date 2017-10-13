@@ -1182,15 +1182,11 @@ class PhaseScreenPSF(GSObject):
                                     gsparams=self._gsparams)
 
     @property
-    def maxk(self):
-        """The value of k beyond which aliasing can be neglected.
-        """
+    def _maxk(self):
         return self.ii.maxk
 
     @property
-    def stepk(self):
-        """The sampling in k space necessary to avoid folding of image in x space.
-        """
+    def _stepk(self):
         return self.ii.stepk
 
     @property
@@ -1638,6 +1634,18 @@ class OpticalPSF(GSObject):
                                    _force_stepk=self._force_stepk,
                                    ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
+
+    @property
+    def _sbp(self):
+        return self._psf._sbp
+
+    @property
+    def _maxk(self):
+        return self._psf.maxk
+
+    @property
+    def _stepk(self):
+        return self._psf.stepk
 
     @property
     def _centroid(self):

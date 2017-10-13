@@ -129,12 +129,13 @@ class FourierSqrtProfile(GSObject):
     def _prepareDraw(self):
         self.orig_obj._prepareDraw()
 
-    def maxK(self):
-        return self.orig_obj.maxK()
+    @property
+    def _maxk(self):
+        return self.orig_obj.maxk
 
-    def stepK(self):
-        return self.orig_obj.stepK() * self._sqrt2
-
+    @property
+    def _stepk(self):
+        return self.orig_obj.stepk * self._sqrt2
 
     @property
     def _is_axisymmetric(self):

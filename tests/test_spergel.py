@@ -148,7 +148,7 @@ def test_spergel_properties():
     np.testing.assert_equal(spergel.centroid, cen)
     # # Check Fourier properties
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
-    maxk = spergel.maxK()
+    maxk = spergel.maxk
     assert spergel.kValue(maxk,0)/test_flux <= galsim.GSParams().maxk_threshold
     np.testing.assert_almost_equal(spergel.flux, test_flux)
     np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
