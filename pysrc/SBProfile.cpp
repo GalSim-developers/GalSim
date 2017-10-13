@@ -66,7 +66,7 @@ namespace galsim {
             // but it's easier to do that than write out the full class_ type.
             wrapper
                 .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                     (void (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
                      (bp::arg("image"), bp::arg("dx")),
                      "Draw in-place and return the summed flux.");
             wrapper

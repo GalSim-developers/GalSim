@@ -129,4 +129,3 @@ class DeltaFunction(GSObject):
 
     def _drawKImage(self, image):
         image.array[:,:] = self.flux
-        return image

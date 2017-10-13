@@ -345,11 +345,9 @@ namespace galsim {
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in]        dx, the pixel scale
-         *
-         * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double dx) const;
+        void draw(ImageView<T> image, double dx) const;
 
         /**
          * @brief Draw an image of the SBProfile in k space.

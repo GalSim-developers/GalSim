@@ -132,14 +132,13 @@ class Box(GSObject):
         return self._sbp.kValue(kpos._p)
 
     def _drawReal(self, image):
-        return self._sbp.draw(image._image, image.scale)
+        self._sbp.draw(image._image, image.scale)
 
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image
 
 
 class Pixel(Box):
@@ -284,11 +283,10 @@ class TopHat(GSObject):
         return self._sbp.kValue(kpos._p)
 
     def _drawReal(self, image):
-        return self._sbp.draw(image._image, image.scale)
+        self._sbp.draw(image._image, image.scale)
 
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image

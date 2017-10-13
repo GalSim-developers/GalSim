@@ -180,4 +180,3 @@ class FourierSqrtProfile(GSObject):
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
         image.array[:,:] = np.sqrt(image.array)
-        return image

@@ -301,7 +301,7 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::draw(ImageView<T> image, double dx) const
+    void SBProfile::draw(ImageView<T> image, double dx) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
@@ -314,7 +314,6 @@ namespace galsim {
 
         _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
         if (dx != 1.) image *= dx*dx;
-        return image.sumElements();
     }
 
     template <typename T>
@@ -496,8 +495,8 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::draw(ImageView<float> image, double dx) const;
-    template double SBProfile::draw(ImageView<double> image, double dx) const;
+    template void SBProfile::draw(ImageView<float> image, double dx) const;
+    template void SBProfile::draw(ImageView<double> image, double dx) const;
 
     template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
     template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;

@@ -253,13 +253,12 @@ class Sum(GSObject):
         return np.sum(kv_list)
 
     def _drawReal(self, image):
-        added_flux = self.obj_list[0]._drawReal(image)
+        self.obj_list[0]._drawReal(image)
         if len(self.obj_list) > 1:
             im1 = image.copy()
             for obj in self.obj_list[1:]:
-                added_flux += obj._drawReal(im1)
+                obj._drawReal(im1)
                 image += im1
-        return added_flux
 
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
@@ -306,4 +305,3 @@ class Sum(GSObject):
             for obj in self.obj_list[1:]:
                 obj._drawKImage(im1)
                 image += im1
-        return image

@@ -654,7 +654,6 @@ class InterpolatedImage(GSObject):
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image
 
 
 def _InterpolatedImage(image, x_interpolant, k_interpolant,
@@ -953,7 +952,6 @@ class InterpolatedKImage(GSObject):
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image
 
 
 

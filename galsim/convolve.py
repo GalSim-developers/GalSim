@@ -356,10 +356,10 @@ class Convolution(GSObject):
 
     def _drawReal(self, image):
         if len(self.obj_list) == 1:
-            return self.obj_list[0]._drawReal(image)
+            self.obj_list[0]._drawReal(image)
         elif len(self.obj_list) == 2:
             try:
-                return self._sbp.draw(image._image, image.scale)
+                self._sbp.draw(image._image, image.scale)
             except AttributeError:
                 raise ValueError("Cannot use real_space convolution for these profiles")
         else:
@@ -385,7 +385,6 @@ class Convolution(GSObject):
             for obj in self.obj_list[1:]:
                 obj._drawKImage(im1)
                 image *= im1
-        return image
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -564,7 +563,6 @@ class Deconvolution(GSObject):
         do_inverse = image.array > self._min_acc_kvalue
         image.array[do_inverse] = 1./image.array[do_inverse]
         image.array[~do_inverse] = self._inv_min_acc_kvalue
-        return image
 
     def __getstate__(self):
         d = self.__dict__.copy()

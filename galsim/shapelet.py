@@ -218,15 +218,14 @@ class Shapelet(GSObject):
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    def _shoot(self, photons, ud):
-        self._sbp.shoot(photons._pa, ud._rng)
-
     def _drawReal(self, image):
         self._sbp.draw(image._image, image.scale)
 
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image
 
     @classmethod
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):

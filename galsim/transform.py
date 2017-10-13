@@ -443,7 +443,7 @@ class Transformation(GSObject):
         return self._original._kValue(fwdT_kpos) * self._kfactor(kpos.x, kpos.y)
 
     def _drawReal(self, image):
-        return self._sbp.draw(image._image, image.scale)
+        self._sbp.draw(image._image, image.scale)
 
     def _shoot(self, photons, ud):
         self.original._shoot(photons, ud)
@@ -454,7 +454,6 @@ class Transformation(GSObject):
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
-        return image
 
 
 def _Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.),

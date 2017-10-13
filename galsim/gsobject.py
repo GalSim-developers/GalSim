@@ -1605,26 +1605,27 @@ class GSObject(object):
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
         if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
-            return self._drawReal(image)
+            self._drawReal(image)
+            return image.array.sum(dtype=float)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
                 im1 = ImageD(bounds=image.bounds, scale=image.scale)
             else:
                 im1 = ImageF(bounds=image.bounds, scale=image.scale)
-            added_flux = self._drawReal(im1)
+            self._drawReal(im1)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
                 image.array[:,:] = im1.array
-            return added_flux
+            return im1.array.sum(dtype=float)
 
     def _drawReal(self, image):
         """Equivalent to the regular drawReal(image, add_to_image=False), but without the usual
         sanity checks, and the image's dtype must be either float32 or float64, and it must
         have a c_contiguous array (image.iscontiguous must be True).
         """
-        return self._sbp.draw(image._image, image.scale)
+        self._sbp.draw(image._image, image.scale)
 
     def getGoodImageSize(self, pixel_scale):
         """Return a good size to use for drawing this profile.
@@ -2160,7 +2161,7 @@ class GSObject(object):
             return image
 
         if not add_to_image and image.iscontiguous:
-            return self._drawKImage(image)
+            self._drawKImage(image)
         else:
             im2 = Image(bounds=image.bounds, dtype=image.dtype, scale=image.scale)
             self._drawKImage(im2)
@@ -2177,11 +2178,8 @@ class GSObject(object):
         have a c_contiguous array (image.iscontiguous must be True).
 
         @param image        The Image onto which to draw the k-space image. [required]
-
-        @returns image (just for consistency with drawKImage)
         """
         self._sbp.drawK(image._image, image.scale)
-        return image
 
     # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)

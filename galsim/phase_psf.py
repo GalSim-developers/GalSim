@@ -1214,6 +1214,9 @@ class PhaseScreenPSF(GSObject):
         self._prepareDraw()
         return self.ii._kValue(kpos)
 
+    def _drawReal(self, image):
+        self.ii._drawReal(image)
+
     def _shoot(self, photons, ud):
         if not self._geometric_shooting:
             self._prepareDraw()
@@ -1239,12 +1242,8 @@ class PhaseScreenPSF(GSObject):
         photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
 
-    def _drawReal(self, image):
-        self.ii._drawReal(image)
-
     def _drawKImage(self, image):
         self.ii._drawKImage(image)
-        return image
 
 
 class OpticalPSF(GSObject):
@@ -1669,12 +1668,11 @@ class OpticalPSF(GSObject):
     def _kValue(self, kpos):
         return self._psf._kValue(kpos)
 
-    def _shoot(self, photons, ud):
-        self._psf._shoot(photons, ud)
-
     def _drawReal(self, image):
         self._psf._drawReal(image)
 
+    def _shoot(self, photons, ud):
+        self._psf._shoot(photons, ud)
+
     def _drawKImage(self, image):
         self._psf._drawKImage(image)
-        return image
