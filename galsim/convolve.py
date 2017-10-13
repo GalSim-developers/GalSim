@@ -305,19 +305,22 @@ class Convolution(GSObject):
         return bool(np.all(ak_list))
 
     @property
-    def centroid(self):
+    def _centroid(self):
         cen_list = [obj.centroid for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0])
 
-    def getPositiveFlux(self):
-        pflux_list = [obj.getPositiveFlux() for obj in self.obj_list]
+    @property
+    def _positive_flux(self):
+        pflux_list = [obj.positive_flux for obj in self.obj_list]
         return np.prod(pflux_list)
 
-    def getNegativeFlux(self):
-        pflux_list = [obj.getNegativeFlux() for obj in self.obj_list]
+    @property
+    def _negative_flux(self):
+        pflux_list = [obj.negative_flux for obj in self.obj_list]
         return np.prod(pflux_list)
 
-    def maxSB(self):
+    @property
+    def _max_sb(self):
         # This one is probably the least accurate of all the estimates of maxSB.
         # The calculation is based on the exact value for Gaussians.
         #     maxSB = flux / 2pi sigma^2
@@ -331,7 +334,7 @@ class Convolution(GSObject):
         # For non-Gaussians, this procedure will tend to produce an over-estimate of the
         # true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed
         # more than the Gaussian does.  So this is likely to be too high, which is acceptable.
-        area_list = [obj.flux / obj.maxSB() for obj in self.obj_list]
+        area_list = [obj.flux / obj.max_sb for obj in self.obj_list]
         return self.flux / np.sum(area_list)
 
     def _xValue(self, pos):
@@ -507,16 +510,19 @@ class Deconvolution(GSObject):
         return self.orig_obj.is_analytic_k
 
     @property
-    def centroid(self):
+    def _centroid(self):
         return -self.orig_obj.centroid
 
-    def getPositiveFlux(self):
-        return 1./self.orig_obj.getPositiveFlux()
+    @property
+    def _positive_flux(self):
+        return 1./self.orig_obj.positive_flux
 
-    def getNegativeFlux(self):
-        return 1./self.orig_obj.getNegativeFlux()
+    @property
+    def _negative_flux(self):
+        return 1./self.orig_obj.negative_flux
 
-    def maxSB(self):
+    @property
+    def _max_sb(self):
         # The only way to really give this any meaning is to consider it in the context
         # of being part of a larger convolution with other components.  The calculation
         # of maxSB for Convolve is
@@ -529,7 +535,7 @@ class Deconvolution(GSObject):
         # maxSB = -flux * maxSB_adaptee / flux_adaptee
         #       = -maxSB_adaptee / flux_adaptee^2
         #
-        return -self.orig_obj.maxSB() / self.orig_obj.flux**2
+        return -self.orig_obj.max_sb / self.orig_obj.flux**2
 
     def _xValue(self, pos):
         raise NotImplementedError("Cannot evaluate a Deconvolution in real space")

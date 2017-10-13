@@ -91,7 +91,7 @@ def test_airy():
     np.testing.assert_equal(airy.centroid, cen)
     np.testing.assert_almost_equal(airy.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy.flux, test_flux)
-    np.testing.assert_almost_equal(airy.xValue(cen), airy.maxSB())
+    np.testing.assert_almost_equal(airy.xValue(cen), airy.max_sb)
 
     check_basic(airy, "Airy obscuration=0.1")
 
@@ -100,7 +100,7 @@ def test_airy():
     np.testing.assert_equal(airy0.centroid, cen)
     np.testing.assert_almost_equal(airy0.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(airy0.flux, test_flux)
-    np.testing.assert_almost_equal(airy0.xValue(cen), airy0.maxSB())
+    np.testing.assert_almost_equal(airy0.xValue(cen), airy0.max_sb)
     np.testing.assert_array_almost_equal(
             airy0.lam_over_diam, 1./0.7, 5,
             err_msg="Airy lam_over_diam returned wrong value")

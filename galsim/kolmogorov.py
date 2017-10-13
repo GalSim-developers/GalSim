@@ -244,16 +244,7 @@ class Kolmogorov(GSObject):
         return self._sbp.stepK()
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._flux * self._k0**2 * self._xzero
 
     def _xValue(self, pos):

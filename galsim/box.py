@@ -118,16 +118,7 @@ class Box(GSObject):
         return math.pi / max(self.width, self.height)
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._norm
 
     def _xValue(self, pos):
@@ -277,16 +268,7 @@ class TopHat(GSObject):
         return math.pi / self._radius
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._norm
 
     def _xValue(self, pos):

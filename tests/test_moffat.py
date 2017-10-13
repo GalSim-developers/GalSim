@@ -114,7 +114,7 @@ def test_moffat():
         np.testing.assert_equal(moffat.centroid, cen)
         np.testing.assert_almost_equal(moffat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(moffat.flux, test_flux)
-        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.maxSB())
+        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.max_sb)
 
     # Should raise an exception if >=2 radii are provided.
     try:
@@ -155,7 +155,7 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
@@ -169,7 +169,7 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):

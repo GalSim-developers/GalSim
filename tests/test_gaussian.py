@@ -153,7 +153,7 @@ def test_gaussian_properties():
     np.testing.assert_almost_equal(gauss.flux, test_flux)
     import math
     np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
-    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.maxSB())
+    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)

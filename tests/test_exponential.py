@@ -123,7 +123,7 @@ def test_exponential_properties():
     np.testing.assert_almost_equal(expon.flux, test_flux)
     import math
     np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale**2)
-    np.testing.assert_almost_equal(expon.xValue(cen), expon.maxSB())
+    np.testing.assert_almost_equal(expon.xValue(cen), expon.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)

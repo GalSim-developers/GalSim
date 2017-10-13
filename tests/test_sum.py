@@ -76,7 +76,7 @@ def test_add():
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(sum_gauss.centroid, cen)
     np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
+    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.max_sb)
 
     # Check with default_params
     sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)

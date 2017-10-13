@@ -191,16 +191,7 @@ class Moffat(GSObject):
         return self._trunc != 0.
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._sbp.maxSB()
 
     def _xValue(self, pos):

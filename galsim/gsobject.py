@@ -348,7 +348,12 @@ class GSObject(object):
     def centroid(self):
         """The (x, y) centroid of an object as a Position.
         """
-        return PositionD(self._sbp.centroid())
+        return self._centroid
+
+    @property
+    def _centroid(self):
+        # Most profiles are centered at 0,0, so make this the default.
+        return PositionD(0,0)
 
     @property
     def positive_flux(self):
@@ -364,7 +369,7 @@ class GSObject(object):
         thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
-        return self._sbp.getPositiveFlux()
+        return self._positive_flux
 
     @property
     def negative_flux(self):
@@ -380,7 +385,17 @@ class GSObject(object):
         thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
-        return self._sbp.getNegativeFlux()
+        return self._negative_flux
+
+    @property
+    def _positive_flux(self):
+        # The usual case.
+        return self.flux
+
+    @property
+    def _negative_flux(self):
+        # The usual case.
+        return 0.
 
     @property
     def max_sb(self):
@@ -399,7 +414,7 @@ class GSObject(object):
         surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
         rather than the maximum value.  For most profiles, these are the same thing.
         """
-        return self._sbp.maxSB()
+        return self._max_sb
 
     # Some calculations that can be done for all GSObjects.
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):

@@ -207,16 +207,7 @@ class InclinedExponential(GSObject):
         return self._sbp.stepK()
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._sbp.maxSB()
 
     def _xValue(self, pos):
@@ -460,16 +451,7 @@ class InclinedSersic(GSObject):
         return self._sbp.stepK()
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._sbp.maxSB()
 
     def _xValue(self, pos):

@@ -151,13 +151,13 @@ def test_spergel_properties():
     maxk = spergel.maxK()
     assert spergel.kValue(maxk,0)/test_flux <= galsim.GSParams().maxk_threshold
     np.testing.assert_almost_equal(spergel.flux, test_flux)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
         outFlux = spergel.flux
         np.testing.assert_almost_equal(outFlux, inFlux)
-        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
 
 
 @timer
@@ -309,7 +309,7 @@ def test_spergel_05():
     import math
     np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale**2,
                                    decimal=5)
-    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)

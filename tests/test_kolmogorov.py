@@ -166,7 +166,7 @@ def test_kolmogorov_properties():
     np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
     np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
     np.testing.assert_almost_equal(psf.flux, test_flux)
-    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.max_sb)
 
     # Check input flux vs output flux
     lors = [1, 0.5, 2, 5]

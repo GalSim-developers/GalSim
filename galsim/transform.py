@@ -416,20 +416,23 @@ class Transformation(GSObject):
         return self._original.is_analytic_k
 
     @property
-    def centroid(self):
+    def _centroid(self):
         cen = self._original.centroid
         cen = PositionD(self._fwd(cen.x, cen.y))
         cen += self._offset
         return cen
 
-    def getPositiveFlux(self):
-        return self._flux_scaling * self._original.getPositiveFlux()
+    @property
+    def _positive_flux(self):
+        return self._flux_scaling * self._original.positive_flux
 
-    def getNegativeFlux(self):
-        return self._flux_scaling * self._original.getNegativeFlux()
+    @property
+    def _negative_flux(self):
+        return self._flux_scaling * self._original.negative_flux
 
-    def maxSB(self):
-        return self._amp_scaling * self._original.maxSB()
+    @property
+    def _max_sb(self):
+        return self._amp_scaling * self._original.max_sb
 
     def _xValue(self, pos):
         pos -= self._offset

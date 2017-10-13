@@ -1067,7 +1067,7 @@ class PhaseScreenPSF(GSObject):
         self._ii_pad_factor = ii_pad_factor
 
         self._bar = _bar
-        self._flux = flux
+        self._flux = float(flux)
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
 
@@ -1123,46 +1123,6 @@ class PhaseScreenPSF(GSObject):
         # Trigger delayed computation of all pending PSFs.
         self._screen_list._prepareDraw()
 
-    # A few items which need the InterpolatedImage to have been prepared before accessing.
-    @property
-    def maxk(self):
-        """The value of k beyond which aliasing can be neglected.
-        """
-        return self.ii.maxk
-
-    @property
-    def stepk(self):
-        """The sampling in k space necessary to avoid folding of image in x space.
-        """
-        return self.ii.stepk
-
-    @property
-    def centroid(self):
-        """The (x, y) centroid of an object as a Position.
-        """
-        self._prepareDraw()
-        return self.ii.centroid
-
-    @property
-    def max_sb(self):
-        """An estimate of the maximum surface brightness of the object.
-
-        Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
-        calculate this value without just drawing the image and checking what the maximum value is.
-        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
-        which will generally be conservative on the high side.
-
-        This routine is mainly used by the photon shooting process, where an overestimate of
-        the maximum surface brightness is acceptable.
-
-        Note, for negative-flux profiles, this will return the absolute value of the most negative
-        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
-        rather than the maximum value.  For most profiles, these are the same thing.
-        """
-        self._prepareDraw()
-        return self.ii.max_sb
-
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         from . import fft
@@ -1199,6 +1159,10 @@ class PhaseScreenPSF(GSObject):
                     "This could lead to aliasing problems. " +
                     "Increasing pad_factor is recommended.")
 
+    @property
+    def _sbp(self):
+        return self.ii._sbp
+
     def __getstate__(self):
         # Finish calculating before pickling.
         self._prepareDraw()
@@ -1218,8 +1182,41 @@ class PhaseScreenPSF(GSObject):
                                     gsparams=self._gsparams)
 
     @property
-    def _sbp(self):
-        return self.ii._sbp
+    def maxk(self):
+        """The value of k beyond which aliasing can be neglected.
+        """
+        return self.ii.maxk
+
+    @property
+    def stepk(self):
+        """The sampling in k space necessary to avoid folding of image in x space.
+        """
+        return self.ii.stepk
+
+    @property
+    def _centroid(self):
+        self._prepareDraw()
+        return self.ii.centroid
+
+    @property
+    def _positive_flux(self):
+        return self.ii.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self.ii.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self.ii.max_sb
+
+    def _xValue(self, pos):
+        self._prepareDraw()
+        return self.ii._xValue(pos)
+
+    def _kValue(self, kpos):
+        self._prepareDraw()
+        return self.ii._kValue(kpos)
 
     def _shoot(self, photons, ud):
         if not self._geometric_shooting:
@@ -1245,6 +1242,13 @@ class PhaseScreenPSF(GSObject):
         photons.x *= nm_to_arcsec
         photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
+
+    def _drawReal(self, image):
+        self.ii._drawReal(image)
+
+    def _drawKImage(self, image):
+        self.ii._drawKImage(image)
+        return image
 
 
 class OpticalPSF(GSObject):
@@ -1531,8 +1535,8 @@ class OpticalPSF(GSObject):
                 self.obscuration = 0.0
 
         # Save for pickling
-        self._lam = lam
-        self._flux = flux
+        self._lam = float(lam)
+        self._flux = float(flux)
         self._interpolant = interpolant
         self._scale_unit = scale_unit
         self._gsparams = gsparams
@@ -1611,6 +1615,10 @@ class OpticalPSF(GSObject):
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
+    @property
+    def _sbp(self):
+        return self._psf._sbp
+
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
@@ -1632,8 +1640,33 @@ class OpticalPSF(GSObject):
         self._psf._prepareDraw()
 
     @property
-    def _sbp(self):
-        return self._psf._sbp
+    def _centroid(self):
+        return self._psf.centroid
+
+    @property
+    def _positive_flux(self):
+        return self._psf.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self._psf.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self._psf.max_sb
+
+    def _xValue(self, pos):
+        return self._psf._xValue(pos)
+
+    def _kValue(self, kpos):
+        return self._psf._kValue(kpos)
 
     def _shoot(self, photons, ud):
         self._psf._shoot(photons, ud)
+
+    def _drawReal(self, image):
+        self._psf._drawReal(image)
+
+    def _drawKImage(self, image):
+        self._psf._drawKImage(image)
+        return image

@@ -109,7 +109,7 @@ def test_box():
         np.testing.assert_equal(box.centroid, cen)
         np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(box.flux, test_flux)
-        np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
+        np.testing.assert_almost_equal(box.xValue(cen), box.max_sb)
         np.testing.assert_array_equal(
                 box.width, width,
                 err_msg="Box width returned wrong value")
@@ -211,7 +211,7 @@ def test_tophat():
         np.testing.assert_equal(tophat.centroid, cen)
         np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(tophat.flux, test_flux)
-        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
+        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.max_sb)
 
 
     # Check picklability

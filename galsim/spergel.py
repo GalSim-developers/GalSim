@@ -108,8 +108,8 @@ class Spergel(GSObject):
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        self._nu = nu
-        self._flux = flux
+        self._nu = float(nu)
+        self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
 
         # Parse the radius options
@@ -190,16 +190,7 @@ class Spergel(GSObject):
         return math.pi / R
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._sbp.maxSB()
 
     def _xValue(self, pos):

@@ -159,8 +159,8 @@ class Sum(GSObject):
 
     @lazy_property
     def flux(self):
-        pflux_list = [obj.flux for obj in self.obj_list]
-        return np.sum(pflux_list)
+        flux_list = [obj.flux for obj in self.obj_list]
+        return np.sum(flux_list)
 
     @lazy_property
     def noise(self):
@@ -223,20 +223,23 @@ class Sum(GSObject):
         return np.all(ak_list)
 
     @property
-    def centroid(self):
+    def _centroid(self):
         cen_list = [obj.centroid * obj.flux for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0]) / self.flux
 
-    def getPositiveFlux(self):
-        pflux_list = [obj.getPositiveFlux() for obj in self.obj_list]
+    @property
+    def _positive_flux(self):
+        pflux_list = [obj.positive_flux for obj in self.obj_list]
         return np.sum(pflux_list)
 
-    def getNegativeFlux(self):
-        pflux_list = [obj.getNegativeFlux() for obj in self.obj_list]
-        return np.sum(pflux_list)
+    @property
+    def _negative_flux(self):
+        nflux_list = [obj.negative_flux for obj in self.obj_list]
+        return np.sum(nflux_list)
 
-    def maxSB(self):
-        sb_list = [obj.maxSB() for obj in self.obj_list]
+    @property
+    def _max_sb(self):
+        sb_list = [obj.max_sb for obj in self.obj_list]
         return np.sum(sb_list)
 
     def _xValue(self, pos):

@@ -112,7 +112,7 @@ class RandomWalk(GSObject):
 
         self._npoints = int(npoints)
         self._half_light_radius = float(half_light_radius)
-        self._flux    = float(flux)
+        self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
 
         # we will verify this in the _verify() method
@@ -264,3 +264,35 @@ class RandomWalk(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
+
+    @property
+    def _centroid(self):
+        return self._sbp.centroid()
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image

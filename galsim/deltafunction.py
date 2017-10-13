@@ -68,7 +68,7 @@ class DeltaFunction(GSObject):
 
     def __init__(self, flux=1., gsparams=None):
         self._gsparams = GSParams.check(gsparams)
-        self._flux = flux
+        self._flux = float(flux)
 
     @property
     def _sbp(self):
@@ -105,16 +105,7 @@ class DeltaFunction(GSObject):
         return self._mock_inf
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._mock_inf
 
     def _xValue(self, pos):

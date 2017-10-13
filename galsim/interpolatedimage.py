@@ -630,16 +630,20 @@ class InterpolatedImage(GSObject):
             self._xim[self._pad_image.bounds] = self._pad_image
         self._image = self._xim[image_bounds]
 
-    def centroid(self):
+    @property
+    def _centroid(self):
         return self._sbp.centroid()
 
-    def getPositiveFlux(self):
+    @property
+    def _positive_flux(self):
         return self._sbp.getPositiveFlux()
 
-    def getNegativeFlux(self):
+    @property
+    def _negative_flux(self):
         return self._sbp.getNegativeFlux()
 
-    def maxSB(self):
+    @property
+    def _max_sb(self):
         return self._sbp.maxSB()
 
     def _xValue(self, pos):
@@ -920,6 +924,39 @@ class InterpolatedKImage(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self.gsparams)
+
+    @property
+    def _centroid(self):
+        return self._sbp.centroid()
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image
+
 
 
 def _InterpolatedKImage(kimage, k_interpolant, gsparams):

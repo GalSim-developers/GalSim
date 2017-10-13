@@ -104,8 +104,8 @@ class Gaussian(GSObject):
                         "One of sigma, fwhm, or half_light_radius must be " +
                         "specified for Gaussian")
 
-        self._sigma = sigma
-        self._flux = flux
+        self._sigma = float(sigma)
+        self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
         self._sigsq = sigma**2
         self._inv_sigsq = 1./self._sigsq
@@ -163,16 +163,7 @@ class Gaussian(GSObject):
         return math.pi / (R * self.sigma)
 
     @property
-    def centroid(self):
-        return PositionD(0,0)
-
-    def getPositiveFlux(self):
-        return self._flux
-
-    def getNegativeFlux(self):
-        return 0.
-
-    def maxSB(self):
+    def _max_sb(self):
         return self._norm
 
     def _xValue(self, pos):

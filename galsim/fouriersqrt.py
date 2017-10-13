@@ -145,21 +145,24 @@ class FourierSqrtProfile(GSObject):
         return self.orig_obj.is_analytic_k
 
     @property
-    def centroid(self):
+    def _centroid(self):
         return 0.5 * self.orig_obj.centroid
 
-    def getPositiveFlux(self):
-        return np.sqrt(self.orig_obj.getPositiveFlux())
+    @property
+    def _positive_flux(self):
+        return np.sqrt(self.orig_obj.positive_flux)
 
-    def getNegativeFlux(self):
-        return np.sqrt(self.orig_obj.getNegativeFlux())
+    @property
+    def _negative_flux(self):
+        return np.sqrt(self.orig_obj.negative_flux)
 
-    def maxSB(self):
+    @property
+    def _max_sb(self):
         # In this case, we want the autoconvolution of this object to get back to the
         # maxSB value of the original obj
         # flux * maxSB / 2 = maxSB_orig
         # maxSB = 2 * maxSB_orig / flux
-        return 2. * self.orig_obj.maxSB() / self.flux
+        return 2. * self.orig_obj.max_sb / self.flux
 
     def _xValue(self, pos):
         raise NotImplementedError("Cannot evaluate in real space with FourierSqrtProfile")

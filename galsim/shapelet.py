@@ -188,6 +188,38 @@ class Shapelet(GSObject):
         self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
                                        self.gsparams._gsp)
 
+    @property
+    def _centroid(self):
+        return self._sbp.centroid()
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image
+
     @classmethod
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
         """Fit for a shapelet decomposition of a given image.

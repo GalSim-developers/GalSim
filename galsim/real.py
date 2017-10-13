@@ -403,6 +403,42 @@ class RealGalaxy(GSObject):
         self._conv = Convolve([self.original_gal, psf_inv], gsparams=self._gsparams)
         self._sbp = self._conv._sbp
 
+    @property
+    def _centroid(self):
+        return self._sbp.centroid()
+
+    @property
+    def flux(self):
+        return self._sbp.getFlux()
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
+        return image
+
 
 class RealGalaxyCatalog(object):
     """Class containing a catalog with information about real galaxy training data.
