@@ -181,6 +181,11 @@ class RealGalaxy(GSObject):
     _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
     _takes_rng = True
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, area_norm=1.0, gsparams=None, logger=None):

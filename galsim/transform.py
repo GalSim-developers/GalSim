@@ -396,20 +396,24 @@ class Transformation(GSObject):
                 self._stepk = math.pi / (math.pi/self._stepk + dr)
         return self._stepk
 
-    def hasHardEdges(self):
-        return self._original.hasHardEdges()
+    @property
+    def _has_hard_edges(self):
+        return self._original.has_hard_edges
 
-    def isAxisymmetric(self):
-        return (self._original.isAxisymmetric and
+    @property
+    def _is_axisymmetric(self):
+        return (self._original.is_axisymmetric and
                 self._jac[0,0] == self._jac[1,1] and
                 self._jac[0,1] == -self._jac[1,0] and
                 self._offset == PositionD(0.,0.))
 
-    def isAnalyticX(self):
-        return self._original.isAnalyticX()
+    @property
+    def _is_analytic_x(self):
+        return self._original.is_analytic_x
 
-    def isAnalyticK(self):
-        return self._original.isAnalyticK()
+    @property
+    def _is_analytic_k(self):
+        return self._original.is_analytic_k
 
     @property
     def centroid(self):

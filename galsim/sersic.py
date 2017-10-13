@@ -196,6 +196,10 @@ class Sersic(GSObject):
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     # The conversion from hlr to scale radius is complicated for Sersic, especially since we
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
     def __init__(self, n, half_light_radius=None, scale_radius=None,
@@ -306,17 +310,9 @@ class Sersic(GSObject):
     def stepK(self):
         return self._sbp.stepK()
 
-    def hasHardEdges(self):
-        return self._trunc != 0.;
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
+    @property
+    def _has_hard_edges(self):
+        return self._trunc != 0.
 
     @property
     def centroid(self):

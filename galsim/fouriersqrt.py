@@ -87,6 +87,9 @@ class FourierSqrtProfile(GSObject):
     """
     _sqrt2 = 1.4142135623730951
 
+    _has_hard_edges = False
+    _is_analytic_x = False
+
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
@@ -132,17 +135,14 @@ class FourierSqrtProfile(GSObject):
     def stepK(self):
         return self.orig_obj.stepK() * self._sqrt2
 
-    def hasHardEdges(self):
-        return False
 
-    def isAxisymmetric(self):
-        return self.orig_obj.isAxisymmetric()
+    @property
+    def _is_axisymmetric(self):
+        return self.orig_obj.is_axisymmetric
 
-    def isAnalyticX(self):
-        return False
-
-    def isAnalyticK(self):
-        return self.orig_obj.isAnalyticK()
+    @property
+    def _is_analytic_k(self):
+        return self.orig_obj.is_analytic_k
 
     @property
     def centroid(self):

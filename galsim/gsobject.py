@@ -322,27 +322,27 @@ class GSObject(object):
         """Whether there are any hard edges in the profile, which would require very small k
         spacing when working in the Fourier domain.
         """
-        return self._sbp.hasHardEdges()
+        return self._has_hard_edges
 
     @property
     def is_axisymmetric(self):
         """Wthether the profile is axially symmetric; affects efficiency of evaluation.
         """
-        return self._sbp.isAxisymmetric()
+        return self._is_axisymmetric
 
     @property
     def is_analytic_x(self):
         """Whether the real-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
-        return self._sbp.isAnalyticX()
+        return self._is_analytic_x
 
     @property
     def is_analytic_k(self):
         """Whether the k-space values can be determined immediately at any position without
         requiring a Discrete Fourier Transform.
         """
-        return self._sbp.isAnalyticK()
+        return self._is_analytic_k
 
     @property
     def centroid(self):

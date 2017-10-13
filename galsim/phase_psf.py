@@ -1022,6 +1022,11 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
                  theta=(0.0*radians, 0.0*radians), interpolant=None,
                  scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
@@ -1456,6 +1461,11 @@ class OpticalPSF(GSObject):
         "scale_unit": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
     _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,

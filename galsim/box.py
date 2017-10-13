@@ -60,6 +60,11 @@ class Box(GSObject):
     _single_params = []
     _takes_rng = False
 
+    _has_hard_edges = True
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, width, height, flux=1., gsparams=None):
         self._width = float(width)
         self._height = float(height)
@@ -111,18 +116,6 @@ class Box(GSObject):
 
     def stepK(self):
         return math.pi / max(self.width, self.height)
-
-    def hasHardEdges(self):
-        return True
-
-    def isAxisymmetric(self):
-        return False
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):
@@ -229,6 +222,11 @@ class TopHat(GSObject):
     _single_params = []
     _takes_rng = False
 
+    _has_hard_edges = True
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, radius, flux=1., gsparams=None):
         self._radius = float(radius)
         self._flux = float(flux)
@@ -277,18 +275,6 @@ class TopHat(GSObject):
 
     def stepK(self):
         return math.pi / self._radius
-
-    def hasHardEdges(self):
-        return True
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

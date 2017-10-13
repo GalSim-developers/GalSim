@@ -79,6 +79,11 @@ class Gaussian(GSObject):
     # 1/(2pi)
     _inv_twopi = 0.15915494309189535
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         if fwhm is not None :
             if sigma is not None or half_light_radius is not None:
@@ -156,18 +161,6 @@ class Gaussian(GSObject):
         R = max(math.sqrt(-2.*math.log(self.gsparams.folding_threshold)),
                 self.gsparams.stepk_minimum_hlr*self._hlr_factor)
         return math.pi / (R * self.sigma)
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

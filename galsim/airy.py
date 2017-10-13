@@ -112,6 +112,11 @@ class Airy(GSObject):
     _hlr_factor = 0.5348321477242647
     _fwhm_factor = 1.028993969962188
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
                  scale_unit=None, gsparams=None):
         from .angle import arcsec, radians, AngleUnit
@@ -214,18 +219,6 @@ class Airy(GSObject):
 
     def stepK(self):
         return self._sbp.stepK()
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

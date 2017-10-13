@@ -70,6 +70,11 @@ class Exponential(GSObject):
     _one_third = 1./3.
     _inv_twopi = 0.15915494309189535
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         if half_light_radius is not None:
             if scale_radius is not None:
@@ -131,18 +136,6 @@ class Exponential(GSObject):
 
     def stepK(self):
         return self._sbp.stepK()
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

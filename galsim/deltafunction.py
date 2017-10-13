@@ -61,6 +61,11 @@ class DeltaFunction(GSObject):
 
     _mock_inf = 1.e300  # Some arbitrary very large number to use when we need infinity.
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, flux=1., gsparams=None):
         self._gsparams = GSParams.check(gsparams)
         self._flux = flux
@@ -98,18 +103,6 @@ class DeltaFunction(GSObject):
 
     def stepK(self):
         return self._mock_inf
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return False
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

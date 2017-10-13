@@ -102,6 +102,11 @@ class RandomWalk(GSObject):
     # size of the galsim.Gaussian objects to use as delta functions
     _gaussian_sigma = 1.0e-8
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
         from .random import BaseDeviate
 

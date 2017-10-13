@@ -101,6 +101,11 @@ class Spergel(GSObject):
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
         self._nu = nu
@@ -183,18 +188,6 @@ class Spergel(GSObject):
         # Go to at least 5*hlr
         R = max(R, self.gsparams.stepk_minimum_hlr * self.half_light_radius)
         return math.pi / R
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

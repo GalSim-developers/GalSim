@@ -94,6 +94,11 @@ class InclinedExponential(GSObject):
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
     _takes_rng = False
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
                  scale_h_over_r=None, flux=1., gsparams=None):
 
@@ -200,18 +205,6 @@ class InclinedExponential(GSObject):
 
     def stepK(self):
         return self._sbp.stepK()
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return False
-
-    def isAnalyticX(self):
-        return False
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):
@@ -320,6 +313,11 @@ class InclinedSersic(GSObject):
                     "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float }]
     _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = False
+    _is_analytic_k = True
 
     def __init__(self, n, inclination, half_light_radius=None, scale_radius=None, scale_height=None,
                  scale_h_over_r=None, flux=1., trunc=0., flux_untruncated=False, gsparams=None):
@@ -460,18 +458,6 @@ class InclinedSersic(GSObject):
 
     def stepK(self):
         return self._sbp.stepK()
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return False
-
-    def isAnalyticX(self):
-        return False
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

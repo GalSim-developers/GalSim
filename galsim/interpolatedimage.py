@@ -260,6 +260,11 @@ class InterpolatedImage(GSObject):
     _takes_rng = True
     _cache_noise_pad = {}
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
@@ -625,18 +630,6 @@ class InterpolatedImage(GSObject):
             self._xim[self._pad_image.bounds] = self._pad_image
         self._image = self._xim[image_bounds]
 
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return False
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
-
     def centroid(self):
         return self._sbp.centroid()
 
@@ -795,6 +788,11 @@ class InterpolatedKImage(GSObject):
     }
     _single_params = []
     _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = False
+    _is_analytic_k = True
 
     def __init__(self, kimage=None, k_interpolant=None, stepk=None, gsparams=None,
                  real_kimage=None, imag_kimage=None, real_hdu=None, imag_hdu=None):

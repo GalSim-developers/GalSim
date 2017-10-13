@@ -143,6 +143,11 @@ class Kolmogorov(GSObject):
     # = flux * k0^2 * (3/5) Gamma(6/5) / 2pi
     _xzero = 0.08767865636723461
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, lam=None, r0=None,
                  r0_500=None, flux=1., scale_unit=None, gsparams=None):
 
@@ -237,18 +242,6 @@ class Kolmogorov(GSObject):
 
     def stepK(self):
         return self._sbp.stepK()
-
-    def hasHardEdges(self):
-        return False
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

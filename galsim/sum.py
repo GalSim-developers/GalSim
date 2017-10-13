@@ -202,20 +202,24 @@ class Sum(GSObject):
         stepk_list = [obj.stepK() for obj in self.obj_list]
         return np.min(stepk_list)
 
-    def hasHardEdges(self):
-        hard_list = [obj.hasHardEdges() for obj in self.obj_list]
+    @property
+    def _has_hard_edges(self):
+        hard_list = [obj.has_hard_edges for obj in self.obj_list]
         return bool(np.any(hard_list))
 
-    def isAxisymmetric(self):
-        axi_list = [obj.isAxisymmetric() for obj in self.obj_list]
+    @property
+    def _is_axisymmetric(self):
+        axi_list = [obj.is_axisymmetric for obj in self.obj_list]
         return np.all(axi_list)
 
-    def isAnalyticX(self):
-        ax_list = [obj.isAnalyticX() for obj in self.obj_list]
+    @property
+    def _is_analytic_x(self):
+        ax_list = [obj.is_analytic_x for obj in self.obj_list]
         return np.all(ax_list)
 
-    def isAnalyticK(self):
-        ak_list = [obj.isAnalyticK() for obj in self.obj_list]
+    @property
+    def _is_analytic_k(self):
+        ak_list = [obj.is_analytic_k for obj in self.obj_list]
         return np.all(ak_list)
 
     @property

@@ -75,6 +75,10 @@ class Moffat(GSObject):
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
 
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
     # since we allow it to be truncated, which matters for hlr.  So we do these calculations
     # in the C++-layer constructor.
@@ -182,17 +186,9 @@ class Moffat(GSObject):
     def stepK(self):
         return self._sbp.stepK()
 
-    def hasHardEdges(self):
+    @property
+    def _has_hard_edges(self):
         return self._trunc != 0.
-
-    def isAxisymmetric(self):
-        return True
-
-    def isAnalyticX(self):
-        return True
-
-    def isAnalyticK(self):
-        return True
 
     @property
     def centroid(self):

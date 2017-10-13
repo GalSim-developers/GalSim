@@ -282,22 +282,26 @@ class Convolution(GSObject):
         inv_stepksq_list = [obj.stepK()**(-2) for obj in self.obj_list]
         return np.sum(inv_stepksq_list)**(-0.5)
 
-    def hasHardEdges(self):
-        return len(self.obj_list) == 1 and self.obj_list[0].hasHardEdges()
+    @property
+    def _has_hard_edges(self):
+        return len(self.obj_list) == 1 and self.obj_list[0].has_hard_edges
 
-    def isAxisymmetric(self):
-        axi_list = [obj.isAxisymmetric() for obj in self.obj_list]
+    @property
+    def _is_axisymmetric(self):
+        axi_list = [obj.is_axisymmetric for obj in self.obj_list]
         return bool(np.all(axi_list))
 
-    def isAnalyticX(self):
+    @property
+    def _is_analytic_x(self):
         if self.real_space and len(self.obj_list) <= 2:
-            ax_list = [obj.isAnalyticX() for obj in self.obj_list]
+            ax_list = [obj.is_analytic_x for obj in self.obj_list]
             return bool(np.all(ax_list))
         else:
             return False
 
-    def isAnalyticK(self):
-        ak_list = [obj.isAnalyticK() for obj in self.obj_list]
+    @property
+    def _is_analytic_k(self):
+        ak_list = [obj.is_analytic_k for obj in self.obj_list]
         return bool(np.all(ak_list))
 
     @property
@@ -439,6 +443,9 @@ class Deconvolution(GSObject):
 
     There are no additional methods for Deconvolution beyond the usual GSObject methods.
     """
+    _has_hard_edges = False
+    _is_analytic_x = False
+
     def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolution must be a GSObject.")
@@ -490,17 +497,14 @@ class Deconvolution(GSObject):
     def stepK(self):
         return self.orig_obj.stepK()
 
-    def hasHardEdges(self):
-        return False
 
-    def isAxisymmetric(self):
-        return self.orig_obj.isAxisymmetric()
+    @property
+    def _is_axisymmetric(self):
+        return self.orig_obj.is_axisymmetric
 
-    def isAnalyticX(self):
-        return False
-
-    def isAnalyticK(self):
-        return self.orig_obj.isAnalyticK()
+    @property
+    def _is_analytic_k(self):
+        return self.orig_obj.is_analytic_k
 
     @property
     def centroid(self):
