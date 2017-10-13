@@ -267,8 +267,8 @@ class Aperture(object):
         if screen_list is not None:
             screen_list = PhaseScreenList(screen_list)
             stepk = min(stepk,
-                        screen_list._stepK(lam=lam, diam=diam, obscuration=obscuration,
-                                          gsparams=self._gsparams))
+                        screen_list._getStepK(lam=lam, diam=diam, obscuration=obscuration,
+                                              gsparams=self._gsparams))
         good_pupil_scale = (stepk * lam * 1.e-9 * (radians / arcsec) / (2 * np.pi * pad_factor))
 
         # Now that we have good candidate sizes and scales, we load or generate the pupil plane
@@ -433,7 +433,7 @@ class Aperture(object):
             b = _BoundsI(1,self.npix,1,self.npix)
             im = _Image(pp_arr, b, PixelScale(1.))
             int_im = InterpolatedImage(im, x_interpolant='linear',
-                                              calculate_stepk=False, calculate_maxk=False)
+                                       calculate_stepk=False, calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
             new_im = Image(pp_arr.shape[1], pp_arr.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
@@ -577,7 +577,7 @@ class Aperture(object):
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
-    def _stepK(self, lam, scale_unit=arcsec):
+    def _getStepK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
@@ -586,7 +586,7 @@ class Aperture(object):
         """
         return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/radians
 
-    def _maxK(self, lam, scale_unit=arcsec):
+    def _getMaxK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid half-size for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
@@ -914,7 +914,7 @@ class PhaseScreenList(object):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
 
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
 
         The required set of parameters depends on the types of the individual PhaseScreens in the
@@ -930,7 +930,7 @@ class PhaseScreenList(object):
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return np.sum([layer._stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
+        return np.sum([layer._getStepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -1051,8 +1051,8 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        self._stepk = _force_stepk
-        self._maxk = _force_maxk
+        self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1075,9 +1075,7 @@ class PhaseScreenPSF(GSObject):
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
         self.ii = InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
-                _force_stepk=self._stepk, _force_maxk=self._maxk)
-        self._sbp = self.ii._sbp
-
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk)
         self._screen_list._delayCalculation(self)
 
     @property
@@ -1106,15 +1104,15 @@ class PhaseScreenPSF(GSObject):
                 self.time_step == other.time_step and
                 self._flux == other._flux and
                 self.interpolant == other.interpolant and
-                self._stepk == other._stepk and
-                self._maxk == other._maxk and
+                self._force_stepk == other._force_stepk and
+                self._force_maxk == other._force_maxk and
                 self._ii_pad_factor == other._ii_pad_factor and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
-                     self._stepk, self._maxk, self._ii_pad_factor, self.gsparams))
+                     self._force_stepk, self._force_maxk, self._ii_pad_factor, self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
@@ -1126,14 +1124,6 @@ class PhaseScreenPSF(GSObject):
         """The value of k beyond which aliasing can be neglected.
         """
         return self.ii.maxk
-
-    @property
-    def nyquist_scale(self):
-        """The Image pixel spacing that does not alias maxk.
-        """
-        # Use this instead of self.ii.nyquistScale() so we don't need to _prepareDraw when
-        # photon-shooting into an automatically-sized image.
-        return np.pi/self.aper._maxK(self.lam, self.scale_unit)
 
     @property
     def stepk(self):
@@ -1188,10 +1178,9 @@ class PhaseScreenPSF(GSObject):
 
         self.ii = InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
-                _force_stepk=self._stepk, _force_maxk=self._maxk,
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
-        self._sbp = self.ii._sbp
 
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
@@ -1211,7 +1200,6 @@ class PhaseScreenPSF(GSObject):
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        del d['_sbp']
         del d['ii']
         return d
 
@@ -1220,10 +1208,13 @@ class PhaseScreenPSF(GSObject):
         self.ii = InterpolatedImage(self.img, x_interpolant=self.interpolant,
                                     use_true_center=False,
                                     pad_factor=self._ii_pad_factor,
-                                    _force_stepk=self._stepk,
-                                    _force_maxk=self._maxk,
+                                    _force_stepk=self._force_stepk,
+                                    _force_maxk=self._force_maxk,
                                     gsparams=self._gsparams)
-        self._sbp = self.ii._sbp
+
+    @property
+    def _sbp(self):
+        return self.ii._sbp
 
     def _shoot(self, photons, ud):
         if not self._geometric_shooting:
@@ -1552,7 +1543,6 @@ class OpticalPSF(GSObject):
                                    ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-        self._sbp = self._psf._sbp
 
     @property
     def flux(self):
@@ -1616,7 +1606,6 @@ class OpticalPSF(GSObject):
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
         d['aper'] = d['_psf'].aper
-        del d['_sbp']
         del d['_psf']
         return d
 
@@ -1631,7 +1620,10 @@ class OpticalPSF(GSObject):
                                    _force_stepk=self._force_stepk,
                                    ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-        self._sbp = self._psf._sbp
+
+    @property
+    def _sbp(self):
+        return self._psf._sbp
 
     def _shoot(self, photons, ud):
         self._psf._shoot(photons, ud)
