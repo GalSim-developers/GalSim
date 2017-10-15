@@ -160,10 +160,6 @@ class RandomWalk(GSObject):
         return self._half_light_radius
 
     @property
-    def flux(self):
-        return self._flux
-
-    @property
     def npoints(self):
         return self._npoints
 

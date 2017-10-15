@@ -32,6 +32,7 @@ from .gsobject import GSObject
 from .sed import SED
 from .bandpass import Bandpass
 from .position import PositionD, PositionI
+from .utilities import lazy_property
 from . import utilities
 from . import integ
 
@@ -1689,7 +1690,7 @@ class ChromaticTransformation(ChromaticObject):
             self._last_wcs = image.wcs
             return image
 
-    @property
+    @lazy_property
     def noise(self):
         from .transform import _Transform
         from .correlatednoise import _BaseCorrelatedNoise
@@ -2205,7 +2206,7 @@ class ChromaticConvolution(ChromaticObject):
         self._last_wcs = image.wcs
         return image
 
-    @property
+    @lazy_property
     def noise(self):
         from .convolve import Convolve
         # Condition for being able to propagate noise:

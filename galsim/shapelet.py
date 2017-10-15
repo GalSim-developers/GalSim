@@ -201,6 +201,10 @@ class Shapelet(GSObject):
         return self._sbp.centroid()
 
     @property
+    def _flux(self):
+        return self._sbp.getFlux()
+
+    @property
     def _positive_flux(self):
         return self._sbp.getPositiveFlux()
 

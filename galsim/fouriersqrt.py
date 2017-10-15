@@ -106,7 +106,7 @@ class FourierSqrtProfile(GSObject):
         return _galsim.SBFourierSqrt(self.orig_obj._sbp, self.gsparams._gsp)
 
     @property
-    def noise(self):
+    def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
@@ -148,6 +148,10 @@ class FourierSqrtProfile(GSObject):
     @property
     def _centroid(self):
         return 0.5 * self.orig_obj.centroid
+
+    @property
+    def _flux(self):
+        return np.sqrt(self.orig_obj.flux)
 
     @property
     def _positive_flux(self):

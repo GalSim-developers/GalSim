@@ -133,7 +133,7 @@ def test_gaussian():
     # Finally, test the noise property for things that don't have any noise set.
     assert gauss.noise is None
     # And accessing the attribute from the class should indicate that it is a lazyproperty
-    assert 'lazy_property' in str(galsim.GSObject.noise)
+    assert 'lazy_property' in str(galsim.GSObject._noise)
 
 
 @timer

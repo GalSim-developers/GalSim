@@ -75,10 +75,6 @@ class DeltaFunction(GSObject):
         # NB. I only need this until compound and transform are reimplemented in Python...
         return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
 
-    @property
-    def flux(self):
-        return self._flux
-
     def __eq__(self, other):
         return (isinstance(other, DeltaFunction) and
                 self.flux == other.flux and

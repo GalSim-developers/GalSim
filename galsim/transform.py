@@ -155,7 +155,7 @@ class Transformation(GSObject):
     def flux_ratio(self): return self._flux_ratio
 
     @lazy_property
-    def flux(self):
+    def _flux(self):
         return self._flux_scaling * self._original.flux
 
     @lazy_property
@@ -165,7 +165,7 @@ class Transformation(GSObject):
                                    self._offset._p, self._flux_ratio, self.gsparams._gsp)
 
     @lazy_property
-    def noise(self):
+    def _noise(self):
         from .correlatednoise import _BaseCorrelatedNoise
         if self.original.noise is None:
             return None

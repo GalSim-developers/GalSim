@@ -1083,10 +1083,6 @@ class PhaseScreenPSF(GSObject):
                 _force_stepk=self._force_stepk, _force_maxk=self._force_maxk)
         self._screen_list._delayCalculation(self)
 
-    @property
-    def flux(self):
-        return self._flux
-
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
                 (self._screen_list, self.lam, self.exptime))
@@ -1552,10 +1548,6 @@ class OpticalPSF(GSObject):
                                    ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-
-    @property
-    def flux(self):
-        return self._flux
 
     def __str__(self):
         screen = self._psf._screen_list[0]

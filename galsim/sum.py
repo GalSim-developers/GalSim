@@ -158,12 +158,12 @@ class Sum(GSObject):
         return _galsim.SBAdd(sb_list, self.gsparams._gsp)
 
     @lazy_property
-    def flux(self):
+    def _flux(self):
         flux_list = [obj.flux for obj in self.obj_list]
         return np.sum(flux_list)
 
     @lazy_property
-    def noise(self):
+    def _noise(self):
         # If any of the objects have a noise attribute, then we propagate the sum of the
         # noises (they add like variances) to the final sum.
         _noise = None

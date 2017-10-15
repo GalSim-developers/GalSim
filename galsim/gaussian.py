@@ -117,8 +117,6 @@ class Gaussian(GSObject):
 
     @property
     def sigma(self): return self._sigma
-    @property
-    def flux(self): return self._flux
 
     @property
     def half_light_radius(self): return self.sigma * Gaussian._hlr_factor

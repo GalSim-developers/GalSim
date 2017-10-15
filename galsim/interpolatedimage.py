@@ -386,10 +386,6 @@ class InterpolatedImage(GSObject):
     def image(self):
         return self._image
 
-    @property
-    def flux(self):
-        return self._flux
-
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
 
         # Check that given pad_image is valid:
@@ -925,6 +921,10 @@ class InterpolatedKImage(GSObject):
     @property
     def _centroid(self):
         return self._sbp.centroid()
+
+    @property
+    def _flux(self):
+        return self._sbp.getFlux()
 
     @property
     def _positive_flux(self):

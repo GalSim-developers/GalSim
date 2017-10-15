@@ -158,8 +158,6 @@ class InclinedExponential(GSObject):
     def scale_radius(self): return self._r0
     @property
     def scale_height(self): return self._h0
-    @property
-    def flux(self): return self._flux
 
     @property
     def half_light_radius(self): return self._r0 * Exponential._hlr_factor
@@ -394,8 +392,6 @@ class InclinedSersic(GSObject):
     def scale_height(self): return self._h0
     @property
     def trunc(self): return self._trunc
-    @property
-    def flux(self): return self._flux
 
     @property
     def scale_h_over_r(self): return self._h0 / self._r0

@@ -246,7 +246,7 @@ class RealGalaxy(GSObject):
             if logger:
                 logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
-            #self.noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
+            #self._noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
             # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
             # want it to be possible to have the RealGalaxyCatalog in another process, and the
             # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
@@ -257,14 +257,14 @@ class RealGalaxy(GSObject):
             self.catalog = real_galaxy_catalog
 
         if noise_image is None:
-            self.noise = UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
+            self._noise = UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
                                                   gsparams=gsparams)
         else:
             ii = InterpolatedImage(noise_image, normalization="sb",
                                    calculate_stepk=False, calculate_maxk=False,
                                    x_interpolant='linear', gsparams=gsparams)
-            self.noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
-            self.noise = self.noise.withVariance(var)
+            self._noise = _BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
+            self._noise = self._noise.withVariance(var)
         if logger:
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
@@ -275,14 +275,14 @@ class RealGalaxy(GSObject):
         self._k_interpolant = k_interpolant
         self._pad_factor = pad_factor
         self._noise_pad_size = noise_pad_size
-        self._flux = flux
+        self._input_flux = flux
         self._flux_rescale = flux_rescale
         self._area_norm = area_norm
         self._gsparams = gsparams
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
-            noise_pad = self.noise
+            noise_pad = self._noise
         else:
             noise_pad = 0.
 
@@ -314,7 +314,7 @@ class RealGalaxy(GSObject):
             if flux is not None:
                 flux_rescale *= flux/self.original_gal.flux
             self.original_gal *= flux_rescale
-            self.noise *= flux_rescale**2
+            self._noise *= flux_rescale**2
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = Deconvolve(self.original_psf, gsparams=gsparams)
@@ -326,7 +326,7 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
         # Save the noise in the image as an accessible attribute
-        self.noise = self.noise.convolvedWith(psf_inv, gsparams)
+        self._noise = self._noise.convolvedWith(psf_inv, gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
 
@@ -354,14 +354,14 @@ class RealGalaxy(GSObject):
                 self._k_interpolant == other._k_interpolant and
                 self._pad_factor == other._pad_factor and
                 self._noise_pad_size == other._noise_pad_size and
-                self._flux == other._flux and
+                self._input_flux == other._input_flux and
                 self._flux_rescale == other._flux_rescale and
                 self._area_norm == other._area_norm and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
         return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
-                     self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
+                     self._k_interpolant, self._pad_factor, self._noise_pad_size, self._input_flux,
                      self._flux_rescale, self._area_norm, self._gsparams))
 
     def __repr__(self):
@@ -374,8 +374,8 @@ class RealGalaxy(GSObject):
             s += 'pad_factor=%r, '%self._pad_factor
         if self._noise_pad_size != 0:
             s += 'noise_pad_size=%r, '%self._noise_pad_size
-        if self._flux is not None:
-            s += 'flux=%r, '%self._flux
+        if self._input_flux is not None:
+            s += 'flux=%r, '%self._input_flux
         if self._flux_rescale is not None:
             s += 'flux_rescale=%r, '%self._flux_rescale
         if self._area_norm != 1:
@@ -416,7 +416,7 @@ class RealGalaxy(GSObject):
         return self._sbp.centroid()
 
     @property
-    def flux(self):
+    def _flux(self):
         return self._sbp.getFlux()
 
     @property

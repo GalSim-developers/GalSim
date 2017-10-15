@@ -216,17 +216,12 @@ class Convolution(GSObject):
     def real_space(self): return self._real_space
 
     @lazy_property
-    def flux(self):
-        flux_list = [obj.flux for obj in self.obj_list]
-        return np.prod(flux_list)
-
-    @lazy_property
     def _sbp(self):
         SBList = [obj._sbp for obj in self.obj_list]
         return _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     @lazy_property
-    def noise(self):
+    def _noise(self):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.
         _noise = None
@@ -311,6 +306,11 @@ class Convolution(GSObject):
         cen_list = [obj.centroid for obj in self.obj_list]
         return sum(cen_list[1:], cen_list[0])
 
+    @lazy_property
+    def _flux(self):
+        flux_list = [obj.flux for obj in self.obj_list]
+        return np.prod(flux_list)
+
     @property
     def _positive_flux(self):
         pflux_list = [obj.positive_flux for obj in self.obj_list]
@@ -346,7 +346,8 @@ class Convolution(GSObject):
             try:
                 return self._sbp.xValue(pos._p)
             except AttributeError:
-                raise ValueError("Cannot use real_space convolution for these profiles")
+                raise NotImplementedError(
+                    "At least one profile in %s does not implement real-space convolution"%self)
         else:
             raise ValueError("Cannot use real_space convolution for >2 profiles")
 
@@ -467,12 +468,8 @@ class Deconvolution(GSObject):
     @property
     def orig_obj(self): return self._orig_obj
 
-    @lazy_property
-    def flux(self):
-        return 1./self.orig_obj.flux
-
     @property
-    def noise(self):
+    def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
@@ -514,6 +511,10 @@ class Deconvolution(GSObject):
     @property
     def _centroid(self):
         return -self.orig_obj.centroid
+
+    @lazy_property
+    def _flux(self):
+        return 1./self.orig_obj.flux
 
     @property
     def _positive_flux(self):
@@ -674,7 +675,7 @@ class AutoConvolution(Convolution):
     def real_space(self): return self._real_space
 
     @property
-    def noise(self):
+    def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
@@ -816,7 +817,7 @@ class AutoCorrelation(Convolution):
     def real_space(self): return self._real_space
 
     @property
-    def noise(self):
+    def _noise(self):
         if self.orig_obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")

@@ -258,8 +258,6 @@ class Sersic(GSObject):
     def scale_radius(self): return self._r0
     @property
     def trunc(self): return self._trunc
-    @property
-    def flux(self): return self._flux
 
     @property
     def half_light_radius(self):
