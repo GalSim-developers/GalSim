@@ -369,10 +369,7 @@ class InterpolatedImage(GSObject):
         if self._flux != self._image_flux:
             prof *= self._flux / self._image_flux
 
-        # Now, in order for these to pickle correctly if they are the "original" object in a
-        # Transform object, we need to hide the current transformation.  An easy way to do that
-        # is to hide the _sbp in an SBAdd object.
-        return _galsim.SBAdd([prof._sbp], self.gsparams._gsp)
+        return prof._sbp
 
     @property
     def x_interpolant(self):
@@ -822,6 +819,7 @@ class InterpolatedKImage(GSObject):
             raise ValueError("kimage wcs must be PixelScale or None.")
 
         self._kimage = kimage.copy()
+        self._gsparams = GSParams.check(gsparams)
 
         # Check for Hermitian symmetry properties of kimage
         shape = kimage.array.shape
@@ -838,50 +836,53 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
-            stepk = kimage.scale
+            if self._kimage.scale is None:
+                # Defaults to 1.0 if no scale is set.
+                self._kimage.scale = 1.
+            self._stepk = self._kimage.scale
+        elif stepk < kimage.scale:
+            import warnings
+            warnings.warn(
+                "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
+            self._stepk = kimage.scale
         else:
-            if stepk < kimage.scale:
-                import warnings
-                warnings.warn(
-                    "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
-                stepk = kimage.scale
-
-        # Default to dk=1
-        if stepk is None:
-            stepk = 1.
-            self._kimage.scale = 1.
-
-        self._stepk = stepk
-
-        stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
-
-        self._gsparams = GSParams.check(gsparams)
+            self._stepk = stepk
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
         if k_interpolant is None:
-            self.k_interpolant = Quintic(tol=1e-4)
+            self._k_interpolant = Quintic(tol=1e-4)
         else:
-            self.k_interpolant = convert_interpolant(k_interpolant)
+            self._k_interpolant = convert_interpolant(k_interpolant)
 
-        sbiki = _galsim.SBInterpolatedKImage(
-                self._kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
-        self._sbiki = sbiki
+    @property
+    def kimage(self):
+        return self._kimage
 
-        if kimage.wcs is not None:
-            sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                      _galsim.PositionD(0.,0.), kimage.scale**2,
-                                      self.gsparams._gsp)
+    @property
+    def k_interpolant(self):
+        return self._k_interpolant
+
+    @lazy_property
+    def _sbp(self):
+        stepk_image = self.stepk / self.kimage.scale  # usually 1, but could be larger
+        self._sbiki = _galsim.SBInterpolatedKImage(
+                self.kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
+
+        if self.kimage.wcs is not None:
+            scale = self.kimage.scale
+            return _galsim.SBTransform(self._sbiki, 1./scale, 0., 0., 1./scale,
+                                       _galsim.PositionD(0.,0.), scale**2,
+                                       self.gsparams._gsp)
         else:
-            sbp = sbiki
-        self._sbp = _galsim.SBAdd([sbp], self.gsparams._gsp)
+            return self._sbiki
 
     def __eq__(self, other):
         return (isinstance(other, InterpolatedKImage) and
-                np.array_equal(self._kimage.array, other._kimage.array) and
-                self._kimage.scale == other._kimage.scale and
+                np.array_equal(self.kimage.array, other.kimage.array) and
+                self.kimage.scale == other.kimage.scale and
                 self.k_interpolant == other.k_interpolant and
-                self._stepk == other._stepk and
+                self.stepk == other.stepk and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
@@ -889,16 +890,16 @@ class InterpolatedKImage(GSObject):
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
                                self.gsparams))
-            self._hash ^= hash(tuple(self._kimage.array.ravel()))
-            self._hash ^= hash((self._kimage.bounds, self._kimage.wcs))
+            self._hash ^= hash(tuple(self.kimage.array.ravel()))
+            self._hash ^= hash((self.kimage.bounds, self.kimage.wcs))
         return self._hash
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(\n%r,\n%r, stepk=%r, gsparams=%r)')%(
-                self._kimage, self.k_interpolant, self._stepk, self.gsparams)
+                self.kimage, self.k_interpolant, self.stepk, self.gsparams)
 
     def __str__(self):
-        return 'galsim.InterpolatedKImage(kimage=%s)'%(self._kimage)
+        return 'galsim.InterpolatedKImage(kimage=%s)'%(self.kimage)
 
     def __getstate__(self):
         # The SBInterpolatedKImage is picklable, but that is pretty inefficient, due to the large
@@ -906,13 +907,12 @@ class InterpolatedKImage(GSObject):
         # call init again on the other side.  There's still an image to be pickled, but at least
         # it will be through the normal pickling rules, rather than the repr.
         d = self.__dict__.copy()
-        del d['_sbp']
-        del d['_sbiki']
+        d.pop('_sbiki',None)
+        d.pop('_sbp',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self.gsparams)
 
     @property
     def _maxk(self):
@@ -962,10 +962,5 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale
     ret._gsparams = GSParams.check(gsparams)
-    ret.k_interpolant = k_interpolant
-    ret._sbiki = _galsim.SBInterpolatedKImage(
-            ret._kimage._image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
-    sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                              _galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
-    ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
+    ret._k_interpolant = k_interpolant
     return ret
