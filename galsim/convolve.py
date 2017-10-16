@@ -30,7 +30,7 @@ from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
-from .utilities import lazy_property
+from .utilities import lazy_property, doc_inherit
 
 
 def Convolve(*args, **kwargs):
@@ -339,6 +339,7 @@ class Convolution(GSObject):
         area_list = [obj.flux / obj.max_sb for obj in self.obj_list]
         return self.flux / np.sum(area_list)
 
+    @doc_inherit
     def _xValue(self, pos):
         if len(self.obj_list) == 1:
             return self.obj_list[0]._xValue(pos)
@@ -351,10 +352,12 @@ class Convolution(GSObject):
         else:
             raise ValueError("Cannot use real_space convolution for >2 profiles")
 
+    @doc_inherit
     def _kValue(self, pos):
         kv_list = [obj.kValue(pos) for obj in self.obj_list]
         return np.prod(kv_list)
 
+    @doc_inherit
     def _drawReal(self, image):
         if len(self.obj_list) == 1:
             self.obj_list[0]._drawReal(image)
@@ -366,6 +369,7 @@ class Convolution(GSObject):
         else:
             raise ValueError("Cannot use real_space convolution for >2 profiles")
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
 
@@ -379,6 +383,7 @@ class Convolution(GSObject):
             obj._shoot(p1, ud)
             photons.convolve(p1, ud)
 
+    @doc_inherit
     def _drawKImage(self, image):
         self.obj_list[0]._drawKImage(image)
         if len(self.obj_list) > 1:
@@ -540,9 +545,7 @@ class Deconvolution(GSObject):
         #
         return -self.orig_obj.max_sb / self.orig_obj.flux**2
 
-    def _xValue(self, pos):
-        raise NotImplementedError("Cannot evaluate a Deconvolution in real space")
-
+    @doc_inherit
     def _kValue(self, pos):
         # Really, for very low original kvalues, this gets very high, which can be unstable
         # in the presence of noise.  So if the original value is less than min_acc_kvalue,
@@ -553,12 +556,7 @@ class Deconvolution(GSObject):
         else:
             return 1./kval
 
-    def _drawReal(self, image):
-        raise NotImplementedError("Cannot draw a Deconvolution in real space")
-
-    def _shoot(self, photons, ud):
-        raise NotImplementedError("Cannot draw a Deconvolution with photon shooting")
-
+    @doc_inherit
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
         do_inverse = image.array > self._min_acc_kvalue

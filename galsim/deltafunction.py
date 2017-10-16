@@ -26,6 +26,7 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .position import PositionD
+from .utilities import doc_inherit
 
 
 class DeltaFunction(GSObject):
@@ -105,23 +106,24 @@ class DeltaFunction(GSObject):
     def _max_sb(self):
         return self._mock_inf
 
+    @doc_inherit
     def _xValue(self, pos):
         if pos.x == 0. and pos.y == 0.:
             return self._mock_inf
         else:
             return 0.
 
+    @doc_inherit
     def _kValue(self, kpos):
         return self.flux
 
-    def _drawReal(self, image):
-        raise NotImplemented("Cannot draw a DeltaFunction in real space")
-
+    @doc_inherit
     def _shoot(self, photons, rng):
         flux_per_photon = self.flux / len(photons)
         photons.x = 0.
         photons.y = 0.
         photons.flux = flux_per_photon
 
+    @doc_inherit
     def _drawKImage(self, image):
         image.array[:,:] = self.flux

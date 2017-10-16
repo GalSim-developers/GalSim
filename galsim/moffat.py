@@ -25,7 +25,7 @@ import math
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .utilities import lazy_property
+from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 
 
@@ -195,17 +195,22 @@ class Moffat(GSObject):
     def _max_sb(self):
         return self._sbp.maxSB()
 
+    @doc_inherit
     def _xValue(self, pos):
         return self._sbp.xValue(pos._p)
 
+    @doc_inherit
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
+    @doc_inherit
     def _drawReal(self, image):
         self._sbp.draw(image._image, image.scale)
 
+    @doc_inherit
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
+    @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)

@@ -25,7 +25,7 @@ from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject
-from .utilities import lazy_property
+from .utilities import lazy_property, doc_inherit
 
 
 def FourierSqrt(obj, gsparams=None):
@@ -169,18 +169,11 @@ class FourierSqrtProfile(GSObject):
         # maxSB = 2 * maxSB_orig / flux
         return 2. * self.orig_obj.max_sb / self.flux
 
-    def _xValue(self, pos):
-        raise NotImplementedError("Cannot evaluate in real space with FourierSqrtProfile")
-
+    @doc_inherit
     def _kValue(self, pos):
         return np.sqrt(self.orig_obj._kValue(pos))
 
-    def _drawReal(self, image):
-        raise NotImplementedError("Cannot draw in real space with FourierSqrtProfile")
-
-    def _shoot(self, photons, ud):
-        raise NotImplementedError("Cannot use method='phot' with FourierSqrtProfile")
-
+    @doc_inherit
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
         image.array[:,:] = np.sqrt(image.array)

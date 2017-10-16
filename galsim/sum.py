@@ -24,7 +24,7 @@ import numpy as np
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticSum
-from .utilities import lazy_property
+from .utilities import lazy_property, doc_inherit
 
 def Add(*args, **kwargs):
     """A function for adding 2 or more GSObject or ChromaticObject instances.
@@ -244,14 +244,17 @@ class Sum(GSObject):
         sb_list = [obj.max_sb for obj in self.obj_list]
         return np.sum(sb_list)
 
+    @doc_inherit
     def _xValue(self, pos):
         xv_list = [obj.xValue(pos) for obj in self.obj_list]
         return np.sum(xv_list)
 
+    @doc_inherit
     def _kValue(self, pos):
         kv_list = [obj.kValue(pos) for obj in self.obj_list]
         return np.sum(kv_list)
 
+    @doc_inherit
     def _drawReal(self, image):
         self.obj_list[0]._drawReal(image)
         if len(self.obj_list) > 1:
@@ -260,6 +263,7 @@ class Sum(GSObject):
                 obj._drawReal(im1)
                 image += im1
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
         from .random import BinomialDeviate
@@ -298,6 +302,7 @@ class Sum(GSObject):
         if len(self.obj_list) > 1:
             photons.setCorrelated()
 
+    @doc_inherit
     def _drawKImage(self, image):
         self.obj_list[0]._drawKImage(image)
         if len(self.obj_list) > 1:

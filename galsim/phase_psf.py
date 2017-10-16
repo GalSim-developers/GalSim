@@ -78,6 +78,7 @@ from .image import Image, _Image
 from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
+from .utilities import doc_inherit
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -1202,17 +1203,21 @@ class PhaseScreenPSF(GSObject):
     def _max_sb(self):
         return self.ii.max_sb
 
+    @doc_inherit
     def _xValue(self, pos):
         self._prepareDraw()
         return self.ii._xValue(pos)
 
+    @doc_inherit
     def _kValue(self, kpos):
         self._prepareDraw()
         return self.ii._kValue(kpos)
 
+    @doc_inherit
     def _drawReal(self, image):
         self.ii._drawReal(image)
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         if not self._geometric_shooting:
             self._prepareDraw()
@@ -1238,6 +1243,7 @@ class PhaseScreenPSF(GSObject):
         photons.y *= nm_to_arcsec
         photons.flux = self._flux / n_photons
 
+    @doc_inherit
     def _drawKImage(self, image):
         self.ii._drawKImage(image)
 
@@ -1654,17 +1660,22 @@ class OpticalPSF(GSObject):
     def _max_sb(self):
         return self._psf.max_sb
 
+    @doc_inherit
     def _xValue(self, pos):
         return self._psf._xValue(pos)
 
+    @doc_inherit
     def _kValue(self, kpos):
         return self._psf._kValue(kpos)
 
+    @doc_inherit
     def _drawReal(self, image):
         self._psf._drawReal(image)
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         self._psf._shoot(photons, ud)
 
+    @doc_inherit
     def _drawKImage(self, image):
         self._psf._drawKImage(image)

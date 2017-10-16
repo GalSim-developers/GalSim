@@ -25,7 +25,7 @@ import cmath
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .utilities import lazy_property
+from .utilities import lazy_property, doc_inherit
 from .position import PositionD
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None):
@@ -433,18 +433,22 @@ class Transformation(GSObject):
     def _max_sb(self):
         return self._amp_scaling * self._original.max_sb
 
+    @doc_inherit
     def _xValue(self, pos):
         pos -= self._offset
         inv_pos = PositionD(self._inv(pos.x, pos.y))
         return self._original._xValue(inv_pos) * self._amp_scaling
 
+    @doc_inherit
     def _kValue(self, kpos):
         fwdT_kpos = PositionD(self._fwdT(kpos.x, kpos.y))
         return self._original._kValue(fwdT_kpos) * self._kfactor(kpos.x, kpos.y)
 
+    @doc_inherit
     def _drawReal(self, image):
         self._sbp.draw(image._image, image.scale)
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         self.original._shoot(photons, ud)
         photons.x, photons.y = self._fwd(photons.x, photons.y)
@@ -452,6 +456,7 @@ class Transformation(GSObject):
         photons.y += self.offset.y
         photons.scaleFlux(self._flux_scaling)
 
+    @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
