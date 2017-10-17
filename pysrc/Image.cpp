@@ -57,15 +57,9 @@ namespace galsim {
             typedef void (*cfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                            bool, bool, bool);
 
-            bp::def("rfft", rfft_func_type(&rfft),
-                    (bp::arg("in"), bp::arg("out"),
-                     bp::arg("shift_in")=true, bp::arg("shift_out")=true));
-            bp::def("irfft", irfft_func_type(&irfft),
-                    (bp::arg("in"), bp::arg("out"),
-                     bp::arg("shift_in")=true, bp::arg("shift_out")=true));
-            bp::def("cfft", cfft_func_type(&cfft),
-                    (bp::arg("in"), bp::arg("out"), bp::arg("inverse")=false,
-                     bp::arg("shift_in")=true, bp::arg("shift_out")=true));
+            bp::def("rfft", rfft_func_type(&rfft));
+            bp::def("irfft", irfft_func_type(&irfft));
+            bp::def("cfft", cfft_func_type(&cfft));
         }
 
         static bp::object wrapImageView(const std::string& suffix)
@@ -73,14 +67,10 @@ namespace galsim {
             bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
                 pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
             pyImageView
-                .def("__init__", bp::make_constructor(
-                        &MakeFromArray, bp::default_call_policies(),
-                        (bp::arg("data"), bp::arg("step"), bp::arg("stride"), bp::arg("bounds"))))
-                ;
+                .def("__init__", bp::make_constructor(&MakeFromArray, bp::default_call_policies()));
 
             typedef void (*wrap_func_type)(ImageView<T>, const Bounds<int>&, bool, bool);
-            bp::def("wrapImage", wrap_func_type(&wrapImage),
-                    (bp::arg("im"), bp::arg("bounds"), bp::arg("hermx"), bp::arg("hermy")));
+            bp::def("wrapImage", wrap_func_type(&wrapImage));
             typedef void (*invert_func_type)(ImageView<T>);
             bp::def("invertImage", invert_func_type(&invertImage));
 
@@ -93,9 +83,7 @@ namespace galsim {
                 pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
             pyConstImageView
                 .def("__init__", bp::make_constructor(
-                        &MakeConstFromArray, bp::default_call_policies(),
-                        (bp::arg("data"), bp::arg("step"), bp::arg("stride"), bp::arg("bounds"))))
-                ;
+                        &MakeConstFromArray, bp::default_call_policies()));
 
             return pyConstImageView;
         }
@@ -138,8 +126,7 @@ namespace galsim {
         scope.attr("ConstImageView") = pyConstImageViewDict;
         scope.attr("ImageView") = pyImageViewDict;
 
-        bp::def("goodFFTSize", &goodFFTSize, bp::arg("input_size"),
-                "Round up to the next larger 2^n or 3x2^n.");
+        bp::def("goodFFTSize", &goodFFTSize);
     }
 
 } // namespace galsim

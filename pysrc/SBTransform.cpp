@@ -32,9 +32,7 @@ namespace galsim {
         {
             bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", bp::no_init)
                 .def(bp::init<const SBProfile &, double, double, double, double,
-                     Position<double>, double, GSParams>(
-                         (bp::args("sbin", "mA", "mB", "mC", "mD"),
-                          bp::arg("x0"), bp::arg("fluxScaling"), bp::arg("gsparams"))));
+                     Position<double>, double, GSParams>());
         }
 
     };

@@ -550,10 +550,10 @@ class InterpolatedImage(GSObject):
             self._maxk = 0.
             self._sbp
             if calculate_maxk is True:
-                self._sbii.calculateMaxK()
+                self._sbii.calculateMaxK(0.)
             else:
                 # If not a bool, then value is max_maxk
-                self._sbii.calculateMaxK(max_maxk=calculate_maxk)
+                self._sbii.calculateMaxK(float(calculate_maxk))
             self.__dict__.pop('_sbp')  # Need to remake it.
             return self._sbii.maxK() / max_scale
         else:

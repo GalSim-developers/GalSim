@@ -31,14 +31,10 @@ namespace {
         template <typename U, typename W>
         static void wrapTemplates(W& wrapper) {
             wrapper
-                .def("addTo",
-                    (double (PhotonArray::*)(ImageView<U>) const)
-                    &PhotonArray::addTo,
-                    (bp::arg("image")))
+                .def("addTo", (double (PhotonArray::*)(ImageView<U>) const) &PhotonArray::addTo)
                 .def("setFrom",
                     (int (PhotonArray::*)(const BaseImage<U>&, double, UniformDeviate))
-                    &PhotonArray::setFrom,
-                    bp::args("image", "maxFlux", "ud"));
+                    &PhotonArray::setFrom);
         }
 
         static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
@@ -57,12 +53,8 @@ namespace {
         {
             bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
             pyPhotonArray
-                .def("__init__", bp::make_constructor(
-                    &construct, bp::default_call_policies(),
-                    bp::args("N", "x", "y", "flux", "dxdz", "dydz", "wavelength", "is_corr")))
-                .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),
-                     "Convolve this PhotonArray with another")
-                ;
+                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()))
+                .def("convolve", &PhotonArray::convolve);
             wrapTemplates<double>(pyPhotonArray);
             wrapTemplates<float>(pyPhotonArray);
         }

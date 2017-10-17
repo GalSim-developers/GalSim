@@ -35,23 +35,7 @@ namespace galsim {
             bp::class_<GSParams> ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
-                    double, double, double, double, int, double>((
-                        bp::arg("minimum_fft_size"),
-                        bp::arg("maximum_fft_size"),
-                        bp::arg("folding_threshold"),
-                        bp::arg("stepk_minimum_hlr"),
-                        bp::arg("maxk_threshold"),
-                        bp::arg("kvalue_accuracy"),
-                        bp::arg("xvalue_accuracy"),
-                        bp::arg("table_spacing"),
-                        bp::arg("realspace_relerr"),
-                        bp::arg("realspace_abserr"),
-                        bp::arg("integration_relerr"),
-                        bp::arg("integration_abserr"),
-                        bp::arg("shoot_accuracy"),
-                        bp::arg("allowed_flux_variation"),
-                        bp::arg("range_division_for_extrema"),
-                        bp::arg("small_fraction_of_flux"))));
+                    double, double, double, double, int, double>());
         }
     };
 
@@ -66,15 +50,11 @@ namespace galsim {
             // but it's easier to do that than write out the full class_ type.
             wrapper
                 .def("draw",
-                     (void (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("dx")),
-                     "Draw in-place and return the summed flux.");
+                     (void (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw);
             wrapper
                 .def("drawK",
                      (void (SBProfile::*)(ImageView<std::complex<U> >, double) const)
-                     &SBProfile::drawK,
-                     (bp::arg("image"), bp::arg("dk")),
-                     "Draw k-space image.");
+                     &SBProfile::drawK);
         }
 
         static void wrap() {
@@ -89,8 +69,7 @@ namespace galsim {
                 .def("getPositiveFlux", &SBProfile::getPositiveFlux)
                 .def("getNegativeFlux", &SBProfile::getNegativeFlux)
                 .def("maxSB", &SBProfile::maxSB)
-                .def("shoot", &SBProfile::shoot, bp::args("pa", "u"))
-                ;
+                .def("shoot", &SBProfile::shoot);
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);
         }

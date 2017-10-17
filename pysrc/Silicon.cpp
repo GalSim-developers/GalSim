@@ -35,11 +35,7 @@ namespace {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
                                                     ImageView<U>);
             wrapper
-                .def("accumulate",
-                     (accumulate_fn)&Silicon::accumulate,
-                     (bp::args("photons", "rng", "image")),
-                     "Accumulate photons in image")
-                ;
+                .def("accumulate", (accumulate_fn)&Silicon::accumulate);
         }
 
 
@@ -58,12 +54,7 @@ namespace {
         {
             bp::class_<Silicon> pySilicon("Silicon", bp::no_init);
             pySilicon
-                .def("__init__", bp::make_constructor(
-                        &MakeSilicon, bp::default_call_policies(),
-                        (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
-                                  "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
-                                  "vertex_data"))))
-                ;
+                .def("__init__", bp::make_constructor(&MakeSilicon, bp::default_call_policies()));
             wrapTemplates<double>(pySilicon);
             wrapTemplates<float>(pySilicon);
         }

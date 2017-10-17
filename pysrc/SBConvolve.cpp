@@ -43,10 +43,7 @@ namespace galsim {
             bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
                 // bp tries the overloads in reverse order, so we wrap the most general one first
                 // to ensure we try it last
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("slist"), bp::arg("real_space"),
-                         bp::arg("gsparams"))));
+                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
         }
     };
 
@@ -54,9 +51,7 @@ namespace galsim {
     {
         static void wrap() {
             bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))));
+                .def(bp::init<const SBProfile&, bool, GSParams>());
         }
     };
 
@@ -64,9 +59,7 @@ namespace galsim {
     {
         static void wrap() {
             bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))));
+                .def(bp::init<const SBProfile&, bool, GSParams>());
         }
 
     };

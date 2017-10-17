@@ -31,10 +31,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBInclinedSersic,bp::bases<SBProfile> >("SBInclinedSersic", bp::no_init)
-                .def(bp::init<double,double,double,double,double,double, GSParams>(
-                         (bp::arg("n"), bp::arg("inclination"), bp::arg("scale_radius"),
-                          bp::arg("scale_height"), bp::arg("flux"), bp::arg("trunc"),
-                          bp::arg("gsparams"))));
+                .def(bp::init<double,double,double,double,double,double, GSParams>());
         }
     };
 

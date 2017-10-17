@@ -56,18 +56,11 @@ namespace {
             // docstrings are in galsim/table.py
             bp::class_<Table > pyTable("_LookupTable", bp::no_init);
             pyTable
-                .def("__init__",
-                     bp::make_constructor(
-                         &makeTable, bp::default_call_policies(),
-                         (bp::arg("args"), bp::arg("vals"), bp::args("N"), bp::arg("interp"))
-                     )
-                )
-                .def(bp::init<const Table &>(bp::args("other")))
-
+                .def("__init__", bp::make_constructor(&makeTable, bp::default_call_policies()))
+                .def(bp::init<const Table &>())
                 // Use version that throws expection if out of bounds
                 .def("__call__", &Table::lookup)
-                .def("interpMany", &interpMany)
-                ;
+                .def("interpMany", &interpMany);
         }
 
     }; // struct PyTable
@@ -118,13 +111,7 @@ namespace {
         {
             bp::class_<Table2D > pyTable2D("_LookupTable2D", bp::no_init);
             pyTable2D
-                .def("__init__",
-                    bp::make_constructor(
-                        &makeTable2D, bp::default_call_policies(),
-                        (bp::arg("x"), bp::arg("y"), bp::arg("f"),
-                         bp::arg("Nx"), bp::arg("Ny"), bp::arg("interp"))
-                    )
-                )
+                .def("__init__", bp::make_constructor(&makeTable2D, bp::default_call_policies()))
                 .def("__call__", &Table2D::lookup)
                 .def("interpMany", &interpMany)
                 .def("gradient", &Gradient)

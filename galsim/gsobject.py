@@ -1786,7 +1786,7 @@ class GSObject(object):
         # Perform the fourier transform.
         breal = _BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
         real_image = Image(breal, dtype=float)
-        _galsim.irfft(kimage_wrap._image, real_image._image)
+        _galsim.irfft(kimage_wrap._image, real_image._image, True, True)
 
         # Add (a portion of) this to the original image.
         temp = real_image.subImage(image.bounds)

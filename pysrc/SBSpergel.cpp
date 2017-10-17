@@ -31,12 +31,9 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
-                .def(bp::init<double,double,double, GSParams>(
-                        (bp::arg("nu"), bp::arg("scale_radius"), bp::arg("flux"),
-                         bp::arg("gsparams"))))
-                .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux, bp::arg("r"))
-                .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius, bp::arg("f"))
-                ;
+                .def(bp::init<double,double,double, GSParams>())
+                .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
+                .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
 
             bp::def("SpergelCalculateHLR", &SpergelCalculateHLR);
         }

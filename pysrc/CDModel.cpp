@@ -37,12 +37,7 @@ namespace galsim {
                 const BaseImage<double>& , const BaseImage<double>& ,
                 const BaseImage<double>& , const BaseImage<double>& ,
                 const int , const double );
-            bp::def("_ApplyCD",
-                ApplyCD_func(&ApplyCD),
-                (bp::arg("output"), bp::arg("input"),
-                 bp::arg("aL"), bp::arg("aR"), bp::arg("aB"), bp::arg("aT"),
-                bp::arg("dmax"), bp::arg("gain_ratio")),
-                "Apply an Antilogus et al (2014) charge deflection model to an image.");
+            bp::def("_ApplyCD", ApplyCD_func(&ApplyCD));
 
         };
 

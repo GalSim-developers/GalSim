@@ -232,7 +232,7 @@ class TopHat(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBTopHat(self._radius, flux=self._flux, gsparams=self.gsparams._gsp)
+        return _galsim.SBTopHat(self._radius, self._flux, self.gsparams._gsp)
 
     @property
     def radius(self): return self._radius

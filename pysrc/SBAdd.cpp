@@ -41,9 +41,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", bp::no_init)
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("slist"), bp::arg("gsparams"))));
+                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
         }
     };
 

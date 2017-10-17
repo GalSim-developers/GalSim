@@ -131,19 +131,10 @@ class RandomWalk(GSObject):
         fluxper=self._flux/self._npoints
 
         for p in self._points:
-            g = _galsim.SBGaussian(
-                sigma=sigma,
-                flux=fluxper,
-                gsparams=self.gsparams._gsp,
-            )
+            g = _galsim.SBGaussian(sigma, fluxper, self.gsparams._gsp)
 
-            g = _galsim.SBTransform(
-                g,
-                1.0, 0.0, 0.0, 1.0,
-                _galsim.PositionD(p[0],p[1]),
-                1.0,
-                self.gsparams._gsp,
-            )
+            g = _galsim.SBTransform(g, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
+                                    self.gsparams._gsp)
 
             gaussians.append(g)
         return gaussians

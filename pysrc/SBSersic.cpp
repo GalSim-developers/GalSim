@@ -31,9 +31,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
-                .def(bp::init<double,double,double,double, GSParams>(
-                         (bp::arg("n"), bp::arg("scale_radius"), bp::arg("flux"),
-                          bp::arg("trunc"), bp::arg("gsparams"))));
+                .def(bp::init<double,double,double,double, GSParams>());
 
             bp::def("SersicTruncatedScale", &SersicTruncatedScale);
             bp::def("SersicIntegratedFlux", &SersicIntegratedFlux);

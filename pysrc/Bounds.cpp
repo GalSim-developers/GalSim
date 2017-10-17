@@ -34,10 +34,9 @@ struct PyPosition {
 
         bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
         pyPosition
-            .def(bp::init<T,T>((bp::arg("x"), bp::arg("y"))))
+            .def(bp::init<T,T>())
             .def_readonly("x", &Position<T>::x)
-            .def_readonly("y", &Position<T>::y)
-            ;
+            .def_readonly("y", &Position<T>::y);
     }
 
 };
@@ -46,15 +45,13 @@ template <typename T>
 struct PyBounds {
 
     static void wrap(std::string const & suffix) {
-        bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::init<>());
+        bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::no_init);
         pyBounds
-            .def(bp::init<T,T,T,T>(bp::args("xmin","xmax","ymin","ymax")))
+            .def(bp::init<T,T,T,T>())
             .add_property("xmin", &Bounds<T>::getXMin)
             .add_property("xmax", &Bounds<T>::getXMax)
             .add_property("ymin", &Bounds<T>::getYMin)
-            .add_property("ymax", &Bounds<T>::getYMax)
-            .enable_pickling()
-            ;
+            .add_property("ymax", &Bounds<T>::getYMax);
     }
 
 };

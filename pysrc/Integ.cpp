@@ -60,10 +60,7 @@ namespace {
 
 void pyExportInteg() {
 
-    bp::def("PyInt1d",
-            &PyInt1d, (bp::args("func", "min", "max"),
-                       bp::arg("rel_err")=DEFRELERR, bp::arg("abs_err")=DEFABSERR),
-            "Calculate the integral of the given 1-d function from min to max.");
+    bp::def("PyInt1d", &PyInt1d);
 
 }
 

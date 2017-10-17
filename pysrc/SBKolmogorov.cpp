@@ -31,9 +31,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBKolmogorov,bp::bases<SBProfile> >("SBKolmogorov", bp::no_init)
-                .def(bp::init<double,double,GSParams>(
-                        (bp::arg("lam_over_r0"), bp::arg("flux"),
-                         bp::arg("gsparams"))));
+                .def(bp::init<double,double,GSParams>());
         }
     };
 

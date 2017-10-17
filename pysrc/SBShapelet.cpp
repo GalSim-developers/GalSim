@@ -52,13 +52,9 @@ namespace galsim {
         static void wrap() {
             bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
                 .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("sigma"), bp::arg("order"),  bp::arg("idata"),
-                         bp::arg("gsparams"))));
+                        &construct, bp::default_call_policies()));
 
-            bp::def("ShapeletFitImage", &fit,
-                    bp::args("sigma","order","idata","image","scale","center"),
-                    "Fit a Shapelet decomposition to the provided image");
+            bp::def("ShapeletFitImage", &fit);
         }
     };
 

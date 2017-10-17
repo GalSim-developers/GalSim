@@ -31,11 +31,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
-                .def(bp::init<double,double,double,double, GSParams>(
-                        (bp::arg("beta"), bp::arg("scale_radius"),
-                         bp::arg("trunc"), bp::arg("flux"), bp::arg("gsparams"))))
-                .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius)
-                ;
+                .def(bp::init<double,double,double,double, GSParams>())
+                .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius);
 
             bp::def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);
         }

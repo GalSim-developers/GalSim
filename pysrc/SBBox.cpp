@@ -31,9 +31,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def(bp::init<double,double,double,GSParams>(
-                        (bp::arg("width"), bp::arg("height"), bp::arg("flux"),
-                         bp::arg("gsparams"))));
+                .def(bp::init<double,double,double,GSParams>());
         }
     };
 
@@ -42,8 +40,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-                .def(bp::init<double,double,GSParams>(
-                        (bp::arg("radius"), bp::arg("flux"), bp::arg("gsparams"))));
+                .def(bp::init<double,double,GSParams>());
         }
     };
 
