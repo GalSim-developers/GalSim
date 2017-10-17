@@ -26,18 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInclinedSersic
-    {
-        static void wrap()
-        {
-            bp::class_<SBInclinedSersic,bp::bases<SBProfile> >("SBInclinedSersic", bp::no_init)
-                .def(bp::init<double,double,double,double,double,double, GSParams>());
-        }
-    };
-
     void pyExportSBInclinedSersic()
     {
-        PySBInclinedSersic::wrap();
+        bp::class_<SBInclinedSersic,bp::bases<SBProfile> >("SBInclinedSersic", bp::no_init)
+            .def(bp::init<double,double,double,double,double,double, GSParams>());
     }
 
 } // namespace galsim

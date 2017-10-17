@@ -26,28 +26,13 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBBox
-    {
-        static void wrap()
-        {
-            bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def(bp::init<double,double,double,GSParams>());
-        }
-    };
-
-    struct PySBTopHat
-    {
-        static void wrap()
-        {
-            bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-                .def(bp::init<double,double,GSParams>());
-        }
-    };
-
     void pyExportSBBox()
     {
-        PySBBox::wrap();
-        PySBTopHat::wrap();
+        bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
+            .def(bp::init<double,double,double,GSParams>());
+
+        bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
+            .def(bp::init<double,double,GSParams>());
     }
 
 } // namespace galsim

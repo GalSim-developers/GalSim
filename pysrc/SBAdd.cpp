@@ -26,28 +26,20 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAdd
+    static SBAdd* construct(const bp::list& slist, GSParams gsparams)
     {
-        static SBAdd* construct(const bp::list& slist, GSParams gsparams)
-        {
-            std::list<SBProfile> plist;
-            int n = len(slist);
-            for(int i=0; i<n; ++i) {
-                plist.push_back(bp::extract<const SBProfile&>(slist[i]));
-            }
-            return new SBAdd(plist, gsparams);
+        std::list<SBProfile> plist;
+        int n = len(slist);
+        for(int i=0; i<n; ++i) {
+            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
         }
-
-        static void wrap()
-        {
-            bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", bp::no_init)
-                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
-        }
-    };
+        return new SBAdd(plist, gsparams);
+    }
 
     void pyExportSBAdd()
     {
-        PySBAdd::wrap();
+        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", bp::no_init)
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
     }
 
 } // namespace galsim

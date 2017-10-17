@@ -25,46 +25,36 @@
 namespace bp = boost::python;
 
 namespace galsim {
-namespace {
 
-    struct PyPhotonArray {
-        template <typename U, typename W>
-        static void wrapTemplates(W& wrapper) {
-            wrapper
-                .def("addTo", (double (PhotonArray::*)(ImageView<U>) const) &PhotonArray::addTo)
-                .def("setFrom",
-                    (int (PhotonArray::*)(const BaseImage<U>&, double, UniformDeviate))
-                    &PhotonArray::setFrom);
-        }
+    template <typename T, typename W>
+    static void WrapTemplates(W& wrapper) {
+        wrapper
+            .def("addTo", (double (PhotonArray::*)(ImageView<T>) const) &PhotonArray::addTo)
+            .def("setFrom",
+                 (int (PhotonArray::*)(const BaseImage<T>&, double, UniformDeviate))
+                 &PhotonArray::setFrom);
+    }
 
-        static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
-                                      size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
-        {
-            double *x = reinterpret_cast<double*>(ix);
-            double *y = reinterpret_cast<double*>(iy);
-            double *flux = reinterpret_cast<double*>(iflux);
-            double *dxdz = reinterpret_cast<double*>(idxdz);
-            double *dydz = reinterpret_cast<double*>(idydz);
-            double *wave = reinterpret_cast<double*>(iwave);
-            return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
-        }
+    static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
+                                  size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
+    {
+        double *x = reinterpret_cast<double*>(ix);
+        double *y = reinterpret_cast<double*>(iy);
+        double *flux = reinterpret_cast<double*>(iflux);
+        double *dxdz = reinterpret_cast<double*>(idxdz);
+        double *dydz = reinterpret_cast<double*>(idydz);
+        double *wave = reinterpret_cast<double*>(iwave);
+        return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
+    }
 
-        static void wrap()
-        {
-            bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
-            pyPhotonArray
-                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()))
-                .def("convolve", &PhotonArray::convolve);
-            wrapTemplates<double>(pyPhotonArray);
-            wrapTemplates<float>(pyPhotonArray);
-        }
-    }; // struct PyPhotonArray
-
-} // anonymous
-
-void pyExportPhotonArray()
-{
-    PyPhotonArray::wrap();
-}
+    void pyExportPhotonArray()
+    {
+        bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
+        pyPhotonArray
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()))
+            .def("convolve", &PhotonArray::convolve);
+        WrapTemplates<double>(pyPhotonArray);
+        WrapTemplates<float>(pyPhotonArray);
+    }
 
 } // namespace galsim

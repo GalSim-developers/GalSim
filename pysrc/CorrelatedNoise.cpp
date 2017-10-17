@@ -27,18 +27,9 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyCorrelationFunctions
-    {
-
-        static void wrap() {
-            bp::def("_calculateCovarianceMatrix", calculateCovarianceMatrix);
-        }
-
-    };
-
     void pyExportCorrelationFunction()
     {
-        PyCorrelationFunctions::wrap();
+        bp::def("_calculateCovarianceMatrix", calculateCovarianceMatrix);
     }
 
 } // namespace galsim

@@ -26,22 +26,14 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSpergel
-    {
-        static void wrap()
-        {
-            bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
-                .def(bp::init<double,double,double, GSParams>())
-                .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
-                .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
-
-            bp::def("SpergelCalculateHLR", &SpergelCalculateHLR);
-        }
-    };
-
     void pyExportSBSpergel()
     {
-        PySBSpergel::wrap();
+        bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
+            .def(bp::init<double,double,double, GSParams>())
+            .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
+            .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
+
+        bp::def("SpergelCalculateHLR", &SpergelCalculateHLR);
     }
 
 } // namespace galsim

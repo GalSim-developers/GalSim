@@ -26,21 +26,13 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBMoffat
-    {
-        static void wrap()
-        {
-            bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
-                .def(bp::init<double,double,double,double, GSParams>())
-                .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius);
-
-            bp::def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);
-        }
-    };
-
     void pyExportSBMoffat()
     {
-        PySBMoffat::wrap();
+        bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
+            .def(bp::init<double,double,double,double, GSParams>())
+            .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius);
+
+        bp::def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);
     }
 
 } // namespace galsim

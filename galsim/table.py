@@ -24,7 +24,7 @@ Also, a simple 2D table for gridded input data: LookupTable2D.
 import numpy as np
 
 from . import _galsim
-
+from .utilities import lazy_property
 
 class LookupTable(object):
     """
@@ -146,26 +146,21 @@ class LookupTable(object):
         self._x_max = self.x[-1]
         if self._x_min == self._x_max:
             raise ValueError("All x values are equal")
+        if self.x_log and self.x[0] <= 0.:
+            raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
+        if self.f_log and np.any(self.f <= 0.):
+            raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
 
-        self._make_table()
-
-    def _make_table(self):
-        # make and store table
+    @lazy_property
+    def _tab(self):
+        # Store these as attributes, so don't need to worry about C++ layer persisting them.
         self._x = self.x
         self._f = self.f
-        if self.x_log:
-            if self._x[0] <= 0.:
-                raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
-            self._x = np.log(self._x)
-        if self.f_log:
-            if np.any(self._f <= 0.):
-                raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
-            self._f = np.log(self._f)
+        if self.x_log: self._x = np.log(self._x)
+        if self.f_log: self._f = np.log(self._f)
 
-        # table is the thing the does the actual work.  It is a C++ Table object, wrapped
-        # as _LookupTable.  Note x must be sorted.
-        self._tab = _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                         len(self._x), self.interpolant)
+        return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                    len(self._x), self.interpolant)
 
     @property
     def x_min(self): return self._x_min
@@ -214,7 +209,7 @@ class LookupTable(object):
         # option 3: a single value
         else:
             xx = float(x)
-            f = self._tab(xx)
+            f = self._tab.interp(xx)
 
         # Handle the log(f) if necessary
         if self.f_log:
@@ -229,6 +224,7 @@ class LookupTable(object):
         if np.max(x) > self.x_max + slop:
             raise ValueError("x value(s) above the range of the LookupTable: %s > %s"%(
                              x, self.x_max))
+
     def getArgs(self):
         return self.x
 
@@ -275,12 +271,11 @@ class LookupTable(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_tab']
+        d.pop('_tab',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._make_table()
 
 class LookupTable2D(object):
     """
@@ -415,12 +410,12 @@ class LookupTable2D(object):
             else:
                 raise ValueError("Cannot use edge_mode='wrap' unless either x and y are equally "
                                  "spaced or first/last row/column of f are identical.")
-        self._make_table()
 
-    def _make_table(self):
-        self._tab = _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                           self.f.ctypes.data, len(self.x), len(self.y),
-                                           self.interpolant)
+    @lazy_property
+    def _tab(self):
+        return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                      self.f.ctypes.data, len(self.x), len(self.y),
+                                      self.interpolant)
     def getXArgs(self):
         return self.x
 
@@ -447,7 +442,7 @@ class LookupTable2D(object):
 
         from numbers import Real
         if isinstance(x, Real):
-            return self._tab(x, y)
+            return self._tab.interp(x, y)
         else:
             xx = np.ascontiguousarray(x.ravel(), dtype=float)
             yy = np.ascontiguousarray(y.ravel(), dtype=float)
@@ -464,7 +459,7 @@ class LookupTable2D(object):
         from numbers import Real
         if isinstance(x, Real):
             if self._inbounds(x, y):
-                return self._tab(x, y)
+                return self._tab.interp(x, y)
             else:
                 return self.constant
         else:
@@ -591,9 +586,8 @@ class LookupTable2D(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_tab']
+        d.pop('_tab',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._make_table()

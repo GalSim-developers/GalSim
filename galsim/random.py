@@ -115,9 +115,9 @@ class BaseDeviate(object):
         if isinstance(seed, BaseDeviate):
             self._reset(seed)
         elif isinstance(seed, (str, int)):
-            self._rng = self._rng_type(seed, *self._rng_args)
+            self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
         elif seed is None:
-            self._rng = self._rng_type(0, *self._rng_args)
+            self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
         else:
             raise ValueError("BaseDeviate must be initialized with either an int or another "
                              "BaseDeviate")
@@ -154,11 +154,23 @@ class BaseDeviate(object):
         """
         ret = BaseDeviate.__new__(self.__class__)
         ret.__dict__.update(self.__dict__)
-        ret._rng = self._rng.duplicate()
+        rng = _galsim.BaseDeviateImpl(self.serialize())
+        ret._rng = self._rng_type(rng, *ret._rng_args)
         return ret
 
     def __copy__(self):
         return self.duplicate()
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['rng_str'] = self._rng.serialize()
+        d.pop('_rng')
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        rng = _galsim.BaseDeviateImpl(d['rng_str'])
+        self._rng = self._rng_type(rng, *self._rng_args)
 
     def clearCache(self):
         """Clear the internal cache of the Deviate, if any.  This is currently only relevant for
@@ -843,13 +855,3 @@ def permute(rng, *args):
         if j == i+1: j = i  # I'm not sure if this is possible, but just in case...
         for lst in args:
             lst[i], lst[j] = lst[j], lst[i]
-
-# Some functions to enable pickling of deviates
-_galsim.BaseDeviateImpl.__getinitargs__ = lambda self: (self.serialize(),)
-_galsim.UniformDeviateImpl.__getinitargs__ = lambda self: (self.serialize(),)
-_galsim.GaussianDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.mean, self.sigma)
-_galsim.BinomialDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.n, self.p)
-_galsim.PoissonDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.mean)
-_galsim.WeibullDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.a, self.b)
-_galsim.GammaDeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.k, self.theta)
-_galsim.Chi2DeviateImpl.__getinitargs__ = lambda self: (self.serialize(), self.n)

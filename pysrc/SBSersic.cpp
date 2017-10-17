@@ -26,22 +26,14 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSersic
-    {
-        static void wrap()
-        {
-            bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
-                .def(bp::init<double,double,double,double, GSParams>());
-
-            bp::def("SersicTruncatedScale", &SersicTruncatedScale);
-            bp::def("SersicIntegratedFlux", &SersicIntegratedFlux);
-            bp::def("SersicHLR", &SersicHLR);
-        }
-    };
-
     void pyExportSBSersic()
     {
-        PySBSersic::wrap();
+        bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
+            .def(bp::init<double,double,double,double, GSParams>());
+
+        bp::def("SersicTruncatedScale", &SersicTruncatedScale);
+        bp::def("SersicIntegratedFlux", &SersicIntegratedFlux);
+        bp::def("SersicHLR", &SersicHLR);
     }
 
 } // namespace galsim

@@ -39,7 +39,6 @@ namespace galsim {
     void pyExportSBAiry();
     void pyExportSBShapelet();
     void pyExportSBInterpolatedImage();
-    void pyExportSBInterpolatedKImage();
     void pyExportSBKolmogorov();
     void pyExportSBInclinedExponential();
     void pyExportSBInclinedSersic();
@@ -85,7 +84,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBAiry();
     galsim::pyExportSBShapelet();
     galsim::pyExportSBInterpolatedImage();
-    galsim::pyExportSBInterpolatedKImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportSBInclinedExponential();
     galsim::pyExportSBInclinedSersic();

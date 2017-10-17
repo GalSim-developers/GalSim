@@ -29,30 +29,15 @@ from . import utilities
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
-# ImageView dict.  One of them is what you get when you just write numpy.int32.  The other is
-# what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the
-# ImageView dict, but we assign both versions just to be sure.
-
-_galsim.ImageView[np.int32] = _galsim.ImageViewI
-_galsim.ConstImageView[np.int32] = _galsim.ConstImageViewI
-
-alt_int32 = ( np.array([0]).astype(np.int32) + 1).dtype.type
-_galsim.ImageView[alt_int32] = _galsim.ImageViewI
-_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
-
-# On some systems, the above doesn't work, but this next one does.  I'll leave both active,
-# just in case there are systems where this doesn't work but the above does.
-alt_int32 = ( np.array([0]).astype(np.int16) +
-              np.array([0]).astype(np.int32) ).dtype.type
-_galsim.ImageView[alt_int32] = _galsim.ImageViewI
-_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
-
-_all_cpp_image_types = tuple(list(_galsim.ImageView.values()) +
-                             list(_galsim.ConstImageView.values()))
-
+# _cpp_type dict.  One of them is what you get when you just write numpy.int32.  The other is
+# what numpy decides an int16 + int32 is.
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
 # http://projects.scipy.org/numpy/ticket/1246
+
+alt_int32 = ( np.array([0]).astype(np.int16) +
+              np.array([0]).astype(np.int32) ).dtype.type
+
 
 class Image(object):
     """A class for storing image data along with the pixel scale or WCS information
@@ -220,16 +205,16 @@ class Image(object):
 
     """
 
-    _typechar = { np.uint16 : 'US',
-                  np.uint32 : 'UI',
-                  np.int16 : 'S',
-                  np.int32 : 'I',
-                  np.float32 : 'F',
-                  np.float64 : 'D',
-                  np.complex64 : 'CF',
-                  np.complex128 : 'CD',
+    _cpp_type = { np.uint16 : _galsim.ImageViewUS,
+                  np.uint32 : _galsim.ImageViewUI,
+                  np.int16 : _galsim.ImageViewS,
+                  np.int32 : _galsim.ImageViewI,
+                  np.float32 : _galsim.ImageViewF,
+                  np.float64 : _galsim.ImageViewD,
+                  np.complex64 : _galsim.ImageViewCF,
+                  np.complex128 : _galsim.ImageViewCD,
                 }
-    _cpp_valid_dtypes = list(_typechar.keys())
+    _cpp_valid_dtypes = list(_cpp_type.keys())
 
     _alias_dtypes = {
         int : np.int32,          # So that user gets what they would expect
@@ -271,7 +256,7 @@ class Image(object):
                 array = np.array(args[0])
                 array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
-            elif isinstance(args[0], (Image,) + _all_cpp_image_types):
+            elif isinstance(args[0], Image):
                 image = args[0]
             else:
                 raise TypeError("Unable to parse %s as an array, bounds, or image."%args[0])
@@ -492,10 +477,7 @@ class Image(object):
 
     @property
     def _image(self):
-        if not self.array.flags.writeable:
-            cls = _galsim.ConstImageView[self._typechar[self.dtype]]
-        else:
-            cls = _galsim.ImageView[self._typechar[self.dtype]]
+        cls = self._cpp_type[self.dtype]
         return cls(self._array.ctypes.data,
                    self._array.strides[1]//self._array.itemsize,
                    self._array.strides[0]//self._array.itemsize,
@@ -1592,9 +1574,7 @@ def ImageCD(*args, **kwargs):
 def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
         raise ValueError("Image must have integer values, not %s"%im1.dtype)
-    if ( isinstance(im2, Image) or
-         type(im2) in _galsim.ImageView.values() or
-         type(im2) in _galsim.ConstImageView.values()):
+    if isinstance(im2, Image):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
         if integer and not im2.isinteger:

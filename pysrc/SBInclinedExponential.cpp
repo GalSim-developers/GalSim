@@ -26,19 +26,11 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInclinedExponential
-    {
-        static void wrap()
-        {
-            bp::class_<SBInclinedExponential,bp::bases<SBProfile> >(
-                "SBInclinedExponential", bp::no_init)
-                .def(bp::init<double,double,double,double, GSParams>());
-        }
-    };
-
     void pyExportSBInclinedExponential()
     {
-        PySBInclinedExponential::wrap();
+        bp::class_<SBInclinedExponential,bp::bases<SBProfile> >(
+            "SBInclinedExponential", bp::no_init)
+            .def(bp::init<double,double,double,double, GSParams>());
     }
 
 } // namespace galsim

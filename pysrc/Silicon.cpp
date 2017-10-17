@@ -26,47 +26,36 @@
 namespace bp = boost::python;
 
 namespace galsim {
-namespace {
 
-    struct PySilicon {
-
-        template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
-            typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                    ImageView<U>);
-            wrapper
-                .def("accumulate", (accumulate_fn)&Silicon::accumulate);
-        }
+    template <typename T, typename W>
+    static void WrapTemplates(W& wrapper) {
+        typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
+                                                 ImageView<T>);
+        wrapper
+            .def("accumulate", (accumulate_fn)&Silicon::accumulate);
+    }
 
 
-        static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
-                                    double Nrecalc, double DiffStep, double PixelSize,
-                                    double SensorThickness, size_t idata)
-        {
-            double* data = reinterpret_cast<double*>(idata);
-            int NumPolys = Nx * Ny + 2;
-            int Nv = 4 * NumVertices + 4;
-            return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                               Nrecalc, DiffStep, PixelSize, SensorThickness, data);
-        }
+    static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
+                                double Nrecalc, double DiffStep, double PixelSize,
+                                double SensorThickness, size_t idata)
+    {
+        double* data = reinterpret_cast<double*>(idata);
+        int NumPolys = Nx * Ny + 2;
+        int Nv = 4 * NumVertices + 4;
+        return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
+                           Nrecalc, DiffStep, PixelSize, SensorThickness, data);
+    }
 
-        static void wrap()
-        {
-            bp::class_<Silicon> pySilicon("Silicon", bp::no_init);
-            pySilicon
-                .def("__init__", bp::make_constructor(&MakeSilicon, bp::default_call_policies()));
-            wrapTemplates<double>(pySilicon);
-            wrapTemplates<float>(pySilicon);
-        }
+    void pyExportSilicon()
+    {
+        bp::class_<Silicon> pySilicon("Silicon", bp::no_init);
+        pySilicon
+            .def("__init__", bp::make_constructor(&MakeSilicon, bp::default_call_policies()));
 
-    }; // struct PySilicon
-
-} // anonymous
-
-void pyExportSilicon()
-{
-    PySilicon::wrap();
-}
+        WrapTemplates<double>(pySilicon);
+        WrapTemplates<float>(pySilicon);
+    }
 
 } // namespace galsim
 

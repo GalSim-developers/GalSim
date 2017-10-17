@@ -25,28 +25,20 @@
 namespace bp = boost::python;
 
 namespace galsim {
-namespace {
 
-template <typename T>
-struct PyPosition {
-
-    static void wrap(std::string const & suffix) {
-
-        bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
-        pyPosition
+    template <typename T>
+    static void WrapPosition(const std::string& suffix)
+    {
+        bp::class_< Position<T> >(("Position" + suffix).c_str(), bp::no_init)
             .def(bp::init<T,T>())
             .def_readonly("x", &Position<T>::x)
             .def_readonly("y", &Position<T>::y);
     }
 
-};
-
-template <typename T>
-struct PyBounds {
-
-    static void wrap(std::string const & suffix) {
-        bp::class_< Bounds<T> > pyBounds(("Bounds" + suffix).c_str(), bp::no_init);
-        pyBounds
+    template <typename T>
+    static void WrapBounds(const std::string& suffix)
+    {
+        bp::class_< Bounds<T> >(("Bounds" + suffix).c_str(), bp::no_init)
             .def(bp::init<T,T,T,T>())
             .add_property("xmin", &Bounds<T>::getXMin)
             .add_property("xmax", &Bounds<T>::getXMax)
@@ -54,15 +46,12 @@ struct PyBounds {
             .add_property("ymax", &Bounds<T>::getYMax);
     }
 
-};
-
-} // anonymous
-
-void pyExportBounds() {
-    PyPosition<double>::wrap("D");
-    PyPosition<int>::wrap("I");
-    PyBounds<double>::wrap("D");
-    PyBounds<int>::wrap("I");
-}
+    void pyExportBounds()
+    {
+        WrapPosition<double>("D");
+        WrapPosition<int>("I");
+        WrapBounds<double>("D");
+        WrapBounds<int>("I");
+    }
 
 } // namespace galsim

@@ -26,49 +26,26 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBConvolve
+    static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
     {
-        static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
-        {
-            std::list<SBProfile> plist;
-            int n = len(slist);
-            for(int i=0; i<n; ++i) {
-                plist.push_back(bp::extract<const SBProfile&>(slist[i]));
-            }
-            return new SBConvolve(plist, real_space, gsparams);
+        std::list<SBProfile> plist;
+        int n = len(slist);
+        for(int i=0; i<n; ++i) {
+            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
         }
-
-        static void wrap()
-        {
-            bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
-                // bp tries the overloads in reverse order, so we wrap the most general one first
-                // to ensure we try it last
-                .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
-        }
-    };
-
-    struct PySBAutoConvolve
-    {
-        static void wrap() {
-            bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>());
-        }
-    };
-
-    struct PySBAutoCorrelate
-    {
-        static void wrap() {
-            bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>());
-        }
-
-    };
+        return new SBConvolve(plist, real_space, gsparams);
+    }
 
     void pyExportSBConvolve()
     {
-        PySBConvolve::wrap();
-        PySBAutoConvolve::wrap();
-        PySBAutoCorrelate::wrap();
+        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+
+        bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
+            .def(bp::init<const SBProfile&, bool, GSParams>());
+
+        bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
+            .def(bp::init<const SBProfile&, bool, GSParams>());
     }
 
 } // namespace galsim

@@ -26,31 +26,20 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyCDModels
+    template <typename T>
+    static void WrapTemplates()
     {
-
-        template <typename U>
-        static void wrapTemplates() {
-
-            typedef void (*ApplyCD_func)(
-                ImageView<U>& , const BaseImage<U>& ,
-                const BaseImage<double>& , const BaseImage<double>& ,
-                const BaseImage<double>& , const BaseImage<double>& ,
-                const int , const double );
-            bp::def("_ApplyCD", ApplyCD_func(&ApplyCD));
-
-        };
-
-        static void wrap(){
-            wrapTemplates<float>();
-            wrapTemplates<double>();
-        }
-
-    };
+        typedef void (*ApplyCD_func)(ImageView<T>& , const BaseImage<T>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const int , const double );
+        bp::def("_ApplyCD", ApplyCD_func(&ApplyCD));
+    }
 
     void pyExportCDModel()
     {
-        PyCDModels::wrap();
+        WrapTemplates<float>();
+        WrapTemplates<double>();
     }
 
 } // namespace galsim

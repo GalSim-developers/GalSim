@@ -26,18 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBKolmogorov
-    {
-        static void wrap()
-        {
-            bp::class_<SBKolmogorov,bp::bases<SBProfile> >("SBKolmogorov", bp::no_init)
-                .def(bp::init<double,double,GSParams>());
-        }
-    };
-
     void pyExportSBKolmogorov()
     {
-        PySBKolmogorov::wrap();
+        bp::class_<SBKolmogorov,bp::bases<SBProfile> >("SBKolmogorov", bp::no_init)
+            .def(bp::init<double,double,GSParams>());
     }
 
 } // namespace galsim

@@ -26,18 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBFourierSqrt
-    {
-        static void wrap()
-        {
-            bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
-                .def(bp::init<const SBProfile &, GSParams>());
-        }
-    };
-
     void pyExportSBFourierSqrt()
     {
-        PySBFourierSqrt::wrap();
+        bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
+            .def(bp::init<const SBProfile &, GSParams>());
     }
 
 } // namespace galsim

@@ -26,20 +26,11 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBTransform
-    {
-        static void wrap()
-        {
-            bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", bp::no_init)
-                .def(bp::init<const SBProfile &, double, double, double, double,
-                     Position<double>, double, GSParams>());
-        }
-
-    };
-
     void pyExportSBTransform()
     {
-        PySBTransform::wrap();
+        bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", bp::no_init)
+            .def(bp::init<const SBProfile &, double, double, double, double,
+                 Position<double>, double, GSParams>());
     }
 
 } // namespace galsim

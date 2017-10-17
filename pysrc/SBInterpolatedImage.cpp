@@ -26,53 +26,32 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBInterpolatedImage
+    template <typename T, typename W>
+    static void WrapTemplates(W& wrapper)
     {
-        template <typename U, typename W>
-        static void wrapTemplates(W& wrapper)
-        {
-            wrapper
-                .def(bp::init<const BaseImage<U> &, const Bounds<int>&, const Bounds<int>&,
-                     const Interpolant&, const Interpolant&,
-                     double, double, GSParams>());
+        wrapper
+            .def(bp::init<const BaseImage<T> &, const Bounds<int>&, const Bounds<int>&,
+                 const Interpolant&, const Interpolant&,
+                 double, double, GSParams>());
 
-            typedef double (*cscf_func_type)(const BaseImage<U>&, double);
-            bp::def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
-        }
-
-        static void wrap()
-        {
-            bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
-                "SBInterpolatedImage", bp::no_init);
-            pySBInterpolatedImage
-                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK);
-            wrapTemplates<float>(pySBInterpolatedImage);
-            wrapTemplates<double>(pySBInterpolatedImage);
-        }
-
-    };
-
-    struct PySBInterpolatedKImage
-    {
-        static void wrap()
-        {
-            bp::class_< SBInterpolatedKImage, bp::bases<SBProfile> > pySBInterpolatedKImage(
-                "SBInterpolatedKImage", bp::no_init);
-            pySBInterpolatedKImage
-                .def(bp::init<const BaseImage<std::complex<double> > &,
-                              double, const Interpolant&, GSParams>());
-        }
-
-    };
+        typedef double (*cscf_func_type)(const BaseImage<T>&, double);
+        bp::def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
+    }
 
     void pyExportSBInterpolatedImage()
     {
-        PySBInterpolatedImage::wrap();
-    }
+        bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
+            "SBInterpolatedImage", bp::no_init);
+        pySBInterpolatedImage
+            .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK);
+        WrapTemplates<float>(pySBInterpolatedImage);
+        WrapTemplates<double>(pySBInterpolatedImage);
 
-    void pyExportSBInterpolatedKImage()
-    {
-        PySBInterpolatedKImage::wrap();
+        bp::class_< SBInterpolatedKImage, bp::bases<SBProfile> > pySBInterpolatedKImage(
+            "SBInterpolatedKImage", bp::no_init);
+        pySBInterpolatedKImage
+            .def(bp::init<const BaseImage<std::complex<double> > &,
+                 double, const Interpolant&, GSParams>());
     }
 
 } // namespace galsim

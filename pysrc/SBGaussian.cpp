@@ -26,18 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBGaussian
-    {
-        static void wrap()
-        {
-            bp::class_<SBGaussian,bp::bases<SBProfile> >("SBGaussian", bp::no_init)
-                .def(bp::init<double,double, GSParams>());
-        }
-    };
-
     void pyExportSBGaussian()
     {
-        PySBGaussian::wrap();
+        bp::class_<SBGaussian,bp::bases<SBProfile> >("SBGaussian", bp::no_init)
+            .def(bp::init<double,double, GSParams>());
     }
 
 } // namespace galsim
