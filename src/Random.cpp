@@ -71,11 +71,16 @@ namespace galsim {
         _impl(rhs._impl)
     {}
 
-    BaseDeviate::BaseDeviate(const std::string& str) :
+    BaseDeviate::BaseDeviate(const char* str_c) :
         _impl(new BaseDeviateImpl())
     {
-        std::istringstream iss(str);
-        iss >> *_impl->_rng;
+        if (str_c == NULL) {
+            seed(0);
+        } else {
+            std::string str(str_c);
+            std::istringstream iss(str);
+            iss >> *_impl->_rng;
+        }
     }
 
     std::string BaseDeviate::serialize()
@@ -230,8 +235,8 @@ namespace galsim {
     UniformDeviate::UniformDeviate(const UniformDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    UniformDeviate::UniformDeviate(const std::string& str) :
-        BaseDeviate(str), _devimpl(new UniformDeviateImpl()) {}
+    UniformDeviate::UniformDeviate(const char* str_c) :
+        BaseDeviate(str_c), _devimpl(new UniformDeviateImpl()) {}
 
     void UniformDeviate::clearCache() { _devimpl->_urd.reset(); }
 
@@ -262,8 +267,8 @@ namespace galsim {
     GaussianDeviate::GaussianDeviate(const GaussianDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    GaussianDeviate::GaussianDeviate(const std::string& str, double mean, double sigma) :
-        BaseDeviate(str), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
+    GaussianDeviate::GaussianDeviate(const char* str_c, double mean, double sigma) :
+        BaseDeviate(str_c), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
 
     double GaussianDeviate::getMean() { return _devimpl->_normal.mean(); }
 
@@ -321,8 +326,8 @@ namespace galsim {
     BinomialDeviate::BinomialDeviate(const BinomialDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    BinomialDeviate::BinomialDeviate(const std::string& str, int N, double p) :
-        BaseDeviate(str), _devimpl(new BinomialDeviateImpl(N,p)) {}
+    BinomialDeviate::BinomialDeviate(const char* str_c, int N, double p) :
+        BaseDeviate(str_c), _devimpl(new BinomialDeviateImpl(N,p)) {}
 
     int BinomialDeviate::getN() { return _devimpl->_bd.t(); }
 
@@ -428,8 +433,8 @@ namespace galsim {
     PoissonDeviate::PoissonDeviate(const PoissonDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    PoissonDeviate::PoissonDeviate(const std::string& str, double mean) :
-        BaseDeviate(str), _devimpl(new PoissonDeviateImpl(mean)) {}
+    PoissonDeviate::PoissonDeviate(const char* str_c, double mean) :
+        BaseDeviate(str_c), _devimpl(new PoissonDeviateImpl(mean)) {}
 
     double PoissonDeviate::getMean() { return _devimpl->getMean(); }
 
@@ -474,8 +479,8 @@ namespace galsim {
     WeibullDeviate::WeibullDeviate(const WeibullDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    WeibullDeviate::WeibullDeviate(const std::string& str, double a, double b) :
-        BaseDeviate(str), _devimpl(new WeibullDeviateImpl(a,b)) {}
+    WeibullDeviate::WeibullDeviate(const char* str_c, double a, double b) :
+        BaseDeviate(str_c), _devimpl(new WeibullDeviateImpl(a,b)) {}
 
     double WeibullDeviate::getA() { return _devimpl->_weibull.a(); }
 
@@ -521,8 +526,8 @@ namespace galsim {
     GammaDeviate::GammaDeviate(const GammaDeviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    GammaDeviate::GammaDeviate(const std::string& str, double k, double theta) :
-        BaseDeviate(str), _devimpl(new GammaDeviateImpl(k,theta)) {}
+    GammaDeviate::GammaDeviate(const char* str_c, double k, double theta) :
+        BaseDeviate(str_c), _devimpl(new GammaDeviateImpl(k,theta)) {}
 
     double GammaDeviate::getK() { return _devimpl->_gamma.alpha(); }
 
@@ -568,8 +573,8 @@ namespace galsim {
     Chi2Deviate::Chi2Deviate(const Chi2Deviate& rhs) :
         BaseDeviate(rhs), _devimpl(rhs._devimpl) {}
 
-    Chi2Deviate::Chi2Deviate(const std::string& str, double n) :
-        BaseDeviate(str), _devimpl(new Chi2DeviateImpl(n)) {}
+    Chi2Deviate::Chi2Deviate(const char* str_c, double n) :
+        BaseDeviate(str_c), _devimpl(new Chi2DeviateImpl(n)) {}
 
     double Chi2Deviate::getN() { return _devimpl->_chi_squared.n(); }
 
