@@ -68,10 +68,10 @@ struct PyShapeData {
         const galsim::Position<double>& moments_centroid,
         double moments_rho4, int moments_n_iter,
         int correction_status, float corrected_e1, float corrected_e2,
-        float corrected_g1, float corrected_g2, std::string meas_type,
-        float corrected_shape_err, std::string correction_method,
+        float corrected_g1, float corrected_g2, const char* meas_type,
+        float corrected_shape_err, const char* correction_method,
         float resolution_factor, float psf_sigma,
-        float psf_e1, float psf_e2, std::string error_message)
+        float psf_e1, float psf_e2, const char* error_message)
     {
         ShapeData* data = new ShapeData();
         data->image_bounds = image_bounds;
@@ -114,7 +114,7 @@ struct PyShapeData {
 
         typedef void (*ESH_func)(ShapeData&, const BaseImage<U>&, const BaseImage<V>&,
                                  const BaseImage<int>&, float, const char *,
-                                 const std::string&, double, double, double, Position<double>,
+                                 const char*, double, double, double, Position<double>,
                                  const HSMParams&);
         bp::def("_EstimateShearView",
                 ESH_func(&EstimateShearView),

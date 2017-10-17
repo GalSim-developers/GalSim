@@ -30,10 +30,11 @@ namespace {
     struct PyTable {
 
         static Table* makeTable(
-            size_t iargs, size_t ivals, int N, const std::string& interp)
+            size_t iargs, size_t ivals, int N, const char* interp_c)
         {
             const double* args = reinterpret_cast<double*>(iargs);
             const double* vals = reinterpret_cast<double*>(ivals);
+            std::string interp(interp_c);
 
             Table::interpolant i = Table::linear;
             if (interp == "spline") i = Table::spline;
@@ -75,11 +76,13 @@ namespace {
     struct PyTable2D{
         static Table2D* makeTable2D(
             size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
-            const std::string& interp)
+            const char* interp_c)
         {
             const double* x = reinterpret_cast<const double*>(ix);
             const double* y = reinterpret_cast<const double*>(iy);
             const double* vals = reinterpret_cast<const double*>(ivals);
+            std::string interp(interp_c);
+
             Table2D::interpolant i = Table2D::linear;
             if (interp == "floor") i = Table2D::floor;
             else if (interp == "ceil") i = Table2D::ceil;

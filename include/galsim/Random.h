@@ -101,7 +101,7 @@ namespace galsim {
         /**
          * @brief Construct a new BaseDeviate from a serialization string
          */
-        BaseDeviate(const std::string& str);
+        BaseDeviate(const char* str_c);
 
         /**
          * @brief Destructor
@@ -119,7 +119,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         BaseDeviate duplicate()
-        { return BaseDeviate(serialize()); }
+        { return BaseDeviate(serialize().c_str()); }
 
         /**
          * @brief Return a string that can act as the repr in python
@@ -261,7 +261,7 @@ namespace galsim {
         UniformDeviate(const UniformDeviate& rhs);
 
         /// @brief Construct a new UniformDeviate from a serialization string
-        UniformDeviate(const std::string& str);
+        UniformDeviate(const char* str_c);
 
         /**
          * @brief Construct a duplicate of this UniformDeviate object.
@@ -269,7 +269,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         UniformDeviate duplicate()
-        { return UniformDeviate(serialize()); }
+        { return UniformDeviate(serialize().c_str()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -330,7 +330,7 @@ namespace galsim {
         GaussianDeviate(const GaussianDeviate& rhs);
 
         /// @brief Construct a new GaussianDeviate from a serialization string
-        GaussianDeviate(const std::string& str, double mean, double sigma);
+        GaussianDeviate(const char* str_c, double mean, double sigma);
 
         /**
          * @brief Construct a duplicate of this GaussianDeviate object.
@@ -338,7 +338,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GaussianDeviate duplicate()
-        { return GaussianDeviate(serialize(),getMean(),getSigma()); }
+        { return GaussianDeviate(serialize().c_str(), getMean(), getSigma()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -440,7 +440,7 @@ namespace galsim {
         BinomialDeviate(const BinomialDeviate& rhs);
 
         /// @brief Construct a new BinomialDeviate from a serialization string
-        BinomialDeviate(const std::string& str, int N, double p);
+        BinomialDeviate(const char* str_c, int N, double p);
 
         /**
          * @brief Construct a duplicate of this BinomialDeviate object.
@@ -448,7 +448,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         BinomialDeviate duplicate()
-        { return BinomialDeviate(serialize(),getN(),getP()); }
+        { return BinomialDeviate(serialize().c_str(), getN(), getP()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -535,7 +535,7 @@ namespace galsim {
         PoissonDeviate(const PoissonDeviate& rhs);
 
         /// @brief Construct a new PoissonDeviate from a serialization string
-        PoissonDeviate(const std::string& str, double mean);
+        PoissonDeviate(const char* str_c, double mean);
 
         /**
          * @brief Draw a new random number from the distribution
@@ -550,7 +550,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         PoissonDeviate duplicate()
-        { return PoissonDeviate(serialize(),getMean()); }
+        { return PoissonDeviate(serialize().c_str(), getMean()); }
 
         /**
          * @brief Report current distribution mean
@@ -634,7 +634,7 @@ namespace galsim {
         WeibullDeviate(const WeibullDeviate& rhs);
 
         /// @brief Construct a new WeibullDeviate from a serialization string
-        WeibullDeviate(const std::string& str, double a, double b);
+        WeibullDeviate(const char* str_c, double a, double b);
 
         /**
          * @brief Construct a duplicate of this WeibullDeviate object.
@@ -642,7 +642,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         WeibullDeviate duplicate()
-        { return WeibullDeviate(serialize(),getA(),getB()); }
+        { return WeibullDeviate(serialize().c_str(), getA(), getB()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -737,7 +737,7 @@ namespace galsim {
         GammaDeviate(const GammaDeviate& rhs);
 
         /// @brief Construct a new GammaDeviate from a serialization string
-        GammaDeviate(const std::string& str, double k, double theta);
+        GammaDeviate(const char* str_c, double k, double theta);
 
         /**
          * @brief Construct a duplicate of this GammaDeviate object.
@@ -745,7 +745,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GammaDeviate duplicate()
-        { return GammaDeviate(serialize(),getK(),getTheta()); }
+        { return GammaDeviate(serialize().c_str(), getK(), getTheta()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -840,7 +840,7 @@ namespace galsim {
         Chi2Deviate(const Chi2Deviate& rhs);
 
         /// @brief Construct a new Chi2Deviate from a serialization string
-        Chi2Deviate(const std::string& str, double n);
+        Chi2Deviate(const char* str_c, double n);
 
         /**
          * @brief Construct a duplicate of this Chi2Deviate object.
@@ -848,7 +848,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         Chi2Deviate duplicate()
-        { return Chi2Deviate(serialize(),getN()); }
+        { return Chi2Deviate(serialize().c_str(), getN()); }
 
         /**
          * @brief Draw a new random number from the distribution.

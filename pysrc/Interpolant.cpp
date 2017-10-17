@@ -28,7 +28,6 @@ namespace galsim {
 
     struct PyInterpolant
     {
-
         static void wrap()
         {
             bp::class_<Interpolant, boost::noncopyable>(
