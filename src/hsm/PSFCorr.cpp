@@ -59,7 +59,7 @@ namespace hsm {
 
     unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
+        ObjectData& gal_data, ObjectData& PSF_data, const char* shear_est_c,
         unsigned long flags, const HSMParams& hsmparams);
 
     void find_ellipmom_2(
@@ -97,7 +97,7 @@ namespace hsm {
         ShapeData& results,
         const BaseImage<T>& gal_image, const BaseImage<U>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux_c,
         double guess_sig_gal, double guess_sig_PSF,
         double precision, galsim::Position<double> guess_centroid,
         const HSMParams& hsmparams)
@@ -106,6 +106,7 @@ namespace hsm {
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
         unsigned long flags=0;
+        const std::string recompute_flux(recompute_flux_c);
 
         dbg<<"Start EstimateShearView"<<std::endl;
         dbg<<"Setting defaults and so on before calling general_shear_estimator"<<std::endl;
@@ -1712,7 +1713,7 @@ namespace hsm {
 
     unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
+        ObjectData& gal_data, ObjectData& PSF_data, const char* shear_est_c,
         unsigned long flags, const HSMParams& hsmparams)
     {
         unsigned int status = 0;
@@ -1720,6 +1721,7 @@ namespace hsm {
         double x0, y0, R;
         double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
         double A_psf, Mxx_psf, Mxy_psf, Myy_psf, rho4_psf;
+        const std::string shear_est(shear_est_c);
 
         if (shear_est == "BJ" || shear_est == "LINEAR" || shear_est == "KSB") {
             /* Measure the PSF so its size and shape can get propagated up to python layer */
@@ -1808,28 +1810,28 @@ namespace hsm {
         ShapeData& results,
         const BaseImage<float>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
     template void EstimateShearView(
         ShapeData& results,
         const BaseImage<double>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
     template void EstimateShearView(
         ShapeData& results,
         const BaseImage<float>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
     template void EstimateShearView(
         ShapeData& results,
         const BaseImage<double>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, const HSMParams& hsmparams);
 

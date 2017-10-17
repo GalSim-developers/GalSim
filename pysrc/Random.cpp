@@ -55,7 +55,7 @@ namespace galsim {
         bp::class_<BaseDeviate> ("BaseDeviateImpl", "", bp::no_init)
             .def(bp::init<long>())
             .def(bp::init<const BaseDeviate&>())
-            .def(bp::init<std::string>())
+            .def(bp::init<const char*>())
             .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed)
             .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset)
             .def("clearCache", &BaseDeviate::clearCache)
