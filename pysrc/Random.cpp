@@ -40,7 +40,7 @@ namespace galsim {
     public:
         BaseDeviateCallBack(long lseed=0) : BaseDeviate(lseed) {}
         BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
-        BaseDeviateCallBack(std::string& str) : BaseDeviate(str) {}
+        BaseDeviateCallBack(const char * str) : BaseDeviate(str) {}
         ~BaseDeviateCallBack() {}
 
     protected:
@@ -72,7 +72,7 @@ namespace galsim {
         static BaseDeviateCallBack* construct(const bp::object& seed) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct BaseDeviate from given seed.");
-            return new BaseDeviateCallBack(0);
+            return new BaseDeviateCallBack( (long)0);
         }
 
         static void wrap() {
@@ -83,7 +83,7 @@ namespace galsim {
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
                 .def(bp::init<long>(bp::arg("seed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
-                .def(bp::init<std::string>(bp::arg("seed")))
+                .def(bp::init<const char *>(bp::arg("seed")))
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
                      (bp::arg("seed")=0))
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
@@ -133,7 +133,7 @@ namespace galsim {
         static UniformDeviate* construct(const bp::object& seed) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct UniformDeviate from given seed.");
-            return new UniformDeviate(0);
+            return new UniformDeviate( (long)0);
         }
 
         static void wrap() {
@@ -144,7 +144,7 @@ namespace galsim {
                     &construct, bp::default_call_policies(), (bp::arg("seed"))))
                 .def(bp::init<long>(bp::arg("seed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("seed")))
-                .def(bp::init<std::string>(bp::arg("seed")))
+                .def(bp::init<const char *>(bp::arg("seed")))
                 .def("duplicate", &UniformDeviate::duplicate)
                 .def("__call__", &UniformDeviate::operator())
                 .enable_pickling()
@@ -158,7 +158,7 @@ namespace galsim {
         static GaussianDeviate* construct(const bp::object& seed, double mean, double sigma) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct GaussianDeviate from given seed.");
-            return new GaussianDeviate(0, mean, sigma);
+            return new GaussianDeviate( (long)0, mean, sigma);
         }
 
         static void wrap() {
@@ -174,7 +174,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
                 .def("duplicate", &GaussianDeviate::duplicate)
@@ -194,7 +194,7 @@ namespace galsim {
         static BinomialDeviate* construct(const bp::object& seed, int N, double p) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct BinomialDeviate from given seed.");
-            return new BinomialDeviate(0, N, p);
+            return new BinomialDeviate( (long)0, N, p);
         }
 
         static void wrap() {
@@ -210,7 +210,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, int, double>(
                         (bp::arg("seed"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
-                .def(bp::init<std::string, int, double>(
+                .def(bp::init<const char *, int, double>(
                         (bp::arg("seed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
                 .def("duplicate", &BinomialDeviate::duplicate)
@@ -230,7 +230,7 @@ namespace galsim {
         static PoissonDeviate* construct(const bp::object& seed, double mean) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct PoissonDeviate from given seed.");
-            return new PoissonDeviate(0, mean);
+            return new PoissonDeviate( (long)0, mean);
         }
 
         static void wrap() {
@@ -246,7 +246,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("seed"), bp::arg("mean")=1.)
                 ))
-                .def(bp::init<std::string, double>(
+                .def(bp::init<const char *, double>(
                         (bp::arg("seed")=0, bp::arg("mean")=1.)
                 ))
                 .def("duplicate", &PoissonDeviate::duplicate)
@@ -264,7 +264,7 @@ namespace galsim {
         static WeibullDeviate* construct(const bp::object& seed, double a, double b) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct WeibullDeviate from given seed.");
-            return new WeibullDeviate(0, a, b);
+            return new WeibullDeviate( (long)0, a, b);
         }
 
         static void wrap() {
@@ -281,7 +281,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("a")=1., bp::arg("b")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
                 .def("duplicate", &WeibullDeviate::duplicate)
@@ -301,7 +301,7 @@ namespace galsim {
         static GammaDeviate* construct(const bp::object& seed, double k, double theta) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct GammaDeviate from given seed.");
-            return new GammaDeviate(0, k, theta);
+            return new GammaDeviate( (long)0, k, theta);
         }
 
         static void wrap() {
@@ -317,7 +317,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("seed"), bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
-                .def(bp::init<std::string, double, double>(
+                .def(bp::init<const char *, double, double>(
                         (bp::arg("seed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def("duplicate", &GammaDeviate::duplicate)
@@ -337,7 +337,7 @@ namespace galsim {
         static Chi2Deviate* construct(const bp::object& seed, double n) {
             if (seed.ptr() != Py_None)
                 throw std::runtime_error("Cannot construct Chi2Deviate from given seed.");
-            return new Chi2Deviate(0, n);
+            return new Chi2Deviate( (long)0, n);
         }
 
         static void wrap() {
@@ -353,7 +353,7 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("seed"), bp::arg("n")=1.)
                 ))
-                .def(bp::init<std::string, double>(
+                .def(bp::init<const char *, double>(
                         (bp::arg("seed")=0, bp::arg("n")=1.)
                 ))
                 .def("duplicate", &Chi2Deviate::duplicate)
