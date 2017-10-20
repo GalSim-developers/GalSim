@@ -98,7 +98,7 @@ class SiliconSensor(Sensor):
                             distortion of the pixel shapes. [default: 10000]
 
     """
-    def __init__(self, dir='lsst_itl', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
+    def __init__(self, dir='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000):
         self.dir = dir
         self.strength = strength
@@ -130,7 +130,12 @@ class SiliconSensor(Sensor):
         NumVertices = self.config['NumVertices']
         Nx = self.config['PixelBoundaryNx']
         Ny = self.config['PixelBoundaryNy']
-        PixelSize = self.config['PixelSize']
+        if 'PixelSize' in self.config:
+            PixelSize = self.config['PixelSize']
+        elif 'PixelSizeX' in self.config:
+            PixelSize = self.config['PixelSizeX']
+        else:
+            PixelSize = 10.0
         SensorThickness = self.config['SensorThickness']
         num_elec = float(self.config['CollectedCharge_0_0']) / self.strength
         # Scale this too, especially important if strength >> 1
@@ -207,8 +212,15 @@ class SiliconSensor(Sensor):
         return config
 
     def _calculate_diff_step(self):
+        NumPhases = self.config['NumPhases']        
         CollectingPhases = self.config['CollectingPhases']
-        PixelSize = self.config['PixelSize']
+        # I'm assuming square pixels for now.
+        if 'PixelSize' in self.config:
+            PixelSize = self.config['PixelSize']
+        elif 'PixelSizeX' in self.config:
+            PixelSize = self.config['PixelSizeX']
+        else:
+            PixelSize = 10.0
         SensorThickness = self.config['SensorThickness']
         ChannelStopWidth = self.config['ChannelStopWidth']
         Vbb = self.config['Vbb']
@@ -221,17 +233,10 @@ class SiliconSensor(Sensor):
         # It depends on the temperature, the sensor voltages, and
         # the diffusion_factor parameter.
 
-        # Set up the diffusion step size at 100 C
-        if CollectingPhases == 1: # pragma: no cover
-            # This is one collecting gate
-            Vdiff = (2.0 * Vparallel_lo + Vparallel_hi) / 3.0 - Vbb
-        elif CollectingPhases == 2: # This is the only value we have now, so the only one tested
-            #This is two collecting gates
-            Vdiff = (Vparallel_lo + 2.0 * Vparallel_hi) / 3.0 - Vbb
-        else: # pragma: no cover
-            return 0.0
-
+        # Set up the diffusion step size at the operating temperature
+        HiPhases = CollectingPhases
+        LoPhases = NumPhases - CollectingPhases
+        Vdiff = (LoPhases * Vparallel_lo + HiPhases * Vparallel_hi) / NumPhases - Vbb
         # 0.026 is kT/q at room temp (298 K)
-        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298 / Vdiff) * SensorThickness
-
+        diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff) * SensorThickness
         return diff_step
