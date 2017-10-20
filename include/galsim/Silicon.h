@@ -39,7 +39,8 @@ namespace galsim
     public:
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness,
-                double* vertex_data);
+                double* vertex_data, double treeRingCenterx, double treeRingCentery,
+		double treeRingAmplitude, double treeRingPeriod);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
@@ -52,6 +53,9 @@ namespace galsim
         void updatePixelDistortions(ImageView<T> target);
 
         template <typename T>
+        void addTreeRingDistortions(ImageView<T> target);
+
+        template <typename T>
         double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target);
 
     private:
@@ -61,6 +65,7 @@ namespace galsim
         std::vector<Polygon> _imagepolys;
         int _numVertices, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
+        double _treeRingCenterx, _treeRingCentery, _treeRingAmplitude, _treeRingPeriod;      
     };
 }
 

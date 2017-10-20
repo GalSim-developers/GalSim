@@ -78,10 +78,13 @@ namespace galsim {
 
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
-                     double* vertex_data) :
+                     double* vertex_data, double treeRingCenterx, double treeRingCentery,
+		     double treeRingAmplitude, double treeRingPeriod) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
-        _sensorThickness(sensorThickness)
+        _sensorThickness(sensorThickness), _treeRingCenterx(treeRingCenterx),
+	_treeRingCentery(treeRingCentery), _treeRingAmplitude(treeRingAmplitude),
+	_treeRingPeriod(treeRingPeriod)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -210,6 +213,43 @@ namespace galsim {
         }
     }
 
+    template <typename T>
+    void Silicon::addTreeRingDistortions(ImageView<T> target)
+    {
+        // This updates the pixel distortions in the _imagepolys
+        // pixel list based on a model of tree rings.
+        Bounds<int> b = target.getBounds();
+	int minx = b.getXMin();
+        int miny = b.getYMin();
+        int maxx = b.getXMax();
+        int maxy = b.getYMax();
+
+        // Now we cycle through the pixels in the target image and add
+        // the (small) distortions due to tree rings
+        std::vector<bool> changed(_imagepolys.size(), false);
+        for (int i=minx; i<maxx; ++i) {
+	  for (int j=miny; j<maxy; ++j) {
+	    int index = (i - minx) * (maxy - miny + 1) + (j - miny);
+	    for (int n=0; n<_nv; n++) {
+	      double tx = (double)i + _imagepolys[index][n].x - _treeRingCenterx;
+	      double ty = (double)j + _imagepolys[index][n].y - _treeRingCentery;	      
+	      double r = sqrt(tx * tx + ty * ty);
+	      double shift = _treeRingAmplitude * cos(r / _treeRingPeriod);
+	      //if (n == 0) printf("i=%d,j=%d,tx=%f,ty=%f,r=%f,shift=%f\n",i,j,tx,ty,r,shift);
+	      // Shifts are along the radial vector in the direction of the doping gradient
+	      double dx = shift * tx / r;
+	      double dy = shift * ty / r;
+	      _imagepolys[index][n].x += dx;
+	      _imagepolys[index][n].y += dy;
+	    }
+	    changed[index] = true;
+	  }
+	}
+        for (size_t k=0; k<_imagepolys.size(); ++k) {
+            if (changed[k]) _imagepolys[k].updateBounds();
+        }
+    }
+  
     template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               ImageView<T> target) const
@@ -364,6 +404,8 @@ namespace galsim {
         for (int i=0; i<nxny; ++i)
             _imagepolys[i] = _emptypoly;
         dbg<<"Built poly list\n";
+	// Now we add in the tree ring distortions
+        addTreeRingDistortions(target);
 
         const double invPixelSize = 1./_pixelSize; // pixels/micron
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
@@ -515,6 +557,9 @@ namespace galsim {
 
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
+
+    template void Silicon::addTreeRingDistortions(ImageView<double> target);
+    template void Silicon::addTreeRingDistortions(ImageView<float> target);
 
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                         ImageView<double> target);

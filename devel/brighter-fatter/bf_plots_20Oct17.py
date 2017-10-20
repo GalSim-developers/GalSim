@@ -18,12 +18,12 @@
 """
 bf_plot.py
 
-Modifying demo5.py to create 5 x 5 arrays of Gaussian spots
+Modifying demo5.py to create 10 x 10 arrays of Gaussian spots
 for characterizing the B-F effect
-Craig Lage - 1-Mar-17
+Craig Lage - 20-Oct-17
 This version tests the writing out of the photon list.
 and uses the latest pixel distortion maps from the
-latest 'hole17 branch of the Poisson_CCD22 code
+latest 'hole20' branch of the Poisson_CCD22 code
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
@@ -69,8 +69,8 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_tiles = 5                   #
-    ny_tiles = 5                   #
+    nx_tiles = 10                   #
+    ny_tiles = 10                   #
     stamp_xsize = 40                #
     stamp_ysize = 40                #
 

@@ -96,16 +96,33 @@ class SiliconSensor(Sensor):
                             Poisson simulation must be increased to match. [default: 3]
     @param nrecalc          The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
+    The following parameters characterize "tree rings", which add small distortions to the sensor
+    pixel positions due to non-uniform background doping in the silicon sensor.
+
+    @param treeringcenterx  The x-coord of the center of the tree ring pattern, which may be 
+                            outside the pixel region.  This is in pixels. [default = -1000.0]
+    @param treeringcentery  The y-coord of the center of the tree ring pattern, which may be 
+                            outside the pixel region.  This is in pixels. [default = -1000.0]
+    @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
+                              this is less than 0.01 pixels. [default = 0.0]
+    @param treeringperiod   The period of the tree ring distortion pattern, in pixels.
+                            [default = 83.5]
+
 
     """
     def __init__(self, dir='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000):
+                 nrecalc=10000, treeringcenterx=-1000.0, treeringcentery=-1000.0,
+                 treeringamplitude=0.0, treeringperiod=83.5):
         self.dir = dir
         self.strength = strength
         self.rng = galsim.UniformDeviate(rng)
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
+        self.treeringcenterx = treeringcenterx
+        self.treeringcentery = treeringcentery
+        self.treeringamplitude = treeringamplitude
+        self.treeringperiod = treeringperiod        
 
         if not os.path.isdir(dir):
             self.full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
@@ -148,7 +165,9 @@ class SiliconSensor(Sensor):
                           % (vertex_file, self.config_file))
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness, vertex_data)
+                                               diff_step, PixelSize, SensorThickness, vertex_data,
+                                               self.treeringcenterx, self.treeringcentery,
+                                               self.treeringamplitude, self.treeringperiod)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir
@@ -159,8 +178,11 @@ class SiliconSensor(Sensor):
 
     def __repr__(self):
         return ('galsim.SiliconSensor(dir=%r, strength=%f, rng=%r, diffusion_factor=%f, '
-                'qdist=%d, nrecalc=%f'%(self.full_dir, self.strength, self.rng,
-                                        self.diffusion_factor, self.qdist, self.nrecalc))
+                'qdist=%d, nrecalc=%f, treeringcenterx = %f, treeringcentery=%f, '
+                'treerincamplitude=%f, treeringperiod=%f'%(self.full_dir, self.strength, self.rng,
+                                        self.diffusion_factor, self.qdist, self.nrecalc,
+                                        self.treeringcenterx, self.treeringcentery,
+                                        self.treeringamplitude, self.treeringperiod))
 
     def __eq__(self, other):
         return (isinstance(other, SiliconSensor) and
@@ -169,7 +191,11 @@ class SiliconSensor(Sensor):
                 self.rng == other.rng and
                 self.diffusion_factor == other.diffusion_factor and
                 self.qdist == other.qdist and
-                self.nrecalc == other.nrecalc)
+                self.nrecalc == other.nrecalc and
+                self.treeringcenterx == other.treeringcenterx and 
+                self.treeringcentery == other.treeringcentery and
+                self.treeringamplitude == other.treeringamplitude and
+                self.treeringperiod == other.treeringperiod)
 
     __hash__ = None
 

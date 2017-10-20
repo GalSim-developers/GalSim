@@ -49,8 +49,9 @@ namespace {
 
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
-                                    double SensorThickness,
-                                    const bp::object& array)
+                                    double SensorThickness, const bp::object& array,
+				    double treeRingCenterx, double treeRingCentery, double treeRingAmplitude,
+				    double treeRingPeriod)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -68,7 +69,9 @@ namespace {
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                               Nrecalc, DiffStep, PixelSize, SensorThickness, data);
+                               Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+			       treeRingCenterx, treeRingCentery, treeRingAmplitude,
+			       treeRingPeriod);
         }
 
         static void wrap()
@@ -79,7 +82,8 @@ namespace {
                         &MakeSilicon, bp::default_call_policies(),
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
                                   "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
-                                  "vertex_data"))))
+                                  "vertex_data", "treeRingCenterx", "treeRingCentery",
+				  "treeRingAmplitude", "treeRingPeriod"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);
