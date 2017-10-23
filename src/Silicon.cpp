@@ -79,7 +79,8 @@ namespace galsim {
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
                      double* vertex_data, double treeRingCenterx, double treeRingCentery,
-		     double treeRingAmplitude, double treeRingPeriod, TableDD table) :
+                     double treeRingAmplitude, double treeRingPeriod,
+                     const Table<double, double>& table) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness), _treeRingCenterx(treeRingCenterx),

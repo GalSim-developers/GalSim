@@ -51,8 +51,9 @@ namespace {
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
                                     double SensorThickness, const bp::object& array,
-				    double treeRingCenterx, double treeRingCentery, double treeRingAmplitude,
-				    double treeRingPeriod, TableDD table)
+                                    double treeRingCenterx, double treeRingCentery,
+                                    double treeRingAmplitude, double treeRingPeriod,
+                                    const Table<double, double>& table)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
