@@ -244,7 +244,7 @@ def test_silicon():
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
-    silicon = galsim.SiliconSensor(dir='lsst_itl', strength=100., rng=rng1, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(dir='lsst_itl_8', strength=100., rng=rng1, diffusion_factor=0.0)
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
@@ -274,13 +274,13 @@ def test_silicon():
 
     # Check the construction with an explicit directory.
     s0 = galsim.SiliconSensor(rng=rng1)
-    dir = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl')
+    dir = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_8')
     s1 = galsim.SiliconSensor(dir=dir, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
                               nrecalc=10000)
     assert s0 == s1
     s1 = galsim.SiliconSensor(dir, 1.0, rng1, 1.0, 3, 10000)
     assert s0 == s1
-    s2 = galsim.SiliconSensor(rng=rng1, dir='lsst_itl')
+    s2 = galsim.SiliconSensor(rng=rng1, dir='lsst_itl_8')
     assert s0 == s2
     s3 = galsim.SiliconSensor(rng=rng1, strength=10.)
     s4 = galsim.SiliconSensor(rng=rng1, diffusion_factor=2.0)
@@ -300,7 +300,7 @@ def test_silicon():
         np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='junk')
         np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='output')
         np.testing.assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
-        np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl', 'hello')
+        np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -489,7 +489,7 @@ def test_bf_slopes():
     from scipy import stats
     simple = galsim.Sensor()
 
-    init_flux = 200000
+    init_flux = 400000
     obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
 
     num_fluxes = 5
@@ -538,23 +538,74 @@ def test_bf_slopes():
     y_slope *= 50000.0 * 100.0
     print('With BF turned on, diffusion off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
             x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
+    assert x_slope > 0.3
+    assert y_slope > 0.3
     x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,1])
     y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,1])
     x_slope *= 50000.0 * 100.0
     y_slope *= 50000.0 * 100.0
     print('With BF turned on, diffusion on, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
             x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
+    assert x_slope > 0.3
+    assert y_slope > 0.3
     x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,2])
     y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,2])
     x_slope *= 50000.0 * 100.0
     y_slope *= 50000.0 * 100.0
     print('With BF turned off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope ))
-    assert abs(x_slope) < 0.5
-    assert abs(y_slope) < 0.5
+    assert abs(x_slope) < 0.3
+    assert abs(y_slope) < 0.3
+
+@timer
+def test_treerings():
+    """Test the addition of tree rings.
+    compare image positions with the simple sensor to 
+    a SiliconSensor with no tree rings and four
+    different additions of tree rings.
+    """
+    from scipy import stats
+    # Set up the different sensors.
+    rng1 = galsim.BaseDeviate(5678)
+    rng2 = galsim.BaseDeviate(5678)
+    rng3 = galsim.BaseDeviate(5678)
+    rng4 = galsim.BaseDeviate(5678)
+    rng5 = galsim.BaseDeviate(5678)
+    sensor0 = galsim.Sensor()
+    sensor1 = galsim.SiliconSensor(rng=rng1)
+    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = -1000.0, treeringcentery = 0.0)
+    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 1000.0, treeringcentery = 0.0)
+    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = -1000.0)
+    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = 1000.0)
+    names = ['NoSensor', 'SiliconSensor, no TreeRings', 'SiliconSensor, TreeRingCenter= (-1000,0)', 'SiliconSensor, TreeRingCenter= (1000,0)', 'SiliconSensor, TreeRingCenter= (0,-1000)', 'SiliconSensor, TreeRingCenter= (0,1000)']
+
+    init_flux = 200000
+    obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
+
+    x_coord = np.zeros([6])
+    y_coord = np.zeros([6])
+
+    for sensortest in range(6):
+        im = galsim.ImageD(10,10, scale=0.3)
+        if sensortest == 1:
+            obj.drawImage(im)
+        else:
+            exec("sensor = sensor%d"%sensortest)
+            obj.drawImage(im, method='phot', sensor=sensor)
+        mom = galsim.utilities.unweighted_moments(im)
+        x_coord[sensortest] = mom['Mx']
+        y_coord[sensortest] = mom['My']
+            
+        print('%s, Moments Mx, My = (%f, %f):'%(names[sensortest], x_coord[sensortest], y_coord[sensortest]))
+    assert abs(x_coord[1] - x_coord[0]) < 0.02
+    assert abs(y_coord[1] - y_coord[0]) < 0.02    
+    assert x_coord[2] - x_coord[1] < -0.40
+    assert abs(y_coord[2] - y_coord[1]) < 0.02    
+    assert x_coord[3] - x_coord[1] > 0.40
+    assert abs(y_coord[3] - y_coord[1]) < 0.02    
+    assert abs(x_coord[4] - x_coord[1]) < 0.02
+    assert y_coord[4] - y_coord[1] < -0.40    
+    assert abs(x_coord[5] - x_coord[1]) < 0.02
+    assert y_coord[5] - y_coord[1] > 0.40   
 
 
 if __name__ == "__main__":
@@ -563,3 +614,4 @@ if __name__ == "__main__":
     test_silicon_fft()
     test_sensor_wavelengths_and_angles()
     test_bf_slopes()
+    test_treerings()

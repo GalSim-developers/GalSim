@@ -51,7 +51,7 @@ namespace {
                                     double Nrecalc, double DiffStep, double PixelSize,
                                     double SensorThickness, const bp::object& array,
 				    double treeRingCenterx, double treeRingCentery, double treeRingAmplitude,
-				    double treeRingPeriod)
+				    double treeRingPeriod, TableDD table)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -71,7 +71,7 @@ namespace {
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data,
 			       treeRingCenterx, treeRingCentery, treeRingAmplitude,
-			       treeRingPeriod);
+			       treeRingPeriod, table);
         }
 
         static void wrap()
@@ -83,7 +83,7 @@ namespace {
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
                                   "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
                                   "vertex_data", "treeRingCenterx", "treeRingCentery",
-				  "treeRingAmplitude", "treeRingPeriod"))))
+				  "treeRingAmplitude", "treeRingPeriod", "table"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);

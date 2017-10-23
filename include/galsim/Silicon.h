@@ -30,6 +30,7 @@
 #include "Polygon.h"
 #include "Image.h"
 #include "PhotonArray.h"
+#include "Table.h"
 
 namespace galsim
 {
@@ -40,7 +41,7 @@ namespace galsim
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness,
                 double* vertex_data, double treeRingCenterx, double treeRingCentery,
-		double treeRingAmplitude, double treeRingPeriod);
+		double treeRingAmplitude, double treeRingPeriod, TableDD table);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
@@ -65,7 +66,8 @@ namespace galsim
         std::vector<Polygon> _imagepolys;
         int _numVertices, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
-        double _treeRingCenterx, _treeRingCentery, _treeRingAmplitude, _treeRingPeriod;      
+        double _treeRingCenterx, _treeRingCentery, _treeRingAmplitude, _treeRingPeriod;
+        TableDD _table;
     };
 }
 

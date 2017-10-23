@@ -79,12 +79,12 @@ namespace galsim {
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
                      double* vertex_data, double treeRingCenterx, double treeRingCentery,
-		     double treeRingAmplitude, double treeRingPeriod) :
+		     double treeRingAmplitude, double treeRingPeriod, TableDD table) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness), _treeRingCenterx(treeRingCenterx),
 	_treeRingCentery(treeRingCentery), _treeRingAmplitude(treeRingAmplitude),
-	_treeRingPeriod(treeRingPeriod)
+	_treeRingPeriod(treeRingPeriod), _table(table)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
