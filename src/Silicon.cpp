@@ -214,10 +214,13 @@ namespace galsim {
     }
 
     template <typename T>
-    void Silicon::addTreeRingDistortions(ImageView<T> target)
+    void Silicon::addTreeRingDistortions(ImageView<T> target, Position<int> orig_center)
     {
         // This updates the pixel distortions in the _imagepolys
         // pixel list based on a model of tree rings.
+        // The coordinates _treeRingCenter are the coordinates
+        // of the tree ring center, shifted to compensate for the
+        // fact that target has its origin shifted to (0,0).
         Bounds<int> b = target.getBounds();
 	int minx = b.getXMin();
         int miny = b.getYMin();
@@ -231,11 +234,10 @@ namespace galsim {
 	  for (int j=miny; j<maxy; ++j) {
 	    int index = (i - minx) * (maxy - miny + 1) + (j - miny);
 	    for (int n=0; n<_nv; n++) {
-	      double tx = (double)i + _imagepolys[index][n].x - _treeRingCenterx;
-	      double ty = (double)j + _imagepolys[index][n].y - _treeRingCentery;	      
+	      double tx = (double)i + _imagepolys[index][n].x - _treeRingCenterx + (double)orig_center.x;
+	      double ty = (double)j + _imagepolys[index][n].y - _treeRingCentery + (double)orig_center.y;	      
 	      double r = sqrt(tx * tx + ty * ty);
 	      double shift = _treeRingAmplitude * cos(r / _treeRingPeriod);
-	      //if (n == 0) printf("i=%d,j=%d,tx=%f,ty=%f,r=%f,shift=%f\n",i,j,tx,ty,r,shift);
 	      // Shifts are along the radial vector in the direction of the doping gradient
 	      double dx = shift * tx / r;
 	      double dy = shift * ty / r;
@@ -377,7 +379,7 @@ namespace galsim {
     }
 
     template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target)
+    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target, Position<int> orig_center)
     {
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
@@ -405,7 +407,7 @@ namespace galsim {
             _imagepolys[i] = _emptypoly;
         dbg<<"Built poly list\n";
 	// Now we add in the tree ring distortions
-        addTreeRingDistortions(target);
+        addTreeRingDistortions(target, orig_center);
 
         const double invPixelSize = 1./_pixelSize; // pixels/micron
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
@@ -558,12 +560,12 @@ namespace galsim {
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
 
-    template void Silicon::addTreeRingDistortions(ImageView<double> target);
-    template void Silicon::addTreeRingDistortions(ImageView<float> target);
+  template void Silicon::addTreeRingDistortions(ImageView<double> target, Position<int> orig_center);
+  template void Silicon::addTreeRingDistortions(ImageView<float> target, Position<int> orig_center);
 
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<double> target);
+                                        ImageView<double> target, Position<int> orig_center);
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<float> target);
+                                        ImageView<float> target, Position<int> orig_center);
 
 } // namespace galsim

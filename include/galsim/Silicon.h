@@ -53,10 +53,10 @@ namespace galsim
         void updatePixelDistortions(ImageView<T> target);
 
         template <typename T>
-        void addTreeRingDistortions(ImageView<T> target);
+        void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
 
         template <typename T>
-        double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target);
+        double accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target, Position<int> orig_center);
 
     private:
         Polygon _emptypoly;

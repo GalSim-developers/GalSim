@@ -1541,9 +1541,9 @@ class GSObject(object):
         imview = image._view()
         imview.setCenter(0,0)
         imview.wcs = galsim.PixelScale(1.0)
-
+        orig_center = image.center() # Save the original center to pass to sensor.accumulate
         if method == 'phot':
-            added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
+            added_photons, photons = prof.drawPhot(imview, orig_center, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
                                                    sensor, surface_ops, maxN)
         else:
@@ -1587,11 +1587,11 @@ class GSObject(object):
                 for op in surface_ops:
                     op.applyTo(photons)
                 if imview.dtype in [np.float32, np.float64]:
-                    added_photons = sensor.accumulate(photons, imview)
+                    added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
                     # Need a temporary
                     im1 = galsim.ImageD(bounds=imview.bounds)
-                    added_photons = sensor.accumulate(photons, im1)
+                    added_photons = sensor.accumulate(photons, im1, orig_center)
                     imview.array[:,:] += im1.array.astype(imview.dtype, copy=False)
 
         image.added_flux = added_photons / flux_scale
@@ -1900,7 +1900,7 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, gain=1., add_to_image=False,
+    def drawPhot(self, image, orig_center=galsim.PositionI(0,0), gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
                  sensor=None, surface_ops=(), maxN=None):
         """
@@ -1921,6 +1921,7 @@ class GSObject(object):
         a Pixel as you would for `drawReal` or `drawFFT`.
 
         @param image        The Image onto which to place the flux. [required]
+        @param orig_center  The Original center of the image before recentering [default (0,0)]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD). [default: 1.]
         @param add_to_image Whether to add to the existing images rather than clear out
@@ -2030,11 +2031,11 @@ class GSObject(object):
                 op.applyTo(photons)
 
             if image.dtype in [np.float32, np.float64]:
-                added_flux += sensor.accumulate(photons, image)
+                added_flux += sensor.accumulate(photons, image, orig_center)
             else:
                 # Need a temporary
                 im1 = galsim.ImageD(bounds=image.bounds)
-                added_flux += sensor.accumulate(photons, im1)
+                added_flux += sensor.accumulate(photons, im1, orig_center)
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
 
             Nleft -= thisN

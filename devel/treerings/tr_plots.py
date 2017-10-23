@@ -18,7 +18,7 @@
 """
 tr_plot.py
 
-Modifying demo5.py to create 5 x 5 arrays of Gaussian spots
+Modifying demo5.py to create arrays of Gaussian spots
 for characterizing the tree rings
 
 - Build a single large image, and access sub-images within it.
@@ -38,7 +38,7 @@ import galsim
 def main(argv):
     """
     Make images to be used for characterizing the brighter-fatter effect
-      - Each fits file is 5 x 5 postage stamps.
+      - Each fits file is 10 x 10 postage stamps.
       - Each postage stamp is 40 x 40 pixels.
       - There are 2 fits files, one with tree rings and one without
       - Each image is in output/tr_nfile.fits, where nfile ranges from 1-2.
@@ -49,8 +49,8 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_tiles = 5                   #
-    ny_tiles = 5                   #
+    nx_tiles = 10                   #
+    ny_tiles = 10                   #
     stamp_xsize = 40                #
     stamp_ysize = 40                #
 
@@ -74,7 +74,8 @@ def main(argv):
 
     rng = galsim.BaseDeviate(5678)    
     sensor1 = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
-    sensor2 = galsim.SiliconSensor(rng=rng, diffusion_factor = 0.0, treeringamplitude = 0.5)
+    # The following makes a sensor with hugely magnified tree rings so you can see the effect
+    sensor2 = galsim.SiliconSensor(rng=rng, diffusion_factor = 0.0, treeringamplitude = 1.0)
 
     for nfile in range(1,3):
         starttime = time.time()
@@ -126,10 +127,10 @@ def main(argv):
                 # 1 pixel between postage stamps
                 b = galsim.BoundsI(ix*stamp_xsize+1 , (ix+1)*stamp_xsize-1, 
                                    iy*stamp_ysize+1 , (iy+1)*stamp_ysize-1)
-                print "ix = %d, iy = %d"%(ix,iy),b
+
                 sub_gal_image = gal_image[b]
                 sub_psf_image = psf_image[b]
-
+                #print "ix = %d, iy = %d, cenx = %d, ceny = %d"%(ix,iy,sub_gal_image.center().x,sub_gal_image.center().y)
                 # Make the final image, convolving with the (unshifted) psf
                 final_gal = galsim.Convolve([psf,gal])
 

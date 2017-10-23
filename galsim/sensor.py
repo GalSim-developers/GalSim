@@ -40,7 +40,7 @@ class Sensor(object):
     def __init__(self):
         pass
 
-    def accumulate(self, photons, image):
+    def accumulate(self, photons, image, orig_center):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
@@ -106,13 +106,13 @@ class SiliconSensor(Sensor):
     @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
                               this is less than 0.01 pixels. [default = 0.0]
     @param treeringperiod   The period of the tree ring distortion pattern, in pixels.
-                            [default = 83.5]
+                            [default = 22.5]
 
 
     """
     def __init__(self, dir='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000, treeringcenterx=-1000.0, treeringcentery=-1000.0,
-                 treeringamplitude=0.0, treeringperiod=83.5):
+                 treeringamplitude=0.0, treeringperiod=22.5):
         self.dir = dir
         self.strength = strength
         self.rng = galsim.UniformDeviate(rng)
@@ -208,14 +208,15 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image):
+    def accumulate(self, photons, image, orig_center):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
+        @param orig_center  The original center of the image, before the image was re-centered to (0,0)
         """
-        return self._silicon.accumulate(photons, self.rng, image._image.view())
+        return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for
