@@ -35,9 +35,10 @@ namespace {
     struct PySilicon {
 
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W & wrapper)
+        {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-						     ImageView<U>, Position<int>);
+                                                     ImageView<U>, Position<int>);
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
@@ -70,8 +71,8 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-			       treeRingCenterx, treeRingCentery, treeRingAmplitude,
-			       treeRingPeriod, table);
+                               treeRingCenterx, treeRingCentery, treeRingAmplitude,
+                               treeRingPeriod, table);
         }
 
         static void wrap()
@@ -83,7 +84,7 @@ namespace {
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
                                   "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
                                   "vertex_data", "treeRingCenterx", "treeRingCentery",
-				  "treeRingAmplitude", "treeRingPeriod", "table"))))
+                                  "treeRingAmplitude", "treeRingPeriod", "table"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);

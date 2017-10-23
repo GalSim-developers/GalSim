@@ -97,23 +97,25 @@ class SiliconSensor(Sensor):
                             Poisson simulation must be increased to match. [default: 3]
     @param nrecalc          The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
+
     The following parameters characterize "tree rings", which add small distortions to the sensor
-    pixel positions due to non-uniform background doping in the silicon sensor. The default pattern 
+    pixel positions due to non-uniform background doping in the silicon sensor. The default pattern
     is a cosine function with period specified by treeringperiod.  Alternatively, the user can
-    specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires 
+    specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires
     the extra parameters listed below
 
-    @param treeringcenterx  The x-coord of the center of the tree ring pattern, which may be 
+    @param treeringcenterx  The x-coord of the center of the tree ring pattern, which may be
                             outside the pixel region.  This is in pixels. [default = -1000.0]
-    @param treeringcentery  The y-coord of the center of the tree ring pattern, which may be 
+    @param treeringcentery  The y-coord of the center of the tree ring pattern, which may be
                             outside the pixel region.  This is in pixels. [default = -1000.0]
     @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
                               this is less than 0.01 pixels. [default = 0.0]
     @param treeringperiod   The period of the tree ring distortion pattern, in pixels.
                             [default = 22.5]
 
-    In the case of the user-defined f(r) pattern, the parameters below must be specified.
-    @param function     A callable function giving the tree ring pattern f(r), or a 
+    In the case of the user-defined f(r) pattern, the parameters below must be specified:
+
+    @param function     A callable function giving the tree ring pattern f(r), or a
                         file containing the function as a 2-column ASCII table.  The
                         function should return values between zero and one, which is then
                         multiplied by the treeringamplitude parameter. [default: None]
@@ -145,7 +147,7 @@ class SiliconSensor(Sensor):
         self.treeringcenterx = treeringcenterx
         self.treeringcentery = treeringcentery
         self.treeringamplitude = treeringamplitude
-        self.treeringperiod = treeringperiod        
+        self.treeringperiod = treeringperiod
 
         if not os.path.isdir(dir):
             self.full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
@@ -165,8 +167,9 @@ class SiliconSensor(Sensor):
         self.config = self._read_config_file(self.config_file)
         if function is None:
             # This is just a place holder until I figure out how to pass this to the C++ side.
-            self.table = galsim.LookupTable(f=[0.0,1.0,2.0,3.0], x=[0.0,0.1,0.2,0.3], interpolant=interpolant)
-        else:            
+            self.table = galsim.LookupTable(f=[0.0,1.0,2.0,3.0], x=[0.0,0.1,0.2,0.3],
+                                            interpolant=interpolant)
+        else:
             self._create_lookup_table(self, function, x_min, x_max, interpolant, npoints)
         self._init_silicon()
 
@@ -207,10 +210,12 @@ class SiliconSensor(Sensor):
     def __repr__(self):
         return ('galsim.SiliconSensor(dir=%r, strength=%f, rng=%r, diffusion_factor=%f, '
                 'qdist=%d, nrecalc=%f, treeringcenterx = %f, treeringcentery=%f, '
-                'treerincamplitude=%f, treeringperiod=%f'%(self.full_dir, self.strength, self.rng,
-                                        self.diffusion_factor, self.qdist, self.nrecalc,
-                                        self.treeringcenterx, self.treeringcentery,
-                                        self.treeringamplitude, self.treeringperiod, self.table))
+                'treerincamplitude=%f, treeringperiod=%f, table=%s'%(
+                    self.full_dir, self.strength, self.rng,
+                    self.diffusion_factor, self.qdist, self.nrecalc,
+                    self.treeringcenterx, self.treeringcentery,
+                    self.treeringamplitude, self.treeringperiod,
+                    self.table))
 
     def __eq__(self, other):
         return (isinstance(other, SiliconSensor) and
@@ -220,7 +225,7 @@ class SiliconSensor(Sensor):
                 self.diffusion_factor == other.diffusion_factor and
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc and
-                self.treeringcenterx == other.treeringcenterx and 
+                self.treeringcenterx == other.treeringcenterx and
                 self.treeringcentery == other.treeringcentery and
                 self.treeringamplitude == other.treeringamplitude and
                 self.treeringperiod == other.treeringperiod and
@@ -268,7 +273,7 @@ class SiliconSensor(Sensor):
         return config
 
     def _calculate_diff_step(self):
-        NumPhases = self.config['NumPhases']        
+        NumPhases = self.config['NumPhases']
         CollectingPhases = self.config['CollectingPhases']
         # I'm assuming square pixels for now.
         if 'PixelSize' in self.config:
@@ -347,6 +352,3 @@ class SiliconSensor(Sensor):
         farray = [function(xarray[i]) for i in range(npoints)]
         table = galsim.LookupTable(farray, xarray, interpolant=interpolant)
         self.table = table
-        return
-
-    
