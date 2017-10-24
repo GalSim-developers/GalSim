@@ -84,7 +84,7 @@ class SiliconSensor(Sensor):
                             share_dir/sensors/, where share_dir is `galsim.meta_data.share_dir`.
                             It must contain, at a minimum, the *.cfg file used to simulate the
                             pixel distortions, and the *_Vertices.dat file which carries the
-                            distorted pixel information.  [default: 'lsst_itl']
+                            distorted pixel information.  [default: 'lsst_itl_8']
     @param strength         Set the strength of the brighter-fatter effect relative to the
                             amount specified by the Poisson simulation results.  [default: 1]
     @param rng              A BaseDeviate object to use for the random number generation
@@ -105,51 +105,44 @@ class SiliconSensor(Sensor):
     specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires
     the extra parameters listed below
 
-    @param treeringcenterx  The x-coord of the center of the tree ring pattern, which may be
-                            outside the pixel region.  This is in pixels. [default = -1000.0]
-    @param treeringcentery  The y-coord of the center of the tree ring pattern, which may be
-                            outside the pixel region.  This is in pixels. [default = -1000.0]
+    @param treeringcenter  A PositionD object with the center of the tree ring pattern, 
+                           which may be outside the pixel region.  This is in pixels. 
+                           [default = (-1000.0, -1000.0)]
     @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
                               this is less than 0.01 pixels. [default = 0.0]
     @param treeringperiod   The period of the tree ring distortion pattern, in pixels.
-                            [default = 22.5]
+                            [default = 141.3]
 
     In the case of the user-defined f(r) pattern, the parameters below must be specified:
 
-    @param function     A callable function giving the tree ring pattern f(r), or a
+    @param tr_radial_func     A callable function giving the tree ring pattern f(r), or a
                         file containing the function as a 2-column ASCII table.  The
                         function should return values between zero and one, which is then
                         multiplied by the treeringamplitude parameter. [default: None]
-    @param x_min        The minimum desired return value (required for non-LookupTable
-                        callable functions; will raise an error if not passed in that case, or if
-                        passed in any other case) [default: None]
-    @param x_min        The maximum desired return value (required for non-LookupTable
-                        callable functions; will raise an error if not passed in that case, or if
-                        passed in any other case) [default: None]
+    @param x_min        The minimum radius of the user defined f(r) function 
+                        (required for non-LookupTable callable functions. [default: None]
+    @param x_max        The maximum radius of the user defined f(r) function 
+                        (required for non-LookupTable callable functions. [default: None]
     @param interpolant  Type of interpolation used for interpolating a file (causes an error if
                         passed alongside a callable function).  Options are given in the
                         documentation for LookupTable. [default: 'linear']
     @param npoints      Number of points we should create for the internal interpolation
                         tables. [default: 2048]
-
-
-
     """
     def __init__(self, dir='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treeringcenterx=-1000.0, treeringcentery=-1000.0,
-                 treeringamplitude=0.0, treeringperiod=22.5, function=None, x_min=None, x_max=None,
-                 interpolant='linear', npoints=2048):
+                 nrecalc=10000, treeringcenter=galsim.PositionD(-1000.0,-1000.0),
+                 treeringamplitude=0.0, treeringperiod=141.3, tr_radial_func=None, x_min=None,
+                 x_max=None, interpolant='linear', npoints=2048):
         self.dir = dir
         self.strength = strength
         self.rng = galsim.UniformDeviate(rng)
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
-        self.treeringcenterx = treeringcenterx
-        self.treeringcentery = treeringcentery
+        self.treeringcenter = treeringcenter
         self.treeringamplitude = treeringamplitude
         self.treeringperiod = treeringperiod
-        self.function = function
+        self.tr_radial_func = tr_radial_func
         self.x_min = x_min
         self.x_max = x_max
         self.interpolant = interpolant
@@ -171,13 +164,19 @@ class SiliconSensor(Sensor):
             self.config_file = config_files[0]
 
         self.config = self._read_config_file(self.config_file)
-        if function is None:
+
+        # Get the Tree ring radial function, if it exists
+        if tr_radial_func is None:
             # This is a dummy table in the case where no function is specified
-            # kludgy, but it works
-            self.table = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
+            # A bit kludgy, but it works
+            self.tr_radial_table = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
                                             interpolant=interpolant)
         else:
-            self._create_lookup_table(function, x_min, x_max, interpolant, npoints)
+            self._create_tr_radial_table(tr_radial_func, x_min, x_max, interpolant, npoints)
+
+        # Now we read in the absorption length table:
+        abs_full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors/absorption/')        
+        self._read_abs_length(abs_full_dir+'abs_length.dat')
         self._init_silicon()
 
     def _init_silicon(self):
@@ -204,9 +203,9 @@ class SiliconSensor(Sensor):
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data,
-                                               self.treeringcenterx, self.treeringcentery,
-                                               self.treeringamplitude, self.treeringperiod,
-                                               self.table.table)
+                                               self.treeringcenter, self.treeringamplitude,
+                                               self.treeringperiod,self.tr_radial_table.table,
+                                               self.abs_length_table.table)        
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir
@@ -217,13 +216,13 @@ class SiliconSensor(Sensor):
 
     def __repr__(self):
         return ('galsim.SiliconSensor(dir=%r, strength=%f, rng=%r, diffusion_factor=%f, '
-                'qdist=%d, nrecalc=%f, treeringcenterx = %f, treeringcentery=%f, '
-                'treerincamplitude=%f, treeringperiod=%f, function=%r, x_min=%r, '
+                'qdist=%d, nrecalc=%f, treeringcenter = %r, '
+                'treerincamplitude=%f, treeringperiod=%f, tr_radial_func=%r, x_min=%r, '
                 'x_max=%r, interpolant=%r, npoints=%r'%(self.full_dir, self.strength, self.rng,
                                         self.diffusion_factor, self.qdist, self.nrecalc,
-                                        self.treeringcenterx, self.treeringcentery,
+                                        self.treeringcenter, 
                                         self.treeringamplitude, self.treeringperiod,
-                                        self.function, self.x_min, self.x_max,
+                                        self.tr_radial_func, self.x_min, self.x_max,
                                         self.interpolant, self.npoints))
 
     def __eq__(self, other):
@@ -234,11 +233,10 @@ class SiliconSensor(Sensor):
                 self.diffusion_factor == other.diffusion_factor and
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc and
-                self.treeringcenterx == other.treeringcenterx and
-                self.treeringcentery == other.treeringcentery and
+                self.treeringcenter == other.treeringcenter and
                 self.treeringamplitude == other.treeringamplitude and
                 self.treeringperiod == other.treeringperiod and
-                self.function == other.function and
+                self.tr_radial_func == other.tr_radial_func and
                 self.x_min == other.x_min and
                 self.x_max == other.x_max and
                 self.interpolant == other.interpolant and
@@ -265,7 +263,7 @@ class SiliconSensor(Sensor):
                             (0,0)
         """
         if orig_center is None:
-            orig_center = galsim.PositionD(0,0)
+            orig_center = galsim.PositionI(0,0)
         return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center)
 
     def _read_config_file(self, filename):
@@ -287,6 +285,19 @@ class SiliconSensor(Sensor):
             except (SyntaxError, NameError):
                 pass
         return config
+
+    def _read_abs_length(self, filename):
+        # This reads in a table of absorption
+        # length vs wavelength in Si.
+        # The ipython notebook that created the data
+        # file from astropy is in the same directory
+        # in share/sensors/absorption
+        abs_data = np.loadtxt(filename, skiprows = 1)
+        xarray = abs_data[:,0]
+        farray = abs_data[:,1]
+        table = galsim.LookupTable(x=xarray, f=farray, interpolant='linear')
+        self.abs_length_table = table
+        return
 
     def _calculate_diff_step(self):
         NumPhases = self.config['NumPhases']
@@ -318,54 +329,54 @@ class SiliconSensor(Sensor):
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff) * SensorThickness
         return diff_step
 
-    def _create_lookup_table(self, function, x_min, x_max, interpolant, npoints):
+    def _create_tr_radial_table(self, tr_radial_func, x_min, x_max, interpolant, npoints):
 
         # Figure out if a string is a filename or something we should be using in an eval call
-        if isinstance(function, str):
+        if isinstance(tr_radial_func, str):
             import os.path
-            if os.path.isfile(function):
+            if os.path.isfile(tr_radial_func):
                 if interpolant is None:
                     interpolant='linear'
                 if x_min or x_max:
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to SiliconSensor')
-                table = galsim.LookupTable(file=function, interpolant=interpolant)
+                table = galsim.LookupTable(file=tr_radial_func, interpolant=interpolant)
             else:
                 try:
-                    function = galsim.utilities.math_eval('lambda x : ' + function)
+                    tr_radial_func = galsim.utilities.math_eval('lambda x : ' + tr_radial_func)
                     if x_min is not None: # is not None in case x_min=0.
-                        function(x_min)
+                        tr_radial_func(x_min)
                     else:
                         # Somebody would be silly to pass a string for evaluation without x_min,
                         # but we'd like to throw reasonable errors in that case anyway
                         function(0.6) # A value unlikely to be a singular point of a function
                 except Exception as e:
                     raise ValueError(
-                        "String function must either be a valid filename or something that "+
+                        "String tr_radial_func must either be a valid filename or something that "+
                         "can eval to a function of x.\n"+
                         "Input provided: {0}\n".format(input_function)+
                         "Caught error: {0}".format(e))
         else:
-            # Check that the function is actually a function
-            if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
-                raise TypeError('Keyword function must be a callable function or a string')
+            # Check that the tr_radial_func is actually a function
+            if not (isinstance(tr_radial_func, galsim.LookupTable) or hasattr(tr_radial_func,'__call__')):
+                raise TypeError('Keyword tr_radial_func must be a callable function or a string')
             #if interpolant:
             #    raise TypeError('Cannot provide an interpolant with a callable function argument')
-            if isinstance(function,galsim.LookupTable):
+            if isinstance(tr_radial_func,galsim.LookupTable):
                 if x_min or x_max:
                     raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
                                     'argument')
-                x_min = function.x_min
-                x_max = function.x_max
+                x_min = tr_radial_func.x_min
+                x_max = tr_radial_func.x_max
             else:
                 if x_min is None or x_max is None:
                     raise TypeError('Must provide x_min and x_max when function argument is a '+
                                     'regular python callable function')
 
             xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-            farray = [function(xarray[i]) for i in range(npoints)]
+            farray = [tr_radial_func(xarray[i]) for i in range(npoints)]
             table = galsim.LookupTable(x=xarray, f=farray, interpolant=interpolant)
-        self.table = table
+        self.tr_radial_table = table
         return
 
     

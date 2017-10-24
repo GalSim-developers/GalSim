@@ -51,9 +51,11 @@ namespace {
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
                                     double SensorThickness, const bp::object& array,
-                                    double treeRingCenterx, double treeRingCentery,
+                                    Position<double> treeRingCenter,
                                     double treeRingAmplitude, double treeRingPeriod,
-                                    const Table<double, double>& table)
+				    const Table<double, double>& tr_radial_table, 
+				    const Table<double, double>& abs_length_table)
+	  
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -66,16 +68,16 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data requires stride == 5");
             if (GetNumpyArrayDim(array.ptr(), 1) != 5)
                 throw std::runtime_error("Silicon vertex_data requires ncol == 5");
-            if (treeRingPeriod < 1.0E-4 && table.size() < 4)
-                throw std::runtime_error("Must specify either a tree ring function or a tree ring period");
+            if (treeRingPeriod < 1.0E-4 && tr_radial_table.size() < 4)
+	        throw std::runtime_error("Must specify either a tree ring function or a tree ring period");
             int NumPolys = Nx * Ny + 2;
             int Nv = 4 * NumVertices + 4;
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                               treeRingCenterx, treeRingCentery, treeRingAmplitude,
-                               treeRingPeriod, table);
+                               treeRingCenter, treeRingAmplitude, treeRingPeriod,
+                               tr_radial_table, abs_length_table);
         }
 
         static void wrap()
@@ -86,8 +88,9 @@ namespace {
                         &MakeSilicon, bp::default_call_policies(),
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
                                   "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
-                                  "vertex_data", "treeRingCenterx", "treeRingCentery",
-                                  "treeRingAmplitude", "treeRingPeriod", "table"))))
+                                  "vertex_data", "treeRingCenter",
+                                  "treeRingAmplitude", "treeRingPeriod",
+				  "tr_radial_table", "abs_length_table"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);

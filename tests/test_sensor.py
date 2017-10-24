@@ -575,20 +575,20 @@ def test_treerings():
     rng7 = galsim.BaseDeviate(5678)        
     sensor0 = galsim.Sensor()
     sensor1 = galsim.SiliconSensor(rng=rng1)
-    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = -1000.0, treeringcentery = 0.0)
-    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 1000.0, treeringcentery = 0.0)
-    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = -1000.0)
-    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = 1000.0)
+    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude = treeringamplitude, treeringperiod = 250.0, treeringcenter = galsim.PositionD(-1000.0,0.0))
+    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude = treeringamplitude, treeringperiod = 250.0, treeringcenter = galsim.PositionD(1000.0,0.0))
+    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude = treeringamplitude, treeringperiod = 250.0, treeringcenter = galsim.PositionD(0.0,-1000.0))
+    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude = treeringamplitude, treeringperiod = 250.0, treeringcenter = galsim.PositionD(0.0,1000.0))
 
     # Now test the ability to read in a user-specified function
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions")))
     from tree_ring_test_function import test_function
-    sensor6 = galsim.SiliconSensor(rng=rng6, treeringamplitude = treeringamplitude, treeringcenterx = -1000.0, treeringcentery = 0.0, function = test_function, x_min = 0.0, x_max = 2000, npoints = 2048)    
+    sensor6 = galsim.SiliconSensor(rng=rng6, treeringamplitude = treeringamplitude, treeringcenter = galsim.PositionD(-1000.0,0.0), tr_radial_func = test_function, x_min = 0.0, x_max = 2000, npoints = 2048)    
 
     # Now test the ability to read in a lookup table
     filepath = os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions"))   
-    sensor7 = galsim.SiliconSensor(rng=rng7, treeringamplitude = treeringamplitude, treeringcenterx = -1000.0, treeringcentery = 0.0, function = filepath+"/tree_ring_lookup.dat")    
+    sensor7 = galsim.SiliconSensor(rng=rng7, treeringamplitude = treeringamplitude, treeringcenter = galsim.PositionD(-1000.0,0.0), tr_radial_func = filepath+"/tree_ring_lookup.dat")    
 
     names = ['NoSensor', 'SiliconSensor, no TreeRings', 'SiliconSensor, TreeRingCenter= (-1000,0)', 'SiliconSensor, TreeRingCenter= (1000,0)', 'SiliconSensor, TreeRingCenter= (0,-1000)', 'SiliconSensor, TreeRingCenter= (0,1000)', 'SiliconSensor with specified function, TreeRingCenter= (-1000,0)', 'SiliconSensor with lookup table, TreeRingCenter= (-1000,0)']
 

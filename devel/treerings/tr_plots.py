@@ -63,9 +63,9 @@ def main(argv):
     if not os.path.isdir('output'):
         os.mkdir('output')
 
-    gal_sigma = 0.2     # arcsec
-    psf_sigma = 0.01     # arcsec
-    pixel_scale = 0.2  # arcsec / pixel
+    gal_sigma = 1.0     # pixels
+    psf_sigma = 0.01     # pixels
+    pixel_scale = 1.0
     noise = 0.01        # standard deviation of the counts in each pixel
 
     logger.info('Starting tr_plots using:')
@@ -75,7 +75,7 @@ def main(argv):
     rng = galsim.BaseDeviate(5678)    
     sensor1 = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
     # The following makes a sensor with hugely magnified tree rings so you can see the effect
-    sensor2 = galsim.SiliconSensor(rng=rng, diffusion_factor = 0.0, treeringamplitude = 1.0)
+    sensor2 = galsim.SiliconSensor(rng=rng, diffusion_factor = 0.0, treeringamplitude = 1.00)
 
     for nfile in range(1,3):
         starttime = time.time()

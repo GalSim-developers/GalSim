@@ -23,8 +23,8 @@ This is a test function to test importing an arbitrary function into sensor.py
 import numpy as np
 
 def test_function(r):
-    TreeRingPeriod = 39.79
-    return np.cos(r / TreeRingPeriod)
+    TreeRingPeriod = 250.0
+    return np.cos(r / TreeRingPeriod * 2.0 * np.pi)
 
 npoints = 2048
 r = np.linspace(0.0, 2000.0, 2048)

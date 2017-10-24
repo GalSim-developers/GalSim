@@ -40,10 +40,11 @@ namespace galsim
     public:
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness,
-                double* vertex_data, double treeRingCenterx, double treeRingCentery,
+                double* vertex_data, Position<double> treeRingCenter,
                 double treeRingAmplitude, double treeRingPeriod,
-                const Table<double, double>& table);
-
+		const Table<double, double>& tr_radial_table,
+		const Table<double, double>& abs_length_table);		
+      
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target) const;
@@ -68,8 +69,10 @@ namespace galsim
         std::vector<Polygon> _imagepolys;
         int _numVertices, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
-        double _treeRingCenterx, _treeRingCentery, _treeRingAmplitude, _treeRingPeriod;
-        Table<double, double> _table;
+        double _treeRingAmplitude, _treeRingPeriod;
+        Position<double> _treeRingCenter;
+	Table<double, double> _tr_radial_table;
+        Table<double, double> _abs_length_table;
     };
 }
 

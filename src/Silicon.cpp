@@ -78,14 +78,17 @@ namespace galsim {
 
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                      double diffStep, double pixelSize, double sensorThickness,
-                     double* vertex_data, double treeRingCenterx, double treeRingCentery,
+                     double* vertex_data, Position<double> treeRingCenter,
                      double treeRingAmplitude, double treeRingPeriod,
-                     const Table<double, double>& table) :
+		     const Table<double, double>& tr_radial_table,
+		     const Table<double, double>& abs_length_table) :		     
+
+
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
-        _sensorThickness(sensorThickness), _treeRingCenterx(treeRingCenterx),
-        _treeRingCentery(treeRingCentery), _treeRingAmplitude(treeRingAmplitude),
-        _treeRingPeriod(treeRingPeriod), _table(table)
+        _sensorThickness(sensorThickness), _treeRingCenter(treeRingCenter),
+        _treeRingAmplitude(treeRingAmplitude), _treeRingPeriod(treeRingPeriod),
+        _tr_radial_table(tr_radial_table), _abs_length_table(abs_length_table)	
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -140,26 +143,6 @@ namespace galsim {
         }
 #endif
     }
-
-#if 0
-    // Got a start on implementing the absorption length lookup,
-    // but couldn't get the python - C++ wrapper working, so I went
-    // back to the analytic function - Craig Lage 17-Feb-17
-    double Silicon::AbsLength(double lambda)
-    {
-        // Looks up the absorption length and returns
-        // an interpolated value
-        int nminus;
-        double aminus, aplus, dlambda;
-        dlambda = _abs_data[2] - _abs_data[0];
-        // index of
-        nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
-        if (nminus < 0) return _abs_data[1];
-        else if (nminus > _nabs - 4) return _abs_data[_nabs - 1];
-        else return _abs_data[nminus+1] +
-            (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
-    }
-#endif
 
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
@@ -235,22 +218,21 @@ namespace galsim {
             for (int j=miny; j<maxy; ++j) {
                 int index = (i - minx) * (maxy - miny + 1) + (j - miny);
                 for (int n=0; n<_nv; n++) {
-                    double tx = (double)i + _imagepolys[index][n].x - _treeRingCenterx +
+                    double tx = (double)i + _imagepolys[index][n].x - _treeRingCenter.x +
                         (double)orig_center.x;
-                    double ty = (double)j + _imagepolys[index][n].y - _treeRingCentery +
+                    double ty = (double)j + _imagepolys[index][n].y - _treeRingCenter.y +
                         (double)orig_center.y;
                     double r = sqrt(tx * tx + ty * ty);
-
-		    if (_table.size() > 3)
+		    if (_tr_radial_table.size() > 3)
 		      {
 			// This is the case where the lookup table has been specified
-			shift = _treeRingAmplitude * _table.lookup(r);
+			shift = _treeRingAmplitude * _tr_radial_table.lookup(r);
 		      }
 		    else
 		      {
 			// No lookup table has been specified. Use default function		
-			shift = _treeRingAmplitude * cos(r / _treeRingPeriod);
-		      }
+			shift = _treeRingAmplitude * cos(r / _treeRingPeriod * 2.0 * M_PI);
+			}
                     // Shifts are along the radial vector in the direction of the doping gradient
                     double dx = shift * tx / r;
                     double dy = shift * ty / r;
@@ -312,18 +294,14 @@ namespace galsim {
     void Silicon::calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
                                            UniformDeviate ud) const
     {
-        const double log10_over_250 = std::log(10.) / 250.;
-
         const int nphotons = photons.size();
         for (int i=0; i<nphotons; ++i) {
             // Determine the distance the photon travels into the silicon
             double si_length;
             if (photons.hasAllocatedWavelengths()) {
                 double lambda = photons.getWavelength(i); // in nm
-                // The below is an approximation.  ToDo: replace with lookup table
-                //double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
-                double abs_length = std::exp((lambda - 500.0) * log10_over_250); // in microns
-                //double abs_length = AbsLength(lambda); // in microns
+		// Lookup the absorption length in the imported table
+		double abs_length = _abs_length_table.lookup(lambda); // in microns		
                 si_length = -abs_length * log(1.0 - ud()); // in microns
 #ifdef DEBUGLOGGING
                 if (i % 1000 == 0) {
@@ -562,8 +540,6 @@ namespace galsim {
 #endif
         return addedFlux;
     }
-
-    //template double Silicon::AbsLength(double lambda) const;
 
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<double> target) const;
