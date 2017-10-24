@@ -149,6 +149,11 @@ class SiliconSensor(Sensor):
         self.treeringcentery = treeringcentery
         self.treeringamplitude = treeringamplitude
         self.treeringperiod = treeringperiod
+        self.function = function
+        self.x_min = x_min
+        self.x_max = x_max
+        self.interpolant = interpolant
+        self.npoints = npoints
 
         if not os.path.isdir(dir):
             self.full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors', dir)
@@ -167,11 +172,12 @@ class SiliconSensor(Sensor):
 
         self.config = self._read_config_file(self.config_file)
         if function is None:
-            # This is just a place holder until I figure out how to pass this to the C++ side.
-            self.table = galsim.LookupTable(f=[0.0,1.0,2.0,3.0], x=[0.0,0.1,0.2,0.3],
+            # This is a dummy table in the case where no function is specified
+            # kludgy, but it works
+            self.table = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
                                             interpolant=interpolant)
         else:
-            self._create_lookup_table(self, function, x_min, x_max, interpolant, npoints)
+            self._create_lookup_table(function, x_min, x_max, interpolant, npoints)
         self._init_silicon()
 
     def _init_silicon(self):
@@ -212,12 +218,13 @@ class SiliconSensor(Sensor):
     def __repr__(self):
         return ('galsim.SiliconSensor(dir=%r, strength=%f, rng=%r, diffusion_factor=%f, '
                 'qdist=%d, nrecalc=%f, treeringcenterx = %f, treeringcentery=%f, '
-                'treerincamplitude=%f, treeringperiod=%f, table=%s'%(
-                    self.full_dir, self.strength, self.rng,
-                    self.diffusion_factor, self.qdist, self.nrecalc,
-                    self.treeringcenterx, self.treeringcentery,
-                    self.treeringamplitude, self.treeringperiod,
-                    self.table))
+                'treerincamplitude=%f, treeringperiod=%f, function=%r, x_min=%r, '
+                'x_max=%r, interpolant=%r, npoints=%r'%(self.full_dir, self.strength, self.rng,
+                                        self.diffusion_factor, self.qdist, self.nrecalc,
+                                        self.treeringcenterx, self.treeringcentery,
+                                        self.treeringamplitude, self.treeringperiod,
+                                        self.function, self.x_min, self.x_max,
+                                        self.interpolant, self.npoints))
 
     def __eq__(self, other):
         return (isinstance(other, SiliconSensor) and
@@ -231,7 +238,11 @@ class SiliconSensor(Sensor):
                 self.treeringcentery == other.treeringcentery and
                 self.treeringamplitude == other.treeringamplitude and
                 self.treeringperiod == other.treeringperiod and
-                self.table == other.table)
+                self.function == other.function and
+                self.x_min == other.x_min and
+                self.x_max == other.x_max and
+                self.interpolant == other.interpolant and
+                self.npoints == other.npoints)
 
     __hash__ = None
 
@@ -319,8 +330,6 @@ class SiliconSensor(Sensor):
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to SiliconSensor')
                 table = galsim.LookupTable(file=function, interpolant=interpolant)
-                x_min = function.x_min
-                x_max = function.x_max
             else:
                 try:
                     function = galsim.utilities.math_eval('lambda x : ' + function)
@@ -340,8 +349,8 @@ class SiliconSensor(Sensor):
             # Check that the function is actually a function
             if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
                 raise TypeError('Keyword function must be a callable function or a string')
-            if interpolant:
-                raise TypeError('Cannot provide an interpolant with a callable function argument')
+            #if interpolant:
+            #    raise TypeError('Cannot provide an interpolant with a callable function argument')
             if isinstance(function,galsim.LookupTable):
                 if x_min or x_max:
                     raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
@@ -353,7 +362,10 @@ class SiliconSensor(Sensor):
                     raise TypeError('Must provide x_min and x_max when function argument is a '+
                                     'regular python callable function')
 
-        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-        farray = [function(xarray[i]) for i in range(npoints)]
-        table = galsim.LookupTable(farray, xarray, interpolant=interpolant)
+            xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
+            farray = [function(xarray[i]) for i in range(npoints)]
+            table = galsim.LookupTable(x=xarray, f=farray, interpolant=interpolant)
         self.table = table
+        return
+
+    

@@ -227,7 +227,7 @@ namespace galsim {
         int miny = b.getYMin();
         int maxx = b.getXMax();
         int maxy = b.getYMax();
-
+	double shift = 0.0;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
         std::vector<bool> changed(_imagepolys.size(), false);
@@ -240,7 +240,17 @@ namespace galsim {
                     double ty = (double)j + _imagepolys[index][n].y - _treeRingCentery +
                         (double)orig_center.y;
                     double r = sqrt(tx * tx + ty * ty);
-                    double shift = _treeRingAmplitude * cos(r / _treeRingPeriod);
+
+		    if (_table.size() > 3)
+		      {
+			// This is the case where the lookup table has been specified
+			shift = _treeRingAmplitude * _table.lookup(r);
+		      }
+		    else
+		      {
+			// No lookup table has been specified. Use default function		
+			shift = _treeRingAmplitude * cos(r / _treeRingPeriod);
+		      }
                     // Shifts are along the radial vector in the direction of the doping gradient
                     double dx = shift * tx / r;
                     double dy = shift * ty / r;

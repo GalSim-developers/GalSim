@@ -66,6 +66,8 @@ namespace {
                 throw std::runtime_error("Silicon vertex_data requires stride == 5");
             if (GetNumpyArrayDim(array.ptr(), 1) != 5)
                 throw std::runtime_error("Silicon vertex_data requires ncol == 5");
+            if (treeRingPeriod < 1.0E-4 && table.size() < 4)
+                throw std::runtime_error("Must specify either a tree ring function or a tree ring period");
             int NumPolys = Nx * Ny + 2;
             int Nv = 4 * NumVertices + 4;
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))

@@ -560,31 +560,45 @@ def test_bf_slopes():
 def test_treerings():
     """Test the addition of tree rings.
     compare image positions with the simple sensor to 
-    a SiliconSensor with no tree rings and four
+    a SiliconSensor with no tree rings and six
     different additions of tree rings.
     """
     from scipy import stats
     # Set up the different sensors.
+    treeringamplitude = 0.5
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
     rng4 = galsim.BaseDeviate(5678)
     rng5 = galsim.BaseDeviate(5678)
+    rng6 = galsim.BaseDeviate(5678)
+    rng7 = galsim.BaseDeviate(5678)        
     sensor0 = galsim.Sensor()
     sensor1 = galsim.SiliconSensor(rng=rng1)
-    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = -1000.0, treeringcentery = 0.0)
-    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 1000.0, treeringcentery = 0.0)
-    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = -1000.0)
-    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude = 0.5, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = 1000.0)
-    names = ['NoSensor', 'SiliconSensor, no TreeRings', 'SiliconSensor, TreeRingCenter= (-1000,0)', 'SiliconSensor, TreeRingCenter= (1000,0)', 'SiliconSensor, TreeRingCenter= (0,-1000)', 'SiliconSensor, TreeRingCenter= (0,1000)']
+    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = -1000.0, treeringcentery = 0.0)
+    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 1000.0, treeringcentery = 0.0)
+    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = -1000.0)
+    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude = treeringamplitude, treeringperiod = 39.79, treeringcenterx = 0.0, treeringcentery = 1000.0)
+
+    # Now test the ability to read in a user-specified function
+    path, filename = os.path.split(__file__)
+    sys.path.append(os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions")))
+    from tree_ring_test_function import test_function
+    sensor6 = galsim.SiliconSensor(rng=rng6, treeringamplitude = treeringamplitude, treeringcenterx = -1000.0, treeringcentery = 0.0, function = test_function, x_min = 0.0, x_max = 2000, npoints = 2048)    
+
+    # Now test the ability to read in a lookup table
+    filepath = os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions"))   
+    sensor7 = galsim.SiliconSensor(rng=rng7, treeringamplitude = treeringamplitude, treeringcenterx = -1000.0, treeringcentery = 0.0, function = filepath+"/tree_ring_lookup.dat")    
+
+    names = ['NoSensor', 'SiliconSensor, no TreeRings', 'SiliconSensor, TreeRingCenter= (-1000,0)', 'SiliconSensor, TreeRingCenter= (1000,0)', 'SiliconSensor, TreeRingCenter= (0,-1000)', 'SiliconSensor, TreeRingCenter= (0,1000)', 'SiliconSensor with specified function, TreeRingCenter= (-1000,0)', 'SiliconSensor with lookup table, TreeRingCenter= (-1000,0)']
 
     init_flux = 200000
     obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
 
-    x_coord = np.zeros([6])
-    y_coord = np.zeros([6])
+    x_coord = np.zeros([8])
+    y_coord = np.zeros([8])
 
-    for sensortest in range(6):
+    for sensortest in range(8):
         im = galsim.ImageD(10,10, scale=0.3)
         if sensortest == 1:
             obj.drawImage(im)
@@ -596,16 +610,20 @@ def test_treerings():
         y_coord[sensortest] = mom['My']
             
         print('%s, Moments Mx, My = (%f, %f):'%(names[sensortest], x_coord[sensortest], y_coord[sensortest]))
-    assert abs(x_coord[1] - x_coord[0]) < 0.02
-    assert abs(y_coord[1] - y_coord[0]) < 0.02    
-    assert x_coord[2] - x_coord[1] < -0.40
-    assert abs(y_coord[2] - y_coord[1]) < 0.02    
-    assert x_coord[3] - x_coord[1] > 0.40
-    assert abs(y_coord[3] - y_coord[1]) < 0.02    
-    assert abs(x_coord[4] - x_coord[1]) < 0.02
-    assert y_coord[4] - y_coord[1] < -0.40    
-    assert abs(x_coord[5] - x_coord[1]) < 0.02
-    assert y_coord[5] - y_coord[1] > 0.40   
+    np.testing.assert_almost_equal(x_coord[0], x_coord[1], decimal = 1)
+    np.testing.assert_almost_equal(y_coord[0], y_coord[1], decimal = 1)    
+    np.testing.assert_almost_equal(x_coord[1] - treeringamplitude, x_coord[2], decimal = 1)
+    np.testing.assert_almost_equal(y_coord[1], y_coord[2], decimal = 1)    
+    np.testing.assert_almost_equal(x_coord[1] + treeringamplitude, x_coord[3], decimal = 1)
+    np.testing.assert_almost_equal(y_coord[1], y_coord[3], decimal = 1)    
+    np.testing.assert_almost_equal(x_coord[1], x_coord[4], decimal = 1)
+    np.testing.assert_almost_equal(y_coord[1] - treeringamplitude, y_coord[4], decimal = 1)
+    np.testing.assert_almost_equal(x_coord[1], x_coord[5], decimal = 1)        
+    np.testing.assert_almost_equal(y_coord[1] + treeringamplitude, y_coord[5], decimal = 1)
+    np.testing.assert_almost_equal(x_coord[2], x_coord[6], decimal = 1)        
+    np.testing.assert_almost_equal(y_coord[2], y_coord[6], decimal = 1)
+    np.testing.assert_almost_equal(x_coord[2], x_coord[7], decimal = 1)        
+    np.testing.assert_almost_equal(y_coord[2], y_coord[7], decimal = 1)
 
 
 if __name__ == "__main__":
