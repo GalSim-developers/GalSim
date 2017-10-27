@@ -1541,7 +1541,7 @@ class GSObject(object):
         imview = image._view()
         imview.setCenter(0,0)
         imview.wcs = galsim.PixelScale(1.0)
-        orig_center = image.center() # Save the original center to pass to sensor.accumulate
+        orig_center = image.center  # Save the original center to pass to sensor.accumulate
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, orig_center, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
