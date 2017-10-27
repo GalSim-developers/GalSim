@@ -1542,10 +1542,11 @@ class GSObject(object):
         imview.setCenter(0,0)
         imview.wcs = galsim.PixelScale(1.0)
         orig_center = image.center  # Save the original center to pass to sensor.accumulate
+        orig_center = orig_center.pos  # Temporary, so long as center is still a dep_posi_type
         if method == 'phot':
-            added_photons, photons = prof.drawPhot(imview, orig_center, gain, add_to_image,
+            added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
-                                                   sensor, surface_ops, maxN)
+                                                   sensor, surface_ops, maxN, orig_center)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1900,9 +1901,9 @@ class GSObject(object):
         return iN, g
 
 
-    def drawPhot(self, image, orig_center=galsim.PositionI(0,0), gain=1., add_to_image=False,
+    def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None):
+                 sensor=None, surface_ops=(), maxN=None, orig_center=galsim.PositionI(0,0)):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1921,7 +1922,6 @@ class GSObject(object):
         a Pixel as you would for `drawReal` or `drawFFT`.
 
         @param image        The Image onto which to place the flux. [required]
-        @param orig_center  The Original center of the image before recentering [default (0,0)]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD). [default: 1.]
         @param add_to_image Whether to add to the existing images rather than clear out
@@ -1961,6 +1961,8 @@ class GSObject(object):
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
                             [default: None, which means no limit]
+        @param orig_center  The position of the image center in the original image coordinates.
+                            [default: (0,0)]
 
         @returns The total flux of photons that landed inside the image bounds.
         """

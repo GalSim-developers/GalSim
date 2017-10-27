@@ -253,17 +253,15 @@ class SiliconSensor(Sensor):
         self.__dict__ = d
         self._init_silicon()  # Build the _silicon object.
 
-    def accumulate(self, photons, image, orig_center=None):
+    def accumulate(self, photons, image, orig_center=galsim.PositionI(0,0)):
         """Accumulate the photons incident at the surface of the sensor into the appropriate
         pixels in the image.
 
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
-        @param orig_center  The original center of the image, before the image was re-centered to
-                            (0,0)
+        @param orig_center  The position of the image center in the original image coordinates.
+                            [default: (0,0)]
         """
-        if orig_center is None:
-            orig_center = galsim.PositionI(0,0)
         return self._silicon.accumulate(photons, self.rng, image._image.view(), orig_center)
 
     def _read_config_file(self, filename):
