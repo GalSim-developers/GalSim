@@ -105,8 +105,8 @@ class SiliconSensor(Sensor):
     specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires
     the extra parameters listed below
 
-    @param treeringcenter  A PositionD object with the center of the tree ring pattern, 
-                           which may be outside the pixel region.  This is in pixels. 
+    @param treeringcenter  A PositionD object with the center of the tree ring pattern,
+                           which may be outside the pixel region.  This is in pixels.
                            [default = (-1000.0, -1000.0)]
     @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
                               this is less than 0.01 pixels. [default = 0.0]
@@ -119,9 +119,9 @@ class SiliconSensor(Sensor):
                         file containing the function as a 2-column ASCII table.  The
                         function should return values between zero and one, which is then
                         multiplied by the treeringamplitude parameter. [default: None]
-    @param x_min        The minimum radius of the user defined f(r) function 
+    @param x_min        The minimum radius of the user defined f(r) function
                         (required for non-LookupTable callable functions. [default: None]
-    @param x_max        The maximum radius of the user defined f(r) function 
+    @param x_max        The maximum radius of the user defined f(r) function
                         (required for non-LookupTable callable functions. [default: None]
     @param interpolant  Type of interpolation used for interpolating a file (causes an error if
                         passed alongside a callable function).  Options are given in the
@@ -175,7 +175,7 @@ class SiliconSensor(Sensor):
             self._create_tr_radial_table(tr_radial_func, x_min, x_max, interpolant, npoints)
 
         # Now we read in the absorption length table:
-        abs_full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors/absorption/')        
+        abs_full_dir = os.path.join(galsim.meta_data.share_dir, 'sensors/absorption/')
         self._read_abs_length(abs_full_dir+'abs_length.dat')
         self._init_silicon()
 
@@ -205,7 +205,7 @@ class SiliconSensor(Sensor):
                                                diff_step, PixelSize, SensorThickness, vertex_data,
                                                self.treeringcenter, self.treeringamplitude,
                                                self.treeringperiod,self.tr_radial_table.table,
-                                               self.abs_length_table.table)        
+                                               self.abs_length_table.table)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir
@@ -220,7 +220,7 @@ class SiliconSensor(Sensor):
                 'treerincamplitude=%f, treeringperiod=%f, tr_radial_func=%r, x_min=%r, '
                 'x_max=%r, interpolant=%r, npoints=%r'%(self.full_dir, self.strength, self.rng,
                                         self.diffusion_factor, self.qdist, self.nrecalc,
-                                        self.treeringcenter, 
+                                        self.treeringcenter,
                                         self.treeringamplitude, self.treeringperiod,
                                         self.tr_radial_func, self.x_min, self.x_max,
                                         self.interpolant, self.npoints))
@@ -377,6 +377,3 @@ class SiliconSensor(Sensor):
             farray = [tr_radial_func(xarray[i]) for i in range(npoints)]
             table = galsim.LookupTable(x=xarray, f=farray, interpolant=interpolant)
         self.tr_radial_table = table
-        return
-
-    

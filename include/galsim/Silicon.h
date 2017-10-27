@@ -42,14 +42,14 @@ namespace galsim
                 double diffStep, double pixelSize, double sensorThickness,
                 double* vertex_data, Position<double> treeRingCenter,
                 double treeRingAmplitude, double treeRingPeriod,
-		const Table<double, double>& tr_radial_table,
-		const Table<double, double>& abs_length_table);		
-      
+                const Table<double, double>& tr_radial_table,
+                const Table<double, double>& abs_length_table);
+
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target) const;
 
-        void calculateConversionDepth(const PhotonArray& photons, 
+        void calculateConversionDepth(const PhotonArray& photons,
                                       std::vector<double>& depth, UniformDeviate ud) const;
 
         template <typename T>
@@ -71,7 +71,7 @@ namespace galsim
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
         double _treeRingAmplitude, _treeRingPeriod;
         Position<double> _treeRingCenter;
-	Table<double, double> _tr_radial_table;
+        Table<double, double> _tr_radial_table;
         Table<double, double> _abs_length_table;
     };
 }
