@@ -268,7 +268,7 @@ class LookupTable(object):
         return s
 
     @classmethod
-    def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False):
+    def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False, amplitude=1.0):
         """Create a LookupTable from a file of x, f values.
 
         This reads in a file, which should contain two columns with the x and f values.
@@ -279,6 +279,8 @@ class LookupTable(object):
                             [default: False]
         @param f_log        Whether the f values should be interpolated using their logarithms
                             rather than their raw values. [default: False]
+        @param amplitude    An optional scaling of the f values relative to the values in the file
+                            [default: 1.0]
         """
         # We don't require pandas as a dependency, but if it's available, this is much faster.
         # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
@@ -300,6 +302,8 @@ class LookupTable(object):
             raise ValueError("File %s provided for LookupTable does not have 2 columns"%file_name)
         x=data[0]
         f=data[1]
+        if amplitude != 1.0:
+            f[:] *= amplitude
         return LookupTable(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
 
     @classmethod
