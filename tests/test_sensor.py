@@ -557,8 +557,7 @@ def test_bf_slopes():
     assert abs(y_slope) < 0.3
 
 def treering_function(r):
-    TreeRingPeriod = 250.0
-    return np.cos(r / TreeRingPeriod * 2.0 * np.pi)
+    return 0.5 * np.cos(r / 250. * 2.0 * np.pi)
 
 @timer
 def test_treerings():
@@ -579,30 +578,26 @@ def test_treerings():
     rng7 = galsim.BaseDeviate(5678)
     sensor0 = galsim.Sensor()
     sensor1 = galsim.SiliconSensor(rng=rng1)
-    sensor2 = galsim.SiliconSensor(rng=rng2, treering_amplitude=treering_amplitude,
-                                   treering_period=250.0,
+    tr2 = galsim.SiliconSensor.simple_treerings(treering_amplitude, 250.)
+    sensor2 = galsim.SiliconSensor(rng=rng2, treering_func=tr2,
                                    treering_center=galsim.PositionD(-1000.0,0.0))
-    sensor3 = galsim.SiliconSensor(rng=rng3, treering_amplitude=treering_amplitude,
-                                   treering_period=250.0,
+    sensor3 = galsim.SiliconSensor(rng=rng3, treering_func=tr2,
                                    treering_center=galsim.PositionD(1000.0,0.0))
-    sensor4 = galsim.SiliconSensor(rng=rng4, treering_amplitude=treering_amplitude,
-                                   treering_period=250.0,
+    sensor4 = galsim.SiliconSensor(rng=rng4, treering_func=tr2,
                                    treering_center=galsim.PositionD(0.0,-1000.0))
-    sensor5 = galsim.SiliconSensor(rng=rng5, treering_amplitude=treering_amplitude,
-                                   treering_period=250.0,
+    tr5 = galsim.SiliconSensor.simple_treerings(treering_amplitude, 250., r_max=2000, dr=1.)
+    sensor5 = galsim.SiliconSensor(rng=rng5, treering_func=tr5,
                                    treering_center=galsim.PositionD(0.0,1000.0))
 
     # Now test the ability to read in a user-specified function
     tr6 = galsim.LookupTable.from_func(treering_function, x_min=0.0, x_max=2000)
-    sensor6 = galsim.SiliconSensor(rng=rng6, treering_amplitude=treering_amplitude,
-                                   treering_center=galsim.PositionD(-1000.0,0.0),
-                                   treering_func=tr6)
+    sensor6 = galsim.SiliconSensor(rng=rng6, treering_func=tr6,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
 
     # Now test the ability to read in a lookup table
     tr7 = galsim.LookupTable.from_file('tree_ring_lookup.dat')
-    sensor7 = galsim.SiliconSensor(rng=rng7, treering_amplitude=treering_amplitude,
-                                   treering_center=galsim.PositionD(-1000.0,0.0),
-                                   treering_func=tr7)
+    sensor7 = galsim.SiliconSensor(rng=rng7, treering_func=tr7,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
 
     sensors = [sensor0, sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7]
     names = ['Sensor()',

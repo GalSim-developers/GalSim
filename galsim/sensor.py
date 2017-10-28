@@ -89,6 +89,13 @@ class SiliconSensor(Sensor):
                         pixel boundaries.  (This file is still somewhat preliminary and may be
                         updated in the future.)
 
+    There is also an option to include "tree rings" in the Silicon model, which add small
+    distortions to the sensor pixel positions due to non-uniform background doping in the silicon
+    sensor.  The tree rings are defined by a center and a radial amplitude function.  The radial
+    function needs to be a galsim.LookupTable instance.  Note that if you just want a simple cosine
+    radial function, you can use the helper class method `SiliconSensor.simple_treerings` to
+    build the LookupTable for you.
+
     @param name             The base name of the files which contains the sensor information,
                             presumably calculated from the Poisson_CCD simulator, which may
                             be specified either as an absolute path or as one of the above names
@@ -109,55 +116,21 @@ class SiliconSensor(Sensor):
                             Poisson simulation must be increased to match. [default: 3]
     @param nrecalc          The number of electrons to accumulate before recalculating the
                             distortion of the pixel shapes. [default: 10000]
-
-    The following parameters characterize "tree rings", which add small distortions to the sensor
-    pixel positions due to non-uniform background doping in the silicon sensor. The default pattern
-    is a cosine function with period specified by treering_period.  Alternatively, the user can
-    specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires
-    the extra parameters listed below
-
-    @param treering_center  A PositionD object with the center of the tree ring pattern,
-                           which may be outside the pixel region.  This is in pixels.
-                           [default = (-1000.0, -1000.0)]
-    @param treering_amplitude  The amplitude of the tree ring pattern distortion.  Typically
-                              this is less than 0.01 pixels. [default = 0.0]
-    @param treering_period   The period of the tree ring distortion pattern, in pixels.
-                            [default = 141.3]
-
-    In the case of the user-defined f(r) pattern, the parameters below must be specified:
-
-    @param treering_func     A callable function giving the tree ring pattern f(r), or a
-                        file containing the function as a 2-column ASCII table.  The
-                        function should return values between zero and one, which is then
-                        multiplied by the treering_amplitude parameter. [default: None]
-    @param x_min        The minimum radius of the user defined f(r) function
-                        (required for non-LookupTable callable functions. [default: None]
-    @param x_max        The maximum radius of the user defined f(r) function
-                        (required for non-LookupTable callable functions. [default: None]
-    @param interpolant  Type of interpolation used for interpolating a file (causes an error if
-                        passed alongside a callable function).  Options are given in the
-                        documentation for LookupTable. [default: 'linear']
-    @param npoints      Number of points we should create for the internal interpolation
-                        tables. [default: 2048]
+    @param treering_func    A galsim.LookupTable giving the tree ring pattern f(r). [default: None]
+    @param treering_center  A PositionD object with the center of the tree ring pattern in pixel
+                            coordinates, which may be outside the pixel region. [default: None;
+                            required if treering_func is provided]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treering_center=galsim.PositionD(-1000.0,-1000.0),
-                 treering_amplitude=0.0, treering_period=141.3, treering_func=None, x_min=None,
-                 x_max=None, interpolant='linear', npoints=2048):
+                 nrecalc=10000, treering_func=None, treering_center=galsim.PositionD(0,0)):
         self.name = name
         self.strength = strength
         self.rng = galsim.UniformDeviate(rng)
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
-        self.treering_center = treering_center
-        self.treering_amplitude = treering_amplitude
-        self.treering_period = treering_period
         self.treering_func = treering_func
-        self.x_min = x_min
-        self.x_max = x_max
-        self.interpolant = interpolant
-        self.npoints = npoints
+        self.treering_center = treering_center
 
         self.config_file = name + '.cfg'
         self.vertex_file = name + '.dat'
@@ -176,10 +149,11 @@ class SiliconSensor(Sensor):
         if treering_func is None:
             # This is a dummy table in the case where no function is specified
             # A bit kludgy, but it works
-            self.treering_func = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
-                                                    interpolant=interpolant)
+            self.treering_func = galsim.LookupTable(x=[0.0,1.0], f=[0.0,0.0], interpolant='linear')
         elif not isinstance(treering_func, galsim.LookupTable):
             raise ValueError("treering_func must be a galsim.LookupTable")
+        if not isinstance(treering_center, galsim.PositionD):
+            raise ValueError("treering_center must be a galsim.PositionD")
 
         # Now we read in the absorption length table:
         abs_file = os.path.join(galsim.meta_data.share_dir, 'sensors', 'abs_length.dat')
@@ -209,8 +183,7 @@ class SiliconSensor(Sensor):
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data,
-                                               self.treering_center, self.treering_amplitude,
-                                               self.treering_period, self.treering_func.table,
+                                               self.treering_func.table, self.treering_center,
                                                self.abs_length_table.table)
 
     def __str__(self):
@@ -222,14 +195,10 @@ class SiliconSensor(Sensor):
 
     def __repr__(self):
         return ('galsim.SiliconSensor(name=%r, strength=%f, rng=%r, diffusion_factor=%f, '
-                'qdist=%d, nrecalc=%f, treering_center = %r, '
-                'treerincamplitude=%f, treering_period=%f, treering_func=%r, x_min=%r, '
-                'x_max=%r, interpolant=%r, npoints=%r'%(
+                'qdist=%d, nrecalc=%f, treering_func=%r, treering_center=%r)')%(
                         self.name, self.strength, self.rng,
                         self.diffusion_factor, self.qdist, self.nrecalc,
-                        self.treering_center, self.treering_amplitude, self.treering_period,
-                        self.treering_func, self.x_min, self.x_max,
-                        self.interpolant, self.npoints))
+                        self.treering_func, self.treering_center)
 
     def __eq__(self, other):
         return (isinstance(other, SiliconSensor) and
@@ -239,14 +208,8 @@ class SiliconSensor(Sensor):
                 self.diffusion_factor == other.diffusion_factor and
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc and
-                self.treering_center == other.treering_center and
-                self.treering_amplitude == other.treering_amplitude and
-                self.treering_period == other.treering_period and
                 self.treering_func == other.treering_func and
-                self.x_min == other.x_min and
-                self.x_max == other.x_max and
-                self.interpolant == other.interpolant and
-                self.npoints == other.npoints)
+                self.treering_center == other.treering_center)
 
     __hash__ = None
 
@@ -333,4 +296,23 @@ class SiliconSensor(Sensor):
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff) * SensorThickness
         return diff_step
 
+    @classmethod
+    def simple_treerings(cls, amplitude=0.5, period=100., r_max=8000., dr=None):
+        """Make a simple tree ring pattern that can be used as the treering_func parameter of
+        SiliconSensor.
 
+        The functional form is amplitude * cos(r / (2*pi*period))
+
+        @param amplitude    The amplitude of the tree ring pattern distortion.  Typically
+                            this is less than 0.01 pixels. [default: 0.5]
+        @param period       The period of the tree ring distortion pattern, in pixels.
+                            [default: 100.]
+        @param r_max        The maximum value of r to store in the lookup table. [default: 8000]
+        @param dr           The spacing to use for the r values. [default: period/100]
+        """
+        k = 0.5 / (np.pi * period)
+        func = lambda r: amplitude * np.cos(k * r)
+        if dr is None:
+            dr = period/100.
+        npoints = int(r_max / dr) + 1
+        return galsim.LookupTable.from_func(func, x_min=0., x_max=r_max, npoints=npoints)

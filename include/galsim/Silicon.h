@@ -39,10 +39,9 @@ namespace galsim
     {
     public:
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
-                double diffStep, double pixelSize, double sensorThickness,
-                double* vertex_data, Position<double> treeRingCenter,
-                double treeRingAmplitude, double treeRingPeriod,
+                double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
                 const Table<double, double>& tr_radial_table,
+                Position<double> treeRingCenter,
                 const Table<double, double>& abs_length_table);
 
         template <typename T>
@@ -69,9 +68,8 @@ namespace galsim
         std::vector<Polygon> _imagepolys;
         int _numVertices, _nx, _ny, _nv, _nrecalc;
         double _qDist, _diffStep, _pixelSize, _sensorThickness;
-        double _treeRingAmplitude, _treeRingPeriod;
-        Position<double> _treeRingCenter;
         Table<double, double> _tr_radial_table;
+        Position<double> _treeRingCenter;
         Table<double, double> _abs_length_table;
     };
 }

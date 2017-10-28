@@ -77,16 +77,16 @@ namespace galsim {
     }
 
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
-                     double diffStep, double pixelSize, double sensorThickness,
-                     double* vertex_data, Position<double> treeRingCenter,
-                     double treeRingAmplitude, double treeRingPeriod,
+                     double diffStep, double pixelSize,
+                     double sensorThickness, double* vertex_data,
                      const Table<double, double>& tr_radial_table,
+                     Position<double> treeRingCenter,
                      const Table<double, double>& abs_length_table) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
-        _sensorThickness(sensorThickness), _treeRingCenter(treeRingCenter),
-        _treeRingAmplitude(treeRingAmplitude), _treeRingPeriod(treeRingPeriod),
-        _tr_radial_table(tr_radial_table), _abs_length_table(abs_length_table)
+        _sensorThickness(sensorThickness),
+        _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
+        _abs_length_table(abs_length_table)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -221,21 +221,16 @@ namespace galsim {
                     double ty = (double)j + _imagepolys[index][n].y - _treeRingCenter.y +
                         (double)orig_center.y;
                     double r = sqrt(tx * tx + ty * ty);
-                    if (_tr_radial_table.size() > 3)
-                    {
-                        // This is the case where the lookup table has been specified
-                        shift = _treeRingAmplitude * _tr_radial_table.lookup(r);
+                    if (_tr_radial_table.size() > 2) {
+                        // The no tree rings case is indicated with a table of size 2, which
+                        // wouldn't make any sense as a user input.
+                        shift = _tr_radial_table.lookup(r);
+                        // Shifts are along the radial vector in direction of the doping gradient
+                        double dx = shift * tx / r;
+                        double dy = shift * ty / r;
+                        _imagepolys[index][n].x += dx;
+                        _imagepolys[index][n].y += dy;
                     }
-                    else
-                    {
-                        // No lookup table has been specified. Use default function
-                        shift = _treeRingAmplitude * cos(r / _treeRingPeriod * 2.0 * M_PI);
-                    }
-                    // Shifts are along the radial vector in the direction of the doping gradient
-                    double dx = shift * tx / r;
-                    double dy = shift * ty / r;
-                    _imagepolys[index][n].x += dx;
-                    _imagepolys[index][n].y += dy;
                 }
                 changed[index] = true;
             }
