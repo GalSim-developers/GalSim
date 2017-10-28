@@ -603,7 +603,8 @@ def test_treerings():
                                    treeringcenter=galsim.PositionD(-1000.0,0.0),
                                    tr_radial_func="tree_ring_lookup.dat")
 
-    names = ['NoSensor',
+    sensors = [sensor0, sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7]
+    names = ['Sensor()',
              'SiliconSensor, no TreeRings',
              'SiliconSensor, TreeRingCenter= (-1000,0)',
              'SiliconSensor, TreeRingCenter= (1000,0)',
@@ -611,41 +612,35 @@ def test_treerings():
              'SiliconSensor, TreeRingCenter= (0,1000)',
              'SiliconSensor with specified function, TreeRingCenter= (-1000,0)',
              'SiliconSensor with lookup table, TreeRingCenter= (-1000,0)']
+    centers = [None, None,
+               (-1000,0),
+               (1000,0),
+               (0,-1000),
+               (0,1000),
+               (-1000,0),
+               (-1000,0)]
 
     init_flux = 200000
     obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
 
-    x_coord = np.zeros([8])
-    y_coord = np.zeros([8])
+    im = galsim.ImageD(10,10, scale=0.3)
+    obj.drawImage(im)
+    ref_mom = galsim.utilities.unweighted_moments(im)
+    print('Reference Moments Mx, My = (%f, %f):'%(ref_mom['Mx'], ref_mom['My']))
 
-    for sensortest in range(8):
+    for sensor, name, center in zip(sensors, names, centers):
         im = galsim.ImageD(10,10, scale=0.3)
-        if sensortest == 1:
-            obj.drawImage(im)
-        else:
-            exec("sensor = sensor%d"%sensortest)
-            obj.drawImage(im, method='phot', sensor=sensor)
+        obj.drawImage(im, method='phot', sensor=sensor)
         mom = galsim.utilities.unweighted_moments(im)
-        x_coord[sensortest] = mom['Mx']
-        y_coord[sensortest] = mom['My']
-
-        print('%s, Moments Mx, My = (%f, %f):'%(names[sensortest], x_coord[sensortest],
-                                                y_coord[sensortest]))
-    np.testing.assert_almost_equal(x_coord[0], x_coord[1], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[0], y_coord[1], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[1] - treeringamplitude, x_coord[2], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[1], y_coord[2], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[1] + treeringamplitude, x_coord[3], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[1], y_coord[3], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[1], x_coord[4], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[1] - treeringamplitude, y_coord[4], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[1], x_coord[5], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[1] + treeringamplitude, y_coord[5], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[2], x_coord[6], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[2], y_coord[6], decimal = 1)
-    np.testing.assert_almost_equal(x_coord[2], x_coord[7], decimal = 1)
-    np.testing.assert_almost_equal(y_coord[2], y_coord[7], decimal = 1)
-
+        print('%s, Moments Mx, My = (%f, %f):'%(name, mom['Mx'], mom['My']))
+        if center is None:
+            np.testing.assert_almost_equal(mom['Mx'], ref_mom['Mx'], decimal = 1)
+            np.testing.assert_almost_equal(mom['My'], ref_mom['My'], decimal = 1)
+        else:
+            np.testing.assert_almost_equal(ref_mom['Mx'] + treeringamplitude * center[0] / 1000,
+                                           mom['Mx'], decimal=1)
+            np.testing.assert_almost_equal(ref_mom['My'] + treeringamplitude * center[1] / 1000,
+                                           mom['My'], decimal=1)
 
 if __name__ == "__main__":
     test_simple()
