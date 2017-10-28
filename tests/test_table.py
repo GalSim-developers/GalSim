@@ -222,6 +222,58 @@ def test_log():
 
 
 @timer
+def test_from_func():
+    """Test the LookupTable.from_func factory function"""
+    x_min = 2
+    x_max = 200
+
+    # Linear interpolation
+    x1 = np.linspace(x_min, x_max, 2000)
+    f1 = [x**3 for x in x1]
+    tab1 = galsim.LookupTable(x1, f1, interpolant='linear')
+    tab2 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, interpolant='linear')
+    print('tab1 = ',tab1, tab1(10))
+    print('tab2 = ',tab2, tab2(10))
+
+    # Spline interpolation
+    tab3 = galsim.LookupTable(x1, f1)
+    tab4 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max)
+    print('tab3 = ',tab3, tab3(10))
+    print('tab4 = ',tab4, tab4(10))
+
+    # Log interpolation
+    x5 = np.exp(np.linspace(np.log(x_min), np.log(x_max), 2000))
+    f5 = [x**3 for x in x5]
+    tab5 = galsim.LookupTable(x5, f5, x_log=True, f_log=True)
+    tab6 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, x_log=True, f_log=True)
+    print('tab5 = ',tab5, tab5(10))
+    print('tab6 = ',tab6, tab6(10))
+
+    test_x_vals = [2.641, 39.85, 81.23125]
+    for x in test_x_vals:
+        truth = x**3
+        f1 = tab1(x)
+        f2 = tab2(x)
+        f3 = tab3(x)
+        f4 = tab4(x)
+        f5 = tab5(x)
+        f6 = tab6(x)
+        print(truth, f1, f2, f3, f4, f5, f6)
+        np.testing.assert_almost_equal(f1/truth, 1.0, decimal=3)
+        np.testing.assert_almost_equal(f2/truth, 1.0, 3,
+                                       "LookupTable.from_func (linear) gave wrong answer")
+        np.testing.assert_almost_equal(f3/truth, 1.0, decimal=7)
+        np.testing.assert_almost_equal(f4/truth, 1.0, 7,
+                                       "LookupTable.from_func (spline) gave wrong answer")
+        np.testing.assert_almost_equal(f5/truth, 1.0, decimal=12)
+        np.testing.assert_almost_equal(f6/truth, 1.0, 12,
+                                       "LookupTable.from_func (log-log) gave wrong answer")
+    do_pickle(tab2)
+    do_pickle(tab4)
+    do_pickle(tab6)
+
+
+@timer
 def test_roundoff():
     table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
     try:
@@ -518,6 +570,7 @@ if __name__ == "__main__":
     test_table()
     test_init()
     test_log()
+    test_from_func()
     test_roundoff()
     test_table2d()
     test_table2d_gradient()

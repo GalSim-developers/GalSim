@@ -112,24 +112,24 @@ class SiliconSensor(Sensor):
 
     The following parameters characterize "tree rings", which add small distortions to the sensor
     pixel positions due to non-uniform background doping in the silicon sensor. The default pattern
-    is a cosine function with period specified by treeringperiod.  Alternatively, the user can
+    is a cosine function with period specified by treering_period.  Alternatively, the user can
     specify an arbitrary f(r) function which characterizes the tree ring pattern.  This requires
     the extra parameters listed below
 
-    @param treeringcenter  A PositionD object with the center of the tree ring pattern,
+    @param treering_center  A PositionD object with the center of the tree ring pattern,
                            which may be outside the pixel region.  This is in pixels.
                            [default = (-1000.0, -1000.0)]
-    @param treeringamplitude  The amplitude of the tree ring pattern distortion.  Typically
+    @param treering_amplitude  The amplitude of the tree ring pattern distortion.  Typically
                               this is less than 0.01 pixels. [default = 0.0]
-    @param treeringperiod   The period of the tree ring distortion pattern, in pixels.
+    @param treering_period   The period of the tree ring distortion pattern, in pixels.
                             [default = 141.3]
 
     In the case of the user-defined f(r) pattern, the parameters below must be specified:
 
-    @param tr_radial_func     A callable function giving the tree ring pattern f(r), or a
+    @param treering_func     A callable function giving the tree ring pattern f(r), or a
                         file containing the function as a 2-column ASCII table.  The
                         function should return values between zero and one, which is then
-                        multiplied by the treeringamplitude parameter. [default: None]
+                        multiplied by the treering_amplitude parameter. [default: None]
     @param x_min        The minimum radius of the user defined f(r) function
                         (required for non-LookupTable callable functions. [default: None]
     @param x_max        The maximum radius of the user defined f(r) function
@@ -141,8 +141,8 @@ class SiliconSensor(Sensor):
                         tables. [default: 2048]
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
-                 nrecalc=10000, treeringcenter=galsim.PositionD(-1000.0,-1000.0),
-                 treeringamplitude=0.0, treeringperiod=141.3, tr_radial_func=None, x_min=None,
+                 nrecalc=10000, treering_center=galsim.PositionD(-1000.0,-1000.0),
+                 treering_amplitude=0.0, treering_period=141.3, treering_func=None, x_min=None,
                  x_max=None, interpolant='linear', npoints=2048):
         self.name = name
         self.strength = strength
@@ -150,10 +150,10 @@ class SiliconSensor(Sensor):
         self.diffusion_factor = diffusion_factor
         self.qdist = qdist
         self.nrecalc = nrecalc
-        self.treeringcenter = treeringcenter
-        self.treeringamplitude = treeringamplitude
-        self.treeringperiod = treeringperiod
-        self.tr_radial_func = tr_radial_func
+        self.treering_center = treering_center
+        self.treering_amplitude = treering_amplitude
+        self.treering_period = treering_period
+        self.treering_func = treering_func
         self.x_min = x_min
         self.x_max = x_max
         self.interpolant = interpolant
@@ -173,13 +173,13 @@ class SiliconSensor(Sensor):
         self.config = self._read_config_file(self.config_file)
 
         # Get the Tree ring radial function, if it exists
-        if tr_radial_func is None:
+        if treering_func is None:
             # This is a dummy table in the case where no function is specified
             # A bit kludgy, but it works
-            self.tr_radial_table = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
-                                                      interpolant=interpolant)
-        else:
-            self._create_tr_radial_table(tr_radial_func, x_min, x_max, interpolant, npoints)
+            self.treering_func = galsim.LookupTable(f=[0.0,0.0,0.0], x=[0.0,0.1,0.2],
+                                                    interpolant=interpolant)
+        elif not isinstance(treering_func, galsim.LookupTable):
+            raise ValueError("treering_func must be a galsim.LookupTable")
 
         # Now we read in the absorption length table:
         abs_file = os.path.join(galsim.meta_data.share_dir, 'sensors', 'abs_length.dat')
@@ -209,8 +209,8 @@ class SiliconSensor(Sensor):
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                                diff_step, PixelSize, SensorThickness, vertex_data,
-                                               self.treeringcenter, self.treeringamplitude,
-                                               self.treeringperiod,self.tr_radial_table.table,
+                                               self.treering_center, self.treering_amplitude,
+                                               self.treering_period, self.treering_func.table,
                                                self.abs_length_table.table)
 
     def __str__(self):
@@ -222,13 +222,13 @@ class SiliconSensor(Sensor):
 
     def __repr__(self):
         return ('galsim.SiliconSensor(name=%r, strength=%f, rng=%r, diffusion_factor=%f, '
-                'qdist=%d, nrecalc=%f, treeringcenter = %r, '
-                'treerincamplitude=%f, treeringperiod=%f, tr_radial_func=%r, x_min=%r, '
+                'qdist=%d, nrecalc=%f, treering_center = %r, '
+                'treerincamplitude=%f, treering_period=%f, treering_func=%r, x_min=%r, '
                 'x_max=%r, interpolant=%r, npoints=%r'%(
                         self.name, self.strength, self.rng,
                         self.diffusion_factor, self.qdist, self.nrecalc,
-                        self.treeringcenter, self.treeringamplitude, self.treeringperiod,
-                        self.tr_radial_func, self.x_min, self.x_max,
+                        self.treering_center, self.treering_amplitude, self.treering_period,
+                        self.treering_func, self.x_min, self.x_max,
                         self.interpolant, self.npoints))
 
     def __eq__(self, other):
@@ -239,10 +239,10 @@ class SiliconSensor(Sensor):
                 self.diffusion_factor == other.diffusion_factor and
                 self.qdist == other.qdist and
                 self.nrecalc == other.nrecalc and
-                self.treeringcenter == other.treeringcenter and
-                self.treeringamplitude == other.treeringamplitude and
-                self.treeringperiod == other.treeringperiod and
-                self.tr_radial_func == other.tr_radial_func and
+                self.treering_center == other.treering_center and
+                self.treering_amplitude == other.treering_amplitude and
+                self.treering_period == other.treering_period and
+                self.treering_func == other.treering_func and
                 self.x_min == other.x_min and
                 self.x_max == other.x_max and
                 self.interpolant == other.interpolant and
@@ -333,51 +333,4 @@ class SiliconSensor(Sensor):
         diff_step = np.sqrt(2 * 0.026 * CCDTemperature / 298.0 / Vdiff) * SensorThickness
         return diff_step
 
-    def _create_tr_radial_table(self, tr_radial_func, x_min, x_max, interpolant, npoints):
 
-        # Figure out if a string is a filename or something we should be using in an eval call
-        if isinstance(tr_radial_func, str):
-            import os.path
-            if os.path.isfile(tr_radial_func):
-                if interpolant is None:
-                    interpolant='linear'
-                if x_min or x_max:
-                    raise TypeError('Cannot pass x_min or x_max alongside a '
-                                    'filename in arguments to SiliconSensor')
-                table = galsim.LookupTable(file=tr_radial_func, interpolant=interpolant)
-            else:
-                try:
-                    tr_radial_func = galsim.utilities.math_eval('lambda x : ' + tr_radial_func)
-                    if x_min is not None: # is not None in case x_min=0.
-                        tr_radial_func(x_min)
-                    else:
-                        # Somebody would be silly to pass a string for evaluation without x_min,
-                        # but we'd like to throw reasonable errors in that case anyway
-                        function(0.6) # A value unlikely to be a singular point of a function
-                except Exception as e:
-                    raise ValueError(
-                        "String tr_radial_func must either be a valid filename or something that "+
-                        "can eval to a function of x.\n"+
-                        "Input provided: {0}\n".format(input_function)+
-                        "Caught error: {0}".format(e))
-        else:
-            # Check that the tr_radial_func is actually a function
-            if not (isinstance(tr_radial_func, galsim.LookupTable) or hasattr(tr_radial_func,'__call__')):
-                raise TypeError('Keyword tr_radial_func must be a callable function or a string')
-            #if interpolant:
-            #    raise TypeError('Cannot provide an interpolant with a callable function argument')
-            if isinstance(tr_radial_func,galsim.LookupTable):
-                if x_min or x_max:
-                    raise TypeError('Cannot provide x_min or x_max with a LookupTable function '+
-                                    'argument')
-                x_min = tr_radial_func.x_min
-                x_max = tr_radial_func.x_max
-            else:
-                if x_min is None or x_max is None:
-                    raise TypeError('Must provide x_min and x_max when function argument is a '+
-                                    'regular python callable function')
-
-            xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-            farray = [tr_radial_func(xarray[i]) for i in range(npoints)]
-            table = galsim.LookupTable(x=xarray, f=farray, interpolant=interpolant)
-        self.tr_radial_table = table

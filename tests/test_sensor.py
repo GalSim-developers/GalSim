@@ -569,7 +569,7 @@ def test_treerings():
     """
     from scipy import stats
     # Set up the different sensors.
-    treeringamplitude = 0.5
+    treering_amplitude = 0.5
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
@@ -579,29 +579,30 @@ def test_treerings():
     rng7 = galsim.BaseDeviate(5678)
     sensor0 = galsim.Sensor()
     sensor1 = galsim.SiliconSensor(rng=rng1)
-    sensor2 = galsim.SiliconSensor(rng=rng2, treeringamplitude=treeringamplitude,
-                                   treeringperiod=250.0,
-                                   treeringcenter=galsim.PositionD(-1000.0,0.0))
-    sensor3 = galsim.SiliconSensor(rng=rng3, treeringamplitude=treeringamplitude,
-                                   treeringperiod=250.0,
-                                   treeringcenter=galsim.PositionD(1000.0,0.0))
-    sensor4 = galsim.SiliconSensor(rng=rng4, treeringamplitude=treeringamplitude,
-                                   treeringperiod=250.0,
-                                   treeringcenter=galsim.PositionD(0.0,-1000.0))
-    sensor5 = galsim.SiliconSensor(rng=rng5, treeringamplitude=treeringamplitude,
-                                   treeringperiod=250.0,
-                                   treeringcenter=galsim.PositionD(0.0,1000.0))
+    sensor2 = galsim.SiliconSensor(rng=rng2, treering_amplitude=treering_amplitude,
+                                   treering_period=250.0,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
+    sensor3 = galsim.SiliconSensor(rng=rng3, treering_amplitude=treering_amplitude,
+                                   treering_period=250.0,
+                                   treering_center=galsim.PositionD(1000.0,0.0))
+    sensor4 = galsim.SiliconSensor(rng=rng4, treering_amplitude=treering_amplitude,
+                                   treering_period=250.0,
+                                   treering_center=galsim.PositionD(0.0,-1000.0))
+    sensor5 = galsim.SiliconSensor(rng=rng5, treering_amplitude=treering_amplitude,
+                                   treering_period=250.0,
+                                   treering_center=galsim.PositionD(0.0,1000.0))
 
     # Now test the ability to read in a user-specified function
-    sensor6 = galsim.SiliconSensor(rng=rng6, treeringamplitude=treeringamplitude,
-                                   treeringcenter=galsim.PositionD(-1000.0,0.0),
-                                   tr_radial_func=treering_function,
-                                   x_min=0.0, x_max=2000, npoints=2048)
+    tr6 = galsim.LookupTable.from_func(treering_function, x_min=0.0, x_max=2000)
+    sensor6 = galsim.SiliconSensor(rng=rng6, treering_amplitude=treering_amplitude,
+                                   treering_center=galsim.PositionD(-1000.0,0.0),
+                                   treering_func=tr6)
 
     # Now test the ability to read in a lookup table
-    sensor7 = galsim.SiliconSensor(rng=rng7, treeringamplitude=treeringamplitude,
-                                   treeringcenter=galsim.PositionD(-1000.0,0.0),
-                                   tr_radial_func="tree_ring_lookup.dat")
+    tr7 = galsim.LookupTable(file='tree_ring_lookup.dat')
+    sensor7 = galsim.SiliconSensor(rng=rng7, treering_amplitude=treering_amplitude,
+                                   treering_center=galsim.PositionD(-1000.0,0.0),
+                                   treering_func=tr7)
 
     sensors = [sensor0, sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7]
     names = ['Sensor()',
@@ -637,9 +638,9 @@ def test_treerings():
             np.testing.assert_almost_equal(mom['Mx'], ref_mom['Mx'], decimal = 1)
             np.testing.assert_almost_equal(mom['My'], ref_mom['My'], decimal = 1)
         else:
-            np.testing.assert_almost_equal(ref_mom['Mx'] + treeringamplitude * center[0] / 1000,
+            np.testing.assert_almost_equal(ref_mom['Mx'] + treering_amplitude * center[0] / 1000,
                                            mom['Mx'], decimal=1)
-            np.testing.assert_almost_equal(ref_mom['My'] + treeringamplitude * center[1] / 1000,
+            np.testing.assert_almost_equal(ref_mom['My'] + treering_amplitude * center[1] / 1000,
                                            mom['My'], decimal=1)
 
 if __name__ == "__main__":

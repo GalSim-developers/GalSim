@@ -265,16 +265,50 @@ class LookupTable(object):
 
 
     def __repr__(self):
-        return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
-            self.x.tolist(), self.f.tolist(), self.x_log, self.f_log, self.interpolant)
+        return 'galsim.LookupTable(x=array(%r), f=array(%r), interpolant=%r, x_log=%r, f_log=%r)'%(
+            self.x.tolist(), self.f.tolist(), self.interpolant, self.x_log, self.f_log)
 
     def __str__(self):
         if self.file is not None:
-            return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
-                self.file, self.interpolant)
+            s = 'galsim.LookupTable(file=%r'%(self.file)
         else:
-            return 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s], interpolant=%r)'%(
-                self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
+            s = 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s]'%(
+                self.x[0], self.x[-1], self.f[0], self.f[-1])
+        if self.interpolant != 'spline':
+            s += ', interpolant=%r'%(self.interpolant)
+        if self.x_log:
+            s += ', x_log=True'
+        if self.f_log:
+            s += ', f_log=True'
+        s += ')'
+        return s
+
+    @classmethod
+    def from_func(cls, func, x_min, x_max, npoints=2000, interpolant='spline',
+                  x_log=False, f_log=False):
+        """Create a LookupTable from a callable function
+
+        This constructs a LookupTable over the given range from x_min and x_max, calculating the
+        corresponding f values from the given function (technically any callable object).
+
+        @param func         A callable function.
+        @param x_min        The minimum x value at which to evalue the function and store in the
+                            lookup table.
+        @param x_max        The maximum x value at which to evalue the function and store in the
+                            lookup table.
+        @param npoints      Number of x values at which to evaluate the function. [default: 2000]
+        @param interpolant  Type of interpolation to use. [default: 'spline']
+        @param x_log        Whether the x values should be uniform in log rather than lienar.
+                            [default: False]
+        @param f_log        Whether the f values should be interpolated using their logarithms
+                            rather than their raw values. [default: False]
+        """
+        if x_log:
+            x = np.exp(np.linspace(np.log(x_min), np.log(x_max), npoints))
+        else:
+            x = np.linspace(x_min, x_max, npoints)
+        f = np.array([func(xx) for xx in x])
+        return cls(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
@@ -385,11 +419,11 @@ class LookupTable2D(object):
     @param y              Strictly increasing array of `y` positions at which to create table.
     @param f              Nx by Ny input array of function values.
     @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', or 'linear'.
-                          [Default: 'linear']
+                          [default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
-                          See above for details.  [Default: 'raise']
+                          See above for details.  [default: 'raise']
     @param constant       A constant to return when extrapolating beyond the input range and
-                          `edge_mode='constant'`.  [Default: 0]
+                          `edge_mode='constant'`.  [default: 0]
     """
     def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
         if edge_mode not in ['raise', 'wrap', 'constant']:
