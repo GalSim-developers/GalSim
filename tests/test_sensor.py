@@ -244,7 +244,7 @@ def test_silicon():
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
-    silicon = galsim.SiliconSensor(dir='lsst_itl_8', strength=100., rng=rng1, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(name='lsst_itl_8', strength=100., rng=rng1, diffusion_factor=0.0)
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
@@ -272,21 +272,21 @@ def test_silicon():
     print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
     assert r1 - r3 > 2*sigma_r / 100
 
-    # Check the construction with an explicit directory.
+    # Check the construction with an explicit name
     s0 = galsim.SiliconSensor(rng=rng1)
-    dir = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_8')
-    s1 = galsim.SiliconSensor(dir=dir, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
+    name = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_8')
+    s1 = galsim.SiliconSensor(name=name, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
                               nrecalc=10000)
     assert s0 == s1
-    s1 = galsim.SiliconSensor(dir, 1.0, rng1, 1.0, 3, 10000)
+    s1 = galsim.SiliconSensor(name, 1.0, rng1, 1.0, 3, 10000)
     assert s0 == s1
-    s2 = galsim.SiliconSensor(rng=rng1, dir='lsst_itl_8')
+    s2 = galsim.SiliconSensor(rng=rng1, name='lsst_itl_8')
     assert s0 == s2
     s3 = galsim.SiliconSensor(rng=rng1, strength=10.)
     s4 = galsim.SiliconSensor(rng=rng1, diffusion_factor=2.0)
     s5 = galsim.SiliconSensor(rng=rng1, qdist=4)
     s6 = galsim.SiliconSensor(rng=rng1, nrecalc=12345)
-    s7 = galsim.SiliconSensor(dir=dir, strength=1.5, rng=rng1, diffusion_factor=1.3, qdist=4,
+    s7 = galsim.SiliconSensor(name=name, strength=1.5, rng=rng1, diffusion_factor=1.3, qdist=4,
                               nrecalc=12345)
     for s in [ s3, s4, s5, s6, s7 ]:
         assert silicon != s
@@ -297,8 +297,8 @@ def test_silicon():
     do_pickle(s7)
 
     try:
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='junk')
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='output')
+        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='junk')
+        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='output')
         np.testing.assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
         np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
     except ImportError:
@@ -556,6 +556,10 @@ def test_bf_slopes():
     assert abs(x_slope) < 0.3
     assert abs(y_slope) < 0.3
 
+def treering_function(r):
+    TreeRingPeriod = 250.0
+    return np.cos(r / TreeRingPeriod * 2.0 * np.pi)
+
 @timer
 def test_treerings():
     """Test the addition of tree rings.
@@ -589,19 +593,15 @@ def test_treerings():
                                    treeringcenter=galsim.PositionD(0.0,1000.0))
 
     # Now test the ability to read in a user-specified function
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions")))
-    from tree_ring_test_function import test_function
     sensor6 = galsim.SiliconSensor(rng=rng6, treeringamplitude=treeringamplitude,
                                    treeringcenter=galsim.PositionD(-1000.0,0.0),
-                                   tr_radial_func=test_function,
+                                   tr_radial_func=treering_function,
                                    x_min=0.0, x_max=2000, npoints=2048)
 
     # Now test the ability to read in a lookup table
-    filepath = os.path.abspath(os.path.join(path, "../share/sensors/tree_ring_functions"))
     sensor7 = galsim.SiliconSensor(rng=rng7, treeringamplitude=treeringamplitude,
                                    treeringcenter=galsim.PositionD(-1000.0,0.0),
-                                   tr_radial_func=filepath+"/tree_ring_lookup.dat")
+                                   tr_radial_func="tree_ring_lookup.dat")
 
     names = ['NoSensor',
              'SiliconSensor, no TreeRings',
