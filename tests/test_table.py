@@ -129,28 +129,22 @@ def test_table():
 @timer
 def test_init():
     """Some simple tests of LookupTable initialization."""
-    interp = 'linear'
+
+    # Make sure nothing bad happens when we try to read in a stored power spectrum and assume
+    # we can use the default interpolant (spline).
+    tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    do_pickle(tab_ps)
+
     try:
-        # Check for bad input: 1 column file, or specifying file and x, or just x, or bad
-        # interpolant.
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp),
-                                 x = interp)
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 x=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
+        # Check for bad inputs
+        np.testing.assert_raises(TypeError, galsim.LookupTable, x='foo')
+        np.testing.assert_raises(TypeError, galsim.LookupTable)
+        np.testing.assert_raises(TypeError, galsim.LookupTable, x=tab_ps.x)
+        np.testing.assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
+        np.testing.assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f,
                                  interpolant='foo')
     except ImportError:
         print('The assert_raises tests require nose')
-    # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
-    # we can use the default interpolant (spline).
-    tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
-
-    # Check picklability
-    do_pickle(tab_ps)
 
 
 @timer

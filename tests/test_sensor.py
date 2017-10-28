@@ -599,7 +599,7 @@ def test_treerings():
                                    treering_func=tr6)
 
     # Now test the ability to read in a lookup table
-    tr7 = galsim.LookupTable(file='tree_ring_lookup.dat')
+    tr7 = galsim.LookupTable.from_file('tree_ring_lookup.dat')
     sensor7 = galsim.SiliconSensor(rng=rng7, treering_amplitude=treering_amplitude,
                                    treering_center=galsim.PositionD(-1000.0,0.0),
                                    treering_func=tr7)

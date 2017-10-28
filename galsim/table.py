@@ -60,8 +60,10 @@ class LookupTable(object):
     - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
 
-    Another option is to read in the values from an ascii file.  The file should have two
-    columns of numbers, which are taken to be the `x` and `f` values.
+    There are also two factory functions which can be used to build a LookupTable:
+
+        from_func makes a LookupTable from a callable function over a given range of x values.
+        from_file reads in a file of x and f values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
@@ -70,12 +72,8 @@ class LookupTable(object):
 
     @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either `x` and `f` or `file` is required.]
     @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either `x` and `f` or `file` is required.]
-    @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
-                         is required]
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
                          'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
@@ -85,38 +83,27 @@ class LookupTable(object):
                          that all inputs / outputs will still be f, it's just a question of how the
                          interpolation is done. [default: False]
     """
-    def __init__(self, x=None, f=None, file=None, interpolant=None, x_log=False, f_log=False):
+    def __init__(self, x=None, f=None, interpolant=None, x_log=False, f_log=False, file=None):
         self.x_log = x_log
         self.f_log = f_log
-        self.file = file
 
         # read in from file if a filename was specified
         if file:
+            from .deprecated import depr
+            depr('LookupTable(file=file_name)', 1.5, 'LookupTable.from_file(file_name)')
             if x is not None or f is not None:
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
-            # We don't require pandas as a dependency, but if it's available, this is much faster.
-            # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
-            CParserError = AttributeError # In case we don't get to the line below where we import
-                                          # it from pandas.parser
-            try:
-                import pandas
-                try:
-                    # version >= 0.20
-                    from pandas.io.common import CParserError
-                except ImportError:
-                    # version < 0.20
-                    from pandas.parser import CParserError
-                data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
-                data = data.values.transpose()
-            except (ImportError, AttributeError, CParserError):
-                data = np.loadtxt(file).transpose()
-            if data.shape[0] != 2:
-                raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
-            x=data[0]
-            f=data[1]
+            table = LookupTable.from_file(file, interpolant, x_log, f_log)
+            self.x = table.x
+            self.f = table.f
+            self.interpolant = table.interpolant
+            self.table = table.table
+            self._x_min = table._x_min
+            self._x_max = table._x_max
+            return
         else:
             if x is None or f is None:
-                raise ValueError("Must specify either file or x,f for LookupTable")
+                raise TypeError("x and f are required for LookupTable")
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
@@ -269,11 +256,8 @@ class LookupTable(object):
             self.x.tolist(), self.f.tolist(), self.interpolant, self.x_log, self.f_log)
 
     def __str__(self):
-        if self.file is not None:
-            s = 'galsim.LookupTable(file=%r'%(self.file)
-        else:
-            s = 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s]'%(
-                self.x[0], self.x[-1], self.f[0], self.f[-1])
+        s = 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s]'%(
+            self.x[0], self.x[-1], self.f[0], self.f[-1])
         if self.interpolant != 'spline':
             s += ', interpolant=%r'%(self.interpolant)
         if self.x_log:
@@ -282,6 +266,41 @@ class LookupTable(object):
             s += ', f_log=True'
         s += ')'
         return s
+
+    @classmethod
+    def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False):
+        """Create a LookupTable from a file of x, f values.
+
+        This reads in a file, which should contain two columns with the x and f values.
+
+        @param file_name    A file from which to read the `(x,f)` pairs.
+        @param interpolant  Type of interpolation to use. [default: 'spline']
+        @param x_log        Whether the x values should be uniform in log rather than lienar.
+                            [default: False]
+        @param f_log        Whether the f values should be interpolated using their logarithms
+                            rather than their raw values. [default: False]
+        """
+        # We don't require pandas as a dependency, but if it's available, this is much faster.
+        # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+        CParserError = AttributeError # In case we don't get to the line below where we import
+                                      # it from pandas.parser
+        try:
+            import pandas
+            try:
+                # version >= 0.20
+                from pandas.io.common import CParserError
+            except ImportError:
+                # version < 0.20
+                from pandas.parser import CParserError
+            data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
+            data = data.values.transpose()
+        except (ImportError, AttributeError, CParserError):
+            data = np.loadtxt(file_name).transpose()
+        if data.shape[0] != 2:
+            raise ValueError("File %s provided for LookupTable does not have 2 columns"%file_name)
+        x=data[0]
+        f=data[1]
+        return LookupTable(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
 
     @classmethod
     def from_func(cls, func, x_min, x_max, npoints=2000, interpolant='spline',
