@@ -289,10 +289,10 @@ class SiliconSensor(Sensor):
 
     @classmethod
     def simple_treerings(cls, amplitude=0.5, period=100., r_max=8000., dr=None):
-        """Make a simple tree ring pattern that can be used as the treering_func parameter of
-        SiliconSensor.
+        """Make a simple sinusoidal tree ring pattern that can be used as the treering_func
+        parameter of SiliconSensor.
 
-        The functional form is amplitude * cos(r / (2*pi*period))
+        The functional form is f(r) = amplitude * cos(r / (2*pi*period))
 
         @param amplitude    The amplitude of the tree ring pattern distortion.  Typically
                             this is less than 0.01 pixels. [default: 0.5]

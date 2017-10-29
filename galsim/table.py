@@ -62,8 +62,8 @@ class LookupTable(object):
 
     There are also two factory functions which can be used to build a LookupTable:
 
-        from_func makes a LookupTable from a callable function over a given range of x values.
-        from_file reads in a file of x and f values.
+        LookupTable.from_func   makes a LookupTable from a callable function
+        LookupTable.from_file   reads in a file of x and f values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law

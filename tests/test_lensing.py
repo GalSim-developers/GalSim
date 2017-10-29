@@ -822,7 +822,6 @@ def test_power_spectrum_with_kappa():
     # First lookup a cosmologically relevant power spectrum (bandlimited version to remove aliasing
     # and allow high-precision comparison).
     tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
-                                          #interpolant='linear')
 
     # Begin with E-mode input power
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
@@ -1010,7 +1009,6 @@ def test_periodic():
 
     # Set up a cosmological shear power spectrum.
     tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
-                                          #interpolant='linear')
     ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
     do_pickle(ps)
 
