@@ -165,12 +165,8 @@ class SiliconSensor(Sensor):
         NumVertices = self.config['NumVertices']
         Nx = self.config['PixelBoundaryNx']
         Ny = self.config['PixelBoundaryNy']
-        if 'PixelSize' in self.config:
-            PixelSize = self.config['PixelSize']
-        elif 'PixelSizeX' in self.config:
-            PixelSize = self.config['PixelSizeX']
-        else:
-            PixelSize = 10.0
+        # This parameter may be either PixelSize or PixelSizeX.
+        PixelSize = self.config.get('PixelSizeX', self.config['PixelSize'])
         SensorThickness = self.config['SensorThickness']
         num_elec = float(self.config['CollectedCharge_0_0']) / self.strength
         # Scale this too, especially important if strength >> 1
@@ -270,12 +266,7 @@ class SiliconSensor(Sensor):
         NumPhases = self.config['NumPhases']
         CollectingPhases = self.config['CollectingPhases']
         # I'm assuming square pixels for now.
-        if 'PixelSize' in self.config:
-            PixelSize = self.config['PixelSize']
-        elif 'PixelSizeX' in self.config:
-            PixelSize = self.config['PixelSizeX']
-        else:
-            PixelSize = 10.0
+        PixelSize = self.config.get('PixelSizeX', self.config['PixelSize'])
         SensorThickness = self.config['SensorThickness']
         ChannelStopWidth = self.config['ChannelStopWidth']
         Vbb = self.config['Vbb']

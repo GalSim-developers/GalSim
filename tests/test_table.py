@@ -60,6 +60,7 @@ def test_table():
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
+        assert len(table1) == len(args1)
 
         # The 4th item is in the args list, so it should be exactly the same as the
         # corresponding item in the vals list.

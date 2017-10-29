@@ -154,8 +154,8 @@ class LookupTable(object):
     def x_min(self): return self._x_min
     @property
     def x_max(self): return self._x_max
-    @property
-    def n_x(self): return len(self.x)
+
+    def __len__(self): return len(self.x)
 
     def __call__(self, x):
         """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
@@ -291,12 +291,12 @@ class LookupTable(object):
             try:
                 # version >= 0.20
                 from pandas.io.common import CParserError
-            except ImportError:
+            except ImportError: # pragma: no cover
                 # version < 0.20
                 from pandas.parser import CParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
-        except (ImportError, AttributeError, CParserError):
+        except (ImportError, AttributeError, CParserError): # pragma: no cover
             data = np.loadtxt(file_name).transpose()
         if data.shape[0] != 2:
             raise ValueError("File %s provided for LookupTable does not have 2 columns"%file_name)
