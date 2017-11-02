@@ -50,7 +50,7 @@ namespace galsim {
          * @param[in] rng   The BaseDeviate to use for the random number generation.
          */
         BaseNoise(boost::shared_ptr<BaseDeviate> rng) : _rng(rng)
-        { if (!_rng) _rng.reset(new BaseDeviate(0)); }
+        { if (!_rng) _rng.reset(new BaseDeviate( (long)0)); }
 
         /**
          * @brief Copy constructor shares the underlying rng.

@@ -483,7 +483,7 @@ class PowerSpectrum(object):
 
         # We have to make an adjustment to the center value to account for how the xValue function
         # of SBInterpolatedImage works.  xValue(0,0) gives the image value at the _nominal_
-        # image center.  i.e. the location you get from im.center().  However, for even-sized
+        # image center.  i.e. the location you get from im.center.  However, for even-sized
         # images, this isn't the true center, since it is constrained to be a PositionI,
         # and the true center is halfway between two pixels.
         # Therefore, we would want an input position of center to use xValue(-0.5, -0.5) in that
@@ -1094,27 +1094,27 @@ class PowerSpectrum(object):
 
                 # Then make the SBInterpolated image.
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r_new._image, xInterp=xinterp, kInterp=kinterp)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r_new._image, xInterp=xinterp, kInterp=kinterp)
             else:
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r._image, xInterp=xinterp, kInterp=kinterp)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r._image, xInterp=xinterp, kInterp=kinterp)
         else:
             if periodic:
                 # Need to expand array here, as well.
                 g1_r_new = self._wrap_image(self.im_g1)
                 g2_r_new = self._wrap_image(self.im_g2)
                 sbii_g1 = galsim._galsim.SBInterpolatedImage(
-                    g1_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g1_r_new._image, xInterp=xinterp, kInterp=kinterp)
                 sbii_g2 = galsim._galsim.SBInterpolatedImage(
-                    g2_r_new.image, xInterp=xinterp, kInterp=kinterp)
+                    g2_r_new._image, xInterp=xinterp, kInterp=kinterp)
             else:
-                sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1.image, xInterp=xinterp,
+                sbii_g1 = galsim._galsim.SBInterpolatedImage(self.im_g1._image, xInterp=xinterp,
                                                              kInterp=kinterp)
-                sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2.image, xInterp=xinterp,
+                sbii_g2 = galsim._galsim.SBInterpolatedImage(self.im_g2._image, xInterp=xinterp,
                                                              kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
@@ -1229,10 +1229,10 @@ class PowerSpectrum(object):
 
             # Then make the SBInterpolated image.
             sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                kappa_new.image, xInterp=xinterp, kInterp=kinterp)
+                kappa_new._image, xInterp=xinterp, kInterp=kinterp)
         else:
             sbii_kappa = galsim._galsim.SBInterpolatedImage(
-                self.im_kappa.image, xInterp=xinterp, kInterp=kinterp)
+                self.im_kappa._image, xInterp=xinterp, kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
         # only if we are doing a periodic treatment of the box.
@@ -1347,10 +1347,10 @@ class PowerSpectrum(object):
             im_mu_new = self._wrap_image(im_mu)
 
             # Then make the SBInterpolated image.
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp,
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new._image, xInterp=xinterp,
                                                          kInterp=kinterp)
         else:
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp,
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu._image, xInterp=xinterp,
                                                          kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but
@@ -1472,18 +1472,18 @@ class PowerSpectrum(object):
             im_g2_new = self._wrap_image(im_g2_r)
 
             # Then make the SBInterpolated image.
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new.image, xInterp=xinterp,
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_new._image, xInterp=xinterp,
                                                          kInterp=kinterp)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new.image, xInterp=xinterp,
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_new._image, xInterp=xinterp,
                                                          kInterp=kinterp)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new.image, xInterp=xinterp,
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu_new._image, xInterp=xinterp,
                                                          kInterp=kinterp)
         else:
-            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r.image, xInterp=xinterp,
+            sbii_g1 = galsim._galsim.SBInterpolatedImage(im_g1_r._image, xInterp=xinterp,
                                                          kInterp=kinterp)
-            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r.image, xInterp=xinterp,
+            sbii_g2 = galsim._galsim.SBInterpolatedImage(im_g2_r._image, xInterp=xinterp,
                                                          kInterp=kinterp)
-            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu.image, xInterp=xinterp,
+            sbii_mu = galsim._galsim.SBInterpolatedImage(im_mu._image, xInterp=xinterp,
                                                          kInterp=kinterp)
 
         # Calculate some numbers that are useful to calculate before the loop over positions, but

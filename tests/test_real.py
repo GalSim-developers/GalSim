@@ -195,7 +195,7 @@ def test_real_galaxy_makeFromImage():
     obj2 = galsim.Convolve(psf, rg_2)
     im1 = obj1.drawImage(scale=0.2, nx=12, ny=12)
     im2 = obj2.drawImage(image=im1.copy())
-    atol = obj1.getFlux()*3e-5
+    atol = obj1.flux*3e-5
     np.testing.assert_allclose(im1.array, im2.array, rtol=0, atol=atol)
 
 
@@ -555,7 +555,7 @@ def test_crg_noise_draw_transform_commutativity():
 
     psf = galsim.Gaussian(fwhm=0.6)
     crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], id=14886,
-                                     maxk=psf.maxK())
+                                     maxk=psf.maxk)
 
     factor = 1.5
     g1 = g2 = 0.1
@@ -659,8 +659,8 @@ def check_crg_noise(n_sed, n_im, n_trial, tol):
     bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
              for blim, rlim in zip(split_points[:-1], split_points[1:])]
 
-    maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxK(),
-                out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
+    maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxk,
+                out_PSF.evaluateAtWavelength(waves[-1]).maxk])
 
     SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
                        flux_type='fphotons', wave_type='nm').withFlux(1.0, visband)

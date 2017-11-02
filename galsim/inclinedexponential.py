@@ -71,15 +71,16 @@ class InclinedExponential(GSObject):
     @param gsparams             An optional GSParams argument.  See the docstring for GSParams for
                                 details. [default: None]
 
-    Methods
-    -------
+    Methods and Properties
+    ----------------------
 
-    In addition to the usual GSObject methods, InclinedExponential has the following access methods:
+    In addition to the usual GSObject methods, InclinedExponential has the following access
+    properties:
 
-        >>> inclination = inclined_exponential_obj.getInclination()
-        >>> r0 = inclined_exponential_obj.getScaleRadius()
-        >>> rh = inclined_exponential_obj.getHalfLightRadius()
-        >>> h0 = inclined_exponential_obj.getScaleHeight()
+        >>> inclination = inclined_exponential_obj.inclination
+        >>> r0 = inclined_exponential_obj.scale_radius
+        >>> rh = inclined_exponential_obj.half_light_radius
+        >>> h0 = inclined_exponential_obj.scale_height
     """
     _req_params = { "inclination" : galsim.Angle }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
@@ -138,46 +139,55 @@ class InclinedExponential(GSObject):
         if not isinstance(inclination, galsim.Angle):
             raise TypeError("Input inclination should be an Angle")
 
-        GSObject.__init__(self, _galsim.SBInclinedExponential(
-                inclination, scale_radius, scale_height, flux, gsparams))
+        self._sbp = _galsim.SBInclinedExponential(
+                inclination, scale_radius, scale_height, flux, gsparams)
         self._gsparams = gsparams
 
     def getInclination(self):
         """Return the inclination angle for this profile as a galsim.Angle instance.
         """
-        return self.SBProfile.getInclination()
+        from .deprecated import depr
+        depr("inclined_exp.getInclination()", 1.5, "inclined_exp.inclination")
+        return self.inclination
 
     def getScaleRadius(self):
         """Return the scale radius for this profile.
         """
-        return self.SBProfile.getScaleRadius()
+        from .deprecated import depr
+        depr("inclined_exp.getScaleRadius()", 1.5, "inclined_exp.scale_radius")
+        return self.scale_radius
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Exponential profile.
         """
-        # Use the factor from the Exponential class
-        return self.SBProfile.getScaleRadius() * galsim.Exponential._hlr_factor
+        from .deprecated import depr
+        depr("inclined_exp.getHalfLightRadius()", 1.5, "inclined_exp.half_light_radius")
+        return self.half_light_radius
 
     def getScaleHeight(self):
         """Return the scale height for this profile.
         """
-        return self.SBProfile.getScaleHeight()
+        from .deprecated import depr
+        depr("inclined_exp.getScaleHeight()", 1.5, "inclined_exp.scale_height")
+        return self.scale_height
 
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight() / self.SBProfile.getScaleRadius()
+        from .deprecated import depr
+        depr("inclined_exp.getScaleHOverR()", 1.5, "inclined_exp.scale_h_over_r")
+        return self.scale_h_over_r
 
     @property
-    def inclination(self): return self.getInclination()
+    def inclination(self): return self._sbp.getInclination()
     @property
-    def scale_radius(self): return self.getScaleRadius()
+    def scale_radius(self): return self._sbp.getScaleRadius()
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
+    def half_light_radius(self): return self.scale_radius * galsim.Exponential._hlr_factor
     @property
-    def scale_height(self): return self.getScaleHeight()
+    def scale_height(self): return self._sbp.getScaleHeight()
     @property
-    def scale_h_over_r(self): return self.getScaleHOverR()
+    def scale_h_over_r(self): return self.scale_height / self.scale_radius
 
     def __eq__(self, other):
         return ((isinstance(other, galsim.InclinedExponential) and

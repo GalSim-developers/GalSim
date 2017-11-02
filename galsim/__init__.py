@@ -94,7 +94,7 @@ version = __version__
 from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD, _BoundsI
 from .shear import Shear, _Shear
-from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
+from .angle import Angle, _Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
@@ -120,7 +120,7 @@ from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
-from .shapelet import Shapelet, ShapeletSize, FitShapelet
+from .shapelet import Shapelet
 from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant

@@ -120,7 +120,7 @@ Radian access method
 Since extracting the value in radians is extremely common, we have an accessor method to do this
 quickly:
 
-    >>> x = theta.rad()
+    >>> x = theta.rad
     >>> print x
     1.57079632679
 
@@ -157,10 +157,16 @@ There are convenience function for getting the sin, cos, and tan of an angle, al
 one for getting sin and cos together, which should be more efficient than doing sin and
 cos separately:
 
-    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
-    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad())
-    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad())
+    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad)
+    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad)
+    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad)
     >>> sint, cost = theta.sincos()
+
+A consequence of this is that you can also use numpy trig functions directly on Angles:
+
+    >>> sint = numpy.sin(theta)
+    >>> cost = numpy.cos(theta)
+    >>> tant = numpy.tan(theta)
 
 Wrapping
 --------
@@ -184,9 +190,9 @@ you would call
 @returns the equivalent angle within the range [center-pi, center+pi)
 """
 
-Angle.__str__ = lambda self: str(self.rad()) + ' radians'
-Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
-Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad() == other.rad()
+Angle.__str__ = lambda self: str(self.rad) + ' radians'
+Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad
+Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad == other.rad
 Angle.__ne__ = lambda self, other: not self.__eq__(other)
 Angle.__neg__ = lambda self: -1. * self
 Angle.__hash__ = lambda self: hash(repr(self))
@@ -216,13 +222,13 @@ def hms(self, sep=":"):
     An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
-    Note: the reverse process is effected by HMS_Angle:
+    Note: the reverse process is effected by Angle.from_hms:
 
         >>> angle = -5.357 * galsim.hours
         >>> hms = angle.hms()
         >>> print hms
         +18:38:34.80000000
-        >>> angle2 = galsim.HMS_Angle(hms)
+        >>> angle2 = galsim.Angle.from_hms(hms)
         >>> print angle2 / galsim.hours
         18.643
         >>> print angle2 / galsim.hours - 24
@@ -240,17 +246,17 @@ def hms(self, sep=":"):
     return _make_dms_string(h,sep)
 
 def dms(self, sep=":"):
-    """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal
+    """Return a DMS representation of the angle as a string: (+/-)dd:mm:ss.decimal
     An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
-    Note: the reverse process is effected by DMS_Angle:
+    Note: the reverse process is effected by Angle.from_dms:
 
         >>> angle = -(5 * galsim.degrees + 13 * galsim.arcmin + 23 * galsim.arcsec)
         >>> dms = angle.dms()
         >>> print dms
         -05:13:23.00000000
-        >>> angle2 = galsim.DMS_Angle(dms)
+        >>> angle2 = galsim.Angle.from_dms(dms)
         >>> print angle2 / galsim.degrees
         -5.22305555556
         >>> print angle2 - angle
@@ -268,7 +274,7 @@ Angle.dms = dms
 
 # Enable pickling
 def Angle_getstate(self):
-    return self.rad()
+    return self.rad
 def Angle_setstate(self, theta):
     self.__init__(theta, galsim.radians)
 Angle.__getstate__ = Angle_getstate
@@ -294,7 +300,7 @@ def parse_dms(s):
 
     return sign * (d + m/60. + s/3600.)
 
-def HMS_Angle(str):
+def Angle_from_hms(cls, hms_string):
     """Convert a string of the form hh:mm:ss.decimal into an Angle.
 
     There may be an initial + or - (or neither), then two digits for the hours, two for the
@@ -308,7 +314,7 @@ def HMS_Angle(str):
         >>> hms = angle.hms()
         >>> print hms
         +18:38:34.80000000
-        >>> angle2 = galsim.HMS_Angle(hms)
+        >>> angle2 = galsim.Angle.from_hms(hms)
         >>> print angle2 / galsim.hours
         18.643
         >>> print angle2 / galsim.hours - 24
@@ -318,9 +324,9 @@ def HMS_Angle(str):
 
     @returns the corresponding Angle instance
     """
-    return parse_dms(str) * galsim.hours
+    return parse_dms(hms_string) * galsim.hours
 
-def DMS_Angle(str):
+def Angle_from_dms(cls, dms_string):
     """Convert a string of the form dd:mm:ss.decimal into an Angle.
 
     There may be an initial + or - (or neither), then two digits for the degrees, two for the
@@ -330,7 +336,48 @@ def DMS_Angle(str):
 
     @returns the corresponding Angle instance
     """
-    return parse_dms(str) * galsim.degrees
+    return parse_dms(dms_string) * galsim.degrees
+
+Angle.from_hms = classmethod(Angle_from_hms)
+Angle.from_dms = classmethod(Angle_from_dms)
+
+class rad_type(float):
+    """The return type of Angle.rad
+
+    A special type that works in most ways as a float, but which allows the use of Angle.rad()
+    as a function rather than a property, but raising a deprecation warning.
+
+    If you have trouble using this type as a float, you can write
+
+        >>> x = float(angle.rad)
+
+    to explicitly turn it into a regular float.  This won't be necessary in version 2.0
+    (and it's probably not ever necessary now).
+    """
+    def __init__(self, x):
+        float.__init__(x)
+
+    def __call__(self):
+        from .deprecated import depr
+        depr("angle.rad()", 1.5, "angle.rad",
+             "rad is now a property rather than a function.  Although note that the return "+
+             "type is not exactly a float (so you can get this message), but acts in most ways "+
+             "list one and is convertible into a real float with float(angle.rad) if needed.")
+        return float(self)
+
+Angle_rad_function = Angle.rad
+def Angle_rad_property(self):
+    return rad_type(Angle_rad_function(self))
+
+Angle.rad = property(Angle_rad_property)
+
+def _Angle(theta):
+    """Equivalent to ``Angle(theta, coord.radians)``, but without the normal overhead (which isn't
+    much to be honest, but this is nonetheless slightly quicker).
+
+    :param theta:   The numerical value of the angle in radians.
+    """
+    return Angle(theta, galsim.radians)
 
 set_func_doc(Angle.wrap, """Wrap Angle to lie in the range [-pi, pi) radians.
 

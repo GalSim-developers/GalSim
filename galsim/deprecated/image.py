@@ -116,3 +116,29 @@ def at(self, x, y):
     return self.getValue(x,y)
 
 galsim.Image.at = at
+
+def Image_getXMin(self):
+    depr('image.getXMin()', 1.5, 'image.xmin')
+    return self.xmin
+
+def Image_getXMax(self):
+    depr('image.getXMax()', 1.5, 'image.xmax')
+    return self.xmax
+
+def Image_getYMin(self):
+    depr('image.getYMin()', 1.5, 'image.ymin')
+    return self.ymin
+
+def Image_getYMax(self):
+    depr('image.getYMax()', 1.5, 'image.ymax')
+    return self.ymax
+
+def Image_getBounds(self):
+    depr('image.getBounds()', 1.5, 'image.bounds')
+    return self.bounds
+
+galsim.Image.getXMin = Image_getXMin
+galsim.Image.getXMax = Image_getXMax
+galsim.Image.getYMin = Image_getYMin
+galsim.Image.getYMax = Image_getYMax
+galsim.Image.getBounds = Image_getBounds

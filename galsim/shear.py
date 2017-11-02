@@ -144,7 +144,7 @@ class Shear(object):
             g = kwargs.pop('g')
             if g > 1 or g < 0:
                 raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
-            self._g = g * np.exp(2j * beta.rad())
+            self._g = g * np.exp(2j * beta.rad)
 
         # e,beta
         elif 'e' in kwargs:
@@ -158,7 +158,7 @@ class Shear(object):
             e = kwargs.pop('e')
             if e > 1 or e < 0:
                 raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad())
+            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad)
 
         # eta,beta
         elif 'eta' in kwargs:
@@ -172,7 +172,7 @@ class Shear(object):
             eta = kwargs.pop('eta')
             if eta < 0:
                 raise ValueError("Requested eta is below 0: %f"%eta)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         # q,beta
         elif 'q' in kwargs:
@@ -187,7 +187,7 @@ class Shear(object):
             if q <= 0 or q > 1:
                 raise ValueError("Cannot use requested axis ratio of %f!"%q)
             eta = -np.log(q)
-            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad)
 
         elif 'beta' in kwargs:
             raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
@@ -203,75 +203,111 @@ class Shear(object):
         """Return the g1 component of the reduced shear.
         Note: s.getG1() is equivalent to s.g1
         """
-        return self._g.real
+        from .deprecated import depr
+        depr("shear.getG1()", 1.5, "shear.g1")
+        return self.g1
 
     def getG2(self):
         """Return the g2 component of the reduced shear.
         Note: s.getG2() is equivalent to s.g2
         """
-        return self._g.imag
+        from .deprecated import depr
+        depr("shear.getG2()", 1.5, "shear.g2")
+        return self.g2
 
     def getG(self):
         """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
         Note: s.getG() is equivalent to s.g
         """
-        return abs(self._g)
+        from .deprecated import depr
+        depr("shear.getG()", 1.5, "shear.g")
+        return self.g
 
     def getBeta(self):
         """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
         Note: s.getBeta() is equivalent to s.beta
         """
-        return 0.5 * np.angle(self._g) * galsim.radians
+        from .deprecated import depr
+        depr("shear.getBeta()", 1.5, "shear.beta")
+        return self.beta
 
     def getShear(self):
         """Return the reduced shear as a complex number g1 + 1j * g2
         Note: s.getShear() is equivalent to s.shear
         """
-        return self._g
+        from .deprecated import depr
+        depr("shear.getShear()", 1.5, "shear.shear")
+        return self.shear
 
     def getE1(self):
         """Return the e1 component of the distortion.
         Note: s.getE1() is equivalent to s.e1
         """
-        return self._g.real * self._g2e(abs(self._g)**2)
+        from .deprecated import depr
+        depr("shear.getE1()", 1.5, "shear.e1")
+        return self.e1
 
     def getE2(self):
         """Return the e2 component of the distortion.
         Note: s.getE2() is equivalent to s.e2
         """
-        return self._g.imag * self._g2e(abs(self._g)**2)
+        from .deprecated import depr
+        depr("shear.getE2()", 1.5, "shear.e2")
+        return self.e2
 
     def getE(self):
         """Return the magnitude of the distortion |e1 + i e2| = sqrt(e1**2 + e2**2)
         Note: s.getE() is equivalent to s.e
         """
-        return abs(self._g) * self._g2e(abs(self._g)**2)
+        from .deprecated import depr
+        depr("shear.getE()", 1.5, "shear.e")
+        return self.e
 
     def getESq(self):
         """Return the magnitude squared of the distortion |e1 + i e2|**2 = e1**2 + e2**2
         Note: s.getESq() is equivalent to s.esq
         """
-        return self.e**2
+        from .deprecated import depr
+        depr("shear.getESq()", 1.5, "shear.esq")
+        return self.esq
 
     def getEta(self):
         """Return the magnitude of the conformal shear eta = atanh(e) = 2 atanh(g)
         Note: s.getEta() is equivalent to s.eta
         """
-        return abs(self._g) * self._g2eta(abs(self._g))
+        from .deprecated import depr
+        depr("shear.getEta()", 1.5, "shear.eta")
+        return self.eta
 
     # make it possible to access g, e, etc. of some Shear object called name using name.g, name.e
-    g1 = property(getG1)
-    g2 = property(getG2)
-    g = property(getG)
-    beta = property(getBeta)
+    @property
+    def g1(self): return self._g.real
 
-    shear = property(getShear)
+    @property
+    def g2(self): return self._g.imag
+    @property
+    def g(self): return abs(self._g)
+    @property
+    def beta(self): return galsim._Angle(0.5 * np.angle(self._g))
 
-    e1 = property(getE1)
-    e2 = property(getE2)
-    e = property(getE)
-    esq = property(getESq)
-    eta = property(getEta)
+    @property
+    def shear(self): return self._g
+
+    @property
+    def e1(self): return self._g.real * self._g2e(self.g**2)
+    @property
+    def e2(self): return self._g.imag * self._g2e(self.g**2)
+    @property
+    def e(self): return self.g * self._g2e(self.g**2)
+    @property
+    def esq(self): return self.e**2
+
+    @property
+    def eta1(self): return self._g.real * self._g2eta(self.g)
+    @property
+    def eta2(self): return self._g.imag * self._g2eta(self.g)
+    @property
+    def eta(self): return self.g * self._g2eta(self.g)
 
     # Helpers to convert between different conventions
     # Note: These return the scale factor by which to multiply.  Not the final value.

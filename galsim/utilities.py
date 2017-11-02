@@ -248,7 +248,7 @@ def convert_interpolant(interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
-        return galsim.Interpolant(interpolant)
+        return galsim.Interpolant.from_name(interpolant)
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
@@ -739,7 +739,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                 img.wcs = img_wcs
             ## Preserve the origin so that the interleaved image has the same bounds as the image
             ## that is being deinterleaved.
-            img.setOrigin(image.origin())
+            img.setOrigin(image.origin)
 
     elif suppress_warnings is False:
         import warnings
@@ -913,10 +913,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         warnings.warn("Interleaved image could not be assigned a WCS automatically.")
 
     # Assign a possibly non-trivial origin and warn if individual image have different origins.
-    orig = im_list[0].origin()
+    orig = im_list[0].origin
     img.setOrigin(orig)
     for im in im_list[1:]:
-        if not im.origin()==orig:  # pragma: no cover
+        if not im.origin==orig:  # pragma: no cover
             import warnings
             warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
             origin of the first Image instance in 'im_list' to the interleaved image.")
@@ -1119,10 +1119,10 @@ def structure_function(image):
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
 def combine_wave_list(*args):
-    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    """Combine wave_list attributes of all objects in obj_list while respecting blue_limit and
     red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
 
-    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @param obj_list  List of SED, Bandpass, or ChromaticObject objects.
     @returns        wave_list, blue_limit, red_limit
     """
     if len(args) == 1:
@@ -1268,7 +1268,7 @@ def unweighted_moments(image, origin=galsim.PositionD(0, 0)):
     @returns  Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
     """
     a = image.array.astype(float)
-    offset = image.origin() - origin
+    offset = image.origin - origin
     xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
                                np.arange(image.array.shape[0]) + offset.y)
     M0 = np.sum(a)

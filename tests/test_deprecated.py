@@ -129,13 +129,15 @@ def test_dep_base():
     """
     g = galsim.Gaussian(sigma=0.34)
 
-    np.testing.assert_almost_equal(check_dep(g.nyquistDx), g.nyquistScale())
+    np.testing.assert_almost_equal(check_dep(g.nyquistDx), check_dep(g.nyquistScale))
 
     check_dep(g.setFlux,flux=1.7)
-    np.testing.assert_almost_equal(g.getFlux(), 1.7)
+    np.testing.assert_almost_equal(check_dep(g.getFlux), 1.7)
 
+    g2 = g.withScaledFlux(1.9)
     check_dep(g.scaleFlux,flux_ratio=1.9)
-    np.testing.assert_almost_equal(g.getFlux(), 1.7 * 1.9)
+    np.testing.assert_almost_equal(check_dep(g.getFlux), g2.flux)
+    assert check_dep(g2.getFluxRatio) == g2.flux_ratio
 
     g2 = g.expand(4.3)
     g3 = check_dep(g.createExpanded,scale=4.3)
@@ -185,10 +187,12 @@ def test_dep_base():
 
     check_dep(g.applyTransformation, dudx=0.1, dudy=1.09, dvdx=-1.32, dvdy=-0.09)
     gsobject_compare(g,g2)
+    np.testing.assert_array_equal(check_dep(g2.getJac), g2.jac.ravel())
 
     g2 = g.shift(0.16, -0.79)
     g3 = check_dep(g.createShifted,dx=0.16, dy=-0.79)
     gsobject_compare(g3,g2)
+    assert check_dep(g2.getOffset) == g2.offset
 
     check_dep(g.applyShift,dx=0.16, dy=-0.79)
     gsobject_compare(g,g2)
@@ -226,31 +230,134 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, gsp2.folding_threshold)
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
-    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    test_gal = galsim.Gaussian(flux=1.7, half_light_radius = test_hlr)
     test_gal_copy = check_dep(test_gal.copy)
-    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getSigma) == test_gal.sigma
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+
+    assert check_dep(test_gal.maxK) == test_gal.maxk
+    assert check_dep(test_gal.nyquistScale) == test_gal.nyquist_scale
+    assert check_dep(test_gal.stepK) == test_gal.stepk
+    assert check_dep(test_gal.hasHardEdges) == test_gal.has_hard_edges
+    assert check_dep(test_gal.isAxisymmetric) == test_gal.is_axisymmetric
+    assert check_dep(test_gal.isAnalyticX) == test_gal.is_analytic_x
+    assert check_dep(test_gal.isAnalyticK) == test_gal.is_analytic_k
+    assert check_dep(test_gal.getPositiveFlux) == test_gal.positive_flux
+    assert check_dep(test_gal.getNegativeFlux) == test_gal.negative_flux
+    assert check_dep(test_gal.maxSB) == test_gal.max_sb
+    assert check_dep(test_gal.centroid) == test_gal.centroid
+ 
+    test_gal = galsim.Exponential(flux=1.7, scale_radius = test_scale[0])
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
 
     for n, scale in zip(test_sersic_n, test_scale) :
         if n == -4:
-            test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+            test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.7)
         else:
-            test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
-        test_gal_copy = check_dep(test_gal1.copy)
+            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.7)
+        test_gal_copy = check_dep(test_gal.copy)
+        assert check_dep(test_gal.getFlux) == test_gal.flux
+        assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+        if n > 0:
+            assert check_dep(test_gal.getN) == test_gal.n
+        assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+        assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+        assert check_dep(test_gal.getTrunc) == test_gal.trunc
 
-    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
+    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.7)
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getLamOverD) == test_gal.lam_over_diam
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getObscuration) == test_gal.obscuration
 
     test_beta = 2.
-    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
+    test_gal = galsim.Moffat(flux=1.7, beta=test_beta, trunc=2.*test_fwhm,
                              fwhm = test_fwhm)
     test_gal_copy = check_dep(test_gal.copy)
-    test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getBeta) == test_gal.beta
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getTrunc) == test_gal.trunc
+
+    test_gal = galsim.Kolmogorov(flux=1.7, fwhm = test_fwhm)
     test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getLamOverR0) == test_gal.lam_over_r0
+    assert check_dep(test_gal.getFWHM) == test_gal.fwhm
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+
+    test_gal = galsim.Box(flux=1.7, width=0.5, height=0.9)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getWidth) == test_gal.width
+    assert check_dep(test_gal.getHeight) == test_gal.height
+
+    test_gal = galsim.Pixel(flux=1.7, scale=0.3)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScale) == test_gal.scale
+
+    test_gal = galsim.TopHat(flux=1.7, radius=0.8)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getRadius) == test_gal.radius
 
     for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
-        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
+        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.7)
         test_gal_copy = check_dep(test_gal.copy)
+        assert check_dep(test_gal.getFlux) == test_gal.flux
+        assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+        assert check_dep(test_gal.getNu) == test_gal.nu
+        assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+        assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+
+    test_gal = galsim.InclinedExponential(flux=1.7, scale_radius=test_scale[0],
+                                          inclination=17*galsim.degrees, scale_height=0.4)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getScaleHeight) == test_gal.scale_height
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getInclination) == test_gal.inclination
+    assert check_dep(test_gal.getScaleHOverR) == test_gal.scale_h_over_r
+
+    test_gal = galsim.InclinedSersic(flux=1.7, n=1.5, scale_radius=test_scale[0],
+                                     inclination=17*galsim.degrees, scale_height=0.4)
+    test_gal_copy = check_dep(test_gal.copy)
+    assert check_dep(test_gal.getFlux) == test_gal.flux
+    assert check_dep(test_gal.getGSParams) == test_gal.gsparams
+    assert check_dep(test_gal.getScaleRadius) == test_gal.scale_radius
+    assert check_dep(test_gal.getN) == test_gal.n
+    assert check_dep(test_gal.getScaleHeight) == test_gal.scale_height
+    assert check_dep(test_gal.getHalfLightRadius) == test_gal.half_light_radius
+    assert check_dep(test_gal.getInclination) == test_gal.inclination
+    assert check_dep(test_gal.getScaleHOverR) == test_gal.scale_h_over_r
+    assert check_dep(test_gal.getTrunc) == test_gal.trunc
+
+    # Check that GSObject(sbp) works but raises a deprecation warning
+    gso = check_dep(galsim.GSObject, g._sbp)
+    sbp = check_dep(getattr, gso, 'SBProfile')
+    sbp = check_dep(getattr, g, 'SBProfile')
+    do_pickle(gso, irreprable=True)
+    do_pickle(sbp)
 
 @timer
 def test_dep_bounds():
@@ -295,6 +402,22 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b2.ymin, 199)
         np.testing.assert_almost_equal(b2.ymax, 503)
 
+        assert check_dep(b.center) == b.center
+        assert check_dep(b.origin) == b.origin
+        assert check_dep(b.trueCenter) == b.true_center
+        do_pickle(b.center)
+
+        p1 = b.center
+        p2 = galsim.PositionI(p1.x,p1.y) if b == bi else galsim.PositionD(p1.x, p1.y)
+        assert p1 + p1 == p2 + p2
+        assert p1 + p2 == p2 + p2
+        assert p2 + p1 == p2 + p2
+        assert p1 - p1 == p2 - p2
+        assert p1 - p2 == p2 - p2
+        assert p2 - p1 == p2 - p2
+        assert p1 / 2 == p2 / 2
+        assert p1 * 2 == p2 * 2
+        assert 2 * p1 == 2 * p2
 
 @timer
 def test_dep_chromatic():
@@ -352,6 +475,22 @@ def test_dep_chromatic():
         obj.drawImage(band, integrator=integrator2).array
     )
 
+    cgal = galsim.ChromaticObject(g)
+    assert check_dep(getattr, cgal, 'obj') == cgal._obj
+    csum = galsim.ChromaticSum(cgal)
+    assert check_dep(getattr, csum, 'objlist') == csum.obj_list
+    cconv = galsim.ChromaticConvolution(cgal)
+    assert check_dep(getattr, cconv, 'objlist') == cconv.obj_list
+
+    # Check centroid -> calculateCentroid
+    sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
+    shift_fn = lambda w: (w, 0)
+    gal = sed * galsim.Gaussian(fwhm=1)
+    gal = gal.shift(shift_fn)
+    cen = check_dep(gal.centroid, bp)
+    np.testing.assert_almost_equal(cen.x, 0.75, 5, "ChromaticObject.centroid() failed")
+    np.testing.assert_almost_equal(cen.y, 0.0, 5, "ChromaticObject.centroid() failed")
 
 
 @timer
@@ -608,12 +747,18 @@ def test_dep_image():
         im1 = check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)(ncol,nrow)
         bounds = galsim.BoundsI(1,ncol,1,nrow)
 
-        assert im1.getXMin() == 1
-        assert im1.getXMax() == ncol
-        assert im1.getYMin() == 1
-        assert im1.getYMax() == nrow
-        assert im1.getBounds() == bounds
+        assert check_dep(im1.getXMin) == 1
+        assert check_dep(im1.getXMax) == ncol
+        assert check_dep(im1.getYMin) == 1
+        assert check_dep(im1.getYMax) == nrow
+        assert check_dep(im1.getBounds) == bounds
         assert im1.bounds == bounds
+        assert check_dep(im1.center) == im1.center
+        assert check_dep(im1.origin) == im1.origin
+        assert check_dep(im1.trueCenter) == im1.true_center
+        assert check_dep(im1.bounds.center) == im1.bounds.center
+        assert check_dep(im1.bounds.origin) == im1.bounds.origin
+        assert check_dep(im1.bounds.trueCenter) == im1.bounds.true_center
 
         # Check basic constructor from ncol, nrow
         # Also test alternate name of image type: ImageD, ImageF, etc.
@@ -621,10 +766,10 @@ def test_dep_image():
         im2 = image_type(bounds)
         im2_view = im2.view()
 
-        assert im2_view.getXMin() == 1
-        assert im2_view.getXMax() == ncol
-        assert im2_view.getYMin() == 1
-        assert im2_view.getYMax() == nrow
+        assert check_dep(im2_view.getXMin) == 1
+        assert check_dep(im2_view.getXMax) == ncol
+        assert check_dep(im2_view.getYMin) == 1
+        assert check_dep(im2_view.getYMax) == nrow
         assert im2_view.bounds == bounds
 
         # Check various ways to set and get values
@@ -645,6 +790,11 @@ def test_dep_image():
                 assert im1.view()(x,y) == 10*x+y
                 assert im2(x,y) == 10*x+y
                 assert im2_view(x,y) == 10*x+y
+
+                assert check_dep(getattr, im1, 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im1.view(), 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im2, 'image')(x,y) == 10*x+y
+                assert check_dep(getattr, im2_view, 'image')(x,y) == 10*x+y
 
         # Check view of given data
         im3_view = check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
@@ -693,32 +843,49 @@ def test_dep_noise():
     np.testing.assert_almost_equal(gn.getVariance(), 1.7 * 1.9)
 
     check_dep(gn.setSigma, 2.3)
-    np.testing.assert_almost_equal(gn.getSigma(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gn.getSigma), 2.3)
 
     pn = galsim.PoissonNoise(rng=rng, sky_level=0.3)
     check_dep(pn.setSkyLevel, 2.3)
-    np.testing.assert_almost_equal(pn.getSkyLevel(), 2.3)
+    np.testing.assert_almost_equal(check_dep(pn.getSkyLevel), 2.3)
 
     cn = galsim.CCDNoise(rng=rng, gain=1.7, read_noise=0.5, sky_level=0.3)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 0.3)
-    np.testing.assert_almost_equal(cn.getGain(), 1.7)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 0.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 1.7)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setSkyLevel, 2.3)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 1.7)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 1.7)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setGain, 0.9)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 0.9)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 0.5)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 0.9)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 0.5)
 
     check_dep(cn.setReadNoise, 11)
-    np.testing.assert_almost_equal(cn.getSkyLevel(), 2.3)
-    np.testing.assert_almost_equal(cn.getGain(), 0.9)
-    np.testing.assert_almost_equal(cn.getReadNoise(), 11)
+    np.testing.assert_almost_equal(check_dep(cn.getSkyLevel), 2.3)
+    np.testing.assert_almost_equal(check_dep(cn.getGain), 0.9)
+    np.testing.assert_almost_equal(check_dep(cn.getReadNoise), 11)
 
+    noise_image = galsim.Image(10,10, init_value=12)
+    vn = galsim.VariableGaussianNoise(rng, noise_image)
+    np.testing.assert_almost_equal(check_dep(vn.getVarImage).array, noise_image.array)
+
+    im1 = galsim.Image(10,10)
+    im2 = galsim.Image(10,10)
+    gn1 = galsim.GaussianNoise(rng.duplicate(), sigma=0.3)
+    gn2 = galsim.GaussianNoise(rng.duplicate(), sigma=0.3)
+    check_dep(gn1.applyToView, im1._image.view())
+    gn2.applyTo(im2)
+    np.testing.assert_almost_equal(im1.array, im2.array)
+
+    vn1 = galsim.VariableGaussianNoise(rng.duplicate(), noise_image)
+    vn2 = galsim.VariableGaussianNoise(rng.duplicate(), noise_image)
+    check_dep(vn1.applyToView, im1._image.view())
+    vn2.applyTo(im2)
+    np.testing.assert_almost_equal(im1.array, im2.array)
 
 @timer
 def test_dep_random():
@@ -727,69 +894,69 @@ def test_dep_random():
     rng = galsim.BaseDeviate(123)
 
     gd = galsim.GaussianDeviate(rng, mean=0.5, sigma=1.7)
-    np.testing.assert_almost_equal(gd.getMean(), 0.5)
-    np.testing.assert_almost_equal(gd.getSigma(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.5)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 1.7)
 
     check_dep(gd.setMean, 0.9)
-    np.testing.assert_almost_equal(gd.getMean(), 0.9)
-    np.testing.assert_almost_equal(gd.getSigma(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 1.7)
 
     check_dep(gd.setSigma, 2.3)
-    np.testing.assert_almost_equal(gd.getMean(), 0.9)
-    np.testing.assert_almost_equal(gd.getSigma(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gd.getMean), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getSigma), 2.3)
 
 
     bd = galsim.BinomialDeviate(rng, N=7, p=0.7)
-    np.testing.assert_almost_equal(bd.getN(), 7)
-    np.testing.assert_almost_equal(bd.getP(), 0.7)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 7)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.7)
 
     check_dep(bd.setN, 9)
-    np.testing.assert_almost_equal(bd.getN(), 9)
-    np.testing.assert_almost_equal(bd.getP(), 0.7)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 9)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.7)
 
     check_dep(bd.setP, 0.3)
-    np.testing.assert_almost_equal(bd.getN(), 9)
-    np.testing.assert_almost_equal(bd.getP(), 0.3)
+    np.testing.assert_almost_equal(check_dep(bd.getN), 9)
+    np.testing.assert_almost_equal(check_dep(bd.getP), 0.3)
 
 
     pd = galsim.PoissonDeviate(rng, mean=0.5)
-    np.testing.assert_almost_equal(pd.getMean(), 0.5)
+    np.testing.assert_almost_equal(check_dep(pd.getMean), 0.5)
 
     check_dep(pd.setMean, 0.9)
-    np.testing.assert_almost_equal(pd.getMean(), 0.9)
+    np.testing.assert_almost_equal(check_dep(pd.getMean), 0.9)
 
 
     wd = galsim.WeibullDeviate(rng, a=0.5, b=1.7)
-    np.testing.assert_almost_equal(wd.getA(), 0.5)
-    np.testing.assert_almost_equal(wd.getB(), 1.7)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.5)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 1.7)
 
     check_dep(wd.setA, 0.9)
-    np.testing.assert_almost_equal(wd.getA(), 0.9)
-    np.testing.assert_almost_equal(wd.getB(), 1.7)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.9)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 1.7)
 
     check_dep(wd.setB, 2.3)
-    np.testing.assert_almost_equal(wd.getA(), 0.9)
-    np.testing.assert_almost_equal(wd.getB(), 2.3)
+    np.testing.assert_almost_equal(check_dep(wd.getA), 0.9)
+    np.testing.assert_almost_equal(check_dep(wd.getB), 2.3)
 
 
     gd = galsim.GammaDeviate(rng, k=0.5, theta=1.7)
-    np.testing.assert_almost_equal(gd.getK(), 0.5)
-    np.testing.assert_almost_equal(gd.getTheta(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.5)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 1.7)
 
     check_dep(gd.setK, 0.9)
-    np.testing.assert_almost_equal(gd.getK(), 0.9)
-    np.testing.assert_almost_equal(gd.getTheta(), 1.7)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 1.7)
 
     check_dep(gd.setTheta, 2.3)
-    np.testing.assert_almost_equal(gd.getK(), 0.9)
-    np.testing.assert_almost_equal(gd.getTheta(), 2.3)
+    np.testing.assert_almost_equal(check_dep(gd.getK), 0.9)
+    np.testing.assert_almost_equal(check_dep(gd.getTheta), 2.3)
 
 
     cd = galsim.Chi2Deviate(rng, n=5)
-    np.testing.assert_almost_equal(cd.getN(), 5)
+    np.testing.assert_almost_equal(check_dep(cd.getN), 5)
 
     check_dep(cd.setN, 9)
-    np.testing.assert_almost_equal(cd.getN(), 9)
+    np.testing.assert_almost_equal(check_dep(cd.getN), 9)
 
 
 @timer
@@ -876,7 +1043,8 @@ def test_dep_sed():
 def test_dep_shapelet():
     """Test the deprecated methods in galsim/deprecated/shapelet.py
     """
-    np.testing.assert_almost_equal(check_dep(galsim.LVectorSize,12), galsim.ShapeletSize(12))
+    np.testing.assert_almost_equal(check_dep(galsim.LVectorSize,12), galsim.Shapelet.size(12))
+    np.testing.assert_almost_equal(check_dep(galsim.ShapeletSize,12), galsim.Shapelet.size(12))
 
     # The next bit is from the old test_shapelet_adjustments() test
 
@@ -901,6 +1069,11 @@ def test_dep_shapelet():
     ref_im = galsim.ImageF(nx,ny)
     ref_shapelet.drawImage(ref_im, scale=scale, method='no_pixel')
 
+    # test deprecated LVector
+    lvec = check_dep(galsim.shapelet.LVector, order, np.array(bvec))
+    np.testing.assert_array_equal(lvec.array, ref_shapelet.bvec)
+    np.testing.assert_array_equal(lvec.order, ref_shapelet.order)
+
     # test setsigma
     shapelet = galsim.Shapelet(sigma=1., order=order, bvec=bvec)
     check_dep(shapelet.setSigma,sigma)
@@ -908,6 +1081,9 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setSigma disagrees with reference Shapelet")
+    assert check_dep(shapelet.getSigma) == shapelet.sigma
+    assert check_dep(shapelet.getFlux) == shapelet.flux
+    assert check_dep(shapelet.getGSParams) == shapelet.gsparams
 
     # Test setBVec
     shapelet = galsim.Shapelet(sigma=sigma, order=order)
@@ -916,6 +1092,7 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setBVec disagrees with reference Shapelet")
+    np.testing.assert_array_equal(check_dep(shapelet.getBVec), shapelet.bvec)
 
     # Test setOrder
     shapelet = galsim.Shapelet(sigma=sigma, order=2)
@@ -925,31 +1102,32 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet set with setOrder disagrees with reference Shapelet")
+    assert check_dep(shapelet.getOrder) == shapelet.order
 
     # Test that changing the order preserves the values to the extent possible.
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     check_dep(shapelet.setOrder,10)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:28], bvec,
+        check_dep(shapelet.getBVec)[0:28], bvec,
         err_msg="Shapelet setOrder to larger doesn't preserve existing values.")
     np.testing.assert_array_equal(
-        shapelet.getBVec()[28:66], np.zeros(66-28),
+        check_dep(shapelet.getBVec)[28:66], np.zeros(66-28),
         err_msg="Shapelet setOrder to larger doesn't fill with zeros.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec(), bvec,
+        check_dep(shapelet.getBVec), bvec,
         err_msg="Shapelet setOrder back to original from larger doesn't preserve existing values.")
     check_dep(shapelet.setOrder,3)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10],
+        check_dep(shapelet.getBVec)[0:10], bvec[0:10],
         err_msg="Shapelet setOrder to smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10],
+        check_dep(shapelet.getBVec)[0:10], bvec[0:10],
         err_msg="Shapelet setOrder back to original from smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[10:28], np.zeros(28-10),
+        check_dep(shapelet.getBVec)[10:28], np.zeros(28-10),
         err_msg="Shapelet setOrder back to original from smaller doesn't fill with zeros.")
 
     # Test that setting a Shapelet with setNM gives the right profile
@@ -989,8 +1167,74 @@ def test_dep_shapelet():
     # Check fitImage
     s1 = galsim.Shapelet(sigma=sigma, order=10)
     check_dep(s1.fitImage, image=im)
-    s2 = galsim.FitShapelet(sigma=sigma, order=10, image=im)
-    np.testing.assert_array_almost_equal(s1.getBVec(), s2.getBVec())
+    s2 = check_dep(galsim.FitShapelet, sigma=sigma, order=10, image=im)
+    np.testing.assert_array_almost_equal(check_dep(s1.getBVec), check_dep(s2.getBVec))
+
+
+@timer
+def test_dep_shapelet_fit():
+    """Test fitting a Shapelet decomposition of an image
+    """
+    for method, norm in [('no_pixel','f'), ('sb','sb')]:
+        # We fit a shapelet approximation of a distorted Moffat profile:
+        flux = 20
+        psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
+        psf = psf.shear(g1=0.11,g2=0.07).shift(0.03,0.04)
+        scale = 0.2
+        pixel = galsim.Pixel(scale)
+        conv = galsim.Convolve([psf,pixel])
+        im1 = conv.drawImage(scale=scale, method=method)
+
+        sigma = 1.2  # Match half-light-radius as a decent first approximation.
+        shapelet = check_dep(galsim.FitShapelet, sigma, 10, im1, normalization=norm)
+        #print('fitted shapelet coefficients = ',shapelet.bvec)
+
+        # Check flux
+        print('flux = ',shapelet.flux,'  cf. ',flux)
+        np.testing.assert_almost_equal(check_dep(shapelet.getFlux) / flux, 1., 1,
+                err_msg="Fitted shapelet has the wrong flux")
+
+        # Test centroid
+        print('centroid = ',check_dep(shapelet.centroid),'  cf. ',check_dep(conv.centroid))
+        np.testing.assert_almost_equal(check_dep(shapelet.centroid).x, check_dep(conv.centroid).x, 2,
+                err_msg="Fitted shapelet has the wrong centroid (x)")
+        np.testing.assert_almost_equal(check_dep(shapelet.centroid).y, check_dep(conv.centroid).y, 2,
+                err_msg="Fitted shapelet has the wrong centroid (y)")
+
+        # Test drawing image from shapelet
+        im2 = im1.copy()
+        shapelet.drawImage(im2, method=method)
+        # Check that images are close to the same:
+        print('norm(diff) = ',np.sum((im1.array-im2.array)**2))
+        print('norm(im) = ',np.sum(im1.array**2))
+        print('max(diff) = ',np.max(np.abs(im1.array-im2.array)))
+        print('max(im) = ',np.max(np.abs(im1.array)))
+        peak_scale = np.max(np.abs(im1.array))*3  # Check agreement to within 3% of peak value.
+        np.testing.assert_almost_equal(im2.array/peak_scale, im1.array/peak_scale, decimal=2,
+                err_msg="Shapelet version not a good match to original")
+
+        # Remeasure -- should now be very close to the same.
+        shapelet2 = check_dep(galsim.FitShapelet, sigma, 10, im2, normalization=norm)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
+
+        # Test drawing off center
+        im2 = im1.copy()
+        offset = galsim.PositionD(0.3,1.4)
+        shapelet.drawImage(im2, method=method, offset=offset)
+        shapelet2 = check_dep(galsim.FitShapelet, sigma, 10, im2, normalization=norm,
+                                       center=check_dep(im2.trueCenter) + offset)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
+
 
 
 @timer
@@ -1022,6 +1266,18 @@ def test_dep_shear():
     np.testing.assert_almost_equal(s.eta, 0.19)
     np.testing.assert_almost_equal(s.beta / galsim.degrees, 52)
 
+    assert check_dep(s.getG1) == s.g1
+    assert check_dep(s.getG2) == s.g2
+    assert check_dep(s.getG) == s.g
+    assert check_dep(s.getBeta) == s.beta
+
+    assert check_dep(s.getE1) == s.e1
+    assert check_dep(s.getE2) == s.e2
+    assert check_dep(s.getE) == s.e
+    assert check_dep(s.getESq) == s.esq
+
+    assert check_dep(s.getEta) == s.eta
+    assert check_dep(s.getShear) == s.shear
 
 
 @timer
@@ -1178,6 +1434,9 @@ def test_dep_phase_psf():
             img1, img2,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
+    optical_screen = galsim.OpticalScreen(diam=1.0)
+    assert check_dep(getattr, optical_screen, 'coef_array') == optical_screen._coef_array
+
 @timer
 def test_dep_wmult():
     """Test drawImage with wmult parameter.
@@ -1188,7 +1447,7 @@ def test_dep_wmult():
     obj = galsim.Exponential(flux=test_flux, scale_radius=2)
     im1 = obj.drawImage(method='no_pixel')
     obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
-    nyq_scale = obj2.nyquistScale()
+    nyq_scale = check_dep(obj2.nyquistScale)
     scale = 0.51   # Just something different from 1 or dx_nyq
     im3 = galsim.ImageD(56,56)
     im5 = galsim.ImageD()
@@ -1269,8 +1528,8 @@ def test_dep_drawKImage():
             "obj.drawKImage() produced image with wrong bounds")
     assert im1.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage() produced image with wrong bounds")
-    nyq_scale = obj.nyquistScale()
-    stepk = obj.stepK()
+    nyq_scale = check_dep(obj.nyquistScale)
+    stepk = check_dep(obj.stepK)
     np.testing.assert_almost_equal(re1.scale, stepk, 9,
                                    "obj.drawKImage() produced real image with wrong scale")
     np.testing.assert_almost_equal(im1.scale, stepk, 9,
@@ -1279,7 +1538,7 @@ def test_dep_drawKImage():
                                    "Measured wrong scale after obj.drawKImage()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_almost_equal(re1(re1.bounds.center()), test_flux, 2,
+    np.testing.assert_almost_equal(re1(check_dep(re1.bounds.center)), test_flux, 2,
                                    "obj.drawKImage() produced real image with wrong flux")
     # Imaginary component should all be 0.
     np.testing.assert_almost_equal(im1.array.sum(), 0., 3,
@@ -1297,7 +1556,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re3,im3) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(re3,im3) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 2,
+    np.testing.assert_almost_equal(re3(check_dep(re3.bounds.center)), test_flux, 2,
                                    "obj.drawKImage(re3,im3) produced real image with wrong flux")
     np.testing.assert_almost_equal(im3.array.sum(), 0., 3,
                                    "obj.drawKImage(re3,im3) produced non-zero imaginary image")
@@ -1325,7 +1584,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re5,im5) produced real image with wrong scale")
     np.testing.assert_almost_equal(im5.scale, stepk, 9,
                                    "obj.drawKImage(re5,im5) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re5(re5.bounds.center()), test_flux, 2,
+    np.testing.assert_almost_equal(re5(check_dep(re5.bounds.center)), test_flux, 2,
                                    "obj.drawKImage(re5,im5) produced real image with wrong flux")
     np.testing.assert_almost_equal(im5.array.sum(), 0., 3,
                                    "obj.drawKImage(re5,im5) produced non-zero imaginary image")
@@ -1345,7 +1604,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(dx) produced real image with wrong scale")
     np.testing.assert_almost_equal(im7.scale, scale, 9,
                                    "obj.drawKImage(dx) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re7(re7.bounds.center()), test_flux, 2,
+    np.testing.assert_almost_equal(re7(check_dep(re7.bounds.center)), test_flux, 2,
                                    "obj.drawKImage(dx) produced real image with wrong flux")
     np.testing.assert_almost_equal(im7.array.astype(float).sum(), 0., 2,
                                    "obj.drawKImage(dx) produced non-zero imaginary image")
@@ -1367,7 +1626,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re9,im9) produced real image with wrong scale")
     np.testing.assert_almost_equal(im9.scale, scale, 9,
                                    "obj.drawKImage(re9,im9) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re9(re9.bounds.center()), test_flux, 4,
+    np.testing.assert_almost_equal(re9(check_dep(re9.bounds.center)), test_flux, 4,
                                    "obj.drawKImage(re9,im9) produced real image with wrong flux")
     np.testing.assert_almost_equal(im9.array.sum(), 0., 5,
                                    "obj.drawKImage(re9,im9) produced non-zero imaginary image")
@@ -1385,7 +1644,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re3,im3) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(re3,im3) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
+    np.testing.assert_almost_equal(re3(check_dep(re3.bounds.center)), test_flux, 4,
                                    "obj.drawKImage(re3,im3) produced real image with wrong flux")
     np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
                                    "obj.drawKImage(re3,im3) produced non-zero imaginary image")
@@ -1399,7 +1658,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re3,im3) produced real image with wrong scale")
     np.testing.assert_almost_equal(im3.scale, stepk, 9,
                                    "obj.drawKImage(re3,im3) produced imag image with wrong scale")
-    np.testing.assert_almost_equal(re3(re3.bounds.center()), test_flux, 4,
+    np.testing.assert_almost_equal(re3(check_dep(re3.bounds.center)), test_flux, 4,
                                    "obj.drawKImage(re3,im3) produced real image with wrong flux")
     np.testing.assert_almost_equal(im3.array.sum(), 0., 5,
                                    "obj.drawKImage(re3,im3) produced non-zero imaginary image")
@@ -1421,7 +1680,7 @@ def test_dep_drawKImage():
             im9.scale, scale, 9,
             "obj.drawKImage(re9,im9,scale) produced imag image with wrong scale")
     np.testing.assert_almost_equal(
-            re9(re9.bounds.center()), test_flux, 4,
+            re9(check_dep(re9.bounds.center)), test_flux, 4,
             "obj.drawKImage(re9,im9,scale) produced real image with wrong flux")
     np.testing.assert_almost_equal(
             im9.array.sum(), 0., 5,
@@ -1443,7 +1702,7 @@ def test_dep_drawKImage():
             im3.scale, stepk, 9,
             "obj.drawKImage(re3,im3,scale<0) produced imag image with wrong scale")
     np.testing.assert_almost_equal(
-            re3(re3.bounds.center()), test_flux, 4,
+            re3(check_dep(re3.bounds.center)), test_flux, 4,
             "obj.drawKImage(re3,im3,scale<0) produced real image with wrong flux")
     np.testing.assert_almost_equal(
             im3.array.sum(), 0., 5,
@@ -1461,7 +1720,7 @@ def test_dep_drawKImage():
         im3.scale, stepk, 9,
         "obj.drawKImage(re3,im3,scale=0) produced imag image with wrong scale")
     np.testing.assert_almost_equal(
-        re3(re3.bounds.center()), test_flux, 4,
+        re3(check_dep(re3.bounds.center)), test_flux, 4,
         "obj.drawKImage(re3,im3,scale=0) produced real image with wrong flux")
     np.testing.assert_almost_equal(
         im3.array.sum(), 0., 5,
@@ -1525,7 +1784,7 @@ def test_dep_drawKImage_Gaussian():
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        check_dep(gal.getFlux), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -1560,15 +1819,15 @@ def test_dep_kroundtrip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
-    do_pickle(b.SBProfile)
-    do_pickle(b.SBProfile, lambda x: repr(x))
+    do_pickle(check_dep(getattr, b, 'SBProfile'))
+    do_pickle(check_dep(getattr, b, 'SBProfile'), lambda x: repr(x))
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
             err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
                      .format(kx, ky)))
 
-    np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+    np.testing.assert_almost_equal(check_dep(a.getFlux), check_dep(b.getFlux), 6) #Fails at 7th decimal
 
     real_b, imag_b = check_dep_tuple2(check_dep(b.drawKImage, real_a.copy(), imag_a.copy()))
     # Fails at 4th decimal
@@ -1591,7 +1850,7 @@ def test_dep_kroundtrip():
                                           scale=real_a.scale))
         b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
-        np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
+        np.testing.assert_almost_equal(check_dep(a.getFlux), check_dep(b.getFlux), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
         # One of these fails at 6th decimal
         np.testing.assert_array_almost_equal(img_a.array, img_b.array, 5)
@@ -1608,16 +1867,16 @@ def test_dep_kroundtrip():
     # Does the stepk parameter do anything?
     a = final
     b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
-    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
-    np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
-    np.testing.assert_almost_equal(b.maxK(), c.maxK())
+    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*check_dep(b.stepK))
+    np.testing.assert_almost_equal(2*check_dep(b.stepK), check_dep(c.stepK))
+    np.testing.assert_almost_equal(check_dep(b.maxK), check_dep(c.maxK))
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
         b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
-        np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
-        np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
+        np.testing.assert_almost_equal(check_dep(a.centroid).x, check_dep(b.centroid).x, 4) #Fails at 5th decimal
+        np.testing.assert_almost_equal(check_dep(a.centroid).y, check_dep(b.centroid).y, 4)
 
     # Test convolution with another object.
     a = final
@@ -1747,6 +2006,139 @@ def test_dep_simreal():
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
 
+@timer
+def test_dep_ecliptic():
+    """Test the conversion from equatorial to ecliptic coordinates."""
+    from numpy import pi
+    # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
+    north_pole = galsim.CelestialCoord(
+        check_dep(galsim.HMS_Angle,'18:00:00.00'),
+        check_dep(galsim.DMS_Angle,'66:33:38.55'))
+    el, b = north_pole.ecliptic()
+    # North pole should have b=90 degrees, with el being completely arbitrary.
+    np.testing.assert_almost_equal(check_dep(b.rad), pi/2, decimal=6)
+
+    south_pole = galsim.CelestialCoord(
+        check_dep(galsim.HMS_Angle,'06:00:00.00'),
+        check_dep(galsim.DMS_Angle,'-66:33:38.55'))
+    el, b = south_pole.ecliptic()
+    # South pole should have b=-90 degrees, with el being completely arbitrary.
+    np.testing.assert_almost_equal(check_dep(b.rad), -pi/2, decimal=6)
+
+    # Also confirm that positions that should be the same in equatorial and ecliptic coordinates are
+    # actually the same:
+    vernal_equinox = galsim.CelestialCoord(0.*galsim.radians, 0.*galsim.radians)
+    el, b = vernal_equinox.ecliptic()
+    np.testing.assert_almost_equal(check_dep(b.rad), 0., decimal=6)
+    np.testing.assert_almost_equal(check_dep(el.rad), 0., decimal=6)
+    autumnal_equinox = galsim.CelestialCoord(pi*galsim.radians, 0.*galsim.radians)
+    el, b = autumnal_equinox.ecliptic()
+    np.testing.assert_almost_equal(check_dep(el.rad), pi, decimal=6)
+    np.testing.assert_almost_equal(check_dep(b.rad), 0., decimal=6)
+
+    # Finally, test the results of using a date to get ecliptic coordinates with respect to the sun,
+    # instead of absolute ones. For this, use dates and times of vernal and autumnal equinox
+    # in 2014 from
+    # http://wwp.greenwichmeantime.com/longest-day/
+    # and the conversion to Julian dates from
+    # http://www.aavso.org/jd-calculator
+    import datetime
+    vernal_eq_date = datetime.datetime(2014,3,20,16,57,0)
+    el, b = vernal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    # Vernal equinox: should have (el, b) = (el_rel, b_rel) = 0.0
+    np.testing.assert_almost_equal(check_dep(el_rel.rad), check_dep(el.rad), decimal=3)
+    np.testing.assert_almost_equal(check_dep(b_rel.rad), check_dep(b.rad), decimal=6)
+    # Now do the autumnal equinox: should have (el, b) = (pi, 0) = (el_rel, b_rel) when we look at
+    # the time of the vernal equinox.
+    el, b = autumnal_equinox.ecliptic(epoch=2014)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    np.testing.assert_almost_equal(check_dep(el_rel.rad), check_dep(el.rad), decimal=3)
+    np.testing.assert_almost_equal(check_dep(b_rel.rad), check_dep(b.rad), decimal=6)
+    # And check that if it's the date of the autumnal equinox (sun at (180, 0)) but we're looking at
+    # the position of the vernal equinox (0, 0), then (el_rel, b_rel) = (-180, 0)
+    autumnal_eq_date = datetime.datetime(2014,9,23,2,29,0)
+    el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
+    np.testing.assert_almost_equal(check_dep(el_rel.rad), -pi, decimal=3)
+    np.testing.assert_almost_equal(check_dep(b_rel.rad), 0., decimal=6)
+    # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
+    # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
+    el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)
+    np.testing.assert_almost_equal(check_dep(el_rel.rad), pi, decimal=3)
+    np.testing.assert_almost_equal(check_dep(b_rel.rad), 0., decimal=6)
+
+    # Check round-trips: go from CelestialCoord to ecliptic back to equatorial, and make sure
+    # results are the same.  This includes use of a function that isn't available to users, but we
+    # use it for a few things so we should still make sure it's working properly.
+    from galsim.celestial import _ecliptic_to_equatorial
+    north_pole_2 = check_dep(_ecliptic_to_equatorial, north_pole.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(check_dep(north_pole.ra.rad),
+                                   check_dep(north_pole_2.ra.rad), decimal=6)
+    np.testing.assert_almost_equal(check_dep(north_pole.dec.rad),
+                                   check_dep(north_pole_2.dec.rad), decimal=6)
+    south_pole_2 = check_dep(_ecliptic_to_equatorial, south_pole.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(check_dep(south_pole.ra.rad),
+                                   check_dep(south_pole_2.ra.rad), decimal=6)
+    np.testing.assert_almost_equal(check_dep(south_pole.dec.rad),
+                                   check_dep(south_pole_2.dec.rad), decimal=6)
+    vernal_equinox_2 = check_dep(_ecliptic_to_equatorial, vernal_equinox.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(check_dep(vernal_equinox.ra.rad),
+                                   check_dep(vernal_equinox_2.ra.rad), decimal=6)
+    np.testing.assert_almost_equal(check_dep(vernal_equinox.dec.rad),
+                                   check_dep(vernal_equinox_2.dec.rad), decimal=6)
+    autumnal_equinox_2 = check_dep(_ecliptic_to_equatorial, autumnal_equinox.ecliptic(epoch=2014), 2014)
+    np.testing.assert_almost_equal(check_dep(autumnal_equinox.ra.rad),
+                                   check_dep(autumnal_equinox_2.ra.rad), decimal=6)
+    np.testing.assert_almost_equal(check_dep(autumnal_equinox.dec.rad),
+                                   check_dep(autumnal_equinox_2.dec.rad), decimal=6)
+
+@timer
+def test_dep_interp():
+    im = galsim.Gaussian(sigma=4).drawImage()
+    test_func = lambda x : (
+        galsim.InterpolatedImage(im, x_interpolant=x).drawImage(method='no_pixel'))
+    do_pickle(check_dep(galsim.Interpolant, 'quintic'), test_func)
+    do_pickle(check_dep(galsim.Interpolant, 'lanczos7'), test_func)
+    do_pickle(check_dep(galsim.Interpolant, 'lanczos9F', 1.e-5), test_func)
+
+@timer
+def test_dep_photon_array():
+    nphotons = 1000
+    obj = galsim.Gaussian(flux=1.7, sigma=2.3)
+    rng = galsim.UniformDeviate(1234)
+
+    photon_array = obj.shoot(nphotons, rng)
+    print('total flux = ',photon_array.flux.sum())
+    np.testing.assert_almost_equal(photon_array.flux.sum(), 1.7)
+
+    im1 = galsim.Image(64,64,scale=1)
+    im1.setCenter(0,0)
+    check_dep(photon_array.addTo, im1._image.view())
+    print('sum = ',im1.array.sum())
+    np.testing.assert_almost_equal(im1.array.sum(), 1.7)
+
+    np.testing.assert_array_equal(check_dep(photon_array.getXArray), photon_array.x)
+    np.testing.assert_array_equal(check_dep(photon_array.getYArray), photon_array.y)
+    np.testing.assert_array_equal(check_dep(photon_array.getFluxArray), photon_array.flux)
+    np.testing.assert_array_equal(check_dep(photon_array.getDXDZArray), photon_array.dxdz)
+    np.testing.assert_array_equal(check_dep(photon_array.getDYDZArray), photon_array.dydz)
+    np.testing.assert_array_equal(check_dep(photon_array.getWavelengthArray),
+                                  photon_array.wavelength)
+
+    np.testing.assert_array_equal(check_dep(photon_array.getX, 0), photon_array.x[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getY, 0), photon_array.y[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getFlux, 0), photon_array.flux[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getDXDZ, 0), photon_array.dxdz[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getDYDZ, 0), photon_array.dydz[0])
+    np.testing.assert_array_equal(check_dep(photon_array.getWavelength, 0),
+                                  photon_array.wavelength[0])
+
+    check_dep(photon_array.setPhoton, 8, 17, 34, 1.8)
+    assert photon_array.x[8] == 17
+    assert photon_array.y[8] == 34
+    assert photon_array.flux[8] == 1.8
+
+
 if __name__ == "__main__":
     test_dep_bandpass()
     test_dep_base()
@@ -1760,6 +2152,7 @@ if __name__ == "__main__":
     test_dep_scene()
     test_dep_sed()
     test_dep_shapelet()
+    test_dep_shapelet_fit()
     test_dep_shear()
     test_dep_optics()
     test_dep_phase_psf()
@@ -1768,3 +2161,6 @@ if __name__ == "__main__":
     test_dep_drawKImage_Gaussian()
     test_dep_kroundtrip()
     test_dep_simreal()
+    test_dep_ecliptic()
+    test_dep_interp()
+    test_dep_photon_array()

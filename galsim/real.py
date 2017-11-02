@@ -287,14 +287,14 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
-        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # Use the stepk value of the PSF as a maximum value for stepk of the galaxy.
         # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_gal = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 pad_factor=pad_factor, noise_pad_size=noise_pad_size,
-                calculate_stepk=self.original_psf.stepK(),
-                calculate_maxk=self.original_psf.maxK(),
+                calculate_stepk=self.original_psf.stepk,
+                calculate_maxk=self.original_psf.maxk,
                 noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_gal',use_index)
@@ -305,7 +305,7 @@ class RealGalaxy(GSObject):
                 flux_rescale = 1.0
             flux_rescale /= area_norm
             if flux is not None:
-                flux_rescale *= flux/self.original_gal.getFlux()
+                flux_rescale *= flux/self.original_gal.flux
             self.original_gal *= flux_rescale
             self.noise *= flux_rescale**2
 
@@ -313,8 +313,8 @@ class RealGalaxy(GSObject):
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
 
         # Initialize the SBProfile attribute
-        GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams).SBProfile)
+        self._conv = galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams)
+        self._sbp = self._conv._sbp
         if logger:
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
@@ -338,10 +338,6 @@ class RealGalaxy(GSObject):
         var = xi.getVariance()
         psf_image = PSF.drawImage(method='no_pixel')
         return RealGalaxy((image, psf_image, noise_image, pixel_scale, var))
-
-    def getHalfLightRadius(self):
-        raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
-                                   +"objects.")
 
     def __eq__(self, other):
         return (isinstance(other, galsim.RealGalaxy) and
@@ -386,17 +382,18 @@ class RealGalaxy(GSObject):
         return 'galsim.RealGalaxy(index=%s, flux=%s)'%(self.index, self.flux)
 
     def __getstate__(self):
-        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # The _sbp is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
-        del d['SBProfile']
+        del d['_conv']
+        del d['_sbp']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=self._gsparams)
-        GSObject.__init__(
-            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams).SBProfile)
+        self._conv = galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams)
+        self._sbp = self._conv._sbp
 
 
 
@@ -1240,10 +1237,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                          for PSF in PSFs for band in bands]
         marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit)
                           for PSF in PSFs for band in bands]
-        psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
+        psf_maxk = np.min([p.maxk for p in marginal_PSFs])
 
         # In practice, the output PSF should almost always cut off at smaller maxk than obtained
-        # above.  In this case, the user can set the maxK keyword argument for improved efficiency.
+        # above.  In this case, the user can set the maxk keyword argument for improved efficiency.
         if maxk is None:
             maxk = np.min([img_maxk, psf_maxk])
         else:
@@ -1297,10 +1294,10 @@ class ChromaticRealGalaxy(ChromaticSum):
         coef = np.transpose(coef, (2,0,1))
         Sigma = np.transpose(Sigma, (2,3,0,1))
 
-        # Set up objlist as required of ChromaticSum subclass.
-        objlist = []
+        # Set up obj_list as required of ChromaticSum subclass.
+        obj_list = []
         for i, sed in enumerate(self.SEDs):
-            objlist.append(sed * galsim._InterpolatedKImage(
+            obj_list.append(sed * galsim._InterpolatedKImage(
                     galsim.ImageCD(coef[i], scale=stepk),
                     k_interpolant=self._k_interpolant,
                     gsparams=self._gsparams))
@@ -1317,7 +1314,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
-        ChromaticSum.__init__(self, objlist)
+        ChromaticSum.__init__(self, obj_list)
 
     @staticmethod
     def _poly_SEDs(bands):

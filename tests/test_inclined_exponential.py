@@ -248,8 +248,8 @@ def test_exponential():
     # Check that they're the same
     np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
 
-    # The face-on version should get the maxSB value exactly right
-    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
+    # The face-on version should get the max_sb value exactly right
+    np.testing.assert_array_almost_equal(inc_profile.max_sb, exp_profile.max_sb)
 
     check_basic(inc_profile, "Face-on " + mode)
 
@@ -294,8 +294,8 @@ def test_sersic():
 
         np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
 
-        # The face-on version should get the maxSB value exactly right
-        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB())
+        # The face-on version should get the max_sb value exactly right
+        np.testing.assert_almost_equal(inc_profile.max_sb, sersic_profile.max_sb)
 
         check_basic(inc_profile, "Face-on " + mode)
 
@@ -338,11 +338,11 @@ def test_edge_on():
         np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
-        # Also the edge-on version should get the maxSB value exactly right
-        np.testing.assert_allclose(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n))
+        # Also the edge-on version should get the max_sb value exactly right
+        np.testing.assert_allclose(prof.max_sb, comp_prof.max_sb * 10. * n / gamma(n))
         prof.drawImage(image, method='sb', use_true_center=False)
-        print('max pixel: ', image.array.max(), ' cf.', prof.maxSB())
-        np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
+        print('max pixel: ', image.array.max(), ' cf.', prof.max_sb)
+        np.testing.assert_allclose(image.array.max(), prof.max_sb, rtol=0.01)
 
 
 @timer
@@ -362,19 +362,13 @@ def test_sanity():
 
         # Check accessing construction args
         np.testing.assert_equal(test_profile.inclination, inc_angle * galsim.radians)
-        np.testing.assert_equal(test_profile.getInclination(), inc_angle * galsim.radians)
         np.testing.assert_equal(test_profile.scale_radius, scale_radius)
-        np.testing.assert_equal(test_profile.getScaleRadius(), scale_radius)
         np.testing.assert_equal(test_profile.scale_height, scale_height)
-        np.testing.assert_equal(test_profile.getScaleHeight(), scale_height)
         np.testing.assert_equal(test_profile.flux, flux)
-        np.testing.assert_equal(test_profile.getFlux(), flux)
 
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_allclose(test_profile.scale_height / test_profile.scale_radius,
                                        test_profile.scale_h_over_r, rtol=1e-4)
-        np.testing.assert_allclose(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
-                                       test_profile.getScaleHOverR(), rtol=1e-4)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)
@@ -394,16 +388,16 @@ def test_sanity():
         np.testing.assert_allclose(test_flux, flux, rtol=rtol)
 
         # Check that the centroid is (0,0)
-        centroid = test_profile.centroid()
+        centroid = test_profile.centroid
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
 
-        # Check maxSB - just ensure it's not under by more than the empirical limit for this
+        # Check max_sb - just ensure it's not under by more than the empirical limit for this
         # approximation
         test_profile.drawImage(test_image, use_true_center=False)
-        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
+        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.max_sb)
 
-        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB()*1.56)
+        np.testing.assert_array_less(test_image.array.max(), test_profile.max_sb*1.56)
 
     # Run tests applicable to both profiles
     for mode in ("InclinedExponential", "InclinedSersic"):
@@ -474,9 +468,9 @@ def test_k_limits():
             test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
                                     scale_height)
 
-            # Check that the k value at maxK() is below maxk_threshold in both the x and y dimensions
-            kx = test_profile.maxK()
-            ky = test_profile.maxK()
+            # Check that the k value at maxk is below maxk_threshold in both the x and y dimensions
+            kx = test_profile.maxk
+            ky = test_profile.maxk
 
             kx_value = test_profile.kValue(kx=kx, ky=0.)
             np.testing.assert_(np.abs(kx_value) < gsparams.maxk_threshold,
@@ -488,15 +482,16 @@ def test_k_limits():
                                msg="ky_value is not below maxk_threshold: " + str(ky_value) + " >= "
                                 + str(gsparams.maxk_threshold))
 
-            # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
-            rmax = np.pi / test_profile.stepK()
+            # Check that less than folding_threshold fraction of light falls outside r = pi/stepk
+            rmax = np.pi / test_profile.stepk
 
             pixel_scale = 0.1
 
-            test_image = galsim.Image(int(10 * rmax / pixel_scale), int(10 * rmax / pixel_scale), scale=pixel_scale)
+            test_image = galsim.Image(int(10 * rmax / pixel_scale), int(10 * rmax / pixel_scale),
+                                      scale=pixel_scale)
             test_profile.drawImage(test_image)
 
-            image_center = test_image.center()
+            image_center = test_image.center
 
             # Get an array of indices within the limits
             image_shape = np.shape(test_image.array)
@@ -588,7 +583,7 @@ def test_pickle():
         prof = get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                          scale_height=0.3)
         do_pickle(prof)
-        do_pickle(prof.SBProfile)
+        do_pickle(prof._sbp)
 
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,

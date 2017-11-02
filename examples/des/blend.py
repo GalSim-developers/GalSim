@@ -191,7 +191,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_images = []
             for prof in profiles:
                 im = galsim.ImageF(bounds=bounds, wcs=wcs)
-                galsim.config.DrawBasic(prof, im, method, offset-im.trueCenter(), config, base,
+                galsim.config.DrawBasic(prof, im, method, offset-im.true_center, config, base,
                                         logger)
                 self.full_images.append(im)
 
@@ -300,7 +300,7 @@ class DeblendBuilder(galsim.config.ExtraOutputBuilder):
         for obj_num in obj_nums:
             # Subtract off the images we made of the (noise-free) neighbors
             neighbor_image = self.scratch[obj_num]
-            b = neighbor_image.bounds & image.getBounds()
+            b = neighbor_image.bounds & image.bounds
             if b.isDefined():
                 image[b] -= neighbor_image[b]
         # Save this in the list of images to write out.

@@ -53,12 +53,32 @@ def Bounds_addBorder(self, border):
     depr('addBorder', 1.3, 'withBorder')
     return self.withBorder(border)
 
+def Bounds_getXMin(self):
+    depr('bounds.getXMin()', 1.5, 'bounds.xmin')
+    return self.xmin
+
+def Bounds_getXMax(self):
+    depr('bounds.getXMax()', 1.5, 'bounds.xmax')
+    return self.xmax
+
+def Bounds_getYMin(self):
+    depr('bounds.getYMin()', 1.5, 'bounds.ymin')
+    return self.ymin
+
+def Bounds_getYMax(self):
+    depr('bounds.getYMax()', 1.5, 'bounds.ymax')
+    return self.ymax
+
 for Class in (galsim._galsim.BoundsD, galsim._galsim.BoundsI):
     Class.setXMin = Bounds_setXMin
     Class.setXMax = Bounds_setXMax
     Class.setYMin = Bounds_setYMin
     Class.setYMax = Bounds_setYMax
     Class.addBorder = Bounds_addBorder
+    Class.getXMin = Bounds_getXMin
+    Class.getXMax = Bounds_getXMax
+    Class.getYMin = Bounds_getYMin
+    Class.getYMax = Bounds_getYMax
 
 del Class    # cleanup public namespace
 

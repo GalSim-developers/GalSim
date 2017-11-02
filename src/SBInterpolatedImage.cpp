@@ -452,8 +452,8 @@ namespace galsim {
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        oss << "galsim.Interpolant.from_name('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
+        oss << "galsim.Interpolant.from_name('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
 
         oss << _pad_factor << ", "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
@@ -1016,7 +1016,7 @@ namespace galsim {
 
         oss << stepK() << ", " << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        oss << "galsim.Interpolant.from_name('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
         oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }

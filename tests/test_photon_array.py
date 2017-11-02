@@ -173,7 +173,7 @@ def test_wavelength_sampler():
     im1 = galsim.Image(64,64,scale=1)
     im1.setCenter(0,0)
     photon_array.flux[photon_array.wavelength < 600] = 0.
-    photon_array.addTo(im1.image.view())
+    photon_array.addTo(im1)
 
     # Make a dummy surface op that clips any photons with lambda < 600
     class Clip600(object):
@@ -213,8 +213,8 @@ def test_photon_angles():
         assigner = galsim.FRatioAngles(fratio, obscuration, rng)
         assigner.applyTo(photon_array)
 
-        dxdz = photon_array.getDXDZArray()
-        dydz = photon_array.getDYDZArray()
+        dxdz = photon_array.dxdz
+        dydz = photon_array.dydz
 
         phi = np.arctan2(dydz,dxdz)
         tantheta = np.sqrt(np.square(dxdz) + np.square(dydz))

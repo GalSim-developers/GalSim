@@ -320,7 +320,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          base.get('image_num',0),base.get('obj_num',0), var, current_var)
             if isinstance(total_sky, galsim.Image):
-                test = np.any(total_sky.image.array < current_var)
+                test = np.any(total_sky.array < current_var)
             else:
                 test = (total_sky < current_var)
             if test:
@@ -417,7 +417,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                         base.get('image_num',0),base.get('obj_num',0), var, current_var)
             read_noise_var_adu = read_noise_var / gain**2
             if isinstance(total_sky, galsim.Image):
-                test = np.any(total_sky.image.array/gain + read_noise_var_adu < current_var)
+                test = np.any(total_sky.array/gain + read_noise_var_adu < current_var)
             else:
                 target_var = total_sky / gain + read_noise_var_adu
                 logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',

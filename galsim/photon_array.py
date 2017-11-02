@@ -138,23 +138,23 @@ PhotonArray.__eq__ = lambda self, other: (
 PhotonArray.__ne__ = lambda self, other: not self == other
 
 # Make properties for convenient access to the various arrays
-def PhotonArray_setx(self, x): self.getXArray()[:] = x
-PhotonArray.x = property(PhotonArray.getXArray, PhotonArray_setx)
+def PhotonArray_setx(self, x): self._getXArray()[:] = x
+PhotonArray.x = property(PhotonArray._getXArray, PhotonArray_setx)
 
-def PhotonArray_sety(self, y): self.getYArray()[:] = y
-PhotonArray.y = property(PhotonArray.getYArray, PhotonArray_sety)
+def PhotonArray_sety(self, y): self._getYArray()[:] = y
+PhotonArray.y = property(PhotonArray._getYArray, PhotonArray_sety)
 
-def PhotonArray_setflux(self, flux): self.getFluxArray()[:] = flux
-PhotonArray.flux = property(PhotonArray.getFluxArray, PhotonArray_setflux)
+def PhotonArray_setflux(self, flux): self._getFluxArray()[:] = flux
+PhotonArray.flux = property(PhotonArray._getFluxArray, PhotonArray_setflux)
 
-def PhotonArray_setdxdz(self, dxdz): self.getDXDZArray()[:] = dxdz
-PhotonArray.dxdz = property(PhotonArray.getDXDZArray, PhotonArray_setdxdz)
+def PhotonArray_setdxdz(self, dxdz): self._getDXDZArray()[:] = dxdz
+PhotonArray.dxdz = property(PhotonArray._getDXDZArray, PhotonArray_setdxdz)
 
-def PhotonArray_setdydz(self, dydz): self.getDYDZArray()[:] = dydz
-PhotonArray.dydz = property(PhotonArray.getDYDZArray, PhotonArray_setdydz)
+def PhotonArray_setdydz(self, dydz): self._getDYDZArray()[:] = dydz
+PhotonArray.dydz = property(PhotonArray._getDYDZArray, PhotonArray_setdydz)
 
-def PhotonArray_setwavelength(self, wavelength): self.getWavelengthArray()[:] = wavelength
-PhotonArray.wavelength = property(PhotonArray.getWavelengthArray, PhotonArray_setwavelength)
+def PhotonArray_setwavelength(self, wavelength): self._getWavelengthArray()[:] = wavelength
+PhotonArray.wavelength = property(PhotonArray._getWavelengthArray, PhotonArray_setwavelength)
 
 def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
     """Turn an existing image into a PhotonArray that would accumulate into this image.
@@ -177,7 +177,7 @@ def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
     max_flux = float(max_flux)
     if (max_flux <= 0):
         raise ValueError("max_flux must be positive")
-    photons = galsim._galsim.MakePhotonsFromImage(image.image, max_flux, ud)
+    photons = galsim._galsim.MakePhotonsFromImage(image._image, max_flux, ud)
     if image.scale != 1.:
         photons.scaleXY(image.scale)
     return photons
@@ -256,6 +256,18 @@ def PhotonArray_read(cls, file_name):
 PhotonArray.write = PhotonArray_write
 PhotonArray.read = classmethod(PhotonArray_read)
 
+orig_addTo = PhotonArray.addTo
+def PhotonArray_addTo(self, image):
+    """Add flux of photons to an image by binning into pixels.
+    """
+    if isinstance(image, galsim.Image):
+        return orig_addTo(self, image._image.view())
+    else:
+        from .deprecated import depr
+        depr("C++-layer image as argument to PhotonArray.addTo", 1.5, "Use a regular galsim.Image")
+        return orig_addTo(self, image.view())
+PhotonArray.addTo = PhotonArray_addTo
+
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
     array of a PhotonArray.
@@ -311,8 +323,8 @@ class FRatioAngles(object):
     def applyTo(self, photon_array):
         """Assign directions to the photons in photon_array."""
 
-        dxdz = photon_array.getDXDZArray()
-        dydz = photon_array.getDYDZArray()
+        dxdz = photon_array.dxdz
+        dydz = photon_array.dydz
         n_photons = len(dxdz)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of

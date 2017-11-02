@@ -39,7 +39,7 @@ New features introduced in this demo:
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - dist = galsim.DistDeviate(rng, function, x_min, x_max)
-- pos = bounds.trueCenter()
+- pos = image.true_center
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
 - wcs.makeSkyImage(image, sky_level)
@@ -134,9 +134,9 @@ def main(argv):
         full_image = galsim.ImageF(image_size, image_size)
 
         # The "true" center of the image is allowed to be halfway between two pixels, as is the
-        # case for even-sized images.  full_image.bounds.center() is an integer position,
+        # case for even-sized images.  full_image.center is an integer position,
         # which would be 1/2 pixel up and to the right of the true center in this case.
-        im_center = full_image.bounds.trueCenter()
+        im_center = full_image.true_center
 
         # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
         # and v(x,y) functions.  We use a simple cubic radial function to create a
@@ -298,10 +298,10 @@ def main(argv):
             # stamp on the full image.
             image_pos = wcs.toImage(pos)
 
-            # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
-            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage
-            # stamp, since the nominal center values have to be integers.  Thus, the nominal center
-            # is 1/2 pixel up and to the right of the true center.
+            # For even-sized postage stamps, the nominal center (available as stamp.center)
+            # cannot be at the true center (available as stamp.true_center) of the postage stamp,
+            # since the nominal center values have to be integers.  Thus, the nominal center is
+            # 1/2 pixel up and to the right of the true center.
             # If we used odd-sized postage stamps, we wouldn't need to do this.
             x_nominal = image_pos.x + 0.5
             y_nominal = image_pos.y + 0.5
@@ -434,7 +434,7 @@ def main(argv):
 
             # Add the truth information for this object to the truth catalog
             row = ( (first_obj_id + k), halo_id,
-                    flux, radius, h_over_r, inclination.rad(), theta.rad(),
+                    flux, radius, h_over_r, inclination.rad, theta.rad,
                     nfw_mu, nfw_z_source, total_shear.g1, total_shear.g2,
                     pos.x, pos.y, image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )

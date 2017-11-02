@@ -224,7 +224,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
         rootps = self._get_update_rootps(image.array.shape, wcs)
@@ -321,7 +321,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
@@ -413,7 +413,7 @@ class _BaseCorrelatedNoise(object):
         if image.wcs is None:
             wcs = self.wcs
         else:
-            wcs = image.wcs.local(image.trueCenter())
+            wcs = image.wcs.local(image.true_center)
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the symmetrizing noise,
         # and the total variance of the combination.
@@ -518,7 +518,7 @@ class _BaseCorrelatedNoise(object):
         """
         # Test whether we can simply return the zero-lag correlation function value, which gives the
         # variance of an image of noise generated according to this model
-        if self._profile.isAnalyticX():
+        if self._profile.is_analytic_x:
             variance = self._profile.xValue(galsim.PositionD(0., 0.))
         else:
             # If the profile has changed since last time (or if we have never been here before),
@@ -722,7 +722,7 @@ class _BaseCorrelatedNoise(object):
             self.drawImage(newcf)
 
             # Since we just drew it, save the variance value for posterity.
-            var = newcf(newcf.bounds.center())
+            var = newcf(newcf.bounds.center)
             self._variance_stored = var
 
             if var <= 0.:
@@ -1224,7 +1224,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         elif scale is not None:
             cf_image.scale = scale
         elif image is not None and image.wcs is not None:
-            cf_image.wcs = image.wcs.local(image.trueCenter())
+            cf_image.wcs = image.wcs.local(image.true_center)
 
         # If wcs is still None at this point or is a PixelScale <= 0., use scale=1.
         if cf_image.wcs is None or (cf_image.wcs.isPixelScale() and cf_image.wcs.scale <= 0):
@@ -1555,10 +1555,10 @@ class CovarianceSpectrum(object):
         """
         import numpy as np
         NSED = len(self.SEDs)
-        maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxK(),
-                       PSF.evaluateAtWavelength(bandpass.red_limit).maxK()])
-        stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepK(),
-                        PSF.evaluateAtWavelength(bandpass.red_limit).stepK()])
+        maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxk,
+                       PSF.evaluateAtWavelength(bandpass.red_limit).maxk])
+        stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepk,
+                        PSF.evaluateAtWavelength(bandpass.red_limit).stepk])
         nk = 2*int(np.ceil(maxk/stepk))
 
         PSF_eff_kimgs = np.empty((NSED, nk, nk), dtype=np.complex128)
