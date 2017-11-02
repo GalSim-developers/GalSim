@@ -71,7 +71,7 @@ sca_rot = np.zeros_like(sca_xc_mm)
 
 # Rotation of focal plane axes relative to payload axes: this is expressed as a CCW rotation of the
 # f2 axis relative to -Y_pl, and of f1 relative to +X_pl.  In cycle 5, this was around +30 degrees,
-# but in cycle 6 there is a 90 degrees CCW rotation with respect to that.
+# but in cycle 6 there is a ~90 degree CCW rotation with respect to that.
 theta_fpa = -60.0*galsim.degrees
 
 # File with SIP coefficients.
