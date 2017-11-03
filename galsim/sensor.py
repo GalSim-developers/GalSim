@@ -292,7 +292,7 @@ class SiliconSensor(Sensor):
         """Make a simple sinusoidal tree ring pattern that can be used as the treering_func
         parameter of SiliconSensor.
 
-        The functional form is f(r) = amplitude * cos(r / (2*pi*period))
+        The functional form is f(r) = amplitude * cos(2*pi*r/period)
 
         @param amplitude    The amplitude of the tree ring pattern distortion.  Typically
                             this is less than 0.01 pixels. [default: 0.5]
@@ -301,7 +301,7 @@ class SiliconSensor(Sensor):
         @param r_max        The maximum value of r to store in the lookup table. [default: 8000]
         @param dr           The spacing to use for the r values. [default: period/100]
         """
-        k = 0.5 / (np.pi * period)
+        k = 2.*np.pi/float(period)
         func = lambda r: amplitude * np.cos(k * r)
         if dr is None:
             dr = period/100.
