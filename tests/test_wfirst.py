@@ -573,6 +573,88 @@ def test_wfirst_psfs():
     except ImportError:
         print('The assert_raises tests require nose')
 
+@timer
+def test_wfirst_basic_numbers():
+    """Trivial test of basic numbers stored in WFIRST module.
+    """
+    # Would be better to have a non-trivial test, but this will do for now.
+    ref_gain = 1.0
+    ref_pixel_scale = 0.11  # arcsec / pixel
+    ref_diameter = 2.37  # meters
+    ref_obscuration = 0.32
+    ref_exptime = 140.25  # s
+    ref_dark_current = 0.015 # e-/pix/s
+    ref_nonlinearity_beta = -6.e-7
+    ref_reciprocity_alpha = 0.0065
+    ref_read_noise = 8.5 # e-
+    ref_n_dithers = 6
+    ref_thermal_backgrounds = {'J129': 0.023, # e-/pix/s
+                               'F184': 0.179,
+                               'Y106': 0.023,
+                               'Z087': 0.023,
+                               'H158': 0.022,
+                               'W149': 0.023}
+    ref_pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
+                                        "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
+    ref_stray_light_fraction = 0.1
+    ref_ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
+                                    [0.013800177, 1.0, 0.015600367], \
+                                    [0.001270391, 0.016129619, 0.001200137] ])
+    ref_ipc_kernel /= np.sum(ref_ipc_kernel)
+    ref_ipc_kernel = galsim.Image(ref_ipc_kernel)
+    ref_persistence_coefficients = \
+        np.array([0.045707683,0.014959818,0.009115737,0.00656769,0.005135571,
+                  0.004217028,0.003577534,0.003106601])/100.
+    ref_n_sca = 18
+    ref_n_pix_tot = 4096
+    ref_n_pix = 4088
+    ref_jitter_rms = 0.014
+    ref_charge_diffusion = 0.1
+
+    assert galsim.wfirst.gain==ref_gain, \
+        'WFIRST gain disagrees with expected value'
+    assert galsim.wfirst.pixel_scale==ref_pixel_scale, \
+        'WFIRST pixel scale disagrees with expected value'
+    assert galsim.wfirst.diameter==ref_diameter, \
+        'WFIRST diameter disagrees with expected value'
+    assert galsim.wfirst.obscuration==ref_obscuration, \
+        'WFIRST obscuration disagrees with expected value'
+    assert galsim.wfirst.exptime==ref_exptime, \
+        'WFIRST exptime disagrees with expected value'
+    assert galsim.wfirst.dark_current==ref_dark_current, \
+        'WFIRST dark current disagrees with expected value'
+    assert galsim.wfirst.nonlinearity_beta==ref_nonlinearity_beta, \
+        'WFIRST nonlinearity disagrees with expected value'
+    assert galsim.wfirst.reciprocity_alpha==ref_reciprocity_alpha, \
+        'WFIRST reciprocity alpha disagrees with expected value'
+    assert galsim.wfirst.read_noise==ref_read_noise, \
+        'WFIRST read noise disagrees with expected value'
+    assert galsim.wfirst.n_dithers==ref_n_dithers, \
+        'WFIRST n_dithers disagrees with expected value'
+    assert galsim.wfirst.thermal_backgrounds.keys()==ref_thermal_backgrounds.keys(),\
+        'WFIRST thermal background list of filters disagrees with reference'
+    for key in ref_thermal_backgrounds.keys():
+        assert galsim.wfirst.thermal_backgrounds[key]==ref_thermal_backgrounds[key],\
+            'WFIRST thermal background for %s disagrees with expected value'%key
+    assert galsim.wfirst.pupil_plane_file==ref_pupil_plane_file, \
+        'WFIRST pupil plane filename disagrees with reference'
+    assert galsim.wfirst.stray_light_fraction==ref_stray_light_fraction, \
+        'WFIRST stray_light_fraction disagrees with expected value'
+    np.testing.assert_array_equal(ref_ipc_kernel, galsim.wfirst.ipc_kernel,
+                                  'WFIRST IPC kernel disagrees with expected value')
+    np.testing.assert_array_equal(
+        ref_persistence_coefficients, galsim.wfirst.persistence_coefficients,
+        'WFIRST persistence coefficients disagree with expected value')
+    assert galsim.wfirst.n_sca==ref_n_sca, \
+        'WFIRST n_sca disagrees with expected value'
+    assert galsim.wfirst.n_pix_tot==ref_n_pix_tot, \
+        'WFIRST n_pix_tot disagrees with expected value'
+    assert galsim.wfirst.n_pix==ref_n_pix, \
+        'WFIRST n_pix disagrees with expected value'
+    assert galsim.wfirst.jitter_rms==ref_jitter_rms, \
+        'WFIRST jitter_rms disagrees with expected value'
+    assert galsim.wfirst.charge_diffusion==ref_charge_diffusion, \
+        'WFIRST charge_diffusion disagrees with expected value'
 
 if __name__ == "__main__":
     test_wfirst_wcs()
@@ -580,3 +662,4 @@ if __name__ == "__main__":
     test_wfirst_bandpass()
     test_wfirst_detectors()
     test_wfirst_psfs()
+    test_wfirst_basic_numbers()
