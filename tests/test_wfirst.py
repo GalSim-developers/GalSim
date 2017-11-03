@@ -35,7 +35,7 @@ except ImportError:
     import galsim.wfirst
 
 @timer
-def dont_test_wfirst_wcs():
+def skip_wfirst_wcs():
     """Test the WFIRST WCS routines against ones provided by the WFIRST project office.
     """
     # This test is out of date and is not run, but since it was a useful test, the code is kept here
