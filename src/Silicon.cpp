@@ -77,11 +77,16 @@ namespace galsim {
     }
 
     Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
-                     double diffStep, double pixelSize, double sensorThickness,
-                     double* vertex_data) :
+                     double diffStep, double pixelSize,
+                     double sensorThickness, double* vertex_data,
+                     const Table<double, double>& tr_radial_table,
+                     Position<double> treeRingCenter,
+                     const Table<double, double>& abs_length_table) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _nrecalc(nrecalc),
         _qDist(qDist), _diffStep(diffStep), _pixelSize(pixelSize),
-        _sensorThickness(sensorThickness)
+        _sensorThickness(sensorThickness),
+        _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
+        _abs_length_table(abs_length_table)
     {
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -137,26 +142,6 @@ namespace galsim {
 #endif
     }
 
-#if 0
-    // Got a start on implementing the absorption length lookup,
-    // but couldn't get the python - C++ wrapper working, so I went
-    // back to the analytic function - Craig Lage 17-Feb-17
-    double Silicon::AbsLength(double lambda)
-    {
-        // Looks up the absorption length and returns
-        // an interpolated value
-        int nminus;
-        double aminus, aplus, dlambda;
-        dlambda = _abs_data[2] - _abs_data[0];
-        // index of
-        nminus = (int) ((lambda - _abs_data[0]) / dlambda) * 2;
-        if (nminus < 0) return _abs_data[1];
-        else if (nminus > _nabs - 4) return _abs_data[_nabs - 1];
-        else return _abs_data[nminus+1] +
-            (lambda - _abs_data[nminus]) * (_abs_data[nminus+3] - _abs_data[nminus+1]);
-    }
-#endif
-
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -211,6 +196,51 @@ namespace galsim {
     }
 
     template <typename T>
+    void Silicon::addTreeRingDistortions(ImageView<T> target, Position<int> orig_center)
+    {
+        // This updates the pixel distortions in the _imagepolys
+        // pixel list based on a model of tree rings.
+        // The coordinates _treeRingCenter are the coordinates
+        // of the tree ring center, shifted to compensate for the
+        // fact that target has its origin shifted to (0,0).
+        Bounds<int> b = target.getBounds();
+        int minx = b.getXMin();
+        int miny = b.getYMin();
+        int maxx = b.getXMax();
+        int maxy = b.getYMax();
+        double shift = 0.0;
+        // Now we cycle through the pixels in the target image and add
+        // the (small) distortions due to tree rings
+        std::vector<bool> changed(_imagepolys.size(), false);
+        for (int i=minx; i<maxx; ++i) {
+            for (int j=miny; j<maxy; ++j) {
+                int index = (i - minx) * (maxy - miny + 1) + (j - miny);
+                for (int n=0; n<_nv; n++) {
+                    double tx = (double)i + _imagepolys[index][n].x - _treeRingCenter.x +
+                        (double)orig_center.x;
+                    double ty = (double)j + _imagepolys[index][n].y - _treeRingCenter.y +
+                        (double)orig_center.y;
+                    double r = sqrt(tx * tx + ty * ty);
+                    if (_tr_radial_table.size() > 2) {
+                        // The no tree rings case is indicated with a table of size 2, which
+                        // wouldn't make any sense as a user input.
+                        shift = _tr_radial_table.lookup(r);
+                        // Shifts are along the radial vector in direction of the doping gradient
+                        double dx = shift * tx / r;
+                        double dy = shift * ty / r;
+                        _imagepolys[index][n].x += dx;
+                        _imagepolys[index][n].y += dy;
+                    }
+                }
+                changed[index] = true;
+            }
+        }
+        for (size_t k=0; k<_imagepolys.size(); ++k) {
+            if (changed[k]) _imagepolys[k].updateBounds();
+        }
+    }
+
+    template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               ImageView<T> target) const
     {
@@ -257,18 +287,14 @@ namespace galsim {
     void Silicon::calculateConversionDepth(const PhotonArray& photons, std::vector<double>& depth,
                                            UniformDeviate ud) const
     {
-        const double log10_over_250 = std::log(10.) / 250.;
-
         const int nphotons = photons.size();
         for (int i=0; i<nphotons; ++i) {
             // Determine the distance the photon travels into the silicon
             double si_length;
             if (photons.hasAllocatedWavelengths()) {
                 double lambda = photons.getWavelength(i); // in nm
-                // The below is an approximation.  ToDo: replace with lookup table
-                //double abs_length = pow(10.0,((lambda - 500.0) / 250.0)); // in microns
-                double abs_length = std::exp((lambda - 500.0) * log10_over_250); // in microns
-                //double abs_length = AbsLength(lambda); // in microns
+                // Lookup the absorption length in the imported table
+                double abs_length = _abs_length_table.lookup(lambda); // in microns
                 si_length = -abs_length * log(1.0 - ud()); // in microns
 #ifdef DEBUGLOGGING
                 if (i % 1000 == 0) {
@@ -337,7 +363,8 @@ namespace galsim {
     }
 
     template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target)
+    double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud, ImageView<T> target,
+                               Position<int> orig_center)
     {
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
@@ -364,6 +391,8 @@ namespace galsim {
         for (int i=0; i<nxny; ++i)
             _imagepolys[i] = _emptypoly;
         dbg<<"Built poly list\n";
+        // Now we add in the tree ring distortions
+        addTreeRingDistortions(target, orig_center);
 
         const double invPixelSize = 1./_pixelSize; // pixels/micron
         const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
@@ -506,8 +535,6 @@ namespace galsim {
         return addedFlux;
     }
 
-    //template double Silicon::AbsLength(double lambda) const;
-
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<double> target) const;
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
@@ -516,9 +543,14 @@ namespace galsim {
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);
 
+    template void Silicon::addTreeRingDistortions(ImageView<double> target,
+                                                  Position<int> orig_center);
+    template void Silicon::addTreeRingDistortions(ImageView<float> target,
+                                                  Position<int> orig_center);
+
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<double> target);
+                                        ImageView<double> target, Position<int> orig_center);
     template double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
-                                        ImageView<float> target);
+                                        ImageView<float> target, Position<int> orig_center);
 
 } // namespace galsim

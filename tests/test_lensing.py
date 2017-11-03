@@ -651,7 +651,7 @@ def test_tabulated():
     data = np.column_stack(data_all)
     filename = 'lensing_reference_data/tmp.txt'
     np.savetxt(filename, data)
-    tab2 = galsim.LookupTable(file = filename)
+    tab2 = galsim.LookupTable.from_file(filename)
     ps_tab2 = galsim.PowerSpectrum(tab2)
     do_pickle(ps_tab2)
     g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
@@ -821,8 +821,7 @@ def test_power_spectrum_with_kappa():
     dx_grid_arcmin = 6
     # First lookup a cosmologically relevant power spectrum (bandlimited version to remove aliasing
     # and allow high-precision comparison).
-    tab_ps = galsim.LookupTable(
-        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+    tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
 
     # Begin with E-mode input power
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
@@ -1009,8 +1008,7 @@ def test_periodic():
     # precisely preserved by this operation.
 
     # Set up a cosmological shear power spectrum.
-    tab_ps = galsim.LookupTable(
-        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+    tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
     do_pickle(ps)
 
@@ -1132,7 +1130,7 @@ def test_bandlimit():
     # elevated rather than testing the entire power spectrum.
 
     # Start with a cosmological power spectrum that is not band-limited.
-    ps_tab = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
+    ps_tab = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(ps_tab, units=galsim.radians)
     do_pickle(ps)
 
@@ -1155,8 +1153,8 @@ def test_psr():
     # But since it is technically documented, we should make sure things like the repr and ==
     # work correctly.
 
-    pe = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
-    pb = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    pe = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00.out')
+    pb = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
     do_pickle(psr)
 

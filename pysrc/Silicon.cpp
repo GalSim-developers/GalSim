@@ -35,13 +35,14 @@ namespace {
     struct PySilicon {
 
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W & wrapper)
+        {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                    ImageView<U>);
+                                                     ImageView<U>, Position<int>);
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
-                     (bp::args("photons", "rng", "image")),
+                     (bp::args("photons", "rng", "image", "orig_center")),
                      "Accumulate photons in image")
                 ;
         }
@@ -49,8 +50,10 @@ namespace {
 
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
-                                    double SensorThickness,
-                                    const bp::object& array)
+                                    double SensorThickness, const bp::object& array,
+                                    const Table<double, double>& treeRingTable,
+                                    const Position<double>& treeRingCenter,
+                                    const Table<double, double>& abs_length_table)
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
@@ -68,7 +71,8 @@ namespace {
             if (GetNumpyArrayDim(array.ptr(), 0) != Nv*(NumPolys-2))
                 throw std::runtime_error("Silicon vertex_data has the wrong number of rows");
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                               Nrecalc, DiffStep, PixelSize, SensorThickness, data);
+                               Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+                               treeRingTable, treeRingCenter, abs_length_table);
         }
 
         static void wrap()
@@ -78,8 +82,10 @@ namespace {
                 .def("__init__", bp::make_constructor(
                         &MakeSilicon, bp::default_call_policies(),
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
-                                  "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
-                                  "vertex_data"))))
+                                  "Nrecalc", "DiffStep", "PixelSize",
+                                  "SensorThickness", "vertex_data",
+                                  "treeRingTable", "treeRingCenter",
+                                  "abs_length_table"))))
                 .enable_pickling()
                 ;
             wrapTemplates<double>(pySilicon);

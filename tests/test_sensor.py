@@ -244,7 +244,7 @@ def test_silicon():
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
-    silicon = galsim.SiliconSensor(dir='lsst_itl', strength=100., rng=rng1, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(name='lsst_itl_8', strength=100., rng=rng1, diffusion_factor=0.0)
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
@@ -272,21 +272,21 @@ def test_silicon():
     print('check r1 - r3 = %f > %f due to brighter-fatter'%(r1-r2,sigma_r))
     assert r1 - r3 > 2*sigma_r / 100
 
-    # Check the construction with an explicit directory.
+    # Check the construction with an explicit name
     s0 = galsim.SiliconSensor(rng=rng1)
-    dir = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl')
-    s1 = galsim.SiliconSensor(dir=dir, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
+    name = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_8')
+    s1 = galsim.SiliconSensor(name=name, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
                               nrecalc=10000)
     assert s0 == s1
-    s1 = galsim.SiliconSensor(dir, 1.0, rng1, 1.0, 3, 10000)
+    s1 = galsim.SiliconSensor(name, 1.0, rng1, 1.0, 3, 10000)
     assert s0 == s1
-    s2 = galsim.SiliconSensor(rng=rng1, dir='lsst_itl')
+    s2 = galsim.SiliconSensor(rng=rng1, name='lsst_itl_8')
     assert s0 == s2
     s3 = galsim.SiliconSensor(rng=rng1, strength=10.)
     s4 = galsim.SiliconSensor(rng=rng1, diffusion_factor=2.0)
     s5 = galsim.SiliconSensor(rng=rng1, qdist=4)
     s6 = galsim.SiliconSensor(rng=rng1, nrecalc=12345)
-    s7 = galsim.SiliconSensor(dir=dir, strength=1.5, rng=rng1, diffusion_factor=1.3, qdist=4,
+    s7 = galsim.SiliconSensor(name=name, strength=1.5, rng=rng1, diffusion_factor=1.3, qdist=4,
                               nrecalc=12345)
     for s in [ s3, s4, s5, s6, s7 ]:
         assert silicon != s
@@ -297,10 +297,10 @@ def test_silicon():
     do_pickle(s7)
 
     try:
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='junk')
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, dir='output')
+        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='junk')
+        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='output')
         np.testing.assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
-        np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl', 'hello')
+        np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
     except ImportError:
         print('The assert_raises tests require nose')
 
@@ -489,7 +489,7 @@ def test_bf_slopes():
     from scipy import stats
     simple = galsim.Sensor()
 
-    init_flux = 200000
+    init_flux = 400000
     obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
 
     num_fluxes = 5
@@ -538,24 +538,105 @@ def test_bf_slopes():
     y_slope *= 50000.0 * 100.0
     print('With BF turned on, diffusion off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
             x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
+    assert x_slope > 0.3
+    assert y_slope > 0.3
     x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,1])
     y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,1])
     x_slope *= 50000.0 * 100.0
     y_slope *= 50000.0 * 100.0
     print('With BF turned on, diffusion on, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(
             x_slope, y_slope ))
-    assert x_slope > 0.5
-    assert y_slope > 0.5
+    assert x_slope > 0.3
+    assert y_slope > 0.3
     x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,2])
     y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,2])
     x_slope *= 50000.0 * 100.0
     y_slope *= 50000.0 * 100.0
     print('With BF turned off, x_slope = %.3f, y_slope = %.3f %% per 50K e-'%(x_slope, y_slope ))
-    assert abs(x_slope) < 0.5
-    assert abs(y_slope) < 0.5
+    assert abs(x_slope) < 0.3
+    assert abs(y_slope) < 0.3
 
+def treering_function(r):
+    return 0.5 * np.cos(r / 250. * 2.0 * np.pi)
+
+@timer
+def test_treerings():
+    """Test the addition of tree rings.
+    compare image positions with the simple sensor to
+    a SiliconSensor with no tree rings and six
+    different additions of tree rings.
+    """
+    from scipy import stats
+    # Set up the different sensors.
+    treering_amplitude = 0.5
+    rng1 = galsim.BaseDeviate(5678)
+    rng2 = galsim.BaseDeviate(5678)
+    rng3 = galsim.BaseDeviate(5678)
+    rng4 = galsim.BaseDeviate(5678)
+    rng5 = galsim.BaseDeviate(5678)
+    rng6 = galsim.BaseDeviate(5678)
+    rng7 = galsim.BaseDeviate(5678)
+    sensor0 = galsim.Sensor()
+    sensor1 = galsim.SiliconSensor(rng=rng1)
+    tr2 = galsim.SiliconSensor.simple_treerings(treering_amplitude, 250.)
+    sensor2 = galsim.SiliconSensor(rng=rng2, treering_func=tr2,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
+    sensor3 = galsim.SiliconSensor(rng=rng3, treering_func=tr2,
+                                   treering_center=galsim.PositionD(1000.0,0.0))
+    sensor4 = galsim.SiliconSensor(rng=rng4, treering_func=tr2,
+                                   treering_center=galsim.PositionD(0.0,-1000.0))
+    tr5 = galsim.SiliconSensor.simple_treerings(treering_amplitude, 250., r_max=2000, dr=1.)
+    sensor5 = galsim.SiliconSensor(rng=rng5, treering_func=tr5,
+                                   treering_center=galsim.PositionD(0.0,1000.0))
+
+    # Now test the ability to read in a user-specified function
+    tr6 = galsim.LookupTable.from_func(treering_function, x_min=0.0, x_max=2000)
+    sensor6 = galsim.SiliconSensor(rng=rng6, treering_func=tr6,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
+
+    # Now test the ability to read in a lookup table
+    tr7 = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=treering_amplitude)
+    sensor7 = galsim.SiliconSensor(rng=rng7, treering_func=tr7,
+                                   treering_center=galsim.PositionD(-1000.0,0.0))
+
+    sensors = [sensor0, sensor1, sensor2, sensor3, sensor4, sensor5, sensor6, sensor7]
+    names = ['Sensor()',
+             'SiliconSensor, no TreeRings',
+             'SiliconSensor, TreeRingCenter= (-1000,0)',
+             'SiliconSensor, TreeRingCenter= (1000,0)',
+             'SiliconSensor, TreeRingCenter= (0,-1000)',
+             'SiliconSensor, TreeRingCenter= (0,1000)',
+             'SiliconSensor with specified function, TreeRingCenter= (-1000,0)',
+             'SiliconSensor with lookup table, TreeRingCenter= (-1000,0)']
+    centers = [None, None,
+               (-1000,0),
+               (1000,0),
+               (0,-1000),
+               (0,1000),
+               (-1000,0),
+               (-1000,0)]
+
+    init_flux = 200000
+    obj = galsim.Gaussian(flux=init_flux, sigma=0.3)
+
+    im = galsim.ImageD(10,10, scale=0.3)
+    obj.drawImage(im)
+    ref_mom = galsim.utilities.unweighted_moments(im)
+    print('Reference Moments Mx, My = (%f, %f):'%(ref_mom['Mx'], ref_mom['My']))
+
+    for sensor, name, center in zip(sensors, names, centers):
+        im = galsim.ImageD(10,10, scale=0.3)
+        obj.drawImage(im, method='phot', sensor=sensor)
+        mom = galsim.utilities.unweighted_moments(im)
+        print('%s, Moments Mx, My = (%f, %f):'%(name, mom['Mx'], mom['My']))
+        if center is None:
+            np.testing.assert_almost_equal(mom['Mx'], ref_mom['Mx'], decimal = 1)
+            np.testing.assert_almost_equal(mom['My'], ref_mom['My'], decimal = 1)
+        else:
+            np.testing.assert_almost_equal(ref_mom['Mx'] + treering_amplitude * center[0] / 1000,
+                                           mom['Mx'], decimal=1)
+            np.testing.assert_almost_equal(ref_mom['My'] + treering_amplitude * center[1] / 1000,
+                                           mom['My'], decimal=1)
 
 if __name__ == "__main__":
     test_simple()
@@ -563,3 +644,4 @@ if __name__ == "__main__":
     test_silicon_fft()
     test_sensor_wavelengths_and_angles()
     test_bf_slopes()
+    test_treerings()

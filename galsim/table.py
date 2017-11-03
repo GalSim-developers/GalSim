@@ -60,8 +60,10 @@ class LookupTable(object):
     - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
 
-    Another option is to read in the values from an ascii file.  The file should have two
-    columns of numbers, which are taken to be the `x` and `f` values.
+    There are also two factory functions which can be used to build a LookupTable:
+
+        LookupTable.from_func   makes a LookupTable from a callable function
+        LookupTable.from_file   reads in a file of x and f values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
@@ -70,12 +72,8 @@ class LookupTable(object):
 
     @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either `x` and `f` or `file` is required.]
     @param f             The list, tuple, or NumPy array of `f(x)` values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
-                         [Either `x` and `f` or `file` is required.]
-    @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
-                         is required]
     @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
                          'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
@@ -85,38 +83,27 @@ class LookupTable(object):
                          that all inputs / outputs will still be f, it's just a question of how the
                          interpolation is done. [default: False]
     """
-    def __init__(self, x=None, f=None, file=None, interpolant=None, x_log=False, f_log=False):
+    def __init__(self, x=None, f=None, interpolant=None, x_log=False, f_log=False, file=None):
         self.x_log = x_log
         self.f_log = f_log
-        self.file = file
 
         # read in from file if a filename was specified
         if file:
+            from .deprecated import depr
+            depr('LookupTable(file=file_name)', 1.5, 'LookupTable.from_file(file_name)')
             if x is not None or f is not None:
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
-            # We don't require pandas as a dependency, but if it's available, this is much faster.
-            # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
-            CParserError = AttributeError # In case we don't get to the line below where we import
-                                          # it from pandas.parser
-            try:
-                import pandas
-                try:
-                    # version >= 0.20
-                    from pandas.io.common import CParserError
-                except ImportError:
-                    # version < 0.20
-                    from pandas.parser import CParserError
-                data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
-                data = data.values.transpose()
-            except (ImportError, AttributeError, CParserError):
-                data = np.loadtxt(file).transpose()
-            if data.shape[0] != 2:
-                raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
-            x=data[0]
-            f=data[1]
+            table = LookupTable.from_file(file, interpolant, x_log, f_log)
+            self.x = table.x
+            self.f = table.f
+            self.interpolant = table.interpolant
+            self.table = table.table
+            self._x_min = table._x_min
+            self._x_max = table._x_max
+            return
         else:
             if x is None or f is None:
-                raise ValueError("Must specify either file or x,f for LookupTable")
+                raise TypeError("x and f are required for LookupTable")
 
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
@@ -167,8 +154,8 @@ class LookupTable(object):
     def x_min(self): return self._x_min
     @property
     def x_max(self): return self._x_max
-    @property
-    def n_x(self): return len(self.x)
+
+    def __len__(self): return len(self.x)
 
     def __call__(self, x):
         """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
@@ -265,16 +252,86 @@ class LookupTable(object):
 
 
     def __repr__(self):
-        return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
-            self.x.tolist(), self.f.tolist(), self.x_log, self.f_log, self.interpolant)
+        return 'galsim.LookupTable(x=array(%r), f=array(%r), interpolant=%r, x_log=%r, f_log=%r)'%(
+            self.x.tolist(), self.f.tolist(), self.interpolant, self.x_log, self.f_log)
 
     def __str__(self):
-        if self.file is not None:
-            return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
-                self.file, self.interpolant)
+        s = 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s]'%(
+            self.x[0], self.x[-1], self.f[0], self.f[-1])
+        if self.interpolant != 'spline':
+            s += ', interpolant=%r'%(self.interpolant)
+        if self.x_log:
+            s += ', x_log=True'
+        if self.f_log:
+            s += ', f_log=True'
+        s += ')'
+        return s
+
+    @classmethod
+    def from_file(cls, file_name, interpolant='spline', x_log=False, f_log=False, amplitude=1.0):
+        """Create a LookupTable from a file of x, f values.
+
+        This reads in a file, which should contain two columns with the x and f values.
+
+        @param file_name    A file from which to read the `(x,f)` pairs.
+        @param interpolant  Type of interpolation to use. [default: 'spline']
+        @param x_log        Whether the x values should be uniform in log rather than lienar.
+                            [default: False]
+        @param f_log        Whether the f values should be interpolated using their logarithms
+                            rather than their raw values. [default: False]
+        @param amplitude    An optional scaling of the f values relative to the values in the file
+                            [default: 1.0]
+        """
+        # We don't require pandas as a dependency, but if it's available, this is much faster.
+        # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+        CParserError = AttributeError # In case we don't get to the line below where we import
+                                      # it from pandas.parser
+        try:
+            import pandas
+            try:
+                # version >= 0.20
+                from pandas.io.common import CParserError
+            except ImportError: # pragma: no cover
+                # version < 0.20
+                from pandas.parser import CParserError
+            data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
+            data = data.values.transpose()
+        except (ImportError, AttributeError, CParserError): # pragma: no cover
+            data = np.loadtxt(file_name).transpose()
+        if data.shape[0] != 2:
+            raise ValueError("File %s provided for LookupTable does not have 2 columns"%file_name)
+        x=data[0]
+        f=data[1]
+        if amplitude != 1.0:
+            f[:] *= amplitude
+        return LookupTable(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
+
+    @classmethod
+    def from_func(cls, func, x_min, x_max, npoints=2000, interpolant='spline',
+                  x_log=False, f_log=False):
+        """Create a LookupTable from a callable function
+
+        This constructs a LookupTable over the given range from x_min and x_max, calculating the
+        corresponding f values from the given function (technically any callable object).
+
+        @param func         A callable function.
+        @param x_min        The minimum x value at which to evalue the function and store in the
+                            lookup table.
+        @param x_max        The maximum x value at which to evalue the function and store in the
+                            lookup table.
+        @param npoints      Number of x values at which to evaluate the function. [default: 2000]
+        @param interpolant  Type of interpolation to use. [default: 'spline']
+        @param x_log        Whether the x values should be uniform in log rather than lienar.
+                            [default: False]
+        @param f_log        Whether the f values should be interpolated using their logarithms
+                            rather than their raw values. [default: False]
+        """
+        if x_log:
+            x = np.exp(np.linspace(np.log(x_min), np.log(x_max), npoints))
         else:
-            return 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s], interpolant=%r)'%(
-                self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
+            x = np.linspace(x_min, x_max, npoints)
+        f = np.array([func(xx) for xx in x])
+        return cls(x, f, interpolant=interpolant, x_log=x_log, f_log=f_log)
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
@@ -385,11 +442,11 @@ class LookupTable2D(object):
     @param y              Strictly increasing array of `y` positions at which to create table.
     @param f              Nx by Ny input array of function values.
     @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', or 'linear'.
-                          [Default: 'linear']
+                          [default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
-                          See above for details.  [Default: 'raise']
+                          See above for details.  [default: 'raise']
     @param constant       A constant to return when extrapolating beyond the input range and
-                          `edge_mode='constant'`.  [Default: 0]
+                          `edge_mode='constant'`.  [default: 0]
     """
     def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
         if edge_mode not in ['raise', 'wrap', 'constant']:

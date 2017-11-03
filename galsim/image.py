@@ -1121,7 +1121,7 @@ class Image(with_metaclass(MetaImage, object)):
             10.0
         """
         from .position import dep_posi_type
-        return dep_posi_type(self.bounds.center, 'image', 'center')
+        return dep_posi_type(self.bounds.center.pos, 'image', 'center')
 
     @property
     def true_center(self):
@@ -1176,7 +1176,7 @@ class Image(with_metaclass(MetaImage, object)):
             galsim.BoundsI(xmin=23, xmax=26, ymin=45, ymax=48)
         """
         from .position import dep_posi_type
-        return dep_posi_type(self.bounds.origin, 'image', 'origin')
+        return dep_posi_type(self.bounds.origin.pos, 'image', 'origin')
 
     def __call__(self, *args, **kwargs):
         """Get the pixel value at given position

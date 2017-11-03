@@ -285,7 +285,7 @@ class DistDeviate(_galsim.BaseDeviate):
                 if x_min or x_max:
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to DistDeviate')
-                function = galsim.LookupTable(file=function, interpolant=interpolant)
+                function = galsim.LookupTable.from_file(function, interpolant=interpolant)
                 x_min = function.x_min
                 x_max = function.x_max
             else:

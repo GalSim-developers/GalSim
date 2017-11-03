@@ -2139,6 +2139,16 @@ def test_dep_photon_array():
     assert photon_array.flux[8] == 1.8
 
 
+@timer
+def test_dep_table():
+    file_name = '../examples/data/cosmo-fid.zmed1.00_smoothed.out'
+    tab1 = check_dep(galsim.LookupTable, file=file_name)
+    tab2 = galsim.LookupTable.from_file(file_name)
+    np.testing.assert_array_equal(tab1.x, tab2.x)
+    np.testing.assert_array_equal(tab1.f, tab2.f)
+    assert tab1 == tab2
+
+
 if __name__ == "__main__":
     test_dep_bandpass()
     test_dep_base()
@@ -2164,3 +2174,4 @@ if __name__ == "__main__":
     test_dep_ecliptic()
     test_dep_interp()
     test_dep_photon_array()
+    test_dep_table()

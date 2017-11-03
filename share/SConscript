@@ -13,6 +13,7 @@ files = glob.glob('*')     # Everything
 files.remove('SConscript') # except this file.
 sed_files = glob.glob('SEDs/*')
 bp_files = glob.glob('bandpasses/*')
+sensor_files = glob.glob('sensors/*')
 
 if 'install' in COMMAND_LINE_TARGETS:
     install_dir = env['FINAL_PREFIX']
@@ -44,8 +45,10 @@ if 'install' in COMMAND_LINE_TARGETS:
     RunInstall(env, files, install_subdir)
     RunInstall(env, sed_files, install_subdir+'/SEDs')
     RunInstall(env, bp_files, install_subdir+'/bandpasses')
+    RunInstall(env, sensor_files, install_subdir+'/sensors')
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
     RunUninstall(env, files, install_subdir)
     RunUninstall(env, sed_files, install_subdir+'/SEDs')
     RunUninstall(env, bp_files, install_subdir+'/bandpasses')
+    RunUninstall(env, sensor_files, install_subdir+'/sensors')
