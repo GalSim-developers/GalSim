@@ -254,14 +254,14 @@ def test_from_func():
         f5 = tab5(x)
         f6 = tab6(x)
         print(truth, f1, f2, f3, f4, f5, f6)
-        np.testing.assert_almost_equal(f1/truth, 1.0, decimal=3)
-        np.testing.assert_almost_equal(f2/truth, 1.0, 3,
+        np.testing.assert_almost_equal(f1/truth, 1.0, decimal=2)
+        np.testing.assert_almost_equal(f2/truth, 1.0, 2,
                                        "LookupTable.from_func (linear) gave wrong answer")
-        np.testing.assert_almost_equal(f3/truth, 1.0, decimal=7)
-        np.testing.assert_almost_equal(f4/truth, 1.0, 7,
+        np.testing.assert_almost_equal(f3/truth, 1.0, decimal=6)
+        np.testing.assert_almost_equal(f4/truth, 1.0, 6,
                                        "LookupTable.from_func (spline) gave wrong answer")
-        np.testing.assert_almost_equal(f5/truth, 1.0, decimal=12)
-        np.testing.assert_almost_equal(f6/truth, 1.0, 12,
+        np.testing.assert_almost_equal(f5/truth, 1.0, decimal=11)
+        np.testing.assert_almost_equal(f6/truth, 1.0, 11,
                                        "LookupTable.from_func (log-log) gave wrong answer")
     do_pickle(tab2)
     do_pickle(tab4)
