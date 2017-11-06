@@ -269,12 +269,12 @@ namespace hsm {
              } else {
                   dbg<<"About to get moments using find_mom_2"<<std::endl;
                   tmv::Matrix<double> moments(3,3);
-                  double sig;
+                  double sig = guess_sig;
                   find_mom_2(masked_object_image_cview, moments, 3,
                              results.moments_centroid.x, results.moments_centroid.y, sig,
                              hsmparams->convergence_threshold, results.moments_n_iter, hsmparams);
                   dbg<<"Repackaging find_mom_2 results"<<std::endl;
-                  results.moments_amp =  moments(0,0);
+                  results.moments_amp =  3.544907701811 * sig * moments(0,0);
                   results.moments_sigma = sig;
                   results.observed_e1 = 0;
                   results.observed_e2 = 0;
