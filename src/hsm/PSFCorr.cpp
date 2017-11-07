@@ -270,7 +270,7 @@ namespace hsm {
                   dbg<<"About to get moments using find_mom_2"<<std::endl;
                   tmv::Matrix<double> moments(3,3);
                   double sig = guess_sig;
-                  find_mom_2(masked_object_image_cview, moments, 3,
+                  find_mom_2(masked_object_image_cview, moments, 2,
                              results.moments_centroid.x, results.moments_centroid.y, sig,
                              hsmparams->convergence_threshold, results.moments_n_iter, hsmparams);
                   dbg<<"Repackaging find_mom_2 results"<<std::endl;
