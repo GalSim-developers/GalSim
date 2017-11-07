@@ -276,8 +276,8 @@ namespace hsm {
                   dbg<<"Repackaging find_mom_2 results"<<std::endl;
                   results.moments_amp =  3.544907701811*sig*moments(0,0);
                   results.moments_sigma = sig;
-                  results.observed_e1 = (moments(2,0)-moments(0,2)) / moments(0,0);
-                  results.observed_e2 =(1./std::sqrt(2.))*(moments(1,1)) / moments(0,0);
+                  results.observed_e1 = 0.5*(moments(2,0)-moments(0,2)) / moments(0,0);
+                  results.observed_e2 = (1./std::sqrt(2.))*(moments(1,1)) / moments(0,0);
                   results.moments_status = 0;
              }
         }
