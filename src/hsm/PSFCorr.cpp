@@ -1874,5 +1874,6 @@ namespace hsm {
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
+
 }
 }
