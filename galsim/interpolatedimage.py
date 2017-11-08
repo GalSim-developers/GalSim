@@ -589,7 +589,7 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     1. There are no padding options. The image must be provided with all padding already applied.
     2. The stepk and maxk values will not be calculated.  If you want to use values for these other
        than the default, you may provide them as _force_stepk and _force_maxk.  Otherwise
-       stepk ~= 2pi / image_size and max_k ~= 2pi / pixel_scale.
+       stepk ~= 2pi / image_size and max_k ~= pi / pixel_scale.
     3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
     4. The input image must have a defined wcs.
 
