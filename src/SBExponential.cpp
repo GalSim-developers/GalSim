@@ -519,7 +519,7 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    ExponentialInfo::ExponentialInfo(GSParamsPtr gsparams)
+    ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
     {
         dbg<<"Start ExponentialInfo with gsparams = "<<*gsparams<<std::endl;
 #ifndef USE_NEWTON_RAPHSON

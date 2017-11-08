@@ -558,7 +558,7 @@ namespace galsim {
         }
     }
 
-    SpergelInfo::SpergelInfo(double nu, GSParamsPtr gsparams) :
+    SpergelInfo::SpergelInfo(double nu, const GSParamsPtr& gsparams) :
         _nu(nu), _gsparams(gsparams),
         _gamma_nup1(math::tgamma(_nu+1.0)),
         _gamma_nup2(_gamma_nup1 * (_nu+1)),

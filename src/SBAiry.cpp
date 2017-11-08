@@ -338,7 +338,7 @@ namespace galsim {
     { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoObs::AiryInfoObs(double obscuration, GSParamsPtr gsparams) :
+    AiryInfoObs::AiryInfoObs(double obscuration, const GSParamsPtr& gsparams) :
         _obscuration(obscuration),
         _obssq(obscuration * obscuration),
         _radial(_obscuration, _obssq, gsparams),
@@ -438,7 +438,7 @@ namespace galsim {
     }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoNoObs::AiryInfoNoObs(GSParamsPtr gsparams) :
+    AiryInfoNoObs::AiryInfoNoObs(const GSParamsPtr& gsparams) :
         _radial(gsparams), _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfoNoObs\n";

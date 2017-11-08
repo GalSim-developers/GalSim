@@ -38,7 +38,7 @@ namespace galsim {
         /**
          * @brief Constructor
          */
-        KolmogorovInfo(GSParamsPtr gsparams);
+        KolmogorovInfo(const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~KolmogorovInfo() {}

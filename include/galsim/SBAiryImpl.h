@@ -95,7 +95,7 @@ namespace galsim {
     class AiryInfoObs : public AiryInfo
     {
     public:
-        AiryInfoObs(double obscuration, GSParamsPtr _gsparams);
+        AiryInfoObs(double obscuration, const GSParamsPtr& _gsparams);
         ~AiryInfoObs() {}
 
         double xValue(double r) const;
@@ -118,7 +118,7 @@ namespace galsim {
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
              */
-            RadialFunction(double obscuration, double obssq, GSParamsPtr gsparams) :
+            RadialFunction(double obscuration, double obssq, const GSParamsPtr& gsparams) :
                 _obscuration(obscuration), _obssq(obssq),
                 _norm(M_PI / (1.-_obssq)), _gsparams(gsparams) {}
 
@@ -161,7 +161,7 @@ namespace galsim {
     class AiryInfoNoObs : public AiryInfo
     {
     public:
-        AiryInfoNoObs(GSParamsPtr gsparams);
+        AiryInfoNoObs(const GSParamsPtr& gsparams);
         ~AiryInfoNoObs() {}
 
         double xValue(double r) const;
@@ -171,7 +171,7 @@ namespace galsim {
         class RadialFunction : public FluxDensity
         {
         public:
-            RadialFunction(GSParamsPtr gsparams) : _gsparams(gsparams) {}
+            RadialFunction(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
 
             double operator()(double radius) const;
 

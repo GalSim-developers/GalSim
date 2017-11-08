@@ -32,7 +32,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SpergelInfo(double nu, GSParamsPtr gsparams);
+        SpergelInfo(double nu, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SpergelInfo() {}

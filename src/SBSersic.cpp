@@ -363,7 +363,7 @@ namespace galsim {
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
-    SersicInfo::SersicInfo(double n, double trunc, GSParamsPtr gsparams) :
+    SersicInfo::SersicInfo(double n, double trunc, const GSParamsPtr& gsparams) :
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
