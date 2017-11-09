@@ -47,7 +47,7 @@ namespace galsim {
     { return fmath::expd(y * std::log(x)); }
 
     SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
-                       const GSParamsPtr& gsparams) :
+                       const GSParams& gsparams) :
         SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux, gsparams)) {}
 
     SBMoffat::SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
@@ -90,7 +90,7 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBMoffat("<<getBeta()<<", "<<getScaleRadius();
         oss << ", None, None, "<<getTrunc()<<", "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -173,10 +173,10 @@ namespace galsim {
 
     SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
                                          double trunc, double flux,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _beta(beta), _flux(flux), _trunc(trunc),
-        _ft(Table<double,double>::spline),
+        _ft(Table::spline),
         _re(0.), // initially set to zero, may be updated by size or getHalfLightRadius().
         _stepk(0.), // calculated by stepK() and stored.
         _maxk(0.) // calculated by maxK() and stored.
@@ -230,7 +230,7 @@ namespace galsim {
 
             // Set maxRrD to the radius where missing fractional flux is xvalue_accuracy
             // (1+R^2)^(1-beta) = xvalue_accuracy
-            _maxRrD = std::sqrt(std::pow(this->gsparams->xvalue_accuracy, 1. / (1. - _beta))- 1.);
+            _maxRrD = std::sqrt(std::pow(this->gsparams.xvalue_accuracy, 1. / (1. - _beta))- 1.);
             xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
@@ -244,34 +244,34 @@ namespace galsim {
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
             << " norm " << _norm << " maxR " << _maxR << std::endl;
 
-        if (std::abs(_beta-1) < this->gsparams->xvalue_accuracy)
+        if (std::abs(_beta-1) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_1;
-        else if (std::abs(_beta-1.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-1.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_15;
-        else if (std::abs(_beta-2) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-2) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_2;
-        else if (std::abs(_beta-2.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-2.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_25;
-        else if (std::abs(_beta-3) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-3) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_3;
-        else if (std::abs(_beta-3.5) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-3.5) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_35;
-        else if (std::abs(_beta-4) < this->gsparams->xvalue_accuracy)
+        else if (std::abs(_beta-4) < this->gsparams.xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_4;
         else _pow_beta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
-        else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-1.5) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_15;
-        else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-2) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_2;
-        else if (std::abs(_beta-2.5) < this->gsparams->kvalue_accuracy)
+        else if (std::abs(_beta-2.5) < this->gsparams.kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_25;
-        else if (std::abs(_beta-3) < this->gsparams->kvalue_accuracy) {
+        else if (std::abs(_beta-3) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_3; _knorm /= 2.;
-        } else if (std::abs(_beta-3.5) < this->gsparams->kvalue_accuracy) {
+        } else if (std::abs(_beta-3.5) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_35; _knorm /= 3.;
-        } else if (std::abs(_beta-4) < this->gsparams->kvalue_accuracy) {
+        } else if (std::abs(_beta-4) < this->gsparams.kvalue_accuracy) {
             _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
@@ -523,7 +523,7 @@ namespace galsim {
                 //
                 // Solve for f(k) = maxk_threshold
                 //
-                double temp = (this->gsparams->maxk_threshold
+                double temp = (this->gsparams.maxk_threshold
                                * math::tgamma(_beta-1.)
                                * std::pow(2.,_beta-0.5)
                                / (2. * sqrt(M_PI)));
@@ -562,7 +562,7 @@ namespace galsim {
                 _stepk = M_PI / _maxR;
             } else {
                 // Ignore the 1 in (1+R^2), so approximately:
-                double R = std::pow(this->gsparams->folding_threshold, 0.5/(1.-_beta)) * _rD;
+                double R = std::pow(this->gsparams.folding_threshold, 0.5/(1.-_beta)) * _rD;
                 dbg<<"R = "<<R<<std::endl;
                 // If it is truncated at less than this, drop to that value.
                 if (R > _maxR) R = _maxR;
@@ -570,7 +570,7 @@ namespace galsim {
                 dbg<<"R => "<<R<<std::endl;
                 dbg<<"stepk = "<<(M_PI/R)<<std::endl;
                 // Make sure it is at least 5 hlr
-                R = std::max(R,gsparams->stepk_minimum_hlr*getHalfLightRadius());
+                R = std::max(R,gsparams.stepk_minimum_hlr*getHalfLightRadius());
                 _stepk = M_PI / R;
             }
         }
@@ -595,14 +595,14 @@ namespace galsim {
     void SBMoffat::SBMoffatImpl::setupFT() const
     {
         assert(_trunc > 0.);
-        if (_ft.size() > 0) return;
+        if (_ft.finalized()) return;
 
         // Do a Hankel transform and store the results in a lookup table.
 
         double prefactor = 2. * (_beta-1.) / (_fluxFactor);
 
         // Along the way, find the last k that has a kValue > 1.e-3
-        double maxk_val = this->gsparams->maxk_threshold;
+        double maxk_val = this->gsparams.maxk_threshold;
         dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
@@ -613,7 +613,7 @@ namespace galsim {
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
-        double dk = gsparams->table_spacing * sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
+        double dk = gsparams.table_spacing * sqrt(sqrt(gsparams.kvalue_accuracy / 10.));
         dbg<<"dk = "<<dk<<std::endl;
         int n_below_thresh = 0;
         // Don't go past k = 50
@@ -638,8 +638,8 @@ namespace galsim {
 
             double val = integ::int1d(
                 I, reg,
-                this->gsparams->integration_relerr,
-                this->gsparams->integration_abserr);
+                this->gsparams.integration_relerr,
+                this->gsparams.integration_abserr);
             val *= prefactor;
 
             xdbg<<"ft("<<k<<") = "<<val<<std::endl;
@@ -647,47 +647,47 @@ namespace galsim {
 
             if (std::abs(val) > maxk_val) _maxk = k;
 
-            if (std::abs(val) > this->gsparams->kvalue_accuracy) n_below_thresh = 0;
+            if (std::abs(val) > this->gsparams.kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
+        _ft.finalize();
         dbg<<"maxk = "<<_maxk<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
+    void SBMoffat::SBMoffatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Moffat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Moffat has analytic inverse-cumulative-flux function.
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++) {
 #ifdef USE_COS_SIN
             // First get a point uniformly distributed on unit circle
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
             math::sincos(theta, sint, cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);
-            result->setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*cost, rFactor*sint, fluxPerPhoton);
 #else
             // First get a point uniformly distributed on unit circle
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1. || rsq==0.);
             // Then map radius to the Moffat flux distribution
             double newRsq = fast_pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq / rsq);
-            result->setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
+            photons.setPhoton(i, rFactor*xu, rFactor*yu, fluxPerPhoton);
 #endif
         }
-        dbg<<"Moffat Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Moffat Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 }

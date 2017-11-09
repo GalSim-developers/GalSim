@@ -22,6 +22,7 @@ A class that handles affine tranformations of a profile including a possible flu
 import galsim
 import numpy as np
 from . import _galsim
+from .utilities import lazy_property
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
               gsparams=None):
@@ -127,32 +128,35 @@ class Transformation(galsim.GSObject):
             self._original = obj.original
         else:
             self._original = obj
-        self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio,
-                                        gsparams)
+        self._gsparams = galsim.GSParams.check(gsparams, self._original.gsparams)
+        self._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset._p,
+                                        flux_ratio, self.gsparams._gsp)
 
-        self._jac = np.asarray(self._sbp.getJac())
-        self._offset = self._sbp.getOffset()
+        # Note: we can't just take the inputs, since if obj is already a Transformation, then
+        # the SBTransform constructor will have absorbed its jac, offset, flux into a single
+        # transformation.
+        self._jac = np.empty((2,2), dtype=float)
+        self._sbp.getJac(self._jac.ctypes.data)
+        self._offset = galsim.PositionD(self._sbp.getOffset())
         self._flux_ratio = self._sbp.getFluxScaling()
-        self._gsparams = gsparams
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         if self.original.noise is None:
             return None
         else:
-            jac = self._jac
-            flux_ratio = self._flux_ratio
+            dudx, dudy, dvdx, dvdy = self._jac.ravel()
             return galsim.correlatednoise._BaseCorrelatedNoise(
                     self.original.noise.rng,
                     galsim._Transform(self.original.noise._profile,
-                                      jac[0], jac[1], jac[2], jac[3],
-                                      flux_ratio=flux_ratio**2),
+                                      dudx, dudy, dvdx, dvdy,
+                                      flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
     @property
     def original(self): return self._original
     @property
-    def jac(self): return self._jac.reshape(2,2)
+    def jac(self): return self._jac
     @property
     def offset(self): return self._offset
     @property
@@ -167,16 +171,16 @@ class Transformation(galsim.GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.Transformation", self.original, tuple(self._jac), self.offset.x,
-                     self.offset.y, self.flux_ratio, self.gsparams))
+        return hash(("galsim.Transformation", self.original, tuple(self._jac.ravel()),
+                     self.offset.x, self.offset.y, self.flux_ratio, self.gsparams))
 
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
-            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
+            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams)
 
     def __str__(self):
         s = str(self.original)
-        dudx, dudy, dvdx, dvdy = self._jac
+        dudx, dudy, dvdx, dvdy = self._jac.ravel()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # Figure out the shear/rotate/dilate calls that are equivalent.
             jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
@@ -215,20 +219,20 @@ class Transformation(galsim.GSObject):
 
     def _prepareDraw(self):
         self._original._prepareDraw()
-        dudx, dudy, dvdx, dvdy = self._jac
+        dudx, dudy, dvdx, dvdy = self._jac.ravel()
         self._sbp = galsim._galsim.SBTransform(self._original._sbp,
                                                dudx, dudy, dvdx, dvdy,
-                                               self.offset, self.flux_ratio,
-                                               self._gsparams)
+                                               self.offset._p, self.flux_ratio,
+                                               self.gsparams._gsp)
 
     def _fwd_ident(self, x, y):
         return x, y
 
     def _fwd_diag(self, x, y):
-        return self._jac[0] * x, self._jac[3] * y
+        return self._jac[0,0] * x, self._jac[1,1] * y
 
     def _fwd_normal(self, x, y):
-        return self._jac[0] * x + self._jac[1] * y, self._jac[2] * x + self._jac[3] * y
+        return self._jac[0,0] * x + self._jac[0,1] * y, self._jac[1,0] * x + self._jac[1,1] * y
 
     def shoot(self, n_photons, rng=None):
         """Shoot photons into a PhotonArray.
@@ -241,16 +245,16 @@ class Transformation(galsim.GSObject):
         @returns PhotonArray.
         """
         # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
-        if np.array_equal(self._jac[1:3], (0,0)):
-            if np.array_equal(self._jac[::3], (1,1)):   # jac is (1,0,0,1)
+        if self._jac[0,1] == 0 and self._jac[1,0] == 0:
+            if self._jac[0,0] == 1 and self._jac[1,1] == 1:     # jac is (1,0,0,1)
                 fwd = self._fwd_ident
                 det = 1
-            else:                                       # jac is (a,0,0,b)
+            else:                                               # jac is (a,0,0,b)
                 fwd = self._fwd_diag
-                det = abs(self._jac[0] * self._jac[3])
-        else:                                           # Fully general case
+                det = abs(self._jac[0,0] * self._jac[1,1])
+        else:                                                   # Fully general case
             fwd = self._fwd_normal
-            det = abs(self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2])
+            det = abs(self._jac[0,0] * self._jac[1,1] - self._jac[0,1] * self._jac[1,0])
 
         ud = galsim.UniformDeviate(rng)
         photon_array = self.original.shoot(n_photons, ud)
@@ -262,7 +266,7 @@ class Transformation(galsim.GSObject):
         return photon_array
 
     def __getstate__(self):
-        # While the SBProfile should be picklable, it is better to reconstruct it from the
+        # While the _sbp should be picklable, it is better to reconstruct it from the
         # original object, which will pickle better.  The SBProfile is only picklable via its
         # repr, which is not the most efficient serialization.  Especially for things like
         # SBInterpolatedImage.
@@ -286,21 +290,11 @@ def _Transform(obj, dudx=1, dudy=0, dvdx=0, dvdy=1, offset=galsim.PositionD(0.,0
         ret._original = obj.original
     else:
         ret._original = obj
-    ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
-    ret._jac = np.asarray(ret._sbp.getJac())
-    ret._offset = ret._sbp.getOffset()
+    ret._gsparams = galsim.GSParams.check(gsparams, ret._original.gsparams)
+    ret._sbp = _galsim.SBTransform(obj._sbp, dudx, dudy, dvdx, dvdy, offset._p,
+                                   flux_ratio, ret.gsparams._gsp)
+    ret._jac = np.empty((2,2), dtype=float)
+    ret._sbp.getJac(ret._jac.ctypes.data)
+    ret._offset = galsim.PositionD(ret._sbp.getOffset())
     ret._flux_ratio = ret._sbp.getFluxScaling()
-    ret._gsparams = gsparams
     return ret
-
-def SBTransform_init(self):
-    obj = self.getObj()
-    dudx, dudy, dvdx, dvdy = self.getJac()
-    offset = self.getOffset()
-    flux_ratio = self.getFluxScaling()
-    gsparams = self.getGSParams()
-    return (obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
-_galsim.SBTransform.__getinitargs__ = SBTransform_init
-_galsim.SBTransform.__getstate__ = lambda self: None
-_galsim.SBTransform.__repr__ = lambda self: \
-        'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()

@@ -583,7 +583,6 @@ def test_pickle():
         prof = get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                          scale_height=0.3)
         do_pickle(prof)
-        do_pickle(prof._sbp)
 
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,

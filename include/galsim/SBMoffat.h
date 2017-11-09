@@ -58,7 +58,7 @@ namespace galsim {
          *                           image operations and rendering, if different from the default.
          */
         SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
-                 const GSParamsPtr& gsparams);
+                 const GSParams& gsparams);
 
 
         /// @brief Copy constructor.

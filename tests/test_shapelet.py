@@ -148,6 +148,10 @@ def test_shapelet_properties():
 
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
+    assert shapelet.sigma == sigma
+    assert shapelet.order == order
+    np.testing.assert_array_equal(shapelet.bvec, bvec)
+
     check_basic(shapelet, "Shapelet", approx_maxsb=True)
 
     # Check flux
@@ -173,8 +177,6 @@ def test_shapelet_properties():
 
     # Check picklability
     do_pickle(shapelet)
-    do_pickle(shapelet._sbp)
-    do_pickle(shapelet._sbp.getBVec())
 
 
 @timer
@@ -193,7 +195,7 @@ def test_shapelet_fit():
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.Shapelet.fit(sigma, 10, im1, normalization=norm)
-        #print('fitted shapelet coefficients = ',shapelet.bvec)
+        print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
         print('flux = ',shapelet.flux,'  cf. ',flux)
@@ -279,8 +281,8 @@ def test_shapelet_adjustments():
 
     # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
     # Make it opaque to the Shapelet versions
-    gsref_shapelet = galsim.Add([ref_shapelet])
-    gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
+    alt_shapelet = ref_shapelet + 0. * galsim.Gaussian(sigma=1)
+    alt_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     shapelet.withFlux(23.).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
@@ -288,42 +290,42 @@ def test_shapelet_adjustments():
         err_msg="Shapelet withFlux disagrees with GSObject withFlux")
 
     # Test that scaling the Shapelet flux does the same thing as the GSObject scaling
-    (gsref_shapelet * 0.23).drawImage(ref_im, method='no_pixel')
+    (alt_shapelet * 0.23).drawImage(ref_im, method='no_pixel')
     (shapelet * 0.23).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet *= 0.23 disagrees with GSObject *= 0.23")
 
     # Test that the Shapelet rotate does the same thing as the GSObject rotate
-    gsref_shapelet.rotate(23. * galsim.degrees).drawImage(ref_im, method='no_pixel')
+    alt_shapelet.rotate(23. * galsim.degrees).drawImage(ref_im, method='no_pixel')
     shapelet.rotate(23. * galsim.degrees).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet rotate disagrees with GSObject rotate")
 
     # Test that the Shapelet dilate does the same thing as the GSObject dilate
-    gsref_shapelet.dilate(1.3).drawImage(ref_im, method='no_pixel')
+    alt_shapelet.dilate(1.3).drawImage(ref_im, method='no_pixel')
     shapelet.dilate(1.3).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet dilate disagrees with GSObject dilate")
 
     # Test that the Shapelet expand does the same thing as the GSObject expand
-    gsref_shapelet.expand(1.7).drawImage(ref_im, method='no_pixel')
+    alt_shapelet.expand(1.7).drawImage(ref_im, method='no_pixel')
     shapelet.expand(1.7).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet expand disagrees with GSObject expand")
 
     # Test that the Shapelet magnify does the same thing as the GSObject magnify
-    gsref_shapelet.magnify(0.8).drawImage(ref_im, method='no_pixel')
+    alt_shapelet.magnify(0.8).drawImage(ref_im, method='no_pixel')
     shapelet.magnify(0.8).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet magnify disagrees with GSObject magnify")
 
     # Test that lens works on Shapelet
-    gsref_shapelet.lens(-0.05, 0.15, 1.1).drawImage(ref_im, method='no_pixel')
+    alt_shapelet.lens(-0.05, 0.15, 1.1).drawImage(ref_im, method='no_pixel')
     shapelet.lens(-0.05, 0.15, 1.1).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,

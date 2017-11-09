@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBDeltaFunction.h"
 
@@ -34,9 +31,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBDeltaFunction,bp::bases<SBProfile> >("SBDeltaFunction", bp::no_init)
-                .def(bp::init<double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("flux")=1., bp::arg("gsparams")=bp::object())
-                ))
+                .def(bp::init<double, GSParams>(
+                        (bp::arg("flux"), bp::arg("gsparams"))))
                 .def(bp::init<const SBDeltaFunction &>())
                 .enable_pickling()
                 ;

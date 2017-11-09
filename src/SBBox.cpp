@@ -33,7 +33,7 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double width, double height, double flux, const GSParamsPtr& gsparams) :
+    SBBox::SBBox(double width, double height, double flux, const GSParams& gsparams) :
         SBProfile(new SBBoxImpl(width,height,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
@@ -57,12 +57,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBBox("<<getWidth()<<", "<<getHeight()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBBox::SBBoxImpl::SBBoxImpl(double width, double height, double flux,
-                                const GSParamsPtr& gsparams) :
+                                const GSParams& gsparams) :
         SBProfileImpl(gsparams), _width(width), _height(height), _flux(flux)
     {
         if (_height==0.) _height=_width;
@@ -236,7 +236,7 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const
     {
-        return 2. / (this->gsparams->maxk_threshold * std::min(_width,_height));
+        return 2. / (this->gsparams.maxk_threshold * std::min(_width,_height));
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -247,21 +247,20 @@ namespace galsim {
         return M_PI / std::max(_width,_height);
     }
 
-    boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
+    void SBBox::SBBoxImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Box shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         for (int i=0; i<N; i++)
-            result->setPhoton(i, _width*(u()-0.5), _height*(u()-0.5), fluxPerPhoton);
-        dbg<<"Box Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+            photons.setPhoton(i, _width*(ud()-0.5), _height*(ud()-0.5), fluxPerPhoton);
+        dbg<<"Box Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 
 
-    SBTopHat::SBTopHat(double radius, double flux, const GSParamsPtr& gsparams) :
+    SBTopHat::SBTopHat(double radius, double flux, const GSParams& gsparams) :
         SBProfile(new SBTopHatImpl(radius,flux,gsparams)) {}
 
     SBTopHat::SBTopHat(const SBTopHat& rhs) : SBProfile(rhs) {}
@@ -279,12 +278,12 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBTopHat("<<getRadius()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBTopHat::SBTopHatImpl::SBTopHatImpl(double radius, double flux,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _r0(radius), _r0sq(_r0*_r0), _flux(flux),
         _norm(_flux / (M_PI * _r0sq))
@@ -451,7 +450,7 @@ namespace galsim {
     {
         // |j1(x)| ~ sqrt(2/(Pi x)) for large x, so using this, we get
         // maxk_thresh = 2 * sqrt(2/(Pi k r0)) / (k r0) = 2 sqrt(2/Pi) (k r0)^-3/2
-        return std::pow(2. * sqrt(2./M_PI) / this->gsparams->maxk_threshold, 2./3.) / _r0;
+        return std::pow(2. * sqrt(2./M_PI) / this->gsparams.maxk_threshold, 2./3.) / _r0;
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at
@@ -462,34 +461,33 @@ namespace galsim {
         return M_PI / _r0;
     }
 
-    boost::shared_ptr<PhotonArray> SBTopHat::SBTopHatImpl::shoot(int N, UniformDeviate u) const
+    void SBTopHat::SBTopHatImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"TopHat shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = _flux/N;
         // cf. SBGaussian's shoot function
         for (int i=0; i<N; i++) {
             // First get a point uniformly distributed on unit circle
 #ifdef USE_COS_SIN
-            double theta = 2.*M_PI*u();
-            double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
+            double theta = 2.*M_PI*ud();
+            double rsq = ud(); // cumulative dist function P(<r) = r^2 for unit circle
             double sint,cost;
             math::sincos(theta, sint, cost);
             // Then map radius to the desired Gaussian with analytic transformation
             double r = sqrt(rsq) * _r0;;
-            result->setPhoton(i, r*cost, r*sint, fluxPerPhoton);
+            photons.setPhoton(i, r*cost, r*sint, fluxPerPhoton);
 #else
             double xu, yu, rsq;
             do {
-                xu = 2.*u()-1.;
-                yu = 2.*u()-1.;
+                xu = 2.*ud()-1.;
+                yu = 2.*ud()-1.;
                 rsq = xu*xu+yu*yu;
             } while (rsq>=1.);
-            result->setPhoton(i, xu * _r0, yu * _r0, fluxPerPhoton);
+            photons.setPhoton(i, xu * _r0, yu * _r0, fluxPerPhoton);
 #endif
         }
-        dbg<<"TopHat Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"TopHat Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

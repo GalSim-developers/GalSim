@@ -52,7 +52,7 @@ def test_angle():
     theta3 = 3 * galsim.hours
     theta4 = 45 * 60 * galsim.arcmin
     theta5 = galsim.Angle(45 * 3600 , galsim.arcsec) # Check explicit installation too.
-    theta6 = galsim._Angle(numpy.pi/4.)  # Underscore constructor implicitly uses radians
+    theta6 = galsim._Angle(pi/4.)  # Underscore constructor implicitly uses radians
 
     assert theta1.rad == pi/4.
     numpy.testing.assert_almost_equal(theta2.rad, pi/4., decimal=12)
@@ -733,6 +733,7 @@ def test_ecliptic():
     el_rel, b_rel = vernal_equinox.ecliptic(epoch=2014, date=autumnal_eq_date)
     numpy.testing.assert_almost_equal(el_rel.wrap(-pi*galsim.radians).rad, -pi, decimal=3)
     numpy.testing.assert_almost_equal(b_rel.rad, 0., decimal=6)
+
     # And check that if it's the date of the vernal equinox (sun at (0, 0)) but we're looking at
     # the position of the autumnal equinox (180, 0), then (el_rel, b_rel) = (180, 0)
     el_rel, b_rel = autumnal_equinox.ecliptic(epoch=2014, date=vernal_eq_date)

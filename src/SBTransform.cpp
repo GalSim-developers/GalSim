@@ -29,7 +29,7 @@ namespace galsim {
     SBTransform::SBTransform(const SBProfile& adaptee,
                              double mA, double mB, double mC, double mD,
                              const Position<double>& cen, double ampScaling,
-                             const GSParamsPtr& gsparams) :
+                             const GSParams& gsparams) :
         SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,ampScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
@@ -46,7 +46,7 @@ namespace galsim {
         oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";
         Position<double> shift = getOffset();
         oss << "galsim.PositionD("<<shift.x<<", "<<shift.y<<"), "<<getFluxScaling();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -78,8 +78,8 @@ namespace galsim {
     SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& adaptee, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double ampScaling,
-        const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
+        const GSParams& gsparams) :
+        SBProfileImpl(gsparams),
         _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling),
         _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.)
     {
@@ -166,7 +166,7 @@ namespace galsim {
         xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
 
         // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_fluxScaling-1.) < this->gsparams->kvalue_accuracy) {
+        if (std::abs(_fluxScaling-1.) < this->gsparams.kvalue_accuracy) {
             xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
         } else {
@@ -905,19 +905,18 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SBTransform::SBTransformImpl::shoot(
-        int N, UniformDeviate u) const
+    void SBTransform::SBTransformImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"Distort shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Simple job here: just remap coords of each photon, then change flux
         // If there is overall magnification in the transform
-        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
-        for (size_t i=0; i<result->size(); i++) {
-            Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i)))+_cen;
-            result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_fluxScaling);
+        _adaptee.shoot(photons,ud);
+        for (int i=0; i<N; i++) {
+            Position<double> xy = fwd(Position<double>(photons.getX(i), photons.getY(i)))+_cen;
+            photons.setPhoton(i, xy.x, xy.y, photons.getFlux(i)*_fluxScaling);
         }
-        dbg<<"Distort Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Distort Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

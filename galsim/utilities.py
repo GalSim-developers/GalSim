@@ -259,8 +259,7 @@ def _convertPositions(pos, units, func):
     """
     # Check for PositionD or PositionI:
     if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
-        pos = [ np.array([pos.x], dtype='float'),
-                np.array([pos.y], dtype='float') ]
+        pos = [ pos.x, pos.y ]
 
     # Check for list of PositionD or PositionI:
     # The only other options allow pos[0], so if this is invalid, an exception
@@ -276,8 +275,7 @@ def _convertPositions(pos, units, func):
     else:
         # Check for (x,y):
         try:
-            pos = [ np.array([float(pos[0])], dtype='float'),
-                    np.array([float(pos[1])], dtype='float') ]
+            pos = [ float(pos[0]), float(pos[1]) ]
         except TypeError:
             # Only other valid option is ( xlist , ylist )
             pos = [ np.array(pos[0], dtype='float'),
@@ -1066,22 +1064,6 @@ def dol_to_lod(dol, N=None):
                 raise ValueError("Cannot broadcast kwarg {0}={1}".format(k, v))
         yield out
 
-def set_func_doc(func, doc):
-    """Dynamically set a docstring for a given function.
-
-    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
-    It turns out this tends to be easier than writing the doc strings in the C++ layer.
-
-    @param func     The function to which a docstring is to be added.
-    @param doc      The doc string to add.
-    """
-    try:
-        # Python3
-        func.__doc__ = doc
-    except AttributeError:
-        func.__func__.__doc__ = doc
-
-
 def structure_function(image):
     """Estimate the angularly-averaged structure function of a 2D random field.
 
@@ -1254,7 +1236,7 @@ def binomial(a, b, n):
     def generate():
         c = a**n
         yield c
-        for i in range(n):
+        for i in range(n):  # pragma: no branch  (It never actually gets past the last yield.)
             c *= b_over_a * (n-i)/(i+1)
             yield c
     return np.fromiter(generate(), float, n+1)

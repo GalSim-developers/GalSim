@@ -220,7 +220,7 @@ namespace galsim {
 
    protected:
         struct BaseDeviateImpl;
-        boost::shared_ptr<BaseDeviateImpl> _impl;
+        shared_ptr<BaseDeviateImpl> _impl;
 
         /// Helper to make the repr with or without the (lengthy!) seed item.
         virtual std::string make_repr(bool incl_seed);
@@ -288,7 +288,7 @@ namespace galsim {
 
     private:
         struct UniformDeviateImpl;
-        boost::shared_ptr<UniformDeviateImpl> _devimpl;
+        shared_ptr<UniformDeviateImpl> _devimpl;
     };
 
     /**
@@ -397,7 +397,7 @@ namespace galsim {
 
     private:
         struct GaussianDeviateImpl;
-        boost::shared_ptr<GaussianDeviateImpl> _devimpl;
+        shared_ptr<GaussianDeviateImpl> _devimpl;
     };
 
 
@@ -495,7 +495,7 @@ namespace galsim {
 
     private:
         struct BinomialDeviateImpl;
-        boost::shared_ptr<BinomialDeviateImpl> _devimpl;
+        shared_ptr<BinomialDeviateImpl> _devimpl;
     };
 
     /**
@@ -586,7 +586,7 @@ namespace galsim {
 
     private:
         struct PoissonDeviateImpl;
-        boost::shared_ptr<PoissonDeviateImpl> _devimpl;
+        shared_ptr<PoissonDeviateImpl> _devimpl;
     };
 
     /**
@@ -691,7 +691,7 @@ namespace galsim {
 
     private:
         struct WeibullDeviateImpl;
-        boost::shared_ptr<WeibullDeviateImpl> _devimpl;
+        shared_ptr<WeibullDeviateImpl> _devimpl;
     };
 
     /**
@@ -796,7 +796,7 @@ namespace galsim {
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
         // don't conform to the normal beta=1/theta.  Rather, they have beta=theta.
         struct GammaDeviateImpl;
-        boost::shared_ptr<GammaDeviateImpl> _devimpl;
+        shared_ptr<GammaDeviateImpl> _devimpl;
     };
 
     /**
@@ -883,7 +883,7 @@ namespace galsim {
     private:
 
         struct Chi2DeviateImpl;
-        boost::shared_ptr<Chi2DeviateImpl> _devimpl;
+        shared_ptr<Chi2DeviateImpl> _devimpl;
     };
 
 }  // namespace galsim

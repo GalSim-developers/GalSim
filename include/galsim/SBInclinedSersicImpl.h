@@ -34,7 +34,7 @@ namespace galsim {
     public:
         SBInclinedSersicImpl(double n, double inclination, double size, RadiusType rType,
                 double height, HeightType hType, double flux,
-                double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+                double trunc, bool flux_untruncated, const GSParams& gsparams);
 
         ~SBInclinedSersicImpl() {}
 
@@ -60,7 +60,7 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not yet implemented
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Sersic index n
         double getN() const { return _n; }
@@ -112,7 +112,7 @@ namespace galsim {
         double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         double _stepk;   ///< Sampling in k space necessary to avoid folding.
 
-        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
+        shared_ptr<SersicInfo> _info; ///< Points to info structure for this n,trunc
 
         void doFillKImage(ImageView<std::complex<double> > im,
                           double kx0, double dkx, int izero,

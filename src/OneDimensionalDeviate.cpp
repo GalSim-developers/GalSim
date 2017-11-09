@@ -184,14 +184,14 @@ namespace galsim {
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
             _flux = integ::int1d(integrand,
                                  _xLower, _xUpper,
-                                 _gsparams->integration_relerr,
-                                 _gsparams->integration_abserr);
+                                 _gsparams.integration_relerr,
+                                 _gsparams.integration_abserr);
         } else {
             // Integrate the input function
             _flux = integ::int1d(*_fluxDensityPtr,
                                  _xLower, _xUpper,
-                                 _gsparams->integration_relerr,
-                                 _gsparams->integration_abserr);
+                                 _gsparams.integration_relerr,
+                                 _gsparams.integration_abserr);
         }
         _fluxIsReady = true;
     }
@@ -220,7 +220,7 @@ namespace galsim {
         if (std::abs(densityLower) > 0. && std::abs(densityUpper) > 0.)
             densityVariation = densityLower / densityUpper;
         if (densityVariation > 1.) densityVariation = 1. / densityVariation;
-        if (densityVariation > _gsparams->allowed_flux_variation) {
+        if (densityVariation > _gsparams.allowed_flux_variation) {
             // Don't split if flux range is small
             _useRejectionMethod = false;
             result.push_back(*this);
@@ -245,7 +245,7 @@ namespace galsim {
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity,
                                                  std::vector<double>& range,
                                                  bool isRadial,
-                                                 const GSParamsPtr& gsparams) :
+                                                 const GSParams& gsparams) :
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
         _negativeFlux(0.),
@@ -281,21 +281,21 @@ namespace galsim {
                              range[iRange],
                              range[iRange+1],
                              extremum,
-                             _gsparams->range_division_for_extrema)) {
+                             _gsparams.range_division_for_extrema)) {
                 xdbg<<"range "<<iRange<<" = "<<range[iRange]<<" ... "<<range[iRange+1]<<
                     "  has an extremum at "<<extremum<<std::endl;
                 // Do 2 ranges
                 {
                     Interval splitit(_fluxDensity, range[iRange], extremum, _isRadial, _gsparams);
                     std::list<Interval> leftList = splitit.split(
-                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<leftList.size()<<" intervals on left of extremem\n";
                     _pt.insert(_pt.end(), leftList.begin(), leftList.end());
                 }
                 {
                     Interval splitit(_fluxDensity, extremum, range[iRange+1], _isRadial, _gsparams);
                     std::list<Interval> rightList = splitit.split(
-                        _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                        _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                     xdbg<<"Add "<<rightList.size()<<" intervals on right of extremem\n";
                     _pt.insert(_pt.end(), rightList.begin(), rightList.end());
                 }
@@ -304,7 +304,7 @@ namespace galsim {
                 Interval splitit(
                     _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
                 std::list<Interval> leftList = splitit.split(
-                    _gsparams->small_fraction_of_flux * totalAbsoluteFlux);
+                    _gsparams.small_fraction_of_flux * totalAbsoluteFlux);
                 xdbg<<"Add "<<leftList.size()<<" intervals\n";
                 _pt.insert(_pt.end(), leftList.begin(), leftList.end());
             }
@@ -316,18 +316,20 @@ namespace galsim {
         _pt.buildTree(thresh);
     }
 
-    boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const
+    void OneDimensionalDeviate::shoot(PhotonArray& photons, UniformDeviate ud, bool xandy) const
     {
+        const int N = photons.size();
         dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         dbg<<"isradial? "<<_isRadial<<std::endl;
+        dbg<<"xandy = "<<xandy<<std::endl;
         dbg<<"N = "<<N<<std::endl;
         assert(N>=0);
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        if (N==0) return result;
+        if (N==0) return;
         double totalAbsoluteFlux = getPositiveFlux() + getNegativeFlux();
         dbg<<"totalAbsFlux = "<<totalAbsoluteFlux<<std::endl;
         double fluxPerPhoton = totalAbsoluteFlux / N;
+        if (xandy) fluxPerPhoton *= totalAbsoluteFlux;
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
 
         // For each photon, first decide which Interval it's in, then drawWithin the interval.
@@ -343,7 +345,7 @@ namespace galsim {
                 double theta = 2.*M_PI*ud();
                 double sintheta, costheta;
                 math::sincos(theta, sintheta, costheta);
-                result->setPhoton(i, radius*costheta, radius*sintheta, flux*fluxPerPhoton);
+                photons.setPhoton(i, radius*costheta, radius*sintheta, flux*fluxPerPhoton);
 #else
                 // Alternate method: doesn't need sin & cos but needs sqrt
                 // First get a point uniformly distributed in unit circle
@@ -361,7 +363,7 @@ namespace galsim {
                 chosen->drawWithin(unitRandom, radius, flux, ud);
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
-                result->setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
+                photons.setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
 #endif
             } else {
                 // Simple 1d interpolation
@@ -370,32 +372,18 @@ namespace galsim {
                 // Now draw an x from within selected interval
                 double x, flux;
                 chosen->drawWithin(unitRandom, x, flux, ud);
-                result->setPhoton(i, x, 0., flux*fluxPerPhoton);
+                if (xandy) {
+                    double y, flux2;
+                    unitRandom = ud();
+                    chosen = _pt.find(unitRandom);
+                    chosen->drawWithin(unitRandom, y, flux2, ud);
+                    photons.setPhoton(i, x, y, flux*flux2*fluxPerPhoton);
+                } else {
+                    photons.setPhoton(i, x, 0., flux*fluxPerPhoton);
+                }
             }
         }
-        dbg<<"OneDimentionalDeviate Realized flux = "<<result->getTotalFlux()<<std::endl;
-
-        // This next bit is probably a bad idea, especially for profiles that have some
-        // negative flux.  It is possible for the random photons to end up totalling a
-        // negative value.  This should be allowed.  And certainly rescaling to get the
-        // correct flux would be wrong (it would involve a sign flip).  Similarly, Gary
-        // pointed out that it is conceivable for someone to want to draw a profile with
-        // zero total flux.  We don't want to rescale all the photons to 0.
-#if 0
-        // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily
-        // match exactly the target flux because of the possibility of variable flux for the
-        // photons, and also positive and negative photons partially canceling out in a
-        // stochastic way.
-        // So rescale the image to get the correct flux.
-        double targetFlux = getPositiveFlux() - getNegativeFlux();
-        double realizedFlux = result->getTotalFlux();
-        dbg<<"targetFlux = "<<targetFlux<<std::endl;
-        dbg<<"realizedFlux = "<<realizedFlux<<std::endl;
-        double scale = targetFlux / realizedFlux;
-        dbg<<"Rescale result by "<<scale<<std::endl;
-        result->scaleFlux(scale);
-#endif
-        return result;
+        dbg<<"OneDimentionalDeviate Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
 } // namespace galsim

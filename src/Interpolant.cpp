@@ -92,22 +92,21 @@ namespace galsim {
 
     double InterpolantXY::getPositiveFlux() const
     {
-        return _i1d->getPositiveFlux()*_i1d->getPositiveFlux()
-            + _i1d->getNegativeFlux()*_i1d->getNegativeFlux();
+        return _i1d.getPositiveFlux()*_i1d.getPositiveFlux()
+            + _i1d.getNegativeFlux()*_i1d.getNegativeFlux();
     }
 
     double InterpolantXY::getNegativeFlux() const
-    { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
+    { return 2.*_i1d.getPositiveFlux()*_i1d.getNegativeFlux(); }
 
-    boost::shared_ptr<PhotonArray> InterpolantXY::shoot(int N, UniformDeviate ud) const
+    void InterpolantXY::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"InterpolantXY shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = 1.\n";
         // Going to assume here that there is not a need to randomize any Interpolant
-        boost::shared_ptr<PhotonArray> result = _i1d->shoot(N, ud);   // get X coordinates
-        result->takeYFrom(*_i1d->shoot(N, ud));
-        dbg<<"InterpolantXY Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        // The 1d interpolants will populate x and y values separately.
+        _i1d.shoot(photons, ud);
+        dbg<<"InterpolantXY Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     double Interpolant::xvalWrapped(double x, int N) const
@@ -139,21 +138,26 @@ namespace galsim {
     // Delta
     //
 
-    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const
+    void Delta::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        const int N = photons.size();
+        dbg<<"Delta shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result->setPhoton(i, 0., 0., fluxPerPhoton);
+            photons.setPhoton(i, 0., 0., fluxPerPhoton);
         }
-        dbg<<"Delta Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Delta Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Delta::makeStr() const
-    { return "delta"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Delta("<<_width<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -169,21 +173,26 @@ namespace galsim {
 
     double Nearest::uval(double u) const { return math::sinc(u); }
 
-    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const
+    void Nearest::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
-            result->setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+            photons.setPhoton(i, ud()-0.5, ud()-0.5, fluxPerPhoton);
         }
-        dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Nearest Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Nearest::makeStr() const
-    { return "nearest"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Nearest("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -212,14 +221,19 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SincInterpolant::shoot(int N, UniformDeviate ud) const
+    void SincInterpolant::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
-        return boost::shared_ptr<PhotonArray>();
     }
 
     std::string SincInterpolant::makeStr() const
-    { return "sinc"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SincInterpolant("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -238,22 +252,27 @@ namespace galsim {
         return s*s;
     }
 
-    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const
+    void Linear::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
+        const int N = photons.size();
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {
             // *** Guessing here that 2 random draws is faster than a sqrt:
-            result->setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+            photons.setPhoton(i, ud() + ud() - 1., ud() + ud() - 1., fluxPerPhoton);
         }
-        dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        dbg<<"Linear Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
     std::string Linear::makeStr() const
-    { return "linear"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Linear("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -298,7 +317,7 @@ namespace galsim {
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) :
+    Cubic::Cubic(double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         dbg<<"Start Cubic:  tol = "<<tol<<std::endl;
@@ -319,9 +338,9 @@ namespace galsim {
         } else {
             // Then need to do the calculation and then cache it.
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            _tab.reset(new TableBuilder(Table::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
                 double ft = uCalc(u);
 #ifdef DEBUGLOGGING
@@ -333,6 +352,7 @@ namespace galsim {
                 _tab->addEntry(u, ft);
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
+            _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
@@ -349,11 +369,17 @@ namespace galsim {
 #endif
     }
 
-    std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
+    std::map<double,shared_ptr<TableBuilder> > Cubic::_cache_tab;
     std::map<double,double> Cubic::_cache_umax;
 
     std::string Cubic::makeStr() const
-    { return "cubic"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Cubic("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -443,7 +469,7 @@ namespace galsim {
                     + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
+    Quintic::Quintic(double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         dbg<<"Start Quintic:  tol = "<<tol<<std::endl;
@@ -464,9 +490,9 @@ namespace galsim {
         } else {
             // Then need to do the calculation and then cache it.
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25);
             _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            _tab.reset(new TableBuilder(Table::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
                 dbg<<"u = "<<u<<std::endl;
                 double ft = uCalc(u);
@@ -486,6 +512,7 @@ namespace galsim {
 #endif
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
+            _tab->finalize();
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
@@ -518,11 +545,17 @@ namespace galsim {
         _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
     }
 
-    std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
+    std::map<double,shared_ptr<TableBuilder> > Quintic::_cache_tab;
     std::map<double,double> Quintic::_cache_umax;
 
     std::string Quintic::makeStr() const
-    { return "quintic"; }
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Quintic("<<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
+        return oss.str();
+    }
 
 
     //
@@ -753,7 +786,7 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParams& gsparams) :
         Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
@@ -829,25 +862,27 @@ namespace galsim {
         } else {
 #ifdef USE_TABLES
             // Build xtab = table of x values
-            _xtab.reset(new Table<double,double>(Table<double,double>::spline));
+            _xtab.reset(new TableBuidler(Table::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
             const double xStep1 =
-                gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
+                gsparams.table_spacing * std::pow(gsparams.xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            _xtab->finalize();
 #endif
 
             // Build utab = table of u values
-            _utab.reset(new Table<double,double>(Table<double,double>::spline));
+            _utab.reset(new TableBuilder(Table::spline));
             const double uStep =
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
+                gsparams.table_spacing * std::pow(gsparams.kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
             for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);
                 _utab->addEntry(u, uval);
                 if (std::abs(uval) > _tolerance) _uMax = u;
             }
+            _utab->finalize();
             // Save these values in the cache.
 #ifdef USE_TABLES
             _cache_xtab[key] = _xtab;
@@ -857,8 +892,8 @@ namespace galsim {
         }
     }
 
-    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_xtab;
-    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_utab;
+    std::map<Lanczos::KeyType,shared_ptr<TableBuilder> > Lanczos::_cache_xtab;
+    std::map<Lanczos::KeyType,shared_ptr<TableBuilder> > Lanczos::_cache_utab;
     std::map<Lanczos::KeyType,double> Lanczos::_cache_umax;
 
     double Lanczos::xval(double x) const
@@ -884,8 +919,12 @@ namespace galsim {
     std::string Lanczos::makeStr() const
     {
         std::ostringstream oss(" ");
-        oss << "lanczos" << _n;
-        if (_conserve_dc) oss << "F";
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.Lanczos("<<_n<<", ";
+        if (_conserve_dc) oss << "True, ";
+        else oss << "False, ";
+        oss <<_tolerance<<", ";
+        oss << "galsim._galsim.GSParams("<<_gsparams<<"))";
         return oss.str();
     }
 

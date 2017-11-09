@@ -154,10 +154,10 @@ class InclinedSersic(GSObject):
             raise TypeError("Input inclination should be an Angle")
 
         self._inclination = inclination
+        self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBInclinedSersic(
-                n, inclination.rad, scale_radius, half_light_radius, scale_height,
-                scale_h_over_r, flux, trunc, flux_untruncated, gsparams)
-        self._gsparams = gsparams
+                n, inclination.rad, scale_radius, half_light_radius,
+                scale_height, scale_h_over_r, flux, trunc, flux_untruncated, self.gsparams._gsp)
 
     @property
     def n(self): return self._sbp.getN()
@@ -182,16 +182,16 @@ class InclinedSersic(GSObject):
                  (self.scale_height == other.scale_height) and
                  (self.flux == other.flux) and
                  (self.trunc == other.trunc) and
-                 (self._gsparams == other._gsparams)))
+                 (self.gsparams == other.gsparams)))
 
     def __hash__(self):
         return hash(("galsim.InclinedSersic", self.n, self.inclination, self.scale_radius,
-                    self.scale_height, self.flux, self.trunc, self._gsparams))
+                    self.scale_height, self.flux, self.trunc, self.gsparams))
     def __repr__(self):
         return ('galsim.InclinedSersic(n=%r, inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, trunc=%r, gsparams=%r)') % (self.n,
             self.inclination, self.scale_radius, self.scale_height, self.flux, self.trunc,
-            self._gsparams)
+            self.gsparams)
 
     def __str__(self):
         s = 'galsim.InclinedSersic(n=%s, inclination=%s, scale_radius=%s, scale_height=%s' % (
@@ -206,6 +206,3 @@ class InclinedSersic(GSObject):
 _galsim.SBInclinedSersic.__getinitargs__ = lambda self: (self.getN(),
         self.getInclination(), self.getScaleRadius(), None, self.getScaleHeight(), None,
         self.getFlux(), self.getTrunc(), False, self.getGSParams())
-_galsim.SBInclinedSersic.__getstate__ = lambda self: None
-_galsim.SBInclinedSersic.__repr__ = lambda self: \
-        'galsim._galsim.SBInclinedSersic(%r, %r, %r, %r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()

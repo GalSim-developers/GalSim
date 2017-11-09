@@ -18,13 +18,9 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBTransform.h"
-#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -32,18 +28,10 @@ namespace galsim {
 
     struct PySBTransform
     {
-        static bp::handle<> getJac(const SBTransform& self) {
-            static npy_intp dim[1] = {4};
-            // Because the C++ version sets references that are passed in, and that's not possible
-            // in Python, we wrap this instead, which returns a numpy array.
-            double a=0., b=0., c=0., d=0.;
-            self.getJac(a, b, c, d);
-            double ar[4] = { a, b, c, d };
-            PyObject* r = PyArray_SimpleNewFromData(1, dim, NPY_DOUBLE, ar);
-            if (!r) throw bp::error_already_set();
-            PyObject* r2 = PyArray_FROM_OF(r, NPY_ARRAY_ENSURECOPY);
-            Py_DECREF(r);
-            return bp::handle<>(r2);
+        static void getJac(const SBTransform& self, size_t idata)
+        {
+            double* data = reinterpret_cast<double*>(idata);
+            self.getJac(data[0], data[1], data[2], data[3]);
         }
 
         static void wrap()
@@ -56,13 +44,9 @@ namespace galsim {
 
             bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", doc, bp::no_init)
                 .def(bp::init<const SBProfile &, double, double, double, double,
-                     Position<double>, double,boost::shared_ptr<GSParams> >(
+                     Position<double>, double, GSParams>(
                          (bp::args("sbin", "mA", "mB", "mC", "mD"),
-                          bp::arg("x0")=Position<double>(0.,0.),
-                          bp::arg("fluxScaling")=1.,
-                          bp::arg("gsparams")=bp::object())
-                     )
-                )
+                          bp::arg("x0"), bp::arg("fluxScaling"), bp::arg("gsparams"))))
                 .def(bp::init<const SBTransform &>())
                 .def("getObj", &SBTransform::getObj)
                 .def("getJac", getJac)

@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBInclinedSersic.h"
 #include "RadiusHelper.h"
@@ -38,7 +35,7 @@ namespace galsim {
             const bp::object & half_light_radius,
             const bp::object & scale_height, const bp::object & scale_h_over_r,
             double flux, double trunc, bool flux_untruncated,
-            boost::shared_ptr<GSParams> gsparams)
+            GSParams gsparams)
         {
             // Get the scale or half-light-radius, as needed
 
@@ -81,15 +78,10 @@ namespace galsim {
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
-                         (bp::arg("n"),
-                          bp::arg("inclination"),
-                          bp::arg("scale_radius")=bp::object(),
-                          bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("scale_height")=bp::object(),
-                          bp::arg("scale_h_over_r")=bp::object(),
-                          bp::arg("flux")=1.,
-                          bp::arg("trunc")=0., bp::arg("flux_untruncated")=false,
-                          bp::arg("gsparams")=bp::object())
+                         (bp::arg("n"), bp::arg("inclination"), bp::arg("scale_radius"),
+                          bp::arg("half_light_radius"), bp::arg("scale_height"),
+                          bp::arg("scale_h_over_r"), bp::arg("flux"), bp::arg("trunc"),
+                          bp::arg("flux_untruncated"), bp::arg("gsparams"))
                      )
                 )
                 .def(bp::init<const SBInclinedSersic &>())

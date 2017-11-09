@@ -25,8 +25,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
 #include "TMV.h"
 
 #include "Std.h"
@@ -212,11 +210,11 @@ namespace galsim {
     class LVectorDeleter
     {
     public:
-        LVectorDeleter(boost::shared_ptr<tmv::Vector<double> > v) : _v(v) {}
+        LVectorDeleter(shared_ptr<tmv::Vector<double> > v) : _v(v) {}
 
         void operator()(double * p) const {} // the _v shared_ptr will delete for us!
 
-        boost::shared_ptr<tmv::Vector<double> > _v;
+        shared_ptr<tmv::Vector<double> > _v;
     };
 
     class LVector
@@ -237,7 +235,7 @@ namespace galsim {
             assert(v.size() == PQIndex::size(order));
         }
 
-        LVector(int order, boost::shared_ptr<tmv::Vector<double> > v) :
+        LVector(int order, shared_ptr<tmv::Vector<double> > v) :
             _order(order), _v(v),
             _owner(_v->ptr(), LVectorDeleter(_v))
         { assert(v->size() == PQIndex::size(order)); }
@@ -390,12 +388,12 @@ namespace galsim {
 
         // Create a matrix containing basis values at vector of input points.
         // Output matrix has m(i,j) = jth basis function at ith point
-        static boost::shared_ptr<tmv::Matrix<double> > basis(
+        static shared_ptr<tmv::Matrix<double> > basis(
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             int order, double sigma=1.);
 
         // Create design matrix, including factors of 1/sigma stored in invsig
-        static boost::shared_ptr<tmv::Matrix<double> > design(
+        static shared_ptr<tmv::Matrix<double> > design(
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             const tmv::ConstVectorView<double>& invsig, int order, double sigma=1.);
 
@@ -409,7 +407,7 @@ namespace galsim {
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             tmv::MatrixView<double> psi, int order, double sigma=1.);
 
-        static boost::shared_ptr<tmv::Matrix<std::complex<double> > > kBasis(
+        static shared_ptr<tmv::Matrix<std::complex<double> > > kBasis(
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
@@ -440,7 +438,7 @@ namespace galsim {
             GType iparam, int orderOut, int orderIn);
 #endif
 
-        boost::shared_ptr<double> getOwner() const { return _owner; }
+        shared_ptr<double> getOwner() const { return _owner; }
 
     private:
         // real vs fourier is set by the type of psi.
@@ -460,8 +458,8 @@ namespace galsim {
         }
 
         int _order;
-        boost::shared_ptr<tmv::Vector<double> > _v;
-        boost::shared_ptr<double> _owner;
+        shared_ptr<tmv::Vector<double> > _v;
+        shared_ptr<double> _owner;
     };
 
     std::ostream& operator<<(std::ostream& os, const LVector& lv);
@@ -509,7 +507,7 @@ namespace galsim {
             assert(m.nrows() == PQIndex::size(orderOut));
         }
 
-        LTransform(int orderOut, int orderIn, boost::shared_ptr<tmv::Matrix<double> > m) :
+        LTransform(int orderOut, int orderIn, shared_ptr<tmv::Matrix<double> > m) :
             _orderIn(orderIn), _orderOut(orderOut), _m(m)
         {
             assert(m->ncols() == PQIndex::size(orderIn));
@@ -582,7 +580,7 @@ namespace galsim {
     private:
         int _orderIn;
         int _orderOut;
-        boost::shared_ptr<tmv::Matrix<double> > _m;
+        shared_ptr<tmv::Matrix<double> > _m;
     };
 
     // Here are the primary types of transformations:

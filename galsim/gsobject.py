@@ -42,6 +42,7 @@ import numpy as np
 
 import galsim
 from . import _galsim
+from .utilities import lazy_property
 
 
 class GSObject(object):
@@ -192,23 +193,28 @@ class GSObject(object):
     the `gal` and/or `psf` should be created with `gsparams` that have a non-default value of
     `folding_threshold`.  This statement applies to the threshold and accuracy parameters.
     """
-    _gsparams = { 'minimum_fft_size' : int,
-                  'maximum_fft_size' : int,
-                  'folding_threshold' : float,
-                  'stepk_minimum_hlr' : float,
-                  'maxk_threshold' : float,
-                  'kvalue_accuracy' : float,
-                  'xvalue_accuracy' : float,
-                  'realspace_relerr' : float,
-                  'realspace_abserr' : float,
-                  'integration_relerr' : float,
-                  'integration_abserr' : float,
-                  'shoot_accuracy' : float,
-                  'allowed_flux_variation' : float,
-                  'range_division_for_extrema' : int,
-                  'small_fraction_of_flux' : float
-                }
-    @galsim.utilities.lazy_property
+    _gsparams_opt = { 'minimum_fft_size' : int,
+                      'maximum_fft_size' : int,
+                      'folding_threshold' : float,
+                      'stepk_minimum_hlr' : float,
+                      'maxk_threshold' : float,
+                      'kvalue_accuracy' : float,
+                      'xvalue_accuracy' : float,
+                      'realspace_relerr' : float,
+                      'realspace_abserr' : float,
+                      'integration_relerr' : float,
+                      'integration_abserr' : float,
+                      'shoot_accuracy' : float,
+                      'allowed_flux_variation' : float,
+                      'range_division_for_extrema' : int,
+                      'small_fraction_of_flux' : float
+                    }
+    def __init__(self):
+        raise NotImplementedError("The GSObject base class should not be instantiated directly.")
+
+    # Note: subclasses are expected to define self._sbp and self._gsparams in their inits.
+
+    @lazy_property
     def noise(self):
         return None
 
@@ -322,19 +328,19 @@ class GSObject(object):
     def centroid(self):
         """The (x, y) centroid of an object as a Position.
         """
-        return self._sbp.centroid()
+        return galsim.PositionD(self._sbp.centroid())
 
     @property
     def positive_flux(self):
-        """The expectation value of the flux in positive photons when shoot() is called.
+        """The expectation value of flux in positive photons.
 
-        Some profiles (such as InterpolatedImages) have components with negative flux, which
-        requires some negative-flux photons to be shot when rendering with photon shooting.
-        This routine returns the total flux in positive photons, which for most profiles is just
-        the total flux, but for the ones that require some negative-flux photons will be a bit
-        larger.
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total flux
+        of the positive-valued photons.
 
-        It should be generally true that `positive_flux - negative_flux` returns the same
+        For profiles that don't have this complication, this is equivalent to getFlux().
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
         thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
@@ -342,14 +348,15 @@ class GSObject(object):
 
     @property
     def negative_flux(self):
-        """The expectation value of the flux in negative photons when shoot() is called.
+        """Returns the expectation value of flux in negative photons.
 
-        Some profiles (such as InterpolatedImages) have components with negative flux, which
-        requires some negative-flux photons to be shot when rendering with photon shooting.
-        This routine returns the total (absolute) flux in negative photons, which for most profiles
-        is just 0, but for the ones that require some negative-flux photons will be non-zero.
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total absolute flux
+        of the negative-valued photons (i.e. as a positive value).
 
-        It should be generally true that `positive_flux - negative_flux` returns the same
+        For profiles that don't have this complication, this returns 0.
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
         thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
         cases involving lookup tables, etc.
         """
@@ -556,7 +563,7 @@ class GSObject(object):
     @property
     def flux(self): return self._sbp.getFlux()
     @property
-    def gsparams(self): return self._sbp.getGSParams()
+    def gsparams(self): return self._gsparams
 
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
@@ -585,9 +592,13 @@ class GSObject(object):
         return self._xValue(pos)
 
     def _xValue(self, pos):
-        """Equivalent to self.xValue(pos), but pos must be a PositionD instance.
+        """Equivalent to xValue(pos), but pos must be a galsim.PositionD instance
+
+        @param pos      The position at which you want the surface brightness of the object.
+
+        @returns the surface brightness at that position.
         """
-        return self._sbp.xValue(pos)
+        return self._sbp.xValue(pos._p)
 
     def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
@@ -608,10 +619,10 @@ class GSObject(object):
         kpos = galsim.utilities.parse_pos_args(args,kwargs,'kx','ky')
         return self._kValue(kpos)
 
-    def _kValue(self, pos):
-        """Equivalent to self.kValue(pos), but pos must be a PositionD instance.
+    def _kValue(self, kpos):
+        """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
-        return self._sbp.kValue(pos)
+        return self._sbp.kValue(kpos._p)
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
@@ -1584,7 +1595,7 @@ class GSObject(object):
         N = self.getGoodImageSize(image.scale)
 
         # We must make something big enough to cover the target image size:
-        image_N = max(np.max(np.abs((image.bounds.__getinitargs__()))) * 2,
+        image_N = max(np.max(np.abs((image.bounds._getinitargs()))) * 2,
                       np.max(image.bounds.numpyShape()))
         N = max(N, image_N)
 
@@ -1635,7 +1646,7 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim._BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        _galsim.wrapImage(kimage._image, bwrap, True, False)
+        _galsim.wrapImage(kimage._image, bwrap._b, True, False)
         kimage_wrap = kimage.subImage(bwrap)
 
         # Perform the fourier transform.
@@ -1953,10 +1964,13 @@ class GSObject(object):
                             which may be any kind of BaseDeviate object.  If `rng` is None, one
                             will be automatically created, using the time as a seed.
                             [default: None]
+
         @returns PhotonArray.
         """
         ud = galsim.UniformDeviate(rng)
-        return self._sbp.shoot(int(n_photons), ud._rng)
+        photons = galsim.PhotonArray(n_photons)
+        self._sbp.shoot(photons._pa, ud._rng)
+        return photons
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, setup_only=False):
@@ -2047,7 +2061,6 @@ class GSObject(object):
             return image
 
         self._drawKImage(image, add_to_image)
-
         return image
 
     def _drawKImage(self, image, add_to_image=False):
@@ -2067,50 +2080,5 @@ class GSObject(object):
         self._sbp.drawK(image._image, image.scale, add_to_image)
         return image
 
-
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self._sbp == other._sbp)
-
+    # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash(("galsim.GSObject", self._sbp))
-
-# Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
-# Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
-# appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
-# convenient way to get the SBProfile to be the correct type in this case.
-# So, getstate just returns the repr string.  And setstate builds the right kind of object
-# by essentially doing `self = eval(repr)`.
-_galsim.SBProfile.__getstate__ = lambda self: self.serialize()
-def SBProfile_setstate(self, state):
-    import galsim
-    # In case the serialization uses these:
-    from numpy import array, int16, int32, float32, float64
-    # The serialization of an SBProfile object should eval to the right thing.
-    # We essentially want to do `self = eval(state)`.  But that doesn't work in python of course.
-    # Se we break up the serialization into the class and the args, then call init with that.
-    cls, args = state.split('(',1)
-    args = args[:-1]  # Remove final paren
-    args = eval(args)
-    self.__class__ = eval(cls)
-    self.__init__(*args)
-_galsim.SBProfile.__setstate__ = SBProfile_setstate
-
-def SBProfile_copy(self):
-    cls = self.__class__
-    if hasattr(self,'__getinitargs__'):
-        return cls(*self.__getinitargs__())
-    else:
-        new_obj = cls.__new__(cls)
-        new_obj.__setstate__(self.__getstate__())
-        return new_obj
-_galsim.SBProfile.__copy__ = SBProfile_copy
-_galsim.SBProfile.__deepcopy__ = lambda self, memo : self.__copy__()
-
-# Quick and dirty.  Just check serializations are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: (
-    isinstance(other,_galsim.SBProfile) and self.serialize() == other.serialize())
-_galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())

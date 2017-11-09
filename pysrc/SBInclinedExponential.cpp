@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBInclinedExponential.h"
 
@@ -34,14 +31,11 @@ namespace galsim {
 
         static void wrap()
         {
-            bp::class_<SBInclinedExponential,bp::bases<SBProfile> >("SBInclinedExponential", bp::no_init)
-                .def(bp::init<double,double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("inclination")=bp::object(),
-                         bp::arg("scale_radius")=bp::object(),
-                         bp::arg("scale_height")=bp::object(),
-                         bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object()))
-                )
+            bp::class_<SBInclinedExponential,bp::bases<SBProfile> >(
+                "SBInclinedExponential", bp::no_init)
+                .def(bp::init<double,double,double,double, GSParams>(
+                        (bp::arg("inclination"), bp::arg("scale_radius"), bp::arg("scale_height"),
+                         bp::arg("flux"), bp::arg("gsparams"))))
                 .def(bp::init<const SBInclinedExponential &>())
                 .def("getInclination", &SBInclinedExponential::getInclination)
                 .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)

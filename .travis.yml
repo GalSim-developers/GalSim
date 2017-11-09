@@ -74,6 +74,8 @@ cache:
     - $HOME/des_data
 
 install:
+    # Travis doesn't always have the most up-to-date nupy already installed, so use -U
+    - travis_wait 30 pip install -U numpy
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time

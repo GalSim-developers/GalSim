@@ -1074,11 +1074,11 @@ class PhaseScreenPSF(GSObject):
         wcs = galsim.PixelScale(self.scale)
         image = galsim._Image(array, bounds, wcs)
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
-        self._dummy_obj = galsim.InterpolatedImage(
+        self._dummy = galsim.InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
                 _serialize_stepk=self._serialize_stepk,
                 _serialize_maxk=self._serialize_maxk)
-        self._sbp = self._dummy_obj._sbp
+        self._sbp = self._dummy._sbp
 
         self._screen_list._delayCalculation(self)
 
@@ -1218,7 +1218,7 @@ class PhaseScreenPSF(GSObject):
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         del d['_sbp']
         del d['ii']
-        d.pop('_dummy_obj',None)
+        d.pop('_dummy', None)
         return d
 
     def __setstate__(self, d):
@@ -1261,14 +1261,10 @@ class PhaseScreenPSF(GSObject):
         v = v[pick]
 
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
-        y *= 1e-9 * 206265
+        x *= 1e-9 * galsim.radians / galsim.arcsec  # convert from nm/m to arcsec.
+        y *= 1e-9 * galsim.radians / galsim.arcsec
 
-        photon_array = galsim._galsim.PhotonArray(n_photons)
-        photon_array.x = x
-        photon_array.y = y
-        photon_array.flux = self._flux/n_photons
-        return photon_array
+        return galsim.PhotonArray(n_photons, x=x, y=y, flux=self._flux/n_photons)
 
 
 class OpticalPSF(GSObject):

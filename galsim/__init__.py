@@ -91,8 +91,8 @@ version = __version__
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else
-from .position import PositionI, PositionD
-from .bounds import BoundsI, BoundsD, _BoundsI
+from .position import Position, PositionI, PositionD
+from .bounds import Bounds, BoundsI, BoundsD, _BoundsI, _BoundsD
 from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
@@ -123,9 +123,10 @@ from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet
 from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
-from .interpolatedimage import Interpolant
-from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from .interpolatedimage import InterpolatedImage, InterpolatedKImage, _InterpolatedKImage
+from .interpolant import Interpolant
+from .interpolant import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
+from .interpolatedimage import InterpolatedImage, _InterpolatedImage
+from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile

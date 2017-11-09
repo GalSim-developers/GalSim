@@ -34,7 +34,7 @@ namespace galsim {
     { return fmath::expd(y * std::log(x)); }
 
     SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
-                       double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :
+                       double trunc, bool flux_untruncated, const GSParams& gsparams) :
         SBProfile(new SBSersicImpl(n, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -83,20 +83,20 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSersic("<<getN()<<", "<<getScaleRadius();
         oss <<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
-    LRUCache< Tuple<double, double, GSParamsPtr >, SersicInfo >
+    LRUCache<Tuple<double, double, GSParamsPtr>, SersicInfo>
         SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
                                          double trunc, bool flux_untruncated,
-                                         const GSParamsPtr& gsparams) :
+                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _trunc(trunc), _trunc_sq(trunc*trunc),
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(MakeTuple(_n, 0., this->gsparams.duplicate())))
+        _info(cache.get(MakeTuple(_n, 0., GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -123,7 +123,7 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -141,7 +141,7 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(MakeTuple(_n,_trunc/_r0, this->gsparams.duplicate()));
+                       _info = cache.get(MakeTuple(_n,_trunc/_r0, GSParamsPtr(this->gsparams)));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
@@ -369,7 +369,7 @@ namespace galsim {
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
         _gamma2n(math::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
-        _ft(Table<double,double>::spline),
+        _ft(Table::spline),
         _kderiv2(0.), _kderiv4(0.)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
@@ -436,7 +436,7 @@ namespace galsim {
     double SersicInfo::kValue(double ksq) const
     {
         assert(ksq >= 0.);
-        if (_ft.size() == 0) buildFT();
+        if (!_ft.finalized()) buildFT();
 
         if (ksq>=_ksq_max)
             return (_highk_a + _highk_b/sqrt(ksq))/ksq; // high-k asymptote
@@ -538,7 +538,8 @@ namespace galsim {
             SersicHankel I(_invn, k);
 
 #ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            std::ostream* integ_dbgout = verbose_level >= 3 ?
+                &Debugger::instance().get_dbgout() : 0;
             integ::IntRegion<double> reg(0, integ_maxr, integ_dbgout);
 #else
             integ::IntRegion<double> reg(0, integ_maxr);
@@ -601,6 +602,7 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
+        _ft.finalize();
         // If didn't find a good approximation for large k, just use the largest k we put in
         // in the table.  (Need to use some approximation after this anyway!)
         if (_ksq_max <= 0.) _ksq_max = fmath::expd(2. * _ft.argMax());
@@ -850,9 +852,8 @@ namespace galsim {
         double _invn;
     };
 
-    boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
+    void SersicInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
 
         if (!_sampler) {
@@ -862,24 +863,22 @@ namespace galsim {
             double shoot_maxr = calculateMissingFluxRadius(_gsparams->shoot_accuracy);
             if (_truncated && _trunc < shoot_maxr) shoot_maxr = _trunc;
             range[1] = shoot_maxr;
-            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SersicInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SersicInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSersic::SBSersicImpl::shoot(int N, UniformDeviate ud) const
+    void SBSersic::SBSersicImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Sersic shoot: N = "<<N<<std::endl;
+        dbg<<"Sersic shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SersicInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Sersic Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Sersic Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

@@ -21,6 +21,7 @@ import numpy as np
 import math
 import os
 import sys
+import warnings
 
 from galsim_test_helpers import *
 
@@ -580,6 +581,25 @@ def test_shear_get():
     np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
                                    err_msg="Magnifications from grid and getLensing disagree!")
 
+    # Test single position versions
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0])), (g1_r[0,0], g2_r[0,0]))
+    np.testing.assert_almost_equal(my_ps.getShear((x[0,0], y[0,0]), reduced=False),
+                                   (g1[0,0], g2[0,0]))
+    np.testing.assert_almost_equal(my_ps.getConvergence((x[0,0], y[0,0])), kappa[0,0])
+    np.testing.assert_almost_equal(my_ps.getMagnification((x[0,0], y[0,0])), mu[0,0])
+    np.testing.assert_almost_equal(my_ps.getLensing((x[0,0], y[0,0])),
+                                   (g1_r[0,0], g2_r[0,0], mu[0,0]))
+
+    # Test outside of bounds
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000)), (0,0))
+        np.testing.assert_almost_equal(my_ps.getShear((5000,5000), reduced=False), (0,0))
+        np.testing.assert_almost_equal(my_ps.getConvergence((5000,5000)), 0)
+        np.testing.assert_almost_equal(my_ps.getMagnification((5000,5000)), 1)
+        np.testing.assert_almost_equal(my_ps.getLensing((5000,5000)), (0,0,1))
+
+
 
 @timer
 def test_shear_units():
@@ -723,7 +743,7 @@ def test_tabulated():
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
         do_pickle(ps)
-        np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
+        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)
@@ -740,10 +760,10 @@ def test_tabulated():
     assert type(tab(k)) == float
     k = (0.5, 1.5)
     result = tab(k)
-    assert type(result) == tuple and len(result) == len(k)
+    assert type(result) == np.ndarray and len(result) == len(k)
     k = list(k)
     result = tab(k)
-    assert type(result) == list and len(result) == len(k)
+    assert type(result) == np.ndarray and len(result) == len(k)
     k = np.array(k)
     result = tab(k)
     assert type(result) == np.ndarray and len(result) == len(k)

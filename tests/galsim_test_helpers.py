@@ -103,6 +103,10 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
+    np.testing.assert_almost_equal(
+            prof.positive_flux - prof.negative_flux, prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
+
     print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
     if approx_maxsb:
@@ -267,7 +271,7 @@ def do_shoot(prof, img, name):
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print('nphot -> ',nphot)
-    if 'InterpolatedImage' in name:
+    if 'InterpolatedImage' in name or 'PhaseScreen' in name:
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
@@ -304,7 +308,7 @@ def radial_integrate(prof, minr, maxr):
     assert prof.is_axisymmetric
     # In this tight loop, it is worth optimizing away the parse_pos_args step.
     # It makes a rather significant difference in the running time of this function.
-    # (I.e., use prof.SBProfile.xValue() instead of prof.xValue() )
+    # (I.e., use prof._xValue() instead of prof.xValue() )
     f = lambda r: 2 * np.pi * r * prof._xValue(galsim.PositionD(r,0))
     return galsim.integ.int1d(f, minr, maxr)
 

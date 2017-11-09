@@ -118,13 +118,6 @@ class LookupTable(object):
             if x is None or f is None:
                 raise ValueError("Must specify either file or x,f for LookupTable")
 
-        # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
-        # lists, tuples).  Also make sure the dtype is float
-        x = np.array(x, dtype=float)
-        f = np.array(f, dtype=float)
-        self.x = x
-        self.f = f
-
         # check for proper interpolant
         if interpolant is None:
             interpolant = 'spline'
@@ -132,16 +125,6 @@ class LookupTable(object):
             if interpolant not in ['spline', 'linear', 'ceil', 'floor', 'nearest']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
         self.interpolant = interpolant
-
-        # make and store table
-        if x_log:
-            if np.any(x <= 0.):
-                raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
-            x = np.log(x)
-        if f_log:
-            if np.any(f <= 0.):
-                raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
-            f = np.log(f)
 
         # Sanity checks
         if len(x) != len(f):
@@ -151,17 +134,38 @@ class LookupTable(object):
         if interpolant in ['linear', 'ceil', 'floor', 'nearest'] and len(x) < 2:
             raise ValueError("Input arrays too small to interpolate")
 
+        # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
+        # lists, tuples).  Also make sure the dtype is float
+        s = np.argsort(x)
+        x = np.array(x, dtype=float)
+        f = np.array(f, dtype=float)
+        self.x = np.ascontiguousarray(x[s])
+        self.f = np.ascontiguousarray(f[s])
+
+        self._x_min = self.x[0]
+        self._x_max = self.x[-1]
+        if self._x_min == self._x_max:
+            raise ValueError("All x values are equal")
+
+        self._make_table()
+
+    def _make_table(self):
+        # make and store table
+        self._x = self.x
+        self._f = self.f
+        if self.x_log:
+            if self._x[0] <= 0.:
+                raise ValueError("Cannot interpolate in log(x) when table contains x<=0!")
+            self._x = np.log(self._x)
+        if self.f_log:
+            if np.any(self._f <= 0.):
+                raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
+            self._f = np.log(self._f)
+
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
         # as _LookupTable.  Note x must be sorted.
-        s = np.argsort(x)
-        self.table = _galsim._LookupTable(x[s], f[s], interpolant)
-
-        # Get the min/max x values, making sure to account properly for x_log.
-        self._x_min = self.table.argMin()
-        self._x_max = self.table.argMax()
-        if x_log:
-            self._x_min = np.exp(self._x_min)
-            self._x_max = np.exp(self._x_max)
+        self._tab = _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                         len(self._x), self.interpolant)
 
     @property
     def x_min(self): return self._x_min
@@ -187,59 +191,52 @@ class LookupTable(object):
 
         @returns the interpolated `f(x)` value(s).
         """
-        # first, keep track of whether interpolation was done in x or log(x)
+        # Check that all x values are in the allowed range
+        self._check_range(x)
+
+        # Handle the log(x) if necessary
         if self.x_log:
             if np.any(np.array(x) <= 0.):
                 raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
-        # figure out what we received, and return the same thing
         # option 1: a NumPy array
         if isinstance(x, np.ndarray):
-            dimen = len(x.shape)
-            if dimen > 2:
-                raise ValueError("Arrays with dimension larger than 2 not allowed!")
-            elif dimen == 2:
-                f = np.empty_like(x.ravel(), dtype=float)
-                self.table.interpMany(x.astype(float,copy=False).ravel(),f)
-                f = f.reshape(x.shape)
-            else:
-                f = np.empty_like(x, dtype=float)
-                self.table.interpMany(x.astype(float,copy=False),f)
-        # option 2: a tuple
-        elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = tuple(f)
-        # option 3: a list
-        elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = list(f)
-        # option 4: a single value
+            xx = np.ascontiguousarray(x.ravel(), dtype=float)
+            f = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+            f = f.reshape(x.shape)
+        # option 2: a tuple or list
+        elif isinstance(x, (tuple, list)):
+            xx = np.ascontiguousarray(x, dtype=float)
+            f = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+        # option 3: a single value
         else:
-            f = self.table(x)
+            xx = float(x)
+            f = self._tab(xx)
 
+        # Handle the log(f) if necessary
         if self.f_log:
             f = np.exp(f)
         return f
 
+    def _check_range(self, x):
+        slop = (self.x_max - self.x_min) * 1.e-6
+        if np.min(x) < self.x_min - slop:
+            raise ValueError("x value(s) below the range of the LookupTable: %s < %s"%(
+                             x, self.x_min))
+        if np.max(x) > self.x_max + slop:
+            raise ValueError("x value(s) above the range of the LookupTable: %s > %s"%(
+                             x, self.x_max))
     def getArgs(self):
-        args = self.table.getArgs()
-        if self.x_log:
-            return np.exp(args)
-        else:
-            return args
+        return self.x
 
     def getVals(self):
-        vals = self.table.getVals()
-        if self.f_log:
-            return np.exp(vals)
-        else:
-            return vals
+        return self.f
 
     def getInterp(self):
-        return self.table.getInterp()
+        return self.interpolant
 
     def isLogX(self):
         return self.x_log
@@ -276,27 +273,14 @@ class LookupTable(object):
             return 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s], interpolant=%r)'%(
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
-# A function to enable pickling of tables
-_galsim._LookupTable.__getinitargs__ = lambda self: \
-        (self.getArgs(), self.getVals(), self.getInterp())
-_galsim._LookupTable.__repr__ = lambda self: \
-        'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
-            self.getArgs(), self.getVals(), self.getInterp())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_tab']
+        return d
 
-def _LookupTable_eq(self, other):
-    return (isinstance(other, _galsim._LookupTable) and
-            self.getArgs() == other.getArgs() and
-            self.getVals() == other.getVals() and
-            self.getInterp() == other.getInterp())
-
-def _LookupTable_hash(self):
-    return hash(("_galsim._LookupTable", tuple(self.getArgs()), tuple(self.getVals()),
-                 self.getInterp()))
-
-_galsim._LookupTable.__eq__ = _LookupTable_eq
-_galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = _LookupTable_hash
-
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._make_table()
 
 class LookupTable2D(object):
     """
@@ -394,7 +378,6 @@ class LookupTable2D(object):
     def __init__(self, x, y, f, interpolant='linear', edge_mode='raise', constant=0):
         if edge_mode not in ['raise', 'wrap', 'constant']:
             raise ValueError("Unknown edge_mode: {:0}".format(edge_mode))
-        self.edge_mode = edge_mode
 
         self.x = np.ascontiguousarray(x, dtype=float)
         self.y = np.ascontiguousarray(y, dtype=float)
@@ -409,6 +392,11 @@ class LookupTable2D(object):
         fshape = self.f.shape
         if fshape != (len(x), len(y)):
             raise ValueError("Shape of `f` must be (len(`x`), len(`y`)).")
+
+        if interpolant not in ['linear', 'ceil', 'floor', 'nearest']:
+            raise ValueError("Unknown interpolant: %s" % interpolant)
+        self.interpolant = interpolant
+
 
         self.interpolant = interpolant
         self.edge_mode = edge_mode
@@ -427,8 +415,20 @@ class LookupTable2D(object):
             else:
                 raise ValueError("Cannot use edge_mode='wrap' unless either x and y are equally "
                                  "spaced or first/last row/column of f are identical.")
+        self._make_table()
 
-        self.table = _galsim._LookupTable2D(self.x, self.y, self.f, self.interpolant)
+    def _make_table(self):
+        self._tab = _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                           self.f.ctypes.data, len(self.x), len(self.y),
+                                           self.interpolant)
+    def getXArgs(self):
+        return self.x
+
+    def getYArgs(self):
+        return self.y
+
+    def getVals(self):
+        return self.f
 
     def _inbounds(self, x, y):
         """Return whether or not *all* coords specified by x and y are in bounds of the original
@@ -447,16 +447,13 @@ class LookupTable2D(object):
 
         from numbers import Real
         if isinstance(x, Real):
-            return self.table(x, y)
+            return self._tab(x, y)
         else:
-            x = np.array(x, dtype=float)
-            y = np.array(y, dtype=float)
-            shape = x.shape
-            x = x.ravel()
-            y = y.ravel()
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(x, y, f)
-            f = f.reshape(shape)
+            xx = np.ascontiguousarray(x.ravel(), dtype=float)
+            yy = np.ascontiguousarray(y.ravel(), dtype=float)
+            f = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, f.ctypes.data, len(xx))
+            f = f.reshape(x.shape)
             return f
 
     def _call_wrap(self, x, y):
@@ -467,23 +464,21 @@ class LookupTable2D(object):
         from numbers import Real
         if isinstance(x, Real):
             if self._inbounds(x, y):
-                return self.table(x, y)
+                return self._tab(x, y)
             else:
                 return self.constant
         else:
-            x = np.array(x, dtype=float)
-            y = np.array(y, dtype=float)
-            shape = x.shape
-            x = x.ravel()
-            y = y.ravel()
-            f = np.empty_like(x)
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
+            f = np.empty_like(x, dtype=float)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
-            tmp = np.empty((sum(good),), dtype=float)
-            self.table.interpMany(x[good], y[good], tmp)
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp = np.empty_like(xx, dtype=float)
+            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
             f[good] = tmp
-            f = f.reshape(shape)
             return f
 
     def __call__(self, x, y):
@@ -501,11 +496,18 @@ class LookupTable2D(object):
         try:
             xx = float(x)
             yy = float(y)
-            return self.table.gradient(xx, yy)
+            grad = np.empty(2, dtype=float)
+            self._tab.gradient(xx, yy, grad.ctypes.data)
+            return tuple(grad)
         except TypeError:
-            dfdx = np.empty_like(x)
-            dfdy = np.empty_like(x)
-            self.table.gradientMany(x.ravel(), y.ravel(), dfdx.ravel(), dfdy.ravel())
+            xx = np.ascontiguousarray(x.ravel(), dtype=float)
+            yy = np.ascontiguousarray(y.ravel(), dtype=float)
+            dfdx = np.empty_like(xx)
+            dfdy = np.empty_like(xx)
+            self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
+                                   dfdx.ctypes.data, dfdy.ctypes.data, len(xx))
+            dfdx = dfdx.reshape(x.shape)
+            dfdy = dfdy.reshape(x.shape)
             return dfdx, dfdy
 
     def _gradient_wrap(self, x, y):
@@ -516,19 +518,26 @@ class LookupTable2D(object):
         from numbers import Real
         if isinstance(x, Real):
             if self._inbounds(x, y):
-                return self.table.gradient(x, y)
+                grad = np.empty(2, dtype=float)
+                self._tab.gradient(float(x), float(y), grad.ctypes.data)
+                return tuple(grad)
             else:
                 return 0.0, 0.0
         else:
-            dfdx = np.empty_like(x)
-            dfdy = np.empty_like(y)
+            x = np.array(x, dtype=float, copy=False)
+            y = np.array(y, dtype=float, copy=False)
+            dfdx = np.empty_like(x, dtype=float)
+            dfdy = np.empty_like(x, dtype=float)
             dfdx.fill(0.0)
             dfdy.fill(0.0)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
-            tmp1 = np.empty((np.sum(good),), dtype=x.dtype)
-            tmp2 = np.empty((np.sum(good),), dtype=x.dtype)
-            self.table.gradientMany(x[good], y[good], tmp1, tmp2)
+            xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
+            yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
+            tmp1 = np.empty_like(xx, dtype=float)
+            tmp2 = np.empty_like(xx, dtype=float)
+            self._tab.gradientMany(xx.ctypes.data, yy.ctypes.data,
+                                   tmp1.ctypes.data, tmp2.ctypes.data, len(xx))
             dfdx[good] = tmp1
             dfdy[good] = tmp2
             return dfdx, dfdy
@@ -560,43 +569,31 @@ class LookupTable2D(object):
 
     def __repr__(self):
         return ("galsim.LookupTable2D(x=array(%r), y=array(%r), "
-                "f=array(%r), interpolant=%r, edge_mode=%r)"%(
-            self.x.tolist(), self.y.tolist(), self.f.tolist(), self.interpolant, self.edge_mode))
+                "f=array(%r), interpolant=%r, edge_mode=%r, constant=%r)"%(
+            self.x.tolist(), self.y.tolist(), self.f.tolist(), self.interpolant, self.edge_mode,
+            self.constant))
 
     def __eq__(self, other):
         return (isinstance(other, LookupTable2D) and
-                self.table == other.table and
-                self.edge_mode == other.edge_mode)
-
+                np.array_equal(self.x,other.x) and
+                np.array_equal(self.y,other.y) and
+                np.array_equal(self.f,other.f) and
+                self.interpolant == other.interpolant and
+                self.edge_mode == other.edge_mode and
+                self.constant == other.constant)
+ 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(("galsim._galsim._LookupTable2D", self.table, self.edge_mode))
+        return hash(("galsim.LookupTable2D", tuple(self.x.ravel()), tuple(self.y.ravel()),
+                    tuple(self.f.ravel()), self.interpolant, self.edge_mode, self.constant))
 
-def _LookupTable2D_eq(self, other):
-    return (isinstance(other, _galsim._LookupTable2D)
-            and np.array_equal(self.getXArgs(), other.getXArgs())
-            and np.array_equal(self.getYArgs(), other.getYArgs())
-            and np.array_equal(self.getVals(), other.getVals())
-            and self.getInterp() == other.getInterp())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_tab']
+        return d
 
-def _LookupTable2D_str(self):
-    x = self.getXArgs()
-    y = self.getYArgs()
-    f = self.getVals()
-    return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
-            "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r)"%(
-            x[0], x[-1], y[0], y[-1], f[0,0], f[0,-1], f[-1,0], f[-1,-1], self.getInterp()))
-
-_galsim._LookupTable2D.__getinitargs__ = lambda self: \
-        (self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
-_galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
-_galsim._LookupTable2D.__hash__ = lambda self: \
-        hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
-              tuple(np.array(self.getVals()).ravel()), self.getInterp()))
-_galsim._LookupTable2D.__str__ = _LookupTable2D_str
-_galsim._LookupTable2D.__repr__ = lambda self: \
-        'galsim._galsim._LookupTable2D(array(%r), array(%r), array(%r), %r)'%(
-        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals().tolist(),
-        self.getInterp())
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._make_table()

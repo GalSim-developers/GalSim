@@ -30,12 +30,12 @@ namespace galsim {
 
     // Specialize the NewValue function used by LRUCache:
     template <>
-    struct LRUCacheHelper< AiryInfo, Tuple< double, GSParamsPtr > >
+    struct LRUCacheHelper<AiryInfo, Tuple<double, GSParamsPtr> >
     {
-        static AiryInfo* NewValue(const Tuple<double, GSParamsPtr >& key)
+        static AiryInfo* NewValue(const Tuple<double, GSParamsPtr>& key)
         {
             const double obscuration = key.first;
-            const GSParamsPtr& gsparams = key.second;
+            GSParamsPtr gsparams = key.second;
             if (obscuration == 0.0)
                 return new AiryInfoNoObs(gsparams);
             else
@@ -44,7 +44,7 @@ namespace galsim {
     };
 
     SBAiry::SBAiry(double lam_over_D, double obscuration, double flux,
-                   const GSParamsPtr& gsparams) :
+                   const GSParams& gsparams) :
         SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux, gsparams)) {}
 
     SBAiry::SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
@@ -56,7 +56,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBAiry("<<getLamOverD()<<", "<<getObscuration()<<", "<<
-            getFlux()<<", galsim.GSParams("<<*gsparams<<"))";
+            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -73,7 +73,7 @@ namespace galsim {
     }
 
     SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux,
-                                   const GSParamsPtr& gsparams) :
+                                   const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_D(lam_over_D),
         _D(1. / lam_over_D),
@@ -84,15 +84,12 @@ namespace galsim {
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(cache.get(MakeTuple(_obscuration, this->gsparams.duplicate())))
+        _info(cache.get(MakeTuple(_obscuration, GSParamsPtr(gsparams))))
     {
-        xdbg<<"SBAiryImpl constructor: gsparams = "<<gsparams.get()<<std::endl;
-        xdbg<<"this->gsparams = "<<this->gsparams.get()<<std::endl;
-        xdbg<<*this->gsparams<<std::endl;
+        xdbg<<"SBAiryImpl constructor: gsparams = "<<gsparams<<std::endl;
     }
 
-    LRUCache< Tuple<double, GSParamsPtr>, AiryInfo > SBAiry::SBAiryImpl::cache(
-        sbp::max_airy_cache);
+    LRUCache<Tuple<double, GSParamsPtr>, AiryInfo> SBAiry::SBAiryImpl::cache(sbp::max_airy_cache);
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
@@ -348,8 +345,7 @@ namespace galsim {
         _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfo for obs = "<<obscuration<<std::endl;
-        xdbg<<"gsparams = "<<_gsparams.get()<<std::endl;
-        xdbg<<*_gsparams<<std::endl;
+        xdbg<<"gsparams = "<<*_gsparams<<std::endl;
         // Calculate stepK:
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
@@ -359,29 +355,27 @@ namespace galsim {
         // So we just use the value for the unobscured Airy disk.
         // TODO: We could do this numerically if we decide that it's important to get this right.
         const double hlr = 0.5348321477;
-        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
         this->_stepk = M_PI / R;
     }
 
-    boost::shared_ptr<PhotonArray> SBAiry::SBAiryImpl::shoot(int N, UniformDeviate u) const
+    void SBAiry::SBAiryImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Airy shoot: N = "<<N<<std::endl;
+        dbg<<"Airy shoot: N = "<<photons.size()<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
-        boost::shared_ptr<PhotonArray> result=_info->shoot(N, u);
+        _info->shoot(photons, ud);
         // Then rescale for this flux & size
-        result->scaleFlux(_flux);
-        result->scaleXY(1./_D);
-        dbg<<"Airy Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        photons.scaleFlux(_flux);
+        photons.scaleXY(1./_D);
+        dbg<<"Airy Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> AiryInfo::shoot(
-        int N, UniformDeviate u) const
+    void AiryInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
         checkSampler();
         assert(_sampler.get());
-        return _sampler->shoot(N, u);
+        _sampler->shoot(photons, ud);
     }
 
     void AiryInfoObs::checkSampler() const
@@ -400,7 +394,7 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, _gsparams));
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, *_gsparams));
     }
 
     // Now the specializations for when obs = 0
@@ -445,18 +439,16 @@ namespace galsim {
 
     // Constructor to initialize Airy constants and k lookup table
     AiryInfoNoObs::AiryInfoNoObs(const GSParamsPtr& gsparams) :
-        _radial(gsparams),
-        _gsparams(gsparams)
+        _radial(gsparams), _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfoNoObs\n";
-        xdbg<<"gsparams = "<<_gsparams.get()<<std::endl;
-        xdbg<<*_gsparams<<std::endl;
+        xdbg<<"gsparams = "<<*_gsparams<<std::endl;
         // Calculate stepK:
         double R = 1. / (_gsparams->folding_threshold * 0.5 * M_PI * M_PI);
         // Make sure it is at least 5 hlr
         // The half-light radius of an Airy disk is 0.5348321477 * lam/D
         const double hlr = 0.5348321477;
-        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
         this->_stepk = M_PI / R;
     }
 
@@ -472,6 +464,6 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, _gsparams));
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, *_gsparams));
     }
 }

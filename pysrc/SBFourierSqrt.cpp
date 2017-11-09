@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBFourierSqrt.h"
 
@@ -35,10 +32,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_< SBFourierSqrt, bp::bases<SBProfile> >("SBFourierSqrt", bp::no_init)
-                .def(bp::init<const SBProfile &,boost::shared_ptr<GSParams> >(
-                        (bp::arg("adaptee"),
-                         bp::arg("gsparams")=bp::object())
-                ))
+                .def(bp::init<const SBProfile &, GSParams>(
+                        (bp::arg("adaptee"), bp::arg("gsparams"))))
                 .def("getObj", &SBFourierSqrt::getObj)
                 .def(bp::init<const SBFourierSqrt &>())
                 ;

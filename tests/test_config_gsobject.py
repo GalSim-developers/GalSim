@@ -1391,8 +1391,8 @@ def test_usertype():
         _takes_rng = False
         def __init__(self, flux=1., gsparams=None):
             obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
-            self._sbp = obj._sbp
             self._gsparams = gsparams
+            self._sbp = obj._sbp
 
     galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 

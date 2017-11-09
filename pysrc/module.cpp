@@ -18,21 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#include "Python.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
-// This is the only one that doesn't have NO_IMPORT_ARRAY.
-#include "numpy/arrayobject.h"
-
-static int doImportNumpy() {
-    import_array1(0);
-    return 0;
-}
 
 namespace galsim {
     void pyExportAngle();
@@ -61,7 +47,6 @@ namespace galsim {
     void pyExportSBDeltaFunction();
     void pyExportRandom();
     void pyExportTable();
-    void pyExportTable2D();
     void pyExportInterpolant();
     void pyExportCDModel();
     void pyExportSilicon();
@@ -83,7 +68,6 @@ namespace galsim {
 } // namespace galsim
 
 BOOST_PYTHON_MODULE(_galsim) {
-    doImportNumpy();
     galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportImage();
@@ -114,7 +98,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::hsm::pyExportHSM();
     galsim::integ::pyExportInteg();
     galsim::pyExportTable();
-    galsim::pyExportTable2D();
     galsim::math::pyExportBessel();
     galsim::pyExportSilicon();
     galsim::pyExportRealGalaxy();

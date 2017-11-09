@@ -34,11 +34,6 @@
 #include <algorithm>
 #include <complex>
 
-// Some versions of boost don't have the right guard to avoid C++-11 extensions.
-// This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
-#define BOOST_NO_CXX11_SMART_PTR
-#include <boost/shared_ptr.hpp>
-
 #include "Std.h"
 #include "Random.h"
 #include "GSParams.h"
@@ -136,7 +131,9 @@ namespace galsim {
         ~SBProfile();
 
         /// Get the GSParams object for this SBProfile
-        const boost::shared_ptr<GSParams> getGSParams() const;
+        /// Makes a copy, since this is used for python pickling, so the current SBProfile
+        /// may go out of scope before we need to use the returned GSParams.
+        GSParams getGSParams() const;
 
         /**
          * @brief Return value of SBProfile at a chosen 2D position in real space.
@@ -297,11 +294,10 @@ namespace galsim {
          * The photon flux may also vary slightly as a means of speeding up photon-shooting, as an
          * alternative to rejection sampling.  See `OneDimensionalDeviate` documentation.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called
@@ -384,7 +380,7 @@ namespace galsim {
         // Protected static class to access pimpl of one SBProfile object from another one.
         static SBProfileImpl* GetImpl(const SBProfile& rhs);
 
-        boost::shared_ptr<SBProfileImpl> _pimpl;
+        shared_ptr<SBProfileImpl> _pimpl;
     };
 
 }

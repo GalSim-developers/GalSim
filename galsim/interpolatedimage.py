@@ -21,12 +21,10 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
 from past.builtins import basestring
-import galsim
-from galsim import GSObject
-from . import _galsim
-from ._galsim import Interpolant
-from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 import numpy as np
+import galsim
+from .gsobject import GSObject
+from . import _galsim
 
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
@@ -256,7 +254,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None,
                  _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
                  hdu=None):
 
@@ -338,14 +336,11 @@ class InterpolatedImage(GSObject):
         if pad_factor <= 0.:
             raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
-        if use_true_center:
-            im_cen = self.image.true_center
-        else:
-            im_cen = self.image.center
+        im_cen = self.image.bounds.true_center if use_true_center else self.image.center
 
         local_wcs = self.image.wcs.local(image_pos = im_cen)
-        self.min_scale = local_wcs._minScale()
-        self.max_scale = local_wcs._maxScale()
+        min_scale = local_wcs._minScale()
+        max_scale = local_wcs._maxScale()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
@@ -353,7 +348,7 @@ class InterpolatedImage(GSObject):
             # Convert from arcsec to pixels according to the local wcs.
             # Use the minimum scale, since we want to make sure noise_pad_size is
             # as large as we need in any direction.
-            noise_pad_size = int(math.ceil(noise_pad_size / self.min_scale))
+            noise_pad_size = int(math.ceil(noise_pad_size / min_scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = galsim.Image.good_fft_size(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
@@ -411,14 +406,14 @@ class InterpolatedImage(GSObject):
         # below what is provided here, while maxk is preserved.
         if _force_stepk > 0.:
             calculate_stepk = False
-            _force_stepk *= self.min_scale
+            _force_stepk *= min_scale
         if _force_maxk > 0.:
             calculate_maxk = False
-            _force_maxk *= self.max_scale
+            _force_maxk *= max_scale
 
         # Due to floating point rounding errors, for pickling it's necessary to store the exact
         # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
-        # values before being scaled by self.min_scale and self.max_scale.  So we do that via the
+        # values before being scaled by min_scale and max_scale.  So we do that via the
         # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
         # pickling.
         if _serialize_stepk is not None:
@@ -431,12 +426,12 @@ class InterpolatedImage(GSObject):
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # Make the SBInterpolatedImage out of the image.
-        sbii = galsim._galsim.SBInterpolatedImage(
-                pad_image._image, self.x_interpolant, self.k_interpolant, pad_factor,
-                _force_stepk, _force_maxk, gsparams)
+        sbii = _galsim.SBInterpolatedImage(
+                pad_image._image, self.x_interpolant._i, self.k_interpolant._i, pad_factor,
+                _force_stepk, _force_maxk, self.gsparams._gsp)
 
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
@@ -464,14 +459,14 @@ class InterpolatedImage(GSObject):
 
         # Save this intermediate profile
         self._sbii = sbii
-        self._stepk = sbii.stepK() / self.min_scale
-        self._maxk = sbii.maxK() / self.max_scale
+        self._stepk = sbii.stepK() / min_scale
+        self._maxk = sbii.maxK() / max_scale
         self._flux = flux
 
         self._serialize_stepk = sbii.stepK()
         self._serialize_maxk = sbii.maxK()
 
-        self._sbp = sbii  # Temporary.  Will update below.
+        self._sbp = sbii  # Temporary.  Will overwrite this later.
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)
@@ -496,8 +491,8 @@ class InterpolatedImage(GSObject):
 
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
-        # is to hide the SBProfile in an SBAdd object.
-        self._sbp = galsim._galsim.SBAdd([prof._sbp])
+        # is to hide the _sbp in an SBAdd object.
+        self._sbp = _galsim.SBAdd([prof._sbp], self.gsparams._gsp)
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the `pad_image` from the given `noise_pad` specification.
@@ -539,7 +534,7 @@ class InterpolatedImage(GSObject):
                 self._pad_factor == other._pad_factor and
                 self._flux == other._flux and
                 self._offset == other._offset and
-                self._gsparams == other._gsparams and
+                self.gsparams == other.gsparams and
                 self._stepk == other._stepk and
                 self._maxk == other._maxk)
 
@@ -547,7 +542,7 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self._pad_factor, self._flux, self._offset, self._gsparams,
+                               self._pad_factor, self._flux, self._offset, self.gsparams,
                                self._stepk, self._maxk))
             self._hash ^= hash(tuple(self._pad_image.array.ravel()))
             self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
@@ -557,7 +552,7 @@ class InterpolatedImage(GSObject):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
                 'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
                 self._pad_image, self.x_interpolant, self.k_interpolant,
-                self._pad_factor, self._flux, self._offset, self._gsparams,
+                self._pad_factor, self._flux, self._offset, self.gsparams,
                 self._stepk, self._maxk)
 
     def __str__(self): return 'galsim.InterpolatedImage(image=%s, flux=%s)'%(self.image, self.flux)
@@ -579,9 +574,73 @@ class InterpolatedImage(GSObject):
         self.__init__(self._pad_image,
                       x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                       pad_factor=self._pad_factor, flux=self._flux,
-                      offset=self._offset, use_true_center=False, gsparams=self._gsparams,
+                      offset=self._offset, use_true_center=False, gsparams=self.gsparams,
                       _serialize_stepk=self._serialize_stepk,
                       _serialize_maxk=self._serialize_maxk)
+
+
+def _InterpolatedImage(image, x_interpolant, k_interpolant,
+                       use_true_center=True, offset=None, gsparams=None,
+                       force_stepk=0., force_maxk=0.):
+    """Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.
+
+    Some notable reductions in functionality relative to InterpolatedImage:
+
+    1. There are no padding options. The image must be provided with all padding already applied.
+    2. The stepk and maxk values will not be calculated.  If you want to use values for these other
+       than the default, you may provide them as _force_stepk and _force_maxk.  Otherwise
+       stepk ~= 2pi / image_size and max_k ~= pi / pixel_scale.
+    3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
+    4. The input image must have a defined wcs.
+
+    @param image            The Image from which to construct the object.
+    @param x_interpolant    An Interpolant instance for real-space interpolation.
+    @param k_interpolant    An Interpolant instance for k-space interpolation.
+    @param use_true_center  Whether to use the true center of the provided image as the center
+                            of the profile. [default: True]
+    @param offset           The location in the input image to use as the center of the profile.
+                            [default: None]
+    @param gsparams         An optional GSParams argument. [default: None]
+    @param force_stepk      A stepk value to use rather than the default value. [default: 0.]
+    @param force_maxk       A maxk value to use rather than the default value. [default: 0.]
+
+    @returns an InterpolatedImage instance
+    """
+    ret = InterpolatedImage.__new__(InterpolatedImage)
+
+    # We need to set all the various attributes that are expected to be in an InterpolatedImage:
+    ret.image = image.copy()
+    ret.x_interpolant = x_interpolant
+    ret.k_interpolant = k_interpolant
+    ret.use_cache = True
+    ret._pad_image = image
+    ret._pad_factor = 1.
+    ret._gsparams = galsim.GSParams.check(gsparams)
+
+    im_cen = image.true_center if use_true_center else image.center
+    local_wcs = image.wcs.local(image_pos = im_cen)
+    min_scale = local_wcs._minScale()
+    max_scale = local_wcs._maxScale()
+    force_stepk *= min_scale
+    force_maxk *= max_scale
+
+    ret._sbp = _galsim.SBInterpolatedImage(
+            image._image, x_interpolant._i, k_interpolant._i, 1.,
+            force_stepk, force_maxk, ret._gsparams._gsp)
+
+    ret._flux = None
+    ret._stepk = ret._sbp.stepK() / min_scale
+    ret._maxk = ret._sbp.maxK() / max_scale
+    ret._serialize_stepk = ret._sbp.stepK()
+    ret._serialize_maxk = ret._sbp.maxK()
+
+    offset = ret._parse_offset(offset)
+    prof = ret._fix_center(ret.image.bounds, offset, use_true_center, reverse=True)
+    ret._offset = -prof.offset if hasattr(prof, 'offset') else None
+
+    prof = local_wcs._profileToWorld(prof)
+    ret._sbp = _galsim.SBAdd([prof._sbp], ret.gsparams._gsp)
+    return ret
 
 
 class InterpolatedKImage(GSObject):
@@ -633,12 +692,12 @@ class InterpolatedKImage(GSObject):
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  [default: galsim.Quintic()]
     @param stepk            By default, the stepk value (the sampling frequency in Fourier-space)
-                            is set by the `scale` attribute of the supplied images.  This keyword
-                            allows the user to specify a coarser sampling in Fourier-space, which
-                            may increase efficiency at the expense of decreasing the separation
-                            between neighboring copies of the DFT-rendered real-space profile.
-                            (See the GSParams docstring for the parameter `folding_threshold` for
-                            more information).  [default: kimage.scale]
+                            of the profile is set by the `scale` attribute of the supplied images.
+                            This keyword allows the user to specify a coarser sampling in Fourier-
+                            space, which may increase efficiency at the expense of decreasing the
+                            separation between neighboring copies of the DFT-rendered real-space
+                            profile.  (See the GSParams docstring for the parameter
+                            `folding_threshold` for more information). [default: kimage.scale]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param real_kimage      Optionally, rather than provide kimage, you may provide the real
@@ -734,7 +793,7 @@ class InterpolatedKImage(GSObject):
 
         stepk_image = stepk / self._kimage.scale  # usually 1, but could be larger
 
-        self._gsparams = gsparams
+        self._gsparams = galsim.GSParams.check(gsparams)
 
         # set up k_interpolant if none was provided by user, or check that the user-provided one
         # is of a valid type
@@ -744,15 +803,16 @@ class InterpolatedKImage(GSObject):
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
         sbiki = _galsim.SBInterpolatedKImage(
-                self._kimage._image, stepk_image, self.k_interpolant, gsparams)
+                self._kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
         self._sbiki = sbiki
 
         if kimage.wcs is not None:
             sbp = _galsim.SBTransform(sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                                      galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
+                                      galsim._galsim.PositionD(0.,0.), kimage.scale**2,
+                                      self.gsparams._gsp)
         else:
             sbp = sbiki
-        self._sbp = _galsim.SBAdd([sbp])
+        self._sbp = _galsim.SBAdd([sbp], self.gsparams._gsp)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
@@ -760,37 +820,37 @@ class InterpolatedKImage(GSObject):
                 self._kimage.scale == other._kimage.scale and
                 self.k_interpolant == other.k_interpolant and
                 self._stepk == other._stepk and
-                self._gsparams == other._gsparams)
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
         # Definitely want to cache this, since the kimage could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
-                               self._gsparams))
+                               self.gsparams))
             self._hash ^= hash(tuple(self._kimage.array.ravel()))
             self._hash ^= hash((self._kimage.bounds, self._kimage.wcs))
         return self._hash
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(\n%r,\n%r, stepk=%r, gsparams=%r)')%(
-                self._kimage, self.k_interpolant, self._stepk, self._gsparams)
+                self._kimage, self.k_interpolant, self._stepk, self.gsparams)
 
     def __str__(self):
         return 'galsim.InterpolatedKImage(kimage=%s)'%(self._kimage)
 
     def __getstate__(self):
-        # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty
-        # inefficient, due to the large images being written as strings.  Better to pickle
-        # the intermediate products and then call init again on the other side.  There's still
-        # an image to be pickled, but at least it will be through the normal pickling rules,
-        # rather than the repr.
+        # The SBInterpolatedKImage is picklable, but that is pretty inefficient, due to the large
+        # images being written as strings.  Better to pickle the intermediate products and then
+        # call init again on the other side.  There's still an image to be pickled, but at least
+        # it will be through the normal pickling rules, rather than the repr.
         d = self.__dict__.copy()
         del d['_sbp']
+        del d['_sbiki']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self._gsparams)
+        self.__init__(self._kimage, self.k_interpolant, stepk=self._stepk, gsparams=self.gsparams)
 
 
 def _InterpolatedKImage(kimage, k_interpolant, gsparams):
@@ -799,65 +859,11 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
     ret = InterpolatedKImage.__new__(InterpolatedKImage)
     ret._kimage = kimage.copy()
     ret._stepk = kimage.scale
-    ret._gsparams = gsparams
+    ret._gsparams = galsim.GSParams.check(gsparams)
     ret.k_interpolant = k_interpolant
     ret._sbiki = _galsim.SBInterpolatedKImage(
-            ret._kimage._image, 1.0, ret.k_interpolant, gsparams)
+            ret._kimage._image, 1.0, ret.k_interpolant._i, ret.gsparams._gsp)
     sbp = _galsim.SBTransform(ret._sbiki, 1./kimage.scale, 0., 0., 1./kimage.scale,
-                              galsim.PositionD(0.,0.), kimage.scale**2, gsparams)
-    ret._sbp = _galsim.SBAdd([sbp])
+                              galsim._galsim.PositionD(0.,0.), kimage.scale**2, ret.gsparams._gsp)
+    ret._sbp = _galsim.SBAdd([sbp], ret.gsparams._gsp)
     return ret
-
-
-# A hack to get the image part of SBInterpolatedImage persisted properly when pickling.
-# Since SBInterpolatedImage (and KImage) needs a C++ image, if we just make it and pass it
-# in, the array will go out of scope, which means the data in the SBInterpolatedImage may be
-# deleted. The trick is to pull off the image part and make a real image, which we attach to the
-# SBInterpolatedImage as an attribute.  So it will live as long as the SBInterpolatedImage object.
-def new_sbi(cls):
-    return cls.__new__(cls)
-def sbi_setstate(self, state):
-    import galsim
-    from numpy import array
-    cls, args = state.split('(',1)
-    args = args[:-1]  # remove final paren
-    im, args = args.split('.image,',1)  # Get the image part separately
-    im = eval(im)
-    args = eval(args)
-    self.__class__ = eval(cls)
-    self.__init__(im._image, *args)
-    self._full_image = im  # Save the original image so it doesn't go out of scope
-
-_galsim.SBInterpolatedImage.__reduce__ = lambda self: (
-        new_sbi, (self.__class__,), self.__getstate__())
-_galsim.SBInterpolatedKImage.__reduce__ = lambda self: (
-        new_sbi, (self.__class__,), self.__getstate__())
-_galsim.SBInterpolatedImage.__setstate__ = sbi_setstate
-_galsim.SBInterpolatedKImage.__setstate__ = sbi_setstate
-
-_galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol(), False)
-_galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Nearest.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.SincInterpolant.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Linear.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
-_galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
-
-_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r, %r)'%self.__getinitargs__()
-_galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)'%self.getTol()
-_galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)'%self.getTol()
-_galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)'%self.getTol()
-_galsim.Linear.__repr__ = lambda self: 'galsim.Linear(%r)'%self.getTol()
-_galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)'%self.getTol()
-_galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)'%self.getTol()
-_galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
-
-# Quick and dirty.  Just check reprs are equal.
-_galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
-_galsim.Interpolant.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.Interpolant.__hash__ = lambda self: hash(repr(self))
-
-def Interpolant_from_name(cls, name, tol=1.e-4):
-    return _galsim.Interpolant_from_name(name, tol)
-_galsim.Interpolant.from_name = classmethod(Interpolant_from_name)

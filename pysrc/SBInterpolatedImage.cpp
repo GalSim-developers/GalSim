@@ -18,9 +18,8 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
+
 #include "SBInterpolatedImage.h"
 
 namespace bp = boost::python;
@@ -34,14 +33,13 @@ namespace galsim {
         {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
-                     boost::shared_ptr<Interpolant>,
-                     boost::shared_ptr<Interpolant>,
-                     double, double, double, boost::shared_ptr<GSParams> >(
+                     const Interpolant&, const Interpolant&,
+                     double, double, double, GSParams>(
                          (bp::arg("image"),
                           bp::arg("xInterp"), bp::arg("kInterp"),
                           bp::arg("pad_factor")=4.,
                           bp::arg("stepk")=0., bp::arg("maxk")=0.,
-                          bp::arg("gsparams")=bp::object())
+                          bp::arg("gsparams")=GSParams())
                      )
                 )
                 ;
@@ -56,11 +54,6 @@ namespace galsim {
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
                      bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK, bp::arg("max_maxk")=0.)
-                .def("getImage", &SBInterpolatedImage::getImage)
-                .def("getPaddedImage", &SBInterpolatedImage::getPaddedImage)
-                .def("getXInterp", &SBInterpolatedImage::getXInterp)
-                .def("getKInterp", &SBInterpolatedImage::getKInterp)
-                .def("getPadFactor", &SBInterpolatedImage::getPadFactor)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);
@@ -76,26 +69,12 @@ namespace galsim {
                 "SBInterpolatedKImage", bp::init<const SBInterpolatedKImage &>()
             );
             pySBInterpolatedKImage
-                .def(bp::init<const BaseImage<double> &,
-                              double, double,
-                              boost::shared_ptr<Interpolant>,
-                              boost::shared_ptr<GSParams> >(
-                                  (bp::arg("data"),
-                                   bp::arg("stepk"),
-                                   bp::arg("maxk"),
-                                   bp::arg("kInterp"),
-                                   bp::arg("gsparams")=bp::object())
-                     ))
-                .def("getKInterp", &SBInterpolatedKImage::getKInterp)
-                .def("_getKData", &SBInterpolatedKImage::getKData)
                 .def(bp::init<const BaseImage<std::complex<double> > &,
-                              double,
-                              boost::shared_ptr<Interpolant>,
-                              boost::shared_ptr<GSParams> >(
+                              double, const Interpolant&, GSParams>(
                                   (bp::arg("kimage"),
                                    bp::arg("stepk"),
                                    bp::arg("kInterp"),
-                                   bp::arg("gsparams")=bp::object())
+                                   bp::arg("gsparams")=GSParams())
                      ))
                 ;
         }

@@ -72,11 +72,10 @@ namespace galsim {
          * Spergel profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N  Total number of photons to produce.
+         * @param[in] photons PhotonArray in which to write the photon information
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double calculateIntegratedFlux(const double& r) const;
         double calculateFluxRadius(const double& f) const;
@@ -88,7 +87,7 @@ namespace galsim {
 
         // Input variables:
         double _nu;       ///< Spergel index.
-        const GSParamsPtr _gsparams; ///< The GSParams object.
+        GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
         double _gamma_nup1;  ///< Gamma(nu+1)
@@ -101,15 +100,15 @@ namespace galsim {
         mutable double _re;      ///< The HLR in units of r0.
 
         // Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable shared_ptr<FluxDensity> _radial;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
     };
 
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
     {
     public:
         SBSpergelImpl(double nu, double size, RadiusType rType,
-                      double flux, const GSParamsPtr& gsparams);
+                      double flux, const GSParams& gsparams);
 
         ~SBSpergelImpl() {}
 
@@ -153,7 +152,7 @@ namespace galsim {
         double maxSB() const { return std::abs(_xnorm) * _info->xValue(0.); }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }
@@ -200,7 +199,7 @@ namespace galsim {
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _k_max;   ///< sqrt(_ksq_max)
 
-        boost::shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
+        shared_ptr<SpergelInfo> _info; ///< Points to info structure for this nu
 
         void doFillXImage(ImageView<double> im,
                           double x0, double dx, int izero,
@@ -239,7 +238,7 @@ namespace galsim {
         SBSpergelImpl(const SBSpergelImpl& rhs);
         void operator=(const SBSpergelImpl& rhs);
 
-        static LRUCache<Tuple< double, GSParamsPtr >, SpergelInfo> cache;
+        static LRUCache<Tuple<double, GSParamsPtr>, SpergelInfo> cache;
     };
 }
 

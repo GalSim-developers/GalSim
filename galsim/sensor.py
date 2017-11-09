@@ -138,12 +138,13 @@ class SiliconSensor(Sensor):
         vertex_file = os.path.join(self.full_dir,self.config['outputfilebase'] + '_0_Vertices.dat')
         vertex_data = np.loadtxt(vertex_file, skiprows = 1)
 
-        if vertex_data.size != 5 * Nx * Ny * (4 * NumVertices + 4):
+        if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):
             raise IOError("Vertex file %s does not match config file %s"
                           % (vertex_file, self.config_file))
 
         self._silicon = galsim._galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                               diff_step, PixelSize, SensorThickness, vertex_data)
+                                               diff_step, PixelSize, SensorThickness,
+                                               vertex_data.ctypes.data)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.dir
@@ -184,7 +185,7 @@ class SiliconSensor(Sensor):
         @param photons      A PhotonArray instance describing the incident photons
         @param image        The image into which the photons should be accumuated.
         """
-        return self._silicon.accumulate(photons, self.rng._rng, image._image)
+        return self._silicon.accumulate(photons._pa, self.rng._rng, image._image)
 
     def _read_config_file(self, filename):
         # This reads the Poisson simulator config file for

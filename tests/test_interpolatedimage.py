@@ -105,8 +105,6 @@ def test_roundtrip():
         # Check picklability
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
-        # interp.SBProfile is not actually an SBInterpolatedImage.  That's stored as _sbii.
-        do_pickle(interp._sbii, irreprable=True)
 
     # Test using a non-c-contiguous image  (.T transposes the image, making it Fortran order)
     image_T = galsim.Image(ref_array.astype(array_type).T)
@@ -144,9 +142,22 @@ def test_roundtrip():
     do_pickle(galsim.Quintic(), test_func)
     do_pickle(galsim.Quintic(tol=0.1), test_func)
     do_pickle(galsim.Quintic())
-    do_pickle(galsim.Interpolant.from_name('quintic'), test_func)
-    do_pickle(galsim.Interpolant.from_name('lanczos7'), test_func)
-    do_pickle(galsim.Interpolant.from_name('lanczos9F',1.e-6), test_func)
+    do_pickle(galsim.Interpolant.from_name('nearest'))
+    do_pickle(galsim.Interpolant.from_name('delta'))
+    do_pickle(galsim.Interpolant.from_name('linear'))
+    do_pickle(galsim.Interpolant.from_name('cubic'))
+    do_pickle(galsim.Interpolant.from_name('quintic'))
+    do_pickle(galsim.Interpolant.from_name('sinc'))
+    do_pickle(galsim.Interpolant.from_name('lanczos7'))
+    do_pickle(galsim.Interpolant.from_name('lanczos9F'))
+    do_pickle(galsim.Interpolant.from_name('lanczos8T'))
+
+    try:
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczos3A')
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanczosF')
+        np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
+    except ImportError:
+        pass
 
 
 @timer
@@ -1003,7 +1014,6 @@ def test_kroundtrip():
     # Check picklability
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
-    do_pickle(b._sbiki, irreprable=True)
 
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,

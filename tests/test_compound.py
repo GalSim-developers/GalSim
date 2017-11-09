@@ -131,7 +131,6 @@ def test_convolve():
     gsobject_compare(single, psf)
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
-    do_pickle(single._sbp)
     do_shoot(single, myImg, "single Convolution")
 
     single = galsim.Convolve([psf])
@@ -344,7 +343,6 @@ def test_realspace_convolve():
     # Check picklability
     do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
-    do_pickle(conv._sbp)
 
     # Check some warnings that should be raised
 
@@ -369,13 +367,11 @@ def test_realspace_convolve():
     check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv._sbp)
 
     conv = galsim.AutoCorrelate(psf,real_space=True)
     check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
     do_pickle(conv)
-    do_pickle(conv._sbp)
 
     try:
         np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
@@ -580,7 +576,6 @@ def test_add():
     # Check picklability
     do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
     do_pickle(sum_gauss)
-    do_pickle(sum_gauss._sbp)
 
     # Sum of just one argument should be equivalent to that argument.
     single = galsim.Add(gauss1)
@@ -732,7 +727,6 @@ def test_deconvolve():
 
     # Check picklability
     do_pickle(inv_obj)
-    do_pickle(inv_obj._sbp)
 
     # And a significantly transformed deconvolve object
     jac = (0.3, -0.8, -0.7, 0.4)
@@ -816,7 +810,6 @@ def test_autoconvolve():
     # Check picklability
     do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(conv2)
-    do_pickle(conv2._sbp)
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
@@ -920,7 +913,6 @@ def test_autocorrelate():
     # Check picklability
     do_pickle(corr, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(corr)
-    do_pickle(corr._sbp)
 
     # Should raise an exception for invalid arguments
     try:
@@ -1039,7 +1031,6 @@ def test_fourier_sqrt():
     # Check picklability
     do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sqrt1)
-    do_pickle(sqrt1._sbp)
 
     # Should raise an exception for invalid arguments
     try:
@@ -1104,7 +1095,7 @@ def test_sum_transform():
 
         do_pickle(gal0)
         do_pickle(gal1)
-        do_pickle(gal2)  # And this.
+        do_pickle(gal2)
 
 @timer
 def test_compound_noise():

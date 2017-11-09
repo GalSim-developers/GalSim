@@ -163,7 +163,7 @@ template <typename T>
 T BaseImage<T>::sumElements() const
 {
     Sum<T> sum;
-    sum = for_each_pixel(*this, sum);
+    for_each_pixel_ref(*this, sum);
     return T(sum.sum);
 }
 
@@ -179,7 +179,7 @@ template <typename T>
 Bounds<int> BaseImage<T>::nonZeroBounds() const
 {
     NonZeroBounds<T> nz;
-    nz = for_each_pixel_ij(*this, nz);
+    for_each_pixel_ij_ref(*this, nz);
     return nz.bounds;
 }
 

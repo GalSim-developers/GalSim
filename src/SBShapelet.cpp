@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-    SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParamsPtr& gsparams) :
+    SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParams& gsparams) :
         SBProfile(new SBShapeletImpl(sigma, bvec, gsparams)) {}
 
     SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
@@ -43,24 +43,31 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
+    void SBShapelet::rotate(double theta)
+    {
+        assert(dynamic_cast<SBShapeletImpl*>(_pimpl.get()));
+        LVector& bvec = static_cast<SBShapeletImpl&>(*_pimpl).getBVec();
+        bvec.rotate(theta);
+    }
+
     std::string SBShapelet::SBShapeletImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBShapelet("<<getSigma()<<", "<<getBVec().repr();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
-                                               const GSParamsPtr& gsparams) :
+                                               const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _sigma(sigma), _bvec(bvec.copy()) {}
 
     double SBShapelet::SBShapeletImpl::maxK() const
     {
         // Start with value for plain old Gaussian:
-        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma;
+        double maxk = sqrt(-2.*std::log(this->gsparams.maxk_threshold))/_sigma;
         // Grow as sqrt of (order+1)
         // Note: this is an approximation.  The right value would require looking at
         // the actual coefficients and doing something smart with them.
@@ -71,7 +78,7 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::stepK() const
     {
         // Start with value for plain old Gaussian:
-        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->folding_threshold)));
+        double R = std::max(4., sqrt(-2.*std::log(this->gsparams.folding_threshold)));
         // Grow as sqrt of (order+1)
         R *= sqrt(double(_bvec.getOrder()+1));
         return M_PI / (R*_sigma);
@@ -142,6 +149,7 @@ namespace galsim {
 
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
+    LVector& SBShapelet::SBShapeletImpl::getBVec() { return _bvec; }
 
     template <typename T>
     void SBShapelet::SBShapeletImpl::fillXImage(ImageView<T> im,

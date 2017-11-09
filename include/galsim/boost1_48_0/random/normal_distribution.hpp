@@ -26,6 +26,8 @@
 #include <boost/static_assert.hpp>
 #include <boost/random/detail/config.hpp>
 #include <boost/random/detail/operators.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
 #endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
 

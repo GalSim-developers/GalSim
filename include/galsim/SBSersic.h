@@ -105,7 +105,7 @@ namespace galsim {
          *                              default.
          */
         SBSersic(double n, double size, RadiusType rType, double flux,
-                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+                 double trunc, bool flux_untruncated, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);

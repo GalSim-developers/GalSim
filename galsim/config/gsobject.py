@@ -189,7 +189,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 def UpdateGSParams(gsparams, config, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
-    opt = galsim.GSObject._gsparams
+    opt = galsim.GSObject._gsparams_opt
     kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.
@@ -477,11 +477,7 @@ def RegisterObjectType(type_name, build_func, input_type=None):
     valid_gsobject_types[type_name] = build_func
     if input_type is not None:
         from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):  # pragma: no cover
-            for key in input_type:
-                RegisterInputConnectedType(key, type_name)
-        else:
-            RegisterInputConnectedType(input_type, type_name)
+        RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

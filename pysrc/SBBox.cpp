@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBBox.h"
 
@@ -35,10 +32,9 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("width"), bp::arg("height"), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
-                ))
+                .def(bp::init<double,double,double,GSParams>(
+                        (bp::arg("width"), bp::arg("height"), bp::arg("flux"),
+                         bp::arg("gsparams"))))
                 .def(bp::init<const SBBox&>())
                 .def("getWidth", &SBBox::getWidth)
                 .def("getHeight", &SBBox::getHeight)
@@ -53,10 +49,8 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("radius"), bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object())
-                ))
+                .def(bp::init<double,double,GSParams>(
+                        (bp::arg("radius"), bp::arg("flux"), bp::arg("gsparams"))))
                 .def(bp::init<const SBTopHat&>())
                 .def("getRadius", &SBTopHat::getRadius)
                 .enable_pickling()

@@ -43,7 +43,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
+        SBAdd(const std::list<SBProfile>& slist, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBAdd(const SBAdd& rhs);

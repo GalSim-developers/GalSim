@@ -21,6 +21,8 @@
 #include <boost/config/no_tr1/cmath.hpp>
 #include <boost/assert.hpp>
 #include <boost/limits.hpp>
+#else
+#include "galsim/boost1_48_0/assert.hpp"
 #endif
 #include "galsim/boost1_48_0/random/uniform_01.hpp"
 #ifdef USE_BOOST

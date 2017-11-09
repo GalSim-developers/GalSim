@@ -35,7 +35,7 @@ namespace galsim {
     { return fmath::exp(y * fmath::log(x)); }
 
     SBSpergel::SBSpergel(double nu, double size, RadiusType rType, double flux,
-                         const GSParamsPtr& gsparams) :
+                         const GSParams& gsparams) :
         SBProfile(new SBSpergelImpl(nu, size, rType, flux, gsparams)) {}
 
     SBSpergel::SBSpergel(const SBSpergel& rhs) : SBProfile(rhs) {}
@@ -66,7 +66,7 @@ namespace galsim {
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSpergel("<<getNu()<<", "<<getScaleRadius();
         oss << ", None, "<<getFlux();
-        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
         return oss.str();
     }
 
@@ -86,9 +86,9 @@ namespace galsim {
         sbp::max_spergel_cache);
 
     SBSpergel::SBSpergelImpl::SBSpergelImpl(double nu, double size, RadiusType rType,
-                                            double flux, const GSParamsPtr& gsparams) :
+                                            double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _nu(nu), _flux(flux), _info(cache.get(MakeTuple(_nu, this->gsparams.duplicate())))
+        _nu(nu), _flux(flux), _info(cache.get(MakeTuple(_nu, GSParamsPtr(this->gsparams))))
     {
         dbg<<"Start SBSpergel constructor:\n";
         dbg<<"nu = "<<_nu<<std::endl;
@@ -98,7 +98,7 @@ namespace galsim {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-(nu+1) = kvalue_accuracy
-        _ksq_max = std::pow(this->gsparams->kvalue_accuracy,-1./(nu+1.))-1.;
+        _ksq_max = std::pow(this->gsparams.kvalue_accuracy,-1./(nu+1.))-1.;
         _k_max = std::sqrt(_ksq_max);
 
         // Set size of this instance according to type of size given in constructor
@@ -708,11 +708,8 @@ namespace galsim {
         double _b;
     };
 
-    boost::shared_ptr<PhotonArray> SpergelInfo::shoot(int N, UniformDeviate ud) const
+    void SpergelInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"SpergelInfo shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.0\n";
-
         if (!_sampler) {
             // Set up the classes for photon shooting
             double shoot_rmax = calculateFluxRadius(1. - _gsparams->shoot_accuracy);
@@ -720,7 +717,7 @@ namespace galsim {
                 std::vector<double> range(2,0.);
                 range[1] = shoot_rmax;
                 _radial.reset(new SpergelNuPositiveRadialFunction(_nu, _xnorm0));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
             } else {
                 // exact s.b. profile diverges at origin, so replace the inner most circle
                 // (defined such that enclosed flux is shoot_acccuracy) with a linear function
@@ -744,24 +741,22 @@ namespace galsim {
                 range[1] = shoot_rmin;
                 range[2] = shoot_rmax;
                 _radial.reset(new SpergelNuNegativeRadialFunction(_nu, shoot_rmin, a, b));
-                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, _gsparams));
+                _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, *_gsparams));
             }
         }
 
         assert(_sampler.get());
-        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        dbg<<"SpergelInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _sampler->shoot(photons,ud);
+        dbg<<"SpergelInfo Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 
-    boost::shared_ptr<PhotonArray> SBSpergel::SBSpergelImpl::shoot(int N, UniformDeviate ud) const
+    void SBSpergel::SBSpergelImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        dbg<<"Spergel shoot: N = "<<N<<std::endl;
+        dbg<<"Spergel shoot: N = "<<photons.size()<<std::endl;
         // Get photons from the SpergelInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Spergel Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+        _info->shoot(photons,ud);
+        photons.scaleFlux(_shootnorm);
+        photons.scaleXY(_r0);
+        dbg<<"Spergel Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
 }

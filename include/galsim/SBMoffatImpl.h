@@ -31,7 +31,7 @@ namespace galsim {
     {
     public:
         SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
-                     const GSParamsPtr& gsparams);
+                     const GSParams& gsparams);
 
         ~SBMoffatImpl() {}
 
@@ -40,7 +40,7 @@ namespace galsim {
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams->maxk_threshold; }
+        bool hasHardEdges() const { return (1.-_fluxFactor) > this->gsparams.maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -71,8 +71,11 @@ namespace galsim {
          * distribution.
          *
          * Will require 2 uniform deviates per photon, plus analytic function (pow and sqrt)
+         *
+         * @param[in] photons PhotonArray in which to write the photon information
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }
@@ -117,7 +120,7 @@ namespace galsim {
         double _maxRrD_sq;
         double _maxR_sq;
 
-        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
+        mutable TableBuilder _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         mutable double _stepk;

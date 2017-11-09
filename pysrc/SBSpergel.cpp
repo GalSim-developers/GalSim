@@ -18,10 +18,7 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
-#define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBSpergel.h"
 #include "RadiusHelper.h"
@@ -34,8 +31,8 @@ namespace galsim {
     {
 
         static SBSpergel* construct(
-            double nu, const bp::object & scale_radius, const bp::object & half_light_radius,
-            double flux, boost::shared_ptr<GSParams> gsparams)
+            double nu, const bp::object& scale_radius, const bp::object& half_light_radius,
+            double flux, GSParams gsparams)
         {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, bp::object());
@@ -57,11 +54,10 @@ namespace galsim {
                      bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("nu"),
-                         bp::arg("scale_radius")=bp::object(),
-                         bp::arg("half_light_radius")=bp::object(),
-                         bp::arg("flux")=1.,
-                         bp::arg("gsparams")=bp::object()))
-                )
+                         bp::arg("scale_radius"),
+                         bp::arg("half_light_radius"),
+                         bp::arg("flux"),
+                         bp::arg("gsparams"))))
                 .def(bp::init<const SBSpergel &>())
                 .def("getNu", &SBSpergel::getNu)
                 .def("getScaleRadius", &SBSpergel::getScaleRadius)

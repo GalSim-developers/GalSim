@@ -313,7 +313,7 @@ def test_variable_gaussian_noise():
             testimage.array, vgResult, precision,
             err_msg="Wrong VariableGaussian noise generated for Fortran-ordered Image")
 
-    # Check VariableGaussianNoise variance:
+    # Check var_image property
     np.testing.assert_almost_equal(
             vgn.var_image.array, var_image.array, precision,
             err_msg="VariableGaussianNoise var_image returns wrong var_image")
@@ -321,8 +321,10 @@ def test_variable_gaussian_noise():
     # Check that the noise model really does produce this variance.
     big_var_image = galsim.ImageD(galsim.BoundsI(0,2047,0,2047))
     big_coords = np.ogrid[0:2048, 0:2048]
-    big_var_image.array[ (big_coords[0] + big_coords[1]) % 2 == 1 ] = gSigma1**2
-    big_var_image.array[ (big_coords[0] + big_coords[1]) % 2 == 0 ] = gSigma2**2
+    mask1 = (big_coords[0] + big_coords[1]) % 2 == 0
+    mask2 = (big_coords[0] + big_coords[1]) % 2 == 1
+    big_var_image.array[mask1] = gSigma1**2
+    big_var_image.array[mask2] = gSigma2**2
     big_vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), big_var_image)
 
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -334,6 +336,12 @@ def test_variable_gaussian_noise():
             var, big_vgn.var_image.array.mean(), 1,
             err_msg='Realized variance for VariableGaussianNoise did not match var_image')
 
+    # Check realized variance in each mask
+    print('rms1 = ',np.std(big_im.array[mask1]))
+    print('rms2 = ',np.std(big_im.array[mask2]))
+    np.testing.assert_almost_equal(np.std(big_im.array[mask1]), gSigma1, decimal=1)
+    np.testing.assert_almost_equal(np.std(big_im.array[mask2]), gSigma2, decimal=1)
+
     # Check that VariableGaussianNoise adds to the image, not overwrites the image.
     gal = galsim.Exponential(half_light_radius=2.3, flux=1.e4)
     gal.drawImage(image=big_im)
@@ -344,16 +352,6 @@ def test_variable_gaussian_noise():
     np.testing.assert_almost_equal(
             var, big_vgn.var_image.array.mean(), 1,
             err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
-
-    # Check that DeviateNoise adds to the image, not overwrites the image.
-    gal.drawImage(image=big_im)
-    big_vgn.rng.seed(testseed)
-    big_im.addNoise(big_vgn)
-    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
-    var = np.var(big_im.array)
-    np.testing.assert_almost_equal(
-            var, big_vgn.var_image.array.mean(), 1,
-            err_msg='DeviateNoise wrong when already an object drawn on the image')
 
     # Check picklability
     do_pickle(vgn, lambda x: (x.rng.serialize(), x.var_image))
@@ -384,8 +382,6 @@ def test_variable_gaussian_noise():
         np.testing.assert_raises(RuntimeError, noise.withScaledVariance(23))
     except:
         pass
-
-
 
 
 @timer

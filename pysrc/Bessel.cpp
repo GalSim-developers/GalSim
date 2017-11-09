@@ -18,8 +18,8 @@
  */
 
 #include "galsim/IgnoreWarnings.h"
-
 #include "boost/python.hpp"
+
 #include "math/BesselRoots.h"
 #include "math/Bessel.h"
 

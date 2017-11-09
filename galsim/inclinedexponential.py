@@ -140,9 +140,9 @@ class InclinedExponential(GSObject):
             raise TypeError("Input inclination should be an Angle")
 
         self._inclination = inclination
+        self._gsparams = galsim.GSParams.check(gsparams)
         self._sbp = _galsim.SBInclinedExponential(
-                inclination.rad, scale_radius, scale_height, flux, gsparams)
-        self._gsparams = gsparams
+                inclination.rad, scale_radius, scale_height, flux, self.gsparams._gsp)
 
     @property
     def inclination(self): return self._inclination
@@ -161,16 +161,16 @@ class InclinedExponential(GSObject):
                  (self.scale_radius == other.scale_radius) and
                  (self.scale_height == other.scale_height) and
                  (self.flux == other.flux) and
-                 (self._gsparams == other._gsparams)))
+                 (self.gsparams == other.gsparams)))
 
     def __hash__(self):
         return hash(("galsim.InclinedExponential", self.inclination, self.scale_radius,
-                    self.scale_height, self.flux, self._gsparams))
+                    self.scale_height, self.flux, self.gsparams))
 
     def __repr__(self):
         return ('galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, ' +
                'flux=%r, gsparams=%r)') % (
-            self.inclination, self.scale_radius, self.scale_height, self.flux, self._gsparams)
+            self.inclination, self.scale_radius, self.scale_height, self.flux, self.gsparams)
 
     def __str__(self):
         s = 'galsim.InclinedExponential(inclination=%s, scale_radius=%s, scale_height=%s' % (
@@ -183,6 +183,3 @@ class InclinedExponential(GSObject):
 _galsim.SBInclinedExponential.__getinitargs__ = lambda self: (
         self.getInclination(), self.getScaleRadius(), self.getScaleHeight(), self.getFlux(),
         self.getGSParams())
-_galsim.SBInclinedExponential.__getstate__ = lambda self: None
-_galsim.SBInclinedExponential.__repr__ = lambda self: \
-        'galsim._galsim.SBInclinedExponential(%r, %r, %r, %r, %r)' % self.__getinitargs__()

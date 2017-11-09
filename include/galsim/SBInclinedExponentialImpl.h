@@ -29,7 +29,7 @@ namespace galsim {
     {
     public:
         SBInclinedExponentialImpl(double inclination, double scale_radius, double scale_height,
-                                  double flux, const GSParamsPtr& gsparams);
+                                  double flux, const GSParams& gsparams);
 
         ~SBInclinedExponentialImpl() {}
 
@@ -72,7 +72,7 @@ namespace galsim {
         double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         /// @brief Returns the inclination angle in radians
         double getInclination() const { return _inclination; }
