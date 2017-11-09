@@ -115,22 +115,29 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise,
 # GSObject
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
-from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
+from .gaussian import Gaussian
+from .moffat import Moffat
+from .airy import Airy
+from .kolmogorov import Kolmogorov
+from .box import Pixel, Box, TopHat
+from .exponential import Exponential
+from .sersic import Sersic, DeVaucouleurs
+from .spergel import Spergel
+from .deltafunction import DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet
-from .inclinedexponential import InclinedExponential
-from .inclinedsersic import InclinedSersic
+from .inclined import InclinedExponential, InclinedSersic
 from .interpolant import Interpolant
 from .interpolant import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from .interpolatedimage import InterpolatedImage, _InterpolatedImage
 from .interpolatedimage import InterpolatedKImage, _InterpolatedKImage
-from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
-from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from .compound import FourierSqrt, FourierSqrtProfile
-from .compound import RandomWalk
+from .sum import Add, Sum
+from .convolve import Convolve, Convolution, Deconvolve, Deconvolution
+from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+from .fouriersqrt import FourierSqrt, FourierSqrtProfile
+from .randwalk import RandomWalk
 from .transform import Transform, Transformation, _Transform
 
 # Chromatic
