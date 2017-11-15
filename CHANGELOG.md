@@ -158,6 +158,7 @@ Deprecated Features
 
 New Features
 ------------
+- Use circular weight function in HSM adaptive moments code. (#917)
 
 - Added new surface brightness profile, 'DeltaFunction'. This represents a
   point source with a flux value. (#533)
