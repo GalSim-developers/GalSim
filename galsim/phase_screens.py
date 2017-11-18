@@ -949,7 +949,7 @@ class HopkinsTelescope(object):
 
     (Note that `theta` and `u` above are both 2-d vectors.)
 
-    @param a_nmrs       A two-dimensional array of coefficients.  First index is over nm, i.e. the
+    @param a_nmrs       A two-dimensional array of coefficients.  First index is over nm, i.e., the
                         pupil aberrations.  The second index is over rs, i.e., the field dependence.
     @param fov_radius   Radius of the field-of-view from which FoV Zernike polynomials are
                         normalized.
@@ -963,11 +963,38 @@ class HopkinsTelescope(object):
         self.jmax_focal = self.a_nmrs.shape[1]-1
         # Field-of-view does not have obscuration, so obscuration=0 and annular=False here.
         noll_coef = _noll_coef_array(self.jmax_focal, 0.0, False)
-        # One coef_array for each wavefront aberration
+        # One coef_array for each pupil wavefront aberration
         self.coef_arrays = [np.dot(noll_coef, a[1:]) for a in self.a_nmrs]
 
     def getAberrations(self, theta_x, theta_y):
-        """Return the aberrations for a particular field angle."""
+        """Return a list of the pupil aberration coefficients for the listed field angle(s).
+        """
         r = theta_x/self.fov_radius + 1j*theta_y/self.fov_radius
         rsqr = np.abs(r)**2
         return [horner2d(rsqr, r, ca).real for ca in self.coef_arrays]
+
+    def wavefront(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+        """ Compute wavefront for the optical phase screen.
+        
+        @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                        be a scalar or an iterable.  The shapes of u and v must match.
+        @param t        Ignored for HopkinsTelescope.
+        @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
+                        permitted.
+        
+        @return s       Array of wavefront lag or lead in nanometers.
+        """
+        u = np.array(u, dtype=float)
+        v = np.array(v, dtype=float)
+        if u.shape != v.shape:
+            raise ValueError("u.shape not equal to v.shape")
+        aberr = self.getAberrations(theta[0].tan(), theta[1].tan())
+
+        noll_coef = _noll_coef_array(self.jmax_pupil, 0.0, False)
+        coef_array = np.dot(noll_coef, aberr[1:])
+        r = u + 1j*v
+        rsqr = np.abs(r)**2        
+        return horner2d(rsqr, r, coef_array).real
