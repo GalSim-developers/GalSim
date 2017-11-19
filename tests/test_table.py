@@ -60,6 +60,7 @@ def test_table():
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
+        assert len(table1) == len(args1)
 
         np.testing.assert_array_equal(table1.getArgs(), args1)
         np.testing.assert_array_equal(table1.getVals(), vals1)
@@ -132,28 +133,22 @@ def test_table():
 @timer
 def test_init():
     """Some simple tests of LookupTable initialization."""
-    interp = 'linear'
+
+    # Make sure nothing bad happens when we try to read in a stored power spectrum and assume
+    # we can use the default interpolant (spline).
+    tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    do_pickle(tab_ps)
+
     try:
-        # Check for bad input: 1 column file, or specifying file and x, or just x, or bad
-        # interpolant.
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp),
-                                 x = interp)
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 x=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
+        # Check for bad inputs
+        np.testing.assert_raises(TypeError, galsim.LookupTable, x='foo')
+        np.testing.assert_raises(TypeError, galsim.LookupTable)
+        np.testing.assert_raises(TypeError, galsim.LookupTable, x=tab_ps.x)
+        np.testing.assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
+        np.testing.assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f,
                                  interpolant='foo')
     except ImportError:
         print('The assert_raises tests require nose')
-    # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
-    # we can use the default interpolant (spline).
-    tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
-
-    # Check picklability
-    do_pickle(tab_ps)
 
 
 @timer
@@ -222,6 +217,58 @@ def test_log():
                                  f_log=True)
     except ImportError:
         print('The assert_raises tests require nose')
+
+
+@timer
+def test_from_func():
+    """Test the LookupTable.from_func factory function"""
+    x_min = 2
+    x_max = 200
+
+    # Linear interpolation
+    x1 = np.linspace(x_min, x_max, 2000)
+    f1 = [x**3 for x in x1]
+    tab1 = galsim.LookupTable(x1, f1, interpolant='linear')
+    tab2 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, interpolant='linear')
+    print('tab1 = ',tab1, tab1(10))
+    print('tab2 = ',tab2, tab2(10))
+
+    # Spline interpolation
+    tab3 = galsim.LookupTable(x1, f1)
+    tab4 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max)
+    print('tab3 = ',tab3, tab3(10))
+    print('tab4 = ',tab4, tab4(10))
+
+    # Log interpolation
+    x5 = np.exp(np.linspace(np.log(x_min), np.log(x_max), 2000))
+    f5 = [x**3 for x in x5]
+    tab5 = galsim.LookupTable(x5, f5, x_log=True, f_log=True)
+    tab6 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, x_log=True, f_log=True)
+    print('tab5 = ',tab5, tab5(10))
+    print('tab6 = ',tab6, tab6(10))
+
+    test_x_vals = [2.641, 39.85, 81.23125]
+    for x in test_x_vals:
+        truth = x**3
+        f1 = tab1(x)
+        f2 = tab2(x)
+        f3 = tab3(x)
+        f4 = tab4(x)
+        f5 = tab5(x)
+        f6 = tab6(x)
+        print(truth, f1, f2, f3, f4, f5, f6)
+        np.testing.assert_almost_equal(f1/truth, 1.0, decimal=2)
+        np.testing.assert_almost_equal(f2/truth, 1.0, 2,
+                                       "LookupTable.from_func (linear) gave wrong answer")
+        np.testing.assert_almost_equal(f3/truth, 1.0, decimal=6)
+        np.testing.assert_almost_equal(f4/truth, 1.0, 6,
+                                       "LookupTable.from_func (spline) gave wrong answer")
+        np.testing.assert_almost_equal(f5/truth, 1.0, decimal=11)
+        np.testing.assert_almost_equal(f6/truth, 1.0, 11,
+                                       "LookupTable.from_func (log-log) gave wrong answer")
+    do_pickle(tab2)
+    do_pickle(tab4)
+    do_pickle(tab6)
 
 
 @timer
@@ -524,6 +571,7 @@ if __name__ == "__main__":
     test_table()
     test_init()
     test_log()
+    test_from_func()
     test_roundoff()
     test_table2d()
     test_table2d_gradient()

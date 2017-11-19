@@ -18,12 +18,12 @@
 """
 bf_plot.py
 
-Modifying demo5.py to create 5 x 5 arrays of Gaussian spots
+Modifying demo5.py to create 10 x 10 arrays of Gaussian spots
 for characterizing the B-F effect
-Craig Lage - 1-Mar-17
+Craig Lage - 20-Oct-17
 This version tests the writing out of the photon list.
 and uses the latest pixel distortion maps from the
-latest 'hole17 branch of the Poisson_CCD22 code
+latest 'hole20' branch of the Poisson_CCD22 code
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
@@ -52,7 +52,7 @@ def main(argv):
     logger = logging.getLogger("bf_plots")
 
     # Add the wavelength info
-    bppath = "../../examples/data/"
+    bppath = "../../share/bandpasses/"
     sedpath = "../../share/"
     sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
 
@@ -69,8 +69,8 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    nx_tiles = 5                   #
-    ny_tiles = 5                   #
+    nx_tiles = 10                   #
+    ny_tiles = 10                   #
     stamp_xsize = 40                #
     stamp_ysize = 40                #
 
@@ -80,8 +80,8 @@ def main(argv):
     sky_level = 0.01                # ADU / arcsec^2
 
     # Make output directory if not already present.
-    if not os.path.isdir('new_output'):
-        os.mkdir('new_output')
+    if not os.path.isdir('output'):
+        os.mkdir('output')
 
     gal_sigma = 0.2     # arcsec
     psf_sigma = 0.01     # arcsec
@@ -105,11 +105,11 @@ def main(argv):
         exec("sensor = sensor%d"%set)
         for nfile in range(1,6):
             # Make bf_x directory if not already present.
-            if not os.path.isdir('new_output/bf_%d'%set):
-                os.mkdir('new_output/bf_%d'%set)
+            if not os.path.isdir('output/bf_%d'%set):
+                os.mkdir('output/bf_%d'%set)
 
-            gal_file_name = os.path.join('new_output','bf_%d/bf_%d.fits'%(set,nfile))
-            sex_file_name = os.path.join('new_output','bf_%d/bf_%d_SEX.fits.cat.reg'%(set,nfile))
+            gal_file_name = os.path.join('output','bf_%d/bf_%d.fits'%(set,nfile))
+            sex_file_name = os.path.join('output','bf_%d/bf_%d_SEX.fits.cat.reg'%(set,nfile))
             sexfile = open(sex_file_name, 'w')
             gal_flux = 2.0e5 * nfile    # total counts on the image
             # Define the galaxy profile
@@ -200,7 +200,7 @@ def main(argv):
 
                     if ix == 0 and iy == 0:
                         final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng, save_photons = True)
-                        photon_file = os.path.join('new_output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.fits'%(set,nfile,ix,iy))
+                        photon_file = os.path.join('output','bf_%d/bf_%d_nx_%d_ny_%d_photon_file.fits'%(set,nfile,ix,iy))
                         sub_gal_image.photons.write(photon_file)
                     else:
                         final_gal.drawImage(sub_gal_image, method = 'phot', sensor=sensor, surface_ops=[sampler, assigner], rng = rng)

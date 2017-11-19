@@ -52,6 +52,11 @@
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #endif
 
+// This is a bug in boost that was apparently fixed in 1.62.  But I don't think we much
+// care about this, so we just disable it regardless of which boost is being used.
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wplacement-new"
+#endif
 
 #ifdef __clang__
 // Only clang seems to have this

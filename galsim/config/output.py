@@ -489,7 +489,7 @@ class OutputBuilder(object):
             return 1
 
     def getNImages(self, config, base, file_num):
-        """Returns the number of images to be built.
+        """Returns the number of images to be built for a given file_num.
 
         In the base class, we only build a single image, so it returns 1.
 

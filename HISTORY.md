@@ -5,6 +5,151 @@ version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
 
+v1.5
+====
+
+API Changes
+-----------
+
+- Simplified the return value of galsim.config.ReadConfig. (#580)
+- Changed RealGalaxyCatalog methods `getGal` and `getPSF` to return
+  `GSObject`s instead of `Image`s. (#640)
+- Reorganized files in `share/galsim` directory. (#640)
+- Changed `SED` objects to have real dimensions. (#789)
+- Changed `drawKImage` to return a single ImageCD. (#799)
+- Changed `InterpolatedKImage` to take an ImageCD. (#799)
+- Dynamic PhaseScreenPSFs require an explicit start time and time step. (#824)
+- OpticalScreen now requires `diam` argument. (#824)
+- Switched galsim.Image(image) to make a copy rather than a view. (#873)
+- Changed the behavior of `RealGalaxyCatalog.preload` (#884)
+
+
+Dependency Changes
+------------------
+- Added `astropy` as a required dependency for chromatic functionality. (#789)
+- Switched `scons tests` test runner from `nosetests` to `pytest`. (#892)
+
+
+Bug Fixes
+---------
+
+- Fixed parity mistake in configuration of WFIRST focal plane. (#675)
+- Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)
+- Fixed bug when whitening noise in images based on COSMOS training datasets
+  using the config functionality. (#792)
+- Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
+- Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
+
+
+Deprecated Features
+-------------------
+
+- Deprecated `simReal` function. (#787)
+- Deprecated `Chromatic` class. (#789)
+- Deprecated `.copy()` methods for immutable classes, including `GSObject`,
+  `ChromaticObject`, `SED`, and `Bandpass`. (#789)
+- Deprecated `wmult` parameter of `drawImage`. (#799)
+- Deprecated `Image.at` method. (#799)
+- Deprecated `gain` parameter of `drawKImage`.  (#799)
+- Deprecated ability to create multiple PhaseScreenPSFs with single call
+  to makePSF. (#824)
+- Deprecated the use of `np.trapz` and `galsim.integ.mipdt` as valid
+  integration rules for use by `ImageIntegrator`s. (#887)
+- Changed the Angle.rad method to a property. (#904)
+- Deprecated the functions HMS_Angle and DMS_Angle. (#904)
+- Deprecated the function ShapeletSize and FitShapelet. (#904)
+- Deprecated using Interpolant base class as a factory function. (#904)
+- Deprecated use of the `SBProfile` attribute of GSObject. (#904)
+- Deprecated making a GSObject directly. (#904)
+- Deprecated use of the `image` attribute of Image. (#904)
+- PhotonArray.addTo(image) now takes a regular galsim.Image argument. (#904)
+- Deprecated the various PhotonArray.get* functions. (#904)
+- Deprecated `calculateFlux(bandpass=None)`. (#905)
+- Deprecated the various `get*` methods that are equivalent to a property.
+  e.g. obj.getFlux() -> obj.flux, etc. (#904)
+- Deprecated ChromaticObject.obj.  (#904)
+- Changed the objlist attribute of ChromaticSum and ChromaticConvolution to
+  obj_list. (#904)
+- Deprecated OpticalScreen.coef_array. (#904)
+- Changed a number of GSObject methods to properties. (#904)
+    - obj.stepK() -> obj.stepk
+    - obj.maxK() -> obj.maxk
+    - obj.nyquistScale() -> obj.nyquist_scale
+    - obj.centroid() -> obj.centroid
+    - obj.getPositiveFlux() -> obj.positive_flux
+    - obj.getNegativeFlux() -> obj.negative_flux
+    - obj.maxSB() -> obj.max_sb
+    - obj.isAxisymmetric() -> obj.is_axisymmetric
+    - obj.isAnalyticX() -> obj.is_analytic_x
+    - obj.isAnalyticK() -> obj.is_analytic_k
+    - obj.hasHardEdges() -> obj.has_hard_edges
+- Renamed ChromaticObject.centroid(bandpass) to calculateCentroid. (#904)
+- Changed a few Image methods to properties. (#904)
+    - image.center() -> image.center
+    - image.trueCenter() -> image.true_center
+    - image.origin() -> image.origin
+
+
+New Features
+------------
+
+- Added `DeltaFunction`. (#533)
+- Added `ChromaticRealGalaxy`. (#640)
+- Added `CovarianceSpectrum`. (#640)
+- Added HST bandpasses covering AEGIS and CANDELS surveys (#640)
+- Added `drawKImage` method for `ChromaticObject` and `CorrelatedNoise` (#640)
+- Updated WFIRST WCS some other basic numbers to Cycle 7 design. (#675)
+- Added support for unsigned int Images. (#715)
+- Added a new Sensor class hierarchy, including SiliconSensor. (#722)
+- Added `save_photons` option to `drawImage`. (#722)
+- Added image.bin and image.subsample methods. (#722)
+- Added annular Zernike option for optical aberration coefficients. (#771)
+- Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
+  user input. (#776)
+- Added keywords `exptime` and `area` to `drawImage()`. (#789)
+- Added ability to use `astropy.units` for units of `SED`s. (#789).
+- Added `InclinedExponential` and `InclinedSersic`. (#782, #811)
+- Added ability to select from a RealGalaxyCatalog or COSMOSCatalog using
+  the 'weight' entries to account for selection effects. (#787)
+- Added complex `Image` dtypes (aka `ImageCD` and `ImageCF`). (#799, #873)
+- Added `maxSB()` method to GSObjects. (#799)
+- Added `im[x,y] = value` and `value = im[x,y]` syntax. (#799)
+- Added ability to do FFTs directly on images. (#799)
+- Added `galsim.RandomWalk`. (#819)
+- Added `generate` function to BaseDeviate and `sed.sampleWavelength`. (#822)
+- Added function `assignPhotonAngles` (#823)
+- Added geometric optics approximation for photon-shooting PhaseScreenPSFs.
+  (#824)
+- Added gradient method to LookupTable2D. (#824)
+- Added `surface_ops` option to `drawImage` function. (#827)
+- Added `ii_pad_factor` kwarg to PhaseScreenPSF and OpticalPSF. (#835)
+- Added `galsim.fft` module. (#840)
+- Added a hook to the WCS classes to allow them to vary with color. (#865)
+- Added optional `variance` parameter to PowerSpectrum.buildGrid. (#865)
+- Added `CelestialCoord.get_xyz()` and `CeletialCoord.from_xyz()`. (#865)
+- Added an optional `center` argument for `Angle.wrap()`. (#865)
+- Added `recenter` option to drawKImage. (#873)
+
+
+New config features
+-------------------
+
+- Changed `galsim.config.CalculateNoiseVar` to CalculateNoiseVariance. (#820)
+- Setting config['rng'] is no longer required when manually running commands
+  like `galsim.config.BuildGSObject`.  (#820)
+- Allow PoissonNoise and CCDNoise without any sky level. (#820)
+- Let 'None' in the config file mean `None`. (#820)
+- Remove default value for 'max_extra_noise' for photon shooting. (#820)
+- Added --except_abort option to galsim executable. (#820)
+- Added optional probability parameter 'p' for Random bool values. (#820)
+- Added ability to specify world_pos in celestial coordinates. (#865)
+- Added the ability to have multiple rngs. (#865)
+- Added ngrid, center, variance, index options to power_spectrum input field.
+  (#865)
+- Added skip option in stamp field. (#865)
+- Added ':field' syntax for templates. (#865)
+
+
 v1.4
 ====
 

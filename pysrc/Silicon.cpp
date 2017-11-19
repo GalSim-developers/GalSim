@@ -31,13 +31,14 @@ namespace {
     struct PySilicon {
 
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W & wrapper)
+        {
             typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                    ImageView<U>);
+                                                     ImageView<U>, Position<int>);
             wrapper
                 .def("accumulate",
                      (accumulate_fn)&Silicon::accumulate,
-                     (bp::args("photons", "rng", "image")),
+                     (bp::args("photons", "rng", "image", "orig_center")),
                      "Accumulate photons in image")
                 ;
         }
@@ -45,13 +46,17 @@ namespace {
 
         static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                     double Nrecalc, double DiffStep, double PixelSize,
-                                    double SensorThickness, size_t idata)
+                                    double SensorThickness, size_t idata,
+                                    const Table& treeRingTable,
+                                    const Position<double>& treeRingCenter,
+                                    const Table& abs_length_table)
         {
             double* data = reinterpret_cast<double*>(idata);
             int NumPolys = Nx * Ny + 2;
             int Nv = 4 * NumVertices + 4;
             return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                               Nrecalc, DiffStep, PixelSize, SensorThickness, data);
+                               Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+                               treeRingTable, treeRingCenter, abs_length_table);
         }
 
         static void wrap()
@@ -61,9 +66,10 @@ namespace {
                 .def("__init__", bp::make_constructor(
                         &MakeSilicon, bp::default_call_policies(),
                         (bp::args("NumVertices", "NumElect", "Nx", "Ny", "QDist",
-                                  "Nrecalc", "DiffStep", "PixelSize", "SensorThickness",
-                                  "vertex_data"))))
-                ;
+                                  "Nrecalc", "DiffStep", "PixelSize",
+                                  "SensorThickness", "vertex_data",
+                                  "treeRingTable", "treeRingCenter",
+                                  "abs_length_table"))));
             wrapTemplates<double>(pySilicon);
             wrapTemplates<float>(pySilicon);
         }

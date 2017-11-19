@@ -183,7 +183,7 @@ class SED(object):
         elif isinstance(self._orig_spec, basestring):
             isfile, filename = galsim.utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
-                self._spec = galsim.LookupTable(file=filename, interpolant='linear')
+                self._spec = galsim.LookupTable.from_file(filename, interpolant='linear')
             else:
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which

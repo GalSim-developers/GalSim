@@ -615,7 +615,7 @@ class PowerSpectrum(object):
         if isinstance(pf,str):
             import os
             if os.path.isfile(pf):
-                pf = galsim.LookupTable(file=pf)
+                pf = galsim.LookupTable.from_file(pf)
             else:
                 # Detect at least _some_ forms of malformed string input.  Note that this
                 # test assumes that the eval string completion is defined for k=1.0.
