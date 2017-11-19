@@ -15,14 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file convolve.py
-Some compound GSObject classes that contain other GSObject instances:
-
-Convolution = convolution of multiple profiles
-Deconvolution = deconvolution by a given profile
-AutoConvolution = convolution of a profile by itself
-AutoCorrelation = convolution of a profile by its reflection
-"""
 
 import numpy as np
 

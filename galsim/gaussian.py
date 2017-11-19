@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file base.py
-This file implements the Gaussian surface brightness profile
-"""
 
 import numpy as np
 import math

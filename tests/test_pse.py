@@ -50,7 +50,7 @@ def test_PSE_basic():
     """Basic test of power spectrum estimation.
     """
     # Begin by setting up the PowerSpectrum and generating shears.
-    my_tab = galsim.LookupTable(file=ps_file)
+    my_tab = galsim.LookupTable.from_file(ps_file)
     my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
     g1, g2 = my_ps.buildGrid(grid_spacing=grid_spacing, ngrid=array_size, units=galsim.degrees,
                              rng=galsim.BaseDeviate(rand_seed))

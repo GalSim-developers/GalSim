@@ -55,7 +55,7 @@ namespace galsim {
         /**
          * @brief Constructor
          */
-        ExponentialInfo(GSParamsPtr gsparams);
+        ExponentialInfo(const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~ExponentialInfo() {}

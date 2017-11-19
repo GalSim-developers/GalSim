@@ -38,7 +38,7 @@ New features introduced in this demo:
 - psf = galsim.InterpolatedImage(psf_filename, scale, flux)
 - tab = galsim.LookupTable(file)
 - cosmos_cat = galsim.COSMOSCatalog(file_name, dir)
-- gal = cosmos_cat.makeGalaxy(gal_type, noise_pad_size, rng)
+- gal = cosmos_cat.makeGalaxy(gal_type, rng, noise_pad_size)
 - ps = galsim.PowerSpectrum(..., units)
 - gal = gal.lens(g1, g2, mu)
 - image.whitenNoise(correlated_noise)

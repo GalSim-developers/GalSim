@@ -33,7 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -48,7 +47,6 @@ default_params = galsim.GSParams(
         realspace_abserr = 1.e-6,
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
-
 
 @timer
 def test_kolmogorov():
@@ -190,8 +188,9 @@ def test_kolmogorov_radii():
     """Test initialization of Kolmogorov with different types of radius specification.
     """
     import math
-    test_hlr = 1.8
+    test_hlr = 1.9
     test_fwhm = 1.8
+
     # Test constructor using lambda/r0
     lors = [1, 0.5, 2, 5]
     for lor in lors:
@@ -222,7 +221,7 @@ def test_kolmogorov_radii():
                 err_msg="Error in half light radius for Kolmogorov initialized with lam_over_r0.")
 
     # Test constructor using half-light-radius:
-    test_gal = galsim.Kolmogorov(flux=1., half_light_radius = test_hlr)
+    test_gal = galsim.Kolmogorov(flux=1., half_light_radius=test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print('hlr_sum = ',hlr_sum)
     np.testing.assert_almost_equal(
@@ -318,13 +317,14 @@ def test_kolmogorov_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
-
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Kolmogorov.  Params include lam_over_r0, fwhm, half_light_radius, lam/r0, lam/r0_500, flux
+    # gsparams.
     # The following should all test unequal:
     gals = [galsim.Kolmogorov(lam_over_r0=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.1),

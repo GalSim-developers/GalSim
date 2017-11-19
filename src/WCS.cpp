@@ -46,7 +46,7 @@ namespace galsim {
     {
         xpow.col(0).setAllTo(1.);
         xpow.col(1) = x;
-        for (size_t i=2; i<xpow.rowsize(); ++i)
+        for (int i=2; i<xpow.rowsize(); ++i)
             xpow.col(i) = ElemProd(xpow.col(i-1), x);
     }
 
@@ -164,7 +164,7 @@ namespace galsim {
     void setup_pow(double x, tmv::Vector<double>& xpow)
     {
         xpow[1] = x;
-        for (size_t i=2; i<xpow.size(); ++i) xpow[i] = xpow[i-1] * x;
+        for (int i=2; i<xpow.size(); ++i) xpow[i] = xpow[i-1] * x;
     }
 
     void InvertAB(int m, double& x, double& y, const double* abar, const double* abpar)

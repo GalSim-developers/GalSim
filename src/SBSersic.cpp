@@ -93,7 +93,7 @@ namespace galsim {
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double scale_radius, double flux,
                                          double trunc, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _r0(scale_radius), _flux(flux), _trunc(trunc),
+        _n(n), _flux(flux), _r0(scale_radius), _trunc(trunc),
         _r0_sq(_r0*_r0), _inv_r0(1./_r0), _inv_r0_sq(_inv_r0*_inv_r0), _trunc_sq(trunc*trunc),
         _info(cache.get(MakeTuple(_n, _trunc/_r0, GSParamsPtr(this->gsparams))))
     {
@@ -307,7 +307,7 @@ namespace galsim {
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() * _inv_r0; }
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
-    SersicInfo::SersicInfo(double n, double trunc, GSParamsPtr gsparams) :
+    SersicInfo::SersicInfo(double n, double trunc, const GSParamsPtr& gsparams) :
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),

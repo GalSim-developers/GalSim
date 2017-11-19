@@ -447,7 +447,6 @@ namespace galsim {
         if (_flux == -999.) {
             _flux = 0.;
             ConstImageView<double> image = getNonZeroImage();
-            int xStart = -((image.getXMax()-image.getXMin()+1)/2);
             for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
                 for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
                     double value = image(ix,iy);

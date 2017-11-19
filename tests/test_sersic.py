@@ -48,7 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-
 @timer
 def test_sersic():
     """Test the generation of a specific Sersic profile against a known result.
@@ -172,14 +171,16 @@ def test_sersic_radii():
     """
     import math
     test_hlr = 1.8
-    test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
-    test_scale = [1.8, 0.05, 0.002, 0.002]
+
     if __name__ != "__main__":
         # If doing a pytest run, we don't actually need to do all 4 sersic n values.
         # Two should be enough to notice if there is a problem, and the full list will be tested
         # when running python test_base.py to try to diagnose the problem.
         test_sersic_n = [1.5, -4]
         test_scale = [1.8, 0.002]
+    else:
+        test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+        test_scale = [1.8, 0.05, 0.002, 0.002]
 
     for n, scale in zip(test_sersic_n, test_scale) :
 
@@ -353,9 +354,14 @@ def test_sersic_flux_scaling():
     test_hlr = 1.8
     test_flux = 17.9
     test_sersic_trunc = [0., 8.5]
-    test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+
     if __name__ != "__main__":
+        # If doing a pytest run, we don't actually need to do all 4 sersic n values.
+        # Two should be enough to notice if there is a problem, and the full list will be tested
+        # when running python test_base.py to try to diagnose the problem.
         test_sersic_n = [1.5, -4]
+    else:
+        test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
 
     # loop through sersic n
     for test_n in test_sersic_n:
@@ -401,8 +407,8 @@ def test_sersic_05():
     """Test the equivalence of Sersic with n=0.5 and Gaussian
     """
     # hlr/sigma = sqrt(2 ln(2)) = 1.177410022515475
-    test_flux = 17.9
     hlr_sigma = 1.177410022515475
+    test_flux = 1.8
 
     # cf test_gaussian()
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
@@ -482,7 +488,6 @@ def test_sersic_1():
         pos = galsim.PositionD(x,y)
         np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(sersic.kValue(pos), expon.kValue(pos), decimal=5)
-
 
 @timer
 def test_ne():

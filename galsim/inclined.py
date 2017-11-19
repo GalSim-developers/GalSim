@@ -15,13 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file inclined.py
-
-This file implements two related propfiles:
-
-InclinedExponential is a class representing an exponential profile inclined to the LOS.
-InclinedSersic is a class representing a (possibly-truncated) Sersic profile inclined to the LOS.
-"""
 
 from . import _galsim
 from .gsobject import GSObject

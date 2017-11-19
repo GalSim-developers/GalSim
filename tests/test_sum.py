@@ -48,13 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-# Some standard values for testing
-test_flux = 1.8
-test_hlr = 1.8
-test_sigma = 1.8
-test_scale = 1.8
-
-
 @timer
 def test_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
@@ -192,6 +185,9 @@ def test_add_flux_scaling():
     """
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
+    test_flux = 17.9
+    test_sigma = 1.8
+    test_scale = 1.9
 
     # init with Gaussian and Exponential only (should be ok given last tests)
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
@@ -301,7 +297,7 @@ def test_sum_transform():
 
 @timer
 def test_sum_noise():
-    """Test that noise propagation works properly for compount objects.
+    """Test that noise propagation works properly for compound objects.
     """
     obj1 = galsim.Gaussian(sigma=1.7)
     obj2 = galsim.Gaussian(sigma=2.3)

@@ -53,11 +53,10 @@ default_params = galsim.GSParams(
 def test_box():
     """Test the generation of a specific box profile against a known result.
     """
-    test_flux = 1.8
-
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
+    test_flux = 1.8
 
     pixel = galsim.Pixel(scale=1, flux=1)
     pixel.drawImage(myImg, method="sb", use_true_center=False)
@@ -151,11 +150,10 @@ def test_box():
 def test_tophat():
     """Test the generation of a specific tophat profile against a known result.
     """
-    test_flux = 1.8
-
     savedImg = galsim.fits.read(os.path.join(imgdir, "tophat_101.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
+    test_flux = 1.8
 
     # There are numerical issues with using radius = 1, since many points are right on the edge
     # of the circle.  e.g. (+-1,0), (0,+-1), (+-0.6,+-0.8), (+-0.8,+-0.6).  And in practice, some

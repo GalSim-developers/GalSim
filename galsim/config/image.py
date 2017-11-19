@@ -428,10 +428,20 @@ class ImageBuilder(object):
     def makeTasks(self, config, base, jobs, logger):
         """Turn a list of jobs into a list of tasks.
 
-        For Single, this passes the job onto the MakeStampTasks function.
+        Each task is performed separately in multi-processing runs, so this provides a mechanism
+        to have multiple jobs depend on each other without being messed up by multi-processing.
+        E.g. you could have blends where each task consists of building several overlapping
+        galaxies (each of which would be a single job).  Perhaps the first job would include
+        a calculation to determine where all the overlapping galaxies should go, and the later
+        jobs would use the results of this calculation and just place the later galaxies in the
+        appropriate place.
+        
+        Normally, though, each task is just a single job, in which case, this function is very
+        simple.
 
-        Most other types though probably want one job per task, for which the appropriate
-        code would be:
+        For Single, this passes the job onto the MakeStampTasks function (which in turn is
+        normally quite simple).  Most other types though probably want one job per task, for which
+        the appropriate code would be:
 
             return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 

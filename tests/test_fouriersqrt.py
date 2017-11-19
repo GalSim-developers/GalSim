@@ -48,13 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-# Some standard values for testing
-test_flux = 1.8
-test_hlr = 1.8
-test_sigma = 1.8
-test_scale = 1.8
-
-
 @timer
 def test_fourier_sqrt():
     """Test that the FourierSqrt operator is the inverse of auto-convolution.

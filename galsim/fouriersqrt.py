@@ -15,9 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file fouriersqrt.py
-FourierSqrt = Fourier-space square root of a profile
-"""
 
 import numpy as np
 

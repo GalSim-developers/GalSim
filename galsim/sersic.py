@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file sersic.py
-This file implements the Sersic surface brightness profiles.  Also DeVaucouleurs, which is
-a subclass of Sersic.
-"""
 
 import numpy as np
 import math

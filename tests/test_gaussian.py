@@ -33,7 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -166,13 +165,12 @@ def test_gaussian_radii():
     """Test initialization of Gaussian with different types of radius specification.
     """
     import math
-    test_hlr = 1.8
+    test_hlr = 1.7
     test_fwhm = 1.8
-    test_sigma = 1.8
-    test_flux = 1.8
+    test_sigma = 1.9
 
     # Test constructor using half-light-radius:
-    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    test_gal = galsim.Gaussian(flux=1., half_light_radius=test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print('hlr_sum = ',hlr_sum)
     np.testing.assert_almost_equal(
@@ -187,9 +185,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Gaussian fwhm not equivalent to fwhm")
 
     # test that sigma provides correct sigma
     got_sigma = test_gal.sigma
@@ -199,12 +194,9 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with half-light radius")
-    np.testing.assert_equal(
-            test_gal.sigma, got_sigma,
-            err_msg="Gaussian sigma not equivalent to sigma property")
 
     # Test constructor using sigma:
-    test_gal = galsim.Gaussian(flux = 1., sigma = test_sigma)
+    test_gal = galsim.Gaussian(flux=1., sigma=test_sigma)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_sigma,0)) / center
     print('sigma ratio = ',ratio)
@@ -219,11 +211,8 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with sigma.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Gaussian half_light_radius not equivalent to half_light_radius property")
 
-    # test that fwhm method provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -231,12 +220,9 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with sigma.")
-    np.testing.assert_equal(
-            test_gal.fwhm, got_fwhm,
-            err_msg="Gaussian fwhm not equivalent to fwhm property")
 
     # Test constructor using FWHM:
-    test_gal = galsim.Gaussian(flux = 1., fwhm = test_fwhm)
+    test_gal = galsim.Gaussian(flux=1., fwhm=test_fwhm)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
     print('fwhm ratio = ',ratio)
@@ -251,9 +237,6 @@ def test_gaussian_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
-    np.testing.assert_equal(
-            test_gal.half_light_radius, got_hlr,
-            err_msg="Gaussian half_light_radius not equivalent to half_light_radius property")
 
     # test that sigma provides correct sigma
     got_sigma = test_gal.sigma
@@ -264,7 +247,7 @@ def test_gaussian_radii():
             test_sigma_ratio, math.exp(-0.5), decimal=4,
             err_msg="Error in sigma for Gaussian initialized with FWHM.")
 
-    # Check that the getters don't work after modifying the original.
+    # Check that the properties don't work after modifying the original.
     # Note: I test all the modifiers here.  For the rest of the profile types, I'll
     # just confirm that it is true of shear.  I don't think that has any chance
     # of missing anything.
@@ -362,13 +345,13 @@ def test_gaussian_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
-
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Gaussian.  Params include sigma, fwhm, half_light_radius, flux, and gsparams.
     # The following should all test unequal:
     gals = [galsim.Gaussian(sigma=1.0),
             galsim.Gaussian(sigma=1.1),

@@ -184,7 +184,7 @@ class SED(object):
         elif isinstance(self._orig_spec, basestring):
             isfile, filename = utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
-                self._spec = LookupTable(file=filename, interpolant='linear')
+                self._spec = LookupTable.from_file(filename, interpolant='linear')
             else:
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
@@ -346,7 +346,7 @@ class SED(object):
         attributes, the SED is considered undefined, and this method will raise an exception if a
         wavelength outside the defined range is passed as an argument.
 
-        @param wave     Wavelength in nanometers at which to evaluate the SED. May be a scalara,
+        @param wave     Wavelength in nanometers at which to evaluate the SED. May be a scalar,
                         a numpy.array, or an astropy.units.Quantity
 
         @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or

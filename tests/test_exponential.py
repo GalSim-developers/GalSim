@@ -33,7 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -48,7 +47,6 @@ default_params = galsim.GSParams(
         realspace_abserr = 1.e-6,
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
-
 
 @timer
 def test_exponential():
@@ -111,7 +109,6 @@ def test_exponential_properties():
     """
     test_flux = 17.9
     test_scale = 1.8
-
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -140,7 +137,7 @@ def test_exponential_radii():
 
     import math
     # Test constructor using half-light-radius:
-    test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
+    test_gal = galsim.Exponential(flux=1., half_light_radius=test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print('hlr_sum = ',hlr_sum)
     np.testing.assert_almost_equal(
@@ -157,7 +154,7 @@ def test_exponential_radii():
             err_msg="Error in scale_radius for Exponential constructed with half light radius")
 
     # Test constructor using scale radius:
-    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
+    test_gal = galsim.Exponential(flux=1., scale_radius=test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
     print('scale ratio = ',ratio)
@@ -233,13 +230,13 @@ def test_exponential_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
-
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Exponential.  Params include half_light_radius, scale_radius, flux, gsparams
     # The following should all test unequal:
     gals = [galsim.Exponential(half_light_radius=1.0),
             galsim.Exponential(half_light_radius=1.1),

@@ -337,7 +337,7 @@ namespace galsim {
 #endif
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
-    KolmogorovInfo::KolmogorovInfo(GSParamsPtr gsparams) :
+    KolmogorovInfo::KolmogorovInfo(const GSParamsPtr& gsparams) :
         _radial(Table::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";

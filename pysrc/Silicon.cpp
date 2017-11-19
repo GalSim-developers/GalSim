@@ -30,7 +30,7 @@ namespace galsim {
     template <typename T, typename W>
     static void WrapTemplates(W& wrapper) {
         typedef double (Silicon::*accumulate_fn)(const PhotonArray&, UniformDeviate,
-                                                 ImageView<T>);
+                                                 ImageView<T>, Position<int>);
         wrapper
             .def("accumulate", (accumulate_fn)&Silicon::accumulate);
     }
@@ -38,13 +38,17 @@ namespace galsim {
 
     static Silicon* MakeSilicon(int NumVertices, double NumElect, int Nx, int Ny, int QDist,
                                 double Nrecalc, double DiffStep, double PixelSize,
-                                double SensorThickness, size_t idata)
+                                double SensorThickness, size_t idata,
+                                const Table& treeRingTable,
+                                const Position<double>& treeRingCenter,
+                                const Table& abs_length_table)
     {
         double* data = reinterpret_cast<double*>(idata);
         int NumPolys = Nx * Ny + 2;
         int Nv = 4 * NumVertices + 4;
         return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                           Nrecalc, DiffStep, PixelSize, SensorThickness, data);
+                           Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+                           treeRingTable, treeRingCenter, abs_length_table);
     }
 
     void pyExportSilicon()

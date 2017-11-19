@@ -29,7 +29,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -45,13 +44,10 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-
 @timer
 def test_deltaFunction():
     """Test the generation of a Delta function profile
     """
-    test_flux = 17.9
-
     # Check construction with no arguments gives expected result
     delta = galsim.DeltaFunction()
     np.testing.assert_almost_equal(delta.flux, 1.0)
@@ -62,6 +58,7 @@ def test_deltaFunction():
     delta = galsim.DeltaFunction(flux=1, gsparams=default_params)
     np.testing.assert_almost_equal(delta.flux, 1.0)
 
+    test_flux = 17.9
     delta = galsim.DeltaFunction(flux=test_flux)
     np.testing.assert_almost_equal(delta.flux, test_flux)
     check_basic(delta, "DeltaFunction")
@@ -115,7 +112,6 @@ def test_deltaFunction_properties():
     """Test some basic properties of the Delta function profile
     """
     test_flux = 17.9
-
     delta = galsim.DeltaFunction(flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)

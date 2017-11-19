@@ -1,0 +1,9 @@
+Craig Lage (cslage@ucdavis.edu)
+UC Davis
+24-Oct-17
+
+The code in this directory is set up to run example GalSim runs that allow you to characterize the tree rings. The basic code is called tr_plots.py.  This code, when run, will generate two images. The first image, tr_1.fits contains 100 spots with no tree rings, and the second tr_2.fits, contains 100 spots with hugely magnified tree rings, where the parameter treeringamplitude has been increased from a typical value on the order of 0.01 pixel to 1.0 pixel.
+
+The easiest way to see the effect is to open both images in ds9 and set the frames to blink.  You can see the location of the spots moving back and forth due to the astrometric distortion.
+
+The plot Spot_Shift.pdf also shows a plot of the pixel shift between these two fits images. It was generated using the ipython notebook TreeRings_24Oct17.ipynb.

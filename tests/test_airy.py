@@ -48,18 +48,16 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-
 @timer
 def test_airy():
     """Test the generation of a specific Airy profile against a known result.
     """
-    test_flux = 17.9
-
     import math
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
+    test_flux = 17.9
 
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     airy.drawImage(myImg, method="sb", use_true_center=False)
@@ -246,6 +244,7 @@ def test_ne():
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Airy.  Params include lam_over_diam, lam, diam, obscuration, flux, and gsparams.
     # The following should all test unequal:
     gals = [galsim.Airy(lam_over_diam=1.0),
             galsim.Airy(lam_over_diam=1.1),
@@ -256,7 +255,6 @@ def test_ne():
             galsim.Airy(lam_over_diam=1.0, flux=1.1),
             galsim.Airy(lam_over_diam=1.0, gsparams=gsp)]
     all_obj_diff(gals)
-
 
 if __name__ == "__main__":
     test_airy()

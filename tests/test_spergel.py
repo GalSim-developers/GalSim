@@ -33,7 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -48,25 +47,6 @@ default_params = galsim.GSParams(
         realspace_abserr = 1.e-6,
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
-
-@timer
-def test_ne():
-    """Test base.py GSObjects for not-equals."""
-    # Define some universal gsps
-    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
-
-    # The following should all test unequal:
-    gals = [galsim.Gaussian(sigma=1.0),
-            galsim.Gaussian(sigma=1.1),
-            galsim.Gaussian(fwhm=1.0),
-            galsim.Gaussian(half_light_radius=1.0),
-            galsim.Gaussian(half_light_radius=1.1),
-            galsim.Gaussian(sigma=1.2, flux=1.0),
-            galsim.Gaussian(sigma=1.2, flux=1.1),
-            galsim.Gaussian(sigma=1.2, gsparams=gsp)]
-    # Check that setifying doesn't remove any duplicate items.
-    all_obj_diff(gals)
-
 
 @timer
 def test_spergel():
@@ -141,7 +121,6 @@ def test_spergel_properties():
     """Test some basic properties of the Spergel profile.
     """
     test_flux = 17.9
-
     spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -149,7 +128,7 @@ def test_spergel_properties():
     # # Check Fourier properties
     np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
     maxk = spergel.maxk
-    assert spergel.kValue(maxk,0)/test_flux <= galsim.GSParams().maxk_threshold
+    assert spergel.kValue(maxk,0).real/test_flux <= galsim.GSParams().maxk_threshold
     np.testing.assert_almost_equal(spergel.flux, test_flux)
     np.testing.assert_almost_equal(spergel.xValue(cen), spergel.max_sb)
     # Check input flux vs output flux
@@ -167,7 +146,7 @@ def test_spergel_radii():
     import math
     test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
     test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
-    test_hlr = 1.9
+    test_hlr = 1.8
 
     for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
 
@@ -282,8 +261,6 @@ def test_spergel_05():
     """Test the equivalence of Spergel with nu=0.5 and Exponential
     """
     # cf test_exponential()
-    test_flux = 17.9
-    test_scale = 1.8
     re = 1.0
     r0 = re/1.67839
     # The real value of re/r0 = 1.6783469900166605
@@ -301,6 +278,8 @@ def test_spergel_05():
     do_kvalue(spergel,myImg,"nu=0.5 Spergel")
 
     # cf test_exponential_properties()
+    test_flux = 17.9
+    test_scale = 1.8
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid, cen)
@@ -324,6 +303,7 @@ def test_ne():
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Spergel.  Params include nu, half_light_radius, scale_radius, flux, and gsparams.
     # The following should all test unequal:
     gals = [galsim.Spergel(nu=0.0, half_light_radius=1.0),
             galsim.Spergel(nu=0.1, half_light_radius=1.0),

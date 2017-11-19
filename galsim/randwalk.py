@@ -15,10 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file randwalk.py
-RandomWalk is a profile that models knots of star formation tracing out the
-profile of a disk with delta functions.
-"""
 
 import numpy as np
 

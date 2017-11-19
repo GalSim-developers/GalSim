@@ -48,13 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-# Some standard values for testing
-test_flux = 1.8
-test_hlr = 1.8
-test_sigma = 1.8
-test_scale = 1.8
-
-
 @timer
 def test_convolve():
     """Test the convolution of a Moffat and a Box profile against a known result.
@@ -171,6 +164,9 @@ def test_convolve_flux_scaling():
     """
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
+    test_flux = 17.9
+    test_sigma = 1.8
+    test_hlr = 1.9
 
     # init with Gaussian and DeVauc only (should be ok given last tests)
     obj = galsim.Convolve(
@@ -780,7 +776,7 @@ def test_ne():
 
 
 @timer
-def test_compound_noise():
+def test_convolve_noise():
     """Test that noise propagation works properly for compount objects.
     """
     obj1 = galsim.Gaussian(sigma=1.7)
@@ -841,4 +837,4 @@ if __name__ == "__main__":
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
-    test_compound_noise()
+    test_convolve_noise()

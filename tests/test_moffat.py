@@ -33,7 +33,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-
 # These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -48,7 +47,6 @@ default_params = galsim.GSParams(
         realspace_abserr = 1.e-6,
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
-
 
 @timer
 def test_moffat():
@@ -103,7 +101,7 @@ def test_moffat():
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
-    test_flux = 1.8
+    test_flux = 17.9
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
         moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
         check_basic(moffat, "Untruncated Moffat with beta=%f"%beta)
@@ -184,14 +182,13 @@ def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
     import math
-    test_hlr = 1.8
+    test_hlr = 1.7
     test_fwhm = 1.8
-    test_scale = 1.8
-    test_flux = 1.8
+    test_scale = 1.9
     test_beta = 2.
 
     # Test constructor using half-light-radius:
-    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr)
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius=test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print('hlr_sum = ',hlr_sum)
     np.testing.assert_almost_equal(
@@ -285,7 +282,7 @@ def test_moffat_radii():
     # Now repeat everything using a severe truncation.  (Above had no truncation.)
 
     # Test constructor using half-light-radius:
-    test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
+    test_gal = galsim.Moffat(flux=1., beta=test_beta, half_light_radius=test_hlr,
                              trunc=2*test_hlr)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr)
     print('hlr_sum = ',hlr_sum)
@@ -314,8 +311,8 @@ def test_moffat_radii():
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
     np.testing.assert_equal(
-            test_gal.beta, test_beta,
-            err_msg="Moffat beta not correct")
+            test_gal.scale_radius, got_scale,
+            err_msg="Moffat scale_radius returned wrong value")
     np.testing.assert_equal(
             test_gal.trunc, 2*test_hlr,
             err_msg="Moffat trunc returned wrong value")
@@ -445,13 +442,14 @@ def test_moffat_flux_scaling():
                 obj2.flux, test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __div__ (result).")
 
-
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
+    # Moffat.  Params include beta, scale_radius, half_light_radius, fwhm, trunc, flux and gsparams.
+    # The following should all test unequal:
     gals = [galsim.Moffat(beta=3.0, scale_radius=1.0),
             galsim.Moffat(beta=3.1, scale_radius=1.1),
             galsim.Moffat(beta=3.0, scale_radius=1.1),

@@ -34,7 +34,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-        SersicInfo(double n, double trunc, GSParamsPtr gsparams);
+        SersicInfo(double n, double trunc, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}

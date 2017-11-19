@@ -1573,11 +1573,11 @@ class GSObject(object):
         imview = image._view()
         imview.setCenter(0,0)
         imview.wcs = PixelScale(1.0)
-
+        orig_center = image.center  # Save the original center to pass to sensor.accumulate
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
-                                                   sensor, surface_ops, maxN)
+                                                   sensor, surface_ops, maxN, orig_center)
         else:
             # If not using phot, but doing sensor, then make a copy.
             if sensor is not None:
@@ -1620,11 +1620,11 @@ class GSObject(object):
                 for op in surface_ops:
                     op.applyTo(photons)
                 if imview.dtype in [np.float32, np.float64]:
-                    added_photons = sensor.accumulate(photons, imview)
+                    added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
                     # Need a temporary
                     im1 = ImageD(bounds=imview.bounds)
-                    added_photons = sensor.accumulate(photons, im1)
+                    added_photons = sensor.accumulate(photons, im1, orig_center)
                     imview.array[:,:] += im1.array.astype(imview.dtype, copy=False)
 
         image.added_flux = added_photons / flux_scale
@@ -1951,7 +1951,7 @@ class GSObject(object):
 
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None):
+                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0)):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -2009,6 +2009,8 @@ class GSObject(object):
         @param maxN         Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
                             [default: None, which means no limit]
+        @param orig_center  The position of the image center in the original image coordinates.
+                            [default: (0,0)]
 
         @returns The total flux of photons that landed inside the image bounds.
         """
@@ -2082,11 +2084,11 @@ class GSObject(object):
                 op.applyTo(photons)
 
             if image.dtype in [np.float32, np.float64]:
-                added_flux += sensor.accumulate(photons, image)
+                added_flux += sensor.accumulate(photons, image, orig_center)
             else:
                 # Need a temporary
                 im1 = ImageD(bounds=image.bounds)
-                added_flux += sensor.accumulate(photons, im1)
+                added_flux += sensor.accumulate(photons, im1, orig_center)
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
 
             Nleft -= thisN

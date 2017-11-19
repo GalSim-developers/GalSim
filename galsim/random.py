@@ -96,7 +96,7 @@ class BaseDeviate(object):
         if seed == int(seed):
             self._seed(int(seed))
         else:
-            raise ValueError("BaseDeviate seed must be an integer.  Got %s"%seed)
+            raise TypeError("BaseDeviate seed must be an integer.  Got %s"%seed)
 
     def _seed(self, seed=0):
         """Equivalent to self.seed(seed), but without any type checking.
@@ -119,8 +119,8 @@ class BaseDeviate(object):
         elif seed is None:
             self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
         else:
-            raise ValueError("BaseDeviate must be initialized with either an int or another "
-                             "BaseDeviate")
+            raise TypeError("BaseDeviate must be initialized with either an int or another "
+                            "BaseDeviate")
 
     def _reset(self, rng):
         """Equivalent to self.reset(rng), but rng must be a BaseDeviate (not an int), and there
@@ -684,7 +684,7 @@ class DistDeviate(BaseDeviate):
                 if x_min or x_max:
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to DistDeviate')
-                function = LookupTable(file=function, interpolant=interpolant)
+                function = LookupTable.from_file(function, interpolant=interpolant)
                 x_min = function.x_min
                 x_max = function.x_max
             else:

@@ -302,14 +302,11 @@ class PhotonArray(object):
         # worry about array reallocations.
         N = int(np.prod(image.array.shape) + total_flux / max_flux)
         photons = cls(N)
-        print('initial N = ',N)
 
         N = photons._pa.setFrom(image._image, max_flux, ud._rng)
-        print('N from setFrom = ',N)
         photons._x = photons.x[:N]
         photons._y = photons.y[:N]
         photons._flux = photons.flux[:N]
-        print('total flux = ',photons._flux.sum())
 
         if image.scale != 1.:
             photons.scaleXY(image.scale)

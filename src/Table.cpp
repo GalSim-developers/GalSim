@@ -362,7 +362,7 @@ namespace galsim {
         const ArgVec _xargs;
         const ArgVec _yargs;
         const double* _vals;
-        const int _nx, _ny; // Array dimensions
+        const int _ny;
 
         typedef double (Table2DImpl::*MemFn)(double x, double y, int i, int j) const;
         MemFn interpolate;
@@ -374,7 +374,7 @@ namespace galsim {
 
     Table2D::Table2DImpl::Table2DImpl(const double* xargs, const double* yargs, const double* vals,
                              int Nx, int Ny, Table2D::interpolant in):
-        _iType(in), _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _nx(Nx), _ny(Ny)
+        _iType(in), _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny)
     {
         switch (_iType) {
           case linear:
