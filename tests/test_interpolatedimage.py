@@ -35,11 +35,6 @@ except ImportError:
 
 from galsim._pyfits import pyfits
 
-# for flux normalization tests
-test_flux = 0.7
-# for scale tests - avoid 1.0 because factors of scale^2 won't show up!
-test_scale = 2.0
-
 # For reference tests:
 TESTDIR=os.path.join(path, "interpolant_comparison_files")
 
@@ -47,17 +42,19 @@ TESTDIR=os.path.join(path, "interpolant_comparison_files")
 KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
 KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
 
-# First make an image that we'll use for interpolation:
-g1 = galsim.Gaussian(sigma = 3.1, flux=2.4).shear(g1=0.2,g2=0.1)
-g2 = galsim.Gaussian(sigma = 1.9, flux=3.1).shear(g1=-0.4,g2=0.3).shift(-0.3,0.5)
-g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
+def setup():
+    # This reference image will be used in a number of tests below, so make it at the start.
+    global final
+    global ref_image
 
-final = g1 + g2 + g3
-ref_image = galsim.ImageD(128,128)
-scale = 0.4
-# The reference image was drawn with the old convention, which is now use_true_center=False
-final.drawImage(image=ref_image, scale=scale, method='sb', use_true_center=False)
-
+    g1 = galsim.Gaussian(sigma = 3.1, flux=2.4).shear(g1=0.2,g2=0.1)
+    g2 = galsim.Gaussian(sigma = 1.9, flux=3.1).shear(g1=-0.4,g2=0.3).shift(-0.3,0.5)
+    g3 = galsim.Gaussian(sigma = 4.1, flux=1.6).shear(g1=0.1,g2=-0.1).shift(0.7,-0.2)
+    final = g1 + g2 + g3
+    ref_image = galsim.ImageD(128,128)
+    scale = 0.4
+    # The reference image was drawn with the old convention, which is now use_true_center=False
+    final.drawImage(image=ref_image, scale=scale, method='sb', use_true_center=False)
 
 @timer
 def test_roundtrip():
@@ -71,6 +68,7 @@ def test_roundtrip():
         [0.13, 0.38, 0.52, 0.06],
         [0.09, 0.41, 0.44, 0.09],
         [0.04, 0.11, 0.10, 0.01] ])
+    test_scale = 2.0
 
     for array_type in ftypes:
         image_in = galsim.Image(ref_array.astype(array_type))
@@ -171,6 +169,7 @@ def test_fluxnorm():
     im_lin_scale = 6 # make an image with this linear scale
     im_fill_value = 3. # fill it with this number
     im_scale = 1.3
+    test_flux = 0.7
 
     # First, make some Image with some total flux value (sum of pixel values) and scale
     im = galsim.ImageF(im_lin_scale, im_lin_scale, scale=im_scale, init_value=im_fill_value)
@@ -805,6 +804,7 @@ def test_Cubic_ref():
     """Test use of Cubic interpolant against some reference values
     """
     interp = galsim.Cubic(tol=1.e-4)
+    scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -830,6 +830,7 @@ def test_Quintic_ref():
     """Test use of Quintic interpolant against some reference values
     """
     interp = galsim.Quintic(tol=1.e-4)
+    scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -854,6 +855,7 @@ def test_Lanczos5_ref():
     """Test use of Lanczos5 interpolant against some reference values
     """
     interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
+    scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -878,6 +880,7 @@ def test_Lanczos7_ref():
     """Test use of Lanczos7 interpolant against some reference values
     """
     interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
+    scale = 0.4
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -1220,6 +1223,7 @@ def test_ne():
 
 
 if __name__ == "__main__":
+    setup()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()

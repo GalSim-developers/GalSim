@@ -48,13 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-# Some standard values for testing
-test_flux = 1.8
-test_hlr = 1.8
-test_sigma = 1.8
-test_scale = 1.8
-
-
 @timer
 def test_convolve():
     """Test the convolution of a Moffat and a Box profile against a known result.
@@ -171,6 +164,9 @@ def test_convolve_flux_scaling():
     """
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
+    test_flux = 17.9
+    test_sigma = 1.8
+    test_hlr = 1.9
 
     # init with Gaussian and DeVauc only (should be ok given last tests)
     obj = galsim.Convolve(
@@ -491,193 +487,6 @@ def test_realspace_shearconvolve():
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
-
-@timer
-def test_add():
-    """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
-    """
-    savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
-    dx = 0.2
-    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
-    myImg.setCenter(0,0)
-
-    gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
-    gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
-    sum_gauss = galsim.Add(gauss1,gauss2)
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
-
-    cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(sum_gauss.centroid, cen)
-    np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.max_sb)
-
-    # Check with default_params
-    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add(gauss1,gauss2) with default_params disagrees with "
-            "expected result")
-    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add(gauss1,gauss2) with GSParams() disagrees with "
-            "expected result")
-
-    # Other ways to do the sum:
-    sum_gauss = gauss1 + gauss2
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum_gauss = gauss1
-    sum_gauss += gauss2
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
-    sum_gauss = galsim.Add([gauss1,gauss2])
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
-    gauss1 = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = galsim.Gaussian(flux=1, sigma=3)
-    sum_gauss = 0.75 * gauss1 + 0.25 * gauss2
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
-    sum_gauss = 0.75 * gauss1
-    sum_gauss += 0.25 * gauss2
-    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
-
-    check_basic(sum_gauss, "sum of 2 Gaussians")
-
-    # Test photon shooting.
-    do_shoot(sum_gauss,myImg,"sum of 2 Gaussians")
-
-    # Test kvalues
-    do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
-
-    # Check picklability
-    do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
-    do_pickle(sum_gauss)
-
-    # Sum of just one argument should be equivalent to that argument.
-    single = galsim.Add(gauss1)
-    gsobject_compare(single, gauss1)
-    check_basic(single, "`sum' of 1 Gaussian")
-    do_pickle(single)
-    do_shoot(single, myImg, "Single Sum")
-
-    single = galsim.Add([gauss1])
-    gsobject_compare(single, gauss1)
-    check_basic(single, "`sum' of 1 Gaussian")
-    do_pickle(single)
-
-    # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.Add)
-        np.testing.assert_raises(TypeError, galsim.Add, myImg)
-        np.testing.assert_raises(TypeError, galsim.Add, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1], real_space=False)
-        np.testing.assert_raises(TypeError, galsim.Sum)
-        np.testing.assert_raises(TypeError, galsim.Sum, myImg)
-        np.testing.assert_raises(TypeError, galsim.Sum, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
-    except ImportError:
-        pass
-
-
-@timer
-def test_sub_neg():
-    """Test that a - b is the same as a + (-b)."""
-    a = galsim.Gaussian(fwhm=1)
-    b = galsim.Kolmogorov(fwhm=1)
-
-    c = a - b
-    d = a + (-b)
-
-    assert c == d
-
-    im1 = c.drawImage()
-    im2 = d.drawImage(im1.copy())
-
-    np.testing.assert_equal(im1.array, im2.array)
-
-@timer
-def test_add_flux_scaling():
-    """Test flux scaling for Add.
-    """
-    # decimal point to go to for parameter value comparisons
-    param_decimal = 12
-
-    # init with Gaussian and Exponential only (should be ok given last tests)
-    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
-                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
-    obj *= 2.
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
-                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
-    obj /= 2.
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
-                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
-    obj2 = obj * 2.
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
-                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
-    obj2 = 2. * obj
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
-                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
-    obj2 = obj / 2.
-    # First test that original obj is unharmed...
-    np.testing.assert_almost_equal(
-        obj.flux, test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.flux, test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")
-
-
 @timer
 def test_deconvolve():
     """Test that deconvolution works as expected
@@ -936,14 +745,6 @@ def test_ne():
     gal1 = galsim.Gaussian(fwhm=1)
     gal2 = galsim.Gaussian(fwhm=2)
 
-    # Sum.  Params are objs to add and potentially gsparams.
-    gals = [galsim.Sum(gal1),
-            galsim.Sum(gal1, gal2),
-            galsim.Sum(gal2, gal1),  # Not! commutative.  (but is associative)
-            galsim.Sum(galsim.Sum(gal1, gal2), gal2),
-            galsim.Sum(gal1, gsparams=gsp)]
-    all_obj_diff(gals)
-
     # Convolution.  Params are objs to convolve and potentially gsparams.
     # The following should test unequal
     gals = [galsim.Convolution(gal1),
@@ -975,130 +776,7 @@ def test_ne():
 
 
 @timer
-def test_fourier_sqrt():
-    """Test that the FourierSqrt operator is the inverse of auto-convolution.
-    """
-    dx = 0.4
-    myImg1 = galsim.ImageF(80,80, scale=dx)
-    myImg1.setCenter(0,0)
-    myImg2 = galsim.ImageF(80,80, scale=dx)
-    myImg2.setCenter(0,0)
-
-    # Test trivial case, where we could (but don't) analytically collapse the
-    # chain of profiles by recognizing that FourierSqrt is the inverse of
-    # AutoConvolve.
-    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    psf.drawImage(myImg1, method='no_pixel')
-    sqrt1 = galsim.FourierSqrt(psf)
-    psf2 = galsim.AutoConvolve(sqrt1)
-    np.testing.assert_almost_equal(psf.stepk, psf2.stepk)
-    psf2.drawImage(myImg2, method='no_pixel')
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Moffat sqrt convolved with self disagrees with original")
-
-    check_basic(sqrt1, "FourierSqrt", do_x=False)
-
-    # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
-    a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test
-    b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
-    check = galsim.Sum([a, b])
-    sqrt = galsim.FourierSqrt(
-        galsim.Sum([
-            galsim.AutoConvolve(a),
-            galsim.AutoConvolve(b),
-            2*galsim.Convolve([a, b])
-        ])
-    )
-    np.testing.assert_almost_equal(check.stepk, sqrt.stepk)
-    check.drawImage(myImg1, method='no_pixel')
-    sqrt.drawImage(myImg2, method='no_pixel')
-    np.testing.assert_almost_equal(check.centroid.x, sqrt.centroid.x)
-    np.testing.assert_almost_equal(check.centroid.y, sqrt.centroid.y)
-    np.testing.assert_almost_equal(check.flux, sqrt.flux)
-    np.testing.assert_almost_equal(check.xValue(check.centroid), check.max_sb)
-    print('check.max_sb = ',check.max_sb)
-    print('sqrt.max_sb = ',sqrt.max_sb)
-    # This isn't super accurate...
-    np.testing.assert_allclose(check.max_sb, sqrt.max_sb, rtol=0.1)
-    printval(myImg1, myImg2)
-    np.testing.assert_array_almost_equal(
-            myImg1.array, myImg2.array, 4,
-            err_msg="Fourier square root of expanded square disagrees with original")
-
-    # Check picklability
-    do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(sqrt1)
-
-    # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
-    except ImportError:
-        pass
-
-@timer
-def test_sum_transform():
-    """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes
-    got messed up for a Transform(Sum(Transform())) object.
-
-    The bug was that we didn't bother to make a new SBProfile for a Sum (or Convolve) of
-    a single object.  But if that was an SBTransform, then the next Transform operation
-    combined the two Transforms, which messed up the repr.
-
-    The fix is to always make an SBAdd or SBConvolve object even if the list of things to add
-    or convolve only has one element.
-    """
-    gal0 = galsim.Exponential(scale_radius=0.34, flux=105.).shear(g1=-0.56,g2=0.15)
-
-    for gal1 in [ galsim.Sum(gal0), galsim.Convolve(gal0) ]:
-        gal2 = gal1.dilate(1)
-
-        sgal1 = eval(str(gal1))
-        rgal1 = eval(repr(gal1))
-        sgal2 = eval(str(gal2))
-        rgal2 = eval(repr(gal2))
-
-        print('gal1 = ',repr(gal1))
-        print('sgal1 = ',repr(sgal1))
-        print('rgal1 = ',repr(rgal1))
-
-        print('gal2 = ',repr(gal2))
-        print('sgal2 = ',repr(sgal2))
-        print('rgal2 = ',repr(rgal2))
-
-        gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
-        sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
-        rgal1_im = rgal1.drawImage(nx=64, ny=64, scale=0.2)
-
-        gal2_im = gal2.drawImage(nx=64, ny=64, scale=0.2)
-        sgal2_im = sgal2.drawImage(nx=64, ny=64, scale=0.2)
-        rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
-
-        # Check that the objects are equivalent, even if they may be written differently.
-        np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
-        np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
-
-        # These two used to fail.
-        np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
-        np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
-
-        do_pickle(gal0)
-        do_pickle(gal1)
-        do_pickle(gal2)
-
-@timer
-def test_compound_noise():
+def test_convolve_noise():
     """Test that noise propagation works properly for compount objects.
     """
     obj1 = galsim.Gaussian(sigma=1.7)
@@ -1106,31 +784,6 @@ def test_compound_noise():
     obj1.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.2)
     obj2.noise = galsim.UncorrelatedNoise(variance=0.5, scale=0.2)
     obj3 = galsim.Gaussian(sigma=2.9)
-
-    # Sum adds the variance of the components
-    sum2 = galsim.Sum([obj1,obj2])
-    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.8,
-            err_msg = "Sum of two objects did not add noise varinace")
-    sum2 = galsim.Sum([obj1,obj3])
-    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.3,
-            err_msg = "Sum of two objects did not add noise varinace")
-    sum2 = galsim.Sum([obj2,obj3])
-    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.5,
-            err_msg = "Sum of two objects did not add noise varinace")
-    sum3 = galsim.Sum([obj1,obj2,obj3])
-    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
-            err_msg = "Sum of three objects did not add noise varinace")
-    sum3 = obj1 + obj2 + obj3
-    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
-            err_msg = "Sum of three objects did not add noise varinace")
-
-    # Adding noise objects with different WCSs will raise a warning.
-    obj4 = galsim.Gaussian(sigma=3.3)
-    obj4.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.8)
-    try:
-        np.testing.assert_warns(UserWarning, galsim.Sum, [obj1, obj4])
-    except:
-        pass
 
     # Convolve convolves the noise from a single component
     conv2 = galsim.Convolution([obj1,obj3])
@@ -1180,13 +833,8 @@ if __name__ == "__main__":
     test_realspace_convolve()
     test_realspace_distorted_convolve()
     test_realspace_shearconvolve()
-    test_add()
-    test_sub_neg()
-    test_add_flux_scaling()
     test_deconvolve()
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
-    test_fourier_sqrt()
-    test_sum_transform()
-    test_compound_noise()
+    test_convolve_noise()
