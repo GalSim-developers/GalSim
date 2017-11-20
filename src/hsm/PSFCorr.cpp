@@ -274,6 +274,7 @@ namespace hsm {
                              results.moments_centroid.x, results.moments_centroid.y, sig,
                              hsmparams->convergence_threshold, results.moments_n_iter, hsmparams);
                   dbg<<"Repackaging find_mom_2 results"<<std::endl;
+                  // flux calculation taken from formula in psf_corr_ksb_1
                   results.moments_amp =  3.544907701811*sig*moments(0,0);
                   results.moments_sigma = sig;
                   results.observed_e1 = std::sqrt(2.)*0.5*(moments(2,0)-moments(0,2)) / moments(0,0);

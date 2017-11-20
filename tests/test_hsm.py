@@ -142,6 +142,10 @@ def test_moments_basic():
 
                 # test for moments with a circular weight function
                 result_round = gal_image.FindAdaptiveMom(round_moments=True)
+
+                # The ellipticities calculated here are we expect when integrating an
+                # elliptical Gaussian light profile with a round Gaussian weight function
+                # with the same sigma.
                 q = np.exp(-2.*math.atanh(total_shear))
                 theta = 0.5*math.atan2(g2, g1)
                 e_round = (1 - q**2)/(1 + q**2 + 2*q)
@@ -149,7 +153,7 @@ def test_moments_basic():
                 e2_round = e_round*math.sin(2*theta)
 
                 np.testing.assert_almost_equal(np.fabs(result_round.moments_sigma-sig/pixel_scale), 0.0,
-                                               err_msg = "- incorrect round dsigma", decimal = decimal)
+                                               err_msg = "- incorrect round sigma", decimal = decimal)
                 np.testing.assert_almost_equal(result_round.observed_shape.e1,
                                                e1_round, err_msg = "- incorrect round e1",
                                                decimal = decimal_shape)
