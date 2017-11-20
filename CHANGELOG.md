@@ -22,7 +22,7 @@ Deprecated Features
 
 New Features
 ------------
-- Use circular weight function in HSM adaptive moments code. (#917)
+- Add option to use circular weight function in HSM adaptive moments code. (#917)
 
 
 
