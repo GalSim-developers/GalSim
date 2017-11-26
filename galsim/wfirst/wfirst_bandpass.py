@@ -129,6 +129,12 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             bp = bp.withZeropoint('AB')
+            # The zeropoint that is calculated by default is for a flux of 1 photon/cm^2/sec through
+            # the bandpass.  We want to set this for the actual WFIRST collecting area.
+            d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
+            area_eff = np.pi * d_eff**2
+            translation_fac = 2.5 * np.log10(area_eff)
+            bp = bp.withZeropoint(bp.zeropoint + translation_fac)
 
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
