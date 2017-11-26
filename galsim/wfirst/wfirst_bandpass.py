@@ -25,7 +25,7 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kwargs):
+def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
@@ -45,9 +45,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
     if thinning is not desired, truncation is recommended.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
-    exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
-    the exposure time that is used for the zeropoint calculation can be used by setting the
-    `exptime` keyword.
+    exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`.
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
