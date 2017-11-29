@@ -67,6 +67,12 @@ namespace hsm {
         double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
         int& num_iter, boost::shared_ptr<HSMParams> hsmparams);
 
+      void find_mom_2(
+        ConstImageView<double> data,
+        tmv::Matrix<double>& moments, int max_order,
+        double& x0, double& y0, double& sigma, double convergence_threshold, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
+
     // Make a masked_image based on the input image and mask.  The returned ImageView is a
     // sub-image of the given masked_image.  It is the smallest sub-image that contains all the
     // non-zero elements in the masked_image, so subsequent operations can safely use this
@@ -211,7 +217,7 @@ namespace hsm {
     CppShapeData FindAdaptiveMomView(
         const BaseImage<T>& object_image, const BaseImage<int>& object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams)
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams)
     {
         dbg<<"Start FindAdaptiveMomView"<<std::endl;
         dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
@@ -247,18 +253,34 @@ namespace hsm {
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
         try {
-            dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
-            find_ellipmom_2(masked_object_image_cview, amp, results.moments_centroid.x,
-                            results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter, hsmparams);
-            dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
+             if (!round_moments) {
+                  dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
+                  find_ellipmom_2(masked_object_image_cview, amp, results.moments_centroid.x,
+                                  results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
+                                  precision, results.moments_n_iter, hsmparams);
+                  dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
 
-            // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
-            results.moments_amp = 2.0*amp;
-            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-            results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
-            results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
-            results.moments_status = 0;
+                  // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
+                  results.moments_amp = 2.0*amp;
+                  results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+                  results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
+                  results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
+                  results.moments_status = 0;
+             } else {
+                  dbg<<"About to get moments using find_mom_2"<<std::endl;
+                  tmv::Matrix<double> moments(3,3);
+                  double sig = guess_sig;
+                  find_mom_2(masked_object_image_cview, moments, 2,
+                             results.moments_centroid.x, results.moments_centroid.y, sig,
+                             hsmparams->convergence_threshold, results.moments_n_iter, hsmparams);
+                  dbg<<"Repackaging find_mom_2 results"<<std::endl;
+                  // flux calculation taken from formula in psf_corr_ksb_1
+                  results.moments_amp =  3.544907701811*sig*moments(0,0);
+                  results.moments_sigma = sig;
+                  results.observed_e1 = std::sqrt(2.)*0.5*(moments(2,0)-moments(0,2)) / moments(0,0);
+                  results.observed_e2 = (moments(1,1)) / moments(0,0);
+                  results.moments_status = 0;
+             }
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
@@ -1844,15 +1866,15 @@ namespace hsm {
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<float>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<double>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
-        
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
+
 }
 }
