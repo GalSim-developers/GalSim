@@ -44,8 +44,22 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     because the stored 'official' versions of the bandpasses cover a wide wavelength range.  So even
     if thinning is not desired, truncation is recommended.
 
-    By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
-    exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`.
+    By default, the routine will set an AB zeropoint (unless `AB_zeropoint=False`).  The
+    zeropoint in GalSim is defined such that the flux is 1 photon/cm^2/sec through the
+    bandpass. This differs from an instrumental bandpass, which is typically defined such that the
+    flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
+    follows:
+
+            # Calculate effective diameter given the obscuration, then get the collecting area in
+            # cm^2.
+            d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
+            area_eff = np.pi * (d_eff/2.)**2
+            delta_zp = 2.5 * np.log10(area_eff)
+
+    delta_zp will be a positive number that should be added to the GalSim zeropoints to compare with
+    externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
+    normalization of fluxes, the `area` kwarg to drawImage can be used to get the right
+    normalization (giving it the quantity `area_eff` calculated using the lines of code above).
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
@@ -64,9 +78,6 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     @param AB_zeropoint       Should the routine set an AB zeropoint before returning the bandpass?
                               If False, then it is up to the user to set a zero point.  [default:
                               True]
-    @param exptime            Exposure time to use for setting the zeropoint; if None, use the
-                              default WFIRST exposure time, taken from galsim.wfirst.exptime.
-                              [default: None]
     @param default_thin_trunc Use the default thinning and truncation options?  Users who wish to
                               use no thinning and truncation of bandpasses, or who want control over
                               the level of thinning and truncation, should have this be False.
@@ -129,12 +140,6 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             bp = bp.withZeropoint('AB')
-            # The zeropoint that is calculated by default is for a flux of 1 photon/cm^2/sec through
-            # the bandpass.  We want to set this for the actual WFIRST collecting area.
-            d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
-            area_eff = np.pi * (d_eff/2.)**2
-            translation_fac = 2.5 * np.log10(area_eff)
-            bp = bp.withZeropoint(bp.zeropoint + translation_fac)
 
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
