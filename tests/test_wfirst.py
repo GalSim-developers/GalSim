@@ -330,8 +330,7 @@ def test_wfirst_bandpass():
     # They calculated instrumental zero points, defined such that the flux is 1 photon/sec (taking
     # into account the WFIRST collecting area).  We convert ours to their definition by adding
     # `delta_zp` calculated below:
-    d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
-    area_eff = np.pi * (d_eff/2.)**2
+    area_eff = galsim.wfirst.collecting_area
     delta_zp = 2.5 * np.log10(area_eff)
     # Define the zeropoints that they calculated:
     ref_zp = {

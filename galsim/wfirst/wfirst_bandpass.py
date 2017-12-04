@@ -50,13 +50,11 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     flux is 1 photon/sec for that instrument.  The difference between the two can be calculated as
     follows:
 
-            # Calculate effective diameter given the obscuration, then get the collecting area in
-            # cm^2.
-            d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
-            area_eff = np.pi * (d_eff/2.)**2
+            # Shift zeropoint based on effective collecting area in cm^2.
+            area_eff = galsim.wfirst.collecting_area
             delta_zp = 2.5 * np.log10(area_eff)
 
-    delta_zp will be a positive number that should be added to the GalSim zeropoints to compare with
+    `delta_zp` will be a positive number that should be added to the GalSim zeropoints to compare with
     externally calculated instrumental zeropoints.  When using the GalSim zeropoints for
     normalization of fluxes, the `area` kwarg to drawImage can be used to get the right
     normalization (giving it the quantity `area_eff` calculated using the lines of code above).
