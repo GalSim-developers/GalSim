@@ -158,7 +158,6 @@ Deprecated Features
 
 New Features
 ------------
-- Add option to use circular weight function in HSM adaptive moments code. (#917)
 
 - Added new surface brightness profile, 'DeltaFunction'. This represents a
   point source with a flux value. (#533)
@@ -304,3 +303,13 @@ New config features
   on the stamp processing having been completed.  But it is customizable via
   the `processSkippedStamp` method of ExtraOutputBuilders, so you can override
   this behavior in your custom modules if you prefer. (#865)
+
+
+Changes from v1.5.0 to v1.5.1
+=============================
+
+New Features
+------------
+
+- Add option to use circular weight function in HSM adaptive moments code. (#917)
+
