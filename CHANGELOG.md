@@ -308,8 +308,12 @@ New config features
 Changes from v1.5.0 to v1.5.1
 =============================
 
-New Features
-------------
+New Feature
+-----------
 
 - Add option to use circular weight function in HSM adaptive moments code. (#917)
 
+Bug Fix
+-------
+
+- Fixed a build problem for Anaconda on Macs using Python 3.6. (#924)
