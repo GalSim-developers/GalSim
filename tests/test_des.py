@@ -266,6 +266,8 @@ def test_meds_config():
     seed = 5757231
     g1 = -0.17
     g2 = 0.23
+    offset_x = -0.17 
+    offset_y = 0.23
 
     # The config dict to write some images to a MEDS file
     config = {
@@ -277,7 +279,7 @@ def test_meds_config():
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
-                    'offset' : { 'type' : 'XY' , 'x' : -0.17, 'y' : 0.23 },
+                    'offset' : { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y },
                     'size' : stamp_size },
         'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
@@ -369,18 +371,23 @@ def test_meds_config():
             box_size = cat['box_size'][iobj]
             numpy.testing.assert_almost_equal(box_size, stamp_size)
 
-            # These should be (box_size-1)/2
+            # cutout_row and cutout_col are the "zero-offset"
+            # position of the object in the stamp. In this convention, the center
+            # of the first pixel is at (0,0). This means cutout_row/col should be
+            # the same as nominal center + offset
+            offset = galsim.PositionD(offset_x, offset_y)
             center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
             cutout_row = cat['cutout_row'][iobj][icut]
             cutout_col = cat['cutout_col'][iobj][icut]
-            print('nominal position = ',cutout_col, cutout_row)
-            numpy.testing.assert_almost_equal(cutout_col, center.x)
-            numpy.testing.assert_almost_equal(cutout_row, center.y)
+            print('cutout_row, cutout_col = ',cutout_col, cutout_row)
+            numpy.testing.assert_almost_equal(cutout_col, (center+offset).x)
+            numpy.testing.assert_almost_equal(cutout_row, (center+offset).y)
 
             # The col0 and row0 here should be the same.
             wcs_meds = m.get_jacobian(iobj, icut)
             numpy.testing.assert_almost_equal(wcs_meds['col0'], (box_size-1)/2.)
             numpy.testing.assert_almost_equal(wcs_meds['row0'], (box_size-1)/2.)
+
 
             # The centroid should be (roughly) at the nominal center + offset
             img = m.get_cutout(iobj, icut, type='image')
@@ -390,10 +397,11 @@ def test_meds_config():
             iy = numpy.sum(y*img)
             print('centroid = ',ix/itot, iy/itot)
 
-            offset = galsim.PositionD(-0.17, 0.23)
             print('center + offset = ',center + offset)
             numpy.testing.assert_almost_equal(ix/itot, (center+offset).x, decimal=2)
             numpy.testing.assert_almost_equal(iy/itot, (center+offset).y, decimal=2)
+
+
 
             # The orig positions are irrelevant and should be 0.
             orig_row = cat['orig_row'][iobj][icut]
