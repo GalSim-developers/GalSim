@@ -255,8 +255,8 @@ def test_meds_config():
     """
     # Some parameters:
     if __name__ == '__main__':
-        nobj = 5
-        n_per_obj = 8
+        nobj = 2
+        n_per_obj = 2
     else:
         nobj = 5
         n_per_obj = 3
@@ -266,8 +266,25 @@ def test_meds_config():
     seed = 5757231
     g1 = -0.17
     g2 = 0.23
-    offset_x = -0.17 
-    offset_y = 0.23
+
+    #generate offsets that depend on the 
+    """
+    offset_x,offset_y = [],[]
+    k=1
+    for i_obj in range(nobj):
+        for i_epoch in range(n_per_obj):
+            offset_x.append(2*np.sin(999*k))
+            offset_y.append(2*np.sin(1000*k))
+            k+=1
+    print(offset_x)
+    print(offset_y)
+    exit()
+    """
+    #offset_x =  {'type' : 'Random', 'min': -2., 'max': 2.}
+    offset_x = '$ np.sin(999.*(@obj_num+1))'
+    offset_y = '$ np.sin(998.*(@obj_num+1))'
+    def get_offset(obj_num):
+        return galsim.PositionD(np.sin(999.*(obj_num+1)),np.sin(998.*(obj_num+1)))
 
     # The config dict to write some images to a MEDS file
     config = {
@@ -280,7 +297,7 @@ def test_meds_config():
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
                     'offset' : { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y },
-                    'size' : stamp_size },
+                    'size' : stamp_size, 'random_seed' : seed },
         'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
                      'nstamps_per_object' : n_per_obj,
@@ -289,9 +306,11 @@ def test_meds_config():
     }
 
     import logging
-    logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
     galsim.config.Process(config, logger=logger)
+
+    print(config['image']['offset'])
 
     # Now repeat, making a separate file for each
     config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 0.7, 'step' : 0.1,
@@ -309,7 +328,8 @@ def test_meds_config():
                         'ny_tiles' : n_per_obj,
                         'pixel_scale' : pixel_scale,
                         'offset' : config['image']['offset'],
-                        'stamp_size' : stamp_size
+                        'stamp_size' : stamp_size,
+                        'random_seed' : seed
                       }
     galsim.config.Process(config, logger=logger)
 
@@ -375,18 +395,19 @@ def test_meds_config():
             # position of the object in the stamp. In this convention, the center
             # of the first pixel is at (0,0). This means cutout_row/col should be
             # the same as nominal center + offset
-            offset = galsim.PositionD(offset_x, offset_y)
+            offset = get_offset(iobj*n_cut+icut)
             center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
             cutout_row = cat['cutout_row'][iobj][icut]
             cutout_col = cat['cutout_col'][iobj][icut]
             print('cutout_row, cutout_col = ',cutout_col, cutout_row)
+            print((center+offset).x, (center+offset).y)
             numpy.testing.assert_almost_equal(cutout_col, (center+offset).x)
             numpy.testing.assert_almost_equal(cutout_row, (center+offset).y)
 
             # The col0 and row0 here should be the same.
             wcs_meds = m.get_jacobian(iobj, icut)
-            numpy.testing.assert_almost_equal(wcs_meds['col0'], (box_size-1)/2.)
-            numpy.testing.assert_almost_equal(wcs_meds['row0'], (box_size-1)/2.)
+            numpy.testing.assert_almost_equal(wcs_meds['col0'], (center+offset).x)
+            numpy.testing.assert_almost_equal(wcs_meds['row0'], (center+offset).y)
 
 
             # The centroid should be (roughly) at the nominal center + offset
