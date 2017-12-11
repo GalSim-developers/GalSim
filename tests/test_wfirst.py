@@ -325,6 +325,25 @@ def test_wfirst_bandpass():
             err_msg="Count rate for stellar model not as expected for bandpass "
             "{0}".format(filter_name))
 
+    # Finally, compare against some external zeropoint calculations from the WFIRST microlensing
+    # group: https://wfirst.ipac.caltech.edu/sims/MABuLS_sim.html
+    # They calculated instrumental zero points, defined such that the flux is 1 photon/sec (taking
+    # into account the WFIRST collecting area).  We convert ours to their definition by adding
+    # `delta_zp` calculated below:
+    area_eff = galsim.wfirst.collecting_area
+    delta_zp = 2.5 * np.log10(area_eff)
+    # Define the zeropoints that they calculated:
+    ref_zp = {
+        'W149': 27.554,
+        'Z087': 26.163
+        }
+    for key in ref_zp.keys():
+        galsim_zp = bp[key].zeropoint + delta_zp
+        # They use slightly different versions of the bandpasses, so we only require agreement to
+        # 0.1 mag.
+        np.testing.assert_almost_equal(galsim_zp, ref_zp[key], decimal=1,
+                                       err_msg="Zeropoint not as expected for bandpass "
+                                       "{0}".format(key))
 
 @timer
 def test_wfirst_detectors():
