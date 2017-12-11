@@ -71,7 +71,8 @@ class MultiExposureObject(object):
     self.box_size       Size of each exposure image.
     """
 
-    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None, wcs=None, id=0):
+    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None, 
+                 wcs=None, id=0, cutout_row=None, cutout_col=None):
 
         # Check that images is valid
         if not isinstance(images,list):
@@ -162,6 +163,18 @@ class MultiExposureObject(object):
         else:
             self.wcs = [ im.wcs.affine(image_pos=im.true_center) for im in self.images ]
 
+        #normally you would supply cutout_row/cutout_col, since we can't usually 
+        #assume objects are centered on the stamp. If not supplied, set them to
+        #the wcs origin (here that is the center of the stamp).
+        if cutout_row is not None:
+            self.cutout_row = cutout_row
+        else:
+            self.cutout_row = [ w.origin.y for w in self.wcs ]
+        if cutout_col is not None:
+            self.cutout_col = cutout_col
+        else:
+            self.cutout_col = [ w.origin.x for w in self.wcs ]
+
         # psf is not required, so leave it as None if not provided.
         self.psf = psf
 
@@ -192,8 +205,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cat['dudcol'] = []
     cat['dvdrow'] = []
     cat['dvdcol'] = []
-    cat['row0'] = []
-    cat['col0'] = []
+    cat['orig_start_row'] = []
+    cat['orig_start_col'] = []
+    cat['cutout_row'] = []
+    cat['cutout_col'] = []
     cat['psf_box_size'] = []
     cat['psf_start_row'] = []
 
@@ -221,9 +236,8 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         dudcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
         dvdrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
         dvdcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        row0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-        col0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-
+        cutout_row   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        cutout_col   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
 
@@ -253,6 +267,13 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             vec['weight'].append(obj.weight[i].array.flatten())
             vec['psf'].append(obj.psf[i].array.flatten())
 
+            print(len(cat['cutout_row']))
+            print(len(obj.cutout_row))
+
+            # append cutout_row/col
+            cutout_row[i] = obj.cutout_row[i]
+            cutout_col[i] = obj.cutout_col[i]
+
             # append the Jacobian
             # col == x
             # row == y
@@ -260,8 +281,6 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             dudrow[i] = obj.wcs[i].dudy
             dvdcol[i] = obj.wcs[i].dvdx
             dvdrow[i] = obj.wcs[i].dvdy
-            col0[i]   = obj.wcs[i].origin.x
-            row0[i]   = obj.wcs[i].origin.y
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -273,13 +292,15 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         cat['start_row'].append(start_rows)
         cat['psf_start_row'].append(psf_start_rows)
 
+        # add cutout_row/col
+        cat['cutout_row'].append(cutout_row)
+        cat['cutout_col'].append(cutout_col)
+
         # add lists of Jacobians
         cat['dudrow'].append(dudrow)
         cat['dudcol'].append(dudcol)
         cat['dvdrow'].append(dvdrow)
         cat['dvdcol'].append(dvdcol)
-        cat['row0'].append(row0)
-        cat['col0'].append(col0)
 
     # concatenate list to one big vector
     vec['image'] = np.concatenate(vec['image'])
@@ -312,9 +333,9 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
                                array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['row0'])     ) )
+                               array=np.array(cat['cutout_row'])     ) )
     cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['col0'])     ) )
+                               array=np.array(cat['cutout_col'])     ) )
     cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
                                array=np.array(cat['dudrow'])   ) )
     cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
@@ -450,6 +471,14 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
                                                 logger=logger)
 
+        #grab list of offsets for cutout_row/cutout_col.
+        offsets = galsim.config.GetFinalExtraOutput('offset', base, logger)
+        #cutout_row/col is the stamp center (**with the center of the first pixel
+        #being (0,0)**) + offset
+        centers = [0.5*im.array.shape[0]-0.5 for im in main_images]
+        cutout_rows = [c+offset.y for c,offset in zip(centers,offsets)]
+        cutout_cols = [c+offset.x for c,offset in zip(centers,offsets)]
+
         weight_images = galsim.config.GetFinalExtraOutput('weight', base, logger)
         if 'badpix' in config:
             badpix_images = galsim.config.GetFinalExtraOutput('badpix', base, logger)
@@ -469,7 +498,9 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                                       weight = weight_images[k1:k2],
                                       badpix = bpk,
                                       psf = psf_images[k1:k2],
-                                      id = obj_num + i)
+                                      id = obj_num + i,
+                                      cutout_row = cutout_rows[k1:k2],
+                                      cutout_col = cutout_cols[k1:k2])
             obj_list.append(obj)
 
         return obj_list
@@ -487,6 +518,11 @@ class MEDSBuilder(galsim.config.OutputBuilder):
             config['weight'] = {}
         if 'psf' not in config:
             config['psf'] = {}
+
+        # We use an extra output type to get the offsets of objects in stamps.
+        # So make sure the config contains ['output']['offset']
+        if 'offset' not in config:
+            config['offset']={}
 
         nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
         nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
