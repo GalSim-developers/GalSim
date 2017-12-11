@@ -270,6 +270,8 @@ def SetDefaultIndex(config, num):
             index['min'] = 0
             index['max'] = num-1
             index['default'] = num
+    if 'index_key' in config:
+        config['index']['index_key'] = config['index_key']
 
 
 def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
