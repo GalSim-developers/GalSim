@@ -408,7 +408,7 @@ def test_meds_config():
             iy = numpy.sum(y*img)
             print('centroid = ',ix/itot, iy/itot)
 
-            print('center + offset = ',center + offset)
+            print('center + offset = ',meds_center + offset)
             numpy.testing.assert_almost_equal(ix/itot, 
                                               (meds_center+offset).x, decimal=2)
             numpy.testing.assert_almost_equal(iy/itot, 
