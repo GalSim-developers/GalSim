@@ -1019,7 +1019,7 @@ def GetIndex(config, base, is_sequence=False):
     return index, index_key
 
 
-def GetRNG(config, base, logger=None, tag=None):
+def GetRNG(config, base, logger=None, tag=''):
     """Get the appropriate current rng according to whatever the current index_key is.
 
     If a logger is provided, then it will emit a warning if there is no current rng setup.
@@ -1027,7 +1027,7 @@ def GetRNG(config, base, logger=None, tag=None):
     @param config           The configuration dict for the current item being worked on.
     @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
-    @param tag              If given, an appropriate name for the current item to use ing the
+    @param tag              If given, an appropriate name for the current item to use in the
                             warning message. [default: None]
 
     @returns either the appropriate rng for the current index_key or None
