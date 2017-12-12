@@ -267,9 +267,6 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             vec['weight'].append(obj.weight[i].array.flatten())
             vec['psf'].append(obj.psf[i].array.flatten())
 
-            print(len(cat['cutout_row']))
-            print(len(obj.cutout_row))
-
             # append cutout_row/col
             cutout_row[i] = obj.cutout_row[i]
             cutout_col[i] = obj.cutout_col[i]

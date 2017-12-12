@@ -255,8 +255,8 @@ def test_meds_config():
     """
     # Some parameters:
     if __name__ == '__main__':
-        nobj = 2
-        n_per_obj = 2
+        nobj = 5
+        n_per_obj = 3
     else:
         nobj = 5
         n_per_obj = 3
@@ -268,19 +268,8 @@ def test_meds_config():
     g2 = 0.23
 
     #generate offsets that depend on the 
-    """
-    offset_x,offset_y = [],[]
-    k=1
-    for i_obj in range(nobj):
-        for i_epoch in range(n_per_obj):
-            offset_x.append(2*np.sin(999*k))
-            offset_y.append(2*np.sin(1000*k))
-            k+=1
-    print(offset_x)
-    print(offset_y)
-    exit()
-    """
-    #offset_x =  {'type' : 'Random', 'min': -2., 'max': 2.}
+    #on the object num so can be easily reproduced
+    #for testing below
     offset_x = '$ np.sin(999.*(@obj_num+1))'
     offset_y = '$ np.sin(998.*(@obj_num+1))'
     def get_offset(obj_num):
@@ -306,11 +295,9 @@ def test_meds_config():
     }
 
     import logging
-    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
     galsim.config.Process(config, logger=logger)
-
-    print(config['image']['offset'])
 
     # Now repeat, making a separate file for each
     config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 0.7, 'step' : 0.1,
@@ -393,21 +380,24 @@ def test_meds_config():
 
             # cutout_row and cutout_col are the "zero-offset"
             # position of the object in the stamp. In this convention, the center
-            # of the first pixel is at (0,0). This means cutout_row/col should be
-            # the same as nominal center + offset
+            # of the first pixel is at (0,0), call this meds_center. 
+            #This means cutout_row/col should be the same as meds_center + offset
             offset = get_offset(iobj*n_cut+icut)
-            center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
+            meds_center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
             cutout_row = cat['cutout_row'][iobj][icut]
             cutout_col = cat['cutout_col'][iobj][icut]
             print('cutout_row, cutout_col = ',cutout_col, cutout_row)
-            print((center+offset).x, (center+offset).y)
-            numpy.testing.assert_almost_equal(cutout_col, (center+offset).x)
-            numpy.testing.assert_almost_equal(cutout_row, (center+offset).y)
+            numpy.testing.assert_almost_equal(cutout_col, 
+                                              (meds_center+offset).x)
+            numpy.testing.assert_almost_equal(cutout_row, 
+                                              (meds_center+offset).y)
 
             # The col0 and row0 here should be the same.
             wcs_meds = m.get_jacobian(iobj, icut)
-            numpy.testing.assert_almost_equal(wcs_meds['col0'], (center+offset).x)
-            numpy.testing.assert_almost_equal(wcs_meds['row0'], (center+offset).y)
+            numpy.testing.assert_almost_equal(wcs_meds['col0'], 
+                                              (meds_center+offset).x)
+            numpy.testing.assert_almost_equal(wcs_meds['row0'], 
+                                              (meds_center+offset).y)
 
 
             # The centroid should be (roughly) at the nominal center + offset
@@ -419,10 +409,10 @@ def test_meds_config():
             print('centroid = ',ix/itot, iy/itot)
 
             print('center + offset = ',center + offset)
-            numpy.testing.assert_almost_equal(ix/itot, (center+offset).x, decimal=2)
-            numpy.testing.assert_almost_equal(iy/itot, (center+offset).y, decimal=2)
-
-
+            numpy.testing.assert_almost_equal(ix/itot, 
+                                              (meds_center+offset).x, decimal=2)
+            numpy.testing.assert_almost_equal(iy/itot, 
+                                              (meds_center+offset).y, decimal=2)
 
             # The orig positions are irrelevant and should be 0.
             orig_row = cat['orig_row'][iobj][icut]
