@@ -71,7 +71,7 @@ class MultiExposureObject(object):
     self.box_size       Size of each exposure image.
     """
 
-    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None, 
+    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None,
                  wcs=None, id=0, cutout_row=None, cutout_col=None):
 
         # Check that images is valid
@@ -163,9 +163,9 @@ class MultiExposureObject(object):
         else:
             self.wcs = [ im.wcs.affine(image_pos=im.true_center) for im in self.images ]
 
-        #normally you would supply cutout_row/cutout_col, since we can't usually 
-        #assume objects are centered on the stamp. If not supplied, set them to
-        #the wcs origin (here that is the center of the stamp).
+        # Normally you would supply cutout_row/cutout_col, since we can't usually
+        # assume objects are centered on the stamp. If not supplied, set them to
+        # the wcs origin (here that is the center of the stamp).
         if cutout_row is not None:
             self.cutout_row = cutout_row
         else:
@@ -468,10 +468,10 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
                                                 logger=logger)
 
-        #grab list of offsets for cutout_row/cutout_col.
-        offsets = galsim.config.GetFinalExtraOutput('offset', base, logger)
-        #cutout_row/col is the stamp center (**with the center of the first pixel
-        #being (0,0)**) + offset
+        # grab list of offsets for cutout_row/cutout_col.
+        offsets = galsim.config.GetFinalExtraOutput('meds_get_offset', base, logger)
+        # cutout_row/col is the stamp center (**with the center of the first pixel
+        # being (0,0)**) + offset
         centers = [0.5*im.array.shape[0]-0.5 for im in main_images]
         cutout_rows = [c+offset.y for c,offset in zip(centers,offsets)]
         cutout_cols = [c+offset.x for c,offset in zip(centers,offsets)]
@@ -517,9 +517,9 @@ class MEDSBuilder(galsim.config.OutputBuilder):
             config['psf'] = {}
 
         # We use an extra output type to get the offsets of objects in stamps.
-        # So make sure the config contains ['output']['offset']
-        if 'offset' not in config:
-            config['offset']={}
+        # It doesn't need any parameters.  Just getting its name into the config dict is sufficient.
+        if 'meds_get_offset' not in config:
+            config['meds_get_offset']={}
 
         nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
         nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
@@ -527,6 +527,28 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         ntot = nobjects * nstamps_per_object
         return ntot
 
-# Make this a valid output type:
+# This extra output type simply saves the values of the image offsets when an
+# object is drawn into the stamp.
+class OffsetBuilder(galsim.config.ExtraOutputBuilder):
+    """This saves the stamp offset values for later use"""
+    # The function to call at the end of building each stamp
+    def processStamp(self, obj_num, config, base, logger):
+        offset = base['stamp_offset']
+        stamp = base['stamp']
+        if 'offset' in stamp:
+            offset += galsim.config.GetCurrentValue('offset', base['stamp'],
+                                                            galsim.PositionD, base)
+        self.scratch[obj_num] = offset
+
+    # The function to call at the end of building each file to finalize the truth catalog
+    def finalize(self, config, base, main_data, logger):
+        offsets_list = []
+        obj_nums = sorted(self.scratch.keys())
+        for obj_num in obj_nums:
+            offsets_list.append(self.scratch[obj_num])
+        return offsets_list
+
+# Register these
 galsim.config.RegisterOutputType('MEDS', MEDSBuilder())
+galsim.config.RegisterExtraOutput('meds_get_offset', OffsetBuilder())
 

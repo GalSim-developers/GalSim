@@ -44,7 +44,6 @@ from . import extra_psf
 from . import extra_weight
 from . import extra_badpix
 from . import extra_truth
-from . import extra_offset
 
 from . import image_scattered
 from . import image_tiled
