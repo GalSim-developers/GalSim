@@ -28,6 +28,7 @@ from .noise import *
 from .wcs import *
 from .gsobject import *
 from .value import *
+from .value_eval import eval_base_variables
 
 # These implement specific types and features that get registered into the main config
 # apparatus.  The functions themselves are not available at galsim.config scope.
