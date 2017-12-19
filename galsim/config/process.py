@@ -521,7 +521,10 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     # and then put the combined results into config['rng'] as a list.
     if isinstance(image['random_seed'], list):
         lst = image['random_seed']
+        logger.debug('random_seed = %s',CleanConfig(lst))
+        logger.debug('seed_offset = %s',seed_offset)
         seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
+        logger.debug('seeds = %s',seeds)
         config['seed'] = seeds[0]
         config['rng'] = rngs[0]
         config[index_key + '_seed'] = seeds[0]
@@ -1034,6 +1037,7 @@ def GetRNG(config, base, logger=None, tag=''):
     """
     logger = LoggerWrapper(logger)
     index, index_key = GetIndex(config, base)
+    logger.debug("GetRNG for %s: %s",index_key,index)
 
     if 'rng_num' in config:
         rng_num = config['rng_num']
@@ -1046,6 +1050,7 @@ def GetRNG(config, base, logger=None, tag=''):
         rng = base.get(index_key + '_rng', None)
 
     if rng is None:
+        logger.debug("No index_key_rng.  Use base[rng]")
         rng = base.get('rng',None)
 
     if rng is None and logger:
@@ -1053,7 +1058,25 @@ def GetRNG(config, base, logger=None, tag=''):
         rng_tag = tag + '_reported_no_rng'
         if rng_tag not in base:
             base[rng_tag] = True
-            logger.warning("No base['rng'] available for %s.  Using /dev/urandom."%tag)
+            logger.warning("No base['rng'] available for %s.  Using /dev/urandom.",tag)
 
     return rng
 
+def CleanConfig(config): # pragma: no cover
+    """Return a "clean" config dict without any leading-underscore values
+
+    GalSim config dicts store a lot of ancillary information internally to help improve
+    efficiency.  However, some of these are actually pointers to other places in the dict, so
+    printing a config dict, or even what should be a small portion of one, can have infinite loops.
+
+    This helper function is useful when debugging config processing to strip out all of these
+    leading-underscore values, so that printing the dict is readonable.
+
+        >>> print(galsim.config.CleanConfig(config_dict))
+    """
+    if isinstance(config, dict):
+        return { k : CleanConfig(config[k]) for k in config if k[0] != '_' }
+    elif isinstance(config, list):
+        return [ CleanConfig(item) for item in config ]
+    else:
+        return config
