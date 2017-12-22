@@ -1014,6 +1014,240 @@ def test_no_output():
     im2 = galsim.Gaussian(sigma=1.7,flux=100).drawImage(scale=1)
     np.testing.assert_equal(im1.array,im2.array)
 
+@timer
+def test_eval_full_word():
+    """This test duplicates a bug that was found when using the galsim_extra FocalPlane type.
+    It's a bit subtle.  The FocalPlane builder sets up some eval_variables with extra things
+    that can be used in Eval items like the center of the exposure, the min/max RA and Dec,
+    the distance of an object from the center of the exposure, etc.
+
+    Two of these are focal_r and focal_rmax.  The former is calculated for any given object
+    and gives the radial distance from the center of the focal plane.  The latter gives the
+    maximum possible radial distance of any possible object (based on the outermost chip
+    corners).
+
+    The bug that turned up was that focal_rmax was accessed when loading an input power_spectrum,
+    which would also trigger the evaluation of focal_r, since that string was also located in
+    the eval string.  But this led to problems, since focal_r was based on world_pos, but that
+    was intended to be used with obj_num rngs, which wasn't set up set at the time time input
+    stuff is processed.
+
+    So there are two fixes to this, which this test checks.  First, the setup of the file-level
+    RNG also sets up the object-level RNG properly, so it doesn't matter if focal_r is accessed
+    at this point.  And second, the eval code now matches to the full word, not just any portion
+    of a word, so shorter eval_variables (focal_r in this case) won't get evaluated gratuitously.
+
+    In additon to testing that issue, we also include another feature where we originally ran into
+    trouble.  Namely having the number of objects be random in each exposure, but have the random
+    number seed for most things repeat for all images in each exposure, which needs to know the
+    number of objects in the exposure.  The salient aspects of this are duplicated here by
+    using MultiFits with the objects being identical for each image in the file.
+    """
+
+    # Much of this is copied from the FocalPlane implementation or the focal_quick.yaml file
+    # in the galsim_extra repo.
+    config = {
+        'eval_variables': {
+            # focal_r is a useful calculation that galaxy/PSF properties might want to depend on.
+            # It is intended to be accessed as an object property.
+            'ffocal_r' : {
+                'type' : 'Eval',
+                'str' : "math.sqrt(pos.x**2 + pos.y**2)",
+                'ppos' : {
+                    'type' : 'Eval',
+                    'str' : "world_center.project(world_pos)",
+                    'cworld_pos' : "@image.world_pos"
+                }
+            },
+            # FocalPlane calculates the below values, including particularly focal_rmax, based on
+            # the WCS's and sets the value in the config dict for each exposure.
+            # They may be used by objects in conjunction with focal_r, but in this case it is also
+            # used by the input PSF power spectrum (below) to set the overall scale of the fft
+            # grid. This is where the bug related to full words in the Eval code came into play.
+            'ffocal_rmax' : 25.,
+            'afov_minra' : '-15 arcsec',
+            'afov_maxra' : '15 arcsec',
+            'afov_mindec' : '-15 arcsec',
+            'afov_maxdec' : '15 arcsec',
+
+            'fseeing' : {
+                'type' : 'RandomGaussian',
+                'mean' : 0.7,
+                'sigma' : 0.1,
+                'index_key' : 'image_num'  # Seeing changes each exposure
+            }
+        },
+
+        'input' :  {
+            'power_spectrum' : {
+                'e_power_function': '(k**2 + (1./180)**2)**(-11./6.)',
+                'b_power_function': '@input.power_spectrum.e_power_function',
+                'units': 'arcsec',
+                'grid_spacing': 10,
+                'ngrid': '$math.ceil(2*focal_rmax / @input.power_spectrum.grid_spacing)',
+                'center': "0,0",
+            },
+        },
+
+        'image' : {
+            'type' : 'Scattered',
+            'xsize' : 100,
+            'ysize' : 100,
+            # This is similar to the tricky random number generation issue that we ran into in
+            # FocalPlane.  That repeated for each exp_num, rather than file_num, but the issue
+            # is basically the same.
+            'random_seed' : [
+                # Used for noise and nobjects.
+                { 'type' : 'Sequence', 'index_key' : 'obj_num', 'first' : 1234 },
+                # Used for objects.  Repeats sequence for each image in file
+                {
+                    'type' : 'Eval',
+                    'index_key' : 'obj_num',
+                    'str' : '314159 + start_obj_num + (obj_num - start_obj_num) % nobjects',
+                    'inobjects' : { 'type' : 'Current', 'key' : 'image.nobjects' }
+                },
+            ],
+
+            # We also used to have problems with this being a random value, so keep that feature
+            # here as well.
+            'nobjects' : {
+                'type' : 'RandomPoisson',
+                'index_key' : 'file_num',
+                'mean' : 10  # Normally much more of course.
+            },
+
+            'noise' : { 'type' : 'Gaussian', 'sigma' : 10 },
+
+            # FocalPlane sets this for each exposure. We'll use the same thing for all files here.
+            'world_center' : galsim.CelestialCoord(0*galsim.degrees, 0*galsim.degrees),
+
+            # focal_r depends on world_pos, so let's copy that as is from the galsim_extra
+            # config file, focal_quick.yaml, where we used to have problems.
+            'world_pos': {
+                'rng_num' : 1,
+                'type': 'RADec',
+                'ra': {
+                    'type': 'Radians',
+                    'theta': { 'type': 'Random', 'min': "$fov_minra.rad", 'max': "$fov_maxra.rad" }
+                },
+                'dec': {
+                    'type': 'Radians',
+                    'theta': {
+                        'type': 'RandomDistribution',
+                        'function': "math.cos(x)",
+                        'x_min': "$fov_mindec.rad",
+                        'x_max': "$fov_maxdec.rad",
+                    }
+                }
+            },
+
+            # We have to have a CelestialWCS to use CelestialCoords for world_pos.
+            # This one is about as simple as it gets.
+            'wcs': {
+                'type': 'Tan',
+                'dudx': 0.26, 'dudy': 0., 'dvdx': 0., 'dvdy': 0.26,
+                'origin' : galsim.PositionD(50,50),
+                'ra' : '0 deg', 'dec' : '0 deg',
+            }
+
+        },
+
+        'output' : {
+            # Not using the FocalPlane type, since that's a galsim_extra thing.  But we can
+            # get the same complications in terms of the random number of objects by using
+            # MultiFits output, and have the random_seed repeat for each image in a file.
+            'type' : 'MultiFits',
+            'nimages' : 2,
+            'nfiles' : 2,
+            'file_name' : "$'output/test_eval_full_word_{0}.fits'.format(file_num)",
+            'truth' : {
+                'file_name' : "$'output/test_eval_full_word_{0}.dat'.format(file_num)",
+                'columns' : {
+                    'num' : 'obj_num',
+                    'exposure' : 'image_num',
+                    'pos' : 'image_pos',
+                    'ra' : 'image.world_pos.ra',
+                    'dec' : 'image.world_pos.dec',
+                    'flux' : 'gal.flux',
+                    'size' : 'gal.sigma',
+                    'psf_fwhm' : 'psf.fwhm',
+                }
+            }
+        },
+
+        'psf' : {
+            'type' : 'Moffat',
+            'beta' : 3.0,
+            # Size of PSF ranges from 0.7 to 0.9 over the focal plane
+            'fwhm' : '$seeing + 0.2 * (focal_r / focal_rmax)**2',
+        },
+
+        'gal' : {
+            'rng_num' : 1,
+            # Keep the galaxy simple, but with random components.
+            'type' : 'Gaussian',
+            'sigma' : { 'type' : 'Random', 'min': 0.5, 'max': 1.5 },
+            'flux' : { 'type' : 'Random', 'min': 5000, 'max': 25000 },
+        }
+    }
+
+    logger = logging.getLogger('test_eval_full_word')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+    galsim.config.Process(config, logger=logger)
+
+    # First check the truth catalogs
+    data0 = np.genfromtxt('output/test_eval_full_word_0.dat', names=True, deletechars='')
+    data1 = np.genfromtxt('output/test_eval_full_word_1.dat', names=True, deletechars='')
+
+    assert len(data0) == 18 # 9 obj each for first two exposures
+    assert len(data1) == 24 # 12 obj each for next two exposures
+    data00 = data0[:9]
+    data01 = data0[9:]
+    data10 = data1[:12]
+    data11 = data1[12:]
+
+    # Check exposure = image_num
+    np.testing.assert_array_equal(data00['exposure'], 0)
+    np.testing.assert_array_equal(data01['exposure'], 1)
+    np.testing.assert_array_equal(data10['exposure'], 2)
+    np.testing.assert_array_equal(data11['exposure'], 3)
+
+    # Check obj_num
+    np.testing.assert_array_equal(data00['num'], range(0,9))
+    np.testing.assert_array_equal(data01['num'], range(9,18))
+    np.testing.assert_array_equal(data10['num'], range(18,30))
+    np.testing.assert_array_equal(data11['num'], range(30,42))
+
+    # Check that galaxy properties are identical within exposures, but different across exposures
+    for key in ['pos.x', 'pos.y', 'ra.rad', 'dec.rad', 'flux', 'size']:
+        np.testing.assert_array_equal(data00[key], data01[key])
+        np.testing.assert_array_equal(data10[key], data11[key])
+        assert np.all(np.not_equal(data00[key], data10[key][:9]))
+
+    # PSFs should all be different, but only in the mean
+    assert np.all(np.not_equal(data00['psf_fwhm'], data01['psf_fwhm']))
+    assert np.all(np.not_equal(data10['psf_fwhm'], data11['psf_fwhm']))
+    assert np.all(np.not_equal(data00['psf_fwhm'], data10['psf_fwhm'][:9]))
+    np.testing.assert_array_almost_equal(data00['psf_fwhm'] - np.mean(data00['psf_fwhm']),
+                                         data01['psf_fwhm'] - np.mean(data01['psf_fwhm']))
+    np.testing.assert_array_almost_equal(data10['psf_fwhm'] - np.mean(data10['psf_fwhm']),
+                                         data11['psf_fwhm'] - np.mean(data11['psf_fwhm']))
+
+    # Finally the images should be different, but almost equal, since the different should only
+    # be in the Gaussian noise.
+    im00, im01 = galsim.fits.readMulti('output/test_eval_full_word_0.fits')
+    assert np.all(np.not_equal(im00.array, im01.array))
+    assert abs(np.mean(im00.array - im01.array)) < 0.1
+    assert 13.5 < np.std(im00.array - im01.array) < 15  # should be ~10 * sqrt(2)
+    assert np.max(np.abs(im00.array)) > 200  # Just verify that many values are quite large
+
+    im10, im11 = galsim.fits.readMulti('output/test_eval_full_word_1.fits')
+    assert np.all(np.not_equal(im10.array, im11.array))
+    assert abs(np.mean(im10.array - im11.array)) < 0.1
+    assert 13.5 < np.std(im10.array - im11.array) < 15
+    assert np.max(np.abs(im10.array)) > 200
+
 
 if __name__ == "__main__":
     test_fits()
@@ -1026,3 +1260,4 @@ if __name__ == "__main__":
     test_retry_io()
     test_config()
     test_no_output()
+    test_eval_full_word()
