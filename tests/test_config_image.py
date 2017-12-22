@@ -1353,6 +1353,7 @@ def test_index_key():
         config4 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
         for n in range(nfiles):
             galsim.config.SetupConfigFileNum(config4[n], n, n*nimages, n*n_per_file)
+            galsim.config.SetupConfigRNG(config4[n])
         images4 = [ galsim.config.BuildImages(nimages, config4[n],
                                              image_num=n*nimages, obj_num=n*n_per_file)
                     for n in range(nfiles) ]
@@ -1361,6 +1362,7 @@ def test_index_key():
     config5 = [ galsim.config.CopyConfig(config) for n in range(nfiles) ]
     for n in range(nfiles):
         galsim.config.SetupConfigFileNum(config5[n], n, n*nimages, n*n_per_file)
+        galsim.config.SetupConfigRNG(config5[n])
 
     images5 = [ [ galsim.config.BuildImage(galsim.config.CopyConfig(config5[n]),
                                            image_num=n*nimages+i,
