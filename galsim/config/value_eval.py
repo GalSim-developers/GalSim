@@ -48,7 +48,8 @@ def _type_by_letter(key):
 
 eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin', 'image_bounds',
                         'image_xsize', 'image_ysize', 'stamp_xsize', 'stamp_ysize', 'pixel_scale',
-                        'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num', ]
+                        'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num',
+                        'world_center', ]
 
 from .value import standard_ignore
 eval_ignore = ['str','_fn'] + standard_ignore
@@ -174,4 +175,5 @@ def _GenerateFromEval(config, base, value_type):
 # Register this as a valid value type
 from .value import RegisterValueType
 RegisterValueType('Eval', _GenerateFromEval,
-                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])
+                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
+                    galsim.CelestialCoord, None ])
