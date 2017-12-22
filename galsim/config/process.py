@@ -523,12 +523,21 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
         lst = image['random_seed']
         logger.debug('random_seed = %s',CleanConfig(lst))
         logger.debug('seed_offset = %s',seed_offset)
-        seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
-        logger.debug('seeds = %s',seeds)
-        config['seed'] = seeds[0]
-        config['rng'] = rngs[0]
-        config[index_key + '_seed'] = seeds[0]
-        config[index_key + '_rng'] = rngs[0]
+        seeds = []
+        rngs = []
+        for i in range(len(lst)):
+            seed, rng = ParseRandomSeed(lst, i, config, seed_offset)
+            logger.debug('seed %d = %s',i,seed)
+            seeds.append(seed)
+            rngs.append(rng)
+            if i == 0:
+                # Helpful to get this done right away, because later seeds might be based
+                # on a random number that uses the first rng.
+                # cf. test_eval_full_word in test_config_output.py.
+                config['seed'] = seed
+                config['rng'] = rng
+                config[index_key + '_seed'] = seed
+                config[index_key + '_rng'] = rng
         config[index_key + '_rngs'] = rngs
         logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
                      config.get('obj_num',0), seeds)
