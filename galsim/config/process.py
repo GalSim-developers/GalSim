@@ -1079,7 +1079,7 @@ def CleanConfig(config): # pragma: no cover
     printing a config dict, or even what should be a small portion of one, can have infinite loops.
 
     This helper function is useful when debugging config processing to strip out all of these
-    leading-underscore values, so that printing the dict is readonable.
+    leading-underscore values, so that printing the dict is reasonable.
 
         >>> print(galsim.config.CleanConfig(config_dict))
     """
