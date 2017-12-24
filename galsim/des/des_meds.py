@@ -280,7 +280,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             dvdrow[i] = obj.wcs[i].dvdy
 
             # check if we are running out of memory
-            if sys.getsizeof(vec) > MAX_MEMORY:
+            if sys.getsizeof(vec) > MAX_MEMORY:  # pragma: no cover
                 raise MemoryError(
                     'Running out of memory > %1.0fGB '%MAX_MEMORY/1.e9 +
                     '- you can increase the limit by changing MAX_MEMORY')
