@@ -284,7 +284,6 @@ def test_meds_config():
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
-                    'offset' : { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y },
                     'size' : stamp_size, 'random_seed' : seed },
         'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
@@ -296,6 +295,11 @@ def test_meds_config():
     import logging
     logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
+    galsim.config.Process(config, logger=logger)
+
+    # Add in badpix and offset so we run both with and without options.
+    config['image']['offset'] = { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y }
+    config['output']['badpix'] = {}
     galsim.config.Process(config, logger=logger)
 
     # Now repeat, making a separate file for each

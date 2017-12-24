@@ -148,8 +148,8 @@ class MultiExposureObject(object):
         # If badpix is provided, combine it into the weight image.
         if badpix is not None:
             for i in range(len(badpix)):
-                mask = [badpix[i] != 0]
-                self.weight[i][mask] = 0.
+                mask = badpix[i].array != 0
+                self.weight[i].array[mask] = 0.
 
         # If seg is not provided, use all 1's.
         if seg is not None:
@@ -536,8 +536,7 @@ class OffsetBuilder(galsim.config.ExtraOutputBuilder):
         offset = base['stamp_offset']
         stamp = base['stamp']
         if 'offset' in stamp:
-            offset += galsim.config.GetCurrentValue('offset', base['stamp'],
-                                                            galsim.PositionD, base)
+            offset += galsim.config.GetCurrentValue('offset', base['stamp'], galsim.PositionD, base)
         self.scratch[obj_num] = offset
 
     # The function to call at the end of building each file to finalize the truth catalog
