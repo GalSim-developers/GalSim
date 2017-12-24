@@ -258,7 +258,7 @@ def test_meds_config():
         nobj = 5
         n_per_obj = 8
     else:
-        nobj = 5
+        nobj = 2
         n_per_obj = 3
     file_name = 'output/test_meds.fits'
     stamp_size = 64
