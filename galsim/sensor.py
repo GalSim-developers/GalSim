@@ -31,8 +31,11 @@ import glob
 import os
 
 from . import _galsim
-from .position import PositionD, PositionI
 from .table import LookupTable
+from .position import PositionI, PositionD
+from .table import LookupTable
+from .random import UniformDeviate
+from . import meta_data
 
 class Sensor(object):
     """
@@ -126,8 +129,6 @@ class SiliconSensor(Sensor):
     """
     def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000, treering_func=None, treering_center=PositionD(0,0)):
-        from .random import UniformDeviate
-        from . import meta_data
         self.name = name
         self.strength = strength
         self.rng = UniformDeviate(rng)

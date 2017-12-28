@@ -273,6 +273,9 @@ class InterpolatedImage(GSObject):
 
         from .wcs import BaseWCS, PixelScale
 
+        from .wcs import BaseWCS, PixelScale
+        from .random import BaseDeviate
+
         # If the "image" is not actually an image, try to read the image as a file.
         if not isinstance(image, Image):
             image = fits.read(image, hdu=hdu)
@@ -384,7 +387,6 @@ class InterpolatedImage(GSObject):
         return self._image
 
     def _buildRealImage(self, pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache):
-
         # Check that given pad_image is valid:
         if pad_image:
             if isinstance(pad_image, basestring):

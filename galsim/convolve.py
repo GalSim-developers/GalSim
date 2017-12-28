@@ -24,7 +24,6 @@ from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property, doc_inherit
 
-
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more GSObject or ChromaticObject instances.
 
