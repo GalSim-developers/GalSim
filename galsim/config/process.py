@@ -1040,7 +1040,7 @@ def GetRNG(config, base, logger=None, tag=''):
     @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
     @param tag              If given, an appropriate name for the current item to use in the
-                            warning message. [default: None]
+                            warning message. [default: '']
 
     @returns either the appropriate rng for the current index_key or None
     """

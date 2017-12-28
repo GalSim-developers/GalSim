@@ -267,7 +267,7 @@ def test_meds_config():
     g1 = -0.17
     g2 = 0.23
 
-    # generate offsets that depend on the on the object num so can be easily reproduced
+    # generate offsets that depend on the object num so can be easily reproduced
     # for testing below
     offset_x = '$ np.sin(999.*(@obj_num+1))'
     offset_y = '$ np.sin(998.*(@obj_num+1))'

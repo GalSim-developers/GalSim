@@ -416,7 +416,7 @@ class OutputBuilder(object):
     default_ext = '.fits'
 
     def setup(self, config, base, file_num, logger):
-        """Do any necessary setup at the start of processing a file)
+        """Do any necessary setup at the start of processing a file.
 
         The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to
         do more things before any processing gets started on this file.
