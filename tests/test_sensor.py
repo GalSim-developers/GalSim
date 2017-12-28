@@ -486,7 +486,6 @@ def test_bf_slopes():
     """Test the brighter-fatter slopes
     with both the B-F effect and diffusion turned on and off.
     """
-    from scipy import stats
     simple = galsim.Sensor()
 
     init_flux = 400000
@@ -532,6 +531,10 @@ def test_bf_slopes():
     print('fluxes = ',fluxes)
     print('x_moments = ',x_moments[:,0])
     print('y_moments = ',y_moments[:,0])
+    try:
+        from scipy import stats
+    except ImportError:
+        return
     x_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,x_moments[:,0])
     y_slope, intercept, r_value, p_value, std_err = stats.linregress(fluxes,y_moments[:,0])
     x_slope *= 50000.0 * 100.0
@@ -566,7 +569,6 @@ def test_treerings():
     a SiliconSensor with no tree rings and six
     different additions of tree rings.
     """
-    from scipy import stats
     # Set up the different sensors.
     treering_amplitude = 0.5
     rng1 = galsim.BaseDeviate(5678)

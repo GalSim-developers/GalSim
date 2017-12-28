@@ -451,6 +451,7 @@ namespace hsm {
         const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
         double guess_sig = 5.0, double precision = 1.0e-6,
         galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
+        bool round_moments = false,
         const HSMParams& hsmparams=HSMParams());
 
     /**

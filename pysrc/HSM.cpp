@@ -102,14 +102,13 @@ struct PyShapeData {
     template <typename U, typename V>
     static void wrapTemplates() {
         typedef void (*FAM_func)(ShapeData& result, const BaseImage<U>&, const BaseImage<int>&,
-                                 double, double, Position<double>, const HSMParams&);
-
+                                 double, double, Position<double>, bool, const HSMParams&);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::args("result"),
                  bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
                  bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
-                 bp::arg("hsmparams")=bp::object()),
+                 bp::arg("round_moments")=false, bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
         typedef void (*ESH_func)(ShapeData&, const BaseImage<U>&, const BaseImage<V>&,
