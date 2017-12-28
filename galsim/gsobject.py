@@ -192,9 +192,13 @@ class GSObject(object):
         >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof._sbp.draw(imview._image)
-        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+          File "galsim/gsobject.py", line 1615, in drawImage
+            added_photons = prof.drawFFT(draw_image, add)
+          File "galsim/gsobject.py", line 1827, in drawFFT
+            kimage, wrap_size = self.drawFFT_makeKImage(image)
+          File "galsim/gsobject.py", line 1753, in drawFFT_makeKImage
+            "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+        RuntimeError: drawFFT requires an FFT that is too large: 6144.
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
         >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
