@@ -76,10 +76,13 @@ class _ReadFile:
         from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
-        with subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True) as p:
-            fin = BytesIO(p.communicate()[0])
-            if p.returncode != 0:
-                raise IOError("Error running gunzip. Return code = %s"%p.returncode)
+        # Also, I'd rather all these use `with subprocess.Popen(...) as p:`, but that's not
+        # supported in 2.7.  So need to keep things this way for now.
+        p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
+        fin = BytesIO(p.communicate()[0])
+        if p.returncode != 0:
+            raise IOError("Error running gunzip. Return code = %s"%p.returncode)
+        p.wait()
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -127,10 +130,11 @@ class _ReadFile:
         import subprocess
         from io import BytesIO
         from galsim._pyfits import pyfits
-        with subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True) as p:
-            fin = BytesIO(p.communicate()[0])
-            if p.returncode != 0:
-                raise IOError("Error running bunzip2. Return code = %s"%p.returncode)
+        p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
+        fin = BytesIO(p.communicate()[0])
+        if p.returncode != 0:
+            raise IOError("Error running bunzip2. Return code = %s"%p.returncode)
+        p.wait()
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -241,27 +245,29 @@ class _WriteFile:
             while os.path.isfile(tmp):
                 tmp = tmp + '.tmp'
             hdu_list.writeto(tmp)
-            with subprocess.Popen(["gzip", tmp], close_fds=True) as p:
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["gzip", tmp], close_fds=True)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p.wait()
             os.rename(tmp+".gz",file)
         else:
             hdu_list.writeto(root)
-            with subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True) as p:
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p.wait()
 
     def gzip_call(self, hdu_list, file):
         import subprocess
         with open(file, 'wb') as fout:
-            with subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout,
-                                  close_fds=True) as p:
-                hdu_list.writeto(p.stdin)
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running gzip. Return code = %s"%p.returncode)
+            p.wait()
 
     def gzip_in_mem(self, hdu_list, file):  # pragma: no cover
         import gzip
@@ -300,27 +306,29 @@ class _WriteFile:
             while os.path.isfile(tmp):
                 tmp = tmp + '.tmp'
             hdu_list.writeto(tmp)
-            with subprocess.Popen(["bzip2", tmp], close_fds=True) as p:
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["bzip2", tmp], close_fds=True)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p.wait()
             os.rename(tmp+".bz2",file)
         else:
             hdu_list.writeto(root)
-            with subprocess.Popen(["bzip2", root], close_fds=True) as p:
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["bzip2", root], close_fds=True)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p.wait()
 
     def bzip2_call(self, hdu_list, file):
         import subprocess
         with open(file, 'wb') as fout:
-            with subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout,
-                                  close_fds=True) as p:
-                hdu_list.writeto(p.stdin)
-                p.communicate()
-                if p.returncode != 0:
-                    raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            if p.returncode != 0:
+                raise IOError("Error running bzip2. Return code = %s"%p.returncode)
+            p.wait()
 
     def bz2_in_mem(self, hdu_list, file):  # pragma: no cover
         import bz2
