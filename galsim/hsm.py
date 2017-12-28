@@ -626,7 +626,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
             return ShapeData(error_message = str(err))
 
 def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, precision=1.0e-6,
-                    guess_centroid=None, strict=True, hsmparams=None):
+                    guess_centroid=None, strict=True, round_moments=False, hsmparams=None):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -705,6 +705,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
                             then information about failures will be silently stored in the output
                             ShapeData object. [default: True]
+    @param round_moments    Use a circular weight function instead of elliptical.
+                            [default: False]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
                             FindAdaptiveMom when estimating moments; see HSMParams documentation
                             using help(galsim.hsm.HSMParams) for more information. [default: None]
@@ -722,8 +724,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     try:
         result = ShapeData()
         _galsim._FindAdaptiveMomView(result._data,
-                                     object_image._image, weight._image, guess_sig, precision,
-                                     guess_centroid._p, hsmparams._hsmp)
+                                     object_image._image, weight._image,
+                                     float(guess_sig), float(precision), guess_centroid._p,
+                                     bool(round_moments), hsmparams._hsmp)
         return result
     except RuntimeError as err:
         if (strict == True):

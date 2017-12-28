@@ -7,7 +7,7 @@ Process for updating fink with a new version:
 - Download the tagged tarball from GitHub.
 - Get the md5sum value for it and update the Source-MD5 value.
 - Make sure the SourceRename value matches the directory name in the tarball.
-- export PYTHONPATH='/sw/lib/python2.7/site-packages/'
+- export PYTHONPATH='/sw/lib/python3.6/site-packages/'
 - cd /sw/fink/dists/local/main/finkinfo/
 - ln -s ~/GalSim/devel/fink/galsim-M.m.info galsim.info
 - fink validate galsim.info
@@ -16,9 +16,9 @@ Process for updating fink with a new version:
 - fink validate /sw/fink/debs/galsim_[...].deb
 - fink install galsim
 - otool -L /sw/lib/libgalsim[...].dylib  (Check the version number and directory.)
-= otool -L /sw/lib/python2.7/site-packages/galsim/_galsim.so
-- Make sure check_yaml works if you set python to /sw/bin/python2.7 and bin to /sw/bin
-- In tests directory run /sw/bin/nosetests2.7
+= otool -L /sw/lib/python3.6/site-packages/galsim/_galsim.so
+- Make sure check_yaml works if you set python to /sw/bin/python3.6 and bin to /sw/bin
+- In tests directory run /sw/bin/nosetests3.6
 - git add new info file for this version.
 - Submit to: http://sourceforge.net/p/fink/package-submissions/
   - Don't forget to change the name to galsim.info (without the version number).

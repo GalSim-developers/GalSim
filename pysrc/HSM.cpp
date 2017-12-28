@@ -71,7 +71,7 @@ namespace hsm {
     template <typename T, typename V>
     static void WrapTemplates() {
         typedef void (*FAM_func)(ShapeData&t, const BaseImage<T>&, const BaseImage<int>&,
-                                 double, double, Position<double>, const HSMParams&);
+                                 double, double, Position<double>, bool, const HSMParams&);
         bp::def("_FindAdaptiveMomView", FAM_func(&FindAdaptiveMomView));
 
         typedef void (*ESH_func)(ShapeData&, const BaseImage<T>&, const BaseImage<V>&,

@@ -1032,7 +1032,7 @@ class PhaseScreenPSF(GSObject):
                  theta=(0.0*radians, 0.0*radians), interpolant=None,
                  scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
                  geometric_shooting=True, gsparams=None,
-                 _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
+                 _bar=None, _force_stepk=0., _force_maxk=0., **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1476,7 +1476,7 @@ class OpticalPSF(GSObject):
                  nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
-                 _force_maxk=None, _force_stepk=None,
+                 _force_stepk=0., _force_maxk=0., 
                  suppress_warning=False, geometric_shooting=False):
         from .phase_screens import OpticalScreen
         if isinstance(scale_unit, str):
@@ -1540,8 +1540,8 @@ class OpticalPSF(GSObject):
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
         self._aper = aper
-        self._force_maxk = _force_maxk
         self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
         self._ii_pad_factor = ii_pad_factor
 
         # Finally, put together to make the PSF.
@@ -1550,7 +1550,7 @@ class OpticalPSF(GSObject):
                                    scale_unit=self._scale_unit, gsparams=self._gsparams,
                                    suppress_warning=self._suppress_warning,
                                    geometric_shooting=self._geometric_shooting,
-                                   _force_maxk=_force_maxk, _force_stepk=_force_stepk,
+                                   _force_stepk=_force_stepk, _force_maxk=_force_maxk, 
                                    ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
@@ -1581,10 +1581,10 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
-        if self._force_maxk is not None:
-            s += ", _force_maxk=%r" % self._force_maxk
         if self._force_stepk is not None:
             s += ", _force_stepk=%r" % self._force_stepk
+        if self._force_maxk is not None:
+            s += ", _force_maxk=%r" % self._force_maxk
         if self._ii_pad_factor is not None:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
@@ -1627,8 +1627,8 @@ class OpticalPSF(GSObject):
                                    aper=aper, interpolant=self._interpolant,
                                    scale_unit=self._scale_unit, gsparams=self._gsparams,
                                    suppress_warning=self._suppress_warning,
-                                   _force_maxk=self._force_maxk,
                                    _force_stepk=self._force_stepk,
+                                   _force_maxk=self._force_maxk,
                                    ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
 
