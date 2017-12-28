@@ -130,6 +130,7 @@ class _ReadFile:
         import subprocess
         from io import BytesIO
         from ._pyfits import pyfits
+        p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = BytesIO(p.communicate()[0])
         if p.returncode != 0:
             raise IOError("Error running bunzip2. Return code = %s"%p.returncode)
