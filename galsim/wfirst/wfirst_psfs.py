@@ -30,8 +30,8 @@ Part of the WFIRST module.  This file includes routines needed to define a reali
 
 # Define a default set of bandpasses for which this routine works.
 default_bandpass_list = ['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158']
-# Prefix for files containing information about Zernikes for each SCA.
-zemax_filepref = "AFTA_C5_WFC_Zernike_Data_150717_SCA"
+# Prefix for files containing information about Zernikes for each SCA for cycle 7.
+zemax_filepref = "WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727"
 zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
@@ -69,11 +69,11 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     which will rotate the entire PSF (including the diffraction spikes and any other features).
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
-    simple, understood wavelength-dependence.  (The WFIRST project webpage for Cycle 5 does in fact
+    simple, understood wavelength-dependence.  (The WFIRST project webpage for Cycle 7 does in fact
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
-    dependence is very small and we neglect it here.)  For reference, the script use to parse the
+    dependence is sub-percent so we neglect it here.)  For reference, the script use to parse the
     Zernikes given on the webpage and create the files in the GalSim repository can be found in
-    `devel/external/parse_wfirst_zernikes_0715.py`.  The resulting chromatic object can be used to
+    `devel/external/parse_wfirst_zernikes_1217.py`.  The resulting chromatic object can be used to
     draw into any of the WFIRST bandpasses.
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
@@ -87,7 +87,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     provide an optional keyword `extra_aberrations` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
-    11 (Noll convention) can be simulated.  For WFIRST, the current tolerance for additional
+    22 (Noll convention) are simulated.  For WFIRST, the current tolerance for additional
     aberrations is a total of 90 nanometers RMS:
     http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
     distributed largely among coma, astigmatism, trefoil, and spherical aberrations (NOT defocus).
@@ -118,8 +118,9 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
     @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
                                    those that are part of the WFIRST design.  These should be
                                    provided in units of waves at the fiducial wavelength of 1293 nm,
-                                   as an array of length 12 with entries 4 through 11 corresponding
-                                   to defocus through spherical aberrations.  [default: None]
+                                   as an array of length 23 with entries 4 through 22 corresponding
+                                   to defocus through the 22nd Zernike in the Noll convention.
+                                   [default: None]
     @param    wavelength_limits    A tuple or list of the blue and red wavelength limits to use for
                                    interpolating the chromatic object, if `n_waves` is not None.  If
                                    None, then it uses the blue and red limits of all imaging
@@ -399,24 +400,28 @@ def loadPSFImages(filename):
 
 def _read_aberrations(SCA):
     """
-    This is a helper routine that reads in aberrations for a particular SCA and wavelength from
-    stored files.  It returns the aberrations in a format required by ChromaticOpticalPSF.
+    This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as
+    galsim.wfirst.wfirst_psfs.zemax_wavelength) from stored files.  It returns the aberrations in a
+    format required by ChromaticOpticalPSF.
 
     @param  SCA      The identifier for the SCA, from 1-18.
     @returns a NumPy array containing the aberrations, in the required format for
     ChromaticOpticalPSF.
     """
     # Construct filename.
-    sca_str = '%02d'%SCA
+    sca_str = '_%02d'%SCA
     infile = os.path.join(galsim.meta_data.share_dir,
                           zemax_filepref + sca_str + zemax_filesuff)
 
     # Read in data.
-    dat = np.loadtxt(infile).transpose()
-    # Put it in the required format: an array of length 12, with the first entry empty (Zernike
-    # polynomials are 1-indexed so we use entries 1-11).  The units are waves.
-    aberrations = np.zeros(12)
-    aberrations[1:] = dat
+    dat = np.loadtxt(infile)
+    # It actually has 5 field positions, not just 1, to allow us to make position-dependent PSFs
+    # within an SCA eventually.  For now, we just use the central one (field position 1, SCA x/y=0
+    # with respect to the center of the SCA).  This is the first row.
+    # Put it in the required format: an array of length 23, with the first entry empty (Zernike
+    # polynomials are 1-indexed so we use entries 1-22).  The units are waves.
+    aberrations = np.zeros(23)
+    aberrations[1:] = dat[0,5:]
     return aberrations
 
 def _find_limits(bandpasses, bandpass_dict):

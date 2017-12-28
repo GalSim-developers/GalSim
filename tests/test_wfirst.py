@@ -439,7 +439,7 @@ def test_wfirst_bandpass():
 def test_wfirst_detectors():
     """Test the WFIRST detector routines for consistency with standard detector routines.
     """
-    # This seems almost silly, but for now the WFIRST detector routines are define in terms of the
+    # This seems almost silly, but for now the WFIRST detector routines are defined in terms of the
     # standard GalSim detector routines, and we should check that even if the routines are modified,
     # they still can agree given the same inputs.
     # So start by making a fairly simple image.
