@@ -595,3 +595,15 @@ class CaptureLog(object):
         self.handler.flush()
         self.output = self.stream.getvalue().strip()
         self.handler.close()
+
+
+# Replicate a small part of the nose package to get the `assert_raises` function/context-manager
+# without relying on nose as a dependency.
+import unittest
+class Dummy(unittest.TestCase):
+    def nop():
+        pass
+_t = Dummy('nop')
+assert_raises = getattr(_t, 'assertRaises')
+del Dummy
+del _t
