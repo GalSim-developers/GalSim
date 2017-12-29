@@ -77,13 +77,13 @@ def run_tests(target, source, env):
         # This bit mimics the actions of the Unix tee command.
         # It writes to both stdout and the log file.
         while py_proc.poll() is None:
-            buf = os.read(py_proc.stdout.fileno(),1)
+            buf = os.read(py_proc.stdout.fileno(),1).decode('utf-8')
             sys.stdout.write(buf)
             sys.stdout.flush()
             total_buf += buf
             log.write(buf)
         # Read anything that is still in the buffer:
-        buf = os.read(py_proc.stdout.fileno(),10000)
+        buf = os.read(py_proc.stdout.fileno(),10000).decode('utf-8')
         total_buf += buf
         sys.stdout.write(buf)
         sys.stdout.flush()
@@ -134,11 +134,11 @@ def run_tests(target, source, env):
             shell=False)
 
         while cpp_proc.poll() is None:
-            buf = os.read(cpp_proc.stdout.fileno(),1)
+            buf = os.read(cpp_proc.stdout.fileno(),1).decode('utf-8')
             sys.stdout.write(buf)
             sys.stdout.flush()
             log.write(buf)
-        buf = os.read(cpp_proc.stdout.fileno(),10000)
+        buf = os.read(cpp_proc.stdout.fileno(),10000).decode('utf-8')
         sys.stdout.write(buf)
         sys.stdout.flush()
         log.write(buf)

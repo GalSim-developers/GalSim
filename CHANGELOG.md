@@ -12,7 +12,7 @@ Dependency Changes
 
 Bug Fixes
 ---------
-
+- Fixed python3 unicode/str mismatches in tests/SConscript
 
 
 Deprecated Features
@@ -28,4 +28,3 @@ New Features
 
 New config features
 -------------------
-
