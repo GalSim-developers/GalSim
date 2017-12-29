@@ -299,11 +299,9 @@ def test_interleaveImages():
             gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
-    try:
-        N = (n,n)
-        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    N = (n,n)
+    with assert_raises(ValueError):
+        galsim.utilities.interleaveImages(im_list,N,offset_list)
 
     offset_list = []
     im_list = []
@@ -318,12 +316,9 @@ def test_interleaveImages():
             gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
-    try:
-        N = (n,n)
-        np.testing.assert_raises(ValueError, galsim.utilities.interleaveImages,
-                                 im_list, N, offset_list)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    N = (n,n)
+    with assert_raises(ValueError):
+        galsim.utilities.interleaveImages(im_list, N, offset_list)
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -465,31 +460,34 @@ def test_rand_with_replacement():
     """Test routine to select random indices with replacement."""
     # Most aspects of this routine get tested when it's used by COSMOSCatalog.  We just check some
     # of the exception-handling here.
-    try:
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(TypeError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng='foo')
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
-        tmp_weights = np.arange(10).astype(float)-3
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-        tmp_weights[0] = np.nan
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-        tmp_weights[0] = np.inf
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
+    with assert_raises(TypeError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng='foo')
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
+
+    tmp_weights = np.arange(10).astype(float)-3
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    tmp_weights[0] = np.nan
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    tmp_weights[0] = np.inf
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
 
     # Make sure results come out the same whether we use _n_rng_calls or not.
     result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
@@ -614,18 +612,14 @@ def test_dol_to_lod():
         assert d == dict(l1=l1[0], l3=l3[i])
 
     # Can't broadcast list of lengths 2 and 3 though.
-    try:
-        dd = dict(l2=l2, l3=l3)
-        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    dd = dict(l2=l2, l3=l3)
+    with assert_raises(ValueError):
+        list(galsim.utilities.dol_to_lod(dd))
 
     # Can't broadcast a dictionary
-    try:
-        dd = dict(l2=l2, d1=d1)
-        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    dd = dict(l2=l2, d1=d1)
+    with assert_raises(ValueError):
+        list(galsim.utilities.dol_to_lod(dd))
 
 
 if __name__ == "__main__":

@@ -187,15 +187,15 @@ def test_multifits():
     assert len(im3_list) == 1
     np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
 
-    try:
-        # Check error message for missing nimages
-        del config['output']['nimages']
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-        # Also if there is an input field that doesn't have nobj capability
-        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-    except ImportError:
-        pass
+    # Check error message for missing nimages
+    del config['output']['nimages']
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+    # Also if there is an input field that doesn't have nobj capability
+    config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     del config['input_objs']
@@ -255,15 +255,15 @@ def test_datacube():
     assert len(im3_list) == 1
     np.testing.assert_array_equal(im3_list[0].array, im1_list[0].array)
 
-    try:
-        # Check error message for missing nimages
-        del config['output']['nimages']
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-        # Also if there is an input field that doesn't have nobj capability
-        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-    except ImportError:
-        pass
+    # Check error message for missing nimages
+    del config['output']['nimages']
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+    # Also if there is an input field that doesn't have nobj capability
+    config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
+
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     del config['input_objs']
@@ -279,10 +279,8 @@ def test_datacube():
     config['output']['weight'] = { 'hdu' : 1 }
     config['output']['badpix'] = { 'file_name' : 'output/test_datacube_bp.fits' }
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 0.1 }
-    try:
-        np.testing.assert_raises(AttributeError, galsim.config.BuildFile,config)
-    except ImportError:
-        pass
+    with assert_raises(AttributeError):
+        galsim.config.BuildFile(config)
 
     # But if both weight and badpix are files, then it should work.
     config['output']['weight'] = { 'file_name' : 'output/test_datacube_wt.fits' }
@@ -980,15 +978,12 @@ def test_config():
     galsim.config.SetInConfig(config,'psf.items.1.diam', 8)
     assert galsim.config.GetFromConfig(config,'psf.items.1.diam') == 8
 
-    try:
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.lam')
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.items.4')
-        np.testing.assert_raises(ValueError,galsim.config.GetFromConfig,config,'psf.itms.1.lam')
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.lam',700)
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.items.4',700)
-        np.testing.assert_raises(ValueError,galsim.config.SetInConfig,config,'psf.itms.1.lam',700)
-    except ImportError:
-        pass
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.items.lam')
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.items.4')
+    assert_raises(ValueError, galsim.config.GetFromConfig, config, 'psf.itms.1.lam')
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.lam', 700)
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.4', 700)
+    assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.itms.1.lam', 700)
 
 @timer
 def test_no_output():
