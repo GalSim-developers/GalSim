@@ -268,6 +268,16 @@ class GSObject(object):
     #     _drawReal(self, image)
     #     _shoot(self, photons, ud):
     #     _drawKImage(self, image)
+    #
+    # Required for real-space convolution
+    #
+    #     _sbp which must be an attribute or property providing a C++-layer SBProfile instance.
+    #
+    # Note that most objects don't need to implement real-space convolution, so use of a C++-layer
+    # SBProfile sub-class is usually only an implementation detail to improve efficiency.
+    #
+    # TODO: For now, _sbp is also required for transformations, but this is expected to be
+    #       addressed in a future PR.
 
     @property
     def flux(self):
