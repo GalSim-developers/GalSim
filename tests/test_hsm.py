@@ -306,33 +306,24 @@ def test_masks():
     # make some screwy weight and badpix images that should cause issues, and check that the
     # exception is thrown
     good_weight_im = galsim.ImageI(imsize, imsize, init_value=1)
-    try:
-        ## different size from image
-        weight_im = galsim.ImageI(imsize, 2*imsize)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        badpix_im = galsim.ImageI(imsize, 2*imsize)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, badpix_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, good_weight_im,
-                                 badpix_im)
-        ## weird values
-        weight_im = galsim.ImageI(imsize, imsize, init_value = -3)
-        np.testing.assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        ## excludes all pixels
-        weight_im = galsim.ImageI(imsize, imsize)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, weight_im)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, weight_im)
-        badpix_im = galsim.ImageI(imsize, imsize, init_value = -1)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, good_weight_im,
-                                 badpix_im)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, good_weight_im,
-                                 badpix_im)
-
-    except ImportError:
-        # assert_raises requires nose, which we don't want to force people to install.
-        # So if they are running this without nose, we just skip these tests.
-        pass
+    ## different size from image
+    weight_im = galsim.ImageI(imsize, 2*imsize)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, 2*imsize)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, badpix_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, good_weight_im, badpix_im)
+    ## weird values
+    weight_im = galsim.ImageI(imsize, imsize, init_value = -3)
+    assert_raises(ValueError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(ValueError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    ## excludes all pixels
+    weight_im = galsim.ImageI(imsize, imsize)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, weight_im)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, imsize, init_value = -1)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im, good_weight_im, badpix_im)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, p_im, good_weight_im, badpix_im)
 
     # check moments, shear without mask
     resm = im.FindAdaptiveMom()
@@ -577,16 +568,13 @@ def test_hsmparams():
     do_pickle(res2)
     do_pickle(galsim._galsim.CppShapeData())
 
-    try:
-        # Then check failure modes: force it to fail by changing HSMParams.
-        new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
-        new_params_size = galsim.hsm.HSMParams(max_amoment = 0.3*res.moments_sigma**2)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, tot_gal_image,
-                                 hsmparams=new_params_niter)
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
-                                 tot_psf_image, hsmparams=new_params_size)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Then check failure modes: force it to fail by changing HSMParams.
+    new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
+    new_params_size = galsim.hsm.HSMParams(max_amoment = 0.3*res.moments_sigma**2)
+    assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, tot_gal_image,
+                  hsmparams=new_params_niter)
+    assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+                  hsmparams=new_params_size)
 
 
 @timer
@@ -646,27 +634,22 @@ def test_hsmparams_nodefault():
     assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
 
     # Check that max_amoment, max_ashift work as expected
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
-                                 tot_psf_image, hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
-        np.testing.assert_raises(
-            RuntimeError, galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
-            guess_centroid=galsim.PositionD(47., tot_gal_image.true_center.y),
-            hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError,
+        galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+        hsmparams=galsim.hsm.HSMParams(max_amoment = 10.))
+    assert_raises(RuntimeError,
+        galsim.hsm.EstimateShear, tot_gal_image, tot_psf_image,
+        guess_centroid=galsim.PositionD(47., tot_gal_image.true_center.y),
+        hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
 
 
 @timer
 def test_shapedata():
     """Check for basic issues with initialization of ShapeData objects."""
     x = 1.
-    try:
-        # Cannot initialize with messed up arguments.
-        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
-        np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Cannot initialize with messed up arguments.
+    assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
+    assert_raises(TypeError, galsim.hsm.ShapeData, x)
 
     # Check that if initialized when empty, the resulting object has certain properties.
     foo = galsim.hsm.ShapeData()
@@ -691,10 +674,8 @@ def test_strict():
 
     # Check that measuring moments with strict = True results in the expected exception, and that
     # it is the same one as is stored when running with strict = False.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.FindAdaptiveMom(im)
     try:
         res2 = im.FindAdaptiveMom()
     except RuntimeError as err:
@@ -705,10 +686,8 @@ def test_strict():
     res = galsim.hsm.EstimateShear(im, im, strict = False)
     if res.error_message == '':
         raise AssertionError("Should have error message stored in case of EstimateShear failure!")
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.EstimateShear(im, im)
     try:
         res2 = galsim.hsm.EstimateShear(im, im)
     except RuntimeError as err:
@@ -761,10 +740,8 @@ def test_bounds_centroid():
 
     # Check that we can take a weird/asymmetric sub-image, and it fails because of centroid shift.
     sub_im = im[galsim.BoundsI(b2.xmin, b2.xmax-100, b2.ymin+27, b2.ymax)]
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, sub_im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.hsm.FindAdaptiveMom(sub_im)
 
     # ... and that it passes if we hand in a good centroid guess.  Note that this test is a bit less
     # stringent than some of the previous ones, because our subimage cut off a decent part of the

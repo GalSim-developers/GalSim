@@ -45,10 +45,8 @@ def test_nonlinearity_basic():
     im_save = im.copy()
 
     # Basic - exceptions / bad usage (invalid function, does not return NumPy array).
-    try:
-        np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        im.applyNonlinearity(lambda x : 1.0)
 
     # Check for constant function as NLfunc
     im_new = im.copy()
@@ -186,10 +184,8 @@ def test_recipfail_basic():
     im_save = im.copy()
 
     # Basic - exceptions / bad usage.
-    try:
-        np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200, 1.0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        im.addReciprocityFailure(-1.0, 200, 1.0)
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
@@ -505,17 +501,13 @@ def test_Persistence_basic():
 
     # Test for different lengths of imgs and coeffs
     im_new = im.copy()
-    try:
-        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev, [0.2, 0.3])
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(TypeError):
+        im_new.applyPersistence(im_prev, [0.2, 0.3])
 
     # Test for a single image and coeffs as a float
     im_new = im.copy()
-    try:
-        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev[0], 1.0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(TypeError):
+        im_new.applyPersistence(im_prev[0], 1.0)
 
     # Testing the multiple images and varying coeffs
     im1 = im.copy()

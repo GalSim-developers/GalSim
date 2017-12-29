@@ -253,13 +253,10 @@ def test_photon_angles():
     assert 0.9 < chisqr_sintheta < 1.1, "Distribution in sin(inclination) is not nearly uniform"
 
     # Try some invalid inputs
-    try:
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=-0.3)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=-0.3)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.0)
-        np.testing.assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.9)
-    except ImportError:
-        pass
+    assert_raises(ValueError, galsim.FRatioAngles, fratio=-0.3)
+    assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=-0.3)
+    assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.0)
+    assert_raises(ValueError, galsim.FRatioAngles, fratio=1.2, obscuration=1.9)
 
 @timer
 def test_photon_io():

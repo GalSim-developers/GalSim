@@ -296,13 +296,11 @@ def test_silicon():
     do_pickle(s1)
     do_pickle(s7)
 
-    try:
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='junk')
-        np.testing.assert_raises(IOError, galsim.SiliconSensor, name='output')
-        np.testing.assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
-        np.testing.assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(IOError, galsim.SiliconSensor, name='junk')
+    assert_raises(IOError, galsim.SiliconSensor, name='output')
+    assert_raises(RuntimeError, galsim.SiliconSensor, rng=3.4)
+    assert_raises(TypeError, galsim.SiliconSensor, 'lsst_itl_8', 'hello')
+
 
 @timer
 def test_silicon_fft():

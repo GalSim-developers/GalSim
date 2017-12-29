@@ -690,32 +690,27 @@ def test_tabulated():
         err_msg="g2 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
 
     # check for appropriate response to inputs when making/using LookupTable
-    try:
-        ## mistaken interpolant choice
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 k_arr, p_arr, interpolant='splin')
-        ## k, P arrays not the same size
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 0.01*np.arange(100.), p_arr)
-        ## arrays too small
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 (1.,2.), (1., 2.))
-        ## try to make shears, but grid includes k values that were not part of the originally
-        ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
-        ## exception should be raised)
-        t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
-        ps = galsim.PowerSpectrum(t)
-        do_pickle(ps)
-        np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
-        ## try to interpolate in log, but with zero values included
-        np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
-                                 x_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
-                                 f_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
-                                 x_log=True, f_log=True)
-    except ImportError:
-        pass
+    ## mistaken interpolant choice
+    with assert_raises(ValueError):
+        galsim.LookupTable(k_arr, p_arr, interpolant='splin')
+    ## k, P arrays not the same size
+    with assert_raises(ValueError):
+        galsim.LookupTable(0.01*np.arange(100.), p_arr)
+    ## arrays too small
+    with assert_raises(ValueError):
+        galsim.LookupTable((1.,2.), (1., 2.))
+    ## try to make shears, but grid includes k values that were not part of the originally
+    ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
+    ## exception should be raised)
+    t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
+    ps = galsim.PowerSpectrum(t)
+    do_pickle(ps)
+    with assert_raises(RuntimeError):
+        ps.buildGrid(grid_spacing=1.7, ngrid=100)
+    ## try to interpolate in log, but with zero values included
+    assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True)
+    assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), f_log=True)
+    assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True, f_log=True)
 
     # check that when calling LookupTable, the outputs have the same form as inputs
     tab = galsim.LookupTable(k_arr, p_arr)
