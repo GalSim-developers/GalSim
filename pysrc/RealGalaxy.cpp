@@ -17,12 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "Pybind11Helper.h"
 #include "RealGalaxy.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -39,8 +35,8 @@ namespace galsim {
         ComputeCRGCoefficients(coef, Sigma, w, kimgs, psf, nsed, nband, nkx, nky);
     };
 
-    void pyExportRealGalaxy() {
-        bp::def("ComputeCRGCoefficients", &CallComputeCRGCoefficients);
+    void pyExportRealGalaxy(PYBIND11_MODULE& _galsim) {
+        GALSIM_DOT def("ComputeCRGCoefficients", &CallComputeCRGCoefficients);
     }
 
 } // namespace galsim

@@ -17,14 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "integ/Int.h"
-
 #include <iostream>
-
-namespace bp = boost::python;
 
 namespace galsim {
 namespace integ {
@@ -36,7 +31,7 @@ namespace integ {
     public:
         PyFunc(const bp::object& func) : _func(func) {}
         double operator()(double x) const
-        { return bp::extract<double>(_func(x)); }
+        { return CAST<double>(_func(x)); }
     private:
         const bp::object& _func;
     };
@@ -54,9 +49,9 @@ namespace integ {
         }
     }
 
-    void pyExportInteg() {
-
-        bp::def("PyInt1d", &PyInt1d);
+    void pyExportInteg(PYBIND11_MODULE& _galsim)
+    {
+        GALSIM_DOT def("PyInt1d", &PyInt1d);
 
     }
 

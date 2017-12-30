@@ -17,34 +17,35 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBConvolve.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
+#ifdef USE_BOOST
+    static BP_CONSTRUCTOR(construct, SBConvolve,
+                          const bp::object& iterable, bool real_space, GSParams gsparams)
     {
+        bp::stl_input_iterator<SBProfile> iter(iterable), end;
         std::list<SBProfile> plist;
-        int n = len(slist);
-        for(int i=0; i<n; ++i) {
-            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
-        }
-        return new SBConvolve(plist, real_space, gsparams);
+        for(; iter != end; ++iter) plist.push_back(*iter);
+        PYBIND11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
     }
-
-    void pyExportSBConvolve()
+#else
+    static BP_CONSTRUCTOR(construct, SBConvolve,
+                          const std::list<SBProfile>& plist, bool real_space, GSParams gsparams)
     {
-        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+        PYBIND11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
+    }
+#endif
 
-        bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
+    void pyExportSBConvolve(PYBIND11_MODULE& _galsim)
+    {
+        bp::class_<SBConvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBConvolve" BP_NOINIT)
+            .def("__init__", BP_MAKE_CONSTRUCTOR( &construct));
+        bp::class_<SBAutoConvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoConvolve" BP_NOINIT)
             .def(bp::init<const SBProfile&, bool, GSParams>());
-
-        bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
+        bp::class_<SBAutoCorrelate BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoCorrelate" BP_NOINIT)
             .def(bp::init<const SBProfile&, bool, GSParams>());
     }
 

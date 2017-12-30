@@ -17,12 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include <boost/python.hpp> // header that includes Python.h always needs to come first
-
+#include "PyBind11Helper.h"
 #include "PhotonArray.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
@@ -35,8 +31,8 @@ namespace galsim {
                  &PhotonArray::setFrom);
     }
 
-    static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
-                                  size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
+    static BP_CONSTRUCTOR(construct, PhotonArray, int N, size_t ix, size_t iy, size_t iflux,
+                          size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
     {
         double *x = reinterpret_cast<double*>(ix);
         double *y = reinterpret_cast<double*>(iy);
@@ -44,14 +40,14 @@ namespace galsim {
         double *dxdz = reinterpret_cast<double*>(idxdz);
         double *dydz = reinterpret_cast<double*>(idydz);
         double *wave = reinterpret_cast<double*>(iwave);
-        return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
+        PYBIND11_PLACEMENT_NEW PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
     }
 
-    void pyExportPhotonArray()
+    void pyExportPhotonArray(PYBIND11_MODULE& _galsim)
     {
-        bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
+        bp::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
         pyPhotonArray
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()))
+            .def("__init__", BP_MAKE_CONSTRUCTOR(&construct))
             .def("convolve", &PhotonArray::convolve);
         WrapTemplates<double>(pyPhotonArray);
         WrapTemplates<float>(pyPhotonArray);

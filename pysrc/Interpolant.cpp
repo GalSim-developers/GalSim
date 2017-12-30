@@ -17,39 +17,36 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
+#include <cstdlib>
 #include "Interpolant.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportInterpolant()
+    void pyExportInterpolant(PYBIND11_MODULE& _galsim)
     {
-        bp::class_<Interpolant, boost::noncopyable>("Interpolant", bp::no_init);
+        bp::class_<Interpolant BOOST_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT);
 
-        bp::class_<Delta, bp::bases<Interpolant> >("Delta", bp::no_init)
+        bp::class_<Delta BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
             .def(bp::init<double,GSParams>());
 
-        bp::class_<Nearest, bp::bases<Interpolant> >("Nearest", bp::no_init)
+        bp::class_<Nearest BP_BASES(Interpolant)>(GALSIM_COMMA "Nearest" BP_NOINIT)
             .def(bp::init<double,GSParams>());
 
-        bp::class_<SincInterpolant, bp::bases<Interpolant> >("SincInterpolant", bp::no_init)
+        bp::class_<SincInterpolant BP_BASES(Interpolant)>(GALSIM_COMMA "SincInterpolant" BP_NOINIT)
             .def(bp::init<double,GSParams>());
 
-        bp::class_<Lanczos, bp::bases<Interpolant> >("Lanczos", bp::no_init)
+        bp::class_<Lanczos BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
             .def(bp::init<int,bool,double,GSParams>())
             .def("urange", &Lanczos::urange);
 
-        bp::class_<Linear, bp::bases<Interpolant> >("Linear", bp::no_init)
+        bp::class_<Linear BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
             .def(bp::init<double,GSParams>());
 
-        bp::class_<Cubic, bp::bases<Interpolant> >("Cubic", bp::no_init)
+        bp::class_<Cubic BP_BASES(Interpolant)>(GALSIM_COMMA "Cubic" BP_NOINIT)
             .def(bp::init<double,GSParams>());
 
-        bp::class_<Quintic, bp::bases<Interpolant> >("Quintic", bp::no_init)
+        bp::class_<Quintic BP_BASES(Interpolant)>(GALSIM_COMMA "Quintic" BP_NOINIT)
             .def(bp::init<double,GSParams>());
     }
 

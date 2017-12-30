@@ -17,18 +17,14 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBTransform.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBTransform()
+    void pyExportSBTransform(PYBIND11_MODULE& _galsim)
     {
-        bp::class_< SBTransform, bp::bases<SBProfile> >("SBTransform", bp::no_init)
+        bp::class_<SBTransform BP_BASES(SBProfile)>(GALSIM_COMMA "SBTransform" BP_NOINIT)
             .def(bp::init<const SBProfile &, double, double, double, double,
                  Position<double>, double, GSParams>());
     }

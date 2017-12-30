@@ -163,7 +163,7 @@ class BaseDeviate(object):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d['rng_str'] = self._rng.serialize()
+        d['rng_str'] = self.serialize()
         d.pop('_rng')
         return d
 
@@ -189,7 +189,7 @@ class BaseDeviate(object):
         of random deviate for this class, just return the raw integer value that would have been
         used to generate this value.
         """
-        return self._rng.raw()
+        return int(self._rng.raw())
 
     def generate(self, array):
         """Generate many pseudo-random values, filling in the values of a numpy array.
@@ -223,7 +223,7 @@ class BaseDeviate(object):
     __hash__ = None
 
     def serialize(self):
-        return self._rng.serialize()
+        return str(self._rng.serialize())
 
     def _seed_repr(self):
         s = self.serialize().split(' ')
@@ -819,7 +819,7 @@ class DistDeviate(BaseDeviate):
     def __eq__(self, other):
         if repr(self) != repr(other):
             return False
-        return (self._rng.serialize() == other._rng.serialize() and
+        return (self.serialize() == other.serialize() and
                 self._function == other._function and
                 self._xmin == other._xmin and
                 self._xmax == other._xmax and
@@ -829,7 +829,7 @@ class DistDeviate(BaseDeviate):
     # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
     # original function parameter, which may be a string or a file name.
     def __getinitargs__(self):
-        return (self._rng.serialize(), self._function, self._xmin, self._xmax,
+        return (self.serialize(), self._function, self._xmin, self._xmax,
                 self._interpolant, self._npoints)
 
 

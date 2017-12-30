@@ -17,18 +17,14 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBGaussian.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBGaussian()
+    void pyExportSBGaussian(PYBIND11_MODULE& _galsim)
     {
-        bp::class_<SBGaussian,bp::bases<SBProfile> >("SBGaussian", bp::no_init)
+        bp::class_<SBGaussian BP_BASES(SBProfile)>(GALSIM_COMMA "SBGaussian" BP_NOINIT)
             .def(bp::init<double,double, GSParams>());
     }
 

@@ -17,29 +17,30 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBAdd.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    static SBAdd* construct(const bp::list& slist, GSParams gsparams)
+#ifdef USE_BOOST
+    static BP_CONSTRUCTOR(construct, SBAdd, const bp::object& iterable, GSParams gsparams)
     {
+        bp::stl_input_iterator<SBProfile> iter(iterable), end;
         std::list<SBProfile> plist;
-        int n = len(slist);
-        for(int i=0; i<n; ++i) {
-            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
-        }
-        return new SBAdd(plist, gsparams);
+        for(; iter != end; ++iter) plist.push_back(*iter);
+        PYBIND11_PLACEMENT_NEW SBAdd(plist, gsparams);
     }
-
-    void pyExportSBAdd()
+#else
+    static BP_CONSTRUCTOR(construct, SBAdd, const std::list<SBProfile>& plist, GSParams gsparams)
     {
-        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", bp::no_init)
-            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+        PYBIND11_PLACEMENT_NEW SBAdd(plist, gsparams);
+    }
+#endif
+
+    void pyExportSBAdd(PYBIND11_MODULE& _galsim)
+    {
+        bp::class_<SBAdd BP_BASES(SBProfile)>(GALSIM_COMMA "SBAdd" BP_NOINIT)
+            .def("__init__", BP_MAKE_CONSTRUCTOR(&construct));
     }
 
 } // namespace galsim

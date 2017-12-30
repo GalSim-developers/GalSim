@@ -17,18 +17,14 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBDeconvolve.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBDeconvolve()
+    void pyExportSBDeconvolve(PYBIND11_MODULE& _galsim)
     {
-        bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
+        bp::class_<SBDeconvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeconvolve" BP_NOINIT)
             .def(bp::init<const SBProfile &, GSParams>());
     }
 

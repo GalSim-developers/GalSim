@@ -88,9 +88,7 @@ opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-opts.Add(BoolVariable('USE_BOOST',
-         'Use the local boost installation for optional boost header files',
-         False))
+opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
 
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
          'Extra paths for header files (separated by : if more than 1)',
@@ -392,7 +390,7 @@ def BasicCCFlags(env):
             else:
                 env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-std=c++98','-fno-strict-aliasing'])
+            env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
             #env.Append(CCFLAGS=['-ftree-vectorize'])
@@ -411,7 +409,6 @@ def BasicCCFlags(env):
             else:
                 env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
-            env.Append(CCFLAGS=['-std=c++98'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
@@ -421,7 +418,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
 
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2','-std=c++98'])
+            env.Replace(CCFLAGS=['-O2'])
             sse_flags = ['-msse2', '-msse']
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
@@ -908,6 +905,15 @@ def TryRunResult(config,text,name):
         ok = False
 
     return ok
+
+
+def CheckFlags(context,try_flags,source_file):
+    init_flags = context.env['CCFLAGS']
+    context.env.PrependUnique(CCFLAGS=try_flags)
+    result = context.TryCompile(source_file,'.cpp')
+    if not result:
+        context.env.Replace(CCFLAGS=init_flags)
+    return result
 
 
 def CheckLibsSimple(config,try_libs,source_file,prepend=True):
@@ -1647,6 +1653,48 @@ def CheckCoord(config):
 
     return 1
 
+def CheckPyBind11(config):
+    config.Message('Checking for pybind11... ')
+
+    result, output = TryScript(config,"import pybind11",python)
+    config.Result(result)
+    if not result:
+        ErrorExit("Unable to import pybind11 using the python executable:\n" + python)
+
+    result, pybind11_ver = TryScript(config,"import pybind11; print(pybind11.__version__)",python)
+    print('pybind11 version is',pybind11_ver)
+
+    config.Message('Checking if we can build against PyBind11... ')
+
+    result, dir1 = TryScript(config,"import pybind11; print(pybind11.get_include())",python)
+    result, dir2 = TryScript(config,"import pybind11; print(pybind11.get_include(True))",python)
+    config.env.Append(CPPPATH=[dir1,dir2])
+
+    pb_source_file = """
+#include <pybind11/pybind11.h>
+
+int check_pb_run() { return 23; }
+
+PYBIND11_PLUGIN(check_pb) {
+    pybind11::module m("check_pb");
+    m.def("run",&check_pb_run);
+    return m.ptr();
+}
+"""
+    result = (CheckFlags(config, '', pb_source_file) or
+              CheckFlags(config, '-std=c++14', pb_source_file) or
+              CheckFlags(config, '-std=c++11', pb_source_file))
+    if not result:
+        ErrorExit("Unable to compile C++ source code using pybind11:\n" + python)
+
+    result = CheckModuleLibs(config,[''],pb_source_file,'check_pb')
+    if not result:
+        ErrorExit("Unable to make a python module with pybind11:\n" + python)
+
+    config.Result(result)
+    return result
+
+
 def CheckBoostPython(config):
     bp_source_file = """
 
@@ -1670,7 +1718,8 @@ BOOST_PYTHON_MODULE(check_bp) {
 """
     config.Message('Checking if we can build against Boost.Python... ')
 
-    result = config.TryCompile(bp_source_file,'.cpp')
+    result = (CheckFlags(config, '-std=c++98', bp_source_file) or
+              CheckFlags(config, '', bp_source_file))
     if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
@@ -1694,8 +1743,10 @@ BOOST_PYTHON_MODULE(check_bp) {
     if not result:
         ErrorExit('Unable to build a python loadable module with Boost.Python')
 
+    config.env.AppendUnique(CPPDEFINES=['USE_BOOST'])
     config.Result(1)
     return 1
+
 
 # If the compiler is incompatible with the compiler that was used to build python,
 # then there can be problems with the exception passing between the C++ layer and the
@@ -1712,16 +1763,28 @@ def CheckPythonExcept(config):
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
-#define BOOST_NO_CXX11_SMART_PTR
-#include "boost/python.hpp"
 #include <stdexcept>
 
+#ifdef USE_BOOST
+#define BOOST_NO_CXX11_SMART_PTR
+#include "boost/python.hpp"
+#else
+#include <pybind11/pybind11.h>
+#endif
 
 void run_throw() { throw std::runtime_error("test error handling"); }
 
+#ifdef USE_BOOST
 BOOST_PYTHON_MODULE(test_throw) {
-    boost::python::def("run",&run_throw);
+    boost::python::def("run", &run_throw);
 }
+#else
+PYBIND11_PLUGIN(test_throw) {
+    pybind11::module test_throw("test_throw");
+    test_throw.def("run", &run_throw);
+    return test_throw.ptr();
+}
+#endif
 """
     py_source_file = """
 import test_throw
@@ -1855,7 +1918,8 @@ def DoCppChecks(config):
 
     #####
     # Check for boost:
-    config.CheckBoost()
+    if config.env['USE_BOOST']:
+        config.CheckBoost()
 
     #####
     # Check for tmv:
@@ -1953,7 +2017,10 @@ def DoPyChecks(config):
     config.CheckPyFITS()
     config.CheckFuture()
     config.CheckCoord()
-    config.CheckBoostPython()
+    if config.env['USE_BOOST']:
+        config.CheckBoostPython()
+    else:
+        config.CheckPyBind11()
     config.CheckPythonExcept()
 
 
@@ -2014,10 +2081,6 @@ def DoConfig(env):
             print('TMV Extra Debugging turned on')
             env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
-    if env['USE_BOOST']:
-        print('Using local boost header files')
-        env.AppendUnique(CPPDEFINES=['USE_BOOST'])
-
     # Don't bother with checks if doing scons -c
     if not env.GetOption('clean'):
         # Sometimes when you are changing around things in other directories, SCons doesn't notice.
@@ -2044,6 +2107,7 @@ def DoConfig(env):
             'CheckPyFITS' : CheckPyFITS ,
             'CheckFuture' : CheckFuture ,
             'CheckCoord' : CheckCoord ,
+            'CheckPyBind11' : CheckPyBind11 ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPythonExcept' : CheckPythonExcept ,
             })

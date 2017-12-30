@@ -17,18 +17,14 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "SBAiry.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBAiry()
+    void pyExportSBAiry(PYBIND11_MODULE& _galsim)
     {
-        bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
+        bp::class_<SBAiry BP_BASES(SBProfile)>(GALSIM_COMMA "SBAiry" BP_NOINIT)
             .def(bp::init<double,double,double,GSParams>());
     }
 

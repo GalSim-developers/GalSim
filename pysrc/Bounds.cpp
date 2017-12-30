@@ -17,41 +17,37 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "Bounds.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 
     template <typename T>
-    static void WrapPosition(const std::string& suffix)
+    static void WrapPosition(PYBIND11_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_< Position<T> >(("Position" + suffix).c_str(), bp::no_init)
+        bp::class_<Position<T> >(GALSIM_COMMA ("Position" + suffix).c_str() BP_NOINIT)
             .def(bp::init<T,T>())
             .def_readonly("x", &Position<T>::x)
             .def_readonly("y", &Position<T>::y);
     }
 
     template <typename T>
-    static void WrapBounds(const std::string& suffix)
+    static void WrapBounds(PYBIND11_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_< Bounds<T> >(("Bounds" + suffix).c_str(), bp::no_init)
+        bp::class_< Bounds<T> >(GALSIM_COMMA ("Bounds" + suffix).c_str() BP_NOINIT)
             .def(bp::init<T,T,T,T>())
-            .add_property("xmin", &Bounds<T>::getXMin)
-            .add_property("xmax", &Bounds<T>::getXMax)
-            .add_property("ymin", &Bounds<T>::getYMin)
-            .add_property("ymax", &Bounds<T>::getYMax);
+            .def_property_readonly("xmin", &Bounds<T>::getXMin)
+            .def_property_readonly("xmax", &Bounds<T>::getXMax)
+            .def_property_readonly("ymin", &Bounds<T>::getYMin)
+            .def_property_readonly("ymax", &Bounds<T>::getYMax);
     }
 
-    void pyExportBounds()
+    void pyExportBounds(PYBIND11_MODULE& _galsim)
     {
-        WrapPosition<double>("D");
-        WrapPosition<int>("I");
-        WrapBounds<double>("D");
-        WrapBounds<int>("I");
+        WrapPosition<double>(_galsim, "D");
+        WrapPosition<int>(_galsim, "I");
+        WrapBounds<double>(_galsim, "D");
+        WrapBounds<int>(_galsim, "I");
     }
 
 } // namespace galsim

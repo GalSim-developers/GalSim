@@ -17,64 +17,60 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
-
+#include "PyBind11Helper.h"
 #include "Image.h"
-
-namespace bp = boost::python;
 
 // Note that docstrings are now added in galsim/image.py
 namespace galsim {
 
     template <typename T>
-    static ImageView<T>* MakeFromArray(size_t idata, int step, int stride,
-                                       const Bounds<int>& bounds)
+    static BP_CONSTRUCTOR(MakeFromArray, ImageView<T>,
+                          size_t idata, int step, int stride, const Bounds<int>& bounds)
     {
         T* data = reinterpret_cast<T*>(idata);
         shared_ptr<T> owner;
-        return new ImageView<T>(data, owner, step, stride, bounds);
+        PYBIND11_PLACEMENT_NEW ImageView<T>(data, owner, step, stride, bounds);
     }
 
     template <typename T>
-    static void WrapImage(const std::string& suffix)
+    static void WrapImage(PYBIND11_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_< BaseImage<T>, boost::noncopyable >(("BaseImage" + suffix).c_str(), bp::no_init);
+        bp::class_<BaseImage<T> BOOST_NONCOPYABLE>(
+            GALSIM_COMMA ("BaseImage" + suffix).c_str() BP_NOINIT);
 
-        typedef ImageView<T>* (*Make_func)(size_t, int, int, const Bounds<int>&);
-        bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >(("ImageView" + suffix).c_str(),
-                                                              bp::no_init)
-            .def("__init__", bp::make_constructor((Make_func)&MakeFromArray,
-                                                  bp::default_call_policies()));
+        typedef BP_CONSTRUCTOR((*Make_func), ImageView<T>, size_t, int, int, const Bounds<int>&);
+        bp::class_<ImageView<T> BP_BASES(BaseImage<T>)>(
+            GALSIM_COMMA ("ImageView" + suffix).c_str() BP_NOINIT)
+            .def("__init__", BP_MAKE_CONSTRUCTOR((Make_func)&MakeFromArray));
 
         typedef void (*rfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool);
         typedef void (*irfft_func_type)(const BaseImage<T>&, ImageView<double>, bool, bool);
         typedef void (*cfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool, bool);
-        bp::def("rfft", rfft_func_type(&rfft));
-        bp::def("irfft", irfft_func_type(&irfft));
-        bp::def("cfft", cfft_func_type(&cfft));
+        GALSIM_DOT def("rfft", rfft_func_type(&rfft));
+        GALSIM_DOT def("irfft", irfft_func_type(&irfft));
+        GALSIM_DOT def("cfft", cfft_func_type(&cfft));
 
         typedef void (*wrap_func_type)(ImageView<T>, const Bounds<int>&, bool, bool);
-        bp::def("wrapImage", wrap_func_type(&wrapImage));
+        GALSIM_DOT def("wrapImage", wrap_func_type(&wrapImage));
 
         typedef void (*invert_func_type)(ImageView<T>);
-        bp::def("invertImage", invert_func_type(&invertImage));
+        GALSIM_DOT def("invertImage", invert_func_type(&invertImage));
     }
 
-    void pyExportImage()
+    void pyExportImage(PYBIND11_MODULE& _galsim)
     {
-        WrapImage<uint16_t>("US");
-        WrapImage<uint32_t>("UI");
-        WrapImage<int16_t>("S");
-        WrapImage<int32_t>("I");
-        WrapImage<float>("F");
-        WrapImage<double>("D");
-        WrapImage<std::complex<double> >("CD");
-        WrapImage<std::complex<float> >("CF");
+        WrapImage<uint16_t>(_galsim, "US");
+        WrapImage<uint32_t>(_galsim, "UI");
+        WrapImage<int16_t>(_galsim, "S");
+        WrapImage<int32_t>(_galsim, "I");
+        WrapImage<float>(_galsim, "F");
+        WrapImage<double>(_galsim, "D");
+        WrapImage<std::complex<double> >(_galsim, "CD");
+        WrapImage<std::complex<float> >(_galsim, "CF");
 
-        bp::def("goodFFTSize", &goodFFTSize);
+        GALSIM_DOT def("goodFFTSize", &goodFFTSize);
     }
 
 } // namespace galsim

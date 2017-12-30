@@ -17,29 +17,22 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "galsim/IgnoreWarnings.h"
-#include "boost/python.hpp"
-
+#include "PyBind11Helper.h"
 #include "math/BesselRoots.h"
 #include "math/Bessel.h"
-
-namespace bp = boost::python;
 
 namespace galsim {
 namespace math {
 
-    void pyExportBessel() {
-
-        bp::def("j0_root", &getBesselRoot0);
-        // In python, with switch from mostly matching the boost names for these to matching
-        // the names scipy.special uses.
-        bp::def("j0", &j0);
-        bp::def("j1", &j1);
-        bp::def("jv", &cyl_bessel_j);
-        bp::def("yv", &cyl_bessel_y);
-        bp::def("iv", &cyl_bessel_i);
-        bp::def("kv", &cyl_bessel_k);
-
+    void pyExportBessel(PYBIND11_MODULE& _galsim)
+    {
+        GALSIM_DOT def("j0_root", &getBesselRoot0);
+        GALSIM_DOT def("j0", &j0);
+        GALSIM_DOT def("j1", &j1);
+        GALSIM_DOT def("jv", &cyl_bessel_j);
+        GALSIM_DOT def("yv", &cyl_bessel_y);
+        GALSIM_DOT def("iv", &cyl_bessel_i);
+        GALSIM_DOT def("kv", &cyl_bessel_k);
     }
 
 } // namespace math
