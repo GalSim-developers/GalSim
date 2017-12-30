@@ -902,15 +902,15 @@ def test_compound():
     automatically or not.
     """
     gal1 = galsim.Gaussian(fwhm=1.7, flux=2.3)
-    gal2 = gal1.shear(g1=0.21, g2=0.12).rotate(33 * galsim.degrees).shift(0.1,0.4) * 11.
-    gal3 = gal2.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    gal2 = gal1.shear(g1=0.21, g2=0.12).rotate(33 * galsim.degrees).shift(0.1,0.4) * 1.1
+    gal3 = gal2.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 8.9
     # These should have compounded automatically into a single transformation
     print('gal3 = ',gal3)
     print('gal3.original = ',gal3.original)
     assert gal3.original == gal1
 
     gal4 = gal2 + 0. * gal1  # Equivalent to gal2, but the sum kills the automatic compounding.
-    gal5 = gal4.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 89.
+    gal5 = gal4.shear(g1=0.18, g2=0.09).rotate(12 * galsim.degrees).shift(-0.3,0.5) * 8.9
     print('gal5 = ',gal5)
     print('gal5.original = ',gal5.original)
     assert gal5.original != gal1
