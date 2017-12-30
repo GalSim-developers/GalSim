@@ -1434,9 +1434,9 @@ class doc_inherit(object):
         self.name = mthd.__name__
 
     def __get__(self, obj, cls):
-        for parent in cls.__bases__:
+        for parent in cls.__bases__: # pragma: no branch
             parfunc = getattr(parent, self.name, None)
-            if parfunc and getattr(parfunc, '__doc__', None):
+            if parfunc and getattr(parfunc, '__doc__', None): # pragma: no branch
                 break
 
         if obj:
@@ -1452,12 +1452,12 @@ class doc_inherit(object):
 
     def get_no_inst(self, cls, parfunc):
         @functools.wraps(self.mthd, assigned=('__name__','__module__'))
-        def f(*args, **kwargs):
+        def f(*args, **kwargs): # pragma: no cover (without inst, this is not normally called.)
             return self.mthd(*args, **kwargs)
         return self.use_parent_doc(f, parfunc)
 
     def use_parent_doc(self, func, source):
-        if source is None:
+        if source is None: # pragma: no cover
             raise NameError("Can't find '%s' in parents"%self.name)
         func.__doc__ = source.__doc__
         return func

@@ -146,10 +146,6 @@ class Airy(GSObject):
     @property
     def lam_over_diam(self): return self._lod
     @property
-    def half_light_radius(self): return self.getHalfLightRadius()
-    @property
-    def fwhm(self): return self.getFWHM()
-    @property
     def obscuration(self): return self._obscuration
 
     @property

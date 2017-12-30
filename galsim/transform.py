@@ -374,8 +374,6 @@ class Transformation(GSObject):
             h2 = math.hypot(self._jac[0,0] - self._jac[1,1], self._jac[0,1] + self._jac[1,0])
             self._major = 0.5 * abs(h1+h2)
             self._minor = 0.5 * abs(h1-h2)
-            if self._major < self._minor:
-                self._major, self._minor = self._minor, self._major
 
     @lazy_property
     def _maxk(self):
