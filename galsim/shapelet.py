@@ -24,6 +24,7 @@ import numpy as np
 
 from .gsobject import GSObject
 from .gsparams import GSParams
+from .position import PositionD
 from .image import Image
 from .utilities import doc_inherit
 from . import _galsim
@@ -199,7 +200,7 @@ class Shapelet(GSObject):
 
     @property
     def _centroid(self):
-        return self._sbp.centroid()
+        return PositionD(self._sbp.centroid())
 
     @property
     def _flux(self):
@@ -269,7 +270,6 @@ class Shapelet(GSObject):
 
         @returns the fitted Shapelet profile
         """
-        from .position import PositionD
         if not center:
             center = image.true_center
         # convert from PositionI if necessary

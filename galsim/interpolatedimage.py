@@ -621,7 +621,7 @@ class InterpolatedImage(GSObject):
 
     @property
     def _centroid(self):
-        return self._sbp.centroid()
+        return PositionD(self._sbp.centroid())
 
     @property
     def _positive_flux(self):

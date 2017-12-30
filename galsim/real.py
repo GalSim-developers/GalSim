@@ -414,7 +414,7 @@ class RealGalaxy(GSObject):
 
     @property
     def _centroid(self):
-        return self._sbp.centroid()
+        return PositionD(self._sbp.centroid())
 
     @property
     def _flux(self):
