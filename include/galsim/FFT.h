@@ -61,8 +61,7 @@
 #include <deque>
 #include <complex>
 
-#include "fftw3.h"
-#include "TMV.h"
+#include <fftw3.h>
 
 #include "Std.h"
 #include "Interpolant.h"
@@ -149,16 +148,9 @@ namespace galsim {
             return *this;
         }
 
-        ~FFTW_Array() {}
+        ~FFTW_Array();
 
-        void resize(size_t n)
-        {
-            if (_n != n) {
-                _n = n;
-                _array.resize(n);
-                _p = _array.get();
-            }
-        }
+        void resize(size_t n);
 
         void fill(T val)
         {
@@ -180,9 +172,6 @@ namespace galsim {
 
     private:
         size_t _n;
-        // fftw_malloc doesn't seem to actually guarantee 16 byte alignment, so we instead
-        // use TMV's AlignedArray class to handle the byte alignment for us.
-        tmv::AlignedArray<T> _array;
         T* _p;
     };
 

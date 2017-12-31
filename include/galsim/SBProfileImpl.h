@@ -22,7 +22,6 @@
 
 #include "SBProfile.h"
 #include "integ/Int.h"
-#include "TMV.h"
 
 namespace galsim {
 
