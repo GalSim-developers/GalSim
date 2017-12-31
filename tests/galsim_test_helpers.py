@@ -127,6 +127,16 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
         assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
 
+    # If supposed to be axisymmetric, make sure it is.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.xValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.xValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in xValues"%name)
+
+
 def check_basic_k(prof, name):
     """Check drawKImage
     """
@@ -162,6 +172,15 @@ def check_basic_k(prof, name):
                 err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
         assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
         assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+
+    # If supposed to be axisymmetric, make sure it is in the kValues.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.kValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.kValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in kValues"%name)
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
