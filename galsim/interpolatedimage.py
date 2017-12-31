@@ -876,8 +876,8 @@ class InterpolatedKImage(GSObject):
         self._sbiki = _galsim.SBInterpolatedKImage(
                 self.kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
 
-        if self.kimage.wcs is not None:
-            scale = self.kimage.scale
+        scale = self.kimage.scale
+        if scale != 1.:
             return _galsim.SBTransform(self._sbiki, 1./scale, 0., 0., 1./scale,
                                        _galsim.PositionD(0.,0.), scale**2,
                                        self.gsparams._gsp)
@@ -927,7 +927,7 @@ class InterpolatedKImage(GSObject):
 
     @property
     def _centroid(self):
-        return self._sbp.centroid()
+        return PositionD(self._sbp.centroid())
 
     @property
     def _flux(self):

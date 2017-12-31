@@ -34,6 +34,7 @@ page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGa
 
 from .gsobject import GSObject
 from .chromatic import ChromaticSum
+from .position import PositionD
 import os
 import numpy as np
 from .utilities import doc_inherit

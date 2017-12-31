@@ -103,9 +103,6 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
-    np.testing.assert_almost_equal(
-            prof.positive_flux - prof.negative_flux, prof.flux,
-            err_msg="%s profile flux not equal to posflux + negflux"%name)
 
     print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
@@ -174,6 +171,11 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
         check_basic_x(prof, name, approx_maxsb, scale)
     if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
+
+    # A few things that should work regardless of what is analytic
+    np.testing.assert_almost_equal(
+            prof.positive_flux - prof.negative_flux, prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),

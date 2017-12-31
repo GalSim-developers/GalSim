@@ -1078,6 +1078,8 @@ def test_kroundtrip():
     do_pickle(b)
     do_pickle(b, lambda x: x.drawImage())
 
+    check_basic(b, "InterpolatedKImage", approx_maxsb=True)
+
     for kx, ky in zip(KXVALS, KYVALS):
         np.testing.assert_almost_equal(a.kValue(kx, ky), b.kValue(kx, ky), 3,
             err_msg=("InterpolatedKImage evaluated incorrectly at ({0:},{1:})"
@@ -1087,7 +1089,7 @@ def test_kroundtrip():
 
     kim_b = b.drawKImage(kim_a.copy())
     # Fails at 4th decimal
-    np.testing.assert_array_almost_equal(kim_a.array, kim_b.array, 3,
+    np.testing.assert_array_almost_equal(kim_b.array, kim_a.array, 3,
                                          "InterpolatedKImage kimage drawn incorrectly.")
 
     img_a = a.drawImage()
@@ -1101,6 +1103,8 @@ def test_kroundtrip():
     c = galsim.InterpolatedKImage(kim_c)
     d = galsim.InterpolatedKImage(galsim.ImageCD(kim_c.array))
     assert c == d, "Failed to construct InterpolatedKImage without wcs."
+    do_pickle(d)
+    do_pickle(d, lambda x: x.drawImage())
 
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):

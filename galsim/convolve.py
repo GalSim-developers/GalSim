@@ -518,7 +518,7 @@ class Deconvolution(GSObject):
 
     @property
     def _negative_flux(self):
-        return 1./self.orig_obj.negative_flux
+        return 0. if self.orig_obj.negative_flux==0. else 1./self.orig_obj.negative_flux
 
     @property
     def _max_sb(self):
