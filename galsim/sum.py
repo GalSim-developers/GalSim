@@ -209,17 +209,17 @@ class Sum(GSObject):
     @property
     def _is_axisymmetric(self):
         axi_list = [obj.is_axisymmetric for obj in self.obj_list]
-        return np.all(axi_list)
+        return bool(np.all(axi_list))
 
     @property
     def _is_analytic_x(self):
         ax_list = [obj.is_analytic_x for obj in self.obj_list]
-        return np.all(ax_list)
+        return bool(np.all(ax_list))
 
     @property
     def _is_analytic_k(self):
         ak_list = [obj.is_analytic_k for obj in self.obj_list]
-        return np.all(ak_list)
+        return bool(np.all(ak_list))
 
     @property
     def _centroid(self):

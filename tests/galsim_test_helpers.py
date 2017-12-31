@@ -127,6 +127,13 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
         assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
 
+    # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
+    prof.drawImage(image, method='sb', scale=1., use_true_center=False)
+    image2 = image.copy()
+    prof.drawReal(image2)
+    np.testing.assert_equal(image2.array, image.array,
+                            err_msg="%s drawReal not equivalent to drawImage"%name)
+
     # If supposed to be axisymmetric, make sure it is.
     if prof.is_axisymmetric:
         for r in [0.2, 1.3, 33.4]:
@@ -195,6 +202,17 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     np.testing.assert_almost_equal(
             prof.positive_flux - prof.negative_flux, prof.flux,
             err_msg="%s profile flux not equal to posflux + negflux"%name)
+    assert isinstance(prof.centroid, galsim.PositionD)
+    assert isinstance(prof.flux, float)
+    assert isinstance(prof.positive_flux, float)
+    assert isinstance(prof.negative_flux, float)
+    assert isinstance(prof.max_sb, float)
+    assert isinstance(prof.stepk, float)
+    assert isinstance(prof.maxk, float)
+    assert isinstance(prof.has_hard_edges, bool)
+    assert isinstance(prof.is_axisymmetric, bool)
+    assert isinstance(prof.is_analytic_x, bool)
+    assert isinstance(prof.is_analytic_k, bool)
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),

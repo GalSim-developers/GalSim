@@ -399,10 +399,10 @@ class Transformation(GSObject):
 
     @property
     def _is_axisymmetric(self):
-        return (self._original.is_axisymmetric and
-                self._jac[0,0] == self._jac[1,1] and
-                self._jac[0,1] == -self._jac[1,0] and
-                self._offset == PositionD(0.,0.))
+        return bool(self._original.is_axisymmetric and
+                    self._jac[0,0] == self._jac[1,1] and
+                    self._jac[0,1] == -self._jac[1,0] and
+                    self._offset == PositionD(0.,0.))
 
     @property
     def _is_analytic_x(self):
