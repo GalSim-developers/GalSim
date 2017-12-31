@@ -39,6 +39,10 @@ API Changes
   is also now a numpy array. (#809e)
 - Similarly, the output of getShear, getConvergence and similar methods of
   NFWHalo and PowerSpectrum are always either scalars or numpy arrays. (#809e)
+- The attribute half_light_radius of both InclinedExponential and
+  InclinedSersic has been changed to disk_half_light_radius, since it does
+  not really correspond to the realized half-light radius of the inclined
+  profile (unless the inclination angle is 0 degrees). (#809f)
 
 
 Bug Fixes

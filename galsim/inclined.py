@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+import math
+
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
@@ -78,7 +80,7 @@ class InclinedExponential(GSObject):
 
         >>> inclination = inclined_exponential_obj.inclination
         >>> r0 = inclined_exponential_obj.scale_radius
-        >>> rh = inclined_exponential_obj.half_light_radius
+        >>> rh = inclined_exponential_obj.disk_half_light_radius
         >>> h0 = inclined_exponential_obj.scale_height
         >>> h0_over_r0 = inclined_exponential_obj.scale_h_over_r
     """
@@ -153,7 +155,7 @@ class InclinedExponential(GSObject):
     def scale_height(self): return self._h0
 
     @property
-    def half_light_radius(self): return self._r0 * Exponential._hlr_factor
+    def disk_half_light_radius(self): return self._r0 * Exponential._hlr_factor
     @property
     def scale_h_over_r(self): return self._h0 / self._r0
 
@@ -281,7 +283,7 @@ class InclinedSersic(GSObject):
         >>> inclination = inclined_sersic_obj.inclination
         >>> r0 = inclined_sersic_obj.scale_radius
         >>> h0 = inclined_sersic_obj.scale_height
-        >>> hlr = inclined_sersic_obj.half_light_radius
+        >>> hlr = inclined_sersic_obj.disk_half_light_radius
     """
     _req_params = { "inclination" : Angle, "n" : float }
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float,
@@ -383,7 +385,7 @@ class InclinedSersic(GSObject):
     def scale_h_over_r(self): return self._h0 / self._r0
 
     @property
-    def half_light_radius(self):
+    def disk_half_light_radius(self):
         if self._hlr == 0.:
             self._hlr = self._r0 * _galsim.SersicHLR(self._n, self._flux_fraction)
         return self._hlr
