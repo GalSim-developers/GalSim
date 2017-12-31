@@ -358,10 +358,11 @@ def test_silicon_fft():
     np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
 
     # Repeat with 20X more photons where the brighter-fatter effect should kick in more.
+    # (Also not in true_center, to hit a different branch about offset in the drawImage code.)
     obj *= 200
-    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
-    obj.drawImage(im2, method='fft', sensor=simple, rng=rng)
-    obj.drawImage(im3, method='fft')
+    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng, use_true_center=False)
+    obj.drawImage(im2, method='fft', sensor=simple, rng=rng, use_true_center=False)
+    obj.drawImage(im3, method='fft', use_true_center=False)
 
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)
