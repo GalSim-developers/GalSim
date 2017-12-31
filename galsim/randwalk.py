@@ -21,6 +21,7 @@ import numpy as np
 from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
+from .position import PositionD
 from .utilities import lazy_property, doc_inherit
 
 class RandomWalk(GSObject):
@@ -100,7 +101,7 @@ class RandomWalk(GSObject):
 
     _has_hard_edges = False
     _is_axisymmetric = False
-    _is_analytic_x = True
+    _is_analytic_x = False
     _is_analytic_k = True
 
     def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
@@ -273,16 +274,8 @@ class RandomWalk(GSObject):
         return self._sbp.maxSB()
 
     @doc_inherit
-    def _xValue(self, pos):
-        return self._sbp.xValue(pos._p)
-
-    @doc_inherit
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
-
-    @doc_inherit
-    def _drawReal(self, image):
-        self._sbp.draw(image._image, image.scale)
 
     @doc_inherit
     def _shoot(self, photons, ud):

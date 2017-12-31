@@ -54,6 +54,8 @@ def test_randwalk_defaults():
 
     pts=rw.points
     assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
+    np.testing.assert_almost_equal(rw.centroid.x, np.mean(pts[:,0]))
+    np.testing.assert_almost_equal(rw.centroid.y, np.mean(pts[:,1]))
 
     # Run some basic tests of correctness
     psf = galsim.Gaussian(sigma=0.8)
