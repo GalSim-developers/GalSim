@@ -294,9 +294,9 @@ def test_OpticalPSF_aberrations_kwargs():
     # It must have at least 3 elements
     with assert_raises(ValueError):
         galsim.OpticalPSF(lod, aberrations=[0.0]*2)
-    if 'assert_warns' in np.testing.__dict__:
-        # The first element must be 0. (Just a warning!)
-        np.testing.assert_warns(UserWarning,galsim.OpticalPSF,lod,aberrations=[0.3]*8)
+    # The first element must be 0. (Just a warning!)
+    with assert_warns(UserWarning):
+        galsim.OpticalPSF(lod, aberrations=[0.3]*8)
     # Cannot provide both aberrations and specific ones by name.
     with assert_raises(TypeError):
         galsim.OpticalPSF(lod, aberrations=np.zeros(8), defocus=-0.12)

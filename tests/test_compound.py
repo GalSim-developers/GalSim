@@ -345,22 +345,18 @@ def test_realspace_convolve():
     do_pickle(conv._sbp)
 
     # Check some warnings that should be raised
-
-    try:
-        # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
-        # 2 with hard edges gives a warning if we ask it not to use real_space
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
-        # >2 of any kind give a warning if we ask it to use real_space
-        g = galsim.Gaussian(sigma=2)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
-        # non-analytic profiles cannot do real_space
-        d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
-    except ImportError:
-        pass
+    # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
+    # 2 with hard edges gives a warning if we ask it not to use real_space
+    assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
+    # >2 of any kind give a warning if we ask it to use real_space
+    g = galsim.Gaussian(sigma=2)
+    assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
+    # non-analytic profiles cannot do real_space
+    d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
+    assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
 
     # Repeat some of the above for AutoConvolve and AutoCorrelate
     conv = galsim.AutoConvolve(psf,real_space=True)
@@ -375,14 +371,10 @@ def test_realspace_convolve():
     do_pickle(conv)
     do_pickle(conv._sbp)
 
-    try:
-        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
-        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
-    except ImportError:
-        pass
-
+    assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
+    assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
+    assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
+    assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
 
 
 @timer
@@ -1121,10 +1113,8 @@ def test_compound_noise():
     # Adding noise objects with different WCSs will raise a warning.
     obj4 = galsim.Gaussian(sigma=3.3)
     obj4.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.8)
-    try:
-        np.testing.assert_warns(UserWarning, galsim.Sum, [obj1, obj4])
-    except:
-        pass
+    with assert_warns(UserWarning):
+        galsim.Sum([obj1, obj4]).noise
 
     # Convolve convolves the noise from a single component
     conv2 = galsim.Convolution([obj1,obj3])
@@ -1141,20 +1131,16 @@ def test_compound_noise():
 
     # Convolution of multiple objects with noise attributes raises a warning and fails
     # to propagate noise properly.  (It takes the input noise from the first one.)
-    try:
-        conv2 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2])
-        conv3 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2, obj3])
-        # Other types don't propagate noise and give a warning about it.
-        np.testing.assert_warns(UserWarning, galsim.Deconvolve, obj1)
-        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, obj1)
-        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
-        np.testing.assert_warns(UserWarning, galsim.FourierSqrt, obj1)
-    except:
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            conv2 = galsim.Convolution([obj1,obj2])
-            conv3 = galsim.Convolution([obj1,obj2,obj3])
+    conv2 = galsim.Convolution([obj1, obj2])
+    conv3 = galsim.Convolution([obj1, obj2, obj3])
+    assert_warns(UserWarning, getattr, conv2, 'noise')
+    assert_warns(UserWarning, getattr, conv3, 'noise')
+
+    # Other types don't propagate noise and give a warning about it.
+    assert_warns(UserWarning, galsim.Deconvolve, obj1)
+    assert_warns(UserWarning, galsim.AutoConvolve, obj1)
+    assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
+    assert_warns(UserWarning, galsim.FourierSqrt, obj1)
 
     obj2.noise = None  # Remove obj2 noise for the rest.
     noise = galsim.Convolve([obj1.noise._profile, obj2, obj2])

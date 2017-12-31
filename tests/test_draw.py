@@ -1050,12 +1050,10 @@ def test_drawImage_area_exptime():
     msg = "obj.drawImage(method='phot') unexpectedly produced equal images with different rng"
     assert not np.allclose(im5.array, im4.array), msg
 
-    try:
-        # Shooting with flux=1 raises a warning.
-        obj1 = obj.withFlux(1)
-        np.testing.assert_warns(UserWarning, obj1.drawImage, method='phot')
-    except ImportError:
-        pass
+    # Shooting with flux=1 raises a warning.
+    obj1 = obj.withFlux(1)
+    with assert_warns(UserWarning):
+        obj1.drawImage(method='phot')
     # But not if we explicitly tell it to shoot 1 photon
     import warnings
     with warnings.catch_warnings():

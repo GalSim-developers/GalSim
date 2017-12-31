@@ -605,5 +605,6 @@ class Dummy(unittest.TestCase):
         pass
 _t = Dummy('nop')
 assert_raises = getattr(_t, 'assertRaises')
+assert_warns = getattr(_t, 'assertWarns')
 del Dummy
 del _t

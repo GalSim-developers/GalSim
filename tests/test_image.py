@@ -2921,18 +2921,12 @@ def test_FITS_bad_type():
     testS_file = os.path.join(datadir, "testS.fits")
     testMultiS_file = os.path.join(datadir, "test_multiS.fits")
     testCubeS_file = os.path.join(datadir, "test_cubeS.fits")
-    try:
-        testS_image = np.testing.assert_warns(
-                UserWarning, galsim.fits.read, testS_file)
-        testMultiS_image_list = np.testing.assert_warns(
-                UserWarning, galsim.fits.readMulti, testMultiS_file)
-        testCubeS_image_list = np.testing.assert_warns(
-                UserWarning, galsim.fits.readCube, testCubeS_file)
-    except ImportError:
-        with warnings.catch_warnings(UserWarning):
-            testS_image = galsim.fits.read(testS_file)
-            testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
-            testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
+    with assert_warns(UserWarning):
+        testS_image = galsim.fits.read(testS_file)
+    with assert_warns(UserWarning):
+        testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
+    with assert_warns(UserWarning):
+        testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
 
     np.testing.assert_equal(np.float64, testS_image.array.dtype.type)
     np.testing.assert_array_equal(ref_array.astype(float), testS_image.array,

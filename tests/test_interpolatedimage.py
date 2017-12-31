@@ -1057,12 +1057,8 @@ def test_kroundtrip():
     np.testing.assert_almost_equal(b.maxk, c.maxk)
 
     # Smaller stepk is overridden.
-    try:
-        d = np.testing.assert_warns(UserWarning,
-                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepk)
-    except ImportError:
-        with warnings.catch_warnings(UserWarning):
-            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
+    with assert_warns(UserWarning):
+        d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
     np.testing.assert_almost_equal(b.stepk, d.stepk)
     np.testing.assert_almost_equal(b.maxk, d.maxk)
 
