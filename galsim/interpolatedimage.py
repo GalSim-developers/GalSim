@@ -459,28 +459,28 @@ class InterpolatedImage(GSObject):
         from .correlatednoise import _BaseCorrelatedNoise, CorrelatedNoise
 
         # Make sure we make rng a BaseDeviate if rng is None
-        rng = BaseDeviate(rng)
+        rng1 = BaseDeviate(rng)
 
         # Figure out what kind of noise to apply to the image
         try:
             noise_pad = float(noise_pad)
             if noise_pad < 0.:
                 raise ValueError("Noise variance cannot be negative!")
-            noise = GaussianNoise(rng, sigma = np.sqrt(noise_pad))
+            noise = GaussianNoise(rng1, sigma = np.sqrt(noise_pad))
 
         except (TypeError, ValueError):
             if isinstance(noise_pad, _BaseCorrelatedNoise):
-                noise = noise_pad.copy(rng=rng)
+                noise = noise_pad.copy(rng=rng1)
             elif isinstance(noise_pad, Image):
-                noise = CorrelatedNoise(noise_pad, rng)
+                noise = CorrelatedNoise(noise_pad, rng1)
             elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
                 noise = InterpolatedImage._cache_noise_pad[noise_pad]
                 if rng:
                     # Make sure that we are using a specified RNG by resetting that in this cached
                     # CorrelatedNoise instance, otherwise preserve the cached RNG
-                    noise = noise.copy(rng=rng)
+                    noise = noise.copy(rng=rng1)
             elif isinstance(noise_pad, basestring):
-                noise = CorrelatedNoise(fits.read(noise_pad), rng)
+                noise = CorrelatedNoise(fits.read(noise_pad), rng1)
                 if use_cache:
                     InterpolatedImage._cache_noise_pad[noise_pad] = noise
             else:
@@ -612,7 +612,7 @@ class InterpolatedImage(GSObject):
         xim_bounds = d.pop('_xim_bounds')
         image_bounds = d.pop('_image_bounds')
         self.__dict__ = d
-        if self._pad_factor <= 1.:
+        if self._pad_image.bounds == xim_bounds:
             self._xim = self._pad_image
         else:
             self._xim = Image(xim_bounds, wcs=self._wcs, dtype=self._pad_image.dtype)

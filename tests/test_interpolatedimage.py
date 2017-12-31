@@ -76,14 +76,28 @@ def test_roundtrip():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        interp = galsim.InterpolatedImage(image_in, scale=test_scale)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
+
+        for wcs in [ galsim.PixelScale(2.0),
+                     galsim.JacobianWCS(2.1, 0.3, -0.4, 2.3),
+                     galsim.AffineTransform(-0.3, 2.1, 1.8, 0.1, galsim.PositionD(0.3, -0.4)) ]:
+            interp = galsim.InterpolatedImage(image_in, wcs=wcs)
+            image_out = galsim.Image(test_array, wcs=wcs)
+            interp.drawImage(image_out, method='no_pixel')
+            np.testing.assert_array_equal(
+                    ref_array.astype(array_type),image_out.array,
+                    err_msg="Output Image differs from reference for type %s, wcs %s"%
+                            (array_type,wcs))
+
+        # And using scale, which is equivalent to the first pass above (but hits a different
+        # code path).
+        interp = galsim.InterpolatedImage(image_in, scale=test_scale)
         image_out = galsim.Image(test_array, scale=test_scale)
         interp.drawImage(image_out, method='no_pixel')
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
-                err_msg="Array from output Image differs from reference array for type %s"%
-                        array_type)
+                err_msg="Output Image differs from reference for type %s, scale %s"%
+                        (array_type,test_scale))
 
         # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
         # Gary says that's expected -- Lanczos isn't technically flux conserving.
@@ -121,24 +135,25 @@ def test_roundtrip():
         galsim.InterpolatedImage(im, x_interpolant=x).drawImage(method='no_pixel'))
 
     do_pickle(galsim.Delta(), test_func)
-    do_pickle(galsim.Delta(tol=0.1), test_func)
+    do_pickle(galsim.Delta(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Delta())
     do_pickle(galsim.Nearest(), test_func)
-    do_pickle(galsim.Nearest(tol=0.1), test_func)
+    do_pickle(galsim.Nearest(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Nearest())
     do_pickle(galsim.SincInterpolant(tol=0.1), test_func)  # Can't really do this with tol=1.e-4
+    do_pickle(galsim.SincInterpolant(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.SincInterpolant())
     do_pickle(galsim.Linear(), test_func)
-    do_pickle(galsim.Linear(tol=0.1), test_func)
+    do_pickle(galsim.Linear(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Linear())
     do_pickle(galsim.Lanczos(3), test_func)
-    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1), test_func)
+    do_pickle(galsim.Lanczos(n=7, conserve_dc=False, tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Lanczos(3))
     do_pickle(galsim.Cubic(), test_func)
-    do_pickle(galsim.Cubic(tol=0.1), test_func)
+    do_pickle(galsim.Cubic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Cubic())
     do_pickle(galsim.Quintic(), test_func)
-    do_pickle(galsim.Quintic(tol=0.1), test_func)
+    do_pickle(galsim.Quintic(tol=0.1), lambda x: (x.xrange, x.krange))
     do_pickle(galsim.Quintic())
     do_pickle(galsim.Interpolant.from_name('nearest'))
     do_pickle(galsim.Interpolant.from_name('delta'))
@@ -156,7 +171,6 @@ def test_roundtrip():
         np.testing.assert_raises(ValueError, galsim.Interpolant.from_name, 'lanzos')
     except ImportError:
         pass
-
 
 @timer
 def test_fluxnorm():
@@ -533,6 +547,14 @@ def test_uncorr_padding():
     if __name__ == '__main__':
         do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
         do_pickle(int_im)
+    else:
+        # On pytest runs, use a smaller noise_pad_size for the pickle tests so it doesn't take
+        # so long to serialize.
+        int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                          pad_factor=1,
+                                          noise_pad_size=max(orig_nx+10,orig_ny+10),
+                                          rng = galsim.GaussianDeviate(orig_seed))
+        do_pickle(int_im)
 
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
@@ -645,8 +667,7 @@ def test_corr_padding():
     orig_seed = 151241
 
     # Read in some small image of a noise field from HST.
-    # Rescale it to have a decently large amplitude for the purpose of doing these tests.
-    im = 1.e2*galsim.fits.read(imgfile)
+    im = galsim.fits.read(imgfile)
     # Make a CorrrlatedNoise out of it.
     cn = galsim.CorrelatedNoise(im, galsim.BaseDeviate(orig_seed))
 
@@ -669,8 +690,46 @@ def test_corr_padding():
         do_pickle(int_im)
 
     # make it into an InterpolatedImage with noise-padding
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = im, noise_pad_size = max(big_nx,big_ny))
+    int_im = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                      noise_pad=im, noise_pad_size=max(big_nx,big_ny))
+
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny, scale=1.)
+    int_im.drawImage(big_img, method='no_pixel')
+    # check that variance is same as original - here, we cannot be too precise because the padded
+    # region is not huge and the comparison will be, well, noisy.
+    np.testing.assert_almost_equal(np.var(big_img.array), np.var(orig_img.array),
+        decimal=decimal_coarse,
+        err_msg='Variance not correct after padding image with correlated noise')
+    if __name__ == '__main__':
+        do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
+        do_pickle(int_im)
+
+    # Check the option to read the image from a file and also cache the resulting noise object
+    int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       noise_pad=imgfile, noise_pad_size=max(big_nx,big_ny))
+    big_img2 = galsim.ImageF(big_nx, big_ny)
+    big_img2 = int_im2.drawImage(big_img.copy(), method='no_pixel')
+    np.testing.assert_array_equal(big_img2.array, big_img.array)
+    # Repeating the same file should use the cached value.
+    int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       noise_pad=imgfile, noise_pad_size=max(big_nx,big_ny))
+    big_img3 = int_im3.drawImage(big_img.copy(), method='no_pixel')
+    np.testing.assert_array_equal(big_img3.array, big_img.array)
+    # Unless we tell it not to.  (Functionality is the same, but less efficient.)
+    int_im4 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       noise_pad=imgfile, noise_pad_size=max(big_nx,big_ny),
+                                       use_cache=False)
+    big_img4 = int_im4.drawImage(big_img.copy(), method='no_pixel')
+    np.testing.assert_array_equal(big_img4.array, big_img.array)
+    # If we don't provide the rng for a cached noise object, it keeps using the one it had.
+    int_im5 = galsim.InterpolatedImage(orig_img,
+                                       noise_pad=imgfile, noise_pad_size=max(big_nx,big_ny))
+    big_img5 = int_im5.drawImage(big_img.copy(), method='no_pixel')
+    assert not np.all(big_img5.array == big_img.array)
+    np.testing.assert_almost_equal(np.var(big_img5.array), np.var(orig_img.array),
+        decimal=decimal_coarse,
+        err_msg='Variance not correct using cached noise, without resetting rng')
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -687,9 +746,8 @@ def test_corr_padding():
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
-    int_im = galsim.InterpolatedImage(
-        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn,
-        noise_pad_size = max(big_nx,big_ny))
+    int_im = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                      noise_pad=cn, noise_pad_size=max(big_nx,big_ny))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.drawImage(big_img_2, scale=1., method='no_pixel')
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
@@ -711,9 +769,9 @@ def test_corr_padding():
     inimg = galsim.fits.read(infile)
     incf = galsim.CorrelatedNoise(inimg, galsim.GaussianDeviate()) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=inimg, noise_pad_size = max(big_nx,big_ny))
+                                       noise_pad=inimg, noise_pad_size=max(big_nx,big_ny))
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=incf, noise_pad_size = max(big_nx,big_ny))
+                                       noise_pad=incf, noise_pad_size=max(big_nx,big_ny))
     big_img2 = galsim.ImageF(big_nx, big_ny)
     big_img3 = galsim.ImageF(big_nx, big_ny)
     int_im2.drawImage(big_img2, scale=1., method='no_pixel')

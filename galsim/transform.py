@@ -444,11 +444,17 @@ class Transformation(GSObject):
 
     @doc_inherit
     def _drawReal(self, image):
-        self._sbp.draw(image._image, image.scale)
+        if self.offset == PositionD(0.,0.) and np.array_equal(self.jac.ravel(), [1,0,0,1]):
+            self._original._drawReal(image)
+            if self._flux_ratio != 1.:
+                image *= self._flux_ratio
+        else:
+            # TODO: Refactor the C++ draw function to allow this to be implemented in python
+            self._sbp.draw(image._image, image.scale)
 
     @doc_inherit
     def _shoot(self, photons, ud):
-        self.original._shoot(photons, ud)
+        self._original._shoot(photons, ud)
         photons.x, photons.y = self._fwd(photons.x, photons.y)
         photons.x += self.offset.x
         photons.y += self.offset.y
