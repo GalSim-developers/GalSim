@@ -228,22 +228,28 @@ def test_exponential():
     """
 
     scale_radius = 3.0
-
-    # Prepare the exponential profile's image
-    exp_profile = galsim.Exponential(scale_radius=scale_radius)
-    exp_image = galsim.Image(image_nx, image_ny, scale=1.0)
-    exp_profile.drawImage(exp_image)
-
+    hlr = 1.7
     mode = "InclinedExponential"
 
+    # Construct from scale_radius
+    exp_profile = galsim.Exponential(scale_radius=scale_radius)
     inc_profile = get_prof(mode, 0 * galsim.radians, scale_radius=scale_radius,
-                                                 scale_height=scale_radius / 10.)
+                           scale_height=scale_radius / 10.)
     np.testing.assert_almost_equal(inc_profile.scale_radius, exp_profile.scale_radius)
     np.testing.assert_almost_equal(inc_profile.disk_half_light_radius,
                                    exp_profile.half_light_radius)
 
-    inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
+    # Construct from half_light_radius
+    exp_profile = galsim.Exponential(half_light_radius=hlr)
+    inc_profile = get_prof(mode, 0 * galsim.radians, half_light_radius=hlr,
+                           scale_height=scale_radius / 10.)
+    np.testing.assert_almost_equal(inc_profile.scale_radius, exp_profile.scale_radius)
+    np.testing.assert_almost_equal(inc_profile.disk_half_light_radius,
+                                   exp_profile.half_light_radius)
 
+    exp_image = galsim.Image(image_nx, image_ny, scale=1.0)
+    exp_profile.drawImage(exp_image)
+    inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
     inc_profile.drawImage(inc_image)
 
     # Check that they're the same
@@ -261,17 +267,23 @@ def test_sersic():
 
     ns = (1.1, 1.1, 2.5, 2.5)
     truncs = (0, 13.5, 0, 18.0)
+    scale_radius = 3.0
     hlr = 1.7
+    mode = "InclinedSersic"
 
     for n, trunc in zip(ns, truncs):
 
-        # Prepare the sersic profile's image
+        # Construct from scale_radius
+        sersic_profile = galsim.Sersic(n=n, scale_radius=scale_radius, trunc=trunc)
+        inc_profile = get_prof(mode, n=n, trunc=trunc, inclination=0 * galsim.radians,
+                               scale_radius=scale_radius,
+                               scale_height=hlr / 10.)
+        np.testing.assert_almost_equal(inc_profile.scale_radius, sersic_profile.scale_radius)
+        np.testing.assert_almost_equal(inc_profile.disk_half_light_radius,
+                                       sersic_profile.half_light_radius)
+
+        # Construct from half-light radius
         sersic_profile = galsim.Sersic(n=n, half_light_radius=hlr, trunc=trunc)
-        sersic_image = galsim.Image(image_nx, image_ny, scale=1.0)
-        sersic_profile.drawImage(sersic_image)
-
-        mode = "InclinedSersic"
-
         inc_profile = get_prof(mode, n=n, trunc=trunc, inclination=0 * galsim.radians,
                                half_light_radius=hlr,
                                scale_height=hlr / 10.)
@@ -279,8 +291,10 @@ def test_sersic():
         np.testing.assert_almost_equal(inc_profile.disk_half_light_radius,
                                        sersic_profile.half_light_radius)
 
+        sersic_image = galsim.Image(image_nx, image_ny, scale=1.0)
+        sersic_profile.drawImage(sersic_image)
         inc_image = galsim.Image(image_nx, image_ny, scale=1.0)
-        inc_profile.drawImage(inc_image, method="fft")
+        inc_profile.drawImage(inc_image)
 
         if save_profiles:
             sersic_image.write("test_sersic.fits", image_dir, clobber=True)
