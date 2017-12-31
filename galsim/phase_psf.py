@@ -1581,11 +1581,11 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
-        if self._force_stepk is not None:
+        if self._force_stepk != 0.:
             s += ", _force_stepk=%r" % self._force_stepk
-        if self._force_maxk is not None:
+        if self._force_maxk != 0.:
             s += ", _force_maxk=%r" % self._force_maxk
-        if self._ii_pad_factor is not None:
+        if self._ii_pad_factor != 4.:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
@@ -1631,10 +1631,6 @@ class OpticalPSF(GSObject):
                                    _force_maxk=self._force_maxk,
                                    ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-
-    @property
-    def _sbp(self):
-        return self._psf._sbp
 
     @property
     def _maxk(self):
