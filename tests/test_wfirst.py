@@ -229,6 +229,7 @@ def test_wfirst_wcs():
     assert galsim.wfirst.allowedPos(pos, datetime.date(2025,3,20))
     assert galsim.wfirst.allowedPos(pos, datetime.date(2025,9,20))
     assert not galsim.wfirst.allowedPos(pos, datetime.date(2025,6,20))
+    assert galsim.wfirst.bestPA(pos, datetime.date(2025,6,20)) is None
 
     # Finally make sure it does something reasonable for the observatory position angle.
     # When the sun is at (0,0), and we look at (90,0), then +Z points towards the Sun and +Y points
