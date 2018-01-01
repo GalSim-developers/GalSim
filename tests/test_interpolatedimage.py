@@ -212,33 +212,36 @@ def test_fluxnorm():
 def test_exceptions():
     """Test failure modes for InterpolatedImage class.
     """
-    try:
-        # What if it receives as input something that is not an Image? Give it a GSObject to check.
-        g = galsim.Gaussian(sigma=1.)
-        np.testing.assert_raises((ValueError, AttributeError), galsim.InterpolatedImage, g)
-        # What if Image does not have a scale set, but scale keyword is not specified?
-        im = galsim.ImageF(5, 5)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-        # Image must have bounds defined
-        im = galsim.ImageF()
-        im.scale = 1.
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-        # Weird flux normalization
-        im = galsim.ImageF(5, 5, scale=1.)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
-        # scale and WCS
-        np.testing.assert_raises(TypeError, galsim.InterpolatedImage, im,
-                                 wcs = galsim.PixelScale(1.), scale=1.)
-        # weird WCS
-        np.testing.assert_raises(TypeError, galsim.InterpolatedImage, im,
-                                 wcs = 1.)
-        # Weird interpolant - give it something random like a GSObject
-        np.testing.assert_raises(Exception, galsim.InterpolatedImage, im, x_interpolant = g)
-        # Image has wrong type
-        im = galsim.ImageI(5, 5)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # What if it receives as input something that is not an Image? Give it a GSObject to check.
+    g = galsim.Gaussian(sigma=1.)
+    with assert_raises((ValueError, AttributeError)):
+        galsim.InterpolatedImage(g)
+    # What if Image does not have a scale set, but scale keyword is not specified?
+    im = galsim.ImageF(5, 5)
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(im)
+    # Image must have bounds defined
+    im = galsim.ImageF()
+    im.scale = 1.
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(im)
+    # Weird flux normalization
+    im = galsim.ImageF(5, 5, scale=1.)
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(im, normalization = 'foo')
+    # scale and WCS
+    with assert_raises(TypeError):
+        galsim.InterpolatedImage(im, wcs = galsim.PixelScale(1.), scale=1.)
+    # weird WCS
+    with assert_raises(TypeError):
+        galsim.InterpolatedImage(im, wcs = 1.)
+    # Weird interpolant - give it something random like a GSObject
+    with assert_raises(Exception):
+        galsim.InterpolatedImage(im, x_interpolant = g)
+    # Image has wrong type
+    im = galsim.ImageI(5, 5)
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(im)
 
 
 @timer
@@ -539,10 +542,8 @@ def test_uncorr_padding():
         do_pickle(int_im)
 
     # Finally check inputs: what if we give it an input variance that is neg?  A list?
-    try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(orig_img, noise_pad=-1.)
 
 
 @timer
@@ -688,10 +689,8 @@ def test_corr_padding():
 
     # Finally, check inputs:
     # what if we give it a screwy way of defining the image padding?
-    try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        galsim.InterpolatedImage(orig_img, noise_pad=-1.)
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
@@ -1058,12 +1057,8 @@ def test_kroundtrip():
     np.testing.assert_almost_equal(b.maxk, c.maxk)
 
     # Smaller stepk is overridden.
-    try:
-        d = np.testing.assert_warns(UserWarning,
-                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepk)
-    except ImportError:
-        with warnings.catch_warnings(UserWarning):
-            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
+    with assert_warns(UserWarning):
+        d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepk)
     np.testing.assert_almost_equal(b.stepk, d.stepk)
     np.testing.assert_almost_equal(b.maxk, d.maxk)
 
@@ -1117,14 +1112,11 @@ def test_multihdu_readin():
             err_msg='Did not get right shape image after reading real_kimage from HDU')
 
     # Check for exception with invalid HDU.
-    try:
-        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
-        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
-                                 real_kimage=infile, imag_kimage=infile, real_hdu=37, imag_hdu=1)
-        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
-                                 real_kimage=infile, imag_kimage=infile, real_hdu=1, imag_hdu=37)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
+    assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                  real_kimage=infile, imag_kimage=infile, real_hdu=37, imag_hdu=1)
+    assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                  real_kimage=infile, imag_kimage=infile, real_hdu=1, imag_hdu=37)
 
 
 @timer

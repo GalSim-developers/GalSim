@@ -180,18 +180,12 @@ def test_draw_add_commutativity():
     # plotme(chromatic_image)
 
     # Check error handling of too few sample points
-    try:
-        integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midptRule, N=1,
-                                                       use_endpoints=False)
-        np.testing.assert_raises(ValueError, chromatic_final.drawImage, bandpass,
-                                 integrator=integrator)
-        integrator = galsim.integ.ContinuousIntegrator(galsim.integ.trapzRule, N=1,
-                                                       use_endpoints=False)
-        np.testing.assert_raises(ValueError, chromatic_final.drawImage, bandpass,
-                                 integrator=integrator)
-    except ImportError:
-        print("The assert_raises tests require nose")
-
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.midptRule, N=1, use_endpoints=False)
+    with assert_raises(ValueError):
+        chromatic_final.drawImage(bandpass, integrator=integrator)
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.trapzRule, N=1, use_endpoints=False)
+    with assert_raises(ValueError):
+        chromatic_final.drawImage(bandpass, integrator=integrator)
 
     peak = chromatic_image.array.max()
     printval(GS_image, chromatic_image)
@@ -207,19 +201,14 @@ def test_draw_add_commutativity():
                 +"galsim.chromatic")
 
     # As an aside, check for appropriate tests of 'integrator' argument.
-    try:
-        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
-                                 integrator='midp') # minor misspelling
-        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
-                                 integrator='midp') # minor misspelling
-        np.testing.assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
-                                 integrator=galsim.integ.midpt)
-        np.testing.assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
-                                 integrator=galsim.integ.midpt)
-    except ImportError:
-        print('The assert_raises tests require nose')
-
-
+    assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                  integrator='midp') # minor misspelling
+    assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                  integrator='midp') # minor misspelling
+    assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
+                  integrator=galsim.integ.midpt)
+    assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
+                  integrator=galsim.integ.midpt)
 
 
 @timer
@@ -548,13 +537,8 @@ def test_chromatic_flux():
         int_flux/analytic_flux, 1.0, 3,
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
-    try:
-        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
-                                 integrator='midp') # minor misspelling
-        np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
-                                 integrator=galsim.integ.midpt)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
     PSF = PSF.deinterpolated
@@ -1197,13 +1181,9 @@ def test_analytic_integrator():
                                          "Analytic integrator doesn't match sample integrator")
 
     # Test that attempting to use SampleIntegrator with analytic sed, bandpass raises an Error:
-    try:
-        np.testing.assert_raises(
-            AttributeError, final1.drawImage, band1,
-            integrator=galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule))
-    except ImportError:
-        print('The assert_raises tests require nose')
-
+    with assert_raises(AttributeError):
+        final1.drawImage(band1,
+                         integrator=galsim.integ.SampleIntegrator(rule=galsim.integ.trapzRule))
 
 
 @timer
@@ -1215,19 +1195,15 @@ def test_gsparam():
     # getting properly forwarded through the internals of ChromaticObjects.
     gsparams = galsim.GSParams(maximum_fft_size=16)
     gal = galsim.Gaussian(fwhm=1, gsparams=gsparams) * bulge_SED
-    try:
-        np.testing.assert_raises(RuntimeError, gal.drawImage, bandpass)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        gal.drawImage(bandpass)
 
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
     psf = galsim.Gaussian(sigma=0.4)
     final = galsim.Convolve([gal, psf], gsparams=gsparams)
-    try:
-        np.testing.assert_raises(RuntimeError, final.drawImage, bandpass)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        final.drawImage(bandpass)
 
     do_pickle(final)
 
@@ -1563,10 +1539,8 @@ def test_interpolated_ChromaticObject():
         ' when including achromatic transformations after precomputation')
 
     # Check that the routine does not interpolate outside of its original bounds.
-    try:
-        np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        obj_interp.drawImage(bandpass_z)
 
     # Make sure it behaves appropriately when asked to apply chromatic transformations after
     # interpolating: it should do the job properly after un-setting the interpolation.
@@ -1864,12 +1838,9 @@ def test_convolution_of_spectral():
     galsim.Convolve(cgal1, cgal2, cgal3)
 
     # This should raise a ValueError
-    try:
-        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1)
-        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal1)
-        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal2, cgal3)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.Convolve, cgal1, cgal1)
+    assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal1)
+    assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal2, cgal3)
 
 
 @timer
@@ -2176,7 +2147,7 @@ def test_ne():
     all_obj_diff(gals)
 
     # Check that all the various combinations are properly unequal
-    gals = [cgal1, 
+    gals = [cgal1,
             galsim.ChromaticObject(gal1),
             galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50)),
             galsim.ChromaticAtmosphere(gal1, 500.0, zenith_angle=30*galsim.degrees),

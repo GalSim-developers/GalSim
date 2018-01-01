@@ -92,14 +92,11 @@ def test_real_galaxy_ideal():
     # or when trying to specify the galaxy too many ways
     rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
     rg_2 = galsim.RealGalaxy(rgc, random=True)
-    try:
-        np.testing.assert_raises(TypeError, galsim.RealGalaxy, rgc, index=ind_fake, rng='foo')
-        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, id=0)
-        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, random=True)
-        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
-        np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.RealGalaxy, rgc, index=ind_fake, rng='foo')
+    assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, id=0)
+    assert_raises(AttributeError, galsim.RealGalaxy, rgc, index=ind_fake, random=True)
+    assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
+    assert_raises(AttributeError, galsim.RealGalaxy, rgc)
     # Different RNGs give different random galaxies.
     rg_3 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(12345))
     rg_4 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890))
@@ -260,7 +257,8 @@ def test_pickle_crg():
     # Check that missing band raises ValueError
     orig_band = f606w_cat.band
     f606w_cat.band = 'eggs'
-    np.testing.assert_raises(ValueError, f606w_cat.getBandpass)
+    with assert_raises(ValueError):
+        f606w_cat.getBandpass()
     f606w_cat.band = orig_band
     f606w_cat.getBandpass()
 

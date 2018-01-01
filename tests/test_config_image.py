@@ -223,10 +223,8 @@ def test_phot():
     # So without the noise field, it will raise an exception.
     del config['image']['n_photons']
     del config['stamp']['n_photons']
-    try:
-        np.testing.assert_raises(AttributeError, galsim.config.BuildImage, config)
-    except ImportError:
-        pass
+    with assert_raises(AttributeError):
+        galsim.config.BuildImage(config)
 
     # Using this much extra noise with a sky noise variance of 50 cuts the number of photons
     # approximately in half.
@@ -380,11 +378,8 @@ def test_reject():
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
     galsim.config.RemoveCurrent(config)
-    try:
-        np.testing.assert_raises((ValueError,IndexError,RuntimeError),
-                                 galsim.config.BuildStamps, nimages, config, do_noise=False)
-    except ImportError:
-        pass
+    with assert_raises((ValueError, IndexError, RuntimeError)):
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
     try:
         with CaptureLog() as cl:
             galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
@@ -645,15 +640,12 @@ def test_ring():
     gal4b = disk + bulge
     gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
-        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
-        gal4c = disk + bulge
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+    gal4c = disk + bulge
+    with assert_raises(AssertionError):
+        gsobject_compare(gal4a, gal4c, conv=galsim.Gaussian(sigma=1))
 
 
 @timer
@@ -758,15 +750,14 @@ def test_scattered():
 
     np.testing.assert_almost_equal(image.array, image2.array)
 
-    try:
-        # Check error message for missing nobjects
-        del config['image']['nobjects']
-        np.testing.assert_raises(AttributeError, galsim.config.BuildImage,config)
-        # Also if there is an input field that doesn't have nobj capability
-        config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
-        np.testing.assert_raises(AttributeError, galsim.config.BuildImage,config)
-    except ImportError:
-        pass
+    # Check error message for missing nobjects
+    del config['image']['nobjects']
+    with assert_raises(AttributeError):
+        galsim.config.BuildImage(config)
+    # Also if there is an input field that doesn't have nobj capability
+    config['input'] = { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } }
+    with assert_raises(AttributeError):
+        galsim.config.BuildImage(config)
     # However, an input field that does have nobj will return something for nobjects.
     # This catalog has 3 rows, so equivalent to nobjects = 3
     config['input'] = { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } }
@@ -1307,11 +1298,8 @@ def test_wcs():
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
     assert wcs == galsim.PixelScale(1.0)
 
-    try:
-        np.testing.assert_raises(ValueError,
-                                 galsim.config.BuildWCS, config['image'], 'invalid', config)
-    except ImportError:
-        pass
+    with assert_raises(ValueError):
+        galsim.config.BuildWCS(config['image'], 'invalid', config)
 
 @timer
 def test_index_key():

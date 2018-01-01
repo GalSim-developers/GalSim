@@ -228,11 +228,8 @@ def test_OpticalPSF_aberrations_struts():
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
-    try:
-        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
-                                 strut_angle=8.) # wrong units
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(TypeError):
+        galsim.OpticalPSF(lod, nstruts=5, strut_thick=0.01, strut_angle=8.) # wrong units
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics)
 
@@ -291,19 +288,18 @@ def test_OpticalPSF_aberrations_kwargs():
     do_pickle(opt2)
 
     # Also, check for proper response to weird inputs.
-    try:
-        # aberrations must be a list or an array
-        np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=0.3)
-        # It must have at least 3 elements
-        np.testing.assert_raises(ValueError,galsim.OpticalPSF,lod,aberrations=[0.0]*2)
-        if 'assert_warns' in np.testing.__dict__:
-            # The first element must be 0. (Just a warning!)
-            np.testing.assert_warns(UserWarning,galsim.OpticalPSF,lod,aberrations=[0.3]*8)
-        # Cannot provide both aberrations and specific ones by name.
-        np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
-                                 defocus=-0.12)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # aberrations must be a list or an array
+    with assert_raises(TypeError):
+        galsim.OpticalPSF(lod, aberrations=0.3)
+    # It must have at least 3 elements
+    with assert_raises(ValueError):
+        galsim.OpticalPSF(lod, aberrations=[0.0]*2)
+    # The first element must be 0. (Just a warning!)
+    with assert_warns(UserWarning):
+        galsim.OpticalPSF(lod, aberrations=[0.3]*8)
+    # Cannot provide both aberrations and specific ones by name.
+    with assert_raises(TypeError):
+        galsim.OpticalPSF(lod, aberrations=np.zeros(8), defocus=-0.12)
 
 
 @timer
@@ -678,13 +674,10 @@ def test_OpticalPSF_lamdiam():
         err_msg="Inconsistent OpticalPSF when using different initialization arguments.")
 
     # Now make sure we cannot do some weird mix-and-match of arguments.
-    try:
-        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam=1.) # need diam too!
-        np.testing.assert_raises(TypeError, galsim.OpticalPSF, diam=1.) # need lam too!
-        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
-        np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.OpticalPSF, lam=1.) # need diam too!
+    assert_raises(TypeError, galsim.OpticalPSF, diam=1.) # need lam too!
+    assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
+    assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
 
 
 @timer

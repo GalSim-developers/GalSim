@@ -141,13 +141,10 @@ def test_gaussian():
     do_pickle(gauss._sbp)
 
     # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
 
     # Finally, test the noise property for things that don't have any noise set.
     assert gauss.noise is None
@@ -266,46 +263,29 @@ def test_gaussian_radii():
     # just confirm that it is true of shear.  I don't think that has any chance
     # of missing anything.
     test_gal_flux1 = test_gal * 3.
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "sigma")
-    except ImportError:
-        # assert_raises requires nose, which we don't want to force people to install.
-        # So if they are running this without nose, we just skip these tests.
-        pass
+    assert_raises(AttributeError, getattr, test_gal_flux1, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_flux1, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_flux1, "sigma")
 
     test_gal_flux2 = test_gal.withFlux(3.)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_flux2, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_flux2, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_flux2, "sigma")
 
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "sigma")
 
     test_gal_rot = test_gal.rotate(theta = 0.5 * galsim.radians)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_rot, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_rot, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_rot, "sigma")
 
     test_gal_shift = test_gal.shift(dx=0.11, dy=0.04)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shift, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shift, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shift, "sigma")
 
 
 @timer
@@ -408,10 +388,8 @@ def test_exponential():
     do_pickle(expon._sbp)
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Exponential, scale_radius=3, half_light_radius=1)
-    except ImportError:
-        pass
+    with assert_raises(TypeError):
+        galsim.Exponential(scale_radius=3, half_light_radius=1)
 
 
 @timer
@@ -478,11 +456,8 @@ def test_exponential_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
 
 
 @timer
@@ -643,13 +618,10 @@ def test_sersic():
     do_kvalue(sersic,myImg, "Severely truncated n=4 Sersic")
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Sersic, n=1.2, scale_radius=3,
-                                 half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.DeVaucouleurs, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
+    with assert_raises(TypeError):
+        galsim.Sersic(n=1.2, scale_radius=3, half_light_radius=1)
+    with assert_raises(TypeError):
+        galsim.DeVaucouleurs(scale_radius=3, half_light_radius=1)
 
 
 @timer
@@ -811,13 +783,10 @@ def test_sersic_radii():
         # Check that the getters don't work after modifying the original.
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
         # But not after shear() (or others, but this is a sufficient test here)
-        try:
-            if n != -4:
-                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "n")
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-        except ImportError:
-            pass
+        if n != -4:
+            assert_raises(AttributeError, getattr, test_gal_shear, "n")
+        assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
 
 
 @timer
@@ -1044,14 +1013,11 @@ def test_airy():
     do_pickle(airy4)
 
     # Should raise an exception if both lam, lam_over_diam are provided
-    try:
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, diam=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3)
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, diam=1)
+    assert_raises(TypeError, galsim.Airy, lam=3)
+    assert_raises(TypeError, galsim.Airy, diam=1)
 
 
 @timer
@@ -1080,12 +1046,9 @@ def test_airy_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_diam")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_diam")
 
 
 @timer
@@ -1402,15 +1365,10 @@ def test_moffat():
         np.testing.assert_almost_equal(moffat.xValue(cen), moffat.max_sb)
 
     # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1)
 
 
 @timer
@@ -1649,13 +1607,10 @@ def test_moffat_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "beta")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "beta")
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
 
 
 @timer
@@ -1785,32 +1740,27 @@ def test_kolmogorov():
 
     # Should raise an exception if >= 2 radius specifications are provided and/or lam and r0 are not
     # paired together.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, r0=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3,
+                  r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, r0=1)
+
 
 @timer
 def test_kolmogorov_properties():
@@ -1922,12 +1872,9 @@ def test_kolmogorov_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_r0")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_r0")
 
 
 @timer
@@ -2042,11 +1989,8 @@ def test_spergel():
     do_pickle(galsim.Spergel(0,1))
 
     # Should raise an exception if both scale_radius and half_light_radius are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Spergel, nu=0, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
+    with assert_raises(TypeError):
+        galsim.Spergel(nu=0, scale_radius=3, half_light_radius=1)
 
 
 @timer
@@ -2136,12 +2080,9 @@ def test_spergel_radii():
 
         # Check that the getters don't work after modifying the original.
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-        try:
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "nu")
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-        except ImportError:
-            pass
+        assert_raises(AttributeError, getattr, test_gal_shear, "nu")
+        assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+        assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
 
 
 @timer

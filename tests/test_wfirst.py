@@ -226,17 +226,14 @@ def test_wfirst_backgrounds():
     # we are looking at the sun.
     bp_dict = galsim.wfirst.getBandpasses()
     bp = bp_dict['J129'] # one of the standard filters, doesn't really matter which
-    try:
-        np.testing.assert_raises(ValueError, galsim.wfirst.getSkyLevel, bp,
-                                 world_pos=galsim.CelestialCoord(0.*galsim.degrees,
-                                                                 0.*galsim.degrees))
+    with assert_raises(ValueError):
+        galsim.wfirst.getSkyLevel(
+                bp, world_pos=galsim.CelestialCoord(0.*galsim.degrees, 0.*galsim.degrees))
         # near autumn equinox
-        np.testing.assert_raises(ValueError, galsim.wfirst.getSkyLevel, bp,
-                                 world_pos=galsim.CelestialCoord(180.*galsim.degrees,
-                                                                 5.*galsim.degrees),
-                                 date=datetime.date(2025,9,15))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        galsim.wfirst.getSkyLevel(
+                bp, world_pos=galsim.CelestialCoord(180.*galsim.degrees, 5.*galsim.degrees),
+                date=datetime.date(2025,9,15))
 
     # The routine should have some obvious symmetry, for example, ecliptic latitude above vs. below
     # plane and ecliptic longitude positive vs. negative (or vs. 360 degrees - original value).
@@ -582,15 +579,10 @@ def test_wfirst_psfs():
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.
     # (2) Invalid SCA numbers.
-    try:
-        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
-                                 extra_aberrations=[0.03, -0.06])
-        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
-                                 SCAs=30)
-        np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
-                                 SCAs=0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.wfirst.getPSF, extra_aberrations=[0.03, -0.06])
+    assert_raises(ValueError, galsim.wfirst.getPSF, SCAs=30)
+    assert_raises(ValueError, galsim.wfirst.getPSF, SCAs=0)
+
 
 @timer
 def test_wfirst_basic_numbers():

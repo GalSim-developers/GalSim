@@ -249,7 +249,7 @@ def test_dep_base():
     assert check_dep(test_gal.getNegativeFlux) == test_gal.negative_flux
     assert check_dep(test_gal.maxSB) == test_gal.max_sb
     assert check_dep(test_gal.centroid) == test_gal.centroid
- 
+
     test_gal = galsim.Exponential(flux=1.7, scale_radius = test_scale[0])
     test_gal_copy = check_dep(test_gal.copy)
     assert check_dep(test_gal.getFlux) == test_gal.flux
@@ -691,15 +691,12 @@ def test_dep_gsobject_ring():
     gal4b = disk + bulge
     gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
 
-    try:
-        # Make sure they don't match when using the default GSParams
-        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
-        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
-        gal4c = disk + bulge
-        np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
-                                 conv=galsim.Gaussian(sigma=1))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Make sure they don't match when using the default GSParams
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+    gal4c = disk + bulge
+    with assert_raises(AssertionError):
+        gsobject_compare(gal4a, gal4c, conv=galsim.Gaussian(sigma=1))
 
 
 @timer
