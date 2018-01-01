@@ -171,12 +171,39 @@ namespace galsim {
     };
 
     template <typename T, typename T2>
+    class AddConstant
+    {
+        const T2 _x;
+    public:
+        AddConstant(const T2 x) : _x(x) {}
+        inline T operator()(const T val) const { return T(_x + val); }
+    };
+
+    template <typename T, typename T2>
     class MultiplyConstant
     {
         const T2 _x;
     public:
         MultiplyConstant(const T2 x) : _x(x) {}
         inline T operator()(const T val) const { return T(_x * val); }
+    };
+
+    template <typename T, typename T2, bool is_int>
+    class DivideConstant // is_int=False
+    {
+        const T2 _invx;
+    public:
+        DivideConstant(const T2 x) : _invx(T2(1)/x) {}
+        inline T operator()(const T val) const { return T(val * _invx); }
+    };
+
+    template <typename T, typename T2>
+    class DivideConstant<T,T2,true>
+    {
+        const T2 _x;
+    public:
+        DivideConstant(const T2 x) : _x(x) {}
+        inline T operator()(const T val) const { return T(val / _x); }
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -248,8 +275,8 @@ namespace galsim {
     { return SumIX<T,T>(im,x); }
 
     template <typename T>
-    inline ImageView<T> operator+=(ImageView<T> im, const T& x)
-    { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
+    inline ImageView<T> operator+=(ImageView<T> im, T x)
+    { transform_pixel(im, AddConstant<T,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator+=(ImageAlloc<T>& im, const T& x)
@@ -265,7 +292,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator+=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::plus<CT>(),x)); return im; }
+    { transform_pixel(im, AddConstant<CT,T>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator+=(ImageAlloc<CT>& im, const T& x)
@@ -382,9 +409,10 @@ namespace galsim {
     inline QuotIX<T,T> operator/(const BaseImage<T>& im, T x)
     { return QuotIX<T,T>(im,x); }
 
+#define INT(T) std::numeric_limits<T>::is_integer
     template <typename T>
-    inline ImageView<T> operator/=(ImageView<T> im, const T& x)
-    { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
+    inline ImageView<T> operator/=(ImageView<T> im, T x)
+    { transform_pixel(im, DivideConstant<T,T,INT(T)>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator/=(ImageAlloc<T>& im, const T& x)
@@ -396,7 +424,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator/=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::divides<CT>(),x)); return im; }
+    { transform_pixel(im, DivideConstant<CT,T,INT(T)>(x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator/=(ImageAlloc<CT>& im, const T& x)
