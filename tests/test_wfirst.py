@@ -218,6 +218,24 @@ def test_wfirst_wcs():
                                     err_msg='Did not find slightly off-edge position on the SCA'
                                     ' when including borders!')
 
+        # Also make sure that for a given SCA, we find positions on it that should be on it,
+        # without/with inclusion of borders.  Just do this test once.
+        if i_test==1:
+            sca_edge_test = 9
+            tmp_wcs = gs_wcs_dict[sca_edge_test]
+            im_test_pos = galsim.PositionD(10.0, galsim.wfirst.n_pix/2)
+            tmp_pos = tmp_wcs.toWorld(im_test_pos)
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
+            assert found_sca==sca_edge_test
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
+            assert found_sca==sca_edge_test
+            im_test_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix+3)
+            tmp_pos = tmp_wcs.toWorld(im_test_pos)
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
+            assert found_sca==None
+            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
+            assert found_sca==sca_edge_test
+
     # There were few-arcsec offsets in our WCS, so allow some fraction of failures.
     print('n_fail = ',n_fail)
     assert n_fail < 0.2*n_test, 'Failed in SCA-matching against reference: %d %d'%(n_fail,n_test)
