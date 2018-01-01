@@ -19,6 +19,8 @@
 @file wfirst_wcs.py
 
 Part of the WFIRST module.  This file includes any routines needed to define and use the WFIRST WCS.
+Current version is consistent with WFIRST wide-field channel optical design version 7.6.8, generated
+during Phase A and presented at the WFIRST System Requirements Review and Mission Definition Review.
 """
 import galsim
 import galsim.wfirst
@@ -28,41 +30,37 @@ import coord
 
 # Basic WFIRST reference info, with lengths in mm.
 pixel_size_mm = 0.01
-focal_length = 18500.
+focal_length = 18727.2
 pix_scale = (pixel_size_mm/focal_length)*galsim.radians
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
 tel_name = "WFIRST"
-instr_name = "WFI"
-optics_design_ver = "4.2.2"
-prog_version = "0.4"
+instr_name = "WFC"
+optics_design_ver = "7.6.8"
+prog_version = "0.5"
 
 # Information about center points of the SCAs in the WFI focal plane coordinate system (f1, f2)
 # coordinates.  These are rotated by an angle theta_fpa with respect to the payload axes, as
-# projected onto the sky. Note that the origin is centered on the FPA, but to get coordinates at the
-# center of the payload axes on the telescope boresight, we can simply add fpa_xc_mm and fpa_yc_mm.
+# projected onto the sky.  The origin is centered on the telescope boresight, but can be related to
+# the center of the FPA by subtracting fpa_xc_mm and fpa_yc_mm.
+#
 # Since the SCAs are 1-indexed, these arrays have a non-used entry with index 0.  i.e., the maximum
 # SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
 # between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
 # were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
-sca_xc_mm = np.array([0., 21.44, 21.44, 21.44, 67.32, 67.32, 67.32, 113.20, 113.20,
-                      113.20, -21.44, -21.44, -21.44,  -67.32, -67.32, -67.32, -113.20,
-                      -113.20, -113.20])
-sca_yc_mm = np.array([0., -12.88,  30.00,  72.88, -24.88,  18.00,  60.88,  -42.88,     0.0,
-                      42.88,  -12.88, 30.00, 72.88, -24.88, 18.00, 60.88, -42.88,
-                      0.00,    42.88])
-# Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle.
+infile = os.path.join(galsim.meta_data.share_dir, 'sca_positions_7_6_8.txt')
+dat = np.loadtxt(infile).transpose()
+sca_xc_mm = -dat[3,:]
+sca_yc_mm = dat[4,:]
+sca_xc_mm = np.insert(sca_xc_mm, 0, 0)
+sca_yc_mm = np.insert(sca_yc_mm, 0, 0)
+# Nominal center of FPA from the payload axis in this coordinate system, in mm and as an angle
+# (neglecting distortions - to be included later).
 fpa_xc_mm = 0.0
-# This calculation is using the WIM page on the WFIRST_MCS_WFC_Zernike_and_Field_Data_160610.xlsm
-# spreadsheet on the https://wfirst.gsfc.nasa.gov/science/Inst_Ref_Info_Cycle6.html page.
-fpa_yc_mm = focal_length*(np.tan(0.46107*galsim.degrees/galsim.radians) - \
-                                   np.tan(-0.038903*galsim.degrees/galsim.radians))
+fpa_yc_mm = 160.484
 xc_fpa = np.arctan(fpa_xc_mm/focal_length)*galsim.radians
 yc_fpa = np.arctan(fpa_yc_mm/focal_length)*galsim.radians
-# Now move the sca coordinates to be with respect to the payload axis location.
-sca_xc_mm += fpa_xc_mm
-sca_yc_mm += fpa_yc_mm
 
 # The next array contains rotation offsets of individual SCA Y axis relative to FPA f2 axis. Same
 # sign convention as theta_fpa. These represent mechanical installation deviations from perfect
@@ -76,7 +74,7 @@ sca_rot = np.zeros_like(sca_xc_mm)
 theta_fpa = -60.0*galsim.degrees
 
 # File with SIP coefficients.
-sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_422.txt')
+sip_filename = os.path.join(galsim.meta_data.share_dir, 'sip_7_6_8.txt')
 
 def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
@@ -182,7 +180,9 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     sin_pa = np.sin(pa_fpa)
 
     # Figure out tangent-plane positions for FPA center:
-    xc_fpa_tp, yc_fpa_tp = _det_to_tangplane_positions(xc_fpa, yc_fpa)
+    # Distortion function is zero there (so we could've passed this through _det_to_tangplane
+    # routine, but we do not need to)
+    xc_fpa_tp, yc_fpa_tp = xc_fpa, yc_fpa
 
     # Note, this routine reads in the coeffs.  We don't use them until later, but read them in for
     # all SCAs at once.
@@ -210,14 +210,17 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         ])
 
         # Set the position of center of this SCA in focal plane angular coordinates.
+        # In Jeff Kruk's code that is used for a comparison, these are also called sca_xc_parax and
+        # likewise for yc.
         sca_xc_fpa = np.arctan(sca_xc_mm[i_sca]/focal_length)*galsim.radians
         sca_yc_fpa = np.arctan(sca_yc_mm[i_sca]/focal_length)*galsim.radians
 
         # Figure out tangent plane positions after distortion, and subtract off those for FPA center
         # (calculated in header).
+        # These define the tangent plane (X, Y) distance of the center of this SCA from the
+        # boresight.
         sca_xc_tp, sca_yc_tp = _det_to_tangplane_positions(sca_xc_fpa, sca_yc_fpa)
-        # These define the tangent plane (X, Y) distance of the center of this SCA from the center
-        # of the overall FPA.
+        # And with respect to center of focal plane.
         sca_xc_tp_f = sca_xc_tp - xc_fpa_tp
         sca_yc_tp_f = sca_yc_tp - yc_fpa_tp
 
@@ -476,22 +479,22 @@ def _det_to_tangplane_positions(x_in, y_in):
     """
     Helper routine to convert (x_in, y_in) focal plane coordinates to tangent plane coordinates
     (x_out, y_out).  If (x_in, y_in) are measured focal plane positions of an object, with the
-    origin at the telescope boresight, then we can define a radius as
+    origin at the boresight, then we can define a radius as
 
         r = sqrt(x_in^2 + y_in^2)
 
     The optical distortion model relies on the following definitions:
 
-        dist = a2*r^2 + a1*r + a0
+        dist = a3*r^3 + a2*r^2 + a1*r + a0
 
     with true (tangent plane) coordinates given by
 
         (x_out, y_out) = (x_in, y_in)/(1 + dist).
 
-    Note that the coefficients given in this routine go in the order {a0, a1, a2}.
+    Note that the coefficients given in this routine go in the order {a0, a1, a2, a3}.
 
     """
-    img_dist_coeff = np.array([-1.0873e-2, 3.5597e-03, 3.6515e-02, -1.8691e-4])
+    img_dist_coeff = np.array([-7.1229e-3, -1.6186e-2, 6.9169e-02, -1.4189e-02])
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/galsim.degrees)**2 + (y_in/galsim.degrees)**2
     r = np.sqrt(r_sq)
