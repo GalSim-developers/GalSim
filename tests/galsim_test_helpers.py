@@ -605,6 +605,29 @@ class Dummy(unittest.TestCase):
         pass
 _t = Dummy('nop')
 assert_raises = getattr(_t, 'assertRaises')
-assert_warns = getattr(_t, 'assertWarns')
+if sys.version_info > (3,2):
+    assert_warns = getattr(_t, 'assertWarns')
+else:
+    from contextlib import contextmanager
+    import warnings
+    @contextmanager
+    def assert_warns(wtype, *args, **kwargs):
+        if len(args) == 0:
+            # When used as a context manager
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                yield w
+            assert len(w) >= 1, \
+                    "Calling %s did not raise a warning with %s, %s"%(f, args, kwargs)
+            assert issubclass(w[0].category, wtype), \
+                    "%s with %s, %s raised the wrong warning type"%(f, args, kwargs)
+        else:
+            # When used as a regular function
+            func = args[0]
+            args = args[1:]
+            with assert_warns(wtype):
+                res = func(*args, **kwargs)
+            yield res
+
 del Dummy
 del _t
