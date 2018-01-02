@@ -84,12 +84,8 @@ opts.Add(PathVariable('FINAL_PREFIX',
          '', PathVariable.PathAccept))
 opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
-opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
-opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
-opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
-opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
+opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
 
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
          'Extra paths for header files (separated by : if more than 1)',
@@ -124,12 +120,19 @@ opts.Add(PathVariable('LD_LIBRARY_PATH',
          'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 
+opts.Add(BoolVariable('USE_TMV','Use TMV for linear algebra, rather than Eigen',False))
+opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
+opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
+
+opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
+opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
+
 opts.Add('PYTEST','Name of pytest executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 # None of the code uses openmp yet.  Re-enable this if we start using it.
 #opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
@@ -530,19 +533,6 @@ def AddOpenMPFlag(env):
         flag = ['-mp','--exceptions']
         ldflag = ['-mp']
         xlib = ['pthread']
-    elif compiler == 'cl':
-        #flag = ['/openmp']
-        #ldflag = ['/openmp']
-        #xlib = []
-        # The Express edition, which is the one I have, doesn't come with
-        # the file omp.h, which we need.  So I am unable to test TMV's
-        # OpenMP with cl.
-        # I believe the Professional edition has full OpenMP support,
-        # so if you have that, the above lines might work for you.
-        # Just uncomment those, and commend the below three lines.
-        print('No OpenMP support for cl')
-        env['WITH_OPENMP'] = False
-        return
     else:
         print('\nWARNING: No OpenMP support for compiler ',compiler,'\n')
         env['WITH_OPENMP'] = False
@@ -726,6 +716,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
             continue
 
         if t == 'EIGEN':
+            # Eigen doesn't put its header files in an include subdirectory.
             AddPath(cpp_paths, tdir)
         else:
             AddPath(bin_paths, os.path.join(tdir, 'bin'))
@@ -1100,6 +1091,75 @@ int main()
   return 0;
 }
 """
+    tmv_version_file = """
+#include <iostream>
+#include "TMV.h"
+int main()
+{ std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
+"""
+    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
+    print('TMV version is',tmv_version.strip())
+
+    tmv_link_file = FindTmvLinkFile(config)
+
+    print('Using TMV_LINK file:',tmv_link_file)
+    try:
+        tmv_link = open(tmv_link_file).read().strip()
+    except:
+        ErrorExit('Could not open TMV link file: ',tmv_link_file)
+    print('    ',tmv_link)
+
+    if sys.platform.find('darwin') != -1:
+        # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
+        # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
+        # if we can tell that this is what the TMV library is using.
+        # Update: Even after 5.1, it still seems to have problems for some systems.
+        major, minor = GetMacVersion()
+        try:
+            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
+            xcode_version = p.stdout.readlines()[0].decode().split()[1]
+            print('XCode version is',xcode_version)
+        except:
+            # Don't require the user to have xcode installed.
+            xcode_version = None
+            print('Unable to determine XCode version')
+        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
+                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+            print('WARNING: The Apple BLAS library has been found not to be thread safe on')
+            print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
+            print('         just multiple threads in the same process.)  The symptom is that')
+            print('         `scons tests` may hang when running pytest using multiple')
+            print('         processes.')
+            if xcode_version is None:
+                # If we couldn't run xcodebuild, then don't give any more information about this.
+                pass
+            elif xcode_version < '5.1':
+                print('         This seems to have been partially fixed with XCode 5.1, so we')
+                print('         recommend upgrading to the latest XCode version.  However, even')
+                print('         with 5.1, some systems still seem to have problems.')
+                env['BAD_BLAS'] = True
+            else:
+                print('         This seems to have been partially fixed with XCode 5.1, so there')
+                print('         is a good chance you will not have any problems.  But there are')
+                print('         still occasional systems that fail when using multithreading with')
+                print('         programs or modules that link to the BLAS library (such as GalSim).')
+                print('         If you do have problems, the solution is to recompile TMV with')
+                print('         the SCons option "WITH_BLAS=false".')
+
+    # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
+    # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
+    # merging everything.
+    tmv_link_dict = config.env.ParseFlags(tmv_link)
+    config.env.Append(LIBS=tmv_link_dict['LIBS'])
+    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['LINKFLAGS'])
+    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['CCFLAGS'])
+    config.env.AppendUnique(LIBPATH=tmv_link_dict['LIBPATH'])
+
+    compiler = config.env['CXXTYPE']
+    if compiler == 'g++' and '-openmp' in config.env['LINKFLAGS']:
+        config.env['LINKFLAGS'].remove('-openmp')
+        config.env.AppendUnique(LINKFLAGS='-fopenmp')
+
     print('Checking for correct TMV linkage... (this may take a little while)')
     config.Message('Checking for correct TMV linkage... ')
 
@@ -1120,6 +1180,7 @@ int main()
             'Error: TMV file failed to link correctly',
             'Check that the correct location is specified for TMV_DIR')
 
+    config.env.AppendUnique(CPPDEFINES=['USE_TMV'])
     config.Result(1)
     return 1
 
@@ -1990,115 +2051,33 @@ def DoCppChecks(config):
     Check for some headers and libraries.
     """
 
-    #####
-    # Check for fftw3:
-
-    # First do a simple check that the library and header are in the path.
+    # FFTW
     if not config.CheckHeader('fftw3.h',language='C++'):
         ErrorExit(
             'fftw3.h not found',
             'You should specify the location of fftw3 as FFTW_DIR=...')
-
     config.CheckFFTW()
 
-    #####
-    # Check for boost:
+    # Boost
     if config.env['USE_BOOST']:
         config.CheckBoost()
 
-    #####
-    # Check for tmv:
-
-    # First do a simple check that the library and header are in the path.
-    # We check the linking with the BLAS library below.
-    if not config.CheckHeader('TMV.h',language='C++'):
-        ErrorExit(
-            'TMV.h not found',
-            'You should specify the location of TMV as TMV_DIR=...')
-
-    tmv_version_file = """
-#include <iostream>
-#include "TMV.h"
-int main()
-{ std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
-"""
-    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
-    print('TMV version is',tmv_version.strip())
-
-    compiler = config.env['CXXTYPE']
-    version = config.env['CXXVERSION_NUMERICAL']
-
-    if 'LIBS' not in config.env :
-        config.env['LIBS'] = []
-
-    tmv_link_file = FindTmvLinkFile(config)
-
-    print('Using TMV_LINK file:',tmv_link_file)
-    try:
-        tmv_link = open(tmv_link_file).read().strip()
-    except:
-        ErrorExit('Could not open TMV link file: ',tmv_link_file)
-    print('    ',tmv_link)
-
-    if sys.platform.find('darwin') != -1:
-        # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
-        # is thread-unsafe for Mac OS 10.7+ prior to XCode 5.1.  Try to give an appropriate warning
-        # if we can tell that this is what the TMV library is using.
-        # Update: Even after 5.1, it still seems to have problems for some systems.
-        major, minor = GetMacVersion()
-        try:
-            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
-            xcode_version = p.stdout.readlines()[0].decode().split()[1]
-            print('XCode version is',xcode_version)
-        except:
-            # Don't require the user to have xcode installed.
-            xcode_version = None
-            print('Unable to determine XCode version')
-        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
-                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
-            print('WARNING: The Apple BLAS library has been found not to be thread safe on')
-            print('         Mac OS versions 10.7+, even across multiple processes (i.e. not')
-            print('         just multiple threads in the same process.)  The symptom is that')
-            print('         `scons tests` may hang when running pytest using multiple')
-            print('         processes.')
-            if xcode_version is None:
-                # If we couldn't run xcodebuild, then don't give any more information about this.
-                pass
-            elif xcode_version < '5.1':
-                print('         This seems to have been partially fixed with XCode 5.1, so we')
-                print('         recommend upgrading to the latest XCode version.  However, even')
-                print('         with 5.1, some systems still seem to have problems.')
-                env['BAD_BLAS'] = True
-            else:
-                print('         This seems to have been partially fixed with XCode 5.1, so there')
-                print('         is a good chance you will not have any problems.  But there are')
-                print('         still occasional systems that fail when using multithreading with')
-                print('         programs or modules that link to the BLAS library (such as GalSim).')
-                print('         If you do have problems, the solution is to recompile TMV with')
-                print('         the SCons option "WITH_BLAS=false".')
-
-    # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
-    # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
-    # merging everything.
-    tmv_link_dict = config.env.ParseFlags(tmv_link)
-    config.env.Append(LIBS=tmv_link_dict['LIBS'])
-    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['LINKFLAGS'])
-    config.env.AppendUnique(LINKFLAGS=tmv_link_dict['CCFLAGS'])
-    config.env.AppendUnique(LIBPATH=tmv_link_dict['LIBPATH'])
-
-    if compiler == 'g++' and '-openmp' in config.env['LINKFLAGS']:
-        config.env['LINKFLAGS'].remove('-openmp')
-        config.env.AppendUnique(LINKFLAGS='-fopenmp')
-
-    # Finally, do the tests for the TMV library linkage:
-    config.CheckTMV()
+    # TMV
+    if config.env['USE_TMV']:
+        if not config.CheckHeader('TMV.h',language='C++'):
+            ErrorExit(
+                'TMV.h not found',
+                'You should specify the location of TMV as TMV_DIR=...')
+        config.CheckTMV()
 
 def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
 
     config.CheckPython()
-    config.CheckPyTMV()
-    config.CheckEigen()
+    if config.env['USE_TMV']:
+        config.CheckPyTMV()
+    else:
+        config.CheckEigen()
     config.CheckNumPy()
     config.CheckPyFITS()
     config.CheckFuture()
@@ -2163,7 +2142,7 @@ def DoConfig(env):
         print('Debugging turned off')
         env.AppendUnique(CPPDEFINES=['NDEBUG'])
     else:
-        if env['TMV_DEBUG']:
+        if env['USE_TMV'] and env['TMV_DEBUG']:
             print('TMV Extra Debugging turned on')
             env.AppendUnique(CPPDEFINES=['TMV_EXTRA_DEBUG'])
 
