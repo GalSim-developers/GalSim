@@ -218,24 +218,35 @@ def test_wfirst_wcs():
                                     err_msg='Did not find slightly off-edge position on the SCA'
                                     ' when including borders!')
 
-        # Also make sure that for a given SCA, we find positions on it that should be on it,
-        # without/with inclusion of borders.  Just do this test once.
-        if i_test==1:
-            sca_edge_test = 9
-            tmp_wcs = gs_wcs_dict[sca_edge_test]
-            im_test_pos = galsim.PositionD(10.0, galsim.wfirst.n_pix/2)
-            tmp_pos = tmp_wcs.toWorld(im_test_pos)
-            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
-            assert found_sca==sca_edge_test
-            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
-            assert found_sca==sca_edge_test
-            im_test_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix+3)
-            tmp_pos = tmp_wcs.toWorld(im_test_pos)
-            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
-            assert found_sca==None
-            found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
-            assert found_sca==sca_edge_test
+        if i_test < 5:
+            # Also make sure that for a given SCA, we find positions on it that should be on it,
+            # without/with inclusion of borders.  Just do this test a limited number of times.
+            for sca_ind in range(1,19):
+                sca_edge_test = sca_ind
+                tmp_wcs = gs_wcs_dict[sca_edge_test]
+                im_test_pos = galsim.PositionD(10.0, galsim.wfirst.n_pix/2)
+                tmp_pos = tmp_wcs.toWorld(im_test_pos)
+                found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
+                assert found_sca==sca_edge_test
+                found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
+                assert found_sca==sca_edge_test
+                im_test_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix+3)
+                tmp_pos = tmp_wcs.toWorld(im_test_pos)
+                found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=False)
+                assert found_sca==None
+                found_sca = galsim.wfirst.findSCA(gs_wcs_dict, tmp_pos, include_border=True)
+                assert found_sca==sca_edge_test
 
+                # And check that we can go from the center of that SCA and reverse-engineer the
+                # position of the center of the FPA.
+                im_test_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2)
+                test_sca_pos = tmp_wcs.toWorld(im_test_pos)
+                test_fpa_pos = galsim.wfirst.convertCenter(test_sca_pos, int(sca_edge_test),
+                                                           PA=pa[i_test]*galsim.radians,
+                                                           date=date, PA_is_FPA=True)
+                delta_arcsec = test_fpa_pos.distanceTo(world_pos) / galsim.arcsec
+                assert delta_arcsec<0.5, "could not round-trip from FPA to SCA to FPA center"
+ 
     # There were few-arcsec offsets in our WCS, so allow some fraction of failures.
     print('n_fail = ',n_fail)
     assert n_fail < 0.2*n_test, 'Failed in SCA-matching against reference: %d %d'%(n_fail,n_test)
