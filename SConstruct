@@ -173,7 +173,6 @@ def ClearCache():
         shutil.rmtree(".sconf_temp")
 
 def GetMacVersion():
-    print('Mac version is',platform.mac_ver()[0])
     ver = platform.mac_ver()[0].split('.')
     if len(ver) >= 2:
         return ver[:2]
@@ -278,6 +277,7 @@ def ErrorExit(*args, **kwargs):
     if sys.platform.find('darwin') != -1:
         major, minor = GetMacVersion()
         if int(major) > 10 or int(minor) >= 11:
+            print('Mac version is %s.%s'%(major,minor))
             print()
             print('Starting with El Capitan (OSX 10.11), Apple instituted a new policy called')
             print('"System Integrity Protection" (SIP) where they strip "dangerous" environment')
@@ -1115,6 +1115,7 @@ int main()
         # if we can tell that this is what the TMV library is using.
         # Update: Even after 5.1, it still seems to have problems for some systems.
         major, minor = GetMacVersion()
+        print('Mac version is %s.%s'%(major,minor))
         try:
             p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
             xcode_version = p.stdout.readlines()[0].decode().split()[1]
@@ -2069,6 +2070,25 @@ def DoCppChecks(config):
                 'TMV.h not found',
                 'You should specify the location of TMV as TMV_DIR=...')
         config.CheckTMV()
+
+    # Eigen
+    else:
+        ok = config.CheckHeader('Eigen/Core',language='C++')
+        if not ok:
+            # Try to get the correct include directory from eigency
+            try:
+                import eigency
+                config.env.Append(CPPPATH=eigency.get_includes()[2])
+                ok = config.CheckHeader('Eigen/Core',language='C++')
+            except ImportError:
+                pass
+        if not ok:
+            ErrorExit(
+                'Eigen/Core not found',
+                'You should either specify the location of Eigen as EIGEN_DIR=... '
+                'or install eigency using: \n'
+                '    pip install git+git://github.com/wouterboomsma/eigency.git')
+
 
 def DoPyChecks(config):
     # These checks are only relevant for the pysrc compilation:
