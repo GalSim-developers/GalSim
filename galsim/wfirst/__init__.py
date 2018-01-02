@@ -242,7 +242,7 @@ charge_diffusion = 0.1
 from .wfirst_bandpass import getBandpasses
 from .wfirst_backgrounds import getSkyLevel
 from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
 from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
