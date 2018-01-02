@@ -85,6 +85,7 @@ opts.Add(PathVariable('FINAL_PREFIX',
 opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
 opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
+opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
 opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
@@ -714,7 +715,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
 
     """
 
-    types = ['BOOST', 'TMV', 'FFTW']
+    types = ['BOOST', 'TMV', 'EIGEN', 'FFTW']
 
     for t in types:
         dirtag = t+'_DIR'
@@ -724,9 +725,12 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
                 print('WARNING: could not find specified %s = %s'%(dirtag,env[dirtag]))
             continue
 
-        AddPath(bin_paths, os.path.join(tdir, 'bin'))
-        AddPath(lib_paths, os.path.join(tdir, 'lib'))
-        AddPath(cpp_paths, os.path.join(tdir, 'include'))
+        if t == 'EIGEN':
+            AddPath(cpp_paths, tdir)
+        else:
+            AddPath(bin_paths, os.path.join(tdir, 'bin'))
+            AddPath(lib_paths, os.path.join(tdir, 'lib'))
+            AddPath(cpp_paths, os.path.join(tdir, 'include'))
 
 
 def AddExtraPaths(env):
@@ -1523,6 +1527,87 @@ PyMODINIT_FUNC initcheck_tmv(void)
     return 1
 
 
+def CheckEigen(config):
+    eigen_source_file = """
+#include "Python.h"
+#include "Eigen/Core"
+#include "Eigen/Cholesky"
+
+static void useEigen() {
+    Eigen::MatrixXd S(10,10);
+    S.setConstant(4.);
+    S.diagonal().array() += 50.;
+    Eigen::MatrixXd m(10,3);
+    m.setConstant(2.);
+    S.llt().solveInPlace(m);
+}
+
+static PyObject* run(PyObject* self, PyObject* args)
+{
+    useEigen();
+    return Py_BuildValue("i", 23);
+}
+
+static PyMethodDef Methods[] = {
+    {"run",  run, METH_VARARGS, "return 23"},
+    {NULL, NULL, 0, NULL}
+};
+
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "check_eigen",
+    NULL,
+    -1,
+    Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_check_eigen(void)
+
+#else
+
+PyMODINIT_FUNC initcheck_eigen(void)
+
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    return PyModule_Create(&moduledef);
+#else
+    Py_InitModule("check_eigen", Methods);
+#endif
+}
+"""
+    config.Message('Checking if we can build module using Eigen... ')
+
+    result = config.TryCompile(eigen_source_file,'.cpp')
+    if not result:
+        ErrorExit('Unable to compile a module using eigen')
+
+    result = CheckModuleLibs(config,[],eigen_source_file,'check_eigen')
+    if not result:
+        ErrorExit('Unable to build a python loadable module that uses eigen')
+
+    config.Result(1)
+
+    eigen_version_file = """
+#include <iostream>
+#include "Eigen/Core"
+int main() {
+    std::cout<<EIGEN_WORLD_VERSION<<"."<<EIGEN_MAJOR_VERSION<<"."<<EIGEN_MINOR_VERSION<<std::endl;
+    return 0;
+}
+"""
+    ok, eigen_version = AltTryRun(config,eigen_version_file,'.cpp')
+    print('Eigen version is %s'%eigen_version)
+
+    return 1
+
+
 def CheckNumPy(config):
     numpy_source_file = """
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -2013,6 +2098,7 @@ def DoPyChecks(config):
 
     config.CheckPython()
     config.CheckPyTMV()
+    config.CheckEigen()
     config.CheckNumPy()
     config.CheckPyFITS()
     config.CheckFuture()
@@ -2103,6 +2189,7 @@ def DoConfig(env):
         config = pyenv.Configure(custom_tests = {
             'CheckPython' : CheckPython ,
             'CheckPyTMV' : CheckPyTMV ,
+            'CheckEigen' : CheckEigen ,
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
             'CheckFuture' : CheckFuture ,
