@@ -31,8 +31,7 @@ namespace galsim {
 
         double* data = reinterpret_cast<double*>(idata);
         int size = PQIndex::size(order);
-        tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
-        v = bvec.rVector();
+        for (int i=0; i<size; ++i) data[i] = bvec.rVector()[i];
     }
 
     static BP_CONSTRUCTOR(construct, SBShapelet,
@@ -40,7 +39,9 @@ namespace galsim {
     {
         double* data = reinterpret_cast<double*>(idata);
         int size = PQIndex::size(order);
-        LVector bvec(order, tmv::VectorViewOf(data, size));
+        VectorXd v(size);
+        for (int i=0; i<size; ++i) v[i] = data[i];
+        LVector bvec(order, v);
         PYBIND11_PLACEMENT_NEW SBShapelet(sigma, bvec, gsparams);
     }
 
