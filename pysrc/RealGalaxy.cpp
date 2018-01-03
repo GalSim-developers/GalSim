@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include "Pybind11Helper.h"
+#include "PyBind11Helper.h"
 #include "RealGalaxy.h"
 
 namespace galsim {
