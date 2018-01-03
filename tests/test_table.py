@@ -95,14 +95,11 @@ def test_table():
                     "data for non-evenly-spaced args, with interpolant %s."%interp)
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
-        try:
-            np.testing.assert_raises(RuntimeError,table1,args1[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table1,args1[-1]+0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
-            np.testing.assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
-        except ImportError:
-            print('The assert_raises tests require nose')
+        assert_raises(RuntimeError,table1,args1[0]-0.01)
+        assert_raises(RuntimeError,table1,args1[-1]+0.01)
+        assert_raises(RuntimeError,table2,args2[0]-0.01)
+        assert_raises(RuntimeError,table2,args2[-1]+0.01)
+        assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
 
         # These shouldn't raise any exception:
         table1(args1[0]+0.01)
@@ -136,16 +133,12 @@ def test_init():
     tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     do_pickle(tab_ps)
 
-    try:
-        # Check for bad inputs
-        np.testing.assert_raises(TypeError, galsim.LookupTable, x='foo')
-        np.testing.assert_raises(TypeError, galsim.LookupTable)
-        np.testing.assert_raises(TypeError, galsim.LookupTable, x=tab_ps.x)
-        np.testing.assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f,
-                                 interpolant='foo')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Check for bad inputs
+    assert_raises(TypeError, galsim.LookupTable, x='foo')
+    assert_raises(TypeError, galsim.LookupTable)
+    assert_raises(TypeError, galsim.LookupTable, x=tab_ps.x)
+    assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
+    assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f, interpolant='foo')
 
 
 @timer
@@ -207,13 +200,9 @@ def test_log():
 
     # Check that an appropriate exception is thrown when trying to do interpolation using negative
     # ones.
-    try:
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, f_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True,
-                                 f_log=True)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, f_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True, f_log=True)
 
 
 @timer
@@ -276,11 +265,8 @@ def test_roundoff():
         table1(10.0 + 1.e-7)
     except:
         raise ValueError("c++ LookupTable roundoff guard failed.")
-    try:
-        np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
-        np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, table1, 1.0-1.e5)
+    assert_raises(RuntimeError, table1, 10.0+1.e5)
 
 
 @timer
@@ -352,18 +338,13 @@ def test_table2d():
                                                                     for x0 in newx]))
 
     # Test edge exception
-    try:
-        np.testing.assert_raises(ValueError, tab2d, 1e6, 1e6)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        tab2d(1e6, 1e6)
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
-    try:
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 (x, y, z), dict(edge_mode='wrap'))
-    except ImportError:
-        print('The assert_warns tests require nose')
+    with assert_raises(ValueError):
+        galsim.LookupTable((x, y, z), dict(edge_mode='wrap'))
 
     # Extend edges and make vals match
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
@@ -394,18 +375,15 @@ def test_table2d():
     assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
 
     # Test that x,y arrays need to be strictly increasing.
-    try:
-        x[0] = x[1]
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        x[0] = x[1]+1
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        x[0] = x[1]-1
-        y[0] = y[1]
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        y[0] = y[1]+1
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    x[0] = x[1]
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    x[0] = x[1]+1
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    x[0] = x[1]-1
+    y[0] = y[1]
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    y[0] = y[1]+1
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
 
 
 @timer

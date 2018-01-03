@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_pickle, all_obj_diff
+from galsim_test_helpers import *
 import sys
 from astropy import units
 from astropy import constants
@@ -44,13 +44,9 @@ def test_SED_basic():
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
-    try:
-        # Eval-str must return a Real
-        np.testing.assert_raises(ValueError, galsim.SED,
-                                 spec="'eggs'", wave_type='A', flux_type='flambda')
-    except ImportError:
-        print('The assert_raises tests require nose')
-
+    # Eval-str must return a Real
+    with assert_raises(ValueError):
+        galsim.SED(spec="'eggs'", wave_type='A', flux_type='flambda')
 
     # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
     s_list = [
@@ -157,12 +153,10 @@ def test_SED_add():
                                        err_msg="Wrong sum in SED.__add__")
         np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
                                        err_msg="Wrong redshift in SED sum")
-    try:
-        # Adding together two SEDs with different redshifts should fail.
-        d = b.atRedshift(0.1)
-        np.testing.assert_raises(ValueError, b.__add__, d)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Adding together two SEDs with different redshifts should fail.
+    d = b.atRedshift(0.1)
+    with assert_raises(ValueError):
+        b.__add__(d)
 
 
 @timer
@@ -192,12 +186,10 @@ def test_SED_sub():
         np.testing.assert_almost_equal(c.redshift, a.redshift, 10,
                                        err_msg="Wrong redshift in SED difference")
 
-    try:
-        # Subracting two SEDs with different redshifts should fail.
-        d = b.atRedshift(0.1)
-        np.testing.assert_raises(ValueError, b.__sub__, d)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Subracting two SEDs with different redshifts should fail.
+    d = b.atRedshift(0.1)
+    with assert_raises(ValueError):
+        b.__sub__(d)
 
 
 @timer
@@ -259,10 +251,8 @@ def test_SED_mul():
     sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)
     sed3 = galsim.SED('3', 'nm', '1')
     sed4 = galsim.SED('4', 'nm', '1')
-    try:
-        np.testing.assert_raises(TypeError, sed1.__mul__,  sed2)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(TypeError):
+        sed1.__mul__(sed2)
     np.testing.assert_almost_equal((sed1*sed3)(100), 3.0, 10, "Found wrong value in SED.__mul__")
     np.testing.assert_almost_equal((sed2*sed4)(10), 8.0, 10, "Found wrong value in SED.__mul__")
     np.testing.assert_almost_equal((sed3*sed4)(30), 12.0, 10, "Found wrong value in SED.__mul__")
@@ -330,10 +320,8 @@ def test_SED_atRedshift():
                                            err_msg="error redshifting SED")
             np.testing.assert_almost_equal(a(w)/bolo_flux, e(w*(1.0+z1))/bolo_flux, 5,
                                            err_msg="error redshifting and thinning SED")
-    try:
-        np.testing.assert_raises(ValueError, a.atRedshift, -1.1)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        a.atRedshift(-1.1)
 
 
 @timer
@@ -355,11 +343,8 @@ def test_combine_wave_list():
         np.testing.assert_equal(wave_list, c.wave_list)
         np.testing.assert_equal(blue_limit, c.blue_limit)
         np.testing.assert_equal(red_limit, c.red_limit)
-    try:
-        np.testing.assert_raises(
-            RuntimeError, galsim.utilities.combine_wave_list, a, d)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.utilities.combine_wave_list(a, d)
 
 
 @timer
@@ -381,28 +366,19 @@ def test_SED_roundoff_guard():
 def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
-    try:
-        # These fail.
-        np.testing.assert_raises(ValueError, galsim.SED, spec='blah',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='wave+',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='somewhere/a/file',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file',
-                                 wave_type='nm', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0,
-                                 wave_type='bar', flux_type='flambda')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
-                                 wave_type='nm')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
-                                 flux_type='bar')
-        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
-        np.testing.assert_raises(ValueError, galsim.SED, spec='wave',
-                                 wave_type=units.Hz, flux_type='2')
-        np.testing.assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # These fail.
+    assert_raises(ValueError, galsim.SED, spec='blah', wave_type='nm', flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='wave+',wave_type='nm', flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='somewhere/a/file', wave_type='nm',
+                  flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec='/somewhere/a/file', wave_type='nm',
+                  flux_type='flambda')
+    assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, wave_type='bar', flux_type='flambda')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0, wave_type='nm')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0, flux_type='bar')
+    assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
+    assert_raises(ValueError, galsim.SED, spec='wave', wave_type=units.Hz, flux_type='2')
+    assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
     # These should succeed.
     galsim.SED(spec='wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
@@ -420,13 +396,10 @@ def test_SED_init():
     # Also check for invalid calls
     foo = np.arange(10.)+1.
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda')
-    try:
-        np.testing.assert_raises(ValueError, sed, 0.5)
-        np.testing.assert_raises(ValueError, sed, 12.0)
-        np.testing.assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
-        np.testing.assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, sed, 0.5)
+    assert_raises(ValueError, sed, 12.0)
+    assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
+    assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
 
     # Check a few valid calls for when fast=False
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda',
@@ -438,11 +411,9 @@ def test_SED_init():
     foo = np.arange(10.)+1.
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda', redshift=1.0,
                      fast=False)
-    try: # outside good range of 2->20 should raise ValueError
-        np.testing.assert_raises(ValueError, sed, 1.5)
-        np.testing.assert_raises(ValueError, sed, 24.0)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # outside good range of 2->20 should raise ValueError
+    assert_raises(ValueError, sed, 1.5)
+    assert_raises(ValueError, sed, 24.0)
 
     sed(3.5)
     sed(3.5*units.nm)
@@ -563,10 +534,8 @@ def test_redshift_calculateFlux():
     for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
         sedz = sed.atRedshift(z)
         if sedz.blue_limit > bp.blue_limit or sedz.red_limit < bp.red_limit:
-            try:
-                np.testing.assert_raises(ValueError, sedz.calculateFlux, bp)
-            except ImportError:
-                print('The assert_raises tests require nose')
+            with assert_raises(ValueError):
+                sedz.calculateFlux(bp)
         else:
             print('z = {} flux = {}'.format(z, sedz.calculateFlux(bp)))
 

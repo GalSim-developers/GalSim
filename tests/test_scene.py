@@ -48,12 +48,9 @@ def test_cosmos_basic():
     assert cat2.nobjects>=cat.nobjects
 
     # Check for reasonable exceptions when initializing.
-    try:
-        # Can't find data (wrong directory).
-        np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
-                                 file_name='real_galaxy_catalog_23.5_example.fits')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Can't find data (wrong directory).
+    with assert_raises(IOError):
+        galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits')
 
     # Try making galaxies
     gal_real = cat2.makeGalaxy(index=0,gal_type='real',chromatic=False)
@@ -159,23 +156,17 @@ def test_cosmos_random():
     assert not hasattr(cat_param, 'real_cat')
 
     # Check for exception handling if bad inputs given for the random functionality.
-    try:
-        np.testing.assert_raises(ValueError, cat.selectRandomIndex, 0)
-        np.testing.assert_raises(ValueError, cat.selectRandomIndex, 10.7)
-        np.testing.assert_raises(TypeError, cat.selectRandomIndex, 10, rng=3)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, cat.selectRandomIndex, 0)
+    assert_raises(ValueError, cat.selectRandomIndex, 10.7)
+    assert_raises(TypeError, cat.selectRandomIndex, 10, rng=3)
 
     # Check that random objects give the right <weight> without/with weighting.
     wt = cat.real_cat.weight[cat.orig_index]
     wt /= np.max(wt)
     avg_weight_val = np.sum(wt)/len(wt)
     wavg_weight_val = np.sum(wt**2)/np.sum(wt)
-    try:
-        np.testing.assert_raises(AssertionError, np.testing.assert_almost_equal, avg_weight_val,
-                                 wavg_weight_val, 3)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(AssertionError):
+        np.testing.assert_almost_equal(avg_weight_val, wavg_weight_val, 3)
     # Make sure we use enough objects that the mean weights converge properly.
     randind_wt = cat.selectRandomIndex(30000, rng=galsim.BaseDeviate(1234))
     wtrand = cat.real_cat.weight[cat.orig_index[randind_wt]] / \
@@ -215,12 +206,9 @@ def test_cosmos_random():
         rng3 = galsim.BaseDeviate(5678)
         ind3 = cat.selectRandomIndex(10, rng=rng3)
         ind3p = cat_param.selectRandomIndex(10) # initialize RNG based on time
-        try:
-            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind1p)
-            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind3)
-            np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, ind1p, ind3p)
-        except ImportError:
-            print('The assert_raises tests require nose')
+        assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind1p)
+        assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind3)
+        assert_raises(AssertionError, np.testing.assert_array_equal, ind1p, ind3p)
 
         # Finally, make sure that directly calling selectRandomIndex() gives the same random ones as
         # makeGalaxy().  We'll do one real object because they are slower, and multiple parametric (just

@@ -36,13 +36,12 @@ datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 def test_Bandpass_basic():
     """Basic tests of Bandpass functionality
     """
-    try:
-        # Cannot initialize bandpass without wave_type:
-        np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
-        # eval-str must return a Real
-        np.testing.assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A')
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Cannot initialize bandpass without wave_type:
+    with assert_raises(TypeError):
+        galsim.Bandpass(throughput=lambda x:x)
+    # eval-str must return a Real
+    with assert_raises(ValueError):
+        galsim.Bandpass(throughput="'spam'", wave_type='A')
 
     # All of these should be equivalent
     b_list = [
@@ -298,6 +297,7 @@ def test_thin():
         print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
+
 @timer
 def test_zp():
     """Check that the zero points are maintained in an appropriate way when thinning, truncating."""
@@ -328,20 +328,19 @@ def test_zp():
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit blue_limit"
 
+
 @timer
 def test_truncate_inputs():
     """Test that bandpass truncation respects certain sanity constraints on the inputs."""
-    try:
-        # Don't allow truncation via two different methods.
-        bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
-        np.testing.assert_raises(ValueError, bp.truncate, relative_throughput=1.e-4, blue_limit=500.)
+    # Don't allow truncation via two different methods.
+    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    assert_raises(ValueError, bp.truncate, relative_throughput=1.e-4, blue_limit=500.)
 
-        # If blue_limit or red_limit is supplied, don't allow values that are outside the original
-        # wavelength range.
-        np.testing.assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
-        np.testing.assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # If blue_limit or red_limit is supplied, don't allow values that are outside the original
+    # wavelength range.
+    assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
+    assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
+
 
 if __name__ == "__main__":
     test_Bandpass_basic()

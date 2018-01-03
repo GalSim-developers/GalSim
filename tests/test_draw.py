@@ -296,14 +296,12 @@ def test_drawImage():
     np.testing.assert_almost_equal(
         mom['My'], (ny+1.+1.)/2., 4, "obj.drawImage(nx,ny) (odd) did not center in y correctly")
 
-    try:
-        # Test if we provide nx, ny, scale, and an existing image.  It should:
-        #   - raise a ValueError
-        im10 = galsim.ImageF()
-        kwargs = {'nx':nx, 'ny':ny, 'scale':scale, 'image':im10}
-        np.testing.assert_raises(ValueError, obj.drawImage, **kwargs)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Test if we provide nx, ny, scale, and an existing image.  It should:
+    #   - raise a ValueError
+    im10 = galsim.ImageF()
+    kwargs = {'nx':nx, 'ny':ny, 'scale':scale, 'image':im10}
+    with assert_raises(ValueError):
+        obj.drawImage(**kwargs)
 
     # Test if we provide bounds and scale.  It should:
     #   - create a new image with the right size
@@ -339,14 +337,12 @@ def test_drawImage():
     np.testing.assert_almost_equal(mom['My'], (ny+1.+1.)/2., 4,
                                    "obj.drawImage(bounds) did not center in y correctly")
 
-    try:
-        # Test if we provide bounds, scale, and an existing image.  It should:
-        #   - raise a ValueError
-        bounds = galsim.BoundsI(1,nx,1,ny)
-        kwargs = {'bounds':bounds, 'scale':scale, 'image':im10}
-        np.testing.assert_raises(ValueError, obj.drawImage, **kwargs)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    # Test if we provide bounds, scale, and an existing image.  It should:
+    #   - raise a ValueError
+    bounds = galsim.BoundsI(1,nx,1,ny)
+    kwargs = {'bounds':bounds, 'scale':scale, 'image':im10}
+    with assert_raises(ValueError):
+        obj.drawImage(**kwargs)
 
 
 @timer
@@ -1054,12 +1050,10 @@ def test_drawImage_area_exptime():
     msg = "obj.drawImage(method='phot') unexpectedly produced equal images with different rng"
     assert not np.allclose(im5.array, im4.array), msg
 
-    try:
-        # Shooting with flux=1 raises a warning.
-        obj1 = obj.withFlux(1)
-        np.testing.assert_warns(UserWarning, obj1.drawImage, method='phot')
-    except ImportError:
-        pass
+    # Shooting with flux=1 raises a warning.
+    obj1 = obj.withFlux(1)
+    with assert_warns(UserWarning):
+        obj1.drawImage(method='phot')
     # But not if we explicitly tell it to shoot 1 photon
     import warnings
     with warnings.catch_warnings():
@@ -1327,42 +1321,39 @@ def test_np_fft():
         np.testing.assert_almost_equal(xar12, xar, 9, "fft2(ifft2(a)) != a with all shifts")
 
     # Check for invalid inputs
-    try:
-        # Must be 2-d arrays
-        xar_1d = input_list[0].ravel()
-        xar_3d = input_list[0].reshape(2,2,4)
-        xar_4d = input_list[0].reshape(2,2,2,2)
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_1d)
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_3d)
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_4d)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_1d)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_3d)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_4d)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_1d)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_3d)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_4d)
-        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_1d)
-        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_3d)
-        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_4d)
+    # Must be 2-d arrays
+    xar_1d = input_list[0].ravel()
+    xar_3d = input_list[0].reshape(2,2,4)
+    xar_4d = input_list[0].reshape(2,2,2,2)
+    assert_raises(ValueError, galsim.fft.fft2, xar_1d)
+    assert_raises(ValueError, galsim.fft.fft2, xar_3d)
+    assert_raises(ValueError, galsim.fft.fft2, xar_4d)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_1d)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_3d)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_4d)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_1d)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_3d)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_4d)
+    assert_raises(ValueError, galsim.fft.irfft2, xar_1d)
+    assert_raises(ValueError, galsim.fft.irfft2, xar_3d)
+    assert_raises(ValueError, galsim.fft.irfft2, xar_4d)
 
-        # Must have even sizes
-        xar_oo = input_list[0][:3,:3]
-        xar_oe = input_list[0][:3,:]
-        xar_eo = input_list[0][:,:3]
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oo)
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_oe)
-        np.testing.assert_raises(ValueError, galsim.fft.fft2, xar_eo)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oo)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_oe)
-        np.testing.assert_raises(ValueError, galsim.fft.ifft2, xar_eo)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oo)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_oe)
-        np.testing.assert_raises(ValueError, galsim.fft.rfft2, xar_eo)
-        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oo)
-        np.testing.assert_raises(ValueError, galsim.fft.irfft2, xar_oe)
-        # eo is ok, since the second dimension is actually N/2+1
-    except ImportError:
-        pass
+    # Must have even sizes
+    xar_oo = input_list[0][:3,:3]
+    xar_oe = input_list[0][:3,:]
+    xar_eo = input_list[0][:,:3]
+    assert_raises(ValueError, galsim.fft.fft2, xar_oo)
+    assert_raises(ValueError, galsim.fft.fft2, xar_oe)
+    assert_raises(ValueError, galsim.fft.fft2, xar_eo)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_oo)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_oe)
+    assert_raises(ValueError, galsim.fft.ifft2, xar_eo)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_oo)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_oe)
+    assert_raises(ValueError, galsim.fft.rfft2, xar_eo)
+    assert_raises(ValueError, galsim.fft.irfft2, xar_oo)
+    assert_raises(ValueError, galsim.fft.irfft2, xar_oe)
+    # eo is ok, since the second dimension is actually N/2+1
 
 @timer
 def test_types():
@@ -1472,18 +1463,15 @@ def test_direct_scale():
     # Check images with invalid wcs raise ValueError
     im4 = galsim.ImageD(65, 65)
     im5 = galsim.ImageD(65, 65, wcs=galsim.JacobianWCS(0.4,0.1,-0.1,0.5))
-    try:
-        np.testing.assert_raises(ValueError, obj.drawReal, im4)
-        np.testing.assert_raises(ValueError, obj.drawReal, im5)
-        np.testing.assert_raises(ValueError, obj.drawFFT, im4)
-        np.testing.assert_raises(ValueError, obj.drawFFT, im5)
-        np.testing.assert_raises(ValueError, obj.drawPhot, im4)
-        np.testing.assert_raises(ValueError, obj.drawPhot, im5)
-        # Also some other errors from drawPhot
-        np.testing.assert_raises(ValueError, obj.drawPhot, im2, n_photons=-20)
-        np.testing.assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
-    except ImportError:
-        pass
+    assert_raises(ValueError, obj.drawReal, im4)
+    assert_raises(ValueError, obj.drawReal, im5)
+    assert_raises(ValueError, obj.drawFFT, im4)
+    assert_raises(ValueError, obj.drawFFT, im5)
+    assert_raises(ValueError, obj.drawPhot, im4)
+    assert_raises(ValueError, obj.drawPhot, im5)
+    # Also some other errors from drawPhot
+    assert_raises(ValueError, obj.drawPhot, im2, n_photons=-20)
+    assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
 
 if __name__ == "__main__":
     test_drawImage()

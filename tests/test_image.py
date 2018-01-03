@@ -251,47 +251,43 @@ def test_Image_basic():
                 assert im2_view[galsim.PositionI(x,y)] == value3
                 assert im2_cview[x,y] == value3
 
-        try:
-            # Setting or getting the value outside the bounds should throw an exception.
-            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.__call__,0,0)
-            np.testing.assert_raises(RuntimeError,im1.__getitem__,0,0)
-            np.testing.assert_raises(RuntimeError,im1.__setitem__,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().__call__,0,0)
-            np.testing.assert_raises(RuntimeError,im1.view().__getitem__,0,0)
-            np.testing.assert_raises(RuntimeError,im1.view().__setitem__,0,0,1)
+        # Setting or getting the value outside the bounds should throw an exception.
+        assert_raises(RuntimeError,im1.setValue,0,0,1)
+        assert_raises(RuntimeError,im1.__call__,0,0)
+        assert_raises(RuntimeError,im1.__getitem__,0,0)
+        assert_raises(RuntimeError,im1.__setitem__,0,0,1)
+        assert_raises(RuntimeError,im1.view().setValue,0,0,1)
+        assert_raises(RuntimeError,im1.view().__call__,0,0)
+        assert_raises(RuntimeError,im1.view().__getitem__,0,0)
+        assert_raises(RuntimeError,im1.view().__setitem__,0,0,1)
 
-            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
-            np.testing.assert_raises(RuntimeError,im1.__call__,ncol+1,0)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,0)
+        assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
+        assert_raises(RuntimeError,im1.__call__,ncol+1,0)
+        assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
+        assert_raises(RuntimeError,im1.view().__call__,ncol+1,0)
 
-            np.testing.assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.__call__,0,nrow+1)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.view().__call__,0,nrow+1)
+        assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
+        assert_raises(RuntimeError,im1.__call__,0,nrow+1)
+        assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
+        assert_raises(RuntimeError,im1.view().__call__,0,nrow+1)
 
-            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.__call__,ncol+1,nrow+1)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
+        assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
+        assert_raises(RuntimeError,im1.__call__,ncol+1,nrow+1)
+        assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
+        assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
 
-            # Also, setting values in something that should be const
-            np.testing.assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
-            np.testing.assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
-            np.testing.assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
-            if tchar[i][0] != 'C':
-                np.testing.assert_raises(ValueError,im1.imag.setValue,1,1,1)
+        # Also, setting values in something that should be const
+        assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
+        assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
+        assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
+        if tchar[i][0] != 'C':
+            assert_raises(ValueError,im1.imag.setValue,1,1,1)
 
-            # Finally check for the wrong number of arguments in get/setitem
-            np.testing.assert_raises(TypeError,im1.__getitem__,1)
-            np.testing.assert_raises(TypeError,im1.__setitem__,1,1)
-            np.testing.assert_raises(TypeError,im1.__getitem__,1,2,3)
-            np.testing.assert_raises(TypeError,im1.__setitem__,1,2,3,4)
-
-        except ImportError:
-            print('The assert_raises tests require nose')
+        # Finally check for the wrong number of arguments in get/setitem
+        assert_raises(TypeError,im1.__getitem__,1)
+        assert_raises(TypeError,im1.__setitem__,1,1)
+        assert_raises(TypeError,im1.__getitem__,1,2,3)
+        assert_raises(TypeError,im1.__setitem__,1,2,3,4)
 
         # Check view of given data
         im3_view = galsim.Image(ref_array.astype(np_array_type))
@@ -405,13 +401,10 @@ def test_undefined_image():
         if types[i] == np.complex128:
             assert im8 == im1
 
-        try:
-            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.__call__,0,0)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().__call__,0,0)
-        except ImportError:
-            pass
+        assert_raises(RuntimeError,im1.setValue,0,0,1)
+        assert_raises(RuntimeError,im1.__call__,0,0)
+        assert_raises(RuntimeError,im1.view().setValue,0,0,1)
+        assert_raises(RuntimeError,im1.view().__call__,0,0)
 
         do_pickle(im1.bounds)
         do_pickle(im1)
@@ -430,10 +423,8 @@ def test_Image_FITS_IO():
             # Cannot write complex Images to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
-            try:
-                np.testing.assert_raises(ValueError, ref_image.write, test_file)
-            except ImportError:
-                pass
+            with assert_raises(ValueError):
+                ref_image.write(test_file)
             continue
 
         #
@@ -598,11 +589,8 @@ def test_Image_MultiFITS_IO():
             for k in range(nimages):
                 image_list.append(ref_image + k)
             test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits")
-            try:
-                np.testing.assert_raises(ValueError, galsim.fits.writeMulti,
-                                         image_list, test_multi_file)
-            except ImportError:
-                pass
+            with assert_raises(ValueError):
+                galsim.fits.writeMulti(image_list, test_multi_file)
             continue
 
         #
@@ -842,17 +830,14 @@ def test_Image_CubeFITS_IO():
             for k in range(nimages):
                 image_list.append(ref_image + k)
             test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
-            try:
-                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
-                                         image_list, test_cube_file)
-                array_list = [im.array for im in image_list]
-                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
-                                         array_list, test_cube_file)
-                one_array = np.asarray(array_list)
-                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
-                                         one_array, test_cube_file)
-            except ImportError:
-                pass
+            with assert_raises(ValueError):
+                galsim.fits.writeCube(image_list, test_cube_file)
+            array_list = [im.array for im in image_list]
+            with assert_raises(ValueError):
+                galsim.fits.writeCube(array_list, test_cube_file)
+            one_array = np.asarray(array_list)
+            with assert_raises(ValueError):
+                galsim.fits.writeCube(one_array, test_cube_file)
             continue
 
         #
@@ -1145,15 +1130,11 @@ def test_Image_binary_add():
         # shape.  Note that this test is only included here (not in the unit tests for all
         # other operations) because all operations have the same error-checking code, so it should
         # only be necessary to check once.
-        try:
-            image1 = galsim.Image(ref_array.astype(types[i]))
-            image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
-                                                    image1.ymin+1, image1.ymax))
-            np.testing.assert_raises(ValueError, image1.__add__, image2)
-        except ImportError:
-            # assert_raises requires nose, which we don't want to force people to install.
-            # So if they are running this without nose, we just skip these tests.
-            pass
+        image1 = galsim.Image(ref_array.astype(types[i]))
+        image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
+                                                image1.ymin+1, image1.ymax))
+        with assert_raises(ValueError):
+            image1.__add__(image2)
 
 
 @timer
@@ -1934,17 +1915,14 @@ def test_ConstImage_array_constness():
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
 
         # The rest are functions, so just use assert_raises.
-        try:
-            np.testing.assert_raises(ValueError, image.setValue, 1, 2, 666)
-            np.testing.assert_raises(ValueError, image.setSubImage, image.bounds, image)
-            np.testing.assert_raises(ValueError, image.addValue, 1, 2, 666)
-            np.testing.assert_raises(ValueError, image.copyFrom, image)
-            np.testing.assert_raises(ValueError, image.resize, image.bounds)
-            np.testing.assert_raises(ValueError, image.fill, 666)
-            np.testing.assert_raises(ValueError, image.setZero)
-            np.testing.assert_raises(ValueError, image.invertSelf)
-        except ImportError:
-            pass
+        assert_raises(ValueError, image.setValue, 1, 2, 666)
+        assert_raises(ValueError, image.setSubImage, image.bounds, image)
+        assert_raises(ValueError, image.addValue, 1, 2, 666)
+        assert_raises(ValueError, image.copyFrom, image)
+        assert_raises(ValueError, image.resize, image.bounds)
+        assert_raises(ValueError, image.fill, 666)
+        assert_raises(ValueError, image.setZero)
+        assert_raises(ValueError, image.invertSelf)
 
         do_pickle(image)
 
@@ -1977,13 +1955,10 @@ def test_BoundsI_init_with_non_pure_ints():
         "Cannot initialize a BoundI with float array elements"
 
     # Using non-integers should raise a ValueError
-    try:
-        np.testing.assert_raises(ValueError,galsim.BoundsI,*bound_arr_flt_nonint)
-        np.testing.assert_raises(ValueError,galsim.BoundsI,
-                                 xmin=bound_arr_flt_nonint[0], xmax=bound_arr_flt_nonint[1],
-                                 ymin=bound_arr_flt_nonint[2], ymax=bound_arr_flt_nonint[3])
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.BoundsI, *bound_arr_flt_nonint)
+    assert_raises(ValueError, galsim.BoundsI,
+                  xmin=bound_arr_flt_nonint[0], xmax=bound_arr_flt_nonint[1],
+                  ymin=bound_arr_flt_nonint[2], ymax=bound_arr_flt_nonint[3])
 
 
 @timer
@@ -2021,63 +1996,51 @@ def test_Image_constructor():
         do_pickle(test_im)
 
         # Check that some invalid sets of construction args raise the appropriate errors
-        try:
-            # Invalid args
-            np.testing.assert_raises(TypeError, galsim.Image, 1, 2, 3)
-            np.testing.assert_raises(TypeError, galsim.Image, 128)
-            np.testing.assert_raises(TypeError, galsim.Image, 1.8)
-            np.testing.assert_raises(TypeError, galsim.Image, 1.3, 2.7)
-            # Invalid array kwarg
-            np.testing.assert_raises(TypeError, galsim.Image, array=5)
-            np.testing.assert_raises(TypeError, galsim.Image, array=test_im)
-            # Invalid image kwarg
-            np.testing.assert_raises(TypeError, galsim.Image, image=5)
-            np.testing.assert_raises(TypeError, galsim.Image, image=test_arr)
-            # Invalid bounds
-            np.testing.assert_raises(TypeError, galsim.Image, bounds=(1,4,1,3))
-            np.testing.assert_raises(TypeError, galsim.Image, bounds=galsim.BoundsD(1,4,1,3))
-            np.testing.assert_raises(TypeError, galsim.Image, array=test_arr, bounds=(1,4,1,3))
-            np.testing.assert_raises(ValueError, galsim.Image,
-                                     array=test_arr, bounds=galsim.BoundsI(1,3,1,4))
-            np.testing.assert_raises(ValueError, galsim.Image,
-                                     array=test_arr, bounds=galsim.BoundsI(1,4,1,1))
-            # Invalid ncol, nrow
-            np.testing.assert_raises(TypeError, galsim.Image, ncol=1.2, nrow=3)
-            np.testing.assert_raises(TypeError, galsim.Image, ncol=2, nrow=3.4)
-            np.testing.assert_raises(ValueError, galsim.Image, ncol='four', nrow='three')
-            # Invalid dtype
-            np.testing.assert_raises(ValueError, galsim.Image, array=test_arr, dtype=bool)
-            np.testing.assert_raises(ValueError, galsim.Image, array=test_arr.astype(bool))
-            # Invalid scale
-            np.testing.assert_raises(ValueError, galsim.Image, 4,3, scale='invalid')
-            # Invalid wcs
-            np.testing.assert_raises(TypeError, galsim.Image, 4,3, wcs='invalid')
-            # Disallowed combinations
-            np.testing.assert_raises(TypeError, galsim.Image,
-                                     ncol=4, nrow=3, bounds=galsim.BoundsI(1,4,1,3))
-            np.testing.assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, array=test_arr)
-            np.testing.assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, image=test_im)
-            np.testing.assert_raises(TypeError, galsim.Image, ncol=4)
-            np.testing.assert_raises(TypeError, galsim.Image, nrow=3)
-            np.testing.assert_raises(ValueError, galsim.Image,
-                                     test_arr, bounds=galsim.BoundsI(1,2,1,3))
-            np.testing.assert_raises(ValueError, galsim.Image,
-                                     array=test_arr, bounds=galsim.BoundsI(1,2,1,3))
-            np.testing.assert_raises(ValueError, galsim.Image,
-                                     [[1,2]], bounds=galsim.BoundsI(1,2,1,3))
-            np.testing.assert_raises(TypeError, galsim.Image, test_arr, init_value=3)
-            np.testing.assert_raises(TypeError, galsim.Image, array=test_arr, init_value=3)
-            np.testing.assert_raises(TypeError, galsim.Image, test_im, init_value=3)
-            np.testing.assert_raises(TypeError, galsim.Image, image=test_im, init_value=3)
-            np.testing.assert_raises(TypeError, galsim.Image, dtype=float, init_value=3)
-            np.testing.assert_raises(TypeError, galsim.Image,
-                                     test_im, scale=3, wcs=galsim.PixelScale(3))
-            # Extra kwargs
-            np.testing.assert_raises(TypeError, galsim.Image, image=test_im, name='invalid')
-
-
-        except ImportError:
-            pass
+        # Invalid args
+        assert_raises(TypeError, galsim.Image, 1, 2, 3)
+        assert_raises(TypeError, galsim.Image, 128)
+        assert_raises(TypeError, galsim.Image, 1.8)
+        assert_raises(TypeError, galsim.Image, 1.3, 2.7)
+        # Invalid array kwarg
+        assert_raises(TypeError, galsim.Image, array=5)
+        assert_raises(TypeError, galsim.Image, array=test_im)
+        # Invalid image kwarg
+        assert_raises(TypeError, galsim.Image, image=5)
+        assert_raises(TypeError, galsim.Image, image=test_arr)
+        # Invalid bounds
+        assert_raises(TypeError, galsim.Image, bounds=(1,4,1,3))
+        assert_raises(TypeError, galsim.Image, bounds=galsim.BoundsD(1,4,1,3))
+        assert_raises(TypeError, galsim.Image, array=test_arr, bounds=(1,4,1,3))
+        assert_raises(ValueError, galsim.Image, array=test_arr, bounds=galsim.BoundsI(1,3,1,4))
+        assert_raises(ValueError, galsim.Image, array=test_arr, bounds=galsim.BoundsI(1,4,1,1))
+        # Invalid ncol, nrow
+        assert_raises(TypeError, galsim.Image, ncol=1.2, nrow=3)
+        assert_raises(TypeError, galsim.Image, ncol=2, nrow=3.4)
+        assert_raises(ValueError, galsim.Image, ncol='four', nrow='three')
+        # Invalid dtype
+        assert_raises(ValueError, galsim.Image, array=test_arr, dtype=bool)
+        assert_raises(ValueError, galsim.Image, array=test_arr.astype(bool))
+        # Invalid scale
+        assert_raises(ValueError, galsim.Image, 4,3, scale='invalid')
+        # Invalid wcs
+        assert_raises(TypeError, galsim.Image, 4,3, wcs='invalid')
+        # Disallowed combinations
+        assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, bounds=galsim.BoundsI(1,4,1,3))
+        assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, array=test_arr)
+        assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, image=test_im)
+        assert_raises(TypeError, galsim.Image, ncol=4)
+        assert_raises(TypeError, galsim.Image, nrow=3)
+        assert_raises(ValueError, galsim.Image, test_arr, bounds=galsim.BoundsI(1,2,1,3))
+        assert_raises(ValueError, galsim.Image, array=test_arr, bounds=galsim.BoundsI(1,2,1,3))
+        assert_raises(ValueError, galsim.Image, [[1,2]], bounds=galsim.BoundsI(1,2,1,3))
+        assert_raises(TypeError, galsim.Image, test_arr, init_value=3)
+        assert_raises(TypeError, galsim.Image, array=test_arr, init_value=3)
+        assert_raises(TypeError, galsim.Image, test_im, init_value=3)
+        assert_raises(TypeError, galsim.Image, image=test_im, init_value=3)
+        assert_raises(TypeError, galsim.Image, dtype=float, init_value=3)
+        assert_raises(TypeError, galsim.Image, test_im, scale=3, wcs=galsim.PixelScale(3))
+        # Extra kwargs
+        assert_raises(TypeError, galsim.Image, image=test_im, name='invalid')
 
 
 @timer
@@ -2958,18 +2921,12 @@ def test_FITS_bad_type():
     testS_file = os.path.join(datadir, "testS.fits")
     testMultiS_file = os.path.join(datadir, "test_multiS.fits")
     testCubeS_file = os.path.join(datadir, "test_cubeS.fits")
-    try:
-        testS_image = np.testing.assert_warns(
-                UserWarning, galsim.fits.read, testS_file)
-        testMultiS_image_list = np.testing.assert_warns(
-                UserWarning, galsim.fits.readMulti, testMultiS_file)
-        testCubeS_image_list = np.testing.assert_warns(
-                UserWarning, galsim.fits.readCube, testCubeS_file)
-    except ImportError:
-        with warnings.catch_warnings(UserWarning):
-            testS_image = galsim.fits.read(testS_file)
-            testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
-            testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
+    with assert_warns(UserWarning):
+        testS_image = galsim.fits.read(testS_file)
+    with assert_warns(UserWarning):
+        testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
+    with assert_warns(UserWarning):
+        testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
 
     np.testing.assert_equal(np.float64, testS_image.array.dtype.type)
     np.testing.assert_array_equal(ref_array.astype(float), testS_image.array,
