@@ -198,25 +198,28 @@ else:
 print('GalSim version is %s'%(galsim_version))
 
 dist = setup(name="GalSim", 
-      version=galsim_version,
-      author="GalSim Developers (point of contact: Mike Jarvis)",
-      author_email="michael@jarvis.net",
-      description="The modular galaxy image simulation toolkit",
-      long_description=long_description,
-      license = "BSD License",
-      url="https://github.com/rmjarvis/GalSim",
-      download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
-      packages=['galsim'],
-      include_package_data=True,
-      ext_modules=[ext],
-      setup_requires=build_dep,
-      install_requires=build_dep + run_dep,
-      cmdclass = {'build_ext': my_builder,
-                  'easy_install': my_easy_install,
-                  },
-      scripts=scripts,
-      zip_safe=False,
-      )
+    version=galsim_version,
+    author="GalSim Developers (point of contact: Mike Jarvis)",
+    author_email="michael@jarvis.net",
+    description="The modular galaxy image simulation toolkit",
+    long_description=long_description,
+    license = "BSD License",
+    url="https://github.com/rmjarvis/GalSim",
+    download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
+    packages=['galsim'],
+    include_package_data=True,
+    ext_modules=[ext],
+    setup_requires=build_dep,
+    install_requires=build_dep + run_dep,
+    cmdclass = {'build_ext': my_builder,
+                'easy_install': my_easy_install,
+                },
+    entry_points = {'console_scripts' : [
+            'galsim = galsim.__main__:main',
+            'galsim_download_cosmos = galsim.download_cosmos:main'
+            ]},
+    zip_safe=False,
+    )
 
 # Check that the path includes the directory where the scripts are installed.
 real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]

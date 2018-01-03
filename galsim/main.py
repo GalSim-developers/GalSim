@@ -27,22 +27,13 @@ import os
 import logging
 import pprint
 
-# The only wrinkle about letting this executable be called galsim is that we want to
-# make sure that `import galsim` doesn't import itself.  We want it to import the real
-# galsim module of course.  So the solution is to get rid of the current directory
-# from python's default search path
-temp = sys.path[0]
-sys.path = sys.path[1:]
-import galsim
-# Now put it back in case anyone else relies on this feature.
-sys.path = [temp] + sys.path
-
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
+    from ._version import __version__ as version
 
     # Short description strings common to both parsing mechanisms
-    version_str = "GalSim Version %s"%galsim.version
+    version_str = "GalSim Version %s"%version
     description = "galsim: configuration file parser for %s.  "%version_str 
     description += "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation "
     description += "for documentation about using this program."
@@ -197,6 +188,8 @@ def AddModules(config, modules):
             config['modules'].extend(modules)
 
 def main():
+    from .config import ReadConfig, Process
+
     args = parse_args()
 
     if args.njobs < 1:
@@ -227,7 +220,7 @@ def main():
     logger = logging.getLogger('galsim')
 
     logger.warn('Using config file %s', args.config_file)
-    all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
+    all_config = ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
 
     # Process each config document
@@ -251,8 +244,8 @@ def main():
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
-                              except_abort=args.except_abort)
+        Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
+                except_abort=args.except_abort)
 
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
@@ -268,7 +261,3 @@ def main():
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
         logger.error(s.getvalue())
- 
-
-if __name__ == "__main__":
-    main()

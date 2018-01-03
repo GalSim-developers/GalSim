@@ -28,17 +28,6 @@ try:
 except:
     from urllib.request import urlopen
 
-# Since this will be installed in the same directory as our galsim executable,
-# we need to do the same trick about changing the path so it imports the real
-# galsim module, not that executable.
-temp = sys.path[0]
-sys.path = sys.path[1:]
-import galsim
-sys.path = [temp] + sys.path
-
-script_name = os.path.basename(__file__)
-
-
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
@@ -372,6 +361,9 @@ def link_target(unpack_dir, link_dir, args, logger):
     logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
 def main():
+    from ._version import __version__ as version
+    from .meta_data import share_dir
+
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
@@ -387,7 +379,7 @@ def main():
     logger = logging.getLogger('galsim')
 
     # Give diagnostic about GalSim version
-    logger.debug("GalSim version: %s",galsim.__version__)
+    logger.debug("GalSim version: %s",version)
     logger.debug("This download script is: %s",__file__)
     logger.info("Type %s -h to see command line options.\n",script_name)
 
@@ -399,7 +391,6 @@ def main():
     # file_name is the name of the file to download, taken from the url.
     # target is the full path of the downloaded tarball
 
-    share_dir = galsim.meta_data.share_dir
     if args.dir is not None:
         target_dir = args.dir
         link = not args.nolink
@@ -460,7 +451,3 @@ def main():
         # Get the directory where this would normally have been unpacked.
         link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
         link_target(unpack_dir, link_dir, args, logger)
-
-
-if __name__ == "__main__":
-    main()
