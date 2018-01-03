@@ -1,0 +1,204 @@
+from __future__ import print_function
+import sys,os,glob,re
+import select
+
+
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+from setuptools.command.install_scripts import install_scripts
+from setuptools.command.easy_install import easy_install
+import setuptools
+print("Using setuptools version",setuptools.__version__)
+
+print('Python version = ',sys.version)
+py_version = "%d.%d"%sys.version_info[0:2]  # we check things based on the major.minor version.
+
+scripts = ['galsim', 'galsim_download_cosmos']
+scripts = [ os.path.join('bin',f) for f in scripts ]
+
+def all_files_from(dir, ext=''):
+    files = []
+    for root, dirnames, filenames in os.walk(dir):
+        for filename in filenames:
+            if filename.endswith(ext):
+                files.append(os.path.join(root, filename))
+    return files
+
+sources = all_files_from('src', '.cpp') + all_files_from('pysrc', '.cpp')
+headers = all_files_from('include')
+shared_data = all_files_from('share')
+print('sources = ',sources)
+print('headers = ',headers)
+print('shared = ',shared_data)
+
+# If we build with debug, undefine NDEBUG flag
+undef_macros = []
+if "--debug" in sys.argv:
+    undef_macros+=['NDEBUG']
+
+copt =  {
+    'gcc' : ['-O3','-ffast-math','-std=c++11'],
+    'icc' : ['-O3','-std=c++11'],
+    'clang' : ['-O3','-ffast-math','-std=c++11','-Wno-shorten-64-to-32'],
+    'unknown' : [],
+}
+
+if "--debug" in sys.argv:
+    copt['gcc'].append('-g')
+    copt['icc'].append('-g')
+    copt['clang'].append('-g')
+
+def get_compiler(cc):
+    """Try to figure out which kind of compiler this really is.
+    In particular, try to distinguish between clang and gcc, either of which may
+    be called cc or gcc.
+    """
+    cmd = [cc,'--version']
+    import subprocess
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    lines = p.stdout.readlines()
+    print('compiler version information: ')
+    for line in lines:
+        print(line.decode().strip())
+    try:
+        # Python3 needs this decode bit.
+        # Python2.7 doesn't need it, but it works fine.
+        line = lines[0].decode(encoding='UTF-8')
+        if line.startswith('Configured'):
+            line = lines[1].decode(encoding='UTF-8')
+    except TypeError:
+        # Python2.6 throws a TypeError, so just use the lines as they are.
+        line = lines[0]
+        if line.startswith('Configured'):
+            line = lines[1]
+
+    if 'clang' in line:
+        return 'clang'
+    elif 'gcc' in line:
+        return 'gcc'
+    elif 'GCC' in line:
+        return 'gcc'
+    elif 'clang' in cc:
+        return 'clang'
+    elif 'gcc' in cc or 'g++' in cc:
+        return 'gcc'
+    elif 'icc' in cc or 'icpc' in cc:
+        return 'icc'
+    else:
+        return 'unknown'
+
+# Make a subclass of build_ext so we can add to the -I list.
+class my_builder( build_ext ):
+    # Adding the libraries and include_dirs here rather than when declaring the Extension
+    # means that the setup_requires modules should already be installed, so pybind11, eigency,
+    # and fftw3 should all import properly.
+    def finalize_options(self):
+        print('finalize_options:')
+        build_ext.finalize_options(self)
+        self.include_dirs.append('include')
+        self.include_dirs.append('include/galsim')
+        import pybind11
+        # Include both the standard location and the --user location, since it's hard to tell
+        # which one is the right choice.
+        self.include_dirs.append(pybind11.get_include(user=False))
+        self.include_dirs.append(pybind11.get_include(user=True))
+        import fftw3
+        self.include_dirs.append('include/fftw3')
+        self.library_dirs.append(fftw3.lib.libdir)
+        fftw3_libname = fftw3.lib.libbase
+        if fftw3_libname.startswith('lib'): fftw3_libname = fftw3_libname[3:]
+        self.libraries.append(fftw3_libname)
+        import eigency
+        self.include_dirs.append(eigency.get_includes()[2])
+        print('include_dirs = ',self.include_dirs)
+        print('library_dirs = ',self.library_dirs)
+        print('libraries = ',self.libraries)
+
+    # Add any extra things based on the compiler being used..
+    def build_extensions(self):
+        # Figure out what compiler it will use
+        cc = self.compiler.executables['compiler_cxx'][0]
+        print('Using compiler %s'%(cc))
+        # Figure out what compiler it will use
+        cc = self.compiler.executables['compiler_cxx'][0]
+        comp_type = get_compiler(cc)
+        if cc == comp_type:
+            print('Using compiler %s'%(cc))
+        else:
+            print('Using compiler %s, which is %s'%(cc,comp_type))
+        # Add the appropriate extra flags for that compiler.
+        for e in self.extensions:
+            e.extra_compile_args = copt[ comp_type ]
+            #e.extra_link_args = lopt[ comp_type ]
+        # Now run the normal build function.
+        build_ext.build_extensions(self)
+
+# AFAICT, setuptools doesn't provide any easy access to the final installation location of the
+# executable scripts.  This bit is just to save the value of script_dir so I can use it later.
+# cf. http://stackoverflow.com/questions/12975540/correct-way-to-find-scripts-directory-from-setup-py-in-python-distutils/
+class my_easy_install( easy_install ):
+    # Match the call signature of the easy_install version.
+    def write_script(self, script_name, contents, mode="t", *ignored):
+        # Run the normal version
+        easy_install.write_script(self, script_name, contents, mode, *ignored)
+        # Save the script install directory in the distribution object.
+        # This is the same thing that is returned by the setup function.
+        self.distribution.script_install_dir = self.script_dir
+
+ext=Extension("galsim._galsim",
+              sources,
+              undef_macros = undef_macros)
+
+build_dep = ['pybind11', 'pyfftw3', 'eigency']
+run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
+
+with open('README.md') as file:
+    long_description = file.read()
+
+# Read in the galsim version from galsim/_version.py
+# cf. http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
+version_file=os.path.join('galsim','_version.py')
+verstrline = open(version_file, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    galsim_version = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (version_file,))
+print('GalSim version is %s'%(galsim_version))
+
+dist = setup(name="GalSim", 
+      version=galsim_version,
+      author="GalSim Developers (point of contact: Mike Jarvis)",
+      author_email="michael@jarvis.net",
+      description="The modular galaxy image simulation toolkit",
+      long_description=long_description,
+      license = "BSD License",
+      url="https://github.com/rmjarvis/GalSim",
+      download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
+      packages=['galsim'],
+      include_package_data=True,
+      ext_modules=[ext],
+      setup_requires=build_dep,
+      install_requires=build_dep + run_dep,
+      cmdclass = {'build_ext': my_builder,
+                  'easy_install': my_easy_install,
+                  },
+      scripts=scripts,
+      zip_safe=False,
+      )
+
+# Check that the path includes the directory where the scripts are installed.
+real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]
+if (hasattr(dist,'script_install_dir') and
+    dist.script_install_dir not in os.environ['PATH'].split(':') and
+    os.path.realpath(dist.script_install_dir) not in real_env_path):
+
+    print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
+    print('         If you want to use the executables, you should add the directory')
+    print('\n             ',dist.script_install_dir,'\n')
+    print('         to your path.  The current path is')
+    print('\n             ',os.environ['PATH'],'\n')
+    print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
+    print('         in which case the scripts will be installed in PREFIX/bin.')
+    print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
