@@ -1032,16 +1032,26 @@ int main()
     config.Message('Checking for correct FFTW linkage... ')
     if not config.TryCompile(fftw_source_file,'.cpp'):
         ErrorExit(
-            'Error: fftw file failed to compile.',
-            'Check that the correct location is specified for FFTW_DIR')
+            'Error: fftw file failed to compile.')
 
     result = (
         CheckLibsFull(config,[''],fftw_source_file) or
         CheckLibsFull(config,['fftw3'],fftw_source_file) )
     if not result:
+        # Try to get the correct library location from pyfftw3
+        try:
+            import fftw3
+            config.env.Append(LIBPATH=fftw3.lib.libdir)
+            result = CheckLibsFull(config,[fftw3.lib.libbase],fftw_source_file)
+        except ImportError:
+            pass
+    if not result:
         ErrorExit(
             'Error: fftw file failed to link correctly',
-            'Check that the correct location is specified for FFTW_DIR')
+            'You should either specify the location of fftw3 as FFTW_DIR=... '
+            'or install pyfftw3 using: \n'
+            '    pip install pyfftw3\n'
+            'which can often find it automatically.')
 
     config.Result(1)
     return 1
@@ -2054,9 +2064,10 @@ def DoCppChecks(config):
 
     # FFTW
     if not config.CheckHeader('fftw3.h',language='C++'):
-        ErrorExit(
-            'fftw3.h not found',
-            'You should specify the location of fftw3 as FFTW_DIR=...')
+        # We have our own version of fftw3.h in case it's not easy to find this.
+        # (The library location is often accessible via pyffw3 if it is installed somewhere.)
+        print('Using local fftw3.h file in GalSim/include/fftw3')
+        config.env.Append(CPPPATH='#include/fftw3')
     config.CheckFFTW()
 
     # Boost
@@ -2078,6 +2089,7 @@ def DoCppChecks(config):
             # Try to get the correct include directory from eigency
             try:
                 import eigency
+                print('Trying eigency installation: ',eigency.get_includes()[2])
                 config.env.Append(CPPPATH=eigency.get_includes()[2])
                 ok = config.CheckHeader('Eigen/Core',language='C++')
             except ImportError:
