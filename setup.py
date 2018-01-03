@@ -179,7 +179,9 @@ ext=Extension("galsim._galsim",
               sources,
               undef_macros = undef_macros)
 
-build_dep = ['pybind11', 'pyfftw3', 'eigency']
+# Note: We don't actually need cython, but eigency depends on it at build time, and their
+# setup.py is broken such that if it's not already installed it fails catastrophically.
+build_dep = ['pybind11', 'pyfftw3', 'cython', 'eigency']
 run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
 
 with open('README.md') as file:

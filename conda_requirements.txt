@@ -1,0 +1,9 @@
+# The requirements that can be installed with conda install -c conda-forge
+
+gcc >= 4.8
+numpy >= 1.13
+future >= 0.15
+astropy >= 2.0
+pyyaml >= 3.12
+pandas >= 0.20
+cython >= 0.26

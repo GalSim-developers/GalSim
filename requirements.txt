@@ -1,15 +1,19 @@
 # I didn't try to figure out which versions of these are really required.  These are the
 # current versions at the time of writing this (Jan, 2018), and they are known to work.
 
-pybind11 >= 2.0.0
-pyfftw3 >= 0.2.1
-
-numpy >= 1.13.3
-future >= 0.15.2
-astropy >= 2.0.3
+# These are in conda_requirements.txt.  If using that, you may prefer to do
+# conda install --file conda_requirements.txt
+numpy >= 1.13
+future >= 0.15
+astropy >= 2.0
 pyyaml >= 3.12
+pandas >= 0.20
+cython >= 0.26
+
+# These are not in (at least some versions of) conda.  Let pip install these.
+pybind11 >= 2.0
+pyfftw3 >= 0.2.1
 LSSTDESC.Coord >= 1.0.5
-pandas >= 0.22.0
 
 # The version of eigency (1.75) on pip doens't install the Eigen directory properly.
 # cf. https://github.com/wouterboomsma/eigency/issues/17
