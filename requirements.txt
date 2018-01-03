@@ -1,0 +1,17 @@
+# I didn't try to figure out which versions of these are really required.  These are the
+# current versions at the time of writing this (Jan, 2018), and they are known to work.
+
+pybind11 >= 2.0.0
+pyfftw3 >= 0.2.1
+
+numpy >= 1.13.3
+future >= 0.15.2
+astropy >= 2.0.3
+pyyaml >= 3.12
+LSSTDESC.Coord >= 1.0.5
+pandas >= 0.22.0
+
+# The version of eigency (1.75) on pip doens't install the Eigen directory properly.
+# cf. https://github.com/wouterboomsma/eigency/issues/17
+# They already fixed the problem on master, so this commit works until they release 1.76.
+git+git://github.com/wouterboomsma/eigency.git@ed54a61e8143284e243f0a7ddbc5acb4c8bf58bd
