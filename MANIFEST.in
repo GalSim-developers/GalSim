@@ -1,4 +1,4 @@
-graft galsim
+recursive-include galsim
 include *.md
 include LICENSE
 global-exclude __pycache__ *.pyc .obj

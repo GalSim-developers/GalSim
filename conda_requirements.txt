@@ -1,9 +1,14 @@
-# The requirements that can be installed with conda install -c conda-forge
-
-gcc >= 4.8
+# The requirements packages that can be installed with
+#    conda install -y -c conda-forge --file conda_requirements.txt
 numpy >= 1.13
 future >= 0.15
 astropy >= 2.0
 pyyaml >= 3.12
 pandas >= 0.20
+pybind11 >= 2.0
+pip >= 9.0
+gcc >= 4.8
 cython >= 0.26
+setuptools >= 38.2
+setuptools_scm >= 1.15.6
+

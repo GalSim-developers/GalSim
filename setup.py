@@ -224,9 +224,9 @@ ext=Extension("galsim._galsim",
               sources,
               undef_macros = undef_macros)
 
-# Note: We don't actually need cython, but eigency depends on it at build time, and their
-# setup.py is broken such that if it's not already installed it fails catastrophically.
-build_dep = ['pybind11', 'cython', 'eigency']
+# Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
+# and their setup.py is broken such that if they're not already installed it fails catastrophically.
+build_dep = ['pybind11', 'setuptools_scm', 'cython', 'eigency']
 run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
 
 with open('README.md') as file:
@@ -254,7 +254,8 @@ dist = setup(name="GalSim",
     url="https://github.com/rmjarvis/GalSim",
     download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
     packages=['galsim'],
-    include_package_data=True,
+    #package_data={'galsim' : shared_data},
+    #include_package_data=True,
     ext_modules=[ext],
     setup_requires=build_dep,
     install_requires=build_dep + run_dep,

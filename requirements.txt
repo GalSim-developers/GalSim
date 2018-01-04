@@ -2,20 +2,24 @@
 # current versions at the time of writing this (Jan, 2018), and they are known to work.
 
 # These are in conda_requirements.txt.  If using that, you may prefer to do
-# conda install --file conda_requirements.txt
+#   conda install -c conda-forge --file conda_requirements.txt
+# prior to running pip install -r requirements.txt
 numpy >= 1.13
 future >= 0.15
 astropy >= 2.0
 pyyaml >= 3.12
 pandas >= 0.20
-cython >= 0.26
-
-# These are not in (at least some versions of) conda.  Let pip install these.
 pybind11 >= 2.0
-pyfftw3 >= 0.2.1
+pip >= 9.0
+gcc >= 4.8
+cython >= 0.26
+setuptools >= 38.2
+setuptools_scm >= 1.15.6
+
+# These are not in conda.  Let pip install these.
 LSSTDESC.Coord >= 1.0.5
 
 # The version of eigency (1.75) on pip doens't install the Eigen directory properly.
 # cf. https://github.com/wouterboomsma/eigency/issues/17
-# They already fixed the problem on master, so this commit works until they release 1.76.
-git+git://github.com/wouterboomsma/eigency.git@ed54a61e8143284e243f0a7ddbc5acb4c8bf58bd
+# It also improperly depends on cython at build time.  This commit fixes that issue.
+git+git://github.com/rmjarvis/eigency.git@33d8d65417484318255dbb422e6ad49dda803f06
