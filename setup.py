@@ -222,6 +222,7 @@ class my_easy_install( easy_install ):
 
 ext=Extension("galsim._galsim",
               sources,
+              depends=headers,
               undef_macros = undef_macros)
 
 # Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
@@ -290,7 +291,7 @@ dist = setup(name="GalSim",
     url="https://github.com/rmjarvis/GalSim",
     download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
     packages=['galsim'],
-    #package_data={'galsim' : shared_data},
+    package_data={'galsim' : shared_data},
     #include_package_data=True,
     ext_modules=[ext],
     setup_requires=build_dep,

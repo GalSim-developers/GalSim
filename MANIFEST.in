@@ -1,4 +1,5 @@
-recursive-include galsim
+recursive-include galsim *.py
 include *.md
 include LICENSE
-global-exclude __pycache__ *.pyc .obj
+recursive-include share *
+global-exclude __pycache__ *.pyc .obj .gitignore SCons*
