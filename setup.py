@@ -1,6 +1,7 @@
 from __future__ import print_function
 import sys,os,glob,re
-import select
+import platform
+import ctypes
 
 
 from setuptools import setup, Extension
@@ -87,6 +88,48 @@ def get_compiler(cc):
     else:
         return 'unknown'
 
+# Check for the fftw3 library in some likely places
+def find_fftw_lib():
+    try_libdirs = []
+    lib_ext = '.so'
+    if 'FFTW_PATH' in os.environ:
+        try_libdirs.append(os.environ['FFTW_PATH'])
+        try_libdirs.append(os.path.join(os.environ['FFTW_PATH'],'lib'))
+    if 'posix' in os.name.lower():
+        try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
+    if 'darwin' in platform.system().lower():
+        try_libdirs.extend(['/sw/lib', '/opt/local/lib'])
+        lib_ext = '.dylib'
+    for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
+        if path in os.environ:
+            for dir in os.environ[path].split(':'):
+                try_libdirs.append(dir)
+
+    name = 'libfftw3' + lib_ext
+    for dir in try_libdirs:
+        try:
+            libpath = os.path.join(dir, name)
+            lib = ctypes.cdll.LoadLibrary(libpath)
+            print("found %s at %s" %(name, libpath))
+            return libpath
+        except OSError as e:
+            print("Did not find %s in %s" %(name, libpath))
+            continue
+    print("Could not find %s in any of the normal locations"%name)
+    print("Trying ctypes.util.find_library")
+    try:
+        libpath = ctypes.util.find_library('fftw3')
+        if libpath == None:
+            raise OSError
+        lib = ctypes.cdll.LoadLibrary(libpath)
+        print("found %s at %s" %(name, libpath))
+        return libpath
+    except Exception as e:
+        print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
+        print("location such as /usr/local/lib, or the installation directory is either in ")
+        print("your LIBRARY_PATH or FFTW_PATH environment variable.")
+        raise
+
 # Make a subclass of build_ext so we can add to the -I list.
 class my_builder( build_ext ):
     # Adding the libraries and include_dirs here rather than when declaring the Extension
@@ -97,17 +140,19 @@ class my_builder( build_ext ):
         build_ext.finalize_options(self)
         self.include_dirs.append('include')
         self.include_dirs.append('include/galsim')
+
         import pybind11
         # Include both the standard location and the --user location, since it's hard to tell
         # which one is the right choice.
         self.include_dirs.append(pybind11.get_include(user=False))
         self.include_dirs.append(pybind11.get_include(user=True))
-        import fftw3
+
         self.include_dirs.append('include/fftw3')
-        self.library_dirs.append(fftw3.lib.libdir)
-        fftw3_libname = fftw3.lib.libbase
-        if fftw3_libname.startswith('lib'): fftw3_libname = fftw3_libname[3:]
-        self.libraries.append(fftw3_libname)
+        fftw_lib = find_fftw_lib()
+        fftw_libpath, fftw_libname = os.path.split(fftw_lib)
+        self.library_dirs.append(os.path.split(fftw_lib)[0])
+        self.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
+
         import eigency
         self.include_dirs.append(eigency.get_includes()[2])
         print('include_dirs = ',self.include_dirs)
@@ -181,7 +226,7 @@ ext=Extension("galsim._galsim",
 
 # Note: We don't actually need cython, but eigency depends on it at build time, and their
 # setup.py is broken such that if it's not already installed it fails catastrophically.
-build_dep = ['pybind11', 'pyfftw3', 'cython', 'eigency']
+build_dep = ['pybind11', 'cython', 'eigency']
 run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
 
 with open('README.md') as file:
