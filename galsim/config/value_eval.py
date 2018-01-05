@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import galsim
 import numpy as np
+import re
 
 # This file handles the parsing for the special Eval type.
 
@@ -48,16 +49,24 @@ def _type_by_letter(key):
 
 eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin', 'image_bounds',
                         'image_xsize', 'image_ysize', 'stamp_xsize', 'stamp_ysize', 'pixel_scale',
-                        'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num', ]
+                        'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num',
+                        'world_center', ]
 
 from .value import standard_ignore
 eval_ignore = ['str','_fn'] + standard_ignore
+
+def _isWordInString(w, s):
+    # Return if a given word is in the given string.
+    # Note, this specifically looks for the whole word. e.g. if w = 'yes' and s = 'eyestrain',
+    # then `w in s` returns True, but `_isWordInString(w,s)` returns False.
+    # cf. https://stackoverflow.com/questions/5319922/python-check-if-word-is-in-a-string
+    return re.search(r'\b({0})\b'.format(w),s) is not None
 
 def _GenerateFromEval(config, base, value_type):
     """@brief Evaluate a string as the provided type
     """
     #print('Start Eval')
-    #print('config = ',config)
+    #print('config = ',galsim.config.CleanConfig(config))
     if '_value' in config:
         return config['_value']
     elif '_fn' in config:
@@ -87,7 +96,6 @@ def _GenerateFromEval(config, base, value_type):
 
         # Turn any "Current" items indicated with an @ sign into regular variables.
         if '@' in string:
-            import re
             # Find @items using regex.  They can include alphanumeric chars plus '.'.
             keys = re.findall(r'@[\w\.]*', string)
             #print('@keys = ',keys)
@@ -111,19 +119,19 @@ def _GenerateFromEval(config, base, value_type):
 
         # Also bring in any top level eval_variables that might be relevant.
         if 'eval_variables' in base:
-            #print('found eval_variables = ',base['eval_variables'])
+            #print('found eval_variables = ',galsim.config.CleanConfig(base['eval_variables']))
             if not isinstance(base['eval_variables'],dict):
                 raise AttributeError("eval_variables must be a dict")
             for key in base['eval_variables']:
                 # Only add variables that appear in the string.
-                if key[1:] in string and key[1:] not in params:
+                if _isWordInString(key[1:],string) and key[1:] not in params:
                     config[key] = { 'type' : 'Current',
                                     'key' : 'eval_variables.' + key }
                     params.append(key[1:])
 
         # Also check for the allowed base variables:
         for key in eval_base_variables:
-            if key in base and key in string and key not in params:
+            if key in base and _isWordInString(key,string) and key not in params:
                 config['x' + key] = { 'type' : 'Current', 'key' : key }
                 params.append(key)
         #print('params = ',params)
@@ -174,4 +182,5 @@ def _GenerateFromEval(config, base, value_type):
 # Register this as a valid value type
 from .value import RegisterValueType
 RegisterValueType('Eval', _GenerateFromEval,
-                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])
+                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD,
+                    galsim.CelestialCoord, None ])

@@ -19,10 +19,8 @@ gal:
     type: Exponential
     half_light_radius:
         index_key: image_num
-        type: Sequence
-        first: 0.5
-        step: 0.5
-        nitems: 3
+        type: List
+        items: [0.5, 1, 1.5]
     ellip:
         index_key: image_num
         type: E1E2

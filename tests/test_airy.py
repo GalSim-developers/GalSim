@@ -141,14 +141,11 @@ def test_airy():
     do_pickle(airy4)
 
     # Should raise an exception if both lam, lam_over_diam are provided
-    try:
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam_over_diam=3, diam=1)
-        np.testing.assert_raises(TypeError, galsim.Airy, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Airy, diam=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3, diam=1)
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, lam=3)
+    assert_raises(TypeError, galsim.Airy, lam_over_diam=3, diam=1)
+    assert_raises(TypeError, galsim.Airy, lam=3)
+    assert_raises(TypeError, galsim.Airy, diam=1)
 
 
 @timer
@@ -177,12 +174,9 @@ def test_airy_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_diam")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_diam")
 
 
 @timer

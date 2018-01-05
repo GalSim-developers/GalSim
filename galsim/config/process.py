@@ -521,11 +521,23 @@ def SetupConfigRNG(config, seed_offset=0, logger=None):
     # and then put the combined results into config['rng'] as a list.
     if isinstance(image['random_seed'], list):
         lst = image['random_seed']
-        seeds, rngs = zip(*[ParseRandomSeed(lst, i, config, seed_offset) for i in range(len(lst))])
-        config['seed'] = seeds[0]
-        config['rng'] = rngs[0]
-        config[index_key + '_seed'] = seeds[0]
-        config[index_key + '_rng'] = rngs[0]
+        logger.debug('random_seed = %s',CleanConfig(lst))
+        logger.debug('seed_offset = %s',seed_offset)
+        seeds = []
+        rngs = []
+        for i in range(len(lst)):
+            seed, rng = ParseRandomSeed(lst, i, config, seed_offset)
+            logger.debug('seed %d = %s',i,seed)
+            seeds.append(seed)
+            rngs.append(rng)
+            if i == 0:
+                # Helpful to get this done right away, because later seeds might be based
+                # on a random number that uses the first rng.
+                # cf. test_eval_full_word in test_config_output.py.
+                config['seed'] = seed
+                config['rng'] = rng
+                config[index_key + '_seed'] = seed
+                config[index_key + '_rng'] = rng
         config[index_key + '_rngs'] = rngs
         logger.debug('obj %d: random_seed is a list. Initializing rngs with seeds %s',
                      config.get('obj_num',0), seeds)
@@ -1019,7 +1031,7 @@ def GetIndex(config, base, is_sequence=False):
     return index, index_key
 
 
-def GetRNG(config, base, logger=None, tag=None):
+def GetRNG(config, base, logger=None, tag=''):
     """Get the appropriate current rng according to whatever the current index_key is.
 
     If a logger is provided, then it will emit a warning if there is no current rng setup.
@@ -1027,13 +1039,14 @@ def GetRNG(config, base, logger=None, tag=None):
     @param config           The configuration dict for the current item being worked on.
     @param base             The base configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
-    @param tag              If given, an appropriate name for the current item to use ing the
-                            warning message. [default: None]
+    @param tag              If given, an appropriate name for the current item to use in the
+                            warning message. [default: '']
 
     @returns either the appropriate rng for the current index_key or None
     """
     logger = LoggerWrapper(logger)
     index, index_key = GetIndex(config, base)
+    logger.debug("GetRNG for %s: %s",index_key,index)
 
     if 'rng_num' in config:
         rng_num = config['rng_num']
@@ -1046,6 +1059,7 @@ def GetRNG(config, base, logger=None, tag=None):
         rng = base.get(index_key + '_rng', None)
 
     if rng is None:
+        logger.debug("No index_key_rng.  Use base[rng]")
         rng = base.get('rng',None)
 
     if rng is None and logger:
@@ -1053,7 +1067,25 @@ def GetRNG(config, base, logger=None, tag=None):
         rng_tag = tag + '_reported_no_rng'
         if rng_tag not in base:
             base[rng_tag] = True
-            logger.warning("No base['rng'] available for %s.  Using /dev/urandom."%tag)
+            logger.warning("No base['rng'] available for %s.  Using /dev/urandom.",tag)
 
     return rng
 
+def CleanConfig(config): # pragma: no cover
+    """Return a "clean" config dict without any leading-underscore values
+
+    GalSim config dicts store a lot of ancillary information internally to help improve
+    efficiency.  However, some of these are actually pointers to other places in the dict, so
+    printing a config dict, or even what should be a small portion of one, can have infinite loops.
+
+    This helper function is useful when debugging config processing to strip out all of these
+    leading-underscore values, so that printing the dict is reasonable.
+
+        >>> print(galsim.config.CleanConfig(config_dict))
+    """
+    if isinstance(config, dict):
+        return { k : CleanConfig(config[k]) for k in config if k[0] != '_' }
+    elif isinstance(config, list):
+        return [ CleanConfig(item) for item in config ]
+    else:
+        return config

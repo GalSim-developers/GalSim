@@ -115,15 +115,10 @@ def test_moffat():
         np.testing.assert_almost_equal(moffat.xValue(cen), moffat.max_sb)
 
     # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3,
-                                 half_light_radius=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, fwhm=2)
+    assert_raises(TypeError, galsim.Moffat, beta=1, scale_radius=3, half_light_radius=1)
 
 
 @timer
@@ -365,13 +360,10 @@ def test_moffat_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "beta")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "beta")
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "scale_radius")
 
 
 @timer

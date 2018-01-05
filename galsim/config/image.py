@@ -153,6 +153,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     - Build the WCS based on either config['image']['wcs'] or config['image']['pixel_scale']
     - Set config['wcs'] to be the built wcs
     - If wcs.isPixelScale(), also set config['pixel_scale'] for convenience.
+    - Set config['world_center'] to either a given value or based on wcs and image_center
 
     @param config       The configuration dict.
     @param xsize        The size of the image in the x-dimension.
@@ -162,10 +163,11 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     logger = galsim.config.LoggerWrapper(logger)
     config['image_xsize'] = xsize
     config['image_ysize'] = ysize
+    image = config['image']
 
     origin = 1 # default
-    if 'index_convention' in config['image']:
-        convention = galsim.config.ParseValue(config['image'],'index_convention',config,str)[0]
+    if 'index_convention' in image:
+        convention = galsim.config.ParseValue(image,'index_convention',config,str)[0]
         if convention.lower() in [ '0', 'c', 'python' ]:
             origin = 0
         elif convention.lower() in [ '1', 'fortran', 'fits' ]:
@@ -178,7 +180,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     config['image_bounds'] = galsim.BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
 
     # Build the wcs
-    wcs = galsim.config.BuildWCS(config['image'], 'wcs', config, logger)
+    wcs = galsim.config.BuildWCS(image, 'wcs', config, logger)
     config['wcs'] = wcs
 
     # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The
@@ -188,11 +190,18 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     if wcs.isPixelScale():
         config['pixel_scale'] = wcs.scale
 
+    # Set world_center
+    if 'world_center' in image:
+        config['world_center'] = galsim.config.ParseValue(image, 'world_center', config,
+                                                          galsim.CelestialCoord)[0]
+    else:
+        config['world_center'] = wcs.toWorld(config['image_center'])
+
 
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
-                 'index_convention', 'nproc'] + stamp_image_keys
+                 'world_center', 'index_convention', 'nproc'] + stamp_image_keys
 
 def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """

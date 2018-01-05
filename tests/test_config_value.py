@@ -320,16 +320,15 @@ def test_float_value():
 
     # Test NFWHaloMagnification
     galsim.config.SetupInputsForImage(config, None)
-    try:
-        # Raise an error because no world_pos
-        np.testing.assert_raises(ValueError,galsim.config.ParseValue, config,'nfw',config, float)
-        config['world_pos'] = galsim.PositionD(6,8)
-        # Still raise an error because no redshift
-        np.testing.assert_raises(ValueError,galsim.config.ParseValue, config,'nfw',config, float)
-        # With this, it should work.
-        config['gal'] = { 'redshift' : gal_z }
-    except ImportError:
-        pass
+    # Raise an error because no world_pos
+    with assert_raises(ValueError):
+        galsim.config.ParseValue(config,'nfw',config, float)
+    config['world_pos'] = galsim.PositionD(6,8)
+    # Still raise an error because no redshift
+    with assert_raises(ValueError):
+        galsim.config.ParseValue(config,'nfw',config, float)
+    # With this, it should work.
+    config['gal'] = { 'redshift' : gal_z }
     nfw_halo = galsim.NFWHalo(mass=halo_mass, conc=halo_conc, redshift=halo_z)
     print("weak lensing mag = ",nfw_halo.getMagnification((6,8), gal_z))
     nfw1 = galsim.config.ParseValue(config,'nfw',config, float)[0]
@@ -409,15 +408,9 @@ def test_float_value():
     np.testing.assert_almost_equal(ps2c, 1.)
 
     # Should raise an AttributeError if there is no type in the dict
-    try:
-        np.testing.assert_raises(AttributeError, galsim.config.ParseValue, config,
-                                 'no_type', config, float)
-        np.testing.assert_raises(AttributeError, galsim.config.ParseValue, config,
-                                 'bad_key', config, float)
-        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config,
-                                 'bad_value', config, float)
-    except ImportError:
-        pass
+    assert_raises(AttributeError, galsim.config.ParseValue, config, 'no_type', config, float)
+    assert_raises(AttributeError, galsim.config.ParseValue, config, 'bad_key', config, float)
+    assert_raises(ValueError, galsim.config.ParseValue, config, 'bad_value', config, float)
 
 
 @timer
@@ -1146,18 +1139,15 @@ def test_shear_value():
     # Test NFWHaloShear
     galsim.config.ProcessInput(config)
     galsim.config.SetupInputsForImage(config, None)
-    try:
-        # Raise an error because no world_pos
-        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config, 'nfw', config,
-                                 galsim.Shear)
-        config['world_pos'] = galsim.PositionD(6,8)
-        # Still raise an error because no redshift
-        np.testing.assert_raises(ValueError, galsim.config.ParseValue, config, 'nfw', config,
-                                 galsim.Shear)
-        # With this, it should work.
-        config['gal'] = { 'redshift' : gal_z }
-    except ImportError:
-        pass
+    # Raise an error because no world_pos
+    with assert_raises(ValueError):
+        galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)
+    config['world_pos'] = galsim.PositionD(6,8)
+    # Still raise an error because no redshift
+    with assert_raises(ValueError):
+        galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)
+    # With this, it should work.
+    config['gal'] = { 'redshift' : gal_z }
     nfw_halo = galsim.NFWHalo(mass=halo_mass, conc=halo_conc, redshift=halo_z)
     nfw1a = galsim.config.ParseValue(config,'nfw',config, galsim.Shear)[0]
     nfw1b = nfw_halo.getShear((6,8), gal_z)

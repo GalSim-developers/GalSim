@@ -130,16 +130,13 @@ def test_angle():
     do_pickle(theta8)
 
     # Check invalid constructors
-    try:
-        np.testing.assert_raises(TypeError,galsim.AngleUnit, galsim.degrees)
-        np.testing.assert_raises(ValueError,galsim.AngleUnit, 'spam')
-        np.testing.assert_raises(TypeError,galsim.AngleUnit, 1, 3)
-        np.testing.assert_raises(TypeError,galsim.Angle, 3.4)
-        np.testing.assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
-        np.testing.assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
-        np.testing.assert_raises(TypeError,galsim.Angle, 1, 3)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError,galsim.AngleUnit, galsim.degrees)
+    assert_raises(ValueError,galsim.AngleUnit, 'spam')
+    assert_raises(TypeError,galsim.AngleUnit, 1, 3)
+    assert_raises(TypeError,galsim.Angle, 3.4)
+    assert_raises(TypeError,galsim.Angle, theta1, galsim.degrees)
+    assert_raises(ValueError,galsim.Angle, 'spam', galsim.degrees)
+    assert_raises(TypeError,galsim.Angle, 1, 3)
 
 
 @timer
@@ -174,10 +171,7 @@ def test_celestialcoord_basic():
     print('c2 is at x,y,z = ',x,y,z)
     assert c2 == galsim.CelestialCoord.from_xyz(x,y,z)
 
-    try:
-        np.testing.assert_raises(ValueError, galsim.CelestialCoord.from_xyz, 0, 0, 0)
-    except ImportError:
-        pass
+    assert_raises(ValueError, galsim.CelestialCoord.from_xyz, 0, 0, 0)
 
     # Check picklability
     do_pickle(c1)

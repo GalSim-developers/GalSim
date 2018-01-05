@@ -210,7 +210,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
             # Wherever we use the world position, we expect a Euclidean position, not a
             # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
             # image center.
-            world_center = config['wcs'].toWorld(config['image_center'])
+            world_center = config.get('world_center', config['wcs'].toWorld(config['image_center']))
             world_pos = config['wcs'].toWorld(image_pos, project_center=world_center,
                                               projection='gnomonic')
         else:
