@@ -6,6 +6,7 @@ import ctypes
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from setuptools.command.easy_install import easy_install
 import setuptools
@@ -208,16 +209,20 @@ def make_meta_data(install_dir):
     f.write('install_dir = "%s"\n'%install_dir)
     f.write('share_dir = "%s"\n'%share_dir)
     f.close()
+    return meta_data_file
+
+class my_install(install):
+    def run(self):
+        print('install_lib = ',self.install_lib)
+        # Make the meta_data.py file based on the actual installation directory.
+        meta_data_file = make_meta_data(self.install_lib)
+        print('made meta_data file ',os.path.abspath(meta_data_file))
+        install.run(self)
 
 # AFAICT, setuptools doesn't provide any easy access to the final installation location of the
 # executable scripts.  This bit is just to save the value of script_dir so I can use it later.
 # cf. http://stackoverflow.com/questions/12975540/correct-way-to-find-scripts-directory-from-setup-py-in-python-distutils/
 class my_easy_install( easy_install ):
-    def finalize_options(self):
-        easy_install.finalize_options(self)
-        # Make the meta_data.py file based on the actual installation directory.
-        make_meta_data(self.install_dir)
-
     # Match the call signature of the easy_install version.
     def write_script(self, script_name, contents, mode="t", *ignored):
         # Run the normal version
@@ -303,6 +308,7 @@ dist = setup(name="GalSim",
     setup_requires=build_dep,
     install_requires=build_dep + run_dep,
     cmdclass = {'build_ext': my_builder,
+                'install': my_install,
                 'easy_install': my_easy_install,
                 },
     entry_points = {'console_scripts' : [
