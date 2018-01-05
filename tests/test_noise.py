@@ -91,18 +91,15 @@ def test_deviate_noise():
     assert noise2 != noise3 # This is no longer equal, since only noise.rng is incremented.
     assert noise == noise3
 
-    try:
-        np.testing.assert_raises(TypeError, galsim.DeviateNoise(53))
-        np.testing.assert_raises(NotImplementedError, galsim.BaseNoise().getVariance())
-        np.testing.assert_raises(NotImplementedError, galsim.BaseNoise().withVariance(23))
-        np.testing.assert_raises(NotImplementedError, galsim.BaseNoise().withScaledVariance(23))
-        np.testing.assert_raises(TypeError, noise.applyTo(23))
-        np.testing.assert_raises(NotImplementedError, galsim.BaseNoise().applyTo(testimage))
-        np.testing.assert_raises(RuntimeError, noise.getVariance())
-        np.testing.assert_raises(RuntimeError, noise.withVariance(23))
-        np.testing.assert_raises(RuntimeError, noise.withScaledVariance(23))
-    except:
-        pass
+    assert_raises(TypeError, galsim.DeviateNoise, 53)
+    assert_raises(NotImplementedError, galsim.BaseNoise().getVariance)
+    assert_raises(NotImplementedError, galsim.BaseNoise().withVariance, 23)
+    assert_raises(NotImplementedError, galsim.BaseNoise().withScaledVariance, 23)
+    assert_raises(TypeError, noise.applyTo, 23)
+    assert_raises(NotImplementedError, galsim.BaseNoise().applyTo, testimage)
+    assert_raises(RuntimeError, noise.getVariance)
+    assert_raises(RuntimeError, noise.withVariance, 23)
+    assert_raises(RuntimeError, noise.withScaledVariance, 23)
 
 
 @timer
@@ -374,14 +371,11 @@ def test_variable_gaussian_noise():
     assert vgn != vgn2
     assert vgn == vgn3
 
-    try:
-        np.testing.assert_raises(TypeError, noise.applyTo(23))
-        np.testing.assert_raises(ValueError, noise.applyTo(galsim.ImageF(3,3)))
-        np.testing.assert_raises(RuntimeError, noise.getVariance())
-        np.testing.assert_raises(RuntimeError, noise.withVariance(23))
-        np.testing.assert_raises(RuntimeError, noise.withScaledVariance(23))
-    except:
-        pass
+    assert_raises(TypeError, vgn.applyTo, 23)
+    assert_raises(ValueError, vgn.applyTo, galsim.ImageF(3,3))
+    assert_raises(RuntimeError, vgn.getVariance)
+    assert_raises(RuntimeError, vgn.withVariance, 23)
+    assert_raises(RuntimeError, vgn.withScaledVariance, 23)
 
 
 @timer

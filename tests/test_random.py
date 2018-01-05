@@ -244,12 +244,9 @@ def test_uniform():
     assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
     # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.UniformDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.UniformDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.UniformDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.UniformDeviate, dict())
+    assert_raises(TypeError, galsim.UniformDeviate, list())
+    assert_raises(TypeError, galsim.UniformDeviate, set())
 
 
 @timer
@@ -393,12 +390,9 @@ def test_gaussian():
     assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
     # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.GaussianDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.GaussianDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.GaussianDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.GaussianDeviate, dict())
+    assert_raises(TypeError, galsim.GaussianDeviate, list())
+    assert_raises(TypeError, galsim.GaussianDeviate, set())
 
 
 @timer
@@ -525,12 +519,9 @@ def test_binomial():
     assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
     # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.BinomialDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.BinomialDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.BinomialDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.BinomialDeviate, dict())
+    assert_raises(TypeError, galsim.BinomialDeviate, list())
+    assert_raises(TypeError, galsim.BinomialDeviate, set())
 
 
 @timer
@@ -673,12 +664,9 @@ def test_poisson():
     assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
     # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.PoissonDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.PoissonDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.PoissonDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.PoissonDeviate, dict())
+    assert_raises(TypeError, galsim.PoissonDeviate, list())
+    assert_raises(TypeError, galsim.PoissonDeviate, set())
 
 
 @timer
@@ -912,12 +900,9 @@ def test_weibull():
     assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
     # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.WeibullDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.WeibullDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.WeibullDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.WeibullDeviate, dict())
+    assert_raises(TypeError, galsim.WeibullDeviate, list())
+    assert_raises(TypeError, galsim.WeibullDeviate, set())
 
 
 @timer
@@ -1042,12 +1027,9 @@ def test_gamma():
     assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
     # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.GammaDeviate, dict())
-        np.testing.assert_raises(TypeError, galsim.GammaDeviate, list())
-        np.testing.assert_raises(TypeError, galsim.GammaDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.GammaDeviate, dict())
+    assert_raises(TypeError, galsim.GammaDeviate, list())
+    assert_raises(TypeError, galsim.GammaDeviate, set())
 
 
 @timer
@@ -1172,40 +1154,32 @@ def test_chi2():
     assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
     # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Chi2Deviate, dict())
-        np.testing.assert_raises(TypeError, galsim.Chi2Deviate, list())
-        np.testing.assert_raises(TypeError, galsim.Chi2Deviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.Chi2Deviate, dict())
+    assert_raises(TypeError, galsim.Chi2Deviate, list())
+    assert_raises(TypeError, galsim.Chi2Deviate, set())
 
 
 @timer
 def test_distfunction():
     """Test distribution-defined random number generator with a function
     """
-    try:
-        # Make sure it requires an input function in order to work.
-        np.testing.assert_raises(TypeError, galsim.DistDeviate)
-        # Make sure it does appropriate input sanity checks.
-        np.testing.assert_raises(TypeError, galsim.DistDeviate,
-                                 function='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
-                                 x_min=1.)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function=1.0)
-        np.testing.assert_raises(ValueError, galsim.DistDeviate, function='foo.dat')
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
-                                 interpolant='linear')
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
-                                 x_min=1.)
-        test_vals = range(10)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate,
-                                 function=galsim.LookupTable(test_vals, test_vals),
-                                 x_min = 1.)
-        foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
-        np.testing.assert_raises(ValueError, foo.val, -1.)
-    except ImportError:
-        print('The assert_raises test requires nose')
+    # Make sure it requires an input function in order to work.
+    assert_raises(TypeError, galsim.DistDeviate)
+    # Make sure it does appropriate input sanity checks.
+    assert_raises(TypeError, galsim.DistDeviate,
+                  function='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
+                  x_min=1.)
+    assert_raises(TypeError, galsim.DistDeviate, function=1.0)
+    assert_raises(ValueError, galsim.DistDeviate, function='foo.dat')
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x, interpolant='linear')
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x)
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x, x_min=1.)
+    test_vals = range(10)
+    assert_raises(TypeError, galsim.DistDeviate,
+                  function=galsim.LookupTable(test_vals, test_vals),
+                  x_min = 1.)
+    foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
+    assert_raises(ValueError, foo.val, -1.)
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1352,12 +1326,9 @@ def test_distfunction():
     assert c1 != c2, "Consecutive DistDeviate(None) compared equal!"
     # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(TypeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+    assert_raises(TypeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+    assert_raises(TypeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
 
 
 @timer
@@ -1563,11 +1534,9 @@ def test_permute():
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
-    try:
-        # permute with no lists should raise TypeError
-        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
-    except ImportError:
-        pass
+    # permute with no lists should raise TypeError
+    with assert_raises(TypeError):
+        galsim.random.permute(312)
 
 
 @timer
@@ -1585,7 +1554,6 @@ def test_ne():
     d2 = galsim.DistDeviate(seed=b, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
     assert repr(d1) == repr(d2)
     assert d1 != d2
-
 
 if __name__ == "__main__":
     test_uniform()

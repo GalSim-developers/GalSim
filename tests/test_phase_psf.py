@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_shoot, do_pickle, all_obj_diff
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -129,10 +129,8 @@ def test_phase_screen_list():
     assert ar1._time > 0.0
     ar1._seek(0.0)
     # But not before t=0.0
-    try:
-        np.testing.assert_raises(ValueError, ar1._seek, -1.0)
-    except ImportError:
-        pass
+    with assert_raises(ValueError):
+        ar1._seek(-1.0)
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, time_step=0.01, rng=rng)
@@ -615,26 +613,18 @@ def test_input():
     """Check that exceptions are raised for invalid input"""
 
     # Specifying only one of alpha and time_step is an error.
-    try:
-        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
-                                 screen_size=10.0, time_step=0.01)
-        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
-                                 screen_size=10.0, alpha=0.997)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, time_step=0.01)
+    assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, alpha=0.997)
     # But specifying both is alright.
     galsim.AtmosphericScreen(screen_size=10.0, alpha=0.997, time_step=0.01)
 
     # Try some variations for Atmosphere
-    try:
-        np.testing.assert_raises(ValueError, galsim.Atmosphere,
-                                 screen_size=10.0, altitude=[0., 1.],
-                                 r0_500=[0.2, 0.3, 0.2])
-        np.testing.assert_raises(ValueError, galsim.Atmosphere,
-                                 screen_size=10.0, r0_500=[0.4, 0.4, 0.4],
-                                 r0_weights=[0.1, 0.3, 0.6])
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.Atmosphere,
+                  screen_size=10.0, altitude=[0., 1.],
+                  r0_500=[0.2, 0.3, 0.2])
+    assert_raises(ValueError, galsim.Atmosphere,
+                  screen_size=10.0, r0_500=[0.4, 0.4, 0.4],
+                  r0_weights=[0.1, 0.3, 0.6])
 
 
 @timer

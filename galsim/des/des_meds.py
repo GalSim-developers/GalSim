@@ -71,7 +71,8 @@ class MultiExposureObject(object):
     self.box_size       Size of each exposure image.
     """
 
-    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None, wcs=None, id=0):
+    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None,
+                 wcs=None, id=0, cutout_row=None, cutout_col=None):
 
         # Check that images is valid
         if not isinstance(images,list):
@@ -147,8 +148,8 @@ class MultiExposureObject(object):
         # If badpix is provided, combine it into the weight image.
         if badpix is not None:
             for i in range(len(badpix)):
-                mask = [badpix[i] != 0]
-                self.weight[i][mask] = 0.
+                mask = badpix[i].array != 0
+                self.weight[i].array[mask] = 0.
 
         # If seg is not provided, use all 1's.
         if seg is not None:
@@ -161,6 +162,18 @@ class MultiExposureObject(object):
             self.wcs = wcs
         else:
             self.wcs = [ im.wcs.affine(image_pos=im.true_center) for im in self.images ]
+
+        # Normally you would supply cutout_row/cutout_col, since we can't usually
+        # assume objects are centered on the stamp. If not supplied, set them to
+        # the wcs origin (here that is the center of the stamp).
+        if cutout_row is not None:
+            self.cutout_row = cutout_row
+        else:
+            self.cutout_row = [ w.origin.y for w in self.wcs ]
+        if cutout_col is not None:
+            self.cutout_col = cutout_col
+        else:
+            self.cutout_col = [ w.origin.x for w in self.wcs ]
 
         # psf is not required, so leave it as None if not provided.
         self.psf = psf
@@ -192,8 +205,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cat['dudcol'] = []
     cat['dvdrow'] = []
     cat['dvdcol'] = []
-    cat['row0'] = []
-    cat['col0'] = []
+    cat['orig_start_row'] = []
+    cat['orig_start_col'] = []
+    cat['cutout_row'] = []
+    cat['cutout_col'] = []
     cat['psf_box_size'] = []
     cat['psf_start_row'] = []
 
@@ -221,9 +236,8 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         dudcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
         dvdrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
         dvdcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        row0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-        col0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-
+        cutout_row   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        cutout_col   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
 
@@ -253,6 +267,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             vec['weight'].append(obj.weight[i].array.flatten())
             vec['psf'].append(obj.psf[i].array.flatten())
 
+            # append cutout_row/col
+            cutout_row[i] = obj.cutout_row[i]
+            cutout_col[i] = obj.cutout_col[i]
+
             # append the Jacobian
             # col == x
             # row == y
@@ -260,11 +278,9 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             dudrow[i] = obj.wcs[i].dudy
             dvdcol[i] = obj.wcs[i].dvdx
             dvdrow[i] = obj.wcs[i].dvdy
-            col0[i]   = obj.wcs[i].origin.x
-            row0[i]   = obj.wcs[i].origin.y
 
             # check if we are running out of memory
-            if sys.getsizeof(vec) > MAX_MEMORY:
+            if sys.getsizeof(vec) > MAX_MEMORY:  # pragma: no cover
                 raise MemoryError(
                     'Running out of memory > %1.0fGB '%MAX_MEMORY/1.e9 +
                     '- you can increase the limit by changing MAX_MEMORY')
@@ -273,13 +289,15 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         cat['start_row'].append(start_rows)
         cat['psf_start_row'].append(psf_start_rows)
 
+        # add cutout_row/col
+        cat['cutout_row'].append(cutout_row)
+        cat['cutout_col'].append(cutout_col)
+
         # add lists of Jacobians
         cat['dudrow'].append(dudrow)
         cat['dudcol'].append(dudcol)
         cat['dvdrow'].append(dvdrow)
         cat['dvdcol'].append(dvdcol)
-        cat['row0'].append(row0)
-        cat['col0'].append(col0)
 
     # concatenate list to one big vector
     vec['image'] = np.concatenate(vec['image'])
@@ -312,9 +330,9 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
                                array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['row0'])     ) )
+                               array=np.array(cat['cutout_row'])     ) )
     cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
-                               array=np.array(cat['col0'])     ) )
+                               array=np.array(cat['cutout_col'])     ) )
     cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
                                array=np.array(cat['dudrow'])   ) )
     cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
@@ -450,6 +468,14 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
                                                 logger=logger)
 
+        # grab list of offsets for cutout_row/cutout_col.
+        offsets = galsim.config.GetFinalExtraOutput('meds_get_offset', base, logger)
+        # cutout_row/col is the stamp center (**with the center of the first pixel
+        # being (0,0)**) + offset
+        centers = [0.5*im.array.shape[0]-0.5 for im in main_images]
+        cutout_rows = [c+offset.y for c,offset in zip(centers,offsets)]
+        cutout_cols = [c+offset.x for c,offset in zip(centers,offsets)]
+
         weight_images = galsim.config.GetFinalExtraOutput('weight', base, logger)
         if 'badpix' in config:
             badpix_images = galsim.config.GetFinalExtraOutput('badpix', base, logger)
@@ -469,7 +495,9 @@ class MEDSBuilder(galsim.config.OutputBuilder):
                                       weight = weight_images[k1:k2],
                                       badpix = bpk,
                                       psf = psf_images[k1:k2],
-                                      id = obj_num + i)
+                                      id = obj_num + i,
+                                      cutout_row = cutout_rows[k1:k2],
+                                      cutout_col = cutout_cols[k1:k2])
             obj_list.append(obj)
 
         return obj_list
@@ -488,12 +516,38 @@ class MEDSBuilder(galsim.config.OutputBuilder):
         if 'psf' not in config:
             config['psf'] = {}
 
+        # We use an extra output type to get the offsets of objects in stamps.
+        # It doesn't need any parameters.  Just getting its name into the config dict is sufficient.
+        if 'meds_get_offset' not in config:
+            config['meds_get_offset']={}
+
         nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
         nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
 
         ntot = nobjects * nstamps_per_object
         return ntot
 
-# Make this a valid output type:
+# This extra output type simply saves the values of the image offsets when an
+# object is drawn into the stamp.
+class OffsetBuilder(galsim.config.ExtraOutputBuilder):
+    """This saves the stamp offset values for later use"""
+    # The function to call at the end of building each stamp
+    def processStamp(self, obj_num, config, base, logger):
+        offset = base['stamp_offset']
+        stamp = base['stamp']
+        if 'offset' in stamp:
+            offset += galsim.config.GetCurrentValue('offset', base['stamp'], galsim.PositionD, base)
+        self.scratch[obj_num] = offset
+
+    # The function to call at the end of building each file to finalize the truth catalog
+    def finalize(self, config, base, main_data, logger):
+        offsets_list = []
+        obj_nums = sorted(self.scratch.keys())
+        for obj_num in obj_nums:
+            offsets_list.append(self.scratch[obj_num])
+        return offsets_list
+
+# Register these
 galsim.config.RegisterOutputType('MEDS', MEDSBuilder())
+galsim.config.RegisterExtraOutput('meds_get_offset', OffsetBuilder())
 

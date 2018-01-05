@@ -142,21 +142,19 @@ def test_convolve():
     do_pickle(single)
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.Convolve)
-        np.testing.assert_raises(TypeError, galsim.Convolve, myImg)
-        np.testing.assert_raises(TypeError, galsim.Convolve, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf, myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf], realspace=False)
-        np.testing.assert_raises(TypeError, galsim.Convolution)
-        np.testing.assert_raises(TypeError, galsim.Convolution, myImg)
-        np.testing.assert_raises(TypeError, galsim.Convolution, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf, myImg])
-        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf], realspace=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Convolve)
+    assert_raises(TypeError, galsim.Convolve, myImg)
+    assert_raises(TypeError, galsim.Convolve, [myImg])
+    assert_raises(TypeError, galsim.Convolve, [psf, myImg])
+    assert_raises(TypeError, galsim.Convolve, [psf, psf, myImg])
+    assert_raises(TypeError, galsim.Convolve, [psf, psf], realspace=False)
+    assert_raises(TypeError, galsim.Convolution)
+    assert_raises(TypeError, galsim.Convolution, myImg)
+    assert_raises(TypeError, galsim.Convolution, [myImg])
+    assert_raises(TypeError, galsim.Convolution, [psf, myImg])
+    assert_raises(TypeError, galsim.Convolution, [psf, psf, myImg])
+    assert_raises(TypeError, galsim.Convolution, [psf, psf], realspace=False)
+
 
 @timer
 def test_convolve_flux_scaling():
@@ -341,22 +339,18 @@ def test_realspace_convolve():
     do_pickle(conv)
 
     # Check some warnings that should be raised
-
-    try:
-        # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
-        # 2 with hard edges gives a warning if we ask it not to use real_space
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
-        # >2 of any kind give a warning if we ask it to use real_space
-        g = galsim.Gaussian(sigma=2)
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
-        # non-analytic profiles cannot do real_space
-        d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
-        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
-    except ImportError:
-        pass
+    # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
+    assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
+    # 2 with hard edges gives a warning if we ask it not to use real_space
+    assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
+    # >2 of any kind give a warning if we ask it to use real_space
+    g = galsim.Gaussian(sigma=2)
+    assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
+    # non-analytic profiles cannot do real_space
+    d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
+    assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
 
     # Repeat some of the above for AutoConvolve and AutoCorrelate
     conv = galsim.AutoConvolve(psf,real_space=True)
@@ -369,14 +363,10 @@ def test_realspace_convolve():
     do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
     do_pickle(conv)
 
-    try:
-        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
-        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
-        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
-    except ImportError:
-        pass
-
+    assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
+    assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
+    assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
+    assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
 
 
 @timer
@@ -562,19 +552,16 @@ def test_deconvolve():
     do_pickle(transformed_inv_obj)
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.Deconvolve)
-        np.testing.assert_raises(TypeError, galsim.Deconvolve, myImg1)
-        np.testing.assert_raises(TypeError, galsim.Deconvolve, [psf])
-        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, real_space=False)
-        np.testing.assert_raises(TypeError, galsim.Deconvolution)
-        np.testing.assert_raises(TypeError, galsim.Deconvolution, myImg1)
-        np.testing.assert_raises(TypeError, galsim.Deconvolution, [psf])
-        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, real_space=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Deconvolve)
+    assert_raises(TypeError, galsim.Deconvolve, myImg1)
+    assert_raises(TypeError, galsim.Deconvolve, [psf])
+    assert_raises(TypeError, galsim.Deconvolve, psf, psf)
+    assert_raises(TypeError, galsim.Deconvolve, psf, real_space=False)
+    assert_raises(TypeError, galsim.Deconvolution)
+    assert_raises(TypeError, galsim.Deconvolution, myImg1)
+    assert_raises(TypeError, galsim.Deconvolution, [psf])
+    assert_raises(TypeError, galsim.Deconvolution, psf, psf)
+    assert_raises(TypeError, galsim.Deconvolution, psf, real_space=False)
 
 
 @timer
@@ -671,19 +658,16 @@ def test_autoconvolve():
     check_basic(autoconv, "AutoConvolve(asym)")
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.AutoConvolve)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolve, myImg1)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolve, [psf])
-        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, realspace=False)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolution)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolution, myImg1)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolution, [psf])
-        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, realspace=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.AutoConvolve)
+    assert_raises(TypeError, galsim.AutoConvolve, myImg1)
+    assert_raises(TypeError, galsim.AutoConvolve, [psf])
+    assert_raises(TypeError, galsim.AutoConvolve, psf, psf)
+    assert_raises(TypeError, galsim.AutoConvolve, psf, realspace=False)
+    assert_raises(TypeError, galsim.AutoConvolution)
+    assert_raises(TypeError, galsim.AutoConvolution, myImg1)
+    assert_raises(TypeError, galsim.AutoConvolution, [psf])
+    assert_raises(TypeError, galsim.AutoConvolution, psf, psf)
+    assert_raises(TypeError, galsim.AutoConvolution, psf, realspace=False)
 
 
 @timer
@@ -724,19 +708,17 @@ def test_autocorrelate():
     do_pickle(corr)
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelate)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, myImg1)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, [obj1])
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, obj2)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, realspace=False)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelation)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, myImg1)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, [obj1])
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, obj2)
-        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, realspace=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.AutoCorrelate)
+    assert_raises(TypeError, galsim.AutoCorrelate, myImg1)
+    assert_raises(TypeError, galsim.AutoCorrelate, [obj1])
+    assert_raises(TypeError, galsim.AutoCorrelate, obj1, obj2)
+    assert_raises(TypeError, galsim.AutoCorrelate, obj1, realspace=False)
+    assert_raises(TypeError, galsim.AutoCorrelation)
+    assert_raises(TypeError, galsim.AutoCorrelation, myImg1)
+    assert_raises(TypeError, galsim.AutoCorrelation, [obj1])
+    assert_raises(TypeError, galsim.AutoCorrelation, obj1, obj2)
+    assert_raises(TypeError, galsim.AutoCorrelation, obj1, realspace=False)
+
 
 @timer
 def test_ne():
@@ -806,29 +788,26 @@ def test_convolve_noise():
     autoconv = galsim.AutoConvolution(obj2)
     autocorr = galsim.AutoCorrelation(obj2)
     four = galsim.FourierSqrt(obj2)
-    try:
-        conv2_noise = np.testing.assert_warns(UserWarning, getattr, conv2, 'noise')
-        conv3_noise = np.testing.assert_warns(UserWarning, getattr, conv3, 'noise')
-        deconv_noise = np.testing.assert_warns(UserWarning, getattr, deconv, 'noise')
-        autoconv_noise = np.testing.assert_warns(UserWarning, getattr, autoconv, 'noise')
-        autocorr_noise = np.testing.assert_warns(UserWarning, getattr, autocorr, 'noise')
-        four_noise = np.testing.assert_warns(UserWarning, getattr, four, 'noise')
-    except ImportError:
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            conv2_noise = conv2.noise
-            conv3_noise = conv3.noise
-            deconv_noise = deconv.noise
-            autoconv_noise = autoconv.noise
-            autocorr_noise = autocorr.noise
-            four_noise = four.noise
+
+    conv2_noise = np.testing.assert_warns(UserWarning, getattr, conv2, 'noise')
+    conv3_noise = np.testing.assert_warns(UserWarning, getattr, conv3, 'noise')
+    deconv_noise = np.testing.assert_warns(UserWarning, getattr, deconv, 'noise')
+    autoconv_noise = np.testing.assert_warns(UserWarning, getattr, autoconv, 'noise')
+    autocorr_noise = np.testing.assert_warns(UserWarning, getattr, autocorr, 'noise')
+    four_noise = np.testing.assert_warns(UserWarning, getattr, four, 'noise')
+
     assert conv2_noise == obj1.noise.convolvedWith(obj2)
     assert conv3_noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
     assert deconv_noise is None
     assert autoconv_noise is None
     assert autocorr_noise is None
     assert four_noise is None
+
+    # Other types don't propagate noise and give a warning about it.
+    assert_warns(UserWarning, galsim.Deconvolve, obj1)
+    assert_warns(UserWarning, galsim.AutoConvolve, obj1)
+    assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
+    assert_warns(UserWarning, galsim.FourierSqrt, obj1)
 
     obj2.noise = None  # Remove obj2 noise for the rest.
     conv2 = galsim.Convolution(obj1, obj2)

@@ -107,19 +107,16 @@ def test_fourier_sqrt():
     do_pickle(sqrt1)
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
-        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.FourierSqrt)
+    assert_raises(TypeError, galsim.FourierSqrt, myImg1)
+    assert_raises(TypeError, galsim.FourierSqrt, [psf])
+    assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
+    assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
+    assert_raises(TypeError, galsim.FourierSqrtProfile)
+    assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
+    assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
+    assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
+    assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
 
 if __name__ == "__main__":
     test_fourier_sqrt()
