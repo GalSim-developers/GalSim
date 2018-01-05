@@ -615,35 +615,40 @@ def test_exceptions():
     for mode in ("InclinedExponential", "InclinedSersic"):
 
         # Need at least one radius specification
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees)
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees)
 
         # Can't have two radius specifications
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., half_light_radius = 1.)
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., half_light_radius = 1.)
 
         # Radius specification must be > 0
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = -1.)
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 half_light_radius = -1.)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, scale_radius = -1.)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, half_light_radius = -1.)
 
         # Can't have both height specifications
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_height = 0.2, scale_h_over_r = 0.1)
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., scale_height = 0.2, scale_h_over_r = 0.1)
 
         # Radius specification must be > 0
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_height = -0.2)
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_h_over_r = -0.1)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, scale_radius = 1., scale_height = -0.2)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., scale_h_over_r = -0.1)
 
         # Enforce inclination is an angle type
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.,
-                                 scale_radius = 1.)
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0., scale_radius = 1.)
 
     # Can't have negative truncation for InclinedSersic
-    np.testing.assert_raises(ValueError, get_prof, "InclinedSersic", inclination = 0.*galsim.degrees,
-                             scale_radius = 1., trunc = -4.5)
+    with assert_raises(ValueError):
+        get_prof("InclinedSersic", inclination = 0.*galsim.degrees,
+                 scale_radius = 1., trunc = -4.5)
 
 @timer
 def test_value_retrieval():

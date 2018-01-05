@@ -121,13 +121,10 @@ def test_gaussian():
     do_pickle(gauss)
 
     # Should raise an exception if >=2 radii are provided.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, half_light_radius=1, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, fwhm=2)
+    assert_raises(TypeError, galsim.Gaussian, sigma=3, half_light_radius=1)
 
     # Finally, test the noise property for things that don't have any noise set.
     assert gauss.noise is None
@@ -252,46 +249,29 @@ def test_gaussian_radii():
     # just confirm that it is true of shear.  I don't think that has any chance
     # of missing anything.
     test_gal_flux1 = test_gal * 3.
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "sigma")
-    except ImportError:
-        # assert_raises requires nose, which we don't want to force people to install.
-        # So if they are running this without nose, we just skip these tests.
-        pass
+    assert_raises(AttributeError, getattr, test_gal_flux1, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_flux1, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_flux1, "sigma")
 
     test_gal_flux2 = test_gal.withFlux(3.)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_flux2, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_flux2, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_flux2, "sigma")
 
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "sigma")
 
     test_gal_rot = test_gal.rotate(theta = 0.5 * galsim.radians)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_rot, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_rot, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_rot, "sigma")
 
     test_gal_shift = test_gal.shift(dx=0.11, dy=0.04)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "sigma")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shift, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shift, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shift, "sigma")
 
 
 @timer

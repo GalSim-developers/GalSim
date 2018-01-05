@@ -146,21 +146,18 @@ def test_add():
     do_pickle(single)
 
     # Should raise an exception for invalid arguments
-    try:
-        np.testing.assert_raises(TypeError, galsim.Add)
-        np.testing.assert_raises(TypeError, galsim.Add, myImg)
-        np.testing.assert_raises(TypeError, galsim.Add, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1], real_space=False)
-        np.testing.assert_raises(TypeError, galsim.Sum)
-        np.testing.assert_raises(TypeError, galsim.Sum, myImg)
-        np.testing.assert_raises(TypeError, galsim.Sum, [myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
-        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Add)
+    assert_raises(TypeError, galsim.Add, myImg)
+    assert_raises(TypeError, galsim.Add, [myImg])
+    assert_raises(TypeError, galsim.Add, [gauss1, myImg])
+    assert_raises(TypeError, galsim.Add, [gauss1, gauss1, myImg])
+    assert_raises(TypeError, galsim.Add, [gauss1, gauss1], real_space=False)
+    assert_raises(TypeError, galsim.Sum)
+    assert_raises(TypeError, galsim.Sum, myImg)
+    assert_raises(TypeError, galsim.Sum, [myImg])
+    assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
+    assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
+    assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
 
 
 @timer

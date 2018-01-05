@@ -77,20 +77,17 @@ def test_pos():
     assert isinstance(pd5.x, float)
     assert isinstance(pd5.y, float)
 
-    try:
-        np.testing.assert_raises(TypeError, galsim.PositionI, 11, 23, 9)
-        np.testing.assert_raises(TypeError, galsim.PositionI, x=11, z=23)
-        np.testing.assert_raises(TypeError, galsim.PositionI, x=11)
-        np.testing.assert_raises(TypeError, galsim.PositionI, 11)
-        np.testing.assert_raises(ValueError, galsim.PositionI, 11, 23.5)
+    assert_raises(TypeError, galsim.PositionI, 11, 23, 9)
+    assert_raises(TypeError, galsim.PositionI, x=11, z=23)
+    assert_raises(TypeError, galsim.PositionI, x=11)
+    assert_raises(TypeError, galsim.PositionI, 11)
+    assert_raises(ValueError, galsim.PositionI, 11, 23.5)
 
-        np.testing.assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
-        np.testing.assert_raises(TypeError, galsim.PositionD, x=11, z=23)
-        np.testing.assert_raises(TypeError, galsim.PositionD, x=11)
-        np.testing.assert_raises(TypeError, galsim.PositionD, 11)
-        np.testing.assert_raises(ValueError, galsim.PositionD, 11, "blue")
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.PositionD, 11, 23, 9)
+    assert_raises(TypeError, galsim.PositionD, x=11, z=23)
+    assert_raises(TypeError, galsim.PositionD, x=11)
+    assert_raises(TypeError, galsim.PositionD, 11)
+    assert_raises(ValueError, galsim.PositionD, 11, "blue")
 
     # Check arithmetic
     for p1 in [pi1, pd1]:
@@ -134,15 +131,12 @@ def test_pos():
     assert pd9 == 0*pd1
     assert isinstance(pd9, galsim.PositionD)
 
-    try:
-        np.testing.assert_raises(ValueError, pd1.__mul__, "11")
-        np.testing.assert_raises(ValueError, pd1.__mul__, None)
-        np.testing.assert_raises(ValueError, pd1.__div__, "11e")
-        np.testing.assert_raises(ValueError, pi1.__mul__, "11e")
-        np.testing.assert_raises(ValueError, pi1.__mul__, None)
-        np.testing.assert_raises(ValueError, pi1.__div__, 11.5)
-    except ImportError:
-        pass
+    assert_raises(ValueError, pd1.__mul__, "11")
+    assert_raises(ValueError, pd1.__mul__, None)
+    assert_raises(ValueError, pd1.__div__, "11e")
+    assert_raises(ValueError, pi1.__mul__, "11e")
+    assert_raises(ValueError, pi1.__mul__, None)
+    assert_raises(ValueError, pi1.__div__, 11.5)
 
     do_pickle(pi1)
     do_pickle(pd1)
@@ -217,22 +211,19 @@ def test_bounds():
         assert b.center == galsim.PositionD(17, 33.5)
         assert b.true_center == galsim.PositionD(17, 33.5)
 
-    try:
-        np.testing.assert_raises(TypeError, galsim.BoundsI, 11, 23, 9)
-        np.testing.assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
-        np.testing.assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
-        np.testing.assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
-        np.testing.assert_raises(TypeError, galsim.BoundsI, 11)
-        np.testing.assert_raises(ValueError, galsim.BoundsI, 11, 23.5, 17, 50.9)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23, 9)
+    assert_raises(TypeError, galsim.BoundsI, 11, 23, 9, 12, 59)
+    assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
+    assert_raises(TypeError, galsim.BoundsI, xmin=11, xmax=50)
+    assert_raises(TypeError, galsim.BoundsI, 11)
+    assert_raises(ValueError, galsim.BoundsI, 11, 23.5, 17, 50.9)
 
-        np.testing.assert_raises(TypeError, galsim.BoundsD, 11, 23, 9)
-        np.testing.assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
-        np.testing.assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
-        np.testing.assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
-        np.testing.assert_raises(TypeError, galsim.BoundsD, 11)
-        np.testing.assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.BoundsD, 11, 23, 9)
+    assert_raises(TypeError, galsim.BoundsD, 11, 23, 9, 12, 59)
+    assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=23, ymin=17, ymax=50, z=23)
+    assert_raises(TypeError, galsim.BoundsD, xmin=11, xmax=50)
+    assert_raises(TypeError, galsim.BoundsD, 11)
+    assert_raises(ValueError, galsim.BoundsD, 11, 23, 17, "blue")
 
     # Check intersection
     assert bi1 == galsim.BoundsI(0,100,0,100) & bi1
@@ -252,16 +243,13 @@ def test_bounds():
     assert bd1.withBorder(4.1) == galsim.BoundsD(6.9,27.1,12.9,54.1)
     assert bd1.withBorder(0) == galsim.BoundsD(11,23,17,50)
     assert bd1.withBorder(-1) == galsim.BoundsD(12,22,18,49)
-    try:
-        np.testing.assert_raises(ValueError, bi1.withBorder, 'blue')
-        np.testing.assert_raises(ValueError, bi1.withBorder, 4.1)
-        np.testing.assert_raises(ValueError, bi1.withBorder, '4')
-        np.testing.assert_raises(ValueError, bi1.withBorder, None)
-        np.testing.assert_raises(ValueError, bd1.withBorder, 'blue')
-        np.testing.assert_raises(ValueError, bd1.withBorder, '4.1')
-        np.testing.assert_raises(ValueError, bd1.withBorder, None)
-    except ImportError:
-        pass
+    assert_raises(ValueError, bi1.withBorder, 'blue')
+    assert_raises(ValueError, bi1.withBorder, 4.1)
+    assert_raises(ValueError, bi1.withBorder, '4')
+    assert_raises(ValueError, bi1.withBorder, None)
+    assert_raises(ValueError, bd1.withBorder, 'blue')
+    assert_raises(ValueError, bd1.withBorder, '4.1')
+    assert_raises(ValueError, bd1.withBorder, None)
 
     # Check expand
     assert bi1.expand(2) == galsim.BoundsI(5,29,0,67)
@@ -273,11 +261,8 @@ def test_bounds():
     assert bi1.shift(galsim.PositionI(2,5)) == galsim.BoundsI(13,25,22,55)
     assert bd1.shift(galsim.PositionD(2,5)) == galsim.BoundsD(13,25,22,55)
     assert bd1.shift(galsim.PositionD(2.3,5.9)) == galsim.BoundsD(13.3,25.3,22.9,55.9)
-    try:
-        np.testing.assert_raises(TypeError, bi1.shift, galsim.PositionD(2,5))
-        np.testing.assert_raises(TypeError, bd1.shift, galsim.PositionI(2,5))
-    except ImportError:
-        pass
+    assert_raises(TypeError, bi1.shift, galsim.PositionD(2,5))
+    assert_raises(TypeError, bd1.shift, galsim.PositionI(2,5))
 
     # Check area
     assert bd1.area() == 12 * 33
@@ -302,13 +287,10 @@ def test_bounds():
         assert not bd1.includes(galsim.BoundsI(14,29,20,30))
         assert not bd1.includes(galsim.BoundsD(22,23.01,49,50.01))
 
-        try:
-            np.testing.assert_raises(TypeError, b.includes, 'blue')
-            np.testing.assert_raises(TypeError, b.includes)
-            np.testing.assert_raises(TypeError, b.includes, galsim.PositionI(17,23), galsim.PositionI(12,13))
-            np.testing.assert_raises(TypeError, b.includes, 2, 3, 4)
-        except ImportError:
-            pass
+        assert_raises(TypeError, b.includes, 'blue')
+        assert_raises(TypeError, b.includes)
+        assert_raises(TypeError, b.includes, galsim.PositionI(17,23), galsim.PositionI(12,13))
+        assert_raises(TypeError, b.includes, 2, 3, 4)
 
     # Check undefined bounds
     assert not galsim.BoundsI().isDefined()
@@ -330,13 +312,10 @@ def test_bounds():
     assert galsim.BoundsD(23, 11, 17, 50) == galsim.BoundsD()
     assert galsim.BoundsD(11, 23, 50, 17) == galsim.BoundsD()
 
-    try:
-        np.testing.assert_raises(ValueError, getattr, galsim.BoundsI(), 'center')
-        np.testing.assert_raises(ValueError, getattr, galsim.BoundsD(), 'center')
-        np.testing.assert_raises(ValueError, getattr, galsim.BoundsI(), 'true_center')
-        np.testing.assert_raises(ValueError, getattr, galsim.BoundsD(), 'true_center')
-    except ImportError:
-        pass
+    assert_raises(ValueError, getattr, galsim.BoundsI(), 'center')
+    assert_raises(ValueError, getattr, galsim.BoundsD(), 'center')
+    assert_raises(ValueError, getattr, galsim.BoundsI(), 'true_center')
+    assert_raises(ValueError, getattr, galsim.BoundsD(), 'true_center')
 
     do_pickle(bi1)
     do_pickle(bd1)
@@ -608,11 +587,9 @@ def test_interleaveImages():
             gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
-    try:
-        N = (n,n)
-        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    N = (n,n)
+    with assert_raises(ValueError):
+        galsim.utilities.interleaveImages(im_list,N,offset_list)
 
     offset_list = []
     im_list = []
@@ -627,12 +604,9 @@ def test_interleaveImages():
             gal.drawImage(image=im,offset=offset,method='no_pixel')
             im_list.append(im)
 
-    try:
-        N = (n,n)
-        np.testing.assert_raises(ValueError, galsim.utilities.interleaveImages,
-                                 im_list, N, offset_list)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    N = (n,n)
+    with assert_raises(ValueError):
+        galsim.utilities.interleaveImages(im_list, N, offset_list)
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -774,31 +748,34 @@ def test_rand_with_replacement():
     """Test routine to select random indices with replacement."""
     # Most aspects of this routine get tested when it's used by COSMOSCatalog.  We just check some
     # of the exception-handling here.
-    try:
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(TypeError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng='foo')
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
-        tmp_weights = np.arange(10).astype(float)-3
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-        tmp_weights[0] = np.nan
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-        tmp_weights[0] = np.inf
-        np.testing.assert_raises(ValueError, galsim.utilities.rand_with_replacement,
-                                 n=2, n_choices=10, rng=galsim.BaseDeviate(1234),
-                                 weight=tmp_weights)
-    except ImportError:
-        print("The assert_raises tests require nose")
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=1.5, n_choices=10, rng=galsim.BaseDeviate(1234))
+    with assert_raises(TypeError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng='foo')
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10.5, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=-11, rng=galsim.BaseDeviate(1234))
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=-2, n_choices=11, rng=galsim.BaseDeviate(1234))
+
+    tmp_weights = np.arange(10).astype(float)-3
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    tmp_weights[0] = np.nan
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
+    tmp_weights[0] = np.inf
+    with assert_raises(ValueError):
+        galsim.utilities.rand_with_replacement(
+            n=2, n_choices=10, rng=galsim.BaseDeviate(1234), weight=tmp_weights)
 
     # Make sure results come out the same whether we use _n_rng_calls or not.
     result_1 = galsim.utilities.rand_with_replacement(n=10, n_choices=100,
@@ -923,18 +900,14 @@ def test_dol_to_lod():
         assert d == dict(l1=l1[0], l3=l3[i])
 
     # Can't broadcast list of lengths 2 and 3 though.
-    try:
-        dd = dict(l2=l2, l3=l3)
-        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    dd = dict(l2=l2, l3=l3)
+    with assert_raises(ValueError):
+        list(galsim.utilities.dol_to_lod(dd))
 
     # Can't broadcast a dictionary
-    try:
-        dd = dict(l2=l2, d1=d1)
-        np.testing.assert_raises(ValueError, list, galsim.utilities.dol_to_lod(dd))
-    except ImportError:
-        print('The assert_raises tests require nose')
+    dd = dict(l2=l2, d1=d1)
+    with assert_raises(ValueError):
+        list(galsim.utilities.dol_to_lod(dd))
 
 
 if __name__ == "__main__":

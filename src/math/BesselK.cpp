@@ -869,6 +869,7 @@ namespace math {
                     --kk;
                 }
                 s1 = coef * (p2 / s);
+                s2 = 0.;
                 if (inu == 0 && n == 1) {
                     recurse = false;
                     s2 = 0;  // Unused in this case, but saves a maybe-uninitialized warning.

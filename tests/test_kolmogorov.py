@@ -117,32 +117,26 @@ def test_kolmogorov():
 
     # Should raise an exception if >= 2 radius specifications are provided and/or lam and r0 are not
     # paired together.
-    try:
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 fwhm=2, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov,
-                                 lam_over_r0=3, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, lam=3)
-        np.testing.assert_raises(TypeError, galsim.Kolmogorov, r0=1)
-    except ImportError:
-        pass
+    assert_raises(TypeError, galsim.Kolmogorov,
+                  lam_over_r0=3, fwhm=2, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, half_light_radius=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, fwhm=2)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, lam_over_r0=3, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, fwhm=2, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, half_light_radius=1, r0=1)
+    assert_raises(TypeError, galsim.Kolmogorov, lam=3)
+    assert_raises(TypeError, galsim.Kolmogorov, r0=1)
 
 @timer
 def test_kolmogorov_properties():
@@ -258,12 +252,9 @@ def test_kolmogorov_radii():
 
     # Check that the getters don't work after modifying the original.
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_r0")
-    except ImportError:
-        pass
+    assert_raises(AttributeError, getattr, test_gal_shear, "fwhm")
+    assert_raises(AttributeError, getattr, test_gal_shear, "half_light_radius")
+    assert_raises(AttributeError, getattr, test_gal_shear, "lam_over_r0")
 
 
 @timer
