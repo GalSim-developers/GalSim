@@ -218,11 +218,17 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
                        'H158': 0.022,
                        'W149': 0.023}
 
-pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
-                                "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
-# The pupil plane image has non-zero values with a diameter of 1696 pixels.  The WFirst mirror
-# is 2.36 meters.  So the scale is 2.36 / 1696 = 0.00139151 meters/pixel.
-pupil_plane_scale = diameter / 1696.
+# F184, W149
+longwave_bands = ['F184', 'W149']
+pupil_plane_file_longwave = os.path.join(galsim.meta_data.share_dir,
+                                         "WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
+# Z087, Y106, J129, H158
+shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
+pupil_plane_file_shortwave = os.path.join(galsim.meta_data.share_dir,
+                                         "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
+# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFirst mirror
+# is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
+pupil_plane_scale = diameter / 2042.
 
 stray_light_fraction = 0.1
 
