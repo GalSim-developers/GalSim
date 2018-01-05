@@ -83,6 +83,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
 
+        builder = valid_output_types[output['type']]
+        builder.setup(output, config, file_num, logger)
+
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, logger=logger, file_scope_only=True)
 
@@ -100,8 +103,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
             # Get the file_name here, in case it needs to create directories, which is not
             # safe to do with multiple processes. (At least not without extra code in the
             # getFilename function...)
-            output_type = output['type']
-            file_name = valid_output_types[output_type].getFilename(output, config, logger)
+            file_name = builder.getFilename(output, config, logger)
             jobs.append(kwargs)
             info.append( (file_num, file_name) )
 
@@ -179,6 +181,10 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     t1 = time.time()
 
     SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
+    output = config['output']
+    output_type = output['type']
+    builder = valid_output_types[output_type]
+    builder.setup(output, config, file_num, logger)
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
@@ -186,18 +192,12 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     nimages = len(nobj)
     config['nimages'] = nimages
     config['nobj'] = nobj
-
-    output = config['output']
-    output_type = output['type']
-
     logger.debug('file %d: BuildFile with type=%s to build %d images, starting with %d',
                  file_num,output_type,nimages,image_num)
 
     # Make sure the inputs and extra outputs are set up properly.
     galsim.config.ProcessInput(config, logger=logger)
     galsim.config.SetupExtraOutput(config, logger=logger)
-
-    builder = valid_output_types[output_type]
 
     # Get the file name
     file_name = builder.getFilename(output, config, logger)
@@ -339,9 +339,6 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     if output_type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%output_type)
 
-    seed = galsim.config.SetupConfigRNG(config, logger=logger)
-    logger.debug('file %d: seed = %d',file_num,seed)
-
 
 def SetDefaultExt(config, default_ext):
     """Set a default ext in a config 'file_name' field if appropriate.
@@ -417,6 +414,20 @@ class OutputBuilder(object):
 
     # A class attribute that sub-classes may override.
     default_ext = '.fits'
+
+    def setup(self, config, base, file_num, logger):
+        """Do any necessary setup at the start of processing a file.
+
+        The base class just calls SetupConfigRNG, but this provides a hook for sub-classes to
+        do more things before any processing gets started on this file.
+
+        @param config           The configuration dict for the output type.
+        @param base             The base configuration dict.
+        @param file_num         The current file_num.
+        @param logger           If given, a logger object to log progress.
+        """
+        seed = galsim.config.SetupConfigRNG(base, logger=logger)
+        logger.debug('file %d: seed = %d',file_num,seed)
 
     def getFilename(self, config, base, logger):
         """Get the file_name for the current file being worked on.
