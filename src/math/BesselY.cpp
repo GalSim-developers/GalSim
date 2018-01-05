@@ -987,6 +987,7 @@ namespace math {
                     double sa = std::sin(arg);
                     double sb = std::cos(arg);
                     double etx = x * 8.;
+                    s2 = 0.;
                     for (int k=1; k<=nn; ++k) {
                         s1 = s2;
                         double t2 = (fmu - 1.) / etx;

@@ -39,12 +39,12 @@ namespace galsim {
                           const Table& abs_length_table)
     {
         double* data = reinterpret_cast<double*>(idata);
-        PYBIND11_PLACEMENT_NEW Silicon(NumVertices, NumElect, Nx, Ny, QDist,
+        PB11_PLACEMENT_NEW Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                                        Nrecalc, DiffStep, PixelSize, SensorThickness, data,
                                        treeRingTable, treeRingCenter, abs_length_table);
     }
 
-    void pyExportSilicon(PYBIND11_MODULE& _galsim)
+    void pyExportSilicon(PB11_MODULE& _galsim)
     {
         bp::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
         pySilicon.def("__init__", BP_MAKE_CONSTRUCTOR(&MakeSilicon));

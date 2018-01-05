@@ -38,7 +38,7 @@ namespace hsm {
 #ifdef USE_BOOST
         ShapeData* data = new ShapeData();
 #else
-        PYBIND11_PLACEMENT_NEW ShapeData();
+        PB11_PLACEMENT_NEW ShapeData();
         ShapeData* data = &instance;
 #endif
         data->image_bounds = image_bounds;
@@ -69,7 +69,7 @@ namespace hsm {
     }
 
     template <typename T, typename V>
-    static void WrapTemplates(PYBIND11_MODULE& _galsim)
+    static void WrapTemplates(PB11_MODULE& _galsim)
     {
         typedef void (*FAM_func)(ShapeData&t, const BaseImage<T>&, const BaseImage<int>&,
                                  double, double, Position<double>, bool, const HSMParams&);
@@ -82,7 +82,7 @@ namespace hsm {
         GALSIM_DOT def("_EstimateShearView", ESH_func(&EstimateShearView));
     };
 
-    void pyExportHSM(PYBIND11_MODULE& _galsim)
+    void pyExportHSM(PB11_MODULE& _galsim)
     {
         bp::class_<HSMParams>(GALSIM_COMMA "HSMParams" BP_NOINIT)
             .def(bp::init<

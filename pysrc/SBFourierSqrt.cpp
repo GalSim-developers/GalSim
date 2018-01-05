@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBFourierSqrt(PYBIND11_MODULE& _galsim)
+    void pyExportSBFourierSqrt(PB11_MODULE& _galsim)
     {
         bp::class_<SBFourierSqrt BP_BASES(SBProfile)>(GALSIM_COMMA "SBFourierSqrt" BP_NOINIT)
             .def(bp::init<const SBProfile &, GSParams>());

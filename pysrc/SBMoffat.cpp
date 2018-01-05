@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBMoffat(PYBIND11_MODULE& _galsim)
+    void pyExportSBMoffat(PB11_MODULE& _galsim)
     {
         bp::class_<SBMoffat BP_BASES(SBProfile)>(GALSIM_COMMA "SBMoffat" BP_NOINIT)
             .def(bp::init<double,double,double,double, GSParams>())

@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBSersic(PYBIND11_MODULE& _galsim)
+    void pyExportSBSersic(PB11_MODULE& _galsim)
     {
         bp::class_<SBSersic BP_BASES(SBProfile)>(GALSIM_COMMA "SBSersic" BP_NOINIT)
             .def(bp::init<double,double,double,double, GSParams>());

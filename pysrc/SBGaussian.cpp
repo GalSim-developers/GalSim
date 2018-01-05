@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBGaussian(PYBIND11_MODULE& _galsim)
+    void pyExportSBGaussian(PB11_MODULE& _galsim)
     {
         bp::class_<SBGaussian BP_BASES(SBProfile)>(GALSIM_COMMA "SBGaussian" BP_NOINIT)
             .def(bp::init<double,double, GSParams>());

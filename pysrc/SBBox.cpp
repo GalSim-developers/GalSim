@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBBox(PYBIND11_MODULE& _galsim)
+    void pyExportSBBox(PB11_MODULE& _galsim)
     {
         bp::class_<SBBox BP_BASES(SBProfile)>(GALSIM_COMMA "SBBox" BP_NOINIT)
             .def(bp::init<double,double,double,GSParams>());

@@ -35,7 +35,7 @@ namespace galsim {
         ComputeCRGCoefficients(coef, Sigma, w, kimgs, psf, nsed, nband, nkx, nky);
     };
 
-    void pyExportRealGalaxy(PYBIND11_MODULE& _galsim) {
+    void pyExportRealGalaxy(PB11_MODULE& _galsim) {
         GALSIM_DOT def("ComputeCRGCoefficients", &CallComputeCRGCoefficients);
     }
 

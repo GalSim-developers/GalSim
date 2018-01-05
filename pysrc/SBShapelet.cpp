@@ -42,10 +42,10 @@ namespace galsim {
         VectorXd v(size);
         for (int i=0; i<size; ++i) v[i] = data[i];
         LVector bvec(order, v);
-        PYBIND11_PLACEMENT_NEW SBShapelet(sigma, bvec, gsparams);
+        PB11_PLACEMENT_NEW SBShapelet(sigma, bvec, gsparams);
     }
 
-    void pyExportSBShapelet(PYBIND11_MODULE& _galsim)
+    void pyExportSBShapelet(PB11_MODULE& _galsim)
     {
         bp::class_<SBShapelet BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
             .def("__init__", BP_MAKE_CONSTRUCTOR(&construct));

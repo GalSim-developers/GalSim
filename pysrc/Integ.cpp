@@ -49,7 +49,7 @@ namespace integ {
         }
     }
 
-    void pyExportInteg(PYBIND11_MODULE& _galsim)
+    void pyExportInteg(PB11_MODULE& _galsim)
     {
         GALSIM_DOT def("PyInt1d", &PyInt1d);
 

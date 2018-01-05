@@ -29,17 +29,17 @@ namespace galsim {
         bp::stl_input_iterator<SBProfile> iter(iterable), end;
         std::list<SBProfile> plist;
         for(; iter != end; ++iter) plist.push_back(*iter);
-        PYBIND11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
+        PB11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
     }
 #else
     static BP_CONSTRUCTOR(construct, SBConvolve,
                           const std::list<SBProfile>& plist, bool real_space, GSParams gsparams)
     {
-        PYBIND11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
+        PB11_PLACEMENT_NEW SBConvolve(plist, real_space, gsparams);
     }
 #endif
 
-    void pyExportSBConvolve(PYBIND11_MODULE& _galsim)
+    void pyExportSBConvolve(PB11_MODULE& _galsim)
     {
         bp::class_<SBConvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBConvolve" BP_NOINIT)
             .def("__init__", BP_MAKE_CONSTRUCTOR( &construct));

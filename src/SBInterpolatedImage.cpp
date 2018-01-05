@@ -105,8 +105,8 @@ namespace galsim {
         dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
 
         int Ninitx = image.getXMax()-image.getXMin()+1;
-        int Ninity = image.getYMax()-image.getYMin()+1;
-        assert(Ninitx == Ninity);
+        //int Ninity = image.getYMax()-image.getYMin()+1;
+        //assert(Ninitx == Ninity);  // (Ensured by the python layer.)
         _Nk = Ninitx;
         _image_bounds = image.getBounds();
         dbg<<"_Nk = "<<_Nk<<std::endl;

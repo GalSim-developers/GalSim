@@ -21,54 +21,52 @@
 #include "PyBind11Helper.h"
 
 namespace galsim {
-    void pyExportBounds(PYBIND11_MODULE&);
-    void pyExportPhotonArray(PYBIND11_MODULE&);
-    void pyExportImage(PYBIND11_MODULE&);
-    void pyExportSBProfile(PYBIND11_MODULE&);
-    void pyExportSBAdd(PYBIND11_MODULE&);
-    void pyExportSBConvolve(PYBIND11_MODULE&);
-    void pyExportSBDeconvolve(PYBIND11_MODULE&);
-    void pyExportSBFourierSqrt(PYBIND11_MODULE&);
-    void pyExportSBTransform(PYBIND11_MODULE&);
-    void pyExportSBBox(PYBIND11_MODULE&);
-    void pyExportSBGaussian(PYBIND11_MODULE&);
-    void pyExportSBDeltaFunction(PYBIND11_MODULE&);
-    void pyExportSBExponential(PYBIND11_MODULE&);
-    void pyExportSBSersic(PYBIND11_MODULE&);
-    void pyExportSBSpergel(PYBIND11_MODULE&);
-    void pyExportSBMoffat(PYBIND11_MODULE&);
-    void pyExportSBAiry(PYBIND11_MODULE&);
-    void pyExportSBShapelet(PYBIND11_MODULE&);
-    void pyExportSBInterpolatedImage(PYBIND11_MODULE&);
-    void pyExportSBKolmogorov(PYBIND11_MODULE&);
-    void pyExportSBInclinedExponential(PYBIND11_MODULE&);
-    void pyExportSBInclinedSersic(PYBIND11_MODULE&);
-    void pyExportRandom(PYBIND11_MODULE&);
-    void pyExportTable(PYBIND11_MODULE&);
-    void pyExportInterpolant(PYBIND11_MODULE&);
-    void pyExportCDModel(PYBIND11_MODULE&);
-    void pyExportSilicon(PYBIND11_MODULE&);
-    void pyExportRealGalaxy(PYBIND11_MODULE&);
-    void pyExportWCS(PYBIND11_MODULE&);
+    void pyExportBounds(PB11_MODULE&);
+    void pyExportPhotonArray(PB11_MODULE&);
+    void pyExportImage(PB11_MODULE&);
+    void pyExportSBProfile(PB11_MODULE&);
+    void pyExportSBAdd(PB11_MODULE&);
+    void pyExportSBConvolve(PB11_MODULE&);
+    void pyExportSBDeconvolve(PB11_MODULE&);
+    void pyExportSBFourierSqrt(PB11_MODULE&);
+    void pyExportSBTransform(PB11_MODULE&);
+    void pyExportSBBox(PB11_MODULE&);
+    void pyExportSBGaussian(PB11_MODULE&);
+    void pyExportSBDeltaFunction(PB11_MODULE&);
+    void pyExportSBExponential(PB11_MODULE&);
+    void pyExportSBSersic(PB11_MODULE&);
+    void pyExportSBSpergel(PB11_MODULE&);
+    void pyExportSBMoffat(PB11_MODULE&);
+    void pyExportSBAiry(PB11_MODULE&);
+    void pyExportSBShapelet(PB11_MODULE&);
+    void pyExportSBInterpolatedImage(PB11_MODULE&);
+    void pyExportSBKolmogorov(PB11_MODULE&);
+    void pyExportSBInclinedExponential(PB11_MODULE&);
+    void pyExportSBInclinedSersic(PB11_MODULE&);
+    void pyExportRandom(PB11_MODULE&);
+    void pyExportTable(PB11_MODULE&);
+    void pyExportInterpolant(PB11_MODULE&);
+    void pyExportCDModel(PB11_MODULE&);
+    void pyExportSilicon(PB11_MODULE&);
+    void pyExportRealGalaxy(PB11_MODULE&);
+    void pyExportWCS(PB11_MODULE&);
 
     namespace hsm {
-        void pyExportHSM(PYBIND11_MODULE&);
+        void pyExportHSM(PB11_MODULE&);
     }
 
     namespace integ {
-        void pyExportInteg(PYBIND11_MODULE&);
+        void pyExportInteg(PB11_MODULE&);
     }
 
     namespace math {
-        void pyExportBessel(PYBIND11_MODULE&);
+        void pyExportBessel(PB11_MODULE&);
     }
 
 } // namespace galsim
 
-PYBIND11_PLUGIN(_galsim)
+PB11_MAKE_MODULE(_galsim)
 {
-    PYBIND11_MAKE_MODULE(_galsim);
-
     galsim::pyExportBounds(_galsim);
     galsim::pyExportPhotonArray(_galsim);
     galsim::pyExportImage(_galsim);
@@ -102,6 +100,4 @@ PYBIND11_PLUGIN(_galsim)
     galsim::hsm::pyExportHSM(_galsim);
     galsim::integ::pyExportInteg(_galsim);
     galsim::math::pyExportBessel(_galsim);
-
-    PYBIND11_RETURN_PTR(_galsim);
 }

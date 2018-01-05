@@ -38,9 +38,9 @@ if "--debug" in sys.argv:
     undef_macros+=['NDEBUG']
 
 copt =  {
-    'gcc' : ['-O3','-ffast-math','-std=c++11'],
+    'gcc' : ['-O3','-ffast-math','-std=c++11','-fvisibility=hidden'],
     'icc' : ['-O3','-std=c++11'],
-    'clang' : ['-O3','-ffast-math','-std=c++11','-Wno-shorten-64-to-32'],
+    'clang' : ['-O3','-ffast-math','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden'],
     'unknown' : [],
 }
 
@@ -161,6 +161,12 @@ class my_builder( build_ext ):
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
+        # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
+        try:
+            self.compiler.compiler_so.remove("-Wstrict-prototypes")
+        except (AttributeError, ValueError):
+            pass
+
         print('Platform is ',self.plat_name)
 
         # Figure out what compiler it will use

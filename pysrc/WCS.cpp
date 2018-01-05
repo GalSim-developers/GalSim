@@ -38,22 +38,22 @@ namespace galsim {
         ApplyPV(n, m, uar, var, pvar);
     }
 
-    TUPLE(double,double) CallInvertPV(double u, double v, size_t pv_data)
+    bp::tuple CallInvertPV(double u, double v, size_t pv_data)
     {
         const double* pvar = reinterpret_cast<const double*>(pv_data);
         InvertPV(u, v, pvar);
-        return MAKE_TUPLE(u,v);
+        return bp::make_tuple(u,v);
     }
 
-    TUPLE(double,double) CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
+    bp::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
     {
         const double* abar = reinterpret_cast<const double*>(ab_data);
         const double* abpar = reinterpret_cast<const double*>(abp_data);
         InvertAB(m, x, y, abar, abpar);
-        return MAKE_TUPLE(x,y);
+        return bp::make_tuple(x,y);
     }
 
-    void pyExportWCS(PYBIND11_MODULE& _galsim)
+    void pyExportWCS(PB11_MODULE& _galsim)
     {
         GALSIM_DOT def("ApplyPV", &CallApplyPV);
         GALSIM_DOT def("ApplyCD", &CallApplyCD);

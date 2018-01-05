@@ -29,11 +29,11 @@ namespace galsim {
     {
         T* data = reinterpret_cast<T*>(idata);
         shared_ptr<T> owner;
-        PYBIND11_PLACEMENT_NEW ImageView<T>(data, owner, step, stride, bounds);
+        PB11_PLACEMENT_NEW ImageView<T>(data, owner, step, stride, bounds);
     }
 
     template <typename T>
-    static void WrapImage(PYBIND11_MODULE& _galsim, const std::string& suffix)
+    static void WrapImage(PB11_MODULE& _galsim, const std::string& suffix)
     {
         bp::class_<BaseImage<T> BOOST_NONCOPYABLE>(
             GALSIM_COMMA ("BaseImage" + suffix).c_str() BP_NOINIT);
@@ -59,7 +59,7 @@ namespace galsim {
         GALSIM_DOT def("invertImage", invert_func_type(&invertImage));
     }
 
-    void pyExportImage(PYBIND11_MODULE& _galsim)
+    void pyExportImage(PB11_MODULE& _galsim)
     {
         WrapImage<uint16_t>(_galsim, "US");
         WrapImage<uint32_t>(_galsim, "UI");

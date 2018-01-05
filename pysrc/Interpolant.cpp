@@ -23,7 +23,7 @@
 
 namespace galsim {
 
-    void pyExportInterpolant(PYBIND11_MODULE& _galsim)
+    void pyExportInterpolant(PB11_MODULE& _galsim)
     {
         bp::class_<Interpolant BOOST_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT);
 

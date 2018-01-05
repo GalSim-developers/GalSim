@@ -28,16 +28,16 @@ namespace galsim {
         bp::stl_input_iterator<SBProfile> iter(iterable), end;
         std::list<SBProfile> plist;
         for(; iter != end; ++iter) plist.push_back(*iter);
-        PYBIND11_PLACEMENT_NEW SBAdd(plist, gsparams);
+        PB11_PLACEMENT_NEW SBAdd(plist, gsparams);
     }
 #else
     static BP_CONSTRUCTOR(construct, SBAdd, const std::list<SBProfile>& plist, GSParams gsparams)
     {
-        PYBIND11_PLACEMENT_NEW SBAdd(plist, gsparams);
+        PB11_PLACEMENT_NEW SBAdd(plist, gsparams);
     }
 #endif
 
-    void pyExportSBAdd(PYBIND11_MODULE& _galsim)
+    void pyExportSBAdd(PB11_MODULE& _galsim)
     {
         bp::class_<SBAdd BP_BASES(SBProfile)>(GALSIM_COMMA "SBAdd" BP_NOINIT)
             .def("__init__", BP_MAKE_CONSTRUCTOR(&construct));

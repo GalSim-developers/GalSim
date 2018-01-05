@@ -46,7 +46,7 @@ namespace galsim {
         rng.generateFromExpectation(N, data);
     }
 
-    void pyExportRandom(PYBIND11_MODULE& _galsim)
+    void pyExportRandom(PB11_MODULE& _galsim)
     {
         bp::class_<BaseDeviate> (GALSIM_COMMA "BaseDeviateImpl" BP_NOINIT)
             .def(bp::init<long>())

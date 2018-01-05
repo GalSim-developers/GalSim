@@ -40,10 +40,10 @@ namespace galsim {
         double *dxdz = reinterpret_cast<double*>(idxdz);
         double *dydz = reinterpret_cast<double*>(idydz);
         double *wave = reinterpret_cast<double*>(iwave);
-        PYBIND11_PLACEMENT_NEW PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
+        PB11_PLACEMENT_NEW PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
     }
 
-    void pyExportPhotonArray(PYBIND11_MODULE& _galsim)
+    void pyExportPhotonArray(PB11_MODULE& _galsim)
     {
         bp::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
         pyPhotonArray

@@ -22,7 +22,7 @@
 
 namespace galsim {
 
-    void pyExportSBInclinedSersic(PYBIND11_MODULE& _galsim)
+    void pyExportSBInclinedSersic(PB11_MODULE& _galsim)
     {
         bp::class_<SBInclinedSersic BP_BASES(SBProfile)>(
             GALSIM_COMMA "SBInclinedSersic" BP_NOINIT)

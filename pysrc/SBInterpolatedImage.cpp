@@ -23,7 +23,7 @@
 namespace galsim {
 
     template <typename T, typename W>
-    static void WrapTemplates(PYBIND11_MODULE& _galsim, W& wrapper)
+    static void WrapTemplates(PB11_MODULE& _galsim, W& wrapper)
     {
         wrapper.def(bp::init<const BaseImage<T> &, const Bounds<int>&, const Bounds<int>&,
                     const Interpolant&, const Interpolant&,
@@ -33,7 +33,7 @@ namespace galsim {
         GALSIM_DOT def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
     }
 
-    void pyExportSBInterpolatedImage(PYBIND11_MODULE& _galsim)
+    void pyExportSBInterpolatedImage(PB11_MODULE& _galsim)
     {
         bp::class_<SBInterpolatedImage BP_BASES(SBProfile)> pySBInterpolatedImage(
             GALSIM_COMMA "SBInterpolatedImage" BP_NOINIT);

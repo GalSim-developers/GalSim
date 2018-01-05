@@ -871,6 +871,7 @@ namespace math {
                 s1 = coef * (p2 / s);
                 if (inu == 0 && n == 1) {
                     recurse = false;
+                    s2 = 0;  // Unused in this case, but saves a maybe-uninitialized warning.
                 } else {
                     s2 = s1 * (x + dnu + .5 - p1 / p2) / x;
                 }

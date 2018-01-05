@@ -35,7 +35,7 @@ namespace galsim {
         else if (interp == "ceil") i = Table::ceil;
         else if (interp == "nearest") i = Table::nearest;
 
-        PYBIND11_PLACEMENT_NEW Table(args, vals, N, i);
+        PB11_PLACEMENT_NEW Table(args, vals, N, i);
     }
 
     static void InterpMany(const Table& table, size_t iargs, size_t ivals, int N)
@@ -59,7 +59,7 @@ namespace galsim {
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
 
-        PYBIND11_PLACEMENT_NEW Table2D(x, y, vals, Nx, Ny, i);
+        PB11_PLACEMENT_NEW Table2D(x, y, vals, Nx, Ny, i);
     }
 
     static void InterpMany2D(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int N)
@@ -86,7 +86,7 @@ namespace galsim {
         table2d.gradientMany(x, y, dfdx, dfdy, N);
     }
 
-    void pyExportTable(PYBIND11_MODULE& _galsim)
+    void pyExportTable(PB11_MODULE& _galsim)
     {
         bp::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
             .def("__init__", BP_MAKE_CONSTRUCTOR(&MakeTable))

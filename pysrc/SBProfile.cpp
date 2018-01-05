@@ -31,7 +31,7 @@ namespace galsim {
                     &SBProfile::drawK);
     }
 
-    void pyExportSBProfile(PYBIND11_MODULE& _galsim)
+    void pyExportSBProfile(PB11_MODULE& _galsim)
     {
         bp::class_<GSParams>(GALSIM_COMMA "GSParams" BP_NOINIT)
             .def(bp::init<
