@@ -222,7 +222,7 @@ class my_install(install):
 # AFAICT, setuptools doesn't provide any easy access to the final installation location of the
 # executable scripts.  This bit is just to save the value of script_dir so I can use it later.
 # cf. http://stackoverflow.com/questions/12975540/correct-way-to-find-scripts-directory-from-setup-py-in-python-distutils/
-class my_easy_install( easy_install ):
+class my_easy_install(easy_install):    # Used when installing via python setup.py install
     # Match the call signature of the easy_install version.
     def write_script(self, script_name, contents, mode="t", *ignored):
         # Run the normal version
@@ -230,6 +230,11 @@ class my_easy_install( easy_install ):
         # Save the script install directory in the distribution object.
         # This is the same thing that is returned by the setup function.
         self.distribution.script_install_dir = self.script_dir
+
+class my_install_scripts(install_scripts):  # Used when pip installing.
+    def run(self):
+        install_scripts.run(self)
+        self.distribution.script_install_dir = self.install_dir
 
 ext=Extension("galsim._galsim",
               sources,
@@ -309,6 +314,7 @@ dist = setup(name="GalSim",
     install_requires=build_dep + run_dep,
     cmdclass = {'build_ext': my_builder,
                 'install': my_install,
+                'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
                 },
     entry_points = {'console_scripts' : [
@@ -320,15 +326,17 @@ dist = setup(name="GalSim",
 
 # Check that the path includes the directory where the scripts are installed.
 real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]
-if (hasattr(dist,'script_install_dir') and
-    dist.script_install_dir not in os.environ['PATH'].split(':') and
-    os.path.realpath(dist.script_install_dir) not in real_env_path):
+if hasattr(dist,'script_install_dir'):
+    print('scripts installed into ',dist.script_install_dir)
+    if (dist.script_install_dir not in os.environ['PATH'].split(':') and
+        os.path.realpath(dist.script_install_dir) not in real_env_path):
 
-    print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
-    print('         If you want to use the executables, you should add the directory')
-    print('\n             ',dist.script_install_dir,'\n')
-    print('         to your path.  The current path is')
-    print('\n             ',os.environ['PATH'],'\n')
-    print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
-    print('         in which case the scripts will be installed in PREFIX/bin.')
-    print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
+        print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
+        print('         If you want to use the executables, you should add the directory')
+        print('\n             ',dist.script_install_dir,'\n')
+        print('         to your path.  The current path is')
+        print('\n             ',os.environ['PATH'],'\n')
+        print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
+        print('         in which case the scripts will be installed in PREFIX/bin.')
+        print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
+
