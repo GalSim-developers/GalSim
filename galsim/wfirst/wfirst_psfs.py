@@ -39,27 +39,24 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
            logger=None, wavelength=None, high_accuracy=False,
            gsparams=None):
     """
-    Get the PSF for WFIRST observations.
+    Get the PSF for WFIRST observations (either a single PSF or a list, depending on the inputs).
 
-    By default, this routine returns a dict of ChromaticOpticalPSF objects, with the dict indexed by
-    the SCA (Sensor Chip Array, the equivalent of a chip in an optical CCD).  The PSF for a given
-    SCA corresponds to that for the center of the SCA.  Currently we do not use information about
-    PSF variation within each SCA, which is relatively small.
+    For each PSF that the user wants to create, they must provide a list or NumPy array of SCA
+    numbers, and a list of strings indicating the bandpass; this is used when setting up the pupil
+    plane configuration and when interpolating chromatic information, if requested.  In general the
+    approach is that if a list of length 'n_psf' is given for `SCA`, then it is assumed that the
+    user would like 'n_psf' PSFs.  But if just a single value for the other kwargs, it is assumed
+    that the single value given for that kwarg should be used for all 'n_psf' PSFs.
 
-    This routine also takes an optional keyword `SCAs`, which can be a single number or an iterable;
-    if this is specified then results are not included for the other SCAs.
+    This routine carries out linear interpolation of the aberrations within a given SCA, based on
+    the WFIRST Cycle 7 specification of the aberrations as a function of focal plane position.
 
     The default is to do the calculations using the full specification of the WFIRST pupil plane,
     which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
-    red bands from
-
-    http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/   (Cycle 5)
-
-    and we neglect for now the fact that the pupil plane configuration is slightly different for
-    imaging in Z087, Y106, J129.  To avoid using the full pupil plane configuration, use the
-    optional keyword `approximate_struts`.  In this case, the pupil plane will have the correct
-    obscuration and number of struts, but the struts will be purely radial and evenly spaced instead
-    of the true configuration.  The simplicity of this arrangement leads to a much faster
+    long- and short-wavelength bands for Cycle 7. To avoid using the full pupil plane configuration,
+    use the optional keyword `approximate_struts`.  In this case, the pupil plane will have the
+    correct obscuration and number of struts, but the struts will be purely radial and evenly spaced
+    instead of the true configuration.  The simplicity of this arrangement leads to a much faster
     calculation, and somewhat simplifies the configuration of the diffraction spikes.  Also note
     that currently the orientation of the struts is fixed, rather than rotating depending on the
     orientation of the focal plane.  Rotation of the PSF can easily be affected by the user via
@@ -74,7 +71,8 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
     dependence is sub-percent so we neglect it here.)  For reference, the script use to parse the
     Zernikes given on the webpage and create the files in the GalSim repository can be found in
     `devel/external/parse_wfirst_zernikes_1217.py`.  The resulting chromatic object can be used to
-    draw into any of the WFIRST bandpasses.
+    draw into any of the WFIRST bandpasses, though the pupil plane configuration will only be
+    correct for those bands in the same range (i.e., long- or short-wavelength bands).
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
     aliasing, the `high_accuracy` option can be set to True.  When using this option, the MTF has a
@@ -99,35 +97,35 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
 
     The PSFs are always defined assuming the user will specify length scales in arcsec.
 
-    @param    SCAs                 Specific SCAs for which the PSF should be loaded.  This can be
-                                   either a single number or an iterable.  If None, then the PSF
-                                   will be loaded for all SCAs (1...18).  Note that the object that
-                                   is returned is a dict indexed by the requested SCA indices.
-                                   [default: None]
+    @param    SCA                  Single value or iterable specifying the SCA(s) for which the 
+                                   PSF should be loaded.
+    @param    bandpass             Single string or list of strings specifying the bandpass to use
+                                   when defining the pupil plane configuration and/or interpolation
+                                   of chromatic PSFs.  If `approximate_struts` is True (which means
+                                   we do not use a realistic pupil plane configuration) and
+                                   `n_waves` is None (no interpolation of chromatic PSFs) then
+                                   'bandpass' can be None.
+    @param    SCA_pos              Single galsim.PositionD or list of galsim.PositionDs indicating
+                                   the position within the SCA for which the PSF should be created.
+                                   If None, the exact center of the SCA is chosen. [default: None]
     @param    approximate_struts   Should the routine use an approximate representation of the pupil
                                    plane, with 6 equally-spaced radial struts, instead of the exact
                                    representation of the pupil plane?  Setting this parameter to
                                    True will lead to faster calculations, with a slightly less
-                                   realistic PSFs.  [default: False]
+                                   realistic PSFs.  Can be a single item or list. [default: False]
     @param    n_waves              Number of wavelengths to use for setting up interpolation of the
                                    chromatic PSF objects, which can lead to much faster image
                                    rendering.  If None, then no interpolation is used. Note that
                                    users who want to interpolate can always set up the interpolation
-                                   later on even if they do not do so when calling getPSF().
+                                   later on even if they do not do so when calling getPSF(). Can be
+                                   a single item or a list.
                                    [default: None]
     @param    extra_aberrations    Array of extra aberrations to include in the PSF model, on top of
                                    those that are part of the WFIRST design.  These should be
                                    provided in units of waves at the fiducial wavelength of 1293 nm,
                                    as an array of length 23 with entries 4 through 22 corresponding
                                    to defocus through the 22nd Zernike in the Noll convention.
-                                   [default: None]
-    @param    wavelength_limits    A tuple or list of the blue and red wavelength limits to use for
-                                   interpolating the chromatic object, if `n_waves` is not None.  If
-                                   None, then it uses the blue and red limits of all imaging
-                                   passbands to determine the most inclusive wavelength range
-                                   possible.  But this keyword can be used to reduce the range of
-                                   wavelengths if only one passband (or a subset of passbands) is to
-                                   be used for making the images.
+                                   Can be a single array or a list of arrays.
                                    [default: None]
     @param    logger               A logger object for output of progress statements if the user
                                    wants them.  [default: None]
@@ -138,17 +136,19 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
                                    will get achromatic OpticalPSF objects for that wavelength, or
                                    (b) a bandpass object, in which case they will get achromatic
                                    OpticalPSF objects defined at the effective wavelength of that
-                                   bandpass.
+                                   bandpass.  Can be a single item or a list.
                                    [default: False]
     @param    high_accuracy        If True, make higher-fidelity representations of the PSF in
                                    Fourier space, to minimize aliasing (see plots on
                                    https://github.com/GalSim-developers/GalSim/issues/661 for more
                                    details).  This setting is more expensive in terms of time and
                                    RAM, and may not be necessary for many applications.
+                                   Can be a single item or a list.
                                    [default: False]
-    @param gsparams                An optional GSParams argument.  See the docstring for GSParams
-                                   for details. [default: None]
-    @returns  A dict of ChromaticOpticalPSF or OpticalPSF objects for each SCA.
+    @param    gsparams             An optional GSParams argument.  See the docstring for GSParams
+                                   for details. Can be a single item or a list.  [default: None]
+    @returns  A single PSF object, or a list of PSF objects (either ChromaticOpticalPSFs or
+              OpticalPSFs depending on the inputs).
     """
     # Deal with inputs:
     # Use the 'SCA' input to figure out whether we are getting a list of PSFs or what.
@@ -164,12 +164,11 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
     # SCA_pos: if None, then all should just be center of the SCA.
     #          if given, then same rules as for Bandpass apply.
     if SCA_pos is None:
-        image_cent = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2)
-        SCA_pos = [image_cent] * n_psf
-    else:
-        SCA_pos = _expand_list(SCA_pos, n_psf)
+        SCA_pos = galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2)
+    SCA_pos = _expand_list(SCA_pos, n_psf)
 
-    # The rest (except logger) follow same rules as Bandpass.
+    # The rest (except logger, bandpass, and SCA_pos) just get expanded out to a list of length
+    # n_psf, if they aren't already in that form.
     approximate_struts = _expand_list(approximate_struts, n_psf)
     n_waves = _expand_list(n_waves, n_psf)
     extra_aberrations = _expand_list(extra_aberrations, n_psf)
@@ -189,8 +188,15 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
             else:
                 raise ValueError("Bad bandpass input: %s"%bandpass[i])
         else:
-            if bandpass[i] not in default_bandpass_list:
-                raise ValueError("Bad bandpass input: %s"%bandpass[i])
+            # Sanity checking:
+            # If we need to use bandpass info, require that it be one of the defaults.
+            # If we do not need to use bandpass info, allow it to be None.
+            if n_waves[i] is not None:
+                if bandpass[i] not in default_bandpass_list:
+                    raise ValueError("Bad bandpass input: %s"%bandpass[i])
+            else:
+                if bandpass[i] not in default_bandpass_list and bandpass[i] is not None:
+                    raise ValueError("Bad bandpass input: %s"%bandpass[i])
 
     # Check cases where reusing is possible.
     # That would be if the SCA and SCA_pos and extra_aberrations are the same,
@@ -230,6 +236,8 @@ def getPSF(SCA, bandpass, SCA_pos=None, approximate_struts=False, n_waves=None, 
 def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
                     n_waves, extra_aberrations, logger, wavelength,
                     high_accuracy, pupil_plane_type, gsparams):
+    """Routine for making a single PSF.  This gets called by getPSF() after it parses all the
+       options that were passed in.  Users will not directly interact with this routine."""
     # Deal with some accuracy settings.
     if high_accuracy:
         if approximate_struts:
@@ -516,7 +524,7 @@ def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
         x_frac*(1.0-y_frac)*upper_x_lower_y_ab + \
         x_frac*y_frac*upper_x_upper_y_ab
 
-    return interp_ab
+    return interp_ab.flatten()
 
 def _find_limits(bandpasses, bandpass_dict):
     """
@@ -549,5 +557,6 @@ def _expand_list(x, n):
     if hasattr(x, '__iter__'):
         if not len(x) == n:
             raise ValueError('Input lists are mismatched in length!')
+        return x
     else:
         return [x] * n
