@@ -276,10 +276,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     if logger: logger.debug('Beginning to get the PSF aberrations.')
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
     # Do bilinear interpolation, unless we're exactly at the center (default).
-    if SCA_pos == galsim.PositionD(galsim.wfirst.n_pix/2, galsim.wfirst.n_pix/2):
-        use_aberrations = aberrations[0,:]
-    else:
-        use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
+    use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
 
     if extra_aberrations is not None:
         use_aberrations += extra_aberrations
@@ -499,11 +496,27 @@ def _read_aberrations(SCA):
 
 def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
     """
-    This is a helper routine to do interpolation of aberrations defined at 5 field
-    positions: the center of the imager and the four corners.
+    This is a helper routine to do bilinear interpolation of aberrations defined at 4 field
+    positions: the four corners.  Note that we also have aberrations at the center position,
+    but these are generally quite close (within a few percent) of what would come from this bilinear
+    interpolation.  So for simplicity, we just do the bilinear interpolation.
     """
-    # For now just fake it: return the first row (center)
-    return aberrations[0,:]
+    min_x = np.min(x_pos)
+    min_y = np.min(y_pos)
+    max_x = np.max(x_pos)
+    max_y = np.max(y_pos)
+    x_frac = (SCA_pos.x - min_x) / (max_x - min_x)
+    y_frac = (SCA_pos.y - min_y) / (max_y - min_y)
+    lower_x_lower_y_ab = aberrations[(x_pos==min_x) & (y_pos==min_y), :]
+    lower_x_upper_y_ab = aberrations[(x_pos==min_x) & (y_pos==max_y), :]
+    upper_x_lower_y_ab = aberrations[(x_pos==max_x) & (y_pos==min_y), :]
+    upper_x_upper_y_ab = aberrations[(x_pos==max_x) & (y_pos==max_y), :]
+    interp_ab = (1.0-x_frac)*(1.0-y_frac)*lower_x_lower_y_ab + \
+        (1.0-x_frac)*y_frac*lower_x_upper_y_ab + \
+        x_frac*(1.0-y_frac)*upper_x_lower_y_ab + \
+        x_frac*y_frac*upper_x_upper_y_ab
+
+    return interp_ab
 
 def _find_limits(bandpasses, bandpass_dict):
     """
