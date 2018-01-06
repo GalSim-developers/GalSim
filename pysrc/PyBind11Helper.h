@@ -32,6 +32,8 @@
 namespace bp = boost::python;
 
 #define PB11_MAKE_MODULE(x) BOOST_PYTHON_MODULE(x)
+#define PB11_START_MODULE(x)
+#define PB11_END_MODULE(x)
 
 #define TUPLE(args...) bp::tuple
 #define MAKE_TUPLE bp::make_tuple
@@ -64,7 +66,15 @@ namespace bp = boost::python;
 #include <pybind11/complex.h>
 namespace bp = pybind11;
 
-#define PB11_MAKE_MODULE(x) PYBIND11_MODULE(x,x)
+#if PYBIND11_VERSION_MAJOR >= 3 || (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR >= 2)
+    #define PB11_MAKE_MODULE(x) PYBIND11_MODULE(x,x)
+    #define PB11_START_MODULE(x)
+    #define PB11_END_MODULE(x)
+#else
+    #define PB11_MAKE_MODULE(x) PYBIND11_PLUGIN(x)
+    #define PB11_START_MODULE(x) pybind11::module x(#x)
+    #define PB11_END_MODULE(x) return x.ptr()
+#endif
 
 #define TUPLE(args...) std::tuple<args>
 #define MAKE_TUPLE std::make_tuple

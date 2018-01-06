@@ -67,6 +67,8 @@ namespace galsim {
 
 PB11_MAKE_MODULE(_galsim)
 {
+    PB11_START_MODULE(_galsim);
+
     galsim::pyExportBounds(_galsim);
     galsim::pyExportPhotonArray(_galsim);
     galsim::pyExportImage(_galsim);
@@ -100,4 +102,6 @@ PB11_MAKE_MODULE(_galsim)
     galsim::hsm::pyExportHSM(_galsim);
     galsim::integ::pyExportInteg(_galsim);
     galsim::math::pyExportBessel(_galsim);
+
+    PB11_END_MODULE(_galsim);
 }
