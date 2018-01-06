@@ -30,14 +30,9 @@ import sys
 import numpy as np
 import math
 
+import galsim
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 # define a range of input parameters for the Gaussians that we are testing
 gaussian_sig_values = [0.5, 1.0, 2.0]

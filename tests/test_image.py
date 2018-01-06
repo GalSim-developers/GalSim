@@ -47,17 +47,10 @@ from __future__ import print_function
 import os
 import sys
 import numpy as np
-
-from galsim_test_helpers import *
 from distutils.version import LooseVersion
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-
+import galsim
+from galsim_test_helpers import *
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change

@@ -19,8 +19,8 @@
 from __future__ import print_function
 import time
 import numpy as np
-import galsim
 
+import galsim
 from galsim_test_helpers import *
 
 VAR_NDECIMAL=4

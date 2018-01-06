@@ -24,16 +24,11 @@ import numpy as np
 import os
 import sys
 
+import galsim
 from galsim_test_helpers import *
+from galsim._pyfits import pyfits
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
-try:
-    import galsim
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
-
-from galsim._pyfits import pyfits
 
 # For reference tests:
 TESTDIR=os.path.join(path, "interpolant_comparison_files")

@@ -21,11 +21,9 @@ import unittest
 import numpy as np
 import warnings
 import os
-import galsim
 import sys
-from galsim_test_helpers import funcname
-from galsim.celestial import CelestialCoord
 
+import galsim
 from galsim_test_helpers import *
 
 have_lsst_stack = True
@@ -33,8 +31,6 @@ have_lsst_stack = True
 try:
     from galsim.lsst import LsstCamera, LsstWCS
 except ImportError as ee:
-    #if __name__ == '__main__':
-        #raise
     # make sure that you are failing because the stack isn't there,
     # rather than because of some bug in lsst_wcs.py
     if "You cannot use the LSST module" in str(ee):
@@ -204,7 +200,7 @@ class LsstCameraTestClass(unittest.TestCase):
         cls.decPointing = -33.015167519966
         cls.rotation = 27.0
 
-        pointing = CelestialCoord(cls.raPointing*galsim.degrees, cls.decPointing*galsim.degrees)
+        pointing = galsim.CelestialCoord(cls.raPointing*galsim.degrees, cls.decPointing*galsim.degrees)
         cls.camera = LsstCamera(pointing, cls.rotation*galsim.degrees)
 
     @timer
@@ -272,13 +268,13 @@ class LsstCameraTestClass(unittest.TestCase):
 
         for ra, dec, rotation in zip(ra_pointing_list, dec_pointing_list, rotation_angle_list):
 
-            pointing = CelestialCoord(ra*galsim.radians, dec*galsim.radians)
+            pointing = galsim.CelestialCoord(ra*galsim.radians, dec*galsim.radians)
             camera = LsstCamera(pointing, rotation*galsim.radians)
 
             dra_list = (rng.random_sample(100)-0.5)*0.5
             ddec_list = (rng.random_sample(100)-0.5)*0.5
 
-            star_list = np.array([CelestialCoord((ra+dra)*galsim.radians,
+            star_list = np.array([galsim.CelestialCoord((ra+dra)*galsim.radians,
                                                 (dec+ddec)*galsim.radians)
                                  for dra, ddec in zip(dra_list, ddec_list)])
 
@@ -312,7 +308,7 @@ class LsstCameraTestClass(unittest.TestCase):
         raPointing = 113.0
         decPointing = -25.6
         rot = 82.1
-        pointing = CelestialCoord(raPointing*galsim.degrees, decPointing*galsim.degrees)
+        pointing = galsim.CelestialCoord(raPointing*galsim.degrees, decPointing*galsim.degrees)
         camera = LsstCamera(pointing, rot*galsim.degrees)
 
         arcsec_per_radian = 180.0*3600.0/np.pi
@@ -321,7 +317,7 @@ class LsstCameraTestClass(unittest.TestCase):
         decList = (rng.random_sample(100)-0.5)*20.0+decPointing
         pointingList = []
         for rr, dd in zip(raList, decList):
-            pointingList.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
+            pointingList.append(galsim.CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
         control_x, control_y = camera.pupilCoordsFromPoint(pointingList)
         test_x, test_y = camera.pupilCoordsFromFloat(np.radians(raList), np.radians(decList))
@@ -423,9 +419,9 @@ class LsstCameraTestClass(unittest.TestCase):
         dec = 0.0
         delta = 0.001
 
-        pointing = CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
-        north = CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
-        east = CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
+        pointing = galsim.CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
+        north = galsim.CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
+        east = galsim.CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
 
         camera = LsstCamera(pointing, 0.0*galsim.degrees)
         x_0, y_0 = camera.pupilCoordsFromPoint(pointing)
@@ -474,9 +470,9 @@ class LsstCameraTestClass(unittest.TestCase):
         dec = 0.0
         delta = 0.001
 
-        pointing = CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
-        north = CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
-        east = CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
+        pointing = galsim.CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
+        north = galsim.CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
+        east = galsim.CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
 
         camera = LsstCamera(pointing, 0.0*galsim.degrees)
         x_0, y_0, name = camera.pixelCoordsFromPoint(pointing)
@@ -532,7 +528,7 @@ class LsstWcsTestCase(unittest.TestCase):
         cls.rotation = 27.0 * galsim.degrees
         cls.chip_name = 'R:0,1 S:1,2'
 
-        cls.pointing = CelestialCoord(cls.raPointing, cls.decPointing)
+        cls.pointing = galsim.CelestialCoord(cls.raPointing, cls.decPointing)
         cls.wcs = LsstWCS(cls.pointing, cls.rotation, cls.chip_name)
 
     @timer
@@ -542,7 +538,7 @@ class LsstWcsTestCase(unittest.TestCase):
         when you specify a nonsense chip.
         """
 
-        pointing = CelestialCoord(112.0*galsim.degrees, -39.0*galsim.degrees)
+        pointing = galsim.CelestialCoord(112.0*galsim.degrees, -39.0*galsim.degrees)
         rotation = 23.1*galsim.degrees
 
         wcs1 = LsstWCS(pointing, rotation, 'R:1,1 S:2,2')
@@ -559,7 +555,7 @@ class LsstWcsTestCase(unittest.TestCase):
         """
 
         with self.assertRaises(AttributeError) as context:
-            self.wcs.pointing = CelestialCoord(22.0*galsim.degrees, -17.0*galsim.degrees)
+            self.wcs.pointing = galsim.CelestialCoord(22.0*galsim.degrees, -17.0*galsim.degrees)
 
         with self.assertRaises(AttributeError) as context:
             self.wcs.rotation_angle = 23.0*galsim.degrees
@@ -606,10 +602,10 @@ class LsstWcsTestCase(unittest.TestCase):
                                                 [self.wcs._chip_name]*len(xPixList))
 
         for rr1, dd1, rr2, dd2 in zip(raTest, decTest, wcsRa, wcsDec):
-            pp = CelestialCoord(rr1*galsim.radians, dd1*galsim.radians)
+            pp = galsim.CelestialCoord(rr1*galsim.radians, dd1*galsim.radians)
 
             dist = \
-            pp.distanceTo(CelestialCoord(rr2*galsim.radians, dd2*galsim.radians))/galsim.arcsec
+            pp.distanceTo(galsim.CelestialCoord(rr2*galsim.radians, dd2*galsim.radians))/galsim.arcsec
 
             msg = 'error in tanWcs was %e arcsec' % dist
             self.assertLess(dist, 0.001, msg=msg)
@@ -664,13 +660,13 @@ class LsstWcsTestCase(unittest.TestCase):
         for rrTest, ddTest, rrTan, ddTan, rrSip, ddSip in \
         zip(raTest, decTest, tanWcsRa, tanWcsDec, tanSipWcsRa, tanSipWcsDec):
 
-            pp = CelestialCoord(rrTest*galsim.radians, ddTest*galsim.radians)
+            pp = galsim.CelestialCoord(rrTest*galsim.radians, ddTest*galsim.radians)
 
             distTan = \
-            pp.distanceTo(CelestialCoord(rrTan*galsim.radians, ddTan*galsim.radians))/galsim.arcsec
+            pp.distanceTo(galsim.CelestialCoord(rrTan*galsim.radians, ddTan*galsim.radians))/galsim.arcsec
 
             distSip = \
-            pp.distanceTo(CelestialCoord(rrSip*galsim.radians, ddSip*galsim.radians))/galsim.arcsec
+            pp.distanceTo(galsim.CelestialCoord(rrSip*galsim.radians, ddSip*galsim.radians))/galsim.arcsec
 
             msg = 'error in TAN WCS %e arcsec; error in TAN-SIP WCS %e arcsec' % (distTan, distSip)
             self.assertLess(distSip, 0.001, msg=msg)
@@ -728,7 +724,7 @@ class LsstWcsTestCase(unittest.TestCase):
         wcs1 = wcs1._newOrigin(new_origin)
         self.assertNotEqual(self.wcs, wcs1)
 
-        other_pointing = CelestialCoord(1.9*galsim.degrees, -34.0*galsim.degrees)
+        other_pointing = galsim.CelestialCoord(1.9*galsim.degrees, -34.0*galsim.degrees)
         wcs2 = LsstWCS(other_pointing, self.rotation, self.chip_name)
         self.assertNotEqual(self.wcs, wcs2)
 
@@ -744,7 +740,7 @@ class LsstWcsTestCase(unittest.TestCase):
         Test that copy() works
         """
 
-        pointing = CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
+        pointing = galsim.CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
         rotation = 116.8*galsim.degrees
         chip_name = 'R:1,2 S:2,2'
         wcs0 = LsstWCS(pointing, rotation, chip_name)
