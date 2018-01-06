@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys,os,glob,re
 import platform
 import ctypes
-
+import types
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
@@ -206,6 +206,65 @@ def try_cc(cc, cflags=[], lflags=[]):
         os.remove(exe_file.name)
     return p.returncode == 0
 
+def cpu_count():
+    """Get the number of cpus
+    """
+    try:
+        import psutil
+        return psutil.cpu_count()
+    except ImportError:
+        pass
+
+    if hasattr(os, 'sysconf'):
+        if 'SC_NPROCESSORS_ONLN' in os.sysconf_names:
+            # Linux & Unix:
+            ncpus = os.sysconf('SC_NPROCESSORS_ONLN')
+            if isinstance(ncpus, int) and ncpus > 0:
+                return ncpus
+        else: # OSX:
+            p = subprocess.Popen(['sysctl -n hw.ncpu'],stdout=subprocess.PIPE,shell=True)
+            return int(p.stdout.read().strip())
+    # Windows:
+    if 'NUMBER_OF_PROCESSORS' in os.environ:
+        ncpus = int(os.environ['NUMBER_OF_PROCESSORS'])
+        if ncpus > 0:
+            return ncpus
+    return 1 # Default
+
+def parallel_compile(self, sources, output_dir=None, macros=None,
+                     include_dirs=None, debug=0, extra_preargs=None,
+                     extra_postargs=None, depends=None):
+    """New compile function that we monkey patch into the existing compiler instance.
+    """
+    import multiprocessing.pool
+
+    # Copied from the regular compile function
+    ncpu = cpu_count()
+    macros, objects, extra_postargs, pp_opts, build = \
+            self._setup_compile(output_dir, macros, include_dirs, sources,
+                                depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    def _single_compile(obj):
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+
+    if ncpu == 1:
+        # This is equivalent to regular compile function
+        for obj in objects:
+            _single_compile(obj)
+    else:
+        # This next bit is taken from here:
+        # https://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
+        # convert to list, imap is evaluated on-demand
+        list(multiprocessing.pool.ThreadPool(ncpu).imap(_single_compile,objects))
+
+    # Return *all* object filenames, not just the ones we just built.
+    return objects
+
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_builder( build_ext ):
@@ -252,19 +311,32 @@ class my_builder( build_ext ):
         else:
             print('Using compiler %s, which is %s'%(cc,comp_type))
 
+        # Add the appropriate extra flags for that compiler.
+        print('Using extra args ',copt[comp_type])
+        cflags += copt[comp_type]
+
         # Check if we can use ccache to speed up repeated compilation.
         if try_cc('ccache ' + cc, cflags):
             print('Using ccache')
-            self.compiler.set_executable('compiler_so', ['ccache'] + self.compiler.compiler_so)
+            self.compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
         #print('compiler_so => ',self.compiler.compiler_so)
 
-        # Add the appropriate extra flags for that compiler.
-        for e in self.extensions:
-            e.extra_compile_args = copt[ comp_type ]
-            #e.extra_link_args = lopt[ comp_type ]
+        # Try to compile in parallel
+        if self.parallel is None or self.parallel is True:
+            ncpu = cpu_count()
+        elif self.parallel: # is an integer
+            ncpu = self.parallel
+        else:
+            ncpu = 1
+        if ncpu > 1:
+            print('Using %d cpus for compiling'%ncpu)
+            if self.parallel is None:
+                print('To override, you may do python setup.py build -j1')
+            self.compiler.compile = types.MethodType(parallel_compile, self.compiler)
 
         # Now run the normal build function.
         build_ext.build_extensions(self)
+
 
 def make_meta_data(install_dir):
     print('install_dir = ',install_dir)
@@ -372,7 +444,7 @@ version_h_file = os.path.join('include', 'galsim', 'Version.h')
 with open(version_h_file, 'w') as f:
     f.write(version_h_text)
 
-dist = setup(name="GalSim", 
+dist = setup(name="GalSim",
     version=galsim_version,
     author="GalSim Developers (point of contact: Mike Jarvis)",
     author_email="michael@jarvis.net",
