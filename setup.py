@@ -4,7 +4,7 @@ import platform
 import ctypes
 
 
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
@@ -306,7 +306,7 @@ dist = setup(name="GalSim",
     license = "BSD License",
     url="https://github.com/rmjarvis/GalSim",
     download_url="https://github.com/GalSim-developers/GalSim/releases/tag/v%s.zip"%galsim_version,
-    packages=['galsim'],
+    packages=find_packages(),
     package_data={'galsim' : shared_data},
     #include_package_data=True,
     ext_modules=[ext],
