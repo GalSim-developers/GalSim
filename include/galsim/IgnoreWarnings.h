@@ -64,6 +64,10 @@
 #pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
 #endif
 
+#if __has_warning("-Wshift-count-overflow")
+#pragma GCC diagnostic ignored "-Wshift-count-overflow"
+#endif
+
 // And clang might need this even if it claims to be GNUC before 4.8.
 #if __has_warning("-Wunused-local-typedefs")
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"

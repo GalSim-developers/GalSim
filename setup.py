@@ -38,7 +38,7 @@ if "--debug" in sys.argv:
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11'],
-    'clang' : ['-O2','-msse2','-ffast-math','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden'],
+    'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden'],
     'unknown' : [],
 }
 
