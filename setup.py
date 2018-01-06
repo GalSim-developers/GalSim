@@ -29,9 +29,6 @@ def all_files_from(dir, ext=''):
 sources = all_files_from('src', '.cpp') + all_files_from('pysrc', '.cpp')
 headers = all_files_from('include')
 shared_data = all_files_from('share')
-print('sources = ',sources)
-print('headers = ',headers)
-print('shared = ',shared_data)
 
 # If we build with debug, undefine NDEBUG flag
 undef_macros = []
@@ -131,13 +128,91 @@ def find_fftw_lib():
         print("your LIBRARY_PATH or FFTW_PATH environment variable.")
         raise
 
+def try_cc(cc, cflags=[], lflags=[]):
+    """Check if compiling a simple bit of c++ code with the given compiler works properly.
+    """
+    import subprocess
+    import tempfile
+    from textwrap import dedent
+    cpp_code = dedent("""
+    #include <iostream>
+    #include <vector>
+    int main() {
+        int n = 500;
+        std::vector<double> x(n,0.);
+        for (int i=0; i<n; ++i) x[i] = 2*i+1;
+        double sum=0.;
+        for (int i=0; i<n; ++i) sum += x[i];
+        return sum;
+    }
+    """)
+    cpp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.cpp')
+    cpp_file.write(cpp_code.encode())
+    cpp_file.close();
+    os_file = tempfile.NamedTemporaryFile(delete=False, suffix='.os')
+    os_file.close()
+    exe_file = tempfile.NamedTemporaryFile(delete=False, suffix='.exe')
+    exe_file.close()
+
+    # Compile
+    cmd = cc + ' ' + ' '.join(cflags + ['-c',cpp_file.name,'-o',os_file.name])
+    #print('cmd = ',cmd)
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        lines = p.stdout.readlines()
+        #print('output = ',lines)
+        p.communicate()
+    except (IOError,OSError) as e:
+        p.returncode = 1
+    if p.returncode != 0:
+        os.remove(cpp_file.name)
+        if os.path.exists(os_file.name):
+            os.remove(os_file.name)
+        return False
+
+    # Link
+    cmd = cc + ' ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
+    #print('cmd = ',cmd)
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        lines = p.stdout.readlines()
+        #print('output = ',lines)
+        p.communicate()
+    except (IOError,OSError) as e:
+        p.returncode = 1
+
+    if p.returncode and cc.endswith('cc'):
+        # The linker needs to be a c++ linker, which isn't 'cc'.  However, I couldn't figure
+        # out how to get setup.py to tell me the actual command to use for linking.  All the
+        # executables available from build_ext.compiler.executables are 'cc', not 'c++'.
+        # I think this must be related to the bugs about not handling c++ correctly.
+        #    http://bugs.python.org/issue9031
+        #    http://bugs.python.org/issue1222585
+        # So just switch it manually and see if that works.
+        cmd = 'c++ ' + ' '.join(lflags + [os_file.name,'-o',exe_file.name])
+        #print('cmd = ',cmd)
+        try:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+            lines = p.stdout.readlines()
+            #print('output = ',lines)
+            p.communicate()
+        except (IOError,OSError) as e:
+            p.returncode = 1
+
+    # Remove the temp files
+    os.remove(cpp_file.name)
+    os.remove(os_file.name)
+    if os.path.exists(exe_file.name):
+        os.remove(exe_file.name)
+    return p.returncode == 0
+
+
 # Make a subclass of build_ext so we can add to the -I list.
 class my_builder( build_ext ):
     # Adding the libraries and include_dirs here rather than when declaring the Extension
     # means that the setup_requires modules should already be installed, so pybind11, eigency,
     # and fftw3 should all import properly.
     def finalize_options(self):
-        print('finalize_options:')
         build_ext.finalize_options(self)
         self.include_dirs.append('include')
         self.include_dirs.append('include/galsim')
@@ -156,9 +231,6 @@ class my_builder( build_ext ):
 
         import eigency
         self.include_dirs.append(eigency.get_includes()[2])
-        print('include_dirs = ',self.include_dirs)
-        print('library_dirs = ',self.library_dirs)
-        print('libraries = ',self.libraries)
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
@@ -171,15 +243,20 @@ class my_builder( build_ext ):
         print('Platform is ',self.plat_name)
 
         # Figure out what compiler it will use
-        cc = self.compiler.executables['compiler_cxx'][0]
-        print('Using compiler %s'%(cc))
-        # Figure out what compiler it will use
-        cc = self.compiler.executables['compiler_cxx'][0]
+        #print('compiler_so = ',self.compiler.compiler_so)
+        cc = self.compiler.compiler_so[0]
+        cflags = self.compiler.compiler_so[1:]
         comp_type = get_compiler(cc)
         if cc == comp_type:
             print('Using compiler %s'%(cc))
         else:
             print('Using compiler %s, which is %s'%(cc,comp_type))
+
+        # Check if we can use ccache to speed up repeated compilation.
+        if try_cc('ccache ' + cc, cflags):
+            print('Using ccache')
+            self.compiler.set_executable('compiler_so', ['ccache'] + self.compiler.compiler_so)
+        #print('compiler_so => ',self.compiler.compiler_so)
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
@@ -213,10 +290,8 @@ def make_meta_data(install_dir):
 
 class my_install(install):
     def run(self):
-        print('install_lib = ',self.install_lib)
         # Make the meta_data.py file based on the actual installation directory.
         meta_data_file = make_meta_data(self.install_lib)
-        print('made meta_data file ',os.path.abspath(meta_data_file))
         install.run(self)
 
 # AFAICT, setuptools doesn't provide any easy access to the final installation location of the
