@@ -313,7 +313,11 @@ class my_builder( build_ext ):
 
         # Add the appropriate extra flags for that compiler.
         print('Using extra args ',copt[comp_type])
-        cflags += copt[comp_type]
+        #cflags += copt[comp_type]
+        # It didn't work for Erin to add this to the end of cflags for some reason.  Maybe related
+        # to the distutils version?  Not sure.  Anyway, this way should work.
+        for e in self.extensions:
+            e.extra_compile_args = copt[comp_type]
 
         # Check if we can use ccache to speed up repeated compilation.
         if try_cc('ccache ' + cc, cflags):
