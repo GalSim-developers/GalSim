@@ -322,6 +322,10 @@ class my_builder( build_ext ):
         #print('compiler_so => ',self.compiler.compiler_so)
 
         # Try to compile in parallel
+        if not hasattr('self', 'parallel'):
+            # This was new in distutils version 3.5.
+            # If user has older version, just set parallel to True and move on.
+            self.parallel = True
         if self.parallel is None or self.parallel is True:
             ncpu = cpu_count()
         elif self.parallel: # is an integer
