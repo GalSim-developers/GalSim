@@ -778,30 +778,24 @@ def test_convolve_noise():
     # to propagate noise properly.  (It takes the input noise from the first one.)
     conv2 = galsim.Convolution(obj1, obj2)
     conv3 = galsim.Convolution(obj1, obj2, obj3)
+    with assert_warns(UserWarning):
+        assert conv2.noise == obj1.noise.convolvedWith(obj2)
+    with assert_warns(UserWarning):
+        assert conv3.noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
+
+    # Other types don't propagate noise and give a warning about it.
     deconv = galsim.Deconvolution(obj2)
     autoconv = galsim.AutoConvolution(obj2)
     autocorr = galsim.AutoCorrelation(obj2)
     four = galsim.FourierSqrt(obj2)
-
-    conv2_noise = np.testing.assert_warns(UserWarning, getattr, conv2, 'noise')
-    conv3_noise = np.testing.assert_warns(UserWarning, getattr, conv3, 'noise')
-    deconv_noise = np.testing.assert_warns(UserWarning, getattr, deconv, 'noise')
-    autoconv_noise = np.testing.assert_warns(UserWarning, getattr, autoconv, 'noise')
-    autocorr_noise = np.testing.assert_warns(UserWarning, getattr, autocorr, 'noise')
-    four_noise = np.testing.assert_warns(UserWarning, getattr, four, 'noise')
-
-    assert conv2_noise == obj1.noise.convolvedWith(obj2)
-    assert conv3_noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
-    assert deconv_noise is None
-    assert autoconv_noise is None
-    assert autocorr_noise is None
-    assert four_noise is None
-
-    # Other types don't propagate noise and give a warning about it.
-    assert_warns(UserWarning, galsim.Deconvolve, obj1)
-    assert_warns(UserWarning, galsim.AutoConvolve, obj1)
-    assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
-    assert_warns(UserWarning, galsim.FourierSqrt, obj1)
+    with assert_warns(UserWarning):
+        assert deconv.noise is None
+    with assert_warns(UserWarning):
+        assert autoconv.noise is None
+    with assert_warns(UserWarning):
+        assert autocorr.noise is None
+    with assert_warns(UserWarning):
+        assert four.noise is None
 
     obj2.noise = None  # Remove obj2 noise for the rest.
     conv2 = galsim.Convolution(obj1, obj2)
