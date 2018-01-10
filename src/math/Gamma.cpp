@@ -46,7 +46,7 @@ namespace math {
     // Defined in BesselJ.cpp
     double dcsevl(double x, const double* cs, int n);
 
-#if not __cplusplus >= 201103L
+#if not (__cplusplus >= 201103L)
     double tgamma(double x)
     {
         double g = dgamma(x);
