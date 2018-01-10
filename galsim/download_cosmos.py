@@ -28,6 +28,8 @@ try:
 except:
     from urllib.request import urlopen
 
+script_name = 'galsim_download_cosmos'
+
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
