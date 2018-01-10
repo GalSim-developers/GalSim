@@ -1191,7 +1191,6 @@ int main()
             'Error: TMV file failed to link correctly',
             'Check that the correct location is specified for TMV_DIR')
 
-    config.env.AppendUnique(CPPDEFINES=['USE_TMV'])
     config.Result(1)
     return 1
 
@@ -1900,7 +1899,6 @@ BOOST_PYTHON_MODULE(check_bp) {
     if not result:
         ErrorExit('Unable to build a python loadable module with Boost.Python')
 
-    config.env.AppendUnique(CPPDEFINES=['USE_BOOST'])
     config.Result(1)
     return 1
 
@@ -2072,10 +2070,12 @@ def DoCppChecks(config):
 
     # Boost
     if config.env['USE_BOOST']:
+        config.env.AppendUnique(CPPDEFINES=['USE_BOOST'])
         config.CheckBoost()
 
     # TMV
     if config.env['USE_TMV']:
+        config.env.AppendUnique(CPPDEFINES=['USE_TMV'])
         if not config.CheckHeader('TMV.h',language='C++'):
             ErrorExit(
                 'TMV.h not found',
@@ -2211,8 +2211,14 @@ def DoConfig(env):
             })
         DoPyChecks(config)
         pyenv = config.Finish()
-        env['final_messages'] = pyenv['final_messages']
 
+        # Make sure any -std= compiler flags required for pysrc get propagated back to the
+        # main environment.
+        for flag in pyenv['CCFLAGS']:
+            if 'std=' in flag:
+                env.AppendUnique(CCFLAGS=[flag])
+
+        env['final_messages'] = pyenv['final_messages']
         env['pyenv'] = pyenv
 
         # Turn the cache back on now, since we always want it for the main compilation steps.
