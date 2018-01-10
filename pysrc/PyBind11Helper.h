@@ -32,7 +32,7 @@
 namespace bp = boost::python;
 
 #define PB11_MAKE_MODULE(x) BOOST_PYTHON_MODULE(x)
-#define PB11_START_MODULE(x)
+#define PB11_START_MODULE(x) bp::scope x;
 #define PB11_END_MODULE(x)
 
 #define TUPLE(args...) bp::tuple
