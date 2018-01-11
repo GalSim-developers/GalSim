@@ -398,7 +398,7 @@ ext=Extension("galsim._galsim",
 
 # Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
 # and their setup.py is broken such that if they're not already installed it fails catastrophically.
-build_dep = ['pybind11', 'setuptools_scm', 'cython', 'eigency']
+build_dep = ['pybind11>=2.2', 'setuptools_scm', 'cython', 'eigency>=1.76']
 run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
 
 with open('README.md') as file:
