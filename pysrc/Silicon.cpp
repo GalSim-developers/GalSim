@@ -47,7 +47,7 @@ namespace galsim {
     void pyExportSilicon(PB11_MODULE& _galsim)
     {
         bp::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
-        pySilicon.def("__init__", BP_MAKE_CONSTRUCTOR(&MakeSilicon));
+        pySilicon.def(BP_MAKE_CONSTRUCTOR(&MakeSilicon));
 
         WrapTemplates<double>(pySilicon);
         WrapTemplates<float>(pySilicon);

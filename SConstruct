@@ -1831,10 +1831,8 @@ def CheckPyBind11(config):
 
 int check_pb_run() { return 23; }
 
-PYBIND11_PLUGIN(check_pb) {
-    pybind11::module m("check_pb");
-    m.def("run",&check_pb_run);
-    return m.ptr();
+PYBIND11_MODULE(check_pb, check_pb) {
+    check_pb.def("run",&check_pb_run);
 }
 """
     result = (CheckFlags(config, '', pb_source_file) or
@@ -1934,10 +1932,8 @@ BOOST_PYTHON_MODULE(test_throw) {
     boost::python::def("run", &run_throw);
 }
 #else
-PYBIND11_PLUGIN(test_throw) {
-    pybind11::module test_throw("test_throw");
+PYBIND11_MODULE(test_throw, test_throw) {
     test_throw.def("run", &run_throw);
-    return test_throw.ptr();
 }
 #endif
 """

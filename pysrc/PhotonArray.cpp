@@ -47,7 +47,7 @@ namespace galsim {
     {
         bp::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
         pyPhotonArray
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&construct))
+            .def(BP_MAKE_CONSTRUCTOR(&construct))
             .def("convolve", &PhotonArray::convolve);
         WrapTemplates<double>(pyPhotonArray);
         WrapTemplates<float>(pyPhotonArray);

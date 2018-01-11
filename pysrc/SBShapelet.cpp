@@ -48,7 +48,7 @@ namespace galsim {
     void pyExportSBShapelet(PB11_MODULE& _galsim)
     {
         bp::class_<SBShapelet BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&construct));
+            .def(BP_MAKE_CONSTRUCTOR(&construct));
 
         GALSIM_DOT def("ShapeletFitImage", &fit);
     }

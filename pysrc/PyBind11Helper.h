@@ -34,6 +34,8 @@ namespace bp = boost::python;
 #define PB11_MAKE_MODULE(x) BOOST_PYTHON_MODULE(x)
 #define PB11_START_MODULE(x) bp::scope x;
 #define PB11_END_MODULE(x)
+#define BP_CONSTRUCTOR(f,x,args...) x* f(args)
+#define PB11_PLACEMENT_NEW return new
 
 #define TUPLE(args...) bp::tuple
 #define MAKE_TUPLE bp::make_tuple
@@ -51,9 +53,7 @@ namespace bp = boost::python;
 #define BP_REGISTER(T) bp::register_ptr_to_python< boost::shared_ptr<T> >()
 #define BOOST_NONCOPYABLE , boost::noncopyable
 #define BP_BASES(T) , bp::bases<T>
-#define BP_MAKE_CONSTRUCTOR(args...) bp::make_constructor(args, bp::default_call_policies())
-#define BP_CONSTRUCTOR(f,x,args...) x* f(args)
-#define PB11_PLACEMENT_NEW return new
+#define BP_MAKE_CONSTRUCTOR(args...) "__init__", bp::make_constructor(args, bp::default_call_policies())
 #define CAST bp::extract
 #define BP_COPY_CONST_REFERENCE bp::return_value_policy<bp::copy_const_reference>()
 #define def_property_readonly add_property
@@ -66,15 +66,11 @@ namespace bp = boost::python;
 #include <pybind11/complex.h>
 namespace bp = pybind11;
 
-#if PYBIND11_VERSION_MAJOR >= 3 || (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR >= 2)
-    #define PB11_MAKE_MODULE(x) PYBIND11_MODULE(x,x)
-    #define PB11_START_MODULE(x)
-    #define PB11_END_MODULE(x)
-#else
-    #define PB11_MAKE_MODULE(x) PYBIND11_PLUGIN(x)
-    #define PB11_START_MODULE(x) pybind11::module x(#x)
-    #define PB11_END_MODULE(x) return x.ptr()
-#endif
+#define PB11_MAKE_MODULE(x) PYBIND11_MODULE(x,x)
+#define PB11_START_MODULE(x)
+#define PB11_END_MODULE(x)
+#define BP_CONSTRUCTOR(f,x,args...) x* f(args)
+#define PB11_PLACEMENT_NEW return new
 
 #define TUPLE(args...) std::tuple<args>
 #define MAKE_TUPLE std::make_tuple
@@ -92,9 +88,7 @@ namespace bp = pybind11;
 #define BP_REGISTER(T)
 #define BOOST_NONCOPYABLE
 #define BP_BASES(T) , T
-#define BP_MAKE_CONSTRUCTOR(args...) args
-#define BP_CONSTRUCTOR(f,x,args...) void f(x& instance, args)
-#define PB11_PLACEMENT_NEW new (&instance)
+#define BP_MAKE_CONSTRUCTOR(args...) bp::init(args)
 #define CAST pybind11::cast
 #define BP_COPY_CONST_REFERENCE pybind11::return_value_policy::reference
 

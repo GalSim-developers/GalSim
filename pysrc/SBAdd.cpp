@@ -40,7 +40,7 @@ namespace galsim {
     void pyExportSBAdd(PB11_MODULE& _galsim)
     {
         bp::class_<SBAdd BP_BASES(SBProfile)>(GALSIM_COMMA "SBAdd" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&construct));
+            .def(BP_MAKE_CONSTRUCTOR(&construct));
     }
 
 } // namespace galsim

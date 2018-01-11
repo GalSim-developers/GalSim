@@ -41,7 +41,7 @@ namespace galsim {
         typedef BP_CONSTRUCTOR((*Make_func), ImageView<T>, size_t, int, int, const Bounds<int>&);
         bp::class_<ImageView<T> BP_BASES(BaseImage<T>)>(
             GALSIM_COMMA ("ImageView" + suffix).c_str() BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR((Make_func)&MakeFromArray));
+            .def(BP_MAKE_CONSTRUCTOR((Make_func)&MakeFromArray));
 
         typedef void (*rfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool);

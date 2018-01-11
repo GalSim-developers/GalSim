@@ -35,12 +35,7 @@ namespace hsm {
         float resolution_factor, float psf_sigma,
         float psf_e1, float psf_e2, const char* error_message)
     {
-#ifdef USE_BOOST
         ShapeData* data = new ShapeData();
-#else
-        PB11_PLACEMENT_NEW ShapeData();
-        ShapeData* data = &instance;
-#endif
         data->image_bounds = image_bounds;
         data->moments_status = moments_status;
         data->observed_e1 = observed_e1;
@@ -63,15 +58,13 @@ namespace hsm {
         data->psf_e1 = psf_e1;
         data->psf_e2 = psf_e2;
         data->error_message = error_message;
-#ifdef USE_BOOST
         return data;
-#endif
     }
 
     template <typename T, typename V>
     static void WrapTemplates(PB11_MODULE& _galsim)
     {
-        typedef void (*FAM_func)(ShapeData&t, const BaseImage<T>&, const BaseImage<int>&,
+        typedef void (*FAM_func)(ShapeData&, const BaseImage<T>&, const BaseImage<int>&,
                                  double, double, Position<double>, bool, const HSMParams&);
         GALSIM_DOT def("_FindAdaptiveMomView", FAM_func(&FindAdaptiveMomView));
 
@@ -90,7 +83,7 @@ namespace hsm {
                  int, double, double, double>());
 
         bp::class_<ShapeData>(GALSIM_COMMA "ShapeData" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&ShapeData_init))
+            .def(BP_MAKE_CONSTRUCTOR(&ShapeData_init))
             .def_readonly("image_bounds", &ShapeData::image_bounds)
             .def_readonly("moments_status", &ShapeData::moments_status)
             .def_readonly("observed_e1", &ShapeData::observed_e1)

@@ -42,7 +42,7 @@ namespace galsim {
     void pyExportSBConvolve(PB11_MODULE& _galsim)
     {
         bp::class_<SBConvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBConvolve" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR( &construct));
+            .def(BP_MAKE_CONSTRUCTOR( &construct));
         bp::class_<SBAutoConvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoConvolve" BP_NOINIT)
             .def(bp::init<const SBProfile&, bool, GSParams>());
         bp::class_<SBAutoCorrelate BP_BASES(SBProfile)>(GALSIM_COMMA "SBAutoCorrelate" BP_NOINIT)

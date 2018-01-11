@@ -89,12 +89,12 @@ namespace galsim {
     void pyExportTable(PB11_MODULE& _galsim)
     {
         bp::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&MakeTable))
+            .def(BP_MAKE_CONSTRUCTOR(&MakeTable))
             .def("interp", &Table::lookup)
             .def("interpMany", &InterpMany);
 
         bp::class_<Table2D >(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
-            .def("__init__", BP_MAKE_CONSTRUCTOR(&MakeTable2D))
+            .def(BP_MAKE_CONSTRUCTOR(&MakeTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)
             .def("gradient", &Gradient)
