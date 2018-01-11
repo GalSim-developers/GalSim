@@ -139,13 +139,32 @@ namespace galsim
 
                 A = ww.asDiagonal() * psf;
                 b = ww.asDiagonal() * kimg;
-                Eigen::ColPivHouseholderQR<MatrixXcd> qr = A.colPivHouseholderQr();
-                x = qr.solve(b);
-                // (AtA)^-1 = (PtRtQtQRP)^-1 = (PtRtRP)^-1 = Pt R^-1 Rt^-1 P
-                dxT = qr.colsPermutation().transpose() *
-                    qr.matrixR().triangularView<Upper>().solve(
-                        qr.matrixR().triangularView<Upper>().transpose().solve(
-                            MatrixXcd(qr.colsPermutation())));
+                Eigen::HouseholderQR<MatrixXcd> qr = A.householderQr();
+                Eigen::Diagonal<const MatrixXcd> Rdiag = qr.matrixQR().diagonal();
+                if (Rdiag.array().abs().minCoeff() < 1.e-15*Rdiag.array().abs().maxCoeff()) {
+                    // Then (nearly) signular.  Use QRP instead.  (This should be fairly rare.)
+                    Eigen::ColPivHouseholderQR<MatrixXcd> qrp = A.colPivHouseholderQr();
+                    x = qrp.solve(b);
+
+                    // A = Q R Pt
+                    // (AtA)^-1 = (PRtQtQRPt)^-1 = (PRtRPt)^-1 = P R^-1 Rt^-1 Pt
+                    const int nzp = qrp.nonzeroPivots();
+                    Eigen::TriangularView<const Eigen::Block<const MatrixXcd>, Upper> R =
+                        qrp.matrixR().topLeftCorner(nzp,nzp).triangularView<Upper>();
+                    dxT.setIdentity();
+                    R.adjoint().solveInPlace(dxT.topLeftCorner(nzp,nzp));
+                    R.solveInPlace(dxT.topLeftCorner(nzp,nzp));
+                    dxT = qrp.colsPermutation() * dxT * qrp.colsPermutation().transpose();
+                } else {
+                    x = qr.solve(b);
+                    // A = Q R
+                    // (AtA)^-1 = (RtQtQR)^-1 = (RtR)^-1 = R^-1 Rt^-1
+                    Eigen::TriangularView<const Eigen::Block<const MatrixXcd>, Upper> R =
+                        qr.matrixQR().topRows(nsed).triangularView<Upper>();
+                    dxT.setIdentity();
+                    R.adjoint().solveInPlace(dxT);
+                    R.solveInPlace(dxT);
+                }
 #endif
 
 
