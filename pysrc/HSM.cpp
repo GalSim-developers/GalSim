@@ -23,7 +23,7 @@
 namespace galsim {
 namespace hsm {
 
-    static BP_CONSTRUCTOR(ShapeData_init, ShapeData,
+    static ShapeData* ShapeData_init(
         const galsim::Bounds<int>& image_bounds, int moments_status,
         float observed_e1, float observed_e2,
         float moments_sigma, float moments_amp,
@@ -62,7 +62,7 @@ namespace hsm {
     }
 
     template <typename T, typename V>
-    static void WrapTemplates(PB11_MODULE& _galsim)
+    static void WrapTemplates(PY_MODULE& _galsim)
     {
         typedef void (*FAM_func)(ShapeData&, const BaseImage<T>&, const BaseImage<int>&,
                                  double, double, Position<double>, bool, const HSMParams&);
@@ -75,15 +75,15 @@ namespace hsm {
         GALSIM_DOT def("_EstimateShearView", ESH_func(&EstimateShearView));
     };
 
-    void pyExportHSM(PB11_MODULE& _galsim)
+    void pyExportHSM(PY_MODULE& _galsim)
     {
-        bp::class_<HSMParams>(GALSIM_COMMA "HSMParams" BP_NOINIT)
-            .def(bp::init<
+        py::class_<HSMParams>(GALSIM_COMMA "HSMParams" BP_NOINIT)
+            .def(py::init<
                  double, double, double, int, int, double, long, long, double, double, double,
                  int, double, double, double>());
 
-        bp::class_<ShapeData>(GALSIM_COMMA "ShapeData" BP_NOINIT)
-            .def(BP_MAKE_CONSTRUCTOR(&ShapeData_init))
+        py::class_<ShapeData>(GALSIM_COMMA "ShapeData" BP_NOINIT)
+            .def(PY_INIT(&ShapeData_init))
             .def_readonly("image_bounds", &ShapeData::image_bounds)
             .def_readonly("moments_status", &ShapeData::moments_status)
             .def_readonly("observed_e1", &ShapeData::observed_e1)

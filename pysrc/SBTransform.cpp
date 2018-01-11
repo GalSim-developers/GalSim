@@ -22,10 +22,10 @@
 
 namespace galsim {
 
-    void pyExportSBTransform(PB11_MODULE& _galsim)
+    void pyExportSBTransform(PY_MODULE& _galsim)
     {
-        bp::class_<SBTransform BP_BASES(SBProfile)>(GALSIM_COMMA "SBTransform" BP_NOINIT)
-            .def(bp::init<const SBProfile &, double, double, double, double,
+        py::class_<SBTransform, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTransform" BP_NOINIT)
+            .def(py::init<const SBProfile &, double, double, double, double,
                  Position<double>, double, GSParams>());
     }
 

@@ -22,10 +22,10 @@
 
 namespace galsim {
 
-    void pyExportSBMoffat(PB11_MODULE& _galsim)
+    void pyExportSBMoffat(PY_MODULE& _galsim)
     {
-        bp::class_<SBMoffat BP_BASES(SBProfile)>(GALSIM_COMMA "SBMoffat" BP_NOINIT)
-            .def(bp::init<double,double,double,double, GSParams>())
+        py::class_<SBMoffat, BP_BASES(SBProfile)>(GALSIM_COMMA "SBMoffat" BP_NOINIT)
+            .def(py::init<double,double,double,double, GSParams>())
             .def("getHalfLightRadius", &SBMoffat::getHalfLightRadius);
 
         GALSIM_DOT def("MoffatCalculateSRFromHLR", &MoffatCalculateScaleRadiusFromHLR);

@@ -22,10 +22,10 @@
 
 namespace galsim {
 
-    void pyExportSBDeltaFunction(PB11_MODULE& _galsim)
+    void pyExportSBDeltaFunction(PY_MODULE& _galsim)
     {
-        bp::class_<SBDeltaFunction BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeltaFunction" BP_NOINIT)
-            .def(bp::init<double, GSParams>());
+        py::class_<SBDeltaFunction, BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeltaFunction" BP_NOINIT)
+            .def(py::init<double, GSParams>());
     }
 
 } // namespace galsim

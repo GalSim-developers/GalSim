@@ -31,14 +31,14 @@ namespace galsim {
                     &SBProfile::drawK);
     }
 
-    void pyExportSBProfile(PB11_MODULE& _galsim)
+    void pyExportSBProfile(PY_MODULE& _galsim)
     {
-        bp::class_<GSParams>(GALSIM_COMMA "GSParams" BP_NOINIT)
-            .def(bp::init<
+        py::class_<GSParams>(GALSIM_COMMA "GSParams" BP_NOINIT)
+            .def(py::init<
                  int, int, double, double, double, double, double, double, double, double,
                  double, double, double, double, int, double>());
 
-        bp::class_<SBProfile> pySBProfile(GALSIM_COMMA "SBProfile" BP_NOINIT);
+        py::class_<SBProfile> pySBProfile(GALSIM_COMMA "SBProfile" BP_NOINIT);
         pySBProfile
             .def("xValue", &SBProfile::xValue)
             .def("kValue", &SBProfile::kValue)

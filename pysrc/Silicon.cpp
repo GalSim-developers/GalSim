@@ -30,24 +30,24 @@ namespace galsim {
         wrapper.def("accumulate", (accumulate_fn)&Silicon::accumulate);
     }
 
-    static BP_CONSTRUCTOR(MakeSilicon, Silicon,
-                          int NumVertices, double NumElect, int Nx, int Ny, int QDist,
-                          double Nrecalc, double DiffStep, double PixelSize,
-                          double SensorThickness, size_t idata,
-                          const Table& treeRingTable,
-                          const Position<double>& treeRingCenter,
-                          const Table& abs_length_table)
+    static Silicon* MakeSilicon(
+        int NumVertices, double NumElect, int Nx, int Ny, int QDist,
+        double Nrecalc, double DiffStep, double PixelSize,
+        double SensorThickness, size_t idata,
+        const Table& treeRingTable,
+        const Position<double>& treeRingCenter,
+        const Table& abs_length_table)
     {
         double* data = reinterpret_cast<double*>(idata);
-        PB11_PLACEMENT_NEW Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                                       Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                                       treeRingTable, treeRingCenter, abs_length_table);
+        return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
+                           Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+                           treeRingTable, treeRingCenter, abs_length_table);
     }
 
-    void pyExportSilicon(PB11_MODULE& _galsim)
+    void pyExportSilicon(PY_MODULE& _galsim)
     {
-        bp::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
-        pySilicon.def(BP_MAKE_CONSTRUCTOR(&MakeSilicon));
+        py::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
+        pySilicon.def(PY_INIT(&MakeSilicon));
 
         WrapTemplates<double>(pySilicon);
         WrapTemplates<float>(pySilicon);

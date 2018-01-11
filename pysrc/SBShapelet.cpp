@@ -34,21 +34,21 @@ namespace galsim {
         for (int i=0; i<size; ++i) data[i] = bvec.rVector()[i];
     }
 
-    static BP_CONSTRUCTOR(construct, SBShapelet,
-                          double sigma, int order, size_t idata, GSParams gsparams)
+    static SBShapelet* construct(
+        double sigma, int order, size_t idata, GSParams gsparams)
     {
         double* data = reinterpret_cast<double*>(idata);
         int size = PQIndex::size(order);
         VectorXd v(size);
         for (int i=0; i<size; ++i) v[i] = data[i];
         LVector bvec(order, v);
-        PB11_PLACEMENT_NEW SBShapelet(sigma, bvec, gsparams);
+        return new SBShapelet(sigma, bvec, gsparams);
     }
 
-    void pyExportSBShapelet(PB11_MODULE& _galsim)
+    void pyExportSBShapelet(PY_MODULE& _galsim)
     {
-        bp::class_<SBShapelet BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
-            .def(BP_MAKE_CONSTRUCTOR(&construct));
+        py::class_<SBShapelet, BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
+            .def(PY_INIT(&construct));
 
         GALSIM_DOT def("ShapeletFitImage", &fit);
     }

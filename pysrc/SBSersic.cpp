@@ -22,10 +22,10 @@
 
 namespace galsim {
 
-    void pyExportSBSersic(PB11_MODULE& _galsim)
+    void pyExportSBSersic(PY_MODULE& _galsim)
     {
-        bp::class_<SBSersic BP_BASES(SBProfile)>(GALSIM_COMMA "SBSersic" BP_NOINIT)
-            .def(bp::init<double,double,double,double, GSParams>());
+        py::class_<SBSersic, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSersic" BP_NOINIT)
+            .def(py::init<double,double,double,double, GSParams>());
 
         GALSIM_DOT def("SersicTruncatedScale", &SersicTruncatedScale);
         GALSIM_DOT def("SersicIntegratedFlux", &SersicIntegratedFlux);

@@ -24,24 +24,24 @@
 namespace galsim {
 
     template <typename T>
-    static BP_CONSTRUCTOR(MakeFromArray, ImageView<T>,
-                          size_t idata, int step, int stride, const Bounds<int>& bounds)
+    static ImageView<T>* MakeFromArray(
+        size_t idata, int step, int stride, const Bounds<int>& bounds)
     {
         T* data = reinterpret_cast<T*>(idata);
         shared_ptr<T> owner;
-        PB11_PLACEMENT_NEW ImageView<T>(data, owner, step, stride, bounds);
+        return new ImageView<T>(data, owner, step, stride, bounds);
     }
 
     template <typename T>
-    static void WrapImage(PB11_MODULE& _galsim, const std::string& suffix)
+    static void WrapImage(PY_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_<BaseImage<T> BOOST_NONCOPYABLE>(
+        py::class_<BaseImage<T> BP_NONCOPYABLE>(
             GALSIM_COMMA ("BaseImage" + suffix).c_str() BP_NOINIT);
 
-        typedef BP_CONSTRUCTOR((*Make_func), ImageView<T>, size_t, int, int, const Bounds<int>&);
-        bp::class_<ImageView<T> BP_BASES(BaseImage<T>)>(
+        typedef ImageView<T>* (*Make_func)(size_t, int, int, const Bounds<int>&);
+        py::class_<ImageView<T>, BP_BASES(BaseImage<T>)>(
             GALSIM_COMMA ("ImageView" + suffix).c_str() BP_NOINIT)
-            .def(BP_MAKE_CONSTRUCTOR((Make_func)&MakeFromArray));
+            .def(PY_INIT((Make_func)&MakeFromArray));
 
         typedef void (*rfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool);
@@ -59,7 +59,7 @@ namespace galsim {
         GALSIM_DOT def("invertImage", invert_func_type(&invertImage));
     }
 
-    void pyExportImage(PB11_MODULE& _galsim)
+    void pyExportImage(PY_MODULE& _galsim)
     {
         WrapImage<uint16_t>(_galsim, "US");
         WrapImage<uint32_t>(_galsim, "UI");

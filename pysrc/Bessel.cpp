@@ -24,7 +24,7 @@
 namespace galsim {
 namespace math {
 
-    void pyExportBessel(PB11_MODULE& _galsim)
+    void pyExportBessel(PY_MODULE& _galsim)
     {
         GALSIM_DOT def("j0_root", &getBesselRoot0);
         GALSIM_DOT def("j0", &j0);

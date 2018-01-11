@@ -23,7 +23,7 @@
 namespace galsim {
 
     template <typename T>
-    static void WrapTemplates(PB11_MODULE& _galsim)
+    static void WrapTemplates(PY_MODULE& _galsim)
     {
         typedef void (*ApplyCD_func)(ImageView<T>& , const BaseImage<T>& ,
                                      const BaseImage<double>& , const BaseImage<double>& ,
@@ -32,7 +32,7 @@ namespace galsim {
         GALSIM_DOT def("_ApplyCD", ApplyCD_func(&ApplyCD));
     }
 
-    void pyExportCDModel(PB11_MODULE& _galsim)
+    void pyExportCDModel(PY_MODULE& _galsim)
     {
         WrapTemplates<float>(_galsim);
         WrapTemplates<double>(_galsim);

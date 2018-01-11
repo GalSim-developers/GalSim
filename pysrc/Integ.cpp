@@ -29,27 +29,27 @@ namespace integ {
         public std::unary_function<double, double>
     {
     public:
-        PyFunc(const bp::object& func) : _func(func) {}
+        PyFunc(const py::object& func) : _func(func) {}
         double operator()(double x) const
-        { return CAST<double>(_func(x)); }
+        { return PY_CAST<double>(_func(x)); }
     private:
-        const bp::object& _func;
+        const py::object& _func;
     };
 
     // Integrate a python function using int1d.
-    bp::tuple PyInt1d(const bp::object& func, double min, double max,
+    py::tuple PyInt1d(const py::object& func, double min, double max,
                       double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     {
         PyFunc pyfunc(func);
         try {
             double res = int1d(pyfunc, min, max, rel_err, abs_err);
-            return bp::make_tuple(true, res);
+            return py::make_tuple(true, res);
         } catch (IntFailure& e) {
-            return bp::make_tuple(false, e.what());
+            return py::make_tuple(false, e.what());
         }
     }
 
-    void pyExportInteg(PB11_MODULE& _galsim)
+    void pyExportInteg(PY_MODULE& _galsim)
     {
         GALSIM_DOT def("PyInt1d", &PyInt1d);
 

@@ -22,10 +22,10 @@
 
 namespace galsim {
 
-    void pyExportSBDeconvolve(PB11_MODULE& _galsim)
+    void pyExportSBDeconvolve(PY_MODULE& _galsim)
     {
-        bp::class_<SBDeconvolve BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeconvolve" BP_NOINIT)
-            .def(bp::init<const SBProfile &, GSParams>());
+        py::class_<SBDeconvolve, BP_BASES(SBProfile)>(GALSIM_COMMA "SBDeconvolve" BP_NOINIT)
+            .def(py::init<const SBProfile &, GSParams>());
     }
 
 } // namespace galsim

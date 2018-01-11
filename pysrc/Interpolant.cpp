@@ -23,31 +23,31 @@
 
 namespace galsim {
 
-    void pyExportInterpolant(PB11_MODULE& _galsim)
+    void pyExportInterpolant(PY_MODULE& _galsim)
     {
-        bp::class_<Interpolant BOOST_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT);
+        py::class_<Interpolant BP_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT);
 
-        bp::class_<Delta BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<Delta, BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
+            .def(py::init<double,GSParams>());
 
-        bp::class_<Nearest BP_BASES(Interpolant)>(GALSIM_COMMA "Nearest" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<Nearest, BP_BASES(Interpolant)>(GALSIM_COMMA "Nearest" BP_NOINIT)
+            .def(py::init<double,GSParams>());
 
-        bp::class_<SincInterpolant BP_BASES(Interpolant)>(GALSIM_COMMA "SincInterpolant" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<SincInterpolant, BP_BASES(Interpolant)>(GALSIM_COMMA "SincInterpolant" BP_NOINIT)
+            .def(py::init<double,GSParams>());
 
-        bp::class_<Lanczos BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
-            .def(bp::init<int,bool,double,GSParams>())
+        py::class_<Lanczos, BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
+            .def(py::init<int,bool,double,GSParams>())
             .def("urange", &Lanczos::urange);
 
-        bp::class_<Linear BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<Linear, BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
+            .def(py::init<double,GSParams>());
 
-        bp::class_<Cubic BP_BASES(Interpolant)>(GALSIM_COMMA "Cubic" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<Cubic, BP_BASES(Interpolant)>(GALSIM_COMMA "Cubic" BP_NOINIT)
+            .def(py::init<double,GSParams>());
 
-        bp::class_<Quintic BP_BASES(Interpolant)>(GALSIM_COMMA "Quintic" BP_NOINIT)
-            .def(bp::init<double,GSParams>());
+        py::class_<Quintic, BP_BASES(Interpolant)>(GALSIM_COMMA "Quintic" BP_NOINIT)
+            .def(py::init<double,GSParams>());
     }
 
 } // namespace galsim

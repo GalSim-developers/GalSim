@@ -23,26 +23,26 @@
 namespace galsim {
 
     template <typename T>
-    static void WrapPosition(PB11_MODULE& _galsim, const std::string& suffix)
+    static void WrapPosition(PY_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_<Position<T> >(GALSIM_COMMA ("Position" + suffix).c_str() BP_NOINIT)
-            .def(bp::init<T,T>())
+        py::class_<Position<T> >(GALSIM_COMMA ("Position" + suffix).c_str() BP_NOINIT)
+            .def(py::init<T,T>())
             .def_readonly("x", &Position<T>::x)
             .def_readonly("y", &Position<T>::y);
     }
 
     template <typename T>
-    static void WrapBounds(PB11_MODULE& _galsim, const std::string& suffix)
+    static void WrapBounds(PY_MODULE& _galsim, const std::string& suffix)
     {
-        bp::class_< Bounds<T> >(GALSIM_COMMA ("Bounds" + suffix).c_str() BP_NOINIT)
-            .def(bp::init<T,T,T,T>())
+        py::class_< Bounds<T> >(GALSIM_COMMA ("Bounds" + suffix).c_str() BP_NOINIT)
+            .def(py::init<T,T,T,T>())
             .def_property_readonly("xmin", &Bounds<T>::getXMin)
             .def_property_readonly("xmax", &Bounds<T>::getXMax)
             .def_property_readonly("ymin", &Bounds<T>::getYMin)
             .def_property_readonly("ymax", &Bounds<T>::getYMax);
     }
 
-    void pyExportBounds(PB11_MODULE& _galsim)
+    void pyExportBounds(PY_MODULE& _galsim)
     {
         WrapPosition<double>(_galsim, "D");
         WrapPosition<int>(_galsim, "I");

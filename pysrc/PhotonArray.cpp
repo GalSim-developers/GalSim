@@ -31,8 +31,8 @@ namespace galsim {
                  &PhotonArray::setFrom);
     }
 
-    static BP_CONSTRUCTOR(construct, PhotonArray, int N, size_t ix, size_t iy, size_t iflux,
-                          size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
+    static PhotonArray* construct(int N, size_t ix, size_t iy, size_t iflux,
+                                  size_t idxdz, size_t idydz, size_t iwave, bool is_corr)
     {
         double *x = reinterpret_cast<double*>(ix);
         double *y = reinterpret_cast<double*>(iy);
@@ -40,14 +40,14 @@ namespace galsim {
         double *dxdz = reinterpret_cast<double*>(idxdz);
         double *dydz = reinterpret_cast<double*>(idydz);
         double *wave = reinterpret_cast<double*>(iwave);
-        PB11_PLACEMENT_NEW PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
+        return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
     }
 
-    void pyExportPhotonArray(PB11_MODULE& _galsim)
+    void pyExportPhotonArray(PY_MODULE& _galsim)
     {
-        bp::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
+        py::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
         pyPhotonArray
-            .def(BP_MAKE_CONSTRUCTOR(&construct))
+            .def(PY_INIT(&construct))
             .def("convolve", &PhotonArray::convolve);
         WrapTemplates<double>(pyPhotonArray);
         WrapTemplates<float>(pyPhotonArray);

@@ -22,8 +22,7 @@
 
 namespace galsim {
 
-    static BP_CONSTRUCTOR(MakeTable, Table,
-                          size_t iargs, size_t ivals, int N, const char* interp_c)
+    static Table* MakeTable(size_t iargs, size_t ivals, int N, const char* interp_c)
     {
         const double* args = reinterpret_cast<double*>(iargs);
         const double* vals = reinterpret_cast<double*>(ivals);
@@ -35,7 +34,7 @@ namespace galsim {
         else if (interp == "ceil") i = Table::ceil;
         else if (interp == "nearest") i = Table::nearest;
 
-        PB11_PLACEMENT_NEW Table(args, vals, N, i);
+        return new Table(args, vals, N, i);
     }
 
     static void InterpMany(const Table& table, size_t iargs, size_t ivals, int N)
@@ -45,9 +44,8 @@ namespace galsim {
         table.interpMany(args, vals, N);
     }
 
-    static BP_CONSTRUCTOR(MakeTable2D, Table2D,
-                          size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
-                          const char* interp_c)
+    static Table2D* MakeTable2D(size_t ix, size_t iy, size_t ivals, int Nx, int Ny,
+                                const char* interp_c)
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
@@ -59,7 +57,7 @@ namespace galsim {
         else if (interp == "ceil") i = Table2D::ceil;
         else if (interp == "nearest") i = Table2D::nearest;
 
-        PB11_PLACEMENT_NEW Table2D(x, y, vals, Nx, Ny, i);
+        return new Table2D(x, y, vals, Nx, Ny, i);
     }
 
     static void InterpMany2D(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int N)
@@ -86,15 +84,15 @@ namespace galsim {
         table2d.gradientMany(x, y, dfdx, dfdy, N);
     }
 
-    void pyExportTable(PB11_MODULE& _galsim)
+    void pyExportTable(PY_MODULE& _galsim)
     {
-        bp::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
-            .def(BP_MAKE_CONSTRUCTOR(&MakeTable))
+        py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
+            .def(PY_INIT(&MakeTable))
             .def("interp", &Table::lookup)
             .def("interpMany", &InterpMany);
 
-        bp::class_<Table2D >(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
-            .def(BP_MAKE_CONSTRUCTOR(&MakeTable2D))
+        py::class_<Table2D >(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
+            .def(PY_INIT(&MakeTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)
             .def("gradient", &Gradient)

@@ -29,34 +29,31 @@
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-namespace bp = boost::python;
+namespace py = boost::python;
 
-#define PB11_MAKE_MODULE(x) BOOST_PYTHON_MODULE(x)
-#define PB11_START_MODULE(x) bp::scope x;
-#define PB11_END_MODULE(x)
-#define BP_CONSTRUCTOR(f,x,args...) x* f(args)
-#define PB11_PLACEMENT_NEW return new
+// Boost Python and PyBind11 work fairly similarly.  There are a few differences though.
+// In some cases, pybind11 simplified things, or changed how some things work.  So these
+// macros allow us to write code that works for either boost python or pybind11.
 
-#define TUPLE(args...) bp::tuple
-#define MAKE_TUPLE bp::make_tuple
-
-#define GALSIM_DOT bp::
-#define GALSIM_COMMA
-#define PB11_MODULE bp::scope
-#define BP_HANDLE bp::handle<>
-#define BP_THROW bp::throw_error_already_set()
-#define BP_NOINIT , bp::no_init
-#define ENABLE_PICKLING .enable_pickling()
-#define PB11_CAST(x) x
-#define BP_OTHER(T) bp::other<T>()
-#define ADD_PROPERTY(name, func) add_property(name, func)
-#define BP_REGISTER(T) bp::register_ptr_to_python< boost::shared_ptr<T> >()
-#define BOOST_NONCOPYABLE , boost::noncopyable
-#define BP_BASES(T) , bp::bases<T>
-#define BP_MAKE_CONSTRUCTOR(args...) "__init__", bp::make_constructor(args, bp::default_call_policies())
-#define CAST bp::extract
-#define BP_COPY_CONST_REFERENCE bp::return_value_policy<bp::copy_const_reference>()
+// First some things where the boost equivalent of some pybind11 function is different:
+#define PYBIND11_MODULE(x,x) BOOST_PYTHON_MODULE(x)
+#define PY_MODULE py::scope
+#define PY_CAST py::extract
+#define PY_INIT(args...) "__init__", py::make_constructor(args, py::default_call_policies())
 #define def_property_readonly add_property
+
+// PyBind11 requires the module object to be written some places where boost python does not.
+// Our module name is always _galsim, so where we would write _galsim. or _galsim, we write these
+// instead so in boost python, the module name goes away.
+#define GALSIM_DOT py::
+#define GALSIM_COMMA
+
+// Finally, there are somethings that are only needed for boost python.  These are not required
+// at all for pybind11.
+#define BP_SCOPE(x) py::scope x;
+#define BP_NOINIT , py::no_init
+#define BP_NONCOPYABLE , boost::noncopyable
+#define BP_BASES(T) py::bases<T>
 
 #else
 
@@ -64,33 +61,19 @@ namespace bp = boost::python;
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
-namespace bp = pybind11;
+namespace py = pybind11;
 
-#define PB11_MAKE_MODULE(x) PYBIND11_MODULE(x,x)
-#define PB11_START_MODULE(x)
-#define PB11_END_MODULE(x)
-#define BP_CONSTRUCTOR(f,x,args...) x* f(args)
-#define PB11_PLACEMENT_NEW return new
-
-#define TUPLE(args...) std::tuple<args>
-#define MAKE_TUPLE std::make_tuple
+#define PY_MODULE py::module
+#define PY_CAST py::cast
+#define PY_INIT(args...) py::init(args)
 
 #define GALSIM_DOT _galsim.
 #define GALSIM_COMMA _galsim,
-#define PB11_MODULE pybind11::module
-#define BP_HANDLE pybind11::handle
-#define BP_THROW throw pybind11::error_already_set()
+
+#define BP_SCOPE(x)
 #define BP_NOINIT
-#define ENABLE_PICKLING
-#define PB11_CAST(x) pybind11::cast(x)
-#define BP_OTHER(T) T()
-#define ADD_PROPERTY(name, func) def_property_readonly(name, func)
-#define BP_REGISTER(T)
-#define BOOST_NONCOPYABLE
-#define BP_BASES(T) , T
-#define BP_MAKE_CONSTRUCTOR(args...) bp::init(args)
-#define CAST pybind11::cast
-#define BP_COPY_CONST_REFERENCE pybind11::return_value_policy::reference
+#define BP_NONCOPYABLE
+#define BP_BASES(T) T
 
 #endif
 
