@@ -9,6 +9,7 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from setuptools.command.easy_install import easy_install
+from setuptools.command.test import test
 import setuptools
 print("Using setuptools version",setuptools.__version__)
 
@@ -391,6 +392,36 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
         install_scripts.run(self)
         self.distribution.script_install_dir = self.install_dir
 
+class my_test(test):
+    # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        test.initialize_options(self)
+        self.pytest_args = None
+
+    def finalize_options(self):
+        test.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        #import here, cause outside the eggs aren't loaded
+        import pytest
+        ncpu = cpu_count()
+        if self.pytest_args is None:
+            self.pytest_args = ['-n=%d'%ncpu, '--timeout=60']
+        else:
+            self.pytest_args = self.pytest_args.split()
+        print('Using pytest args: ',self.pytest_args,' (can update with -a pytest_args)')
+        original_dir = os.getcwd()
+        os.chdir('tests')
+        test_files = glob.glob('test*.py')
+        errno = pytest.main(self.pytest_args + test_files)
+        if errno != 0:
+            sys.exit(errno)
+        os.chdir(original_dir)
+
 ext=Extension("galsim._galsim",
               sources,
               depends=headers,
@@ -398,8 +429,9 @@ ext=Extension("galsim._galsim",
 
 # Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
 # and their setup.py is broken such that if they're not already installed it fails catastrophically.
-build_dep = ['pybind11>=2.2', 'setuptools_scm', 'cython', 'eigency>=1.76']
-run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas']
+build_dep = ['pybind11>=2.2', 'setuptools_scm', 'cython', 'eigency']
+run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas', 'starlink-pyast']
+test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
 
 with open('README.md') as file:
     long_description = file.read()
@@ -467,10 +499,12 @@ dist = setup(name="GalSim",
     ext_modules=[ext],
     setup_requires=build_dep,
     install_requires=build_dep + run_dep,
+    tests_require=test_dep,
     cmdclass = {'build_ext': my_builder,
                 'install': my_install,
                 'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
+                'test': my_test,
                 },
     entry_points = {'console_scripts' : [
             'galsim = galsim.__main__:main',
