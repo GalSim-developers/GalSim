@@ -6,6 +6,7 @@ import types
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_clib import build_clib
 from setuptools.command.install import install
 from setuptools.command.install_scripts import install_scripts
 from setuptools.command.easy_install import easy_install
@@ -27,7 +28,8 @@ def all_files_from(dir, ext=''):
                 files.append(os.path.join(root, filename))
     return files
 
-sources = all_files_from('src', '.cpp') + all_files_from('pysrc', '.cpp')
+py_sources = all_files_from('pysrc', '.cpp')
+cpp_sources = all_files_from('src', '.cpp')
 headers = all_files_from('include')
 shared_data = all_files_from('share')
 
@@ -267,8 +269,80 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
     return objects
 
 
+def fix_compiler(compiler, parallel):
+    # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
+    try:
+        compiler.compiler_so.remove("-Wstrict-prototypes")
+    except (AttributeError, ValueError):
+        pass
+
+    # Figure out what compiler it will use
+    #print('compiler = ',compiler.compiler)
+    cc = compiler.compiler_so[0]
+    cflags = compiler.compiler_so[1:]
+    comp_type = get_compiler(cc)
+    if cc == comp_type:
+        print('Using compiler %s'%(cc))
+    else:
+        print('Using compiler %s, which is %s'%(cc,comp_type))
+
+    # Check if we can use ccache to speed up repeated compilation.
+    if try_cc('ccache ' + cc, cflags):
+        print('Using ccache')
+        compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
+
+    if parallel is None or parallel is True:
+        ncpu = cpu_count()
+    elif parallel: # is an integer
+        ncpu = parallel
+    else:
+        ncpu = 1
+    if ncpu > 1:
+        print('Using %d cpus for compiling'%ncpu)
+        if parallel is None:
+            print('To override, you may do python setup.py build -j1')
+        compiler.compile = types.MethodType(parallel_compile, compiler)
+
+    extra_cflags = copt[comp_type]
+    print('Using extra flags ',extra_cflags)
+
+    # Return the extra cflags, since those will be added to the build step in a different place.
+    return extra_cflags
+
 # Make a subclass of build_ext so we can add to the -I list.
-class my_builder( build_ext ):
+class my_build_clib(build_clib):
+    # Adding the libraries and include_dirs here rather than when declaring the Extension
+    # means that the setup_requires modules should already be installed, so pybind11, eigency,
+    # and fftw3 should all import properly.
+    def finalize_options(self):
+        build_clib.finalize_options(self)
+        self.include_dirs.append('include')
+        self.include_dirs.append('include/galsim')
+        self.include_dirs.append('include/fftw3')
+
+        import eigency
+        self.include_dirs.append(eigency.get_includes()[2])
+
+    # Add any extra things based on the compiler being used..
+    def build_libraries(self, libraries):
+
+        # They didn't put the parallel option into build_clib like they did with build_ext, so
+        # look for the parallel option there instead.
+        build_ext = self.distribution.get_command_obj('build_ext')
+        parallel = getattr(build_ext, 'parallel', True)
+
+        cflags = fix_compiler(self.compiler, parallel)
+
+        # Add the appropriate extra flags for that compiler.
+        for (lib_name, build_info) in libraries:
+            build_info['cflags'] = build_info.get('cflags',[]) + cflags
+
+        # Now run the normal build function.
+        build_clib.build_libraries(self, libraries)
+
+
+# Make a subclass of build_ext so we can add to the -I list.
+class my_build_ext(build_ext):
     # Adding the libraries and include_dirs here rather than when declaring the Extension
     # means that the setup_requires modules should already be installed, so pybind11, eigency,
     # and fftw3 should all import properly.
@@ -276,6 +350,10 @@ class my_builder( build_ext ):
         build_ext.finalize_options(self)
         self.include_dirs.append('include')
         self.include_dirs.append('include/galsim')
+        self.include_dirs.append('include/fftw3')
+
+        import eigency
+        self.include_dirs.append(eigency.get_includes()[2])
 
         import pybind11
         # Include both the standard location and the --user location, since it's hard to tell
@@ -283,65 +361,23 @@ class my_builder( build_ext ):
         self.include_dirs.append(pybind11.get_include(user=False))
         self.include_dirs.append(pybind11.get_include(user=True))
 
-        self.include_dirs.append('include/fftw3')
         fftw_lib = find_fftw_lib()
         fftw_libpath, fftw_libname = os.path.split(fftw_lib)
         self.library_dirs.append(os.path.split(fftw_lib)[0])
         self.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
 
-        import eigency
-        self.include_dirs.append(eigency.get_includes()[2])
-
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
-        # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
-        try:
-            self.compiler.compiler_so.remove("-Wstrict-prototypes")
-        except (AttributeError, ValueError):
-            pass
 
-        print('Platform is ',self.plat_name)
+        # The -jN option was new in distutils version 3.5.
+        # If user has older version, just set parallel to True and move on.
+        parallel = getattr(self, 'parallel', True)
 
-        # Figure out what compiler it will use
-        #print('compiler_so = ',self.compiler.compiler_so)
-        cc = self.compiler.compiler_so[0]
-        cflags = self.compiler.compiler_so[1:]
-        comp_type = get_compiler(cc)
-        if cc == comp_type:
-            print('Using compiler %s'%(cc))
-        else:
-            print('Using compiler %s, which is %s'%(cc,comp_type))
+        cflags = fix_compiler(self.compiler, parallel)
 
         # Add the appropriate extra flags for that compiler.
-        print('Using extra args ',copt[comp_type])
-        #cflags += copt[comp_type]
-        # It didn't work for Erin to add this to the end of cflags for some reason.  Maybe related
-        # to the distutils version?  Not sure.  Anyway, this way should work.
         for e in self.extensions:
-            e.extra_compile_args = copt[comp_type]
-
-        # Check if we can use ccache to speed up repeated compilation.
-        if try_cc('ccache ' + cc, cflags):
-            print('Using ccache')
-            self.compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
-        #print('compiler_so => ',self.compiler.compiler_so)
-
-        # Try to compile in parallel
-        if not hasattr('self', 'parallel'):
-            # This was new in distutils version 3.5.
-            # If user has older version, just set parallel to True and move on.
-            self.parallel = True
-        if self.parallel is None or self.parallel is True:
-            ncpu = cpu_count()
-        elif self.parallel: # is an integer
-            ncpu = self.parallel
-        else:
-            ncpu = 1
-        if ncpu > 1:
-            print('Using %d cpus for compiling'%ncpu)
-            if self.parallel is None:
-                print('To override, you may do python setup.py build -j1')
-            self.compiler.compile = types.MethodType(parallel_compile, self.compiler)
+            e.extra_compile_args = cflags
 
         # Now run the normal build function.
         build_ext.build_extensions(self)
@@ -422,9 +458,13 @@ class my_test(test):
             sys.exit(errno)
         os.chdir(original_dir)
 
+
+lib=("galsim", {'sources' : cpp_sources,
+                'depends' : headers,
+                'include_dirs' : ['include', 'include/galsim'],
+                'undef_macros' : undef_macros })
 ext=Extension("galsim._galsim",
-              sources,
-              depends=headers,
+              py_sources,
               undef_macros = undef_macros)
 
 # Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
@@ -496,11 +536,13 @@ dist = setup(name="GalSim",
     packages=find_packages(),
     package_data={'galsim' : shared_data},
     #include_package_data=True,
+    libraries=[lib],
     ext_modules=[ext],
     setup_requires=build_dep,
     install_requires=build_dep + run_dep,
     tests_require=test_dep,
-    cmdclass = {'build_ext': my_builder,
+    cmdclass = {'build_ext': my_build_ext,
+                'build_clib': my_build_clib,
                 'install': my_install,
                 'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
