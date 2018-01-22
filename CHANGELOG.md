@@ -27,6 +27,7 @@ Deprecated Features
 New Features
 ------------
 - Add option to use circular weight function in HSM adaptive moments code. (#917)
+- Add VonKarman profile GSObject.
 
 
 

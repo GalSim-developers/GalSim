@@ -22,6 +22,7 @@ SBKolmogorov.cpp
 SBSpergel.cpp
 SBInclinedExponential.cpp
 SBInclinedSersic.cpp
+SBVonKarman.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp
