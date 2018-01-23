@@ -144,7 +144,7 @@ class VonKarman(GSObject):
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
 
-    def structureFunction(self, rho):
+    def _structure_function(self, rho):  # pragma: nocover
         return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):
@@ -168,6 +168,8 @@ class VonKarman(GSObject):
             out += ", scale_unit=%r"%self.scale_unit
         if self.do_delta:
             out += ", do_delta=True"
+        if self._suppress_warning:
+            out += ", suppress_warning=True"
         out += ", gsparams=%r"%self.gsparams
         out += ")"
         return out

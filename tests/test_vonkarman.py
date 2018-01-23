@@ -70,14 +70,12 @@ def test_vk_delta():
     """Test a VonKarman with a significant delta-function amplitude"""
     kwargs = {'lam':1100.0, 'r0':0.8, 'L0':5.0, 'flux':2.2}
     # Try to see if we can catch the warning first
-    try:
-        if 'assert_warns' in np.testing.__dict__:
-            np.testing.assert_warns(galsim.VonKarman, **kwargs)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_warns(UserWarning):
+        vk = galsim.VonKarman(**kwargs)
 
     kwargs['suppress_warning'] = True
     vk = galsim.VonKarman(**kwargs)
+    do_pickle(vk)
 
     # This profile has more than 15% of its flux in the delta-function component.
     np.testing.assert_array_less(0.15, vk.delta_amplitude/vk.flux)
@@ -85,6 +83,7 @@ def test_vk_delta():
     np.testing.assert_almost_equal(vk.kValue(1e10, 0).real, 0.0)
     # But if we use do_delta=True, then the asymptotic kValue should be that of the delta function.
     vkd = galsim.VonKarman(do_delta=True, **kwargs)
+    do_pickle(vkd)
     np.testing.assert_almost_equal(vkd.kValue(1e10, 0).real, vkd.delta_amplitude)
 
     # Either way, the fluxes should be the same.
@@ -100,7 +99,8 @@ def test_vk_scale():
     """Test vk scale argument"""
     kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'flux':2.2}
     vk_arcsec = galsim.VonKarman(scale_unit=galsim.arcsec, **kwargs)
-    vk_arcmin = galsim.VonKarman(scale_unit=galsim.arcmin, **kwargs)
+    vk_arcmin = galsim.VonKarman(scale_unit='arcmin', **kwargs)
+    do_pickle(vk_arcmin)
 
     np.testing.assert_almost_equal(vk_arcsec.flux, vk_arcmin.flux)
     np.testing.assert_almost_equal(vk_arcsec.kValue(0.0, 0.0), vk_arcmin.kValue(0.0, 0.0))
@@ -118,7 +118,7 @@ def test_vk_ne():
 
     objs = [galsim.VonKarman(lam=500.0, r0=0.2, L0=25.0),
             galsim.VonKarman(lam=500.0, r0=0.2, L0=25.0, flux=2.2),
-            galsim.VonKarman(lam=500.0, r0=0.2, L0=20.0),
+            galsim.VonKarman(lam=500.0, r0=0.2, L0=1e11),
             galsim.VonKarman(lam=500.0, r0=0.1, L0=20.0),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, do_delta=True),
@@ -158,6 +158,7 @@ def vk_benchmark():
         vk.drawImage(nx=16, ny=16, scale=0.2, method='phot', n_photons=50000)
     t3 = time.time()
     print("Time to photon-shoot 100 more with 50000 photons each: {:6.3f}s".format(t3-t2))
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
