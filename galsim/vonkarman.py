@@ -142,8 +142,8 @@ class VonKarman(GSObject):
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
 
-    def _structure_function(self, rho):  # pragma: nocover
-        return self._sbvk.structureFunction(rho)
+    def _structure_function(self, rho):
+        return self._sbvk.structureFunction(rho)  # pragma: nocover
 
     def __eq__(self, other):
         return (isinstance(other, galsim.VonKarman) and
