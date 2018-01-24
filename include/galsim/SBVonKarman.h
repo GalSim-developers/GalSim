@@ -20,8 +20,7 @@
 #ifndef GalSim_SBVonKarman_H
 #define GalSim_SBVonKarman_H
 /**
- * @file SBVonKarman.h @brief SBProfile for von Karman turbulence PSF, potentially including
- *                            truncated power spectrum.
+ * @file SBVonKarman.h @brief SBProfile for von Karman turbulence PSF.
  */
 
 #include "SBProfile.h"

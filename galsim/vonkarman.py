@@ -16,9 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file base.py
-This file implements the von Karman atmospheric PSF profile.  A version which has the underlying
-turbulence power spectrum truncated below a given scale is also available as a correction when using
-geometric shooting through an atmospheric PhaseScreenPSF.
+This file implements the von Karman atmospheric PSF profile.
 """
 
 import numpy as np
