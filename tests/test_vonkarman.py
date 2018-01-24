@@ -143,6 +143,38 @@ def test_vk_eq_kolm():
     np.testing.assert_allclose(kolm_img.array, vk_img.array, atol=flux*1e-5, rtol=0)
 
 
+@timer
+def test_vk_fitting_formulae():
+    #         lam, r0_500, L0
+    params = [(650, 0.15, 10.0),
+              (450, 0.12, 25.0),
+              (900, 0.18, 100.0)]
+
+    def predicted_FWHM_ratio(r0, L0):
+        """Fitting formula for VonKarman FWHM / Kolmogorov FWHM
+        from Martinez++2014
+        """
+        return np.sqrt(1 - 2.183*(r0/L0)**0.356)
+
+    def predicted_HLR_ratio(r0, L0):
+        """Fitting formula for VonKarman HLR / Kolmogorov HLR
+        from Martinez++2014
+        """
+        return np.sqrt(1 - 1.534*(r0/L0)**0.347)
+
+    for lam, r0_500, L0 in params:
+        print(lam, r0_500, L0)
+        r0 = r0_500*(lam/500.0)**(6./5)
+        kolm = galsim.Kolmogorov(lam=lam, r0=r0)
+        vk = galsim.VonKarman(lam=lam, r0=r0, L0=L0)
+        HLR_ratio = vk.calculateHLR() / kolm.calculateHLR()
+        FWHM_ratio = vk.calculateFWHM() / kolm.calculateFWHM()
+        print(HLR_ratio)
+        print(FWHM_ratio)
+        np.testing.assert_allclose(HLR_ratio, predicted_HLR_ratio(r0, L0), rtol=0.015)
+        np.testing.assert_allclose(FWHM_ratio, predicted_FWHM_ratio(r0, L0), rtol=0.015)
+
+
 def vk_benchmark():
     import time
     t0 = time.time()
@@ -172,5 +204,6 @@ if __name__ == "__main__":
     test_vk_scale()
     test_vk_ne()
     test_vk_eq_kolm()
+    test_vk_fitting_formulae()
     if args.benchmark:
         vk_benchmark()
