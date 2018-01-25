@@ -1200,6 +1200,8 @@ class PhaseScreenPSF(GSObject):
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
+        if self._bar:
+            self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
