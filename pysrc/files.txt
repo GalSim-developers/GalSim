@@ -23,6 +23,7 @@ SBSpergel.cpp
 SBInclinedExponential.cpp
 SBInclinedSersic.cpp
 SBVonKarman.cpp
+SBSK.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp
