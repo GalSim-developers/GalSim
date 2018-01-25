@@ -21,6 +21,7 @@ from builtins import range, zip
 import numpy as np
 import galsim
 
+
 class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
     initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
@@ -62,7 +63,12 @@ class AtmosphericScreen(object):
                          that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
-
+    @param kmin          Minimum k-mode to include when generating phase screens.  Generally this
+                         will only be used when testing the geometric approximation for atmospheric
+                         PSFs.  [default: None]
+    @param kmax          Maximum k-mode to include when generating phase screens.  This may be used
+                         in conjunction with SecondKick to complete the geometric approximation for
+                         atmospheric PSFs.  [default: None]
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
     simulations"
@@ -73,7 +79,7 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
-                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None):
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, kmax=None, kmin=None):
 
         if (alpha != 1.0 and time_step is None):
             raise ValueError("No time_step provided when alpha != 1.0")
@@ -99,6 +105,9 @@ class AtmosphericScreen(object):
 
         if rng is None:
             rng = galsim.BaseDeviate()
+
+        self.kmin = kmin
+        self.kmax = kmax
 
         self._orig_rng = rng.duplicate()
         self.dynamic = True
@@ -162,6 +171,7 @@ class AtmosphericScreen(object):
         """
         fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
+        ksq = (fx*fx + fy*fy)*(2*np.pi)**2
 
         L0_inv = 1./self.L0 if self.L0 is not None else 0.0
         old_settings = np.seterr(all='ignore')
@@ -171,6 +181,10 @@ class AtmosphericScreen(object):
         np.seterr(**old_settings)
         self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self._psi[0, 0] = 0.0
+        if self.kmin is not None:
+            self._psi[ksq < self.kmin**2] = 0.0
+        if self.kmax is not None:
+            self._psi[ksq > self.kmax**2] = 0.0
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self._psi**2"""
