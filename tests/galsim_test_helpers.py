@@ -266,12 +266,13 @@ def do_shoot(prof, img, name):
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
     print('nphot -> ',nphot)
-    if 'InterpolatedImage' in name or 'SK' in name:
+    if 'InterpolatedImage' in name:
         nphot *= 10
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
+    np.testing.assert_allclose(
+            img.array.sum(dtype=float), test_flux, rtol=10**(-photon_decimal_test),
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
     print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
