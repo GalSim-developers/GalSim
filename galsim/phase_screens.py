@@ -905,36 +905,7 @@ class OpticalScreen(object):
         return gradu, gradv
 
 
-class OpticalScreenPerturbationModel(OpticalScreen):
-    """
-    Class to describe optical aberrations with a perturbation model common to all field locations.
-    """
-    def __init__(self, field_coord, perturbation_model=None):
-        if perturbation_model is None:
-            perturbation_model = ZeroPerturbationModel()
-        # Calculate the wavefront Zernike coefficients for the specified field position under the
-        # specified telescope perturbation model.
-        aberrations = perturbation_model.get_aberrations(field_coord)
-        # Initialize the phase screen with the wavefront coefficients we have now computed for
-        # this field position.
-        super(OpticalScreenPerturbationModel, self).__init__(aberrations=aberrations, lam_0=lam_0)
-
-
-class ZeroPerturbationModel(object):
-    """
-    A class to use as a default perturbation model that yields zero optics screen aberrations.
-    """
-    def __init__(self):
-        pass
-
-    def get_aberrations(fielc_coord=None):
-        """
-        Return a list of wavefront aberration Zernike coefficients for use in OpticalScreen
-        """
-        return np.zeros(12., dtype=float)
-
-
-class HopkinsTelescope(object):
+class OpticalScreenField(object):
     """A telescope object that can compute optical aberrations as a function of the location on
     the field of view.
 
@@ -956,7 +927,7 @@ class HopkinsTelescope(object):
     """
     def __init__(self, a_nmrs, fov_radius=None):
         if fov_radius is None:
-            raise ValueError("fov_radius is required for HopkinsTelescope")
+            raise ValueError("fov_radius is required for OpticalScreenField")
         self.fov_radius = fov_radius
         self.a_nmrs = a_nmrs
         self.jmax_pupil = self.a_nmrs.shape[0]-1
@@ -980,7 +951,7 @@ class HopkinsTelescope(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Ignored for HopkinsTelescope.
+        @param t        Ignored for OpticalScreenField.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.

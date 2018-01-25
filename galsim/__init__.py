@@ -119,8 +119,7 @@ from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
-from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, OpticalScreenPerturbationModel
-from .phase_screens import HopkinsTelescope
+from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, OpticalScreenField
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
