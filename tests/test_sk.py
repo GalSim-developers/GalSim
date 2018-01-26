@@ -3,47 +3,40 @@ import galsim
 
 from galsim_test_helpers import *
 
-lam = 500.0
-r0 = 0.2
-L0 = 30.0
-diam = 8.36
-obscuration = 0.0
-kcrit = 2*np.pi/r0
-flux = 1.0
-
-bigGSP = galsim.GSParams(maximum_fft_size=8192)
-
+@timer
 def test_sk(slow=False):
     """Test generation of SK profiles
     """
+    obscuration = 0.5
+    bigGSP = galsim.GSParams(maximum_fft_size=8192)
+
     if __name__ == '__main__' and slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.1, 0.15, 0.3]
         L0s = [1e10, 25.0, 10.0]
-        kcrits = [20.0, 60.0]
+        kcrits = [4.0, 10.0]
     else:
         lams = [500.0]
         r0_500s = [0.15]
         L0s = [25.0]
-        kcrits = [20.0]
+        kcrits = [4.0]
     for lam in lams:
         for r0_500 in r0_500s:
             r0 = r0_500*(lam/500)**(6./5)
             for L0 in L0s:
                 for kcrit in kcrits:
                     kwargs = {'lam':lam, 'r0':r0, 'L0':L0, 'kcrit':kcrit, 'diam':4.0}
-                    kwargs['gsparams'] = bigGSP
                     print(kwargs)
+                    kwargs['gsparams'] = bigGSP
 
                     sk = galsim.SK(flux=2.2, **kwargs)
-                    print(sk.stepk, sk.maxk)
                     np.testing.assert_almost_equal(sk.flux, 2.2)
                     do_pickle(sk)
                     do_pickle(sk._sbp)
                     do_pickle(sk._sbp, lambda x: (x.getFlux(), x.getGSParams()))
 
                     # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
-                    # Sharply decrease maxk by convolving in a smallish Gaussian.
+                    # Decrease maxk by convolving in a smallish Gaussian.
                     obj = galsim.Convolve(sk, galsim.Gaussian(fwhm=0.2))
                     check_basic(obj, "SK")
                     img = galsim.Image(16, 16, scale=0.2)
@@ -51,19 +44,34 @@ def test_sk(slow=False):
                     do_kvalue(obj, img, "SK")
 
 
+@timer
 def test_airy():
     """Check access to the airy subcomponent of SK.
     """
+    lam = 500.0
+    r0 = 0.2
+    L0 = 30.0
+    diam = 8.36
+    obscuration = 0.5
+    kcrit = 10.0
+
     sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit)
-    airy = galsim.Airy(lam=lam, diam=diam)
+    airy = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
     assert sk._sbairy == airy._sbp
 
 
+@timer
 def test_structure_function():
     """Test that SK structure function is equivalent to vonKarman structure function when kcrit=0.
     This is nontrivial since the SK structure function is numerically integrated, while the vK
     structure function is evaluated analytically.
     """
+    lam = 500.0
+    r0 = 0.2
+    L0 = 30.0
+    diam = 8.36
+    obscuration = 0.61
+
     sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=0.0)
     vk = galsim.VonKarman(lam, r0, L0=L0)
 
@@ -73,18 +81,24 @@ def test_structure_function():
         np.testing.assert_allclose(sksf, vksf, rtol=1e-6)
 
 
+@timer
 def test_limiting_cases():
     """SK has some two interesting limiting cases.
     A) When kcrit = 0, SK = Convolve(Airy, VonKarman).
     B) When kcrit = inf, SK = Airy
     Test these.
     """
+    lam = 500.0
+    r0 = 0.2
+    L0 = 30.0
+    diam = 8.36
+    obscuration = 0.61
 
     # First kcrit=0
     sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=0.0)
     limiting_case = galsim.Convolve(
         galsim.VonKarman(lam, r0, L0=L0),
-        galsim.Airy(lam=lam, diam=diam)
+        galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
     )
     print(sk.stepk, sk.maxk)
     print(limiting_case.stepk, limiting_case.maxk)
@@ -98,7 +112,7 @@ def test_limiting_cases():
 
     # kcrit=inf
     sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=np.inf)
-    limiting_case = galsim.Airy(lam=lam, diam=diam)
+    limiting_case = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
 
     for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0]:
         np.testing.assert_allclose(
@@ -108,16 +122,24 @@ def test_limiting_cases():
             atol=1e-4)
 
 
+@timer
 def test_sf_lut(slow=False):
     """Test the suitability of the lookup table used to store the structure function by comparing
     results of xValue and kValue both with and without using the LUT.
     """
+    lam = 500.0
+    r0 = 0.2
+    L0 = 30.0
+    diam = 8.36
+    obscuration = 0.61
+    kcrit = 2*np.pi/r0
+
     sk = galsim.SK(lam, r0, diam, obscuration, L0, 0.5*kcrit)
 
     print("Testing kValue")
     for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
         print()
-        print(k)
+        print("k = {}".format(k))
         print(sk.kValue(0, k).real)
         print(sk._sbp.kValueSlow(k))
         np.testing.assert_allclose(
@@ -130,7 +152,7 @@ def test_sf_lut(slow=False):
     print()
     print()
     print("Testing xValue")
-    if __name__ == "__main__":
+    if __name__ == '__main__':
         xs = [0.0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.2]
         if slow:
             xs.extend([0.3, 0.6, 1.0, 2.0, 3.0, 6.0])
@@ -138,7 +160,7 @@ def test_sf_lut(slow=False):
         xs = [0.0, 0.001, 0.003, 0.01, 0.03]
     for x in xs:
         print()
-        print(x)
+        print("x = {}".format(x))
         print(sk.xValue(0, x))
         print(sk._sbp.xValueSlow(x))
         np.testing.assert_allclose(
@@ -147,6 +169,51 @@ def test_sf_lut(slow=False):
             rtol=1e-5,
             atol=1e-2
         )
+
+
+@timer
+def test_sk_phase_psf():
+    """Test that analytic second kick profile matches what can be obtained from PhaseScreenPSF with
+    an appropriate truncated power spectrum.
+    """
+    # import matplotlib.pyplot as plt
+
+    lam = 500.0
+    r0 = 0.2
+    L0 = 30.0
+    diam = 4.0
+    obscuration = 0.5
+    kcrit = 2*np.pi/r0
+
+    rng = galsim.UniformDeviate(1234567890)
+    weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+    speed = [rng()*20 for _ in range(6)]
+    direction = [rng()*360*galsim.degrees for _ in range(6)]
+    aper = galsim.Aperture(4.0, obscuration=obscuration)
+    kcrits = [1, 2, 4] if __name__ == '__main__' else [1]
+    for kcrit in kcrits:
+        atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, kmin=kcrit, rng=rng,
+                                speed=speed, direction=direction,
+                                screen_size=102.4, screen_scale=0.05)
+        psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper)
+        phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
+        sk = galsim.SK(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0, kcrit=kcrit)
+        skImg = sk.drawImage(nx=64, ny=64, scale=0.02)
+        phaseMom = galsim.hsm.FindAdaptiveMom(phaseImg)
+        skMom = galsim.hsm.FindAdaptiveMom(skImg)
+
+        np.testing.assert_allclose(phaseMom.moments_sigma, skMom.moments_sigma, rtol=2e-2)
+
+        # fig, axes = plt.subplots(nrows=1, ncols=2)
+        # vmin = -6
+        # vmax = -1
+        # phim = axes[0].imshow(np.log10(phaseImg.array), vmin=vmin, vmax=vmax)
+        # axes[0].set_title("PhasePSF")
+        # skim = axes[1].imshow(np.log10(skImg.array), vmin=vmin, vmax=vmax)
+        # axes[1].set_title("SK")
+        # fig.tight_layout()
+        # plt.show()
+
 
 
 if __name__ == '__main__':
@@ -160,3 +227,4 @@ if __name__ == '__main__':
     test_structure_function()
     test_limiting_cases()
     test_sf_lut(args.slow)
+    test_sk_phase_psf()
