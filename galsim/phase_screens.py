@@ -896,7 +896,7 @@ class OpticalScreen(object):
 
 
     def _wavefront_gradient(self, u, v, t, theta):
-        # Same as wavefront(), but no argument checking.
+        # Same as wavefront_gradient(), but no argument checking.
         # Note, this phase screen is actually independent of time and theta.
         du = dv = 0.01*self.diam
         w0 = self._wavefront(u, v, t, theta)
@@ -922,14 +922,20 @@ class OpticalScreenField(object):
 
     @param a_nmrs       A two-dimensional array of coefficients.  First index is over nm, i.e., the
                         pupil aberrations.  The second index is over rs, i.e., the field dependence.
-    @param fov_radius   Radius of the field-of-view from which FoV Zernike polynomials are
-                        normalized.
+    @param fov_radius   Radius of the field-of-view as a galsim.Angle from which FoV Zernike 
+                        polynomials are normalized.
+    @param lam_0        Reference wavelength in nanometers at which Zernike aberrations are
+                        being specified.  [default: 500]                        
     """
-    def __init__(self, a_nmrs, fov_radius=None):
+    def __init__(self, a_nmrs, fov_radius=None, lam_0=500.0):
         if fov_radius is None:
             raise ValueError("fov_radius is required for OpticalScreenField")
-        self.fov_radius = fov_radius
+        try:
+            self.fov_radius = fov_radius.rad()
+        except:
+            raise ValueError("fov_radius must be a galsim.Angle object")
         self.a_nmrs = a_nmrs
+        self.lam_0 = lam_0
         self.jmax_pupil = self.a_nmrs.shape[0]-1
         self.jmax_focal = self.a_nmrs.shape[1]-1
         # Field-of-view does not have obscuration, so obscuration=0 and annular=False here.
@@ -937,8 +943,14 @@ class OpticalScreenField(object):
         # One coef_array for each pupil wavefront aberration
         self.coef_arrays = [np.dot(noll_coef, a[1:]) for a in self.a_nmrs]
 
+        self.dynamic = False
+        self.reversible = True
+
     def getAberrations(self, theta_x, theta_y):
         """Return a list of the pupil aberration coefficients for the listed field angle(s).
+
+        @param theta_x  Tangent of the field position in x-direction
+        @param theta_y  Tangent of the field position in y-direction
         """
         r = theta_x/self.fov_radius + 1j*theta_y/self.fov_radius
         rsqr = np.abs(r)**2
@@ -962,10 +974,14 @@ class OpticalScreenField(object):
         v = np.array(v, dtype=float)
         if u.shape != v.shape:
             raise ValueError("u.shape not equal to v.shape")
-        aberr = self.getAberrations(theta[0].tan(), theta[1].tan())
+        return self._wavefront(u, v, t, theta)
 
+    def _wavefront(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
+        # Note, this phase screen is actually independent of time.        
+        aberr = self.getAberrations(theta[0].tan(), theta[1].tan())
         noll_coef = _noll_coef_array(self.jmax_pupil, 0.0, False)
         coef_array = np.dot(noll_coef, aberr[1:])
         r = u + 1j*v
         rsqr = np.abs(r)**2        
-        return horner2d(rsqr, r, coef_array).real
+        return horner2d(rsqr, r, coef_array).real * self.lam_0
