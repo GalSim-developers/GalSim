@@ -121,7 +121,6 @@ namespace galsim {
         double getR0() const { return _r0; }
         double getDiam() const { return _diam; }
         double getObscuration() const { return _obscuration; }
-        const boost::shared_ptr<SBAiry> getAiry() const { return _airy; }
         double getL0() const { return _L0; }
         double getKCrit() const { return _kcrit; }
         double getScale() const { return _scale; }
@@ -159,7 +158,6 @@ namespace galsim {
         double _flux;
         double _scale;
 
-        boost::shared_ptr<SBAiry> _airy;
         boost::shared_ptr<SKInfo> _info;
 
         // Copy constructor and op= are undefined.

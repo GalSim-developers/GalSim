@@ -45,22 +45,6 @@ def test_sk(slow=False):
 
 
 @timer
-def test_airy():
-    """Check access to the airy subcomponent of SK.
-    """
-    lam = 500.0
-    r0 = 0.2
-    L0 = 30.0
-    diam = 8.36
-    obscuration = 0.5
-    kcrit = 10.0
-
-    sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit)
-    airy = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
-    assert sk._sbairy == airy._sbp
-
-
-@timer
 def test_structure_function():
     """Test that SK structure function is equivalent to vonKarman structure function when kcrit=0.
     This is nontrivial since the SK structure function is numerically integrated, while the vK
@@ -223,7 +207,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_sk(args.slow)
-    test_airy()
     test_structure_function()
     test_limiting_cases()
     test_sf_lut(args.slow)

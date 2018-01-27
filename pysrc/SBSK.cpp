@@ -49,7 +49,6 @@ namespace galsim {
                 .def("getL0", &SBSK::getL0)
                 .def("getKCrit", &SBSK::getKCrit)
                 .def("getScale", &SBSK::getScale)
-                .def("getAiry", &SBSK::getAiry)
                 .def("getHalfLightRadius", &SBSK::getHalfLightRadius)
                 .def("structureFunction", &SBSK::structureFunction)
                 .def("kValueSlow", &SBSK::kValueSlow)

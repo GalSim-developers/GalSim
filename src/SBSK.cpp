@@ -80,12 +80,6 @@ namespace galsim {
         return static_cast<const SBSKImpl&>(*_pimpl).getObscuration();
     }
 
-    const boost::shared_ptr<SBAiry> SBSK::getAiry() const
-    {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getAiry();
-    }
-
     double SBSK::getL0() const
     {
         assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
@@ -404,7 +398,6 @@ namespace galsim {
         _kcrit(kcrit),
         _flux(flux),
         _scale(scale),
-        _airy(new SBAiry(lam*1e-9/diam*ARCSEC2RAD, obscuration, 1, gsparams)),
         _info(cache.get(boost::make_tuple(1e-9*lam, r0, diam, obscuration, L0, kcrit, this->gsparams.duplicate())))
     { }
 

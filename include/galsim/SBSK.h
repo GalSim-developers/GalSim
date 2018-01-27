@@ -24,7 +24,6 @@
  */
 
 #include "SBProfile.h"
-#include "SBAiry.h"
 
 namespace galsim {
 
@@ -63,7 +62,6 @@ namespace galsim {
         double getR0() const;
         double getDiam() const;
         double getObscuration() const;
-        const boost::shared_ptr<SBAiry> getAiry() const;
         double getL0() const;
         double getKCrit() const;
         double getScale() const;

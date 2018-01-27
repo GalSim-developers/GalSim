@@ -43,13 +43,6 @@ namespace galsim {
                 .def("getObscuration", &SBAiry::getObscuration)
                 .enable_pickling()
                 ;
-// Work around for "no to_python (by-value) converter found for C++ type: boost::shared_ptr<>"
-// boost::python bug that seems to only exist for boost version 1.60.
-// See GalSim Issue #764 for related discussion.
-#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
-            bp::register_ptr_to_python< boost::shared_ptr<SBAiry> >();
-#endif
-
         }
     };
 
