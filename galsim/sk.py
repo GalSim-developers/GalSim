@@ -63,10 +63,6 @@ class SK(GSObject):
         return self._sbp.getObscuration()
 
     @property
-    def _sbairy(self):
-        return self._sbp.getAiry()
-
-    @property
     def L0(self):
         return self._sbp.getL0()
 
