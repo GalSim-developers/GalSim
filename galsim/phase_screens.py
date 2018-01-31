@@ -931,7 +931,7 @@ class OpticalScreenField(object):
         if fov_radius is None:
             raise ValueError("fov_radius is required for OpticalScreenField")
         try:
-            self.fov_radius = fov_radius.rad()
+            self.fov_radius = fov_radius.tan()
         except:
             raise ValueError("fov_radius must be a galsim.Angle object")
         self.a_nmrs = a_nmrs
