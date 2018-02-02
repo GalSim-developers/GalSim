@@ -162,20 +162,27 @@ def test_sk_phase_psf():
     """
     # import matplotlib.pyplot as plt
 
+    # Note that this test uses a fudge factor discovered while implementing the second kick.
+    # The galsim.AtmosphericScreen() class was over-representing turbulence for a given set of
+    # parameters by about 30%.  We intend to remove this fudge factor once the that error has been
+    # addressed in a separate issue.
+    fudge_factor = 0.7
+
     lam = 500.0
-    r0 = 0.2
+    r0 = 0.2 * fudge_factor**(-5./3)
     L0 = 30.0
     diam = 4.0
     obscuration = 0.5
-    kcrit = 2*np.pi/r0
 
     rng = galsim.UniformDeviate(1234567890)
     weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
     speed = [rng()*20 for _ in range(6)]
     direction = [rng()*360*galsim.degrees for _ in range(6)]
     aper = galsim.Aperture(4.0, obscuration=obscuration)
-    kcrits = [1, 2, 4] if __name__ == '__main__' else [1]
+    kcrits = [1, 3, 10] if __name__ == '__main__' else [1]
     for kcrit in kcrits:
+        # Technically, we should probably use a smaller screen_scale here, but that runs really
+        # slowly.  The below seems to work well enough for the tested kcrits.
         atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, kmin=kcrit, rng=rng,
                                 speed=speed, direction=direction,
                                 screen_size=102.4, screen_scale=0.05)
@@ -186,6 +193,7 @@ def test_sk_phase_psf():
         phaseMom = galsim.hsm.FindAdaptiveMom(phaseImg)
         skMom = galsim.hsm.FindAdaptiveMom(skImg)
 
+        print(phaseMom.moments_sigma, skMom.moments_sigma)
         np.testing.assert_allclose(phaseMom.moments_sigma, skMom.moments_sigma, rtol=2e-2)
 
         # fig, axes = plt.subplots(nrows=1, ncols=2)
@@ -197,7 +205,6 @@ def test_sk_phase_psf():
         # axes[1].set_title("SK")
         # fig.tight_layout()
         # plt.show()
-
 
 
 if __name__ == '__main__':
