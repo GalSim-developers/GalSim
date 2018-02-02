@@ -26,8 +26,8 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/special_functions/bessel.hpp>
 
-#include "SBSK.h"
-#include "SBSKImpl.h"
+#include "SBSecondKick.h"
+#include "SBSecondKickImpl.h"
 #include "fmath/fmath.hpp"
 #include "Solve.h"
 #include "bessel/Roots.h"
@@ -43,83 +43,85 @@ namespace galsim {
     //
     //
     //
-    //SBSK
+    //SBSecondKick
     //
     //
     //
 
-    SBSK::SBSK(double lam, double r0, double diam, double obscuration, double L0, double kcrit,
-               double flux, double scale, const GSParamsPtr& gsparams) :
-        SBProfile(new SBSKImpl(lam, r0, diam, obscuration, L0, kcrit, flux, scale, gsparams)) {}
+    SBSecondKick::SBSecondKick(double lam, double r0, double diam, double obscuration, double L0,
+                               double kcrit, double flux, double scale,
+                               const GSParamsPtr& gsparams) :
+        SBProfile(new SBSecondKickImpl(lam, r0, diam, obscuration, L0, kcrit, flux, scale,
+                                       gsparams)) {}
 
-    SBSK::SBSK(const SBSK &rhs) : SBProfile(rhs) {}
+    SBSecondKick::SBSecondKick(const SBSecondKick &rhs) : SBProfile(rhs) {}
 
-    SBSK::~SBSK() {}
+    SBSecondKick::~SBSecondKick() {}
 
-    double SBSK::getLam() const
+    double SBSecondKick::getLam() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getLam();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getLam();
     }
 
-    double SBSK::getR0() const
+    double SBSecondKick::getR0() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getR0();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getR0();
     }
 
-    double SBSK::getDiam() const
+    double SBSecondKick::getDiam() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getDiam();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getDiam();
     }
 
-    double SBSK::getObscuration() const
+    double SBSecondKick::getObscuration() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getObscuration();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getObscuration();
     }
 
-    double SBSK::getL0() const
+    double SBSecondKick::getL0() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getL0();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getL0();
     }
 
-    double SBSK::getKCrit() const
+    double SBSecondKick::getKCrit() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getKCrit();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getKCrit();
     }
 
-    double SBSK::getScale() const
+    double SBSecondKick::getScale() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getScale();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getScale();
     }
 
-    double SBSK::getHalfLightRadius() const
+    double SBSecondKick::getHalfLightRadius() const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).getHalfLightRadius();
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    double SBSK::structureFunction(double rho) const
+    double SBSecondKick::structureFunction(double rho) const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).structureFunction(rho);
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).structureFunction(rho);
     }
 
-    double SBSK::kValueSlow(double k) const
+    double SBSecondKick::kValueSlow(double k) const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).kValueSlow(k);
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).kValueSlow(k);
     }
 
-    double SBSK::xValueSlow(double k) const
+    double SBSecondKick::xValueSlow(double k) const
     {
-        assert(dynamic_cast<const SBSKImpl*>(_pimpl.get()));
-        return static_cast<const SBSKImpl&>(*_pimpl).xValueSlow(k);
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).xValueSlow(k);
     }
 
     //
@@ -344,7 +346,7 @@ namespace galsim {
             if (r >= maxR) {
                 if (_hlr == 1e10) {
                     dbg << "sum = " << sum << '\n';
-                    throw SBError("Cannot find SK half-light-radius.");
+                    throw SBError("Cannot find SecondKick half-light-radius.");
                 }
                 R = maxR;
                 break;
@@ -377,18 +379,20 @@ namespace galsim {
     }
 
     LRUCache<boost::tuple<double,double,double,double,double,double,GSParamsPtr>,SKInfo>
-        SBSK::SBSKImpl::cache(sbp::max_SK_cache);
+        SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
     //
     //
-    //SBSKImpl
+    //SBSecondKickImpl
     //
     //
     //
 
-    SBSK::SBSKImpl::SBSKImpl(double lam, double r0, double diam, double obscuration, double L0,
-                             double kcrit, double flux, double scale, const GSParamsPtr& gsparams) :
+    SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam, double r0, double diam,
+                                                     double obscuration, double L0, double kcrit,
+                                                     double flux, double scale,
+                                                     const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _lam(lam),
         _r0(r0),
@@ -401,20 +405,20 @@ namespace galsim {
         _info(cache.get(boost::make_tuple(1e-9*lam, r0, diam, obscuration, L0, kcrit, this->gsparams.duplicate())))
     { }
 
-    double SBSK::SBSKImpl::maxK() const
+    double SBSecondKick::SBSecondKickImpl::maxK() const
     { return _info->maxK()*_scale; }
 
-    double SBSK::SBSKImpl::stepK() const
+    double SBSecondKick::SBSecondKickImpl::stepK() const
     { return _info->stepK()*_scale; }
 
-    double SBSK::SBSKImpl::getHalfLightRadius() const
+    double SBSecondKick::SBSecondKickImpl::getHalfLightRadius() const
     { return _info->getHalfLightRadius()/_scale; }
 
-    std::string SBSK::SBSKImpl::serialize() const
+    std::string SBSecondKick::SBSecondKickImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBSK("
+        oss << "galsim._galsim.SBSecondKick("
             <<getLam()<<", "
             <<getR0()<<", "
             <<getDiam()<<", "
@@ -427,25 +431,25 @@ namespace galsim {
         return oss.str();
     }
 
-    double SBSK::SBSKImpl::structureFunction(double rho) const
+    double SBSecondKick::SBSecondKickImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
         return _info->structureFunction(rho);
     }
 
-    double SBSK::SBSKImpl::kValue(double k) const
+    double SBSecondKick::SBSecondKickImpl::kValue(double k) const
     // this kValue assumes k is in inverse arcsec
     {
         return _info->kValue(k)*_flux;
     }
 
-    std::complex<double> SBSK::SBSKImpl::kValue(const Position<double>& p) const
+    std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
     // k in units of _scale.
     {
         return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
     }
 
-    double SBSK::SBSKImpl::kValueSlow(double k) const
+    double SBSecondKick::SBSecondKickImpl::kValueSlow(double k) const
     // k in units of _scale.
     {
         return _info->kValueSlow(k/_scale)*_flux;
@@ -454,17 +458,17 @@ namespace galsim {
     class SKXIntegrand : public std::unary_function<double,double>
     {
     public:
-        SKXIntegrand(double r, const SBSK::SBSKImpl& sbski) :
+        SKXIntegrand(double r, const SBSecondKick::SBSecondKickImpl& sbski) :
             _r(r), _sbski(sbski)
         {}
 
         double operator()(double k) const { return _sbski.kValue(k)*k*j0(k*_r); }
     private:
         double _r;
-        const SBSK::SBSKImpl& _sbski;
+        const SBSecondKick::SBSecondKickImpl& _sbski;
     };
 
-    double SBSK::SBSKImpl::xValue(double r) const {
+    double SBSecondKick::SBSecondKickImpl::xValue(double r) const {
     // r in arcsec.
         // SKXIntegrand I(r, *this);
         // return integ::int1d(I, 0.0, integ::MOCK_INF,
@@ -472,19 +476,19 @@ namespace galsim {
         return _info->xValue(r)*_flux;
     }
 
-    double SBSK::SBSKImpl::xValue(const Position<double>& p) const
+    double SBSecondKick::SBSecondKickImpl::xValue(const Position<double>& p) const
     // r in units of _scale
     {
         return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
     }
 
-    double SBSK::SBSKImpl::xValueSlow(double r) const
+    double SBSecondKick::SBSecondKickImpl::xValueSlow(double r) const
     {
     //r in units of _scale
         return _info->xValueSlow(r*_scale);
     }
 
-    boost::shared_ptr<PhotonArray> SBSK::SBSKImpl::shoot(
+    boost::shared_ptr<PhotonArray> SBSecondKick::SBSecondKickImpl::shoot(
         int N, UniformDeviate ud) const
     {
         dbg<<"SK shoot: N = "<<N<<std::endl;

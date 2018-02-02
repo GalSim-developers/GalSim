@@ -17,10 +17,10 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBSK_H
-#define GalSim_SBSK_H
+#ifndef GalSim_SBSecondKick_H
+#define GalSim_SBSecondKick_H
 /**
- * @file SBSK.h @brief SBProfile for second kick.
+ * @file SBSecondKick.h @brief SBProfile for second kick.
  */
 
 #include "SBProfile.h"
@@ -28,11 +28,11 @@
 namespace galsim {
 
     namespace sbp {
-        // How many SK profiles to save in the cache
+        // How many SecondKick profiles to save in the cache
         const int max_SK_cache = 100;
     }
 
-    class SBSK : public SBProfile
+    class SBSecondKick : public SBProfile
     {
     public:
         /**
@@ -48,14 +48,14 @@ namespace galsim {
          * @param[in] scale        Scale of 'x' in xValue in arcsec.
          * @param[in] gsparams     GSParams.
          */
-        SBSK(double lam, double r0, double diam, double obscuration, double L0, double kcrit,
-             double flux, double scale, const GSParamsPtr& gsparams);
+        SBSecondKick(double lam, double r0, double diam, double obscuration, double L0,
+                     double kcrit, double flux, double scale, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor
-        SBSK(const SBSK& rhs);
+        SBSecondKick(const SBSecondKick& rhs);
 
         /// @brief Destructor.
-        ~SBSK();
+        ~SBSecondKick();
 
         /// Getters
         double getLam() const;
@@ -76,11 +76,11 @@ namespace galsim {
 
     protected:
 
-        class SBSKImpl;
+        class SBSecondKickImpl;
 
     private:
         // op= is undefined
-        void operator=(const SBSK& rhs);
+        void operator=(const SBSecondKick& rhs);
     };
 }
 

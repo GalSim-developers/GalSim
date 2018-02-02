@@ -4,8 +4,8 @@ import galsim
 from galsim_test_helpers import *
 
 @timer
-def test_sk(slow=False):
-    """Test generation of SK profiles
+def test_second_kick(slow=False):
+    """Test generation of SecondKick profiles
     """
     obscuration = 0.5
     bigGSP = galsim.GSParams(maximum_fft_size=8192)
@@ -29,7 +29,7 @@ def test_sk(slow=False):
                     print(kwargs)
                     kwargs['gsparams'] = bigGSP
 
-                    sk = galsim.SK(flux=2.2, **kwargs)
+                    sk = galsim.SecondKick(flux=2.2, **kwargs)
                     np.testing.assert_almost_equal(sk.flux, 2.2)
                     do_pickle(sk)
                     do_pickle(sk._sbp)
@@ -38,17 +38,17 @@ def test_sk(slow=False):
                     # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
                     # Decrease maxk by convolving in a smallish Gaussian.
                     obj = galsim.Convolve(sk, galsim.Gaussian(fwhm=0.2))
-                    check_basic(obj, "SK")
+                    check_basic(obj, "SecondKick")
                     img = galsim.Image(16, 16, scale=0.2)
-                    do_shoot(obj, img, "SK")
-                    do_kvalue(obj, img, "SK")
+                    do_shoot(obj, img, "SecondKick")
+                    do_kvalue(obj, img, "SecondKick")
 
 
 @timer
 def test_structure_function():
-    """Test that SK structure function is equivalent to vonKarman structure function when kcrit=0.
-    This is nontrivial since the SK structure function is numerically integrated, while the vK
-    structure function is evaluated analytically.
+    """Test that SecondKick structure function is equivalent to vonKarman structure function when
+    kcrit=0.  This is nontrivial since the SecondKick structure function is numerically integrated,
+    while the vK structure function is evaluated analytically.
     """
     lam = 500.0
     r0 = 0.2
@@ -56,7 +56,7 @@ def test_structure_function():
     diam = 8.36
     obscuration = 0.61
 
-    sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=0.0)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=0.0)
     vk = galsim.VonKarman(lam, r0, L0=L0)
 
     for rho in [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]:
@@ -67,9 +67,9 @@ def test_structure_function():
 
 @timer
 def test_limiting_cases():
-    """SK has some two interesting limiting cases.
-    A) When kcrit = 0, SK = Convolve(Airy, VonKarman).
-    B) When kcrit = inf, SK = Airy
+    """SecondKick has some two interesting limiting cases.
+    A) When kcrit = 0, SecondKick = Convolve(Airy, VonKarman).
+    B) When kcrit = inf, SecondKick = Airy
     Test these.
     """
     lam = 500.0
@@ -79,7 +79,7 @@ def test_limiting_cases():
     obscuration = 0.61
 
     # First kcrit=0
-    sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=0.0)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=0.0)
     limiting_case = galsim.Convolve(
         galsim.VonKarman(lam, r0, L0=L0),
         galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
@@ -95,7 +95,7 @@ def test_limiting_cases():
             atol=1e-8)
 
     # kcrit=inf
-    sk = galsim.SK(lam, r0, diam, obscuration, L0, kcrit=np.inf)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=np.inf)
     limiting_case = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
 
     for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0]:
@@ -118,7 +118,7 @@ def test_sf_lut(slow=False):
     obscuration = 0.61
     kcrit = 2*np.pi/r0
 
-    sk = galsim.SK(lam, r0, diam, obscuration, L0, 0.5*kcrit)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, 0.5*kcrit)
 
     print("Testing kValue")
     for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
@@ -188,7 +188,7 @@ def test_sk_phase_psf():
                                 screen_size=102.4, screen_scale=0.05)
         psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper)
         phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
-        sk = galsim.SK(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0, kcrit=kcrit)
+        sk = galsim.SecondKick(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0, kcrit=kcrit)
         skImg = sk.drawImage(nx=64, ny=64, scale=0.02)
         phaseMom = galsim.hsm.FindAdaptiveMom(phaseImg)
         skMom = galsim.hsm.FindAdaptiveMom(skImg)
@@ -202,7 +202,7 @@ def test_sk_phase_psf():
         # phim = axes[0].imshow(np.log10(phaseImg.array), vmin=vmin, vmax=vmax)
         # axes[0].set_title("PhasePSF")
         # skim = axes[1].imshow(np.log10(skImg.array), vmin=vmin, vmax=vmax)
-        # axes[1].set_title("SK")
+        # axes[1].set_title("SecondKick")
         # fig.tight_layout()
         # plt.show()
 

@@ -23,17 +23,17 @@
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 
-#include "SBSK.h"
+#include "SBSecondKick.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSK
+    struct PySBSecondKick
     {
         static void wrap()
         {
-            bp::class_<SBSK,bp::bases<SBProfile> >("SBSK", bp::no_init)
+            bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
                 .def(bp::init<double,double,double,double,double,double,double,double,
                               boost::shared_ptr<GSParams> >(
                         (bp::arg("lam"), bp::arg("r0"),
@@ -41,26 +41,26 @@ namespace galsim {
                          bp::arg("L0"), bp::arg("kcrit"), bp::arg("flux")=1.,
                          bp::arg("scale")=1.0, bp::arg("gsparams")=bp::object()))
                 )
-                .def(bp::init<const SBSK &>())
-                .def("getLam", &SBSK::getLam)
-                .def("getR0", &SBSK::getR0)
-                .def("getDiam", &SBSK::getDiam)
-                .def("getObscuration", &SBSK::getObscuration)
-                .def("getL0", &SBSK::getL0)
-                .def("getKCrit", &SBSK::getKCrit)
-                .def("getScale", &SBSK::getScale)
-                .def("getHalfLightRadius", &SBSK::getHalfLightRadius)
-                .def("structureFunction", &SBSK::structureFunction)
-                .def("kValueSlow", &SBSK::kValueSlow)
-                .def("xValueSlow", &SBSK::xValueSlow)
+                .def(bp::init<const SBSecondKick &>())
+                .def("getLam", &SBSecondKick::getLam)
+                .def("getR0", &SBSecondKick::getR0)
+                .def("getDiam", &SBSecondKick::getDiam)
+                .def("getObscuration", &SBSecondKick::getObscuration)
+                .def("getL0", &SBSecondKick::getL0)
+                .def("getKCrit", &SBSecondKick::getKCrit)
+                .def("getScale", &SBSecondKick::getScale)
+                .def("getHalfLightRadius", &SBSecondKick::getHalfLightRadius)
+                .def("structureFunction", &SBSecondKick::structureFunction)
+                .def("kValueSlow", &SBSecondKick::kValueSlow)
+                .def("xValueSlow", &SBSecondKick::xValueSlow)
                 .enable_pickling()
                 ;
         }
     };
 
-    void pyExportSBSK()
+    void pyExportSBSecondKick()
     {
-        PySBSK::wrap();
+        PySBSecondKick::wrap();
     }
 
 } // namespace galsim

@@ -17,11 +17,11 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_SBSKImpl_H
-#define GalSim_SBSKImpl_H
+#ifndef GalSim_SBSecondKickImpl_H
+#define GalSim_SBSecondKickImpl_H
 
 #include "SBProfileImpl.h"
-#include "SBSK.h"
+#include "SBSecondKick.h"
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
 #include "Table.h"
@@ -93,17 +93,17 @@ namespace galsim {
     //
     //
     //
-    //SBSKImpl
+    //SBSecondKickImpl
     //
     //
     //
 
-    class SBSK::SBSKImpl : public SBProfileImpl
+    class SBSecondKick::SBSecondKickImpl : public SBProfileImpl
     {
     public:
-        SBSKImpl(double lam, double r0, double diam, double obscuration, double L0, double kcrit,
-                 double flux, double scale, const GSParamsPtr& gsparams);
-        ~SBSKImpl() {}
+        SBSecondKickImpl(double lam, double r0, double diam, double obscuration, double L0,
+                         double kcrit, double flux, double scale, const GSParamsPtr& gsparams);
+        ~SBSecondKickImpl() {}
 
         bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
@@ -127,7 +127,7 @@ namespace galsim {
         double maxSB() const { return _flux * _info->xValue(0.); }
 
         /**
-         * @brief SBSK photon-shooting is done numerically with `OneDimensionalDeviate`
+         * @brief SBSecondKick photon-shooting is done numerically with `OneDimensionalDeviate`
          * class.
          *
          * @param[in] N Total number of photons to produce.
@@ -161,10 +161,11 @@ namespace galsim {
         boost::shared_ptr<SKInfo> _info;
 
         // Copy constructor and op= are undefined.
-        SBSKImpl(const SBSKImpl& rhs);
-        void operator=(const SBSKImpl& rhs);
+        SBSecondKickImpl(const SBSecondKickImpl& rhs);
+        void operator=(const SBSecondKickImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,double,double,double,double,GSParamsPtr>,SKInfo> cache;
+        static LRUCache<boost::tuple<double,double,double,double,double,double,GSParamsPtr>,SKInfo>
+            cache;
     };
 }
 

@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file sk.py
+"""@file second_kick.py
 
 This file implements the atmospheric PSF "second kick", which is an analytic calculation for the
 surface brightness profile of an atmospheric PSF convolved with an Airy PSF in the infinite exposure
@@ -33,7 +33,7 @@ from . import _galsim
 from .gsobject import GSObject
 
 
-class SK(GSObject):
+class SecondKick(GSObject):
     """Class describing the infinite exposure limit (or equivalently, the expected value) for the
     surface brightness profile of an atmospheric PSF convolved by an Airy PSF.  The atmospheric PSF
     is assumed to arise from a turbulent phase spectrum following a von Karman power spectrum of
@@ -54,10 +54,11 @@ class SK(GSObject):
     et al. (2015) for the LSST PhoSim package.  Essentially, phase fluctuations below a critical
     mode in Fourier space, labeled `kcrit`, are handled by the fast geometric optics calculations
     present in PhaseScreenPSF.  Fluctuations for Fourier modes above `kcrit` are then calculated
-    analytically by SK.  Because very many oscillations of these high-k modes both fit within a
-    given telescope aperture and pass by the aperture during a moderate length exposure time, we can
-    use the same analytic expectation value calculation for the high-k component of all PSFs across
-    a field of view, thus incurring the somewhat expensive calculation for Fourier optics only once.
+    analytically by SecondKick.  Because very many oscillations of these high-k modes both fit
+    within a given telescope aperture and pass by the aperture during a moderate length exposure
+    time, we can use the same analytic expectation value calculation for the high-k component of all
+    PSFs across a field of view, thus incurring the somewhat expensive calculation for Fourier optics
+    only once.
 
     For more details, we refer the reader to the original implementation described in
 
@@ -92,8 +93,8 @@ class SK(GSObject):
         # Need _scale_unit for repr roundtriping.
         self._scale_unit = scale_unit
         scale = scale_unit/galsim.arcsec
-        self._sbp = galsim._galsim.SBSK(lam, r0, diam, obscuration, L0, kcrit, flux, scale,
-                                        gsparams)
+        self._sbp = galsim._galsim.SBSecondKick(
+            lam, r0, diam, obscuration, L0, kcrit, flux, scale, gsparams)
 
     @property
     def lam(self):
@@ -134,7 +135,7 @@ class SK(GSObject):
         return self._sbp.structureFunction(rho)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.SK) and
+        return (isinstance(other, galsim.SecondKick) and
         self.lam == other.lam and
         self.r0 == other.r0 and
         self.diam == other.diam and
@@ -146,11 +147,11 @@ class SK(GSObject):
         self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.SK", self.lam, self.r0, self.diam, self.obscuration, self.L0,
+        return hash(("galsim.SecondKick", self.lam, self.r0, self.diam, self.obscuration, self.L0,
                      self.kcrit, self.flux, self.scale_unit, self.gsparams))
 
     def __repr__(self):
-        out = "galsim.SK("
+        out = "galsim.SecondKick("
         out += "lam=%r"%self.lam
         out += ", r0=%r"%self.r0
         out += ", diam=%r"%self.diam
@@ -166,11 +167,11 @@ class SK(GSObject):
         return out
 
     def __str__(self):
-        return "galsim.SK(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
+        return "galsim.SecondKick(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
 
-_galsim.SBSK.__getinitargs__ = lambda self: (
+_galsim.SBSecondKick.__getinitargs__ = lambda self: (
     self.getLam(), self.getR0(), self.getDiam(), self.getObscuration(), self.getL0(),
     self.getKCrit(), self.getFlux(), self.getScale(), self.getGSParams())
-_galsim.SBSK.__getstate__ = lambda self: None
-_galsim.SBSK.__repr__ = lambda self: \
-    "galsim._galsim.SBSK(%r, %r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
+_galsim.SBSecondKick.__getstate__ = lambda self: None
+_galsim.SBSecondKick.__repr__ = lambda self: \
+    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
