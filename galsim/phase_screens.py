@@ -350,7 +350,7 @@ class AtmosphericScreen(object):
         return self._tab2d.gradient(u, v)
 
 
-def Atmosphere(screen_size, rng=None, **kwargs):
+def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
 
@@ -500,8 +500,13 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     if rng is None:
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
-    return galsim.PhaseScreenList([AtmosphericScreen(**kw)
-                                   for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
+
+    psl = []
+    for kw in galsim.utilities.dol_to_lod(kwargs, nmax):
+        psl.append(AtmosphericScreen(**kw))
+        if _bar is not None:
+            _bar.update()
+    return galsim.PhaseScreenList(psl)
 
 
 # Some utilities for working with Zernike polynomials
