@@ -16,8 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 """@file sk.py
-This file implements the atmospheric PSF "second kick".
-"""
+
+This file implements the atmospheric PSF "second kick", which is an analytic calculation for the
+surface brightness profile of an atmospheric PSF convolved with an Airy PSF in the infinite exposure
+limit.  The atmospheric turbulence spectrum follows the von Karman formulation with an optional
+truncation scale.  Generally, this will be used in conjunction with a PhaseScreenPSF being drawn
+using photon-shooting.  In this case, the PhaseScreenPSF will simulate the effects of the low
+frequency turbulence modes, which can be treated purely using refraction, while the SecondKick
+handles the high frequency modes."""
 
 import numpy as np
 
@@ -28,7 +34,50 @@ from .gsobject import GSObject
 
 
 class SK(GSObject):
-    """
+    """Class describing the infinite exposure limit (or equivalently, the expected value) for the
+    surface brightness profile of an atmospheric PSF convolved by an Airy PSF.  The atmospheric PSF
+    is assumed to arise from a turbulent phase spectrum following a von Karman power spectrum of
+    fluctuations:
+
+        (f^2 + L0^2)^(-11/6)
+
+    (See the VonKarman docstring for more details).
+
+    The intended use for this profile is as a correction to applying the geometric approximation to
+    PhaseScreenPSF objects when drawing using photon shooting.  The geometric approximation is only
+    valid for length scales larger than some critical scale where the effects of interference are
+    negligible.  For smaller length scales, interference (diffraction) must be handled using an
+    optical paradigm that acknowledges the wave nature of light, such as Fourier optics.
+
+    Fourier optics calculations are many orders of magnitude slower than geometric optics
+    calculations, however, so we implement a scale-splitting algorithm first described in Peterson
+    et al. (2015) for the LSST PhoSim package.  Essentially, phase fluctuations below a critical
+    mode in Fourier space, labeled `kcrit`, are handled by the fast geometric optics calculations
+    present in PhaseScreenPSF.  Fluctuations for Fourier modes above `kcrit` are then calculated
+    analytically by SK.  Because very many oscillations of these high-k modes both fit within a
+    given telescope aperture and pass by the aperture during a moderate length exposure time, we can
+    use the same analytic expectation value calculation for the high-k component of all PSFs across
+    a field of view, thus incurring the somewhat expensive calculation for Fourier optics only once.
+
+    For more details, we refer the reader to the original implementation described in
+
+        Peterson et al.  2015  ApJSS  vol. 218
+
+    @param lam               Wavelength in nanometers
+    @param r0                Fried parameter in meters.
+    @param diam              Aperture diameter in meters.
+    @param obscuration       Linear dimension of central obscuration as fraction of aperture
+                             linear dimension. [0., 1.).  [default: 0.0]
+    @param L0                Outer scale in meters.  [default: np.inf]
+    @param kcrit             Critical Fourier mode below which the turbulence power spectrum will be
+                             truncated.
+    @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
+    @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
+                             etc.  Should be a galsim.AngleUnit or a string that can be used to
+                             construct one (e.g., 'arcsec', 'radians', etc.).
+                             [default: galsim.arcsec]
+    @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
+                             details. [default: None]
     """
     def __init__(self, lam, r0, diam, obscuration=0, L0=np.inf, kcrit=None, flux=1,
                  scale_unit=galsim.arcsec, gsparams=None):
@@ -122,6 +171,6 @@ class SK(GSObject):
 _galsim.SBSK.__getinitargs__ = lambda self: (
     self.getLam(), self.getR0(), self.getDiam(), self.getObscuration(), self.getL0(),
     self.getKCrit(), self.getFlux(), self.getScale(), self.getGSParams())
-# _galsim.SBSK.__getstate__ = lambda self: None
+_galsim.SBSK.__getstate__ = lambda self: None
 _galsim.SBSK.__repr__ = lambda self: \
     "galsim._galsim.SBSK(%r, %r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
