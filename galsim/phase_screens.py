@@ -177,7 +177,7 @@ class AtmosphericScreen(object):
         old_settings = np.seterr(all='ignore')
         self._psi = (1./self.screen_size*self._kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
                      (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                     self.npix * np.sqrt(np.sqrt(2.0)))
+                     self.npix)
         np.seterr(**old_settings)
         self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self._psi[0, 0] = 0.0
