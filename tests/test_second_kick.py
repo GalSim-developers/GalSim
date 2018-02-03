@@ -162,14 +162,8 @@ def test_sk_phase_psf():
     """
     # import matplotlib.pyplot as plt
 
-    # Note that this test uses a fudge factor discovered while implementing the second kick.
-    # The galsim.AtmosphericScreen() class was over-representing turbulence for a given set of
-    # parameters by about 30%.  We intend to remove this fudge factor once the that error has been
-    # addressed in a separate issue.
-    fudge_factor = 0.7
-
     lam = 500.0
-    r0 = 0.2 * fudge_factor**(-5./3)
+    r0 = 0.2
     L0 = 30.0
     diam = 4.0
     obscuration = 0.5
