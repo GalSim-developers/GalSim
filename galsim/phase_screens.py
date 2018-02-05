@@ -866,7 +866,7 @@ class OpticalScreen(object):
         return galsim.utilities.horner2d(rsqr, r, self._coef_array, dtype=complex).real * self.lam_0
 
     def wavefront_gradient(self, u, v, t=None, theta=None):
-        """ Compute gradient of wavefront due to atmospheric phase screen.
+        """ Compute gradient of wavefront due to optical phase screen.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
