@@ -58,8 +58,9 @@ def MergeConfig(config1, config2, logger=None):
                         "one takes precedence",key)
             pass
 
+"""
 def ReadYaml(config_file):
-    """Read in a YAML configuration file and return the corresponding dicts.
+    Read in a YAML configuration file and return the corresponding dicts.
 
     A YAML file is allowed to define several dicts using multiple documents. The GalSim parser
     treats this as a set of multiple jobs to be done.  The first document is taken to be a "base"
@@ -72,7 +73,7 @@ def ReadYaml(config_file):
     @param config_file      The name of the configuration file to read.
 
     @returns list of config dicts
-    """
+    
     import yaml
 
     # cf. coldfix's answer here:
@@ -108,6 +109,7 @@ def ReadYaml(config_file):
             MergeConfig(c, base_config)
 
     return all_config
+"""
 
 
 def ReadJson(config_file):

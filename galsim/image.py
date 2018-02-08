@@ -21,7 +21,7 @@ classes.
 """
 
 from __future__ import division
-from future.utils import with_metaclass
+from six import with_metaclass
 from . import _galsim
 import numpy as np
 import galsim

@@ -21,3 +21,4 @@ tmp*
 examples_bin
 *~
 .cache
+.idea

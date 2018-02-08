@@ -19,7 +19,7 @@
 Routines for controlling catalog input/output with GalSim.
 """
 
-from future.utils import iteritems, iterkeys, itervalues
+from six import iteritems, iterkeys, itervalues
 from builtins import zip
 import galsim
 import os

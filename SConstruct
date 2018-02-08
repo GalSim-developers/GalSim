@@ -51,9 +51,9 @@ config_file = 'gs_scons.conf'
 # prefix for the system so I didn't have to set this.
 
 # MJ: Is there a python function that might return this in a more platform-independent way?
-default_prefix = '/usr/local'
+default_prefix = '${EUCLID_CUSTOM_PREFIX}/local'
 
-default_python = '/usr/bin/env python'
+default_python = '$EUCLID_CUSTOM_PREFIX/bin/python3'
 default_cxx = 'c++'
 
 # first check for a saved conf file
@@ -1938,7 +1938,7 @@ def DoPyChecks(config):
     config.CheckPyTMV()
     config.CheckNumPy()
     config.CheckPyFITS()
-    config.CheckFuture()
+    # config.CheckFuture()
     config.CheckBoostPython()
     config.CheckPythonExcept()
 

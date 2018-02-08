@@ -22,8 +22,8 @@ This file includes routines for reading and writing individual Images to/from FI
 routines for handling multiple Images.
 """
 
-from future.utils import iteritems, iterkeys, itervalues
-from past.builtins import basestring
+from six import iteritems, iterkeys, itervalues
+from builtins import str
 import os
 import galsim
 import numpy as np
@@ -488,7 +488,7 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin:
-        if isinstance(fin, basestring): # pragma: no cover
+        if isinstance(fin, str): # pragma: no cover
             # In this case, it is a file name that we need to delete.
             # Note: This is relevant for the _tmp versions that are not run on Travis, so
             # don't include this bit in the coverage report.
@@ -1163,7 +1163,7 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
-        if isinstance(header, basestring):
+        if isinstance(header, str):
             file_name = header
             header = None
 

@@ -17,7 +17,7 @@
 #
 from __future__ import print_function
 
-from past.builtins import basestring
+from builtins import str
 import sys
 import galsim
 
@@ -125,7 +125,7 @@ def ParseValue(config, key, base, value_type):
     else: # Not a dict
 
         # Check for some special markup on string items and convert them to normal dicts.
-        if isinstance(param, basestring):
+        if isinstance(param, str):
             if param[0] == '$':
                 config[key] = { 'type': 'Eval', 'str': str(param[1:]) }
                 return ParseValue(config, key, base, value_type)

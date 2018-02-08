@@ -265,7 +265,7 @@ class OpticalPSF(GSObject):
             if lam is None or diam is None:
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             # In this case we're going to use scale_unit, so parse it in case of string input:
-            if isinstance(scale_unit, basestring):
+            if isinstance(scale_unit, str):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 

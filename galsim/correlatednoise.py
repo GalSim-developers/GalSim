@@ -21,7 +21,7 @@ Python layer documentation and functions for handling correlated noise in GalSim
 
 import numpy as np
 import galsim
-from future.utils import iteritems
+from six import iteritems
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.

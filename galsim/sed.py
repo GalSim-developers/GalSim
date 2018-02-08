@@ -19,7 +19,7 @@
 Spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
-from past.builtins import basestring
+from builtins import str
 import numpy as np
 
 import galsim
@@ -180,7 +180,7 @@ class SED(object):
                 raise ValueError("Attempt to set spectral SED using float or integer.")
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
-        elif isinstance(self._orig_spec, basestring):
+        elif isinstance(self._orig_spec, str):
             isfile, filename = galsim.utilities.check_share_file(self._orig_spec, 'SEDs')
             if isfile:
                 self._spec = galsim.LookupTable.from_file(filename, interpolant='linear')
