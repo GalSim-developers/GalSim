@@ -24,6 +24,7 @@ import logging
 import math
 import re
 import warnings
+import pytest
 
 from galsim_test_helpers import *
 
@@ -1020,7 +1021,8 @@ def test_tiled():
     np.testing.assert_array_equal(im3b.array, im3a.array)
 
 
-@timer
+
+@pytest.mark.skip("YAML not supported")
 def test_njobs():
     """Test that splitting up jobs works correctly.
 
@@ -1313,7 +1315,8 @@ def test_wcs():
     except ImportError:
         pass
 
-@timer
+
+@pytest.mark.skip("YAML not supported")
 def test_index_key():
     """Test some aspects of setting non-default index_key values
     """
@@ -1459,7 +1462,7 @@ def test_index_key():
     assert 'current' not in config1['gal']['shear']
 
 
-@timer
+@pytest.mark.skip("YAML not supported")
 def test_multirng():
     """Test using multiple rngs.
 
@@ -1547,7 +1550,7 @@ def test_multirng():
         np.testing.assert_array_equal(im.array, images2[n].array)
         np.testing.assert_array_equal(im.array, images3[n].array)
 
-@timer
+@pytest.mark.skip("YAML not supported")
 def test_template():
     """Test various uses of the template keyword
     """
