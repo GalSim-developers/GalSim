@@ -317,3 +317,13 @@ Bug Fix
 -------
 
 - Fixed a build problem for Anaconda on Macs using Python 3.6. (#924)
+
+Fork for Euclid (M. Marseille) from 1.5.1 version
+=================================================
+
+New Feature
+-----------
+
+- Dependency from future removed
+
+

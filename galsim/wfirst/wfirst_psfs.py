@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-from past.builtins import basestring
+from builtins import str
 import galsim
 import galsim.wfirst
 import numpy as np
@@ -295,7 +295,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     if bandpass_list is None:
         bandpass_list = default_bandpass_list
     else:
-        if not isinstance(bandpass_list[0], basestring):
+        if not isinstance(bandpass_list[0], str):
             raise ValueError("Expected input list of bandpass names!")
         if not set(bandpass_list).issubset(default_bandpass_list):
             err_msg = ''

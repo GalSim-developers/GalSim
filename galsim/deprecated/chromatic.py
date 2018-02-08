@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-from future.utils import iteritems
+from six import iteritems
 import galsim
 from galsim.deprecated import depr
 from galsim import ChromaticObject

@@ -67,7 +67,7 @@ def _GenerateFromEval(config, base, value_type):
         # If the function is not already compiled, then this is the first time through, so do
         # a full parsing of all the possibilities.
 
-        from future.utils import exec_
+        from six import exec_
         # These will be the variables to use for evaluating the eval statement.
         # Start with the current locals and globals, and add extra items to them.
         if 'eval_gdict' not in base:

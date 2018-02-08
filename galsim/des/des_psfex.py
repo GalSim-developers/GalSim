@@ -27,7 +27,7 @@ See documentation here:
     https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
-from past.builtins import basestring
+from builtins import str
 
 import galsim
 import galsim.config

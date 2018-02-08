@@ -18,8 +18,9 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+
 from contextlib import contextmanager
-from future.utils import iteritems
+from six import iteritems
 from builtins import range, object
 
 import numpy as np
@@ -1221,7 +1222,7 @@ def math_eval(str, other_modules=()):
     """
     # Python 2 and 3 have a different syntax for exec with globals() dict.
     # The exec_ function lets us use the Python 3 syntax even in Python 2.
-    from future.utils import exec_
+    from six import exec_
     gdict = globals().copy()
     exec_('import numpy', gdict)
     exec_('import numpy as np', gdict)

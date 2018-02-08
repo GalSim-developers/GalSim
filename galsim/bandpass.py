@@ -19,7 +19,7 @@
 Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 """
 
-from past.builtins import basestring
+from builtins import str
 import numpy as np
 
 import galsim
@@ -196,7 +196,7 @@ class Bandpass(object):
 
         if self._tp is not None:
             pass
-        elif isinstance(self._orig_tp, basestring):
+        elif isinstance(self._orig_tp, str):
             isfile, filename = galsim.utilities.check_share_file(self._orig_tp, 'bandpasses')
             if isfile:
                 self._tp = galsim.LookupTable.from_file(filename, interpolant='linear')
