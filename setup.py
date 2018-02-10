@@ -93,18 +93,24 @@ def get_compiler(cc):
 def find_fftw_lib():
     try_libdirs = []
     lib_ext = '.so'
-    if 'FFTW_PATH' in os.environ:
-        try_libdirs.append(os.environ['FFTW_PATH'])
-        try_libdirs.append(os.path.join(os.environ['FFTW_PATH'],'lib'))
+    if 'FFTW_DIR' in os.environ:
+        try_libdirs.append(os.environ['FFTW_DIR'])
+        try_libdirs.append(os.path.join(os.environ['FFTW_DIR'],'lib'))
     if 'posix' in os.name.lower():
         try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
     if 'darwin' in platform.system().lower():
-        try_libdirs.extend(['/sw/lib', '/opt/local/lib'])
+        try_libdirs.extend(['/usr/local/lib', '/usr/lib', '/sw/lib', '/opt/local/lib'])
         lib_ext = '.dylib'
     for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
         if path in os.environ:
             for dir in os.environ[path].split(':'):
                 try_libdirs.append(dir)
+    # If the above don't work, the fftw3 module may have the right directory.
+    try:
+        import fftw3
+        try_libdirs.append(fftw3.lib.libdir)
+    except ImportError:
+        pass
 
     name = 'libfftw3' + lib_ext
     for dir in try_libdirs:
@@ -128,8 +134,45 @@ def find_fftw_lib():
     except Exception as e:
         print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
         print("location such as /usr/local/lib, or the installation directory is either in ")
-        print("your LIBRARY_PATH or FFTW_PATH environment variable.")
+        print("your LIBRARY_PATH or FFTW_DIR environment variable.")
         raise
+
+# Check for Eigen in some likely places
+def find_eigen_dir():
+    try_dirs = []
+    if 'EIGEN_DIR' in os.environ:
+        try_dirs.append(os.environ['EIGEN_DIR'])
+        try_dirs.append(os.path.join(os.environ['EIGEN_DIR']))
+    if 'posix' in os.name.lower():
+        try_dirs.extend(['/usr/local/include', '/usr/include'])
+    if 'darwin' in platform.system().lower():
+        try_dirs.extend(['/usr/local/include', '/usr/include', '/sw/include',
+                            '/opt/local/include'])
+    for path in ['C_INCLUDE_PATH']:
+        if path in os.environ:
+            for dir in os.environ[path].split(':'):
+                try_dirs.append(dir)
+    # eigency is a python package that bundles the Eigen header files, so if that's there,
+    # can use that.
+    try:
+        import eigency
+        try_dirs.append(eigency.get_includes()[2])
+    except ImportError:
+        pass
+
+    for dir in try_dirs:
+        if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
+            print("found Eigen at", dir)
+            return dir
+        if os.path.isfile(os.path.join(dir, 'eigen3', 'Eigen/Core')):
+            dir = os.path.join(dir, 'eigen3')
+            print("found Eigen at", dir)
+            return dir
+    print("Could not find Eigen.  Make sure it is installed either in a standard ")
+    print("location such as /usr/local/include, or the installation directory is either in ")
+    print("your C_INCLUDE_PATH or EIGEN_DIR environment variable.")
+    raise OSError("Could not find Eigen")
+
 
 def try_cc(cc, cflags=[], lflags=[]):
     """Check if compiling a simple bit of c++ code with the given compiler works properly.
@@ -309,19 +352,45 @@ def fix_compiler(compiler, parallel):
     # Return the extra cflags, since those will be added to the build step in a different place.
     return extra_cflags
 
+def add_dirs(builder):
+    # We need to do most of this both for build_clib and build_ext, so separate it out here.
+
+    # First some basic ones we always need.
+    builder.include_dirs.append('include')
+    builder.include_dirs.append('include/galsim')
+
+    # Look for fftw3.
+    fftw_lib = find_fftw_lib()
+    fftw_libpath, fftw_libname = os.path.split(fftw_lib)
+    if hasattr(builder, 'library_dirs'):
+        builder.library_dirs.append(os.path.split(fftw_lib)[0])
+        builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
+    fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
+    if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):
+        # Usually, the fftw3.h file is in an associated include dir, but not always.
+        builder.include_dirs.append(fftw_include)
+    else:
+        # If not, we have our own copy of fftw3.h here.
+        builder.include_dirs.append('include/fftw3')
+
+    # Look for Eigen/Core
+    eigen_dir = find_eigen_dir()
+    builder.include_dirs.append(eigen_dir)
+
+    # Finally, add pybind11's include dir
+    import pybind11
+    # Include both the standard location and the --user location, since it's hard to tell
+    # which one is the right choice.
+    builder.include_dirs.append(pybind11.get_include(user=False))
+    builder.include_dirs.append(pybind11.get_include(user=True))
+
+
+
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_clib(build_clib):
-    # Adding the libraries and include_dirs here rather than when declaring the Extension
-    # means that the setup_requires modules should already be installed, so pybind11, eigency,
-    # and fftw3 should all import properly.
     def finalize_options(self):
         build_clib.finalize_options(self)
-        self.include_dirs.append('include')
-        self.include_dirs.append('include/galsim')
-        self.include_dirs.append('include/fftw3')
-
-        import eigency
-        self.include_dirs.append(eigency.get_includes()[2])
+        add_dirs(self)
 
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
@@ -343,28 +412,9 @@ class my_build_clib(build_clib):
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_ext(build_ext):
-    # Adding the libraries and include_dirs here rather than when declaring the Extension
-    # means that the setup_requires modules should already be installed, so pybind11, eigency,
-    # and fftw3 should all import properly.
     def finalize_options(self):
         build_ext.finalize_options(self)
-        self.include_dirs.append('include')
-        self.include_dirs.append('include/galsim')
-        self.include_dirs.append('include/fftw3')
-
-        import eigency
-        self.include_dirs.append(eigency.get_includes()[2])
-
-        import pybind11
-        # Include both the standard location and the --user location, since it's hard to tell
-        # which one is the right choice.
-        self.include_dirs.append(pybind11.get_include(user=False))
-        self.include_dirs.append(pybind11.get_include(user=True))
-
-        fftw_lib = find_fftw_lib()
-        fftw_libpath, fftw_libname = os.path.split(fftw_lib)
-        self.library_dirs.append(os.path.split(fftw_lib)[0])
-        self.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
+        add_dirs(self)
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
@@ -467,9 +517,7 @@ ext=Extension("galsim._galsim",
               py_sources,
               undef_macros = undef_macros)
 
-# Note: We don't actually need cython or setuptools_scm, but eigency depends on them at build time,
-# and their setup.py is broken such that if they're not already installed it fails catastrophically.
-build_dep = ['pybind11>=2.2', 'setuptools_scm', 'cython', 'eigency']
+build_dep = ['pybind11>=2.2']
 run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas', 'starlink-pyast']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
 
