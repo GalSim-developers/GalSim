@@ -69,6 +69,7 @@ from past.builtins import basestring
 from itertools import chain
 from builtins import range
 from heapq import heappush, heappop
+import weakref
 
 import numpy as np
 import galsim
@@ -730,19 +731,21 @@ class PhaseScreenList(object):
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
-        self._pending.append(psf)
+        self._pending.append(weakref.ref(psf))
         heappush(self._update_time_heap, (psf.t0, len(self._pending)-1))
 
     def _prepareDraw(self):
         """Calculate previously delayed PSFs."""
         if not self._pending:
             return
-            # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
-            # in a simple loop.
+        # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
+        # in a simple loop.
         if not self.dynamic:
-            for psf in self._pending:
-                psf._step()
-                psf._finalize()
+            for psfref in self._pending:
+                psf = psfref()
+                if psf is not None:
+                    psf._step()
+                    psf._finalize()
             self._pending = []
             self._update_time_heap = []
             return
@@ -755,15 +758,17 @@ class PhaseScreenList(object):
             t, i = heappop(self._update_time_heap)
             self._seek(t)
             # Update that PSF
-            psf = self._pending[i]
-            psf._step()
-            # If that PSF's next possible update time doesn't extend past its exptime, then
-            # push it back on the heap.
-            t += psf.time_step
-            if t < psf.t0 + psf.exptime:
-                heappush(self._update_time_heap, (t, i))
-            else:
-                psf._finalize()
+            psfref = self._pending[i]
+            psf = psfref()
+            if psf is not None:
+                psf._step()
+                # If that PSF's next possible update time doesn't extend past its exptime, then
+                # push it back on the heap.
+                t += psf.time_step
+                if t < psf.t0 + psf.exptime:
+                    heappush(self._update_time_heap, (t, i))
+                else:
+                    psf._finalize()
         self._pending = []
 
     def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
