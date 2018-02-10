@@ -30,6 +30,7 @@ def all_files_from(dir, ext=''):
 
 py_sources = all_files_from('pysrc', '.cpp')
 cpp_sources = all_files_from('src', '.cpp')
+test_sources = all_files_from('tests', '.cpp')
 headers = all_files_from('include')
 shared_data = all_files_from('share')
 
@@ -491,9 +492,59 @@ class my_test(test):
         self.test_args = []
         self.test_suite = True
 
+    def run_cpp_tests(self):
+        import subprocess
+
+        builder = self.distribution.get_command_obj('build_ext')
+        compiler = builder.compiler
+        ext = builder.extensions[0]
+        objects = compiler.compile(test_sources,
+                output_dir=builder.build_temp,
+                macros=ext.define_macros,
+                include_dirs=ext.include_dirs,
+                debug=builder.debug,
+                extra_postargs=ext.extra_compile_args,
+                depends=ext.depends)
+
+        if ext.extra_objects:
+            objects.extend(ext.extra_objects)
+        extra_args = ext.extra_link_args or []
+
+        libraries = builder.get_libraries(ext)
+        library_dirs = ext.library_dirs
+        fftw_lib = find_fftw_lib()
+        fftw_libpath, fftw_libname = os.path.split(fftw_lib)
+        library_dirs.append(os.path.split(fftw_lib)[0])
+        libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
+        libraries.append('galsim')
+
+        exe_file = os.path.join(builder.build_temp,'cpp_test')
+        compiler.link_executable(
+                objects, 'cpp_test',
+                output_dir=builder.build_temp,
+                libraries=libraries,
+                library_dirs=library_dirs,
+                runtime_library_dirs=ext.runtime_library_dirs,
+                extra_postargs=extra_args,
+                debug=builder.debug,
+                target_lang='c++')
+
+        p = subprocess.Popen([exe_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        lines = p.stdout.readlines()
+        p.communicate()
+        for line in lines:
+            print(line.decode().strip())
+        if p.returncode == 0:
+            print("All C++ tests passed.")
+        else:
+            raise RuntimeError("C++ tests failed")
+
     def run_tests(self):
-        #import here, cause outside the eggs aren't loaded
         import pytest
+
+        # Build and run the C++ tests
+        self.run_cpp_tests()
+
         ncpu = cpu_count()
         if self.pytest_args is None:
             self.pytest_args = ['-n=%d'%ncpu, '--timeout=60']
@@ -504,9 +555,15 @@ class my_test(test):
         os.chdir('tests')
         test_files = glob.glob('test*.py')
         errno = pytest.main(self.pytest_args + test_files)
+        print('pytest ',self.pytest_args,test_files)
+        errno = 0
         if errno != 0:
             sys.exit(errno)
         os.chdir(original_dir)
+
+        print("Note: There might be some TypeError's after this.  It seems to be a bug in some")
+        print("      versions of Python's multiprocessing module. ")
+        print("      They are harmless and can be ignored.\n")
 
 
 lib=("galsim", {'sources' : cpp_sources,
