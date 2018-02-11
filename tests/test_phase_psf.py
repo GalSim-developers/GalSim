@@ -696,6 +696,20 @@ def test_gc():
     gc.collect()
     assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
+    # A corner case revealed in coverage tests:
+    # Make sure that everything still works if some, but not all static pending PSFs are deleted.
+    screen = galsim.OpticalScreen(diam=1.1)
+    phaseScreenList = galsim.PhaseScreenList(screen)
+    psf1 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf2 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf3 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    del psf2
+    psf1.drawImage(nx=10, ny=10, scale=0.2)
+    del psf1, psf3
+    assert phaseScreenList._pending == []
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
 
 if __name__ == "__main__":
     test_aperture()
