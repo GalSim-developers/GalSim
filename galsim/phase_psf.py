@@ -756,11 +756,12 @@ class PhaseScreenList(object):
         while(self._update_time_heap):
             # Get and seek to next time that has a PSF update.
             t, i = heappop(self._update_time_heap)
-            self._seek(t)
-            # Update that PSF
+            # Check if that PSF weakref is still alive
             psfref = self._pending[i]
             psf = psfref()
             if psf is not None:
+                # Update that PSF
+                self._seek(t)
                 psf._step()
                 # If that PSF's next possible update time doesn't extend past its exptime, then
                 # push it back on the heap.
