@@ -684,7 +684,7 @@ def test_gc():
     # If we draw one using photon-shooting, it still exists in _pending
     psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
     psf.drawImage(nx=10, ny=10, scale=0.2, method='phot', n_photons=100)
-    assert psf in [p() for p in atm._pending]
+    assert psf in [p[1]() for p in atm._pending]
 
     # If we draw even one of many using fft, _pending gets completely emptied
     psf2 = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)

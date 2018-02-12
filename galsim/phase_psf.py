@@ -69,7 +69,6 @@ from past.builtins import basestring
 from itertools import chain
 from builtins import range
 from heapq import heappush, heappop
-import weakref
 
 import numpy as np
 import galsim
@@ -653,7 +652,6 @@ class PhaseScreenList(object):
         self._layers = list(layers)
         self._update_attrs()
         self._pending = []  # Pending PSFs to calculate upon first drawImage.
-        self._update_time_heap = []  # Heap to store each PSF's next time-of-update.
 
     def __len__(self):
         return len(self._layers)
@@ -731,8 +729,7 @@ class PhaseScreenList(object):
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
-        self._pending.append(weakref.ref(psf))
-        heappush(self._update_time_heap, (psf.t0, len(self._pending)-1))
+        heappush(self._pending, (psf.t0, galsim.utilities.OrderedWeakRef(psf)))
 
     def _prepareDraw(self):
         """Calculate previously delayed PSFs."""
@@ -741,7 +738,7 @@ class PhaseScreenList(object):
         # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
         # in a simple loop.
         if not self.dynamic:
-            for psfref in self._pending:
+            for _, psfref in self._pending:
                 psf = psfref()
                 if psf is not None:
                     psf._step()
@@ -752,22 +749,21 @@ class PhaseScreenList(object):
 
         # If we do have time-evolving screens, then iteratively increment the time while being
         # careful to always stop at multiples of each PSF's time_step attribute to update that PSF.
-        # Use a heap to track the next time to stop at.
-        while(self._update_time_heap):
+        # Use a heap (in _pending list) to track the next time to stop at.
+        while(self._pending):
             # Get and seek to next time that has a PSF update.
-            t, i = heappop(self._update_time_heap)
-            # Check if that PSF weakref is still alive
-            psfref = self._pending[i]
+            t, psfref = heappop(self._pending)
+            # Check if this PSF weakref is still alive
             psf = psfref()
             if psf is not None:
-                # Update that PSF
+                # If it's alive, update this PSF
                 self._seek(t)
                 psf._step()
                 # If that PSF's next possible update time doesn't extend past its exptime, then
                 # push it back on the heap.
                 t += psf.time_step
                 if t < psf.t0 + psf.exptime:
-                    heappush(self._update_time_heap, (t, i))
+                    heappush(self._pending, (t, galsim.utilities.OrderedWeakRef(psf)))
                 else:
                     psf._finalize()
         self._pending = []
