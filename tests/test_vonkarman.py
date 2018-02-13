@@ -80,7 +80,7 @@ def test_vk_delta():
     do_pickle(vk)
 
     # This profile has more than 15% of its flux in the delta-function component.
-    np.testing.assert_array_less(0.15, vk.delta_amplitude/vk.flux)
+    assert vk.delta_amplitude > 0.15 * vk.flux
     # If do_delta is False (the default), then the asymptotic kValue should still be zero.
     np.testing.assert_almost_equal(vk.kValue(1e10, 0).real, 0.0)
     # But if we use do_delta=True, then the asymptotic kValue should be that of the delta function.
@@ -183,15 +183,15 @@ def vk_benchmark():
     vk = galsim.VonKarman(lam=700, r0=0.1, L0=24.3)
     vk.drawImage(nx=16, ny=16, scale=0.2)
     t1 = time.time()
-    print("Time to create/draw first time: {:6.3f}s".format(t1-t0))
+    print("Time to create/draw first time: {:6.3f}s".format(t1-t0))  # ~0.7s
     for i in range(10):
         vk.drawImage(nx=16, ny=16, scale=0.2)
     t2 = time.time()
-    print("Time to draw 10 more: {:6.3f}s".format(t2-t1))
+    print("Time to draw 10 more: {:6.3f}s".format(t2-t1))  # ~0.07s
     for i in range(100):
         vk.drawImage(nx=16, ny=16, scale=0.2, method='phot', n_photons=50000)
     t3 = time.time()
-    print("Time to photon-shoot 100 more with 50000 photons each: {:6.3f}s".format(t3-t2))
+    print("Time to photon-shoot 100 more with 50000 photons each: {:6.3f}s".format(t3-t2))  # ~0.9s
 
 
 if __name__ == "__main__":
