@@ -273,7 +273,7 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
         dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
-        if (sum < 0.997)
+        if (sum < 1-_gsparams->folding_threshold)
             throw SBError("Could not find folding_threshold");
 
         std::vector<double> range(2, 0.);
