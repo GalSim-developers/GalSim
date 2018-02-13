@@ -915,7 +915,7 @@ def test_noll():
     # Test that the version of _noll_to_zern in phase_screens.py is accurate.
     for j in range(1,30):
         true_n,true_m = noll_to_zern(j)
-        n,m = galsim.phase_screens._noll_to_zern(j)
+        n,m = galsim.zernike._noll_to_zern(j)
         #print('j=%d, noll = %d,%d, true_noll = %d,%d'%(j,n,m,true_n,true_m))
         assert n == true_n
         assert m == true_m
@@ -928,7 +928,7 @@ def test_noll():
     def zern_rho_coefs(n, m):
         """Compute coefficients of radial part of Zernike (n, m).
         """
-        from galsim.phase_screens import _nCr
+        from galsim.zernike import _nCr
         kmax = (n-abs(m)) // 2
         A = np.zeros(n+1)
         for k in range(kmax+1):
@@ -936,9 +936,9 @@ def test_noll():
         return A
 
     for j in range(1,30):
-        n,m = galsim.phase_screens._noll_to_zern(j)
+        n,m = galsim.zernike._noll_to_zern(j)
         true_coefs = zern_rho_coefs(n,m)
-        coefs = galsim.phase_screens._zern_rho_coefs(n,m)
+        coefs = galsim.zernike._zern_rho_coefs(n,m)
         #print('j=%d, coefs = %s'%(j,coefs))
         np.testing.assert_array_equal(coefs,true_coefs)
 

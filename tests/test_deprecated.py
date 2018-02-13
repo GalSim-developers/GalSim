@@ -1432,7 +1432,7 @@ def test_dep_phase_psf():
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
     optical_screen = galsim.OpticalScreen(diam=1.0)
-    assert check_dep(getattr, optical_screen, 'coef_array') == optical_screen._coef_array
+    assert check_dep(getattr, optical_screen, 'coef_array') == optical_screen._zernike._coef_array
 
 @timer
 def test_dep_wmult():
