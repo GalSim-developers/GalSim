@@ -177,6 +177,20 @@ def test_vk_fitting_formulae():
         np.testing.assert_allclose(FWHM_ratio, predicted_FWHM_ratio(r0, L0), rtol=0.015)
 
 
+def test_vk_gsp():
+    """Test that we can construct a vK with non-standard folding_threshold.
+    """
+    # default folding_threshold is 5e-3.
+    # We can't go too much smaller than this for such a flat asymptotic profile, but check a little
+    # bit further works.
+    gsp1 = galsim.GSParams(folding_threshold=1e-2)
+    gsp2 = galsim.GSParams(folding_threshold=2e-3)
+
+    # Just testing that these construct successfully
+    galsim.VonKarman(lam=700, r0=0.1, L0=24.3, gsparams=gsp1)
+    galsim.VonKarman(lam=700, r0=0.1, L0=24.3, gsparams=gsp2)
+
+
 def vk_benchmark():
     import time
     t0 = time.time()
@@ -207,5 +221,6 @@ if __name__ == "__main__":
     test_vk_ne()
     test_vk_eq_kolm()
     test_vk_fitting_formulae()
+    test_vk_gsp()
     if args.benchmark:
         vk_benchmark()
