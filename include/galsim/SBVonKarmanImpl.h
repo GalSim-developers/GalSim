@@ -69,11 +69,6 @@ namespace galsim {
         bool _doDelta;
         double _hlr; // half-light-radius
 
-        // Magic constants that we can compute once and store.
-        const static double magic1; // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
-        const static double magic2; // gamma(5/6) / 2^(1/6)
-        const static double magic3; // magic1 * gamma(-5/6) / 2^(11/6)
-        const static double magic4; // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
         const GSParamsPtr _gsparams;
 
         TableDD _radial;
