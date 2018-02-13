@@ -118,7 +118,7 @@ namespace galsim {
             double val = _vki.kValue(k)-_mkt;
             xdbg<<"resid(k="<<k<<")="<<val<<'\n';
             return val;
-         }
+        }
     private:
         const double _mkt;
         const VonKarmanInfo& _vki;
@@ -131,6 +131,8 @@ namespace galsim {
                                  const GSParamsPtr& gsparams) :
         _lam(lam), _r0(r0), _L0(L0), _r0L0m53(pow(r0/L0, -5./3)), _gsparams(gsparams),
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
+        _deltaScale(1./(1.-_deltaAmplitude)),
+        _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta),
         _radial(TableDD::spline)
     {
@@ -145,10 +147,9 @@ namespace galsim {
                 // _maxk = std::numeric_limits<double>::infinity();
                 _maxk = MOCK_INF;
             } else {
-                mkt = mkt*(1-_deltaAmplitude)+_deltaAmplitude;
+                mkt = mkt*(1.-_deltaAmplitude)+_deltaAmplitude;
             }
         }
-        // if (_maxk != std::numeric_limits<double>::infinity()) {
         if (_maxk != MOCK_INF) {
             VKIkValueResid vkikvr(*this, mkt);
             Solve<VKIkValueResid> solver(vkikvr, 0.1, 1);
@@ -165,7 +166,7 @@ namespace galsim {
     }
 
     double VonKarmanInfo::structureFunction(double rho) const {
-    // rho in meters
+        // rho in meters
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
         static const double magic1 = 0.1716613621245708932;
@@ -184,44 +185,51 @@ namespace galsim {
     }
 
     double VonKarmanInfo::kValueNoTrunc(double k) const {
-    // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam*k*ARCSEC2RAD/(2*M_PI)));
+        // k in inverse arcsec
+        return fmath::expd(-0.5*structureFunction(_lam_arcsec*k));
     }
 
     double VonKarmanInfo::kValue(double k) const {
-    // k in inverse arcsec
-    // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
-    // This means we should also rescale by (1-_deltaAmplitude) though, so we still retain
-    // kValue(0)=1.
-        double val = (kValueNoTrunc(k) - _deltaAmplitude)/(1-_deltaAmplitude);
+        // k in inverse arcsec
+        // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
+        // This means we should also rescale by (1-_deltaAmplitude) though, so we still retain
+        // kValue(0)=1.d
+        double val = (kValueNoTrunc(k) - _deltaAmplitude) * _deltaScale;
         if (std::abs(val) < std::numeric_limits<double>::epsilon())
             return 0.0;
         return val;
     }
 
-    class VKIXIntegrand : public std::unary_function<double,double>
+    class VKXIntegrand : public std::unary_function<double,double>
     {
     public:
-        VKIXIntegrand(double r, const VonKarmanInfo& vki) : _r(r), _vki(vki) {}
+        VKXIntegrand(double r, const VonKarmanInfo& vki) : _r(r), _vki(vki) {}
         double operator()(double k) const { return _vki.kValue(k)*j0(k*_r)*k; }
     private:
         const double _r;  //arcsec
         const VonKarmanInfo& _vki;
     };
 
-    double VonKarmanInfo::xValue(double r) const {
-    // r in arcsec
-        VKIXIntegrand I(r, *this);
+    // This version does the integral.  But it's slow, so for regular xValue calls, once the
+    // _radial lookup table is built, use that.
+    double VonKarmanInfo::rawXValue(double r) const
+    {
+        // r in arcsec
+        VKXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
         return integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
     }
 
+    double VonKarmanInfo::xValue(double r) const {
+        return r < _radial.argMax() ? _radial(r) : 0.;
+    }
+
     void VonKarmanInfo::_buildRadialFunc() {
         // set_verbose(2);
         double r = 0.0;
-        double val = xValue(0.0); // This is the value without the delta function (clearly).
+        double val = rawXValue(0.0); // This is the value without the delta function (clearly).
         _radial.addEntry(r, val);
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
@@ -246,7 +254,7 @@ namespace galsim {
             (r < _gsparams->stepk_minimum_hlr*_hlr) || (r < R) || (sum < thresh2);
             logr += dlogr, r=exp(logr), dr=r*(1-exp(-dlogr)))
         {
-            val = xValue(r);
+            val = rawXValue(r);
             xdbg<<"f("<<r<<") = "<<val<<'\n';
             _radial.addEntry(r, val);
 
@@ -344,42 +352,16 @@ namespace galsim {
         return _info->structureFunction(rho);
     }
 
-    double SBVonKarman::SBVonKarmanImpl::kValue(double k) const
-    // this kValue assumes k is in inverse arcsec
-    {
-        return _info->kValue(k)*_flux;
-    }
-
     std::complex<double> SBVonKarman::SBVonKarmanImpl::kValue(const Position<double>& p) const
-    // k in units of _scale.
+        // k in units of _scale.
     {
-        return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
-    }
-
-    class VKXIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        VKXIntegrand(double r, const SBVonKarman::SBVonKarmanImpl& sbvki) :
-            _r(r), _sbvki(sbvki)
-        {}
-
-        double operator()(double k) const { return _sbvki.kValue(k)*k*j0(k*_r); }
-    private:
-        double _r;
-        const SBVonKarman::SBVonKarmanImpl& _sbvki;
-    };
-
-    double SBVonKarman::SBVonKarmanImpl::xValue(double r) const {
-    // r in arcsec.
-        VKXIntegrand I(r, *this);
-        return integ::int1d(I, 0.0, integ::MOCK_INF,
-                            gsparams->integration_relerr, gsparams->integration_abserr)/(2*M_PI);
+        return _flux * _info->kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
     }
 
     double SBVonKarman::SBVonKarmanImpl::xValue(const Position<double>& p) const
-    // r in units of _scale
+        // r in units of _scale
     {
-        return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
+        return _flux * _info->xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
     }
 
     boost::shared_ptr<PhotonArray> SBVonKarman::SBVonKarmanImpl::shoot(

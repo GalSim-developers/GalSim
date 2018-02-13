@@ -53,11 +53,12 @@ namespace galsim {
         double structureFunction(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        double kValueNoTrunc(double) const;
+        double rawXValue(double) const;
+
     private:
         VonKarmanInfo(const VonKarmanInfo& rhs); ///<Hide the copy constructor
         void operator=(const VonKarmanInfo& rhs); ///<Hide the assignment operator
-
-        double kValueNoTrunc(double) const;
 
         double _lam; // Wavelength in meters
         double _r0; // Fried parameter in meters
@@ -66,6 +67,8 @@ namespace galsim {
         double _stepk;
         double _maxk;
         double _deltaAmplitude;
+        double _deltaScale;  // 1/(1-_deltaAmplitude)
+        double _lam_arcsec;  // _lam * ARCSEC2RAD / 2pi
         bool _doDelta;
         double _hlr; // half-light-radius
 
