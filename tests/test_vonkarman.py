@@ -34,6 +34,7 @@ except ImportError:
 def test_vk(slow=False):
     """Test the generation of VonKarman profiles
     """
+    gsp = galsim.GSParams(maximum_fft_size=8192)
     if __name__ == '__main__' and slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.05, 0.15, 0.3]
@@ -52,7 +53,7 @@ def test_vk(slow=False):
                     kwargs = {'lam':lam, 'r0':r0, 'L0':L0, 'do_delta':do_delta}
                     print(kwargs)
 
-                    vk = galsim.VonKarman(flux=2.2, **kwargs)
+                    vk = galsim.VonKarman(flux=2.2, gsparams=gsp, **kwargs)
                     np.testing.assert_almost_equal(vk.flux, 2.2)
 
                     check_basic(vk, "VonKarman")
@@ -61,8 +62,9 @@ def test_vk(slow=False):
                     do_pickle(vk._sbp, lambda x: (x.getFlux(), x.getGSParams()))
 
                     img = galsim.Image(16, 16, scale=0.2)
-                    do_shoot(vk, img, "VonKarman")
-                    do_kvalue(vk, img, "VonKarman")
+                    if not do_delta:
+                        do_shoot(vk, img, "VonKarman")
+                        do_kvalue(vk, img, "VonKarman")
 
 
 @timer
