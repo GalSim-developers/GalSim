@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-// #define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -229,16 +229,36 @@ namespace galsim {
     }
 
     void VonKarmanInfo::_buildRadialFunc() {
-        // set_verbose(2);
-        double r = 0.0;
+        dbg<<"Start buildRadialFunc:\n";
+        dbg<<"lam = "<<_lam<<std::endl;
+        dbg<<"L0 = "<<_L0<<std::endl;
+        dbg<<"doDelta = "<<_doDelta<<"  "<<_deltaAmplitude<<"  "<<_deltaScale<<std::endl;
+        set_verbose(2);
         double val = rawXValue(0.0); // This is the value without the delta function (clearly).
-        _radial.addEntry(r, val);
+        _radial.addEntry(0., val);
+        dbg<<"(1/L0)^-5/3 = "<<_r0L0m53<<std::endl;
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
-        double r0 = 0.05*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double logr = log(r0);
-        double dr = 0;
-        double dlogr = 0.1*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        // For small values of r, the function goes as
+        // f(r) = f0 (1 - C r^2)
+        // The following formula for C is completely empirical, but it's close enough for
+        // estimating a good value of r0 to start at, which is all we use this for.
+        double C = (1.4 * pow(_L0,-2./3.) + 0.0767417) / (_lam_arcsec * _lam_arcsec);
+#ifdef DEBUGLOGGING
+        double f0 = val;
+        double f1 = rawXValue(1.e-2);
+        double f2 = rawXValue(2.e-2);
+        // For very small values of L0, this value of C is a bit too small, so there is probably
+        // another term in the Taylor expansion starting to come into play. Maybe an L0^-4/3 term.
+        dbg<<"C = "<<C<<std::endl;
+        dbg<<"f(1.e-2) = "<<f1<<"  "<<f0 * (1.-C*1.e-4)<<std::endl;
+        dbg<<"f(2.e-2) = "<<f2<<"  "<<f0 * (1.-C*4.e-4)<<std::endl;
+#endif
+        // Start at r0 where f(r0) - f(0) ~= xvalue_accuracy.
+        double r0 = sqrt(_gsparams->xvalue_accuracy / (val * C));
+
+        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+
         dbg<<"r0 = "<<r0<<" arcsec\n";
         dbg<<"dlogr = "<<dlogr<<"\n";
 
@@ -247,42 +267,43 @@ namespace galsim {
 
         xdbg<<"sum = "<<sum<<'\n';
 
-        double thresh1 = (1.-_gsparams->folding_threshold);
-        double thresh2 = (1.-_gsparams->folding_threshold/2);
-        double R = 1e10;
-        _hlr = 1e10;
-        double maxR = 60.0; // hard cut at 1 arcminute.
-        for(r = exp(logr);
-            (r < _gsparams->stepk_minimum_hlr*_hlr) || (r < R) || (sum < thresh2);
-            logr += dlogr, r=exp(logr), dr=r*(1-exp(-dlogr)))
-        {
+        // We accumulate the sum without the 2 pi dlogr factors for efficiency.
+        // So the relevant thresholds we want are:
+        double thresh0 = 0.5 / (2.*M_PI*dlogr);
+        double thresh1 = (1.-_gsparams->folding_threshold) / (2.*M_PI*dlogr);
+        double thresh2 = (1.-_gsparams->folding_threshold/5.) / (2.*M_PI*dlogr);
+        dbg<<"thresh = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
+        double R = 0.;
+        _hlr = 0.;
+        const double maxR = 60.0; // hard cut at 1 arcminute.
+        double prev_val=val;
+        for(double logr=log(r0); logr<log(maxR) && sum < thresh2; logr+=dlogr) {
+            double r = exp(logr);
             val = rawXValue(r);
-            xdbg<<"f("<<r<<") = "<<val<<'\n';
+            xdbg<<"f("<<r<<") = "<<val<<std::endl;
+            prev_val = val;
             _radial.addEntry(r, val);
 
-            sum += 2*M_PI*val*r*dr;
-            xdbg<<"dr = "<<dr<<'\n';
+            // Accumulate integral int(r f(r) dr) = int(r^2 f(r) dlogr), but without dlogr factor,
+            // since it is constant for all terms.  (Also not including 2pi which would be in
+            // the normal integral for the enclosed flux.)
+            sum += val*r*r;
             xdbg<<"sum = "<<sum<<'\n';
 
-            if (_hlr == 1e10 && sum > 0.5) {
-                _hlr = r;
-                dbg<<"hlr = "<<_hlr<<" arcsec\n";
-            }
-            if (R == 1e10 && sum > thresh1) R=r;
-            if (r >= maxR) {
-                if (_hlr == 1e10)
-                    throw SBError("Cannot find von Karman half-light-radius.");
-                R = maxR;
-                break;
-            }
+            if (_hlr == 0. && sum > thresh0) _hlr = r;
+            if (R == 0. && sum > thresh1) R = r;
         }
+        if (_hlr == 0.)
+            throw SBError("Cannot find von Karman half-light-radius.");
+        if (R == 0.) R = maxR;
         dbg<<"Finished building radial function.\n";
         dbg<<"R = "<<R<<" arcsec\n";
         dbg<<"HLR = "<<_hlr<<" arcsec\n";
         R = std::max(R, _gsparams->stepk_minimum_hlr*_hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
-        dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
+        sum *= 2.*M_PI * dlogr;
+        dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
         if (sum < 1-_gsparams->folding_threshold)
             throw SBError("Could not find folding_threshold");
 
