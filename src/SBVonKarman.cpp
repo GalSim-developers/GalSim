@@ -276,12 +276,10 @@ namespace galsim {
         double R = 0.;
         _hlr = 0.;
         const double maxR = 60.0; // hard cut at 1 arcminute.
-        double prev_val=val;
         for(double logr=log(r0); logr<log(maxR) && sum < thresh2; logr+=dlogr) {
             double r = exp(logr);
             val = rawXValue(r);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
-            prev_val = val;
             _radial.addEntry(r, val);
 
             // Accumulate integral int(r f(r) dr) = int(r^2 f(r) dlogr), but without dlogr factor,
