@@ -181,6 +181,7 @@ def test_vk_fitting_formulae():
         np.testing.assert_allclose(FWHM_ratio, predicted_FWHM_ratio(r0, L0), rtol=0.015)
 
 
+@timer
 def test_vk_gsp():
     """Test that we can construct a vK with non-standard folding_threshold.
     """
@@ -217,7 +218,13 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--slow", action='store_true', help="Run slow tests")
     parser.add_argument("--benchmark", action='store_true', help="Run timing benchmark")
+    parser.add_argument("--profile", action='store_true', help="Profile the tests")
     args = parser.parse_args()
+
+    if args.profile:
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
 
     test_vk(args.slow)
     test_vk_delta()
@@ -228,3 +235,8 @@ if __name__ == "__main__":
     test_vk_gsp()
     if args.benchmark:
         vk_benchmark()
+
+    if args.profile:
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('tottime')
+        ps.print_stats(30)
