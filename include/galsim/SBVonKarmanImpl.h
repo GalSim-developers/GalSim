@@ -131,6 +131,24 @@ namespace galsim {
 
         double structureFunction(double rho) const;
 
+        // Overrides for better efficiency
+        template <typename T>
+        void fillXImage(ImageView<T> im,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        template <typename T>
+        void fillXImage(ImageView<T> im,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
         std::string serialize() const;
 
     private:
