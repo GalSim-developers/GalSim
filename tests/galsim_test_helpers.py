@@ -617,10 +617,10 @@ else:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 yield w
-            assert len(w) >= 1, \
-                    "Calling %s did not raise a warning with %s, %s"%(f, args, kwargs)
+            assert len(w) >= 1, "Expected warning %s was not raised."%(wtype)
             assert issubclass(w[0].category, wtype), \
-                    "%s with %s, %s raised the wrong warning type"%(f, args, kwargs)
+                    "Warning raised was the wrong type (got %s, expected %s)"%(
+                    w[0].category, wtype)
         else:
             # When used as a regular function
             func = args[0]
