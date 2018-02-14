@@ -127,9 +127,10 @@ namespace galsim {
     // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
     const double magic4 = 0.1726286598236691505;
 
-    VonKarmanInfo::VonKarmanInfo(double lam, double r0, double L0, bool doDelta,
+    // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
+    VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
-        _lam(lam), _r0(r0), _L0(L0), _r0L0m53(pow(r0/L0, -5./3)), _gsparams(gsparams),
+        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)), _gsparams(gsparams),
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
@@ -166,7 +167,7 @@ namespace galsim {
     }
 
     double VonKarmanInfo::structureFunction(double rho) const {
-        // rho in meters
+        // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
         static const double magic1 = 0.1716613621245708932;
@@ -177,10 +178,10 @@ namespace galsim {
 
         double rhoL0 = rho/_L0;
         if (rhoL0 < 1e-6) {
-            return -magic3*fast_pow(2*M_PI*rho/_r0, 5./3);
+            return -magic3*fast_pow(2*M_PI*rho, 5./3.);
         } else {
-            double x = 2*M_PI*rhoL0;
-            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6)*boost::math::cyl_bessel_k(5./6, x));
+            double x = 2.*M_PI*rhoL0;
+            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
         }
     }
 
@@ -197,7 +198,8 @@ namespace galsim {
         double val = (kValueNoTrunc(k) - _deltaAmplitude) * _deltaScale;
         if (std::abs(val) < std::numeric_limits<double>::epsilon())
             return 0.0;
-        return val;
+        else
+            return val;
     }
 
     class VKXIntegrand : public std::unary_function<double,double>
@@ -295,7 +297,7 @@ namespace galsim {
         return _sampler->shoot(N,ud);
     }
 
-    LRUCache<boost::tuple<double,double,double,bool,GSParamsPtr>,VonKarmanInfo>
+    LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo>
         SBVonKarman::SBVonKarmanImpl::cache(sbp::max_vonKarman_cache);
 
     //
@@ -316,7 +318,7 @@ namespace galsim {
         _flux(flux),
         _scale(scale),
         _doDelta(doDelta),
-        _info(cache.get(boost::make_tuple(1e-9*lam, r0, L0, doDelta, this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(1e-9*lam/r0, L0/r0, doDelta, this->gsparams.duplicate())))
     { }
 
     double SBVonKarman::SBVonKarmanImpl::maxK() const

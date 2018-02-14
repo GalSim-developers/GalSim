@@ -39,7 +39,7 @@ namespace galsim {
     class VonKarmanInfo
     {
     public:
-        VonKarmanInfo(double lam, double r0, double L0, bool doDelta, const GSParamsPtr& gsparams);
+        VonKarmanInfo(double lam, double L0, bool doDelta, const GSParamsPtr& gsparams);
 
         ~VonKarmanInfo() {}
 
@@ -60,9 +60,8 @@ namespace galsim {
         VonKarmanInfo(const VonKarmanInfo& rhs); ///<Hide the copy constructor
         void operator=(const VonKarmanInfo& rhs); ///<Hide the assignment operator
 
-        double _lam; // Wavelength in meters
-        double _r0; // Fried parameter in meters
-        double _L0; // Outer scale in meters
+        double _lam; // Wavelength in units of the Fried parameter, r0
+        double _L0; // Outer scale in units of the Fried parameter, r0
         double _r0L0m53; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
@@ -149,7 +148,7 @@ namespace galsim {
         SBVonKarmanImpl(const SBVonKarmanImpl& rhs);
         void operator=(const SBVonKarmanImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
+        static LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
     };
 }
 
