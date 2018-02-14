@@ -2,7 +2,7 @@ This README file describes the python code used to process AEGIS HST images in V
 The final products are similar to the COSMOS Real Galaxy training sample.
 The script can be implemented to analyze any HST field data in multiple filters. It takes HST images in multiple bands, identifies objects with SExtractor, classifies those objects as stars and galaxies. Stars are then used to measure the PSF. Galaxies that satisfy certain criteria (see Section 3.8 in document) are selected for the main catalog. Separate catalogs are made for different bands. Each catalog can be individually used to initialize a galsim.RealGalaxyCatalog or galsim.COSMOSCatalog instance.  A postage stamp image is drawn for every galaxy in the catalog in each band. Each galaxy image will also have a postage stamp of its PSF in each band. The entries in different filter catalog files correspond to the same galaxies.
 
-##Requirements:
+## Requirements:
 ### Input Files:
 * Image files: Science image in fits format along with its corresponding weight map in a single folder. The input files for the multiple filters are in separate folders, the folder name being the filter name (main_path/filter/file_name).
 * Co-added images : The science images in multiple bands should be added. The variance maps (1/weight map) of multiple bands should be added. Objects are detected on these Co-added images using SExtractor in dual image mode.  
