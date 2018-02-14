@@ -1,3 +1,8 @@
+"""Script that just generates plots of phase screens with upper and lower truncations in their
+power spectra.
+"""
+
+
 import warnings
 import numpy as np
 import galsim

@@ -1,3 +1,7 @@
+"""Script to investigate the FFT PSF dependence on phase screen resolution.  Produces a plot of
+4 different PSFs using progressively decreasing screen resolution.
+"""
+
 import warnings
 import numpy as np
 import galsim
