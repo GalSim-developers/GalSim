@@ -52,6 +52,10 @@ def test_vk(slow=False):
                 for do_delta in do_deltas:
                     kwargs = {'lam':lam, 'r0':r0, 'L0':L0, 'do_delta':do_delta}
                     print(kwargs)
+                    delta_amp = np.exp(-0.5*0.172629*(r0/L0)**(-5./3.))
+                    if delta_amp > 1.e-3:
+                        print("Skip this combination, since delta > maxk_threshold")
+                        continue
 
                     vk = galsim.VonKarman(flux=2.2, gsparams=gsp, **kwargs)
                     np.testing.assert_almost_equal(vk.flux, 2.2)
