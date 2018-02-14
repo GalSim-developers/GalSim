@@ -177,12 +177,14 @@ def test_sk_phase_psf():
     for kcrit in kcrits:
         # Technically, we should probably use a smaller screen_scale here, but that runs really
         # slowly.  The below seems to work well enough for the tested kcrits.
-        atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, kmin=kcrit, rng=rng,
+        atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, rng=rng,
                                 speed=speed, direction=direction,
                                 screen_size=102.4, screen_scale=0.05)
+        atm.instantiate(kmin=kcrit)
         psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper)
         phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
-        sk = galsim.SecondKick(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0, kcrit=kcrit)
+        sk = galsim.SecondKick(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0,
+                               kcrit=kcrit)
         skImg = sk.drawImage(nx=64, ny=64, scale=0.02)
         phaseMom = galsim.hsm.FindAdaptiveMom(phaseImg)
         skMom = galsim.hsm.FindAdaptiveMom(skImg)

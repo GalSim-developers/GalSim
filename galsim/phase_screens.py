@@ -63,12 +63,13 @@ class AtmosphericScreen(object):
                          that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
-    @param kmin          Minimum k-mode to include when generating phase screens.  Generally this
-                         will only be used when testing the geometric approximation for atmospheric
-                         PSFs.  [default: None]
-    @param kmax          Maximum k-mode to include when generating phase screens.  This may be used
-                         in conjunction with SecondKick to complete the geometric approximation for
-                         atmospheric PSFs.  [default: None]
+    @param suppress_warning   AtmosphericScreens used for drawing using Fourier optics should
+                              generally be different than those used for drawing using geometric
+                              optics.  This class will normally attempt to sanity check that an
+                              appropriate screen is being used for both situations, and issue a
+                              warning if it thinks there may be an error.  If you want to turn this
+                              warning off, however, then you can set `suppress_warning=True`.
+                              [default: False]
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
     simulations"
@@ -79,7 +80,7 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
-                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, kmax=None, kmin=None):
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False):
 
         if (alpha != 1.0 and time_step is None):
             raise ValueError("No time_step provided when alpha != 1.0")
@@ -106,18 +107,13 @@ class AtmosphericScreen(object):
         if rng is None:
             rng = galsim.BaseDeviate()
 
-        self.kmin = kmin
-        self.kmax = kmax
-
         self._orig_rng = rng.duplicate()
         self.dynamic = True
         self.reversible = self.alpha == 1.0
 
-        self._init_psi()
-        self._reset()
-        # Free some RAM for frozen-flow screen.
-        if self.reversible:
-            del self._psi, self._screen
+        # These will be None until screens are instantiated.
+        self.kmin = None
+        self.kmax = None
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -128,14 +124,29 @@ class AtmosphericScreen(object):
                         self.screen_size, self.screen_scale, self.altitude, self.r0_500, self.L0,
                         self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
 
-    # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
-    # object as immutable under the python data model.  The requirements for hashability are that
-    # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
-    # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
-    # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
-    # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
-    # computational convenience, and don't "define" the object and are not even strictly necessary
-    # for its implementation.
+    # AtmosphericScreen has some somewhat unusual behavior with regards to mutability/hashability.
+    # This arises from the desire to delay making the phase screens until how they're going to be
+    # used, because their use governs whether or not we include high-k turbulence in the screens.
+    #
+    # First, here's the former comment that explains why we could consider AtmosphericScreen
+    # immutable before we had to worry about delayed screen instantiation:
+
+        # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
+        # object as immutable under the python data model.  The requirements for hashability are that
+        # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
+        # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
+        # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
+        # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
+        # computational convenience, and don't "define" the object and are not even strictly necessary
+        # for its implementation.
+
+    # Now that we delay the instantiation of the screens, the above paragraph doesn't strictly apply
+    # anymore.  However, once the screens *are* instantiated, AtmosphericScreen can be considered
+    # immutable/hashable from that point forward.  So we implement a __hash__ function that raises
+    # an exception if the screens have not yet been instantiated, but returns a value if they have.
+    # For __eq__, whether or not the screens have been instantiated is part of the comparison.
+    # With this in mind, we still have a == b implies hash(a) == hash(b) when the hash doesn't
+    # raise an exception, and a == b implies f(a) == f(b) when the f's don't raise any exceptions.
     def __eq__(self, other):
         return (isinstance(other, galsim.AtmosphericScreen) and
                 self.screen_size == other.screen_size and
@@ -147,17 +158,60 @@ class AtmosphericScreen(object):
                 self.vy == other.vy and
                 self.alpha == other.alpha and
                 self.time_step == other.time_step and
-                self._orig_rng == other._orig_rng)
+                self._orig_rng == other._orig_rng and
+                self.kmin == other.kmin and
+                self.kmax == other.kmax)
 
     def __hash__(self):
+        if self.kmax is None:
+            raise TypeError(
+                "AtmosphericScreen is unhashable before screens have been instantiated.")
         if not hasattr(self, '_hash'):
             self._hash = hash((
                     "galsim.AtmosphericScreen", self.screen_size, self.screen_scale, self.altitude,
                     self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.time_step,
-                    repr(self._orig_rng.serialize())))
+                    repr(self._orig_rng.serialize()), self.kmin, self.kmax))
         return self._hash
 
     def __ne__(self, other): return not self == other
+
+    def instantiate(self, kmin=0., kmax=float('inf'), check=None):
+        """
+        @param kmin   Minimum k-mode to include when generating phase screens.  Generally this will
+                      only be used when testing the geometric approximation for atmospheric PSFs.
+                      [default: 0]
+        @param kmax   Maximum k-mode to include when generating phase screens.  This may be used in
+                      conjunction with SecondKick to complete the geometric approximation for
+                      atmospheric PSFs.  [default: float('inf')]
+        @param check  Sanity check indicator.  If equal to 'FFT', then check that phase screen
+                      Fourier modes are not being truncated, which is appropriate for full Fourier
+                      optics.  If equal to 'phot', then check that phase screen Fourier modes *are*
+                      being truncated, which is appropriate for the geometric optics approximation.
+                      If `None`, then don't perform a check.  Also, don't perform a check if
+                      self.suppress_warning is True.
+        """
+        if self.kmax is None:
+            self.kmin = kmin
+            self.kmax = kmax
+            self._init_psi()
+            self._reset()
+            # Free some RAM for frozen-flow screens.
+            if self.reversible:
+                del self._psi, self._screen
+        if check is not None and not self.suppress_warning:
+            if check == 'FFT':
+                if kmax != float('inf'):
+                    import warnings
+                    warnings.warn(
+                        "Instantiating AtmosphericScreen with kmax != inf "
+                        "may yield surprising results when drawing using Fourier optics.")
+            if check == 'phot':
+                if kmax == float('inf'):
+                    import warnings
+                    warnings.warn(
+                        "Instantiating AtmosphericScreen with kmax == inf "
+                        "may yield surprising results when drawing using geometric optics.")
+
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
@@ -169,6 +223,7 @@ class AtmosphericScreen(object):
     def _init_psi(self):
         """Assemble 2D von Karman sqrt power spectrum.
         """
+
         fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
         ksq = (fx*fx + fy*fy)
@@ -181,10 +236,8 @@ class AtmosphericScreen(object):
         np.seterr(**old_settings)
         self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self._psi[0, 0] = 0.0
-        if self.kmin is not None:
-            self._psi[ksq < self.kmin**2] = 0.0
-        if self.kmax is not None:
-            self._psi[ksq > self.kmax**2] = 0.0
+        self._psi[ksq < self.kmin**2] = 0.0
+        self._psi[ksq > self.kmax**2] = 0.0
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self._psi**2"""
@@ -276,6 +329,8 @@ class AtmosphericScreen(object):
             if t.shape != u.shape:
                 raise ValueError("t.shape must match u.shape if t is not a scalar")
 
+        self.instantiate()  # noop if already instantiated
+
         if self.reversible:
             return self._wavefront(u, v, t, theta)
         else:
@@ -291,7 +346,8 @@ class AtmosphericScreen(object):
             return out
 
     def _wavefront(self, u, v, t, theta):
-        # Same as wavefront(), but no argument checking and no boiling updates.
+        # Same as wavefront(), but no argument checking, no boiling updates, no
+        # screen instantiation checking
         if t is None:
             t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
@@ -327,6 +383,8 @@ class AtmosphericScreen(object):
             t = np.array(t, dtype=float)
             if t.shape != u.shape:
                 raise ValueError("t.shape must match u.shape if t is not a scalar")
+
+        self.instantiate()  # noop if already instantiated
 
         if self.reversible:
             return self._wavefront_gradient(u, v, t, theta)

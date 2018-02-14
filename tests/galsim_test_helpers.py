@@ -355,8 +355,16 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
     if isinstance(obj1, Hashable):
-        #print('hash = ',hash(obj1),hash(obj2))
-        assert hash(obj1) == hash(obj2)
+        try:
+            #print('hash = ',hash(obj1),hash(obj2))
+            assert hash(obj1) == hash(obj2)
+        except TypeError as e:
+            # Uninstantiated AtmosphericScreens, and probably things that depend on them are not
+            # hashable.  I can't think of a good way to tell this to the `Hashable` class though, so
+            # we just trap their exception here and move on.
+            errstr = "AtmosphericScreen is unhashable before screens have been instantiated."
+            if e.args[0] != errstr:
+                raise
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1

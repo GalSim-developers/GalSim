@@ -728,6 +728,13 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
+    def instantiate(self, **kwargs):
+        for layer in self:
+            try:
+                layer.instantiate(**kwargs)
+            except AttributeError:
+                pass
+
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
         self._pending.append(psf)
@@ -1194,6 +1201,8 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
+        # NOTE: This is where I need to make sure the screen is instantiated for DFT.
+        self._screen_list.instantiate(check='DFT')
         wf = self._screen_list._wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
@@ -1279,6 +1288,9 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
+        # NOTE : And this is where the screen needs to be instantiated for drawing with geometric
+        # photon shooting
+        self._screen_list.instantiate()
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265
