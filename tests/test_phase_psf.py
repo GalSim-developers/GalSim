@@ -502,10 +502,13 @@ def test_ne():
 def test_phase_gradient_shoot():
     # Make the atmosphere
     seed = 12345
-    r0_500 = 0.2  # m
+    r0_500 = 0.15  # m
     nlayers = 6
     screen_size = 102.4  # m
-    screen_scale = 0.1  # m
+    if __name__ == '__main__' and False:
+        screen_scale = 0.025 # m
+    else:
+        screen_scale = 0.1 # m
     max_speed = 20  # m/s
 
     rng = galsim.BaseDeviate(seed)
@@ -530,13 +533,20 @@ def test_phase_gradient_shoot():
         spd.append(u()*max_speed)
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
+    rng2 = rng.duplicate()
     atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
                             screen_size=screen_size, screen_scale=screen_scale)
+    # Make a second atmosphere to use for geometric photon-shooting
+    atm2 = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng2,
+                             screen_size=screen_size, screen_scale=screen_scale)
+    # These should be equal at the moment, before we've actually instantiated any screens by drawing
+    # with them.
+    assert atm == atm2
 
     lam = 500.0
     diam = 4.0
-    pad_factor = 1.0
-    oversampling = 1.0
+    pad_factor = 0.5
+    oversampling = 0.5
 
     aper = galsim.Aperture(diam=diam, lam=lam,
                            screen_list=atm, pad_factor=pad_factor,
@@ -548,74 +558,122 @@ def test_phase_gradient_shoot():
     u.generate(ys)
     thetas = [(x*galsim.degrees, y*galsim.degrees) for x, y in zip(xs, ys)]
 
-    if __name__ == '__main__':
+    if __name__ == '__main__' and False:
         exptime = 15.0
+        time_step = 0.05
         centroid_tolerance = 0.05
-        second_moment_tolerance = 0.5
+        size_tolerance = 0.07  # absolute
+        size_bias = 0.018  # as a fraction
+        shape_tolerance = 0.005
     else:
-        exptime = 0.2
+        exptime = 1.0
+        time_step = 0.1
         centroid_tolerance = 0.2
-        second_moment_tolerance = 1.5
+        size_tolerance = 0.15
+        size_bias = 0.15
+        shape_tolerance = 0.03
 
     psfs = [atm.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper) for th in thetas]
+    psfs2 = [atm2.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step) for th in thetas]
     shoot_moments = []
     fft_moments = []
 
-    # At the moment, Ixx and Iyy (but not Ixy) are systematically smaller in phase gradient shooting
-    # mode than in FFT mode.  For now, I'm willing to accept this, but we should revisit it once we
-    # get the "second kick" approximation implemented.
-    offset = 0.5
-
-    for psf in psfs:
+    for psf, psf2 in zip(psfs, psfs2):
         im_shoot = psf.drawImage(nx=48, ny=48, scale=0.05, method='phot', n_photons=100000, rng=rng)
-        im_fft = psf.drawImage(nx=48, ny=48, scale=0.05)
+        im_fft = psf2.drawImage(nx=48, ny=48, scale=0.05)
 
-        shoot_moment = galsim.utilities.unweighted_moments(im_shoot)
-        fft_moment = galsim.utilities.unweighted_moments(im_fft)
+        # at this point, the atms should be different.
+        assert atm != atm2
 
-        for key in ['Mx', 'My']:
-            np.testing.assert_allclose(
-                    shoot_moment[key], fft_moment[key], rtol=0, atol=centroid_tolerance,
-                    err_msg='Phase gradient centroid {0} not close to fft centroid'.format(key))
+        shoot_moment = galsim.hsm.FindAdaptiveMom(im_shoot)
+        fft_moment = galsim.hsm.FindAdaptiveMom(im_fft)
 
-        for key in ['Mxx', 'Myy']:
-            np.testing.assert_allclose(
-                    shoot_moment[key]+offset, fft_moment[key], rtol=0, atol=second_moment_tolerance,
-                    err_msg='Phase gradient second moment {} not close to fft moment'.format(key))
+        # print()
+        # print()
+        # print()
+        # print(shoot_moment.observed_shape.g1)
+        # print(fft_moment.observed_shape.g1)
+
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(ncols=2)
+        # axes[0].imshow(im_shoot.array)
+        # axes[1].imshow(im_fft.array)
+        # plt.show()
 
         np.testing.assert_allclose(
-            shoot_moment['Mxy'], fft_moment['Mxy'], rtol=0, atol=second_moment_tolerance,
-            err_msg='Phase gradient second moment Mxy not close to fft moment')
+            shoot_moment.moments_centroid.x,
+            fft_moment.moments_centroid.x,
+            rtol=0, atol=centroid_tolerance,
+            err_msg='Phase gradient centroid x not close to fft centroid')
+
+        np.testing.assert_allclose(
+            shoot_moment.moments_centroid.y,
+            fft_moment.moments_centroid.y,
+            rtol=0, atol=centroid_tolerance,
+            err_msg='Phase gradient centroid y not close to fft centroid')
+
+        np.testing.assert_allclose(
+            shoot_moment.moments_sigma,
+            fft_moment.moments_sigma*(1+size_bias),
+            rtol=0, atol=size_tolerance,
+            err_msg='Phase gradient sigma not close to fft sigma')
+
+        np.testing.assert_allclose(
+            shoot_moment.observed_shape.g1,
+            fft_moment.observed_shape.g1,
+            rtol=0, atol=shape_tolerance,
+            err_msg='Phase gradient shape g1 not close to fft shape')
+
+        np.testing.assert_allclose(
+            shoot_moment.observed_shape.g2,
+            fft_moment.observed_shape.g2,
+            rtol=0, atol=shape_tolerance,
+            err_msg='Phase gradient shape g2 not close to fft shape')
 
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
 
+
+    # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
+    # I think they're all fine, but this is admittedly a tad bit backwards.
+    best_size_bias = np.mean([s1.moments_sigma/s2.moments_sigma
+                              for s1, s2 in zip(shoot_moments, fft_moments)])
+    print("best_size_bias = ", best_size_bias)
+    print("xcentroid")
+    print(max(np.abs([s1.moments_centroid.x - s2.moments_centroid.x
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+    print("ycentroid")
+    print(max(np.abs([s1.moments_centroid.y - s2.moments_centroid.y
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+    print("size")
+    print(max(np.abs([s1.moments_sigma - s2.moments_sigma*(1+size_bias)
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+    print("bestsize")
+    print(max(np.abs([s1.moments_sigma - s2.moments_sigma*(best_size_bias)
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+    print("g1")
+    print(max(np.abs([s1.observed_shape.g1 - s2.observed_shape.g1
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+    print("g2")
+    print(max(np.abs([s1.observed_shape.g2 - s2.observed_shape.g2
+                      for s1, s2 in zip(shoot_moments, fft_moments)])))
+
+    # import matplotlib.pyplot as plt
+    # fig, ax = plt.subplots(nrows=1, ncols=1)
+    # ax.scatter(
+    #     [s.observed_shape.g1 for s in shoot_moments],
+    #     [s.observed_shape.g1 for s in fft_moments]
+    # )
+    # xlim = ax.get_xlim()
+    # ylim = ax.get_ylim()
+    # lim = (min(xlim[0], ylim[0]), max(xlim[1], ylim[1]))
+    # ax.set_xlim(lim)
+    # ax.set_ylim(lim)
+    # ax.plot([-100, 100], [-100, 100])
+    # plt.show()
+
     # Verify that shoot with rng=None runs
     psf.shoot(100, rng=None)
-
-    # Constraints on the ensemble should be tighter than for individual PSFs.
-    mean_shoot_moment = {}
-    mean_fft_moment = {}
-    for k in shoot_moments[0]:
-        mean_shoot_moment[k] = np.mean([sm[k] for sm in shoot_moments])
-        mean_fft_moment[k] = np.mean([fm[k] for fm in fft_moments])
-
-    for key in ['Mx', 'My']:
-        np.testing.assert_allclose(
-                mean_shoot_moment[key], mean_fft_moment[key], rtol=0, atol=centroid_tolerance,
-                err_msg='Mean phase gradient centroid {0} not close to mean fft centroid'
-                        .format(key))
-
-    for key in ['Mxx', 'Myy']:
-        np.testing.assert_allclose(
-                mean_shoot_moment[key]+offset, mean_fft_moment[key], rtol=0,
-                atol=second_moment_tolerance,
-                err_msg='Mean phase gradient second moment {} not close to mean fft moment'
-                .format(key))
-
-    np.testing.assert_allclose(
-        mean_shoot_moment['Mxy'], mean_fft_moment['Mxy'], rtol=0, atol=second_moment_tolerance,
-        err_msg='Mean phase gradient second moment Mxy not close to mean fft moment')
 
 
 @timer
@@ -666,9 +724,13 @@ def test_speedup():
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2)
     # Should be ~seconds if _prepareDraw() gets executed, ~0.01s otherwise.
     psf = atm.makePSF(lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)
+    # Draw once to instantiate the SecondKick
+    psf.drawImage(method='phot', n_photons=1e3)
     t0 = time.time()
+    # Draw again for actual test
     psf.drawImage(method='phot', n_photons=1e3)
     t1 = time.time()
+    print("Time for geometric approximation draw: {:6.4f}s".format(t1-t0))
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 

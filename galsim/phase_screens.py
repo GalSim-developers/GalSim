@@ -106,6 +106,7 @@ class AtmosphericScreen(object):
 
         if rng is None:
             rng = galsim.BaseDeviate()
+        self._suppress_warning = suppress_warning
 
         self._orig_rng = rng.duplicate()
         self.dynamic = True
@@ -198,15 +199,15 @@ class AtmosphericScreen(object):
             # Free some RAM for frozen-flow screens.
             if self.reversible:
                 del self._psi, self._screen
-        if check is not None and not self.suppress_warning:
+        if check is not None and not self._suppress_warning:
             if check == 'FFT':
-                if kmax != float('inf'):
+                if self.kmax != float('inf'):
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax != inf "
                         "may yield surprising results when drawing using Fourier optics.")
             if check == 'phot':
-                if kmax == float('inf'):
+                if self.kmax == float('inf'):
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax == inf "
