@@ -125,29 +125,15 @@ class AtmosphericScreen(object):
                         self.screen_size, self.screen_scale, self.altitude, self.r0_500, self.L0,
                         self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
 
-    # AtmosphericScreen has some somewhat unusual behavior with regards to mutability/hashability.
-    # This arises from the desire to delay making the phase screens until how they're going to be
-    # used, because their use governs whether or not we include high-k turbulence in the screens.
-    #
-    # First, here's the former comment that explains why we could consider AtmosphericScreen
-    # immutable before we had to worry about delayed screen instantiation:
+    # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
+    # object as hashable under the python data model.  The requirements for hashability are that
+    # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
+    # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
+    # function on an AtmosphericScreen, such as producing a PSF.  Generally, it's a good idea to
+    # try for hash(a) == hash(b) to imply that it's very likely that a == b, too.  This is mostly
+    # True for AtmosphericScreen (and derived objects, like PSFs), but note that while we don't
+    # use the object's mutable internal state for the hash value, we do use it for the __eq__ test.
 
-        # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
-        # object as immutable under the python data model.  The requirements for hashability are that
-        # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
-        # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
-        # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
-        # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
-        # computational convenience, and don't "define" the object and are not even strictly necessary
-        # for its implementation.
-
-    # Now that we delay the instantiation of the screens, the above paragraph doesn't strictly apply
-    # anymore.  However, once the screens *are* instantiated, AtmosphericScreen can be considered
-    # immutable/hashable from that point forward.  So we implement a __hash__ function that raises
-    # an exception if the screens have not yet been instantiated, but returns a value if they have.
-    # For __eq__, whether or not the screens have been instantiated is part of the comparison.
-    # With this in mind, we still have a == b implies hash(a) == hash(b) when the hash doesn't
-    # raise an exception, and a == b implies f(a) == f(b) when the f's don't raise any exceptions.
     def __eq__(self, other):
         return (isinstance(other, galsim.AtmosphericScreen) and
                 self.screen_size == other.screen_size and
@@ -164,14 +150,11 @@ class AtmosphericScreen(object):
                 self.kmax == other.kmax)
 
     def __hash__(self):
-        if self.kmax is None:
-            raise TypeError(
-                "AtmosphericScreen is unhashable before screens have been instantiated.")
         if not hasattr(self, '_hash'):
             self._hash = hash((
                     "galsim.AtmosphericScreen", self.screen_size, self.screen_scale, self.altitude,
                     self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.time_step,
-                    repr(self._orig_rng.serialize()), self.kmin, self.kmax))
+                    repr(self._orig_rng.serialize())))
         return self._hash
 
     def __ne__(self, other): return not self == other
