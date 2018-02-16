@@ -13,7 +13,9 @@ Dependency Changes
   repo so people could more easily use this functionality without requiring all
   of GalSim as a dependency. (#809b)
 - Removed dependency on boost.
-- Added dependency on (pybind11 or cffi...)
+- Removed dependency on TMV.
+- Added dependency on pybind11.
+- Added dependency on Eigen.
 
 
 API Changes
@@ -43,6 +45,8 @@ API Changes
   InclinedSersic has been changed to disk_half_light_radius, since it does
   not really correspond to the realized half-light radius of the inclined
   profile (unless the inclination angle is 0 degrees). (#809f)
+- Removed galsim_yaml and galsim_json scripts, which were essentially just
+  aliases for galsim -f yaml and galsim -f json respectively. (#809f)
 
 
 Bug Fixes
