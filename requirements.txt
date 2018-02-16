@@ -11,14 +11,6 @@ pyyaml >= 3.12
 pandas >= 0.20
 pybind11 >= 2.2
 pip >= 9.0
-cython >= 0.26
-setuptools >= 38.2
-setuptools_scm >= 1.15.6
 
-# These are not in conda.  Let pip install these.
+# This is not in conda.  Let pip install these.
 LSSTDESC.Coord >= 1.0.5
-
-# The version of eigency (1.75) on pip doens't install the Eigen directory properly.
-# cf. https://github.com/wouterboomsma/eigency/issues/17
-# It also improperly depends on cython at build time.  This commit fixes that issue.
-git+git://github.com/rmjarvis/eigency.git@33d8d65417484318255dbb422e6ad49dda803f06
