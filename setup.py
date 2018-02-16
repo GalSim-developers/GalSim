@@ -380,11 +380,12 @@ def add_dirs(builder):
 
     # Finally, add pybind11's include dir
     import pybind11
+    print('PyBind11 is version ',pybind11.__version__)
     # Include both the standard location and the --user location, since it's hard to tell
     # which one is the right choice.
-    builder.include_dirs.append(pybind11.get_include(user=False))
     builder.include_dirs.append(pybind11.get_include(user=True))
-
+    builder.include_dirs.append(pybind11.get_include(user=False))
+    print('Include files for pybind11 are ',builder.include_dirs[-2:])
 
 
 # Make a subclass of build_ext so we can add to the -I list.
