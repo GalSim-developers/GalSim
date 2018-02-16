@@ -1,58 +1,13 @@
-Installation Instructions
-=========================
+Installation Using SCons
+========================
 
-System requirements: GalSim currently only supports Linux and Mac OSX.
+Prior to version 2.0, this was the only installation method for installing
+GalSim.  It is still supported, mostly in case some users have trouble with
+the setup.py method, but not recommended for most users.
 
-Table of Contents:
+Please see the instructions in INSTALL.md first to see if that method
+will work for you.
 
-0) [Overall summary](#0-overall-summary)
-
-1) [Software required before building GalSim](#1-software-required-before-building-galsim)
-
-2) [Installing the GalSim Python package](#2-installing-the-galsim-python-package)
-
-3) [Running tests and installing example executables](#3-running-tests-and-installing-example-executables)
-
-4) [Running example scripts](#4-running-example-scripts)
-
-5) [Platform-specific notes](#5-platform-specific-notes)
-
-6) [More SCons options](#6-more-scons-options)
-
-
-0. Overall summary
-==================
-
-While the sections below detail how to install GalSim including its required and
-optional dependencies, this section gives a brief summary.  A minimal
-installation of GalSim requires the following dependencies. This dependency list
-includes a canonical version number that is known to work. In most cases, other
-recent versions will also work:
-
-- Python (2.7, 3.4, 3.5, 3.6)
-- SCons (2.1.0)
-- NumPy (1.11)
-- LSSTDESC.Coord (1.0.4)
-- Astropy (1.1.1)
-- Future (0.16.0)
-- FFTW (3.3)
-- TMV (0.73)
-- Boost (1.61)
-
-A few optional dependencies provide additional functionality, but GalSim can
-otherwise be compiled and used without them.  Basic WCS functionality is native
-to GalSim, but for users with more complicated WCS needs, we recommend
-installing starlink-pyast. Thee Astropy WCS package is also supported, but note
-that it requires scipy as an additional dependency.  To use yaml for config
-parsing, the pyyaml module is needed.  Faster text file parsing for reading in
-bandpasses and SEDs can be enabled if you have the pandas module (but the code
-will work, albeit more slowly, without this module).
-
-The sections below give a lot more details about how to obtain these
-dependencies; many are available from sources like pip or easy_install, rather
-than having to be installed from source. Third party packages like Anaconda
-often include many of these dependencies automatically.  GalSim and all of its
-dependencies can be installed via fink, for users with Macs.
 
 1. Software required before building GalSim
 ===========================================
@@ -60,189 +15,15 @@ dependencies can be installed via fink, for users with Macs.
 Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.
 
-i) Python (2.7, 3.4, 3.5, or 3.6 series), with some additional modules installed
---------------------------------------------------------------------------------
+i) Python (2.7, 3.4, 3.5, or 3.6 series)
+----------------------------------------
 
 The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
 Currently GalSim supports Python versions 2.7, 3.4, 3.5, and 3.6.  It is likely
-that other Python 3.x versions are compatible, but these two are the only ones
-actively tested.
-
-Many systems have a version of Python pre-installed. To check whether you
-already have a compatible version, type
-
-    python --version
-
-at the terminal prompt. If you get a "Command not found" error, or the reported
-version is not one of the supported versions, you should read the "Getting
-Python and required modules" section below.
-
-It may be that there is or soon will be more than one version of Python
-installed on your operating system, in which case please see the "Making sure
-you are using the right Python" Section below.
-
-### Getting Python and required modules ###
-
-For a list of places to download Python, see http://www.python.org/download/.
-
-The GalSim package also requires
-
-* the numerical Python module NumPy (http://www.numpy.org).  Currently GalSim is
-  regularly tested to ensure it works with NumPy 1.11.2, but other versions will
-  likely work.
-
-* the astronomical FITS file input/output module PyFITS available
-  either as a standalone package:
-      http://www.stsci.edu/institute/software_hardware/pyfits
-  or as part of the astropy library:
-      http://www.astropy.org/
-  The latter is preferred, since this is now where all future development of
-  this package is happening.  Currently GalSim is regularly tested to ensure
-  it works with astropy version 1.1.1, but it is likely that most recent
-  versions will also work.
-
-* the future module, which is used to ease compatibility between Python 2
-  and Python 3.  Currently GalSim is regularly tested to ensure
-  it works with version 0.16.0 of this module, but other versions may work.
-
-* the PyYAML package for parsing YAML files (http://pyyaml.org/wiki/PyYAML)
-  Note: PyYAML is only technically required if you are using the `galsim`
-  executable for parsing YAML config files.  Users who will only use GalSim
-  in Python (or use only JSON config files) may skip this dependency.
-  Currently GalSim is regularly tested to ensure it works with version 3.12
-  of this package, but other versions may work.
-
-* the LSSTDESC.Coord module (https://github.com/LSSTDESC/Coord), which is
-  used for angles and coordinates.  It is a faster alternative to the
-  astropy.coordinates module for the use cases that we need.
-
-* Optional dependency: PyAst WCS package.  This is a really nice front end
-  for the Starlink AST astrometry code.  It seems to support pretty much
-  every WCS encoding there is.  (At least every one we tried.)  Their
-  preferred installation method is via pip:
-      pip install starlink-pyast
-  For more information, see their website:
-      https://pypi.python.org/pypi/starlink-pyast/
-  With this installed, you can use the galsim.PyAstWCS class, which in
-  turn means that galsim.FitsWCS will pretty much always work.
-
-* Optional dependency: Astropy WCS package.  We already mentioned astropy
-  above for astropy.io.fits.  Another package we can use from astropy is
-  their WCS package, astropy.wcs.  They cannot read all that many WCS types
-  (compared to PyAst at least), but hopefully the functionality will include
-  in time.  Unfortunately, this package has scipy as a dependency, which
-  is kind of a gargantuan package.  But if you are willing to install that
-  too, then you can use the galsim.AstropyWCS class.
-
-* Optional dependency: Astropy Units package.  This is now required for
-  GalSim chromatic functionality, but can be omitted if you are not using
-  this part of GalSim.
-
-* Optional dependency: Pandas.  This has a very fast function for reading ASCII
-  tables.  If this is not available (e.g. when reading in Bandpass or SED
-  files) then we fall back to the (much) slower numpy loadtxt function.
-
-These should installed onto your Python system so that they can be imported by:
-
-    >>> import numpy
-    >>> import astropy.io.fits  [ Either this (preferred)... ]
-    >>> import pyfits           [ ... or this.               ]
-    >>> import future
-    >>> import yaml
-    >>> import coord
-    >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
-    >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
-    >>> import pandas           [ for faster ASCII table input ]
-
-within Python.  You can test this by loading up the Python interpreter for the
-version of Python you will be using with the GalSim toolkit. This is usually
-achieved by typing `python` or `/path/to/executable/bin/python` if your desired
-Python is not the system default, and typing the `import` commands above.  If
-you get no warning message, things are OK.
-
-If you do not have these modules, follow the links above or alternatively try
-`easy_install` (or equivalently `/path/to/executable/bin/easy_install` if your
-desired Python is not the default).
-
-As an example, if using the default system Python, connected to the internet
-and with root/admin privileges simply type
-
-    easy_install numpy
-    easy_install pyfits
-    easy_install future
-    easy_install pyyaml
-
-at the prompt.  If not using an admin account, prefix the commands above with
-`sudo` and enter your admin password when prompted. The required modules should
-then be installed.
-
-See http://packages.python.org/distribute/easy_install.html#using-easy-install
-for more details about the extremely useful `easy_install` feature.
-
-Another option for installing these packages is pip.  See pypi.python.org for
-details about getting this installed if you do not already have it on your
-system.  Then
-
-    pip install numpy
-    pip install astropy
-    pip install future
-    pip install pyyaml
-    pip install lsstdesc.coord
-    pip install starlink-pyast
-    pip install scipy
-
-### Third party-maintained Python packages ###
-
-There are a number of third party-maintained packages which bundle Python with
-many of the numerical and scientific libraries that are commonly used, and
-many of these are free for non-commercial or academic use.
-
-One good example of such a package, which includes all of the Python
-dependencies required by GalSim (NumPy, PyFITS, PyYAML as well as SCons and
-pytest; see Section 2 below) was the Enthought Python Distribution (EPD; see
-https://enthought.com/products/canopy/academic/ for the academic download
-instructions).
-
-The new Enthought "Canopy" package, a successor to EPD, provides the same
-functionality.  However, it has been found that Canopy on Mac OSX can give
-problems building against Boost.Python, another GalSim dependency.  A solution
-to these issues is described here:
-https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-canopy
-
-Other re-packaged Python downloads can be found at
-http://www.python.org/download/.
-
-### Making sure you are using the right Python ###
-
-Some users will find they have a few versions of Python around their operating
-system (determined, for example, using `locate python` at the prompt). A common
-way this will happen if there is already an older build (e.g. Python 2.4.X)
-being used by the operating system and then you install a newer version from
-one of the sources described above.
-
-It will be important to make sure that the version of Python for which NumPy,
-PyFITS and PyYAML etc. are installed is also the one being used for GalSim,
-and that this is the one *you* want to use GalSim from! Knowing which installed
-version of Python will be used is also important for the installation of the
-Boost libraries (see Section 1.v, below).
-
-To check which Python is your default you can identify the location of the
-executable by, for example, typing
-
-    which python
-
-at the prompt. This will tell you the location of the executable, something like
-    /path/to/executable/bin/python
-
-If this is not the Python you want, please edit your startup scripts (e.g.
-`.profile` or `.bashrc`), and be sure to specify where your desired Python
-version resides when installing the Boost C++ libraries (see Section 1.v).
-
-See Section 5 of this document for some suggestions about getting Python, Boost
-and all the other dependencies all working well together on your specific
-system.
+that other Python 3.x versions are compatible, but these are the only ones
+being actively tested.
 
 
 ii) SCons (http://www.scons.org)
@@ -267,12 +48,16 @@ is often distributed as fftw3.  See Section 5 for some suggestions about
 installing this on your platform.
 
 
-iv) TMV (https://github.com/rmjarvis/tmv/) (version >= 0.72 required)
+iv) TMV (https://github.com/rmjarvis/tmv/) (version >= 0.72)
 -----------------------------------------------------------------------
 
-GalSim uses the TMV library for its linear algebra routines. You should
-download it from the site above and follow the instructions in its INSTALL
-file for how to install it. Usually installing TMV just requires the command
+GalSim can use either Eigen or TMV for its linear algebra routines.  See
+the appropriate section in INSTALL.md if you want to use Eigen.  To use
+TMV (which was required prior to version 2.0), read on.
+
+You should download TMV from the site above and follow the instructions in its
+INSTALL file for how to install it. Usually installing TMV just requires the
+command
 
     scons install PREFIX=<installdir>
 
@@ -282,18 +67,13 @@ installation directory if you are comfortable installing it into `/usr/local`.
 However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=<installdir>].
 
-Note: On Mac OS 10.7, the Apple BLAS library has problems when run using
-multiple processes.  So if you have such a system, we recommend getting a
-different BLAS library, such as ATLAS (and making sure TMV finds it instead
-of the system BLAS) or compiling TMV with no BLAS library at all (using
-the SCons option `WITH_BLAS=false`).  Otherwise, Galsim programs may hang
-when run with multiple processes.  e.g. `scons tests` by default uses
-multiple processes, and multiple people reported problems using the Apple
-system BLAS on OS 10.7.
-
 
 v) Boost C++ (http://www.boost.org)
 -----------------------------------
+
+GalSim can use either PyBind11 or Boost for wrapping the C++ code to use in
+Python.  See the appropriate section in INSTALL.md if you want to use PyBind11.
+To use Boost (which was required prior to version 2.0), read on.
 
 GalSim makes use of some of the Boost C++ libraries, and these parts of Boost
 must be installed. Currently GalSim is regularly tested to ensure it works with
@@ -360,8 +140,7 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
 =======================================
 
 Once you have installed all the dependencies described above, you are ready to
-build GalSim. From the GalSim base directory (in which this INSTALL.md file is
-found) type
+build GalSim. From the GalSim base directory (in which this file is found) type
 
     scons
 
@@ -384,10 +163,13 @@ installing TMV, i.e. The TMV library and include files are installed in
 `<tmv-dir>/lib` and `<tmv-dir>/include`. Some important options that you may
 need to set are:
 
-* `TMV_DIR`: Explicitly give the TMV prefix
-
 * `FFTW_DIR`: Explicitly give the FFTW prefix
 
+* `USE_TMV`: Specify that you want to use TMV rather than Eigen.
+* `TMV_DIR`: Explicitly give the TMV prefix
+* `EIGEN_DIR`: Explicitly give the Eigen prefix
+
+# `USE_BOOST`: Specify that you want to use Boost rather than PyBind11.
 * `BOOST_DIR`: Explicitly give the Boost prefix
 
 * `EXTRA_LIBS`: Additional libraries to send to the linker
@@ -582,8 +364,8 @@ intend to use for running GalSim.
 The solution may be to install Boost C++ manually. This can be done by following
 the instructions of Section 1.v), above.
 
-ii) Mac OSX 10.8 and earlier
-----------------------------
+ii) Mac OSX
+-----------
 a) Use of Fink -- the `fink` (http://www.finkproject.org) package management
 software is popular with Mac users.  Once it is installed, you can get either
 most or all of the prerequisites using it, depending on whether you want
@@ -691,27 +473,6 @@ Some users may find that the last step results in an inability to import the
 GalSim module.  In that case, you can clear that addition to DYLD_LIBRARY_PATH
 and instead add /opt/local/lib to DYLD_FALLBACK_LIBRARY_PATH.
 
-Notes on MacPorts with Mac OS X 10.8:
-The use of `sudo` in the above commands may elicit an error message that says
-"dyld: DYLD_ environment variables being ignored because main executable
-(/usr/bin/sudo) is setuid or setgid".  This is the result of a bug in Mac OS X
-10.8, and will not prevent the installation of GalSim with the above steps from
-being successful.
-
-Notes on MacPorts version of gcc with Mac OS X 10.5.8:
-If you have installed a MacPorts version of gcc (e.g., "mp-gcc47"), it may not
-link correctly with the other MacPorts installed modules, which are compiled in
-the system gcc versions.  To check what gcc versions are available to you, try
-the command
-
-    port select --list gcc
-
-then switch to the system gcc version (either 4.0 or 4.2) with
-
-    sudo port select --set gcc gcc42
-
-and compile GalSim with the system gcc.
-
 c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
 Max OSX.  Currently GalSim is available on homebrew, so it (plus dependencies)
 should be installable via
@@ -719,23 +480,6 @@ should be installable via
     brew tap camphogg/science
     brew install gal-sim
 
-
-iii) Mac OSX 10.9 (Mavericks)
------------------------------
-
-Most of what applies above for earlier Mac OSX versions seems to apply for
-GalSim on Mavericks too, although not all combinations have yet been tested.
-
-However, it has been found that GalSim and its dependencies can be sensitive
-(e.g. Issue #483) to the fact that under Mavericks the system `gcc` is NOT in
-fact the Gnu Compiler Collection, but in fact Clang masquerading as such.  This
-can lead to problems when linking libraries, as described in the following
-GalSim Wiki FAQ item:
-https://github.com/GalSim-developers/GalSim/wiki/Installation-FAQ#wiki-what-should-i-do-about-undefined-symbols-for-architecture-x86_64-errors
-
-The best success seems to be achieved in Mavericks by *explicitly* specifying
-`clang` and `clang++` as the compiler to GalSim and all its dependencies when
-building (as in the example above).
 
 iv) Docker
 ----------
@@ -745,6 +489,7 @@ Karen Ng has created a Docker file for containerizing GalSim.  See her repo:
     https://github.com/karenyyng/GalSim_dockerfile
 
 for instructions about how to either use her image or create your own.
+
 
 6. More SCons options
 =====================
@@ -791,6 +536,8 @@ You can list these options from the command line with
 * `WARN` (False) specifies whether to add warning compiler flags such as
    `-Wall`.
 
+* `COVER` (False) specifies whether to add unit test coverage of the C++ layer.
+
 * `PYTHON` (/usr/bin/env python) specifies which version of Python you are
    planning to use GalSim with.  If you choose not to use the default here,
    then you need to remember to use the correct Python version
@@ -812,6 +559,15 @@ You can list these options from the command line with
 
 ### Flags that specify where to look for external libraries ###
 
+* `FFTW_DIR` ('') specifies the root location of FFTW. The header files should
+   be in `FFTW_DIR/include` and the library files in `FFTW_DIR/lib`.
+
+* `EIGEN_DIR` ('') specifies the root location of the Eigen header files.
+   The Core include file for Eigen should located at `EIGEN_DIR/Eigen/Core`.
+
+* `USE_TMV` (False) specifies to use TMV rather than Eigen for the linear
+   algebra code in the C++ layer.
+
 * `TMV_DIR` ('') specifies the location of TMV if it is not in a standard
    location. This should be the same value as you used for PREFIX when
    installing TMV.
@@ -819,20 +575,19 @@ You can list these options from the command line with
 * `TMV_LINK` ('') specifies the location of the tmv-link file. Normally, this is
    in `TMV_DIR/share`, but if not, you can specify the correct location here.
 
-* `FFTW_DIR` ('') specifies the root location of FFTW. The header files should
-   be in `FFTW_DIR/include` and the library files in `FFTW_DIR/lib`.
-
-* `BOOST_DIR` ('') specifies the root location of BOOST The header files should
-   be in `BOOST_DIR/include/boost` and the library files in `BOOST_DIR/lib`.
-
-* `USE_BOOST` (False) specifies whether to use a local boost installation for
-   some optional boost header files.  We bundle the boost.random implementation
-   from a specific boost version (1.48) to make sure "random" variable generation
-   is deterministic across machines and over time.  To make it fully self-
+* `USE_BOOST` (False) specifies whether to use Boost.Python for wrapping the
+   C++ code rather than PyBind11.  If this is set, it will also use your
+   Boost installation for some header files used by the random number
+   generator code. We bundle the boost.random implementation from a specific
+   boost version (1.48) to make sure "random" variable generation is
+   deterministic across machines and over time.  To make it fully self-
    contained, we edited them slightly to not include many of the complicated
    workarounds boost has for specific compilers and such.  However, those
    workarounds can be reenabled by setting USE_BOOST=True if your system needs
    them.
+
+* `BOOST_DIR` ('') specifies the root location of BOOST The header files should
+   be in `BOOST_DIR/include/boost` and the library files in `BOOST_DIR/lib`.
 
 * `EXTRA_INCLUDE_PATH` ('') specifies extra directories in which to search for
    header files in addition to the standard locations such as `/usr/include` and

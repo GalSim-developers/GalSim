@@ -87,6 +87,13 @@ opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', Fal
 opts.Add('FFTW_DIR','Explicitly give the fftw3 prefix','')
 opts.Add('EIGEN_DIR','Explicitly give the Eigen prefix','')
 
+opts.Add(BoolVariable('USE_TMV','Use TMV for linear algebra, rather than Eigen',False))
+opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
+opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
+
+opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
+opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
+
 opts.Add(PathVariable('EXTRA_INCLUDE_PATH',
          'Extra paths for header files (separated by : if more than 1)',
          '', PathVariable.PathAccept))
@@ -120,19 +127,12 @@ opts.Add(PathVariable('LD_LIBRARY_PATH',
          'cf. DYLD_LIBRARY_PATH for why this may be useful.',
          '', PathVariable.PathAccept))
 
-opts.Add(BoolVariable('USE_TMV','Use TMV for linear algebra, rather than Eigen',False))
-opts.Add('TMV_DIR','Explicitly give the tmv prefix','')
-opts.Add('TMV_LINK','File that contains the linking instructions for TMV','')
-opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-
-opts.Add(BoolVariable('USE_BOOST','Use boost python for the wrapping, rather than pybind11',False))
-opts.Add('BOOST_DIR','Explicitly give the boost prefix','')
-
 opts.Add('PYTEST','Name of pytest executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
+opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
 # None of the code uses openmp yet.  Re-enable this if we start using it.
 #opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
