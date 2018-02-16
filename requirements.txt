@@ -14,3 +14,4 @@ pip >= 9.0
 
 # This is not in conda.  Let pip install these.
 LSSTDESC.Coord >= 1.0.5
+starlink-pyast >= 3.9.0

@@ -576,7 +576,8 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros)
 
 build_dep = ['pybind11>=2.2']
-run_dep = ['numpy', 'future', 'astropy', 'pyyaml', 'LSSTDESC.Coord', 'pandas', 'starlink-pyast']
+run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord',  # Required.
+           'pyyaml', 'pandas', 'starlink-pyast']            # Not technically required, but useful.
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
 
 with open('README.md') as file:
