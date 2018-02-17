@@ -503,9 +503,10 @@ def test_phase_gradient_shoot():
     # Make the atmosphere
     seed = 12345
     r0_500 = 0.15  # m
+    L0 = 20.0  # m
     nlayers = 6
     screen_size = 102.4  # m
-    if __name__ == '__main__' and False:
+    if __name__ == '__main__':
         screen_scale = 0.025 # m
     else:
         screen_scale = 0.1 # m
@@ -534,11 +535,11 @@ def test_phase_gradient_shoot():
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
     rng2 = rng.duplicate()
-    atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
+    atm = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts, rng=rng,
                             screen_size=screen_size, screen_scale=screen_scale)
     # Make a second atmosphere to use for geometric photon-shooting
-    atm2 = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng2,
-                             screen_size=screen_size, screen_scale=screen_scale)
+    atm2 = galsim.Atmosphere(r0_500=r0_500, L0=L0, speed=spd, direction=dirn, altitude=alts,
+                             rng=rng2, screen_size=screen_size, screen_scale=screen_scale)
     # These should be equal at the moment, before we've actually instantiated any screens by drawing
     # with them.
     assert atm == atm2
@@ -558,7 +559,7 @@ def test_phase_gradient_shoot():
     u.generate(ys)
     thetas = [(x*galsim.degrees, y*galsim.degrees) for x, y in zip(xs, ys)]
 
-    if __name__ == '__main__' and False:
+    if __name__ == '__main__':
         exptime = 15.0
         time_step = 0.05
         centroid_tolerance = 0.05
@@ -574,9 +575,16 @@ def test_phase_gradient_shoot():
         shape_tolerance = 0.03
 
     psfs = [atm.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper) for th in thetas]
-    psfs2 = [atm2.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step) for th in thetas]
+    psfs2 = [atm2.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step)
+             for th in thetas]
     shoot_moments = []
     fft_moments = []
+
+    vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500)**1.2, L0=L0)
+    airy = galsim.Airy(lam=lam, diam=diam)
+    obj = galsim.Convolve(vk, airy)
+    vkImg = obj.drawImage(nx=48, ny=48, scale=0.05)
+    vkMom = galsim.hsm.FindAdaptiveMom(vkImg)
 
     for psf, psf2 in zip(psfs, psfs2):
         im_shoot = psf.drawImage(nx=48, ny=48, scale=0.05, method='phot', n_photons=100000, rng=rng)
@@ -617,6 +625,13 @@ def test_phase_gradient_shoot():
             fft_moment.moments_sigma*(1+size_bias),
             rtol=0, atol=size_tolerance,
             err_msg='Phase gradient sigma not close to fft sigma')
+
+        np.testing.assert_allclose(
+            shoot_moment.moments_sigma,
+            vkMom.moments_sigma,
+            rtol=0.1, atol=0,
+            err_msg='Phase gradient sigma not close to infinite exposure analytic sigma'
+        )
 
         np.testing.assert_allclose(
             shoot_moment.observed_shape.g1,
