@@ -70,11 +70,11 @@ def make_plot(args):
     # Additionally, we set the screen size and scale.
     atmRng = galsim.BaseDeviate(args.seed+1)
     print("Inflating atmosphere")
+    fftAtm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                               speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                               screen_size=args.screen_size, screen_scale=args.screen_scale)
     with ProgressBar(args.nlayers) as bar:
-        fftAtm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                   speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                   screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                   _bar=bar)
+        fftAtm.instantiate(_bar=bar)
     print(fftAtm[0].screen_scale, fftAtm[0].screen_size)
     print(fftAtm[0]._tab2d.f.shape)
     # `atm` is now an instance of a galsim.PhaseScreenList object.
@@ -113,13 +113,13 @@ def make_plot(args):
         # reset atmRng
         atmRng = galsim.BaseDeviate(args.seed+1)
         print("Inflating atmosphere with kcrit={}".format(kcrit))
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                    speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                    screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                    kmax=float(kcrit), _bar=bar)
+            atm.instantiate(kmax=float(kcrit), _bar=bar)
         kick1 = atm.makePSF(lam=args.lam, aper=aper, exptime=args.exptime,
-                            time_step=args.time_step)
+                            time_step=args.time_step, second_kick=False)
         r0 = args.r0_500*(args.lam/500)**(6./5)
         kick2 = galsim.SecondKick(lam=args.lam, r0=r0, diam=args.diam, obscuration=args.obscuration,
                                   L0=args.L0, kcrit=kcrit)

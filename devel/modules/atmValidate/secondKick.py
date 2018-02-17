@@ -86,11 +86,11 @@ def make_plot(args):
         # Additionally, we set the screen size and scale.
         atmRng = galsim.BaseDeviate(args.seed+1)
         print("Inflating atmosphere with kcrit={}".format(kcrit))
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                    speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                    screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                    kmin=float(kcrit), _bar=bar)
+            atm.instantiate(kmin=float(kcrit), _bar=bar)
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)
 

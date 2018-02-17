@@ -83,12 +83,14 @@ def make_plot(args):
         # Make sure to use a consistent seed for the atmosphere when varying kcrit
         # Additionally, we set the screen size and scale.
         atmRng = galsim.BaseDeviate(args.seed+1)
-        print("Inflating atmosphere with kcrit={}".format(kcrit))
+        print("Inflating atmosphere with kcrit={:6.3f}".format(kcrit))
+        atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                screen_size=args.screen_size, screen_scale=args.screen_scale,
+                                suppress_warning=True)
         with ProgressBar(args.nlayers) as bar:
-            atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                    speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                    screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                    kmax=float(kcrit), _bar=bar)
+            atm.instantiate(kmax=float(kcrit), _bar=bar)
+
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)
 
@@ -102,7 +104,7 @@ def make_plot(args):
         print("Drawing with Fourier optics")
         with ProgressBar(args.exptime/args.time_step) as bar:
             psf = atm.makePSF(lam=args.lam, aper=aper, exptime=args.exptime,
-                              time_step=args.time_step, _bar=bar)
+                              time_step=args.time_step, second_kick=False, _bar=bar)
             fftImg = psf.drawImage(nx=args.nx, ny=args.nx, scale=args.scale)
 
         airy = galsim.Airy(lam=args.lam, diam=args.diam, obscuration=args.obscuration)

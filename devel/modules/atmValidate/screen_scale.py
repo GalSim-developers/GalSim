@@ -52,6 +52,8 @@ def shrink_layer(layer, factor):
     ret._ys = layer._ys[::factor]
     ret._tab2d = galsim.LookupTable2D(
         ret._xs, ret._ys, new, interpolant='linear', edge_mode='wrap')
+    ret.kmin = layer.kmin
+    ret.kmax = layer.kmax
 
     return ret
 
@@ -105,11 +107,11 @@ def make_plot(args):
 
     # Generate atmosphere, set the initial screen size and scale.
     atmRng = galsim.BaseDeviate(args.seed+1)
+    fineAtm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                screen_size=args.screen_size, screen_scale=args.screen_scale)
     with ProgressBar(args.nlayers) as bar:
-        fineAtm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                    speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                    screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                    _bar=bar)
+        fineAtm.instantiate(_bar=bar)
     # `fineAtm` is now an instance of a galsim.PhaseScreenList object.
 
     # Construct an Aperture object for computing the PSF.  The Aperture object describes the

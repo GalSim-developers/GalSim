@@ -729,12 +729,14 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
-    def instantiate(self, **kwargs):
+    def instantiate(self, _bar=None, **kwargs):
         for layer in self:
             try:
                 layer.instantiate(**kwargs)
             except AttributeError:
                 pass
+            if _bar:
+                _bar.update()
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""

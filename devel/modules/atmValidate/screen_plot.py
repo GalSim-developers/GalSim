@@ -14,6 +14,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 from astropy.utils.console import ProgressBar
 
+
 def save_plot(img, filename):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,4))
     ax.set_xticks([])
@@ -75,11 +76,11 @@ def make_plot(args):
     # Additionally, we set the screen size and scale.
     atmRng = galsim.BaseDeviate(args.seed+1)
     print("Inflating atmosphere")
+    atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                            speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                            screen_size=args.screen_size, screen_scale=args.screen_scale)
     with ProgressBar(args.nlayers) as bar:
-        atm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                _bar=bar)
+        atm.instantiate(_bar=bar)
     print(atm[0].screen_scale, atm[0].screen_size)
     print(atm[0]._tab2d.f.shape)
     # `atm` is now an instance of a galsim.PhaseScreenList object.
@@ -90,27 +91,31 @@ def make_plot(args):
 
     save_plot(img, args.outprefix+"full.png")
 
+    del atm
+
     kcrits = np.logspace(np.log10(args.kmin), np.log10(args.kmax), 4)
     for icol, kcrit in enumerate(kcrits):
+        atmRng = galsim.BaseDeviate(args.seed+1)
+        atmLowK = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                    speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                    screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atmRng = galsim.BaseDeviate(args.seed+1)
-            atmLowK = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                        speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                        screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                        kmax=float(kcrit), _bar=bar)
+            atmLowK.instantiate(kmax=float(kcrit), _bar=bar)
 
         img = atmLowK.wavefront(x, y, 0)
         save_plot(img, "{}{}_{}".format(args.outprefix, icol, "low.png"))
+        del atmLowK
 
+        atmRng = galsim.BaseDeviate(args.seed+1)
+        atmHighK = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
+                                     speed=spd, direction=dirn, altitude=alts, rng=atmRng,
+                                     screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atmRng = galsim.BaseDeviate(args.seed+1)
-            atmHighK = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
-                                         speed=spd, direction=dirn, altitude=alts, rng=atmRng,
-                                         screen_size=args.screen_size, screen_scale=args.screen_scale,
-                                         kmin=float(kcrit), _bar=bar)
+            atmHighK.instantiate(kmin=float(kcrit), _bar=bar)
 
         img = atmHighK.wavefront(x, y, 0)
         save_plot(img, "{}{}_{}".format(args.outprefix, icol, "high.png"))
+        del atmHighK
 
 
 if __name__ == '__main__':
@@ -130,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument("--screen_size", type=float, default=102.4,
                         help="Size of atmospheric screen in meters.  Note that the screen wraps "
                              "with periodic boundary conditions.  Default: 102.4")
-    parser.add_argument("--screen_scale", type=float, default=0.0125,
+    parser.add_argument("--screen_scale", type=float, default=0.05,
                         help="Resolution of atmospheric screen in meters.  Default: 0.0125")
     parser.add_argument("--kmin", type=float, default=0.1,
                         help="Minimum kcrit to plot.  Default: 0.1")
