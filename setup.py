@@ -414,7 +414,7 @@ def add_dirs(builder, output=False):
 class my_build_clib(build_clib):
     def finalize_options(self):
         build_clib.finalize_options(self)
-        add_dirs(self)
+        add_dirs(self, output=True)  # This happens first, so only output for this call.
 
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
@@ -438,7 +438,7 @@ class my_build_clib(build_clib):
 class my_build_ext(build_ext):
     def finalize_options(self):
         build_ext.finalize_options(self)
-        add_dirs(self, output=True)
+        add_dirs(self)
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
@@ -573,20 +573,17 @@ class my_test(test):
             self.pytest_args = ['-n=%d'%ncpu, '--timeout=60']
         else:
             self.pytest_args = self.pytest_args.split()
-        print('Using pytest args: ',self.pytest_args,' (can update with -a pytest_args)')
+
+        #print('Using pytest args: ',self.pytest_args,' (can update with -a pytest_args)')
         original_dir = os.getcwd()
         os.chdir('tests')
         test_files = glob.glob('test*.py')
+
         errno = pytest.main(self.pytest_args + test_files)
-        print('pytest ',self.pytest_args,test_files)
         errno = 0
         if errno != 0:
             sys.exit(errno)
         os.chdir(original_dir)
-
-        print("Note: There might be some TypeError's after this.  It seems to be a bug in some")
-        print("      versions of Python's multiprocessing module. ")
-        print("      They are harmless and can be ignored.\n")
 
 
 lib=("galsim", {'sources' : cpp_sources,
@@ -675,7 +672,7 @@ dist = setup(name="GalSim",
     libraries=[lib],
     ext_modules=[ext],
     setup_requires=build_dep,
-    install_requires=build_dep + run_dep,
+    install_requires=run_dep,
     tests_require=test_dep,
     cmdclass = {'build_ext': my_build_ext,
                 'build_clib': my_build_clib,
