@@ -8,11 +8,13 @@ eigency >= 1.77
 numpy >= 1.13
 future >= 0.15
 astropy >= 2.0
-pyyaml >= 3.12
-pandas >= 0.20
 pybind11 >= 2.2
 pip >= 9.0
 
+# Not technically required, but useful.
+pyyaml >= 3.12
+pandas >= 0.20
+
 # This is not in conda.  Let pip install these.
 LSSTDESC.Coord >= 1.0.5
-starlink-pyast >= 3.9.0
+starlink-pyast >= 3.9.0  # Also not required, but useful.

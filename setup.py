@@ -584,8 +584,7 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros)
 
 build_dep = ['pybind11>=2.2']
-run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord',  # Required.
-           'pyyaml', 'pandas', 'starlink-pyast']            # Not technically required, but useful.
+run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
 
 # If Eigen doesn't exist in the normal places, add eigency ad a build dependency.
