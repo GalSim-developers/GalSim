@@ -114,27 +114,30 @@ def find_fftw_lib(output=False):
         pass
 
     name = 'libfftw3' + lib_ext
+    if output:
+        print("Looking for ",name)
     for dir in try_libdirs:
+        if output:
+            print("  ", dir, end='')
         try:
             libpath = os.path.join(dir, name)
             lib = ctypes.cdll.LoadLibrary(libpath)
             if output:
-                print("found %s at %s" %(name, libpath))
+                print("  (yes)")
             return libpath
         except OSError as e:
             if output:
-                print("Did not find %s in %s" %(name, libpath))
+                print("  (no)")
             continue
-    if output:
-        print("Could not find %s in any of the normal locations"%name)
-        print("Trying ctypes.util.find_library")
     try:
         libpath = ctypes.util.find_library('fftw3')
         if libpath == None:
             raise OSError
+        if output:
+            print("  ", os.path.split(libpath)[0], end='')
         lib = ctypes.cdll.LoadLibrary(libpath)
         if output:
-            print("found %s at %s" %(name, libpath))
+            print("  (yes)")
         return libpath
     except Exception as e:
         if output:
@@ -145,10 +148,14 @@ def find_fftw_lib(output=False):
 
 # Check for Eigen in some likely places
 def find_eigen_dir(output=False):
+    import distutils.sysconfig
+
     try_dirs = []
     if 'EIGEN_DIR' in os.environ:
         try_dirs.append(os.environ['EIGEN_DIR'])
         try_dirs.append(os.path.join(os.environ['EIGEN_DIR']))
+    # This is where conda will install it.
+    try_dirs.append(distutils.sysconfig.get_config_var('INCLUDEDIR'))
     if 'posix' in os.name.lower():
         try_dirs.extend(['/usr/local/include', '/usr/include'])
     if 'darwin' in platform.system().lower():
@@ -166,16 +173,23 @@ def find_eigen_dir(output=False):
     except ImportError:
         pass
 
+    if output:
+        print("Looking for Eigen:")
     for dir in try_dirs:
+        if output:
+            print("  ", dir, end='')
         if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
             if output:
-                print("found Eigen at", dir)
+                print("  (yes)")
             return dir
         if os.path.isfile(os.path.join(dir, 'eigen3', 'Eigen/Core')):
             dir = os.path.join(dir, 'eigen3')
             if output:
-                print("found Eigen at", dir)
+                # Only print this if the eigen3 addition was key to finding it.
+                print("\n  ", dir, "  (yes)")
             return dir
+        if output:
+            print("  (no)")
     if output:
         print("Could not find Eigen.  Make sure it is installed either in a standard ")
         print("location such as /usr/local/include, or the installation directory is either in ")
