@@ -4,15 +4,24 @@ import platform
 import ctypes
 import types
 
-from setuptools import setup, Extension, find_packages
-from setuptools.command.build_ext import build_ext
-from setuptools.command.build_clib import build_clib
-from setuptools.command.install import install
-from setuptools.command.install_scripts import install_scripts
-from setuptools.command.easy_install import easy_install
-from setuptools.command.test import test
-import setuptools
-print("Using setuptools version",setuptools.__version__)
+try:
+    from setuptools import setup, Extension, find_packages
+    from setuptools.command.build_ext import build_ext
+    from setuptools.command.build_clib import build_clib
+    from setuptools.command.install import install
+    from setuptools.command.install_scripts import install_scripts
+    from setuptools.command.easy_install import easy_install
+    from setuptools.command.test import test
+    import setuptools
+    print("Using setuptools version",setuptools.__version__)
+except ImportError:
+    print()
+    print("****")
+    print("    Installation requires setuptools version >= 38.")
+    print("    Please upgrade or install with pip install -U setuptools")
+    print("****")
+    print()
+    raise
 
 print('Python version = ',sys.version)
 py_version = "%d.%d"%sys.version_info[0:2]  # we check things based on the major.minor version.
@@ -403,6 +412,7 @@ def add_dirs(builder, output=False):
     # Finally, add pybind11's include dir
     import pybind11
     print('PyBind11 is version ',pybind11.__version__)
+    #print(pybind11.__file__)
     # Include both the standard location and the --user location, since it's hard to tell
     # which one is the right choice.
     builder.include_dirs.append(pybind11.get_include(user=True))
@@ -594,7 +604,7 @@ ext=Extension("galsim._galsim",
               py_sources,
               undef_macros = undef_macros)
 
-build_dep = ['pybind11>=2.2']
+build_dep = ['setuptools>=38', 'pybind11>=2.2']
 run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
 
@@ -672,7 +682,7 @@ dist = setup(name="GalSim",
     libraries=[lib],
     ext_modules=[ext],
     setup_requires=build_dep,
-    install_requires=run_dep,
+    install_requires=build_dep + run_dep,
     tests_require=test_dep,
     cmdclass = {'build_ext': my_build_ext,
                 'build_clib': my_build_clib,
