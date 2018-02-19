@@ -12,10 +12,11 @@ Dependency Changes
   GalSim as the Angle and CelestialCoord classes.  We moved it to a separate
   repo so people could more easily use this functionality without requiring all
   of GalSim as a dependency. (#809b)
-- Removed dependency on boost.
-- Removed dependency on TMV.
-- Added dependency on pybind11.
-- Added dependency on Eigen.
+- Removed dependency on boost. (#809)
+- Removed dependency on TMV. (#809)
+- Added dependency on pybind11. (#809)
+- Added dependency on Eigen. (#809)
+- FFTW is now the only dependency that pip cannot handle automatically. (#809)
 
 
 API Changes

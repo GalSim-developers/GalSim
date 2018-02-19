@@ -4,6 +4,7 @@
 # These are in conda_requirements.txt.  If using that, you may prefer to do
 #   conda install -c conda-forge --file conda_requirements.txt
 # prior to running pip install -r requirements.txt
+eigency >= 1.77
 numpy >= 1.13
 future >= 0.15
 astropy >= 2.0

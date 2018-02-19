@@ -7,9 +7,9 @@ Table of Contents:
 
 1) [Overall summary](#1-overall-summary)
 
-2) [Installing Eigen](#2-installing-eigen)
+2) [Installing FFTW](#2-installing-fftw)
 
-3) [Installing FFTW](#3-installing-fftw)
+3) [Installing Eigen](#3-installing-eigen)
 
 4) [Using Conda](#4-using-conda)
 
@@ -44,15 +44,15 @@ brand of Python you are using.)
 
 Either of these installation methods will automatically install most of the
 required dependencies for you if you do not have them already installed on your
-machine.  There are two exceptions, however.  Eigen and FFTW are not directly
-pip installable, so if the above installation fails, you may need to install
-these separately. See the sections 2 and 3 below for more details about how to
-do this.
+machine.  There is one exception, however.  FFTW is not directly pip
+installable, so if the above installation fails, you may need to install
+it separately. See the sections 2 below for more details about how to do this.
 
 The other dependencies should all be installed automatically, but they
 are listed here for completeness along with versions that are known to work.
 In most cases, other recent versions will also work:
 
+- Eigen (3.2.8)  (via eigency 1.77)
 - NumPy (1.14.0)
 - Future (0.16.0)
 - Astropy (2.0.3)
@@ -77,135 +77,7 @@ separately from installing GalSim, the easiest way is to use the command
 in the GalSim directory.  
 
 
-2. Installing Eigen
-===================
-
-GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
-header-only library, which means that nothing needs to be compiled to use them.
-You just need to download the header files and make sure GalSim can find them.
-
-We require Eigen version >= 3.0.  Most tests have been done with Eigen 3.3.4,
-but we have also used 3.2.8 and 3.0.4, so probably any 3.x version will work.
-However, if you have trouble with another version, try upgrading to 3.3.4 or
-later.
-
-Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
-This is still an option if you prefer (e.g. it may be faster for some use
-cases, since it can use an optimized BLAS library on your system), but to
-use TMV, you need to use the SCons installation option described below.
-
-
-i) Installing it yourself
--------------------------
-
-Eigen is available at the URL
-
-    http://eigen.tuxfamily.org/index.php
-
-As of this writing, version 3.3.4 is the current latest release, for which
-the following commands should work to download and install it:
-
-    wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
-    tar xfj 3.3.4.tar.bz2
-    sudo cp eigen-eigen-5a0156e40feb/Eigen /usr/local/include
-
-In the final cp line, the MD5 hash (5a0156e40feb) will presumably change for
-other versions, so use whatever directory tar expands into if you are using
-a different version than 3.3.4.
-
-If you do not have sudo privileges, you can copy to a different directory such
-as $HOME/include instead and leave off the sudo from the cp command.  In this
-case, make sure this directory is in your C_INCLUDE_PATH environment variable.
-
-Finally, you can also skip the last command above and instead set EIGEN_DIR
-as an environment variabe to tell GalSim where the files are
-
-    export EIGEN_DIR=/some/path/to/eigen
-
-This should be the directory in which the Eigen subdirectory is found.  E.g.
-
-    export EIGEN_DIR=$HOME/eigen-eigen-5a0156e40feb
-
-Probably, you should put this into your .bash_profile file so it always gets
-set when you log in.
-
-
-ii) Using an existing installation
-----------------------------------
-
-If Eigen is already installed on your system, there may be nothing to do.
-If it is in a standard location like /usr/local/include or in some other
-directory in your C_INCLUDE_PATH, then GalSim should find it without
-any extra work on your part.
-
-If it is in a non-standard location, and you do not want to add this path
-to your C_INCLUDE_PATH, then you can instead set the EIGEN_DIR environment
-variable to tell GalSim where to look
-
-    export EIGEN_DIR=/some/path/to/eigen
-
-For instance, if Eigen was installed into /usr/include/eigen3, then you
-could use that with
-
-    export EIGEN_DIR=/usr/include/eigen3
-
-This command would normally be done in your .bash_profile file so it gets
-executed every time you log in.
-
-If you have multiple versions of Eigen installed on your system, this variable
-can be used to specify which version you want GalSim to use as this will be
-the first location it will check during the installation process.
-
-
-iii) Using conda
-----------------
-
-If you use conda, Eigen can be install with
-
-    conda install eigen
-    
-This will put it into the anaconda/include directory on your system (within
-your active environment if appropriate).  GalSim knows to look here, so there
-is nothing dditional you need to do.
-
-
-iv) Using fink
---------------
-
-If you use fink on a Mac, Eigen can be installed with
-
-    fink install eigen
-
-This will put it into the /sw/include directory on your system. GalSim knows
-to look here, so there is nothing dditional you need to do.
-
-
-v) Using MacPorts
------------------
-
-If you use MacPorts, Eigen can be installed with
-
-    port install eigen
-
-This will put it into the /opt/local/include directory on your system. GalSim
-knows to look here, so there is nothing dditional you need to do.
-
-
-vi) Using eigency
------------------
-
-Eigency is a pip-installable module that bundles the Eigen header files, so it
-can also be used to install these files on your system.  Unfortunately, at least
-as of version 1.75, there are errors in their setup.py file, so the pip version
-does not actually work for this purpose.
-
-However, Mike Jarvis has a fork that fixes these errors, which you can pip
-install manually using the command
-
-    pip install git+git://github.com/rmjarvis/eigency.git@33d8d65417484
-
-
-3. Installing FFTW
+2. Installing FFTW
 ==================
 
 GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
@@ -318,6 +190,138 @@ If you use MacPorts, FFTW can be installed with
 
 This will put it into the /opt/loca/lib directory on your system. GalSim knows
 to look here, so there is nothing dditional you need to do.
+
+
+3. Installing Eigen
+===================
+
+GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
+header-only library, which means that nothing needs to be compiled to use them.
+You can download the header files yourself, but if you do not, then we use
+the pip-installable eigency module, which bundles the header files in their
+installed python directory.  So usually, this dependency should require no
+work on your part.
+
+However, it might become useful to install Eigen separately from eigency
+e.g. if you want to upgrade to a newer version of Eigen than the one that is
+bundled with eigency.  (Eigen 3.2.8 is bundled with eigency 1.77.)  Therefore,
+this section describes several options for how to obtain and install Eigen.
+
+We require Eigen version >= 3.0.  Most tests have been done with Eigen 3.2.8
+or 3.3.4, but we have also 3.0.4, so probably any 3.x version will work.
+However, if you have trouble with another version, try upgrading to 3.2.8 or
+later.
+
+Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
+This is still an option if you prefer (e.g. it may be faster for some use
+cases, since it can use an optimized BLAS library on your system), but to
+use TMV, you need to use the SCons installation option described below.
+
+
+i) Installing it yourself
+-------------------------
+
+Eigen is available at the URL
+
+    http://eigen.tuxfamily.org/index.php
+
+As of this writing, version 3.3.4 is the current latest release, for which
+the following commands should work to download and install it:
+
+    wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
+    tar xfj 3.3.4.tar.bz2
+    sudo cp eigen-eigen-5a0156e40feb/Eigen /usr/local/include
+
+In the final cp line, the MD5 hash (5a0156e40feb) will presumably change for
+other versions, so use whatever directory tar expands into if you are using
+a different version than 3.3.4.
+
+If you do not have sudo privileges, you can copy to a different directory such
+as $HOME/include instead and leave off the sudo from the cp command.  In this
+case, make sure this directory is in your C_INCLUDE_PATH environment variable.
+
+Finally, you can also skip the last command above and instead set EIGEN_DIR
+as an environment variabe to tell GalSim where the files are
+
+    export EIGEN_DIR=/some/path/to/eigen
+
+This should be the directory in which the Eigen subdirectory is found.  E.g.
+
+    export EIGEN_DIR=$HOME/eigen-eigen-5a0156e40feb
+
+Probably, you should put this into your .bash_profile file so it always gets
+set when you log in.
+
+
+ii) Using an existing installation
+----------------------------------
+
+If Eigen is already installed on your system, there may be nothing to do.
+If it is in a standard location like /usr/local/include or in some other
+directory in your C_INCLUDE_PATH, then GalSim should find it without
+any extra work on your part.
+
+If it is in a non-standard location, and you do not want to add this path
+to your C_INCLUDE_PATH, then you can instead set the EIGEN_DIR environment
+variable to tell GalSim where to look
+
+    export EIGEN_DIR=/some/path/to/eigen
+
+For instance, if Eigen was installed into /usr/include/eigen3, then you
+could use that with
+
+    export EIGEN_DIR=/usr/include/eigen3
+
+This command would normally be done in your .bash_profile file so it gets
+executed every time you log in.
+
+If you have multiple versions of Eigen installed on your system, this variable
+can be used to specify which version you want GalSim to use as this will be
+the first location it will check during the installation process.
+
+
+iii) Using conda
+----------------
+
+If you use conda, Eigen can be install with
+
+    conda install eigen
+    
+This will put it into the anaconda/include directory on your system (within
+your active environment if appropriate).  GalSim knows to look here, so there
+is nothing dditional you need to do.
+
+
+iv) Using fink
+--------------
+
+If you use fink on a Mac, Eigen can be installed with
+
+    fink install eigen
+
+This will put it into the /sw/include directory on your system. GalSim knows
+to look here, so there is nothing dditional you need to do.
+
+
+v) Using MacPorts
+-----------------
+
+If you use MacPorts, Eigen can be installed with
+
+    port install eigen
+
+This will put it into the /opt/local/include directory on your system. GalSim
+knows to look here, so there is nothing dditional you need to do.
+
+
+vi) Using eigency
+-----------------
+
+Eigency is a pip-installable module that bundles the Eigen header files, so it
+can also be used to install these files on your system.  Indeed, as mentioned 
+above, we will use eigency automatically if Eigen is not found in one of the
+above locations.  So the above installations will take precendence, but
+eigency should work as a fall-back.
 
 
 4. Using Conda

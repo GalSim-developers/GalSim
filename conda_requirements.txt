@@ -8,3 +8,5 @@ pandas >= 0.20
 pybind11 >= 2.2
 pip >= 9.0
 gcc >= 4.8
+fftw >= 3.3
+eigen >= 3.3

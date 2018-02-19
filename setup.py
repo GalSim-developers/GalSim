@@ -91,7 +91,7 @@ def get_compiler(cc):
         return 'unknown'
 
 # Check for the fftw3 library in some likely places
-def find_fftw_lib():
+def find_fftw_lib(output=False):
     try_libdirs = []
     lib_ext = '.so'
     if 'FFTW_DIR' in os.environ:
@@ -118,28 +118,33 @@ def find_fftw_lib():
         try:
             libpath = os.path.join(dir, name)
             lib = ctypes.cdll.LoadLibrary(libpath)
-            print("found %s at %s" %(name, libpath))
+            if output:
+                print("found %s at %s" %(name, libpath))
             return libpath
         except OSError as e:
-            print("Did not find %s in %s" %(name, libpath))
+            if output:
+                print("Did not find %s in %s" %(name, libpath))
             continue
-    print("Could not find %s in any of the normal locations"%name)
-    print("Trying ctypes.util.find_library")
+    if output:
+        print("Could not find %s in any of the normal locations"%name)
+        print("Trying ctypes.util.find_library")
     try:
         libpath = ctypes.util.find_library('fftw3')
         if libpath == None:
             raise OSError
         lib = ctypes.cdll.LoadLibrary(libpath)
-        print("found %s at %s" %(name, libpath))
+        if output:
+            print("found %s at %s" %(name, libpath))
         return libpath
     except Exception as e:
-        print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
-        print("location such as /usr/local/lib, or the installation directory is either in ")
-        print("your LIBRARY_PATH or FFTW_DIR environment variable.")
+        if output:
+            print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
+            print("location such as /usr/local/lib, or the installation directory is either in ")
+            print("your LIBRARY_PATH or FFTW_DIR environment variable.")
         raise
 
 # Check for Eigen in some likely places
-def find_eigen_dir():
+def find_eigen_dir(output=False):
     try_dirs = []
     if 'EIGEN_DIR' in os.environ:
         try_dirs.append(os.environ['EIGEN_DIR'])
@@ -163,15 +168,18 @@ def find_eigen_dir():
 
     for dir in try_dirs:
         if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
-            print("found Eigen at", dir)
+            if output:
+                print("found Eigen at", dir)
             return dir
         if os.path.isfile(os.path.join(dir, 'eigen3', 'Eigen/Core')):
             dir = os.path.join(dir, 'eigen3')
-            print("found Eigen at", dir)
+            if output:
+                print("found Eigen at", dir)
             return dir
-    print("Could not find Eigen.  Make sure it is installed either in a standard ")
-    print("location such as /usr/local/include, or the installation directory is either in ")
-    print("your C_INCLUDE_PATH or EIGEN_DIR environment variable.")
+    if output:
+        print("Could not find Eigen.  Make sure it is installed either in a standard ")
+        print("location such as /usr/local/include, or the installation directory is either in ")
+        print("your C_INCLUDE_PATH or EIGEN_DIR environment variable.")
     raise OSError("Could not find Eigen")
 
 
@@ -353,7 +361,7 @@ def fix_compiler(compiler, parallel):
     # Return the extra cflags, since those will be added to the build step in a different place.
     return extra_cflags
 
-def add_dirs(builder):
+def add_dirs(builder, output=False):
     # We need to do most of this both for build_clib and build_ext, so separate it out here.
 
     # First some basic ones we always need.
@@ -361,7 +369,7 @@ def add_dirs(builder):
     builder.include_dirs.append('include/galsim')
 
     # Look for fftw3.
-    fftw_lib = find_fftw_lib()
+    fftw_lib = find_fftw_lib(output=output)
     fftw_libpath, fftw_libname = os.path.split(fftw_lib)
     if hasattr(builder, 'library_dirs'):
         builder.library_dirs.append(os.path.split(fftw_lib)[0])
@@ -375,7 +383,7 @@ def add_dirs(builder):
         builder.include_dirs.append('include/fftw3')
 
     # Look for Eigen/Core
-    eigen_dir = find_eigen_dir()
+    eigen_dir = find_eigen_dir(output=output)
     builder.include_dirs.append(eigen_dir)
 
     # Finally, add pybind11's include dir
@@ -416,7 +424,7 @@ class my_build_clib(build_clib):
 class my_build_ext(build_ext):
     def finalize_options(self):
         build_ext.finalize_options(self)
-        add_dirs(self)
+        add_dirs(self, output=True)
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
@@ -579,6 +587,14 @@ build_dep = ['pybind11>=2.2']
 run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord',  # Required.
            'pyyaml', 'pandas', 'starlink-pyast']            # Not technically required, but useful.
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
+
+# If Eigen doesn't exist in the normal places, add eigency ad a build dependency.
+try:
+    find_eigen_dir()
+except OSError:
+    print('Adding eigency to build_dep')
+    build_dep += ['eigency>=1.77']
+
 
 with open('README.md') as file:
     long_description = file.read()
