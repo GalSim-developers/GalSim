@@ -412,12 +412,20 @@ def add_dirs(builder, output=False):
     # Finally, add pybind11's include dir
     import pybind11
     print('PyBind11 is version ',pybind11.__version__)
-    #print(pybind11.__file__)
-    # Include both the standard location and the --user location, since it's hard to tell
-    # which one is the right choice.
-    builder.include_dirs.append(pybind11.get_include(user=True))
-    builder.include_dirs.append(pybind11.get_include(user=False))
-    print('Include files for pybind11 are ',builder.include_dirs[-2:])
+    for user in [True, False, None]:
+        if user is None:
+            # Last time through, raise an error.
+            print("Could not find pybind11 header files.")
+            print("They should have been in one of the following two locations:")
+            print("   ",pybind11.get_include(True))
+            print("   ",pybind11.get_include(False))
+            raise OSError("Could not find PyBind11")
+
+        try_dir = pybind11.get_include(user=user)
+        if os.path.isfile(os.path.join(try_dir, 'pybind11/pybind11.h')):
+            print('Include files for pybind11 are in',try_dir)
+            builder.include_dirs.append(try_dir)
+            break
 
 
 # Make a subclass of build_ext so we can add to the -I list.
