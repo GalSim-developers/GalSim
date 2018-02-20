@@ -522,11 +522,13 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
 
 class my_test(test):
     # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test"),
+                    ('njobs=', 'j', "Number of jobs to use in py.test")]
 
     def initialize_options(self):
         test.initialize_options(self)
         self.pytest_args = None
+        self.njobs = None
 
     def finalize_options(self):
         test.finalize_options(self)
@@ -584,11 +586,14 @@ class my_test(test):
         # Build and run the C++ tests
         self.run_cpp_tests()
 
-        ncpu = cpu_count()
-        # PyTest sometimes has issues with a large number of processes.  Limit to 8.
-        if ncpu > 8: ncpu = 8
         if self.pytest_args is None:
-            self.pytest_args = ['-n=%d'%ncpu, '--timeout=60']
+            if self.njobs is None:
+                self.njobs = cpu_count()
+            else:
+                self.njobs = int(self.njobs)
+            print('Using %d processes for pytest.'%self.njobs)
+            print('To change this use python setup.py test -jN')
+            self.pytest_args = ['-n=%d'%self.njobs, '--timeout=60']
         else:
             self.pytest_args = self.pytest_args.split()
 
