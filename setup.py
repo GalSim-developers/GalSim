@@ -2,6 +2,7 @@ from __future__ import print_function
 import sys,os,glob,re
 import platform
 import ctypes
+import ctypes.util
 import types
 
 try:
@@ -123,37 +124,39 @@ def find_fftw_lib(output=False):
         pass
 
     name = 'libfftw3' + lib_ext
-    if output:
-        print("Looking for ",name)
+    if output: print("Looking for ",name)
+    tried_dirs = set()  # Keep track, so we don't try the same thing twice.
     for dir in try_libdirs:
-        if output:
-            print("  ", dir, end='')
+        if dir == '': continue  # This messes things up if it's in there.
+        if dir in tried_dirs: continue
+        else: tried_dirs.add(dir)
+        if output: print("  ", dir, end='')
         try:
             libpath = os.path.join(dir, name)
             lib = ctypes.cdll.LoadLibrary(libpath)
-            if output:
-                print("  (yes)")
+            if output: print("  (yes)")
             return libpath
         except OSError as e:
-            if output:
-                print("  (no)")
+            if output: print("  (no)")
             continue
     try:
         libpath = ctypes.util.find_library('fftw3')
         if libpath == None:
             raise OSError
-        if output:
-            print("  ", os.path.split(libpath)[0], end='')
         lib = ctypes.cdll.LoadLibrary(libpath)
-        if output:
-            print("  (yes)")
-        return libpath
     except Exception as e:
         if output:
             print("Could not find fftw3 library.  Make sure it is installed either in a standard ")
             print("location such as /usr/local/lib, or the installation directory is either in ")
             print("your LIBRARY_PATH or FFTW_DIR environment variable.")
         raise
+    else:
+        dir, name = os.path.split(libpath)
+        if output:
+            if dir == '': dir = '[none]'
+            print("  ", dir, "  (yes)")
+        return libpath
+
 
 # Check for Eigen in some likely places
 def find_eigen_dir(output=False):
@@ -182,14 +185,11 @@ def find_eigen_dir(output=False):
     except ImportError:
         pass
 
-    if output:
-        print("Looking for Eigen:")
+    if output: print("Looking for Eigen:")
     for dir in try_dirs:
-        if output:
-            print("  ", dir, end='')
+        if output: print("  ", dir, end='')
         if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
-            if output:
-                print("  (yes)")
+            if output: print("  (yes)")
             return dir
         if os.path.isfile(os.path.join(dir, 'eigen3', 'Eigen/Core')):
             dir = os.path.join(dir, 'eigen3')
@@ -197,8 +197,7 @@ def find_eigen_dir(output=False):
                 # Only print this if the eigen3 addition was key to finding it.
                 print("\n  ", dir, "  (yes)")
             return dir
-        if output:
-            print("  (no)")
+        if output: print("  (no)")
     if output:
         print("Could not find Eigen.  Make sure it is installed either in a standard ")
         print("location such as /usr/local/include, or the installation directory is either in ")
@@ -395,7 +394,8 @@ def add_dirs(builder, output=False):
     fftw_lib = find_fftw_lib(output=output)
     fftw_libpath, fftw_libname = os.path.split(fftw_lib)
     if hasattr(builder, 'library_dirs'):
-        builder.library_dirs.append(os.path.split(fftw_lib)[0])
+        if fftw_libpath != '':
+            builder.library_dirs.append(fftw_libpath)
         builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
     fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
     if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):
@@ -547,8 +547,9 @@ class my_test(test):
         library_dirs = ext.library_dirs
         fftw_lib = find_fftw_lib()
         fftw_libpath, fftw_libname = os.path.split(fftw_lib)
-        library_dirs.append(os.path.split(fftw_lib)[0])
-        libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
+        if fftw_libpath != '':
+            library_dirs.append(fftw_libpath)
+        libraries.append(fftw_libname.split('.')[0][3:])
         libraries.append('galsim')
 
         exe_file = os.path.join(builder.build_temp,'cpp_test')
