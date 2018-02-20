@@ -4,6 +4,7 @@ import platform
 import ctypes
 import ctypes.util
 import types
+import subprocess
 
 try:
     from setuptools import setup, Extension, find_packages
@@ -67,7 +68,6 @@ def get_compiler(cc):
     be called cc or gcc.
     """
     cmd = [cc,'--version']
-    import subprocess
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     lines = p.stdout.readlines()
     print('compiler version information: ')
@@ -208,7 +208,6 @@ def find_eigen_dir(output=False):
 def try_cc(cc, cflags=[], lflags=[]):
     """Check if compiling a simple bit of c++ code with the given compiler works properly.
     """
-    import subprocess
     import tempfile
     from textwrap import dedent
     cpp_code = dedent("""
@@ -334,10 +333,11 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
         for obj in objects:
             _single_compile(obj)
     else:
-        # This next bit is taken from here:
-        # https://stackoverflow.com/questions/11013851/speeding-up-build-process-with-distutils
-        # convert to list, imap is evaluated on-demand
-        list(multiprocessing.pool.ThreadPool(ncpu).imap(_single_compile,objects))
+        # Use ThreadPool, rather than Pool, since the objects are picklable.
+        pool = multiprocessing.pool.ThreadPool(ncpu)
+        pool.map(_single_compile, objects)
+        pool.close()
+        pool.join()
 
     # Return *all* object filenames, not just the ones we just built.
     return objects
@@ -526,8 +526,6 @@ class my_test(test):
         self.test_suite = True
 
     def run_cpp_tests(self):
-        import subprocess
-
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
         ext = builder.extensions[0]
@@ -574,12 +572,13 @@ class my_test(test):
             raise RuntimeError("C++ tests failed")
 
     def run_tests(self):
-        import pytest
 
         # Build and run the C++ tests
         self.run_cpp_tests()
 
         ncpu = cpu_count()
+        # PyTest sometimes has issues with a large number of processes.  Limit to 8.
+        if ncpu > 8: ncpu = 8
         if self.pytest_args is None:
             self.pytest_args = ['-n=%d'%ncpu, '--timeout=60']
         else:
@@ -590,10 +589,21 @@ class my_test(test):
         os.chdir('tests')
         test_files = glob.glob('test*.py')
 
-        errno = pytest.main(self.pytest_args + test_files)
-        errno = 0
-        if errno != 0:
-            sys.exit(errno)
+        if True:
+            import pytest
+            errno = pytest.main(self.pytest_args + test_files)
+            errno = 0
+            if errno != 0:
+                sys.exit(errno)
+        else:
+            # Alternate method calls pytest executable.  But the above code seems to work.
+            p = subprocess.Popen(['pytest'] + self.pytest_args + test_files)
+            p.communicate()
+            if p.returncode == 0:
+                print("All python tests passed.")
+            else:
+                raise RuntimeError("Some Python tests failed")
+
         os.chdir(original_dir)
 
 
