@@ -31,26 +31,33 @@ The usual way to install GalSim is now (starting with version 2.0) simply
 
     pip install galsim
 
-or by cloning the repo and doing
-    
+which will install the latest official release of GalSim.
+
+Note that you may need to use sudo with the above command if you are installing
+into system directories.  If you do not have write privileges for the directory
+it is trying to install into, you can use the --user flag to install into a
+local directory instead.  (Normally something like $HOME/Library/Python/2.7
+or $HOME/.local, depending on your system.)
+
+If you would rather install from source (e.g. to work on a development branch),
+you can do
+
     python setup.py install
 
-Note that you may need to use sudo with the above commands if they are
-installing into system directories.  If you do not have write privileges for
-the directory that the above commands would install into, you can use the
---user flag to install into a local directory.  (Normally something like
-$HOME/Library/Python/2.7 or $HOME/.local, depending on your system and which
-brand of Python you are using.)
+(again possibly with either sudo or --user).  This sometimes does not properly
+install all of the dependencies properly, so you might need to first run
 
-Either of these installation methods will automatically install most of the
-required dependencies for you if you do not have them already installed on your
-machine.  There is one exception, however.  FFTW is not directly pip
-installable, so if the above installation fails, you may need to install
-it separately. See the sections 2 below for more details about how to do this.
+    pip install -r requirements.txt
 
-The other dependencies should all be installed automatically, but they
-are listed here for completeness along with versions that are known to work.
-In most cases, other recent versions will also work:
+Either of these installation methods should handle most of the required
+dependencies for you if you do not have them already installed on your machine.
+There is one exception, however.  FFTW is not directly pip installable, so if
+the above installation fails, you may need to install it separately. See
+sections 2 below for more details about how to do this.
+
+The other dependencies should all be installed by pip, but we list them here
+for completeness along with versions that are known to work.  In most cases,
+other recent versions will also work:
 
 - Eigen (3.2.8)  (via eigency 1.77)
 - NumPy (1.14.0)
@@ -68,13 +75,6 @@ pip uses to determine what else to install.  But if you install with
 - Starlink (3.10.0)  (Improved WCS functionality)
 - PyYaml (3.12)      (Reads YAML config files)
 - Pandas (0.20)      (Faster reading of ASCII input files)
-
-If you would like to install all the above pip-installable dependencies
-separately from installing GalSim, the easiest way is to use the command
-
-    pip install -r requirements.txt
-
-in the GalSim directory.  
 
 
 2. Installing FFTW
