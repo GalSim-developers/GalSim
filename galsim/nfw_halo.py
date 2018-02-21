@@ -141,22 +141,11 @@ class NFWHalo(object):
         elif not isinstance(cosmo,Cosmology):
             raise TypeError("Invalid cosmo parameter in NFWHalo constructor")
 
-        # Check if halo_pos is a Position
-        if isinstance(halo_pos,galsim.PositionD):
-            pass  # This is what it should be
-        elif isinstance(halo_pos,galsim.PositionI):
-            # Convert to a PositionD
-            halo_pos = galsim.PositionD(halo_pos.x, halo_pos.y)
-        elif isinstance(halo_pos, tuple) and len(halo_pos) == 2:
-            # Convert (x,y) tuple to PositionD
-            halo_pos = galsim.PositionD(halo_pos[0], halo_pos[1])
-        else:
-            raise TypeError("Unable to parse the input halo_pos argument for NFWHalo")
-
+        # Make sure things are the right types.
         self.M = float(mass)
         self.c = float(conc)
         self.z = float(redshift)
-        self.halo_pos = halo_pos
+        self.halo_pos = galsim.PositionD(halo_pos)
         self.cosmo = cosmo
 
         # calculate scale radius
