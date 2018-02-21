@@ -370,7 +370,7 @@ namespace galsim {
     double SBVonKarman::SBVonKarmanImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
-        return _info->structureFunction(rho);
+        return _info->structureFunction(rho/_r0);
     }
 
     std::complex<double> SBVonKarman::SBVonKarmanImpl::kValue(const Position<double>& p) const
