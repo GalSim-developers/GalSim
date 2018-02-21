@@ -27,6 +27,9 @@ Deprecated Features
 -------------------
 
 - Deprecated passing Image arguments to kappaKaiserSquires function. (#855)
+- Deprecated the interpolant argument for PowerSpectrum methods getShear,
+  getConvergence, getMagnification, and getLensing.  The interpolant should
+  be set when calling buildGrid. (#855)
 
 
 New Features

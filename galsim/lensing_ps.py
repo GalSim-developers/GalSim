@@ -972,10 +972,9 @@ class PowerSpectrum(object):
         convergence as reduced shear `g=gamma/(1-kappa)`; the `reduced` keyword can be set to False
         in order to return the non-reduced shear.
 
-        Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears, if none is specified here) modifies the effective shear power
-        spectrum and correlation function somewhat, though the effects can be limited by careful
-        choice of grid parameters (see buildGrid() docstring for details).  Assuming those
+        Note that the interpolation (specified when calling buildGrid) modifies the effective shear
+        power spectrum and correlation function somewhat, though the effects can be limited by
+        careful choice of grid parameters (see buildGrid() docstring for details).  Assuming those
         guidelines are followed, then the shear correlation function modifications due to use of the
         quintic, Lanczos-3, and Lanczos-5 interpolants are below 5% on all scales from the grid
         spacing to the total grid extent, typically below 2%.  The linear, cubic, and nearest
@@ -1028,16 +1027,16 @@ class PowerSpectrum(object):
                             are outside the bounds of the original grid on which shears were
                             defined.  If not, then shears are set to zero for positions outside the
                             original grid. [default: False]
-        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
-                            By default, the one that was specified when building the grid was used.
-                            Specifying an interpolant here does not change the one that is stored
-                            as part of this PowerSpectrum instance. [default: None]
 
         @returns the shear as a tuple, (g1,g2)
 
         If the input `pos` is given a single position, (g1,g2) are the two shear components.
         If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
+        if interpolant is not None:  # pragma: no cover
+            from .deprecated import depr
+            depr("interpolant", 1.6, "",
+                 "You should specify the interpolant when calling buildGrid")
 
         if not hasattr(self, 'im_g1'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getShear")
@@ -1046,10 +1045,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getShear')
 
         # Set the interpolant:
-        if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
-        else:
+        if interpolant is None:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        else: # pragma: no cover
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         kinterp = galsim.Quintic()
 
         if reduced:
@@ -1139,11 +1138,10 @@ class PowerSpectrum(object):
         The docstring for buildGrid() provides some guidance on appropriate grid configurations to
         use when building a grid that is to be later interpolated to random positions.
 
-        Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears and convergence, if none is specified here) modifies the
-        effective 2-point functions of these quantities.  See docstring for getShear() docstring for
-        caveats about interpolation.  The user is advised to be very careful about deviating from
-        the default Lanczos-5 interpolant.
+        Note that the interpolation (specified when calling buildGrid) modifies the effective
+        2-point functions of these quantities.  See docstring for getShear() docstring for caveats
+        about interpolation.  The user is advised to be very careful about deviating from the
+        default Lanczos-5 interpolant.
 
         The usage of getConvergence() is the same as for getShear(), except that it returns only a
         single quantity (convergence value or array of convergence values) rather than two
@@ -1161,16 +1159,16 @@ class PowerSpectrum(object):
                             are outside the bounds of the original grid on which shears and
                             convergences were defined.  If not, then convergences are set to zero
                             for positions outside the original grid.  [default: False]
-        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
-                            By default, the one that was specified when building the grid was used.
-                            Specifying an interpolant here does not change the one that is stored
-                            as part of this PowerSpectrum instance. [default: None]
 
         @returns the convergence, kappa.
 
         If the input `pos` is given a single position, kappa is the convergence value.
         If the input `pos` is given a list/array of positions, kappa is a NumPy array.
         """
+        if interpolant is not None:  # pragma: no cover
+            from .deprecated import depr
+            depr("interpolant", 1.6, "",
+                 "You should specify the interpolant when calling buildGrid")
 
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getConvergence")
@@ -1179,10 +1177,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getConvergence')
 
         # Set the interpolant:
-        if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
-        else:
+        if interpolant is None:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        else: # pragma: no cover
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         kinterp = galsim.Quintic()
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
@@ -1240,11 +1238,10 @@ class PowerSpectrum(object):
         grid configurations to use when building a grid that is to be later interpolated to random
         positions.
 
-        Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears and convergence, if none is specified here) modifies the
-        effective 2-point functions of these quantities.  See docstring for getShear() docstring for
-        caveats about interpolation.  The user is advised to be very careful about deviating from
-        the default Lanczos-5 interpolant.
+        Note that the interpolation (specified when calling buildGrid) modifies the effective
+        2-point functions of these quantities.  See docstring for getShear() docstring for caveats
+        about interpolation.  The user is advised to be very careful about deviating from the
+        default Lanczos-5 interpolant.
 
         The usage of getMagnification() is the same as for getShear(), except that it returns only a
         single quantity (a magnification value or array of magnification values) rather than a pair
@@ -1262,16 +1259,16 @@ class PowerSpectrum(object):
                             if they are outside the bounds of the original grid on which shears
                             and convergences were defined.  If not, then magnification is set to
                             1 for positions outside the original grid.  [default: False]
-        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
-                            By default, the one that was specified when building the grid was
-                            used.  Specifying an interpolant here does not change the one that
-                            is stored as part of this PowerSpectrum instance. [default: None]
 
         @returns the magnification, mu.
 
         If the input `pos` is given a single position, mu is the magnification value.
         If the input `pos` is given a list/array of positions, mu is a NumPy array.
         """
+        if interpolant is not None:  # pragma: no cover
+            from .deprecated import depr
+            depr("interpolant", 1.6, "",
+                 "You should specify the interpolant when calling buildGrid")
 
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getMagnification")
@@ -1280,10 +1277,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getMagnification')
 
         # Set the interpolant:
-        if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
-        else:
+        if interpolant is None:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        else: # pragma: no cover
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
@@ -1348,11 +1345,10 @@ class PowerSpectrum(object):
         docstring for buildGrid() provides some guidance on appropriate grid configurations to use
         when building a grid that is to be later interpolated to random positions.
 
-        Note that the interpolation (carried out using the interpolant that was specified when
-        building the gridded shears and convergence, if none is specified here) modifies the
-        effective 2-point functions of these quantities.  See docstring for getShear() docstring for
-        caveats about interpolation.  The user is advised to be very careful about deviating from
-        the default Lanczos-5 interpolant.
+        Note that the interpolation (specified when calling buildGrid) modifies the effective
+        2-point functions of these quantities.  See docstring for getShear() docstring for caveats
+        about interpolation.  The user is advised to be very careful about deviating from the
+        default Lanczos-5 interpolant.
 
         The usage of getLensing() is the same as for getShear(), except that it returns three
         quantities (two reduced shear components and magnification) rather than two.  See
@@ -1371,10 +1367,6 @@ class PowerSpectrum(object):
                             and convergences were defined.  If not, then shear is set to zero
                             and magnification is set to 1 for positions outside the original
                             grid.  [default: False]
-        @param interpolant  Interpolant that will be used for interpolating the gridded shears.
-                            By default, the one that was specified when building the grid was
-                            used.  Specifying an interpolant here does not change the one that
-                            is stored as part of this PowerSpectrum instance. [default: None]
 
         @returns shear and magnification as a tuple (g1,g2,mu).
 
@@ -1382,6 +1374,10 @@ class PowerSpectrum(object):
         magnification values at that position.
         If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
+        if interpolant is not None:  # pragma: no cover
+            from .deprecated import depr
+            depr("interpolant", 1.6, "",
+                 "You should specify the interpolant when calling buildGrid")
 
         if not hasattr(self, 'im_kappa'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getLensing")
@@ -1390,10 +1386,10 @@ class PowerSpectrum(object):
         pos_x, pos_y = galsim.utilities._convertPositions(pos, units, 'getLensing')
 
         # Set the interpolant:
-        if interpolant is not None:
-            xinterp = galsim.utilities.convert_interpolant(interpolant)
-        else:
+        if interpolant is None:
             xinterp = galsim.utilities.convert_interpolant(self.interpolant)
+        else: # pragma: no cover
+            xinterp = galsim.utilities.convert_interpolant(interpolant)
         kinterp = galsim.Quintic()
 
         # Calculate the magnification based on the convergence and shear
