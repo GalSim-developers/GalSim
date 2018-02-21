@@ -16,9 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file base.py
-This file implements the von Karman atmospheric PSF profile.  A version which has the underlying
-turbulence power spectrum truncated below a given scale is also available as a correction when using
-geometric shooting through an atmospheric PhaseScreenPSF.
+This file implements the von Karman atmospheric PSF profile.
 """
 
 import numpy as np
@@ -35,12 +33,13 @@ class VonKarman(GSObject):
     profile is that the von Karman profile includes a parameter for the outer scale of atmospheric
     turbulence, which is a physical scale beyond which fluctuations in the refractive index stop
     growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation
-    power spectrum is proportional to
+    power spectrum at spatial frequency f is proportional to
 
-        (f^2 + L0^-2)^(-11/6)
+        r0^(-5/3) (f^2 + L0^-2)^(-11/6)
 
-    where f is a spatial frequency and L0 is the outer scale in meters.  The Kolmogorov power
-    spectrum proportional to f^(-11/3) is recovered as L0 -> infinity,
+    where r0 is the Fried parameter which sets the overall turbulence amplitude and L0 is the outer
+    scale in meters.  The Kolmogorov power spectrum proportional to r0^(-5/3) f^(-11/3) is recovered
+    as L0 -> infinity.
 
     For more information, we recommend the following references:
 
@@ -56,13 +55,15 @@ class VonKarman(GSObject):
         exp(-0.5*0.172*(r0/L0)^(-5/3))
 
     In almost all cases of interest this evaluates to something tiny, often on the order of 10^-100
-    or smaller.  By default, GalSim will ignore this delta function entirely.  If for some reason
-    you want to keep the delta function, though, then you can pass the do_delta=True argument to the
-    VonKarman initializer.
+    or smaller.  By default, GalSim will ignore this delta function entirely since it usually
+    doesn't make any difference, but can complicate some calculations like drawing using
+    method='real_space' or by formally requiring huge Fourier transforms for drawing using
+    method='fft'.  If for some reason you want to keep the delta function, though, then you can pass
+    the do_delta=True argument to the VonKarman initializer.
 
     @param lam               Wavelength in nanometers
     @param r0                Fried parameter in meters.
-    @param L0                Outer scale in meters.  [default: np.inf]
+    @param L0                Outer scale in meters.  [default: 25.0]
     @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
                              etc.  Should be a galsim.AngleUnit or a string that can be used to
@@ -78,7 +79,7 @@ class VonKarman(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, L0=np.inf, flux=1, scale_unit=galsim.arcsec,
+    def __init__(self, lam, r0, L0=25.0, flux=1, scale_unit=galsim.arcsec,
                  do_delta=False, suppress_warning=False, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
@@ -144,7 +145,7 @@ class VonKarman(GSObject):
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
 
-    def _structure_function(self, rho):  # pragma: nocover
+    def _structure_function(self, rho):  # pragma: no cover
         return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):

@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-// #define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -111,14 +111,6 @@ namespace galsim {
     //
     //
 
-    const double VonKarmanInfo::magic1 = 2*boost::math::tgamma(11./6)/(pow(2, 5./6)*pow(M_PI, 8./3))
-                                    * pow(24/5.*boost::math::tgamma(6./5), 5./6);
-    const double VonKarmanInfo::magic2 = boost::math::tgamma(5./6)/pow(2., 1./6);
-    const double VonKarmanInfo::magic3 = VonKarmanInfo::magic1*boost::math::tgamma(-5./6)/pow(2., 11./6);
-    const double VonKarmanInfo::magic4 = boost::math::tgamma(11./6)*boost::math::tgamma(5./6)
-                                    / pow(M_PI,8./3)
-                                    * pow(24./5*boost::math::tgamma(6./5),5./6);
-
     class VKIkValueResid {
     public:
         VKIkValueResid(const VonKarmanInfo& vki, double mkt) : _vki(vki), _mkt(mkt) {}
@@ -126,16 +118,22 @@ namespace galsim {
             double val = _vki.kValue(k)-_mkt;
             xdbg<<"resid(k="<<k<<")="<<val<<'\n';
             return val;
-         }
+        }
     private:
         const double _mkt;
         const VonKarmanInfo& _vki;
     };
 
-    VonKarmanInfo::VonKarmanInfo(double lam, double r0, double L0, bool doDelta,
+    // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
+    const double magic4 = 0.1726286598236691505;
+
+    // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
+    VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
-        _lam(lam), _r0(r0), _L0(L0), _r0L0m53(pow(r0/L0, -5./3)), _gsparams(gsparams),
+        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)), _gsparams(gsparams),
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
+        _deltaScale(1./(1.-_deltaAmplitude)),
+        _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta),
         _radial(TableDD::spline)
     {
@@ -150,10 +148,9 @@ namespace galsim {
                 // _maxk = std::numeric_limits<double>::infinity();
                 _maxk = MOCK_INF;
             } else {
-                mkt = mkt*(1-_deltaAmplitude)+_deltaAmplitude;
+                mkt = mkt*(1.-_deltaAmplitude)+_deltaAmplitude;
             }
         }
-        // if (_maxk != std::numeric_limits<double>::infinity()) {
         if (_maxk != MOCK_INF) {
             VKIkValueResid vkikvr(*this, mkt);
             Solve<VKIkValueResid> solver(vkikvr, 0.1, 1);
@@ -170,62 +167,98 @@ namespace galsim {
     }
 
     double VonKarmanInfo::structureFunction(double rho) const {
-    // rho in meters
+        // rho in units of r0
+
+        // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
+        static const double magic1 = 0.1716613621245708932;
+        // gamma(5/6) / 2^(1/6)
+        static const double magic2 = 1.005634917998590172;
+        // magic1 * gamma(-5/6) / 2^(11/6)
+        static const double magic3 = -0.3217609479366896341;
+
         double rhoL0 = rho/_L0;
         if (rhoL0 < 1e-6) {
-            return -magic3*fast_pow(2*M_PI*rho/_r0, 5./3);
+            return -magic3*fast_pow(2*M_PI*rho, 5./3.);
         } else {
-            double x = 2*M_PI*rhoL0;
-            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6)*boost::math::cyl_bessel_k(5./6, x));
+            double x = 2.*M_PI*rhoL0;
+            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
         }
     }
 
     double VonKarmanInfo::kValueNoTrunc(double k) const {
-    // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam*k*ARCSEC2RAD/(2*M_PI)));
+        // k in inverse arcsec
+        return fmath::expd(-0.5*structureFunction(_lam_arcsec*k));
     }
 
     double VonKarmanInfo::kValue(double k) const {
-    // k in inverse arcsec
-    // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
-    // This means we should also rescale by (1-_deltaAmplitude) though, so we still retain
-    // kValue(0)=1.
-        double val = (kValueNoTrunc(k) - _deltaAmplitude)/(1-_deltaAmplitude);
+        // k in inverse arcsec
+        // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
+        // This means we should also rescale by (1-_deltaAmplitude) though, so we still retain
+        // kValue(0)=1.d
+        double val = (kValueNoTrunc(k) - _deltaAmplitude) * _deltaScale;
         if (std::abs(val) < std::numeric_limits<double>::epsilon())
             return 0.0;
-        return val;
+        else
+            return val;
     }
 
-    class VKIXIntegrand : public std::unary_function<double,double>
+    class VKXIntegrand : public std::unary_function<double,double>
     {
     public:
-        VKIXIntegrand(double r, const VonKarmanInfo& vki) : _r(r), _vki(vki) {}
+        VKXIntegrand(double r, const VonKarmanInfo& vki) : _r(r), _vki(vki) {}
         double operator()(double k) const { return _vki.kValue(k)*j0(k*_r)*k; }
     private:
         const double _r;  //arcsec
         const VonKarmanInfo& _vki;
     };
 
-    double VonKarmanInfo::xValue(double r) const {
-    // r in arcsec
-        VKIXIntegrand I(r, *this);
+    // This version does the integral.  But it's slow, so for regular xValue calls, once the
+    // _radial lookup table is built, use that.
+    double VonKarmanInfo::rawXValue(double r) const
+    {
+        // r in arcsec
+        VKXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
         return integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
     }
 
+    double VonKarmanInfo::xValue(double r) const {
+        return r < _radial.argMax() ? _radial(r) : 0.;
+    }
+
     void VonKarmanInfo::_buildRadialFunc() {
-        // set_verbose(2);
-        double r = 0.0;
-        double val = xValue(0.0); // This is the value without the delta function (clearly).
-        _radial.addEntry(r, val);
+        dbg<<"Start buildRadialFunc:\n";
+        dbg<<"lam = "<<_lam<<std::endl;
+        dbg<<"L0 = "<<_L0<<std::endl;
+        dbg<<"doDelta = "<<_doDelta<<"  "<<_deltaAmplitude<<"  "<<_deltaScale<<std::endl;
+        set_verbose(2);
+        double val = rawXValue(0.0); // This is the value without the delta function (clearly).
+        _radial.addEntry(0., val);
+        dbg<<"(1/L0)^-5/3 = "<<_r0L0m53<<std::endl;
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
-        double r0 = 0.05*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double logr = log(r0);
-        double dr = 0;
-        double dlogr = 0.1*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        // For small values of r, the function goes as
+        // f(r) = f0 (1 - C r^2)
+        // The following formula for C is completely empirical, but it's close enough for
+        // estimating a good value of r0 to start at, which is all we use this for.
+        double C = (1.4 * pow(_L0,-2./3.) + 0.0767417) / (_lam_arcsec * _lam_arcsec);
+#ifdef DEBUGLOGGING
+        double f0 = val;
+        double f1 = rawXValue(1.e-2);
+        double f2 = rawXValue(2.e-2);
+        // For very small values of L0, this value of C is a bit too small, so there is probably
+        // another term in the Taylor expansion starting to come into play. Maybe an L0^-4/3 term.
+        dbg<<"C = "<<C<<std::endl;
+        dbg<<"f(1.e-2) = "<<f1<<"  "<<f0 * (1.-C*1.e-4)<<std::endl;
+        dbg<<"f(2.e-2) = "<<f2<<"  "<<f0 * (1.-C*4.e-4)<<std::endl;
+#endif
+        // Start at r0 where f(r0) - f(0) ~= xvalue_accuracy.
+        double r0 = sqrt(_gsparams->xvalue_accuracy / (val * C));
+
+        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+
         dbg<<"r0 = "<<r0<<" arcsec\n";
         dbg<<"dlogr = "<<dlogr<<"\n";
 
@@ -234,43 +267,42 @@ namespace galsim {
 
         xdbg<<"sum = "<<sum<<'\n';
 
-        double thresh1 = (1.-_gsparams->folding_threshold);
-        double thresh2 = (1.-_gsparams->folding_threshold/2);
-        double R = 1e10;
-        _hlr = 1e10;
-        double maxR = 60.0; // hard cut at 1 arcminute.
-        for(r = exp(logr);
-            (r < _gsparams->stepk_minimum_hlr*_hlr) || (r < R) || (sum < thresh2);
-            logr += dlogr, r=exp(logr), dr=r*(1-exp(-dlogr)))
-        {
-            val = xValue(r);
-            xdbg<<"f("<<r<<") = "<<val<<'\n';
+        // We accumulate the sum without the 2 pi dlogr factors for efficiency.
+        // So the relevant thresholds we want are:
+        double thresh0 = 0.5 / (2.*M_PI*dlogr);
+        double thresh1 = (1.-_gsparams->folding_threshold) / (2.*M_PI*dlogr);
+        double thresh2 = (1.-_gsparams->folding_threshold/5.) / (2.*M_PI*dlogr);
+        dbg<<"thresh = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
+        double R = 0.;
+        _hlr = 0.;
+        const double maxR = 60.0; // hard cut at 1 arcminute.
+        for(double logr=log(r0); logr<log(maxR) && sum < thresh2; logr+=dlogr) {
+            double r = exp(logr);
+            val = rawXValue(r);
+            xdbg<<"f("<<r<<") = "<<val<<std::endl;
             _radial.addEntry(r, val);
 
-            sum += 2*M_PI*val*r*dr;
-            xdbg<<"dr = "<<dr<<'\n';
+            // Accumulate integral int(r f(r) dr) = int(r^2 f(r) dlogr), but without dlogr factor,
+            // since it is constant for all terms.  (Also not including 2pi which would be in
+            // the normal integral for the enclosed flux.)
+            sum += val*r*r;
             xdbg<<"sum = "<<sum<<'\n';
 
-            if (_hlr == 1e10 && sum > 0.5) {
-                _hlr = r;
-                dbg<<"hlr = "<<_hlr<<" arcsec\n";
-            }
-            if (R == 1e10 && sum > thresh1) R=r;
-            if (r >= maxR) {
-                if (_hlr == 1e10)
-                    throw SBError("Cannot find von Karman half-light-radius.");
-                R = maxR;
-                break;
-            }
+            if (_hlr == 0. && sum > thresh0) _hlr = r;
+            if (R == 0. && sum > thresh1) R = r;
         }
+        if (_hlr == 0.)
+            throw SBError("Cannot find von Karman half-light-radius.");
+        if (R == 0.) R = maxR;
         dbg<<"Finished building radial function.\n";
         dbg<<"R = "<<R<<" arcsec\n";
         dbg<<"HLR = "<<_hlr<<" arcsec\n";
         R = std::max(R, _gsparams->stepk_minimum_hlr*_hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
-        dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
-        if (sum < 0.997)
+        sum *= 2.*M_PI * dlogr;
+        dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
+        if (sum < 1-_gsparams->folding_threshold)
             throw SBError("Could not find folding_threshold");
 
         std::vector<double> range(2, 0.);
@@ -284,7 +316,7 @@ namespace galsim {
         return _sampler->shoot(N,ud);
     }
 
-    LRUCache<boost::tuple<double,double,double,bool,GSParamsPtr>,VonKarmanInfo>
+    LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo>
         SBVonKarman::SBVonKarmanImpl::cache(sbp::max_vonKarman_cache);
 
     //
@@ -305,7 +337,7 @@ namespace galsim {
         _flux(flux),
         _scale(scale),
         _doDelta(doDelta),
-        _info(cache.get(boost::make_tuple(1e-9*lam, r0, L0, doDelta, this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(1e-9*lam/r0, L0/r0, doDelta, this->gsparams.duplicate())))
     { }
 
     double SBVonKarman::SBVonKarmanImpl::maxK() const
@@ -341,42 +373,16 @@ namespace galsim {
         return _info->structureFunction(rho);
     }
 
-    double SBVonKarman::SBVonKarmanImpl::kValue(double k) const
-    // this kValue assumes k is in inverse arcsec
-    {
-        return _info->kValue(k)*_flux;
-    }
-
     std::complex<double> SBVonKarman::SBVonKarmanImpl::kValue(const Position<double>& p) const
-    // k in units of _scale.
+        // k in units of _scale.
     {
-        return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
-    }
-
-    class VKXIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        VKXIntegrand(double r, const SBVonKarman::SBVonKarmanImpl& sbvki) :
-            _r(r), _sbvki(sbvki)
-        {}
-
-        double operator()(double k) const { return _sbvki.kValue(k)*k*j0(k*_r); }
-    private:
-        double _r;
-        const SBVonKarman::SBVonKarmanImpl& _sbvki;
-    };
-
-    double SBVonKarman::SBVonKarmanImpl::xValue(double r) const {
-    // r in arcsec.
-        VKXIntegrand I(r, *this);
-        return integ::int1d(I, 0.0, integ::MOCK_INF,
-                            gsparams->integration_relerr, gsparams->integration_abserr)/(2*M_PI);
+        return _flux * _info->kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
     }
 
     double SBVonKarman::SBVonKarmanImpl::xValue(const Position<double>& p) const
-    // r in units of _scale
+        // r in units of _scale
     {
-        return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
+        return _flux * _info->xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
     }
 
     boost::shared_ptr<PhotonArray> SBVonKarman::SBVonKarmanImpl::shoot(
@@ -390,6 +396,130 @@ namespace galsim {
         result->scaleXY(_scale);
         dbg<<"VonKarman Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
+    }
+
+    template <typename T>
+    void SBVonKarman::SBVonKarmanImpl::fillXImage(ImageView<T> im,
+                                                  double x0, double dx, int izero,
+                                                  double y0, double dy, int jzero) const
+    {
+        dbg<<"SBVonKarman fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            T* ptr = im.getData();
+            const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            x0 *= _scale;
+            dx *= _scale;
+            y0 *= _scale;
+            dy *= _scale;
+
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
+                double x = x0;
+                double ysq = y0*y0;
+                for (int i=0; i<m; ++i,x+=dx)
+                    *ptr++ = _flux * _info->xValue(sqrt(x*x + ysq));
+            }
+        }
+    }
+
+    template <typename T>
+    void SBVonKarman::SBVonKarmanImpl::fillXImage(ImageView<T> im,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
+    {
+        dbg<<"SBVonKarman fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        T* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        x0 *= _scale;
+        dx *= _scale;
+        dxy *= _scale;
+        y0 *= _scale;
+        dy *= _scale;
+        dyx *= _scale;
+
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = _flux * _info->xValue(sqrt(x*x + y*y));
+        }
+    }
+
+    template <typename T>
+    void SBVonKarman::SBVonKarmanImpl::fillKImage(ImageView<std::complex<T> > im,
+                                                  double kx0, double dkx, int izero,
+                                                  double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBVonKarman fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<T>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 /= _scale;
+            dkx /= _scale;
+            ky0 /= _scale;
+            dky /= _scale;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0;i<m;++i,kx+=dkx)
+                    *ptr++ = _flux * _info->kValue(kx*kx+kysq);
+            }
+        }
+    }
+
+    template <typename T>
+    void SBVonKarman::SBVonKarmanImpl::fillKImage(ImageView<std::complex<T> > im,
+                                                  double kx0, double dkx, double dkxy,
+                                                  double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBVonKarman fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<T>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 /= _scale;
+        dkx /= _scale;
+        dkxy /= _scale;
+        ky0 /= _scale;
+        dky /= _scale;
+        dkyx /= _scale;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _flux * _info->kValue(kx*kx+ky*ky);
+        }
     }
 
 }

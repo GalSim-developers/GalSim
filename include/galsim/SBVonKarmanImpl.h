@@ -39,7 +39,7 @@ namespace galsim {
     class VonKarmanInfo
     {
     public:
-        VonKarmanInfo(double lam, double r0, double L0, bool doDelta, const GSParamsPtr& gsparams);
+        VonKarmanInfo(double lam, double L0, bool doDelta, const GSParamsPtr& gsparams);
 
         ~VonKarmanInfo() {}
 
@@ -53,27 +53,24 @@ namespace galsim {
         double structureFunction(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        double kValueNoTrunc(double) const;
+        double rawXValue(double) const;
+
     private:
         VonKarmanInfo(const VonKarmanInfo& rhs); ///<Hide the copy constructor
         void operator=(const VonKarmanInfo& rhs); ///<Hide the assignment operator
 
-        double kValueNoTrunc(double) const;
-
-        double _lam; // Wavelength in meters
-        double _r0; // Fried parameter in meters
-        double _L0; // Outer scale in meters
+        double _lam; // Wavelength in units of the Fried parameter, r0
+        double _L0; // Outer scale in units of the Fried parameter, r0
         double _r0L0m53; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
         double _deltaAmplitude;
+        double _deltaScale;  // 1/(1-_deltaAmplitude)
+        double _lam_arcsec;  // _lam * ARCSEC2RAD / 2pi
         bool _doDelta;
         double _hlr; // half-light-radius
 
-        // Magic constants that we can compute once and store.
-        const static double magic1; // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
-        const static double magic2; // gamma(5/6) / 2^(1/6)
-        const static double magic3; // magic1 * gamma(-5/6) / 2^(11/6)
-        const static double magic4; // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
         const GSParamsPtr _gsparams;
 
         TableDD _radial;
@@ -134,6 +131,24 @@ namespace galsim {
 
         double structureFunction(double rho) const;
 
+        // Overrides for better efficiency
+        template <typename T>
+        void fillXImage(ImageView<T> im,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        template <typename T>
+        void fillXImage(ImageView<T> im,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        template <typename T>
+        void fillKImage(ImageView<std::complex<T> > im,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
         std::string serialize() const;
 
     private:
@@ -151,7 +166,7 @@ namespace galsim {
         SBVonKarmanImpl(const SBVonKarmanImpl& rhs);
         void operator=(const SBVonKarmanImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
+        static LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
     };
 }
 
