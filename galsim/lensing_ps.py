@@ -427,7 +427,7 @@ class PowerSpectrum(object):
 
         # Check if center is a PositionD
         if not isinstance(center,galsim.PositionD):
-            raise TypeError("center argument for buildGrid must be a PositionD instance")
+            raise ValueError("center argument for buildGrid must be a PositionD instance")
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
@@ -498,7 +498,7 @@ class PowerSpectrum(object):
             def bandlimit_func(k, k_max):
                 return 1.0
         else:
-            raise RuntimeError("Unrecognized option for band limit!")
+            raise ValueError("Unrecognized option for band limit!")
 
         # If we actually have dimensionless Delta^2, then we must convert to power
         # P(k) = 2pi Delta^2 / k^2,
@@ -624,6 +624,7 @@ class PowerSpectrum(object):
 
         # Convert string inputs to either a lambda function or LookupTable
         if isinstance(pf,str):
+            origpf = pf
             import os
             if os.path.isfile(pf):
                 pf = galsim.LookupTable.from_file(pf)
@@ -635,7 +636,7 @@ class PowerSpectrum(object):
                     pf(1.0)
                 except Exception as e:
                     raise ValueError(
-                        "String power_spectrum must either be a valid filename or something that "+
+                        "String %s must either be a valid filename or something that "%pf_str+
                         "can eval to a function of k.\n"+
                         "Input provided: {0}\n".format(origpf)+
                         "Caught error: {0}".format(e))

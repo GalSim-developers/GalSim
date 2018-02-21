@@ -213,6 +213,7 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
     rng2 = rng.duplicate()
+    assert_raises(RuntimeError, test_ps.nRandCallsForBuildGrid)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)
@@ -666,8 +667,7 @@ def test_tabulated():
     data = np.column_stack(data_all)
     filename = 'lensing_reference_data/tmp.txt'
     np.savetxt(filename, data)
-    tab2 = galsim.LookupTable.from_file(filename)
-    ps_tab2 = galsim.PowerSpectrum(tab2)
+    ps_tab2 = galsim.PowerSpectrum(filename)
     do_pickle(ps_tab2)
     g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                          rng = galsim.BaseDeviate(seed))
@@ -718,14 +718,34 @@ def test_tabulated():
     ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
     ## exception should be raised)
     t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
-    ps = galsim.PowerSpectrum(t)
-    do_pickle(ps)
+    limited_ps = galsim.PowerSpectrum(t)
+    do_pickle(limited_ps)
     with assert_raises(RuntimeError):
-        ps.buildGrid(grid_spacing=1.7, ngrid=100)
+        limited_ps.buildGrid(grid_spacing=1.7, ngrid=100)
+
     ## try to interpolate in log, but with zero values included
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True)
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), f_log=True)
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True, f_log=True)
+
+    # Check some invalid PowerSpectrum parameters
+    assert_raises(AttributeError, galsim.PowerSpectrum)
+    assert_raises(AttributeError, galsim.PowerSpectrum, delta2=True)
+    assert_raises(AttributeError, galsim.PowerSpectrum, delta2=True, units='radians')
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function=tab, units='inches')
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function=tab, units=True)
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function='not_a_file')
+    assert_raises(ValueError, galsim.PowerSpectrum, b_power_function='not_a_file')
+    assert_raises(ValueError, ps_tab.buildGrid)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7)
+    assert_raises(ValueError, ps_tab.buildGrid, ngrid=10)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, kmin_factor=2.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, kmax_factor=1.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, center=(5,5))
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, units='inches')
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, units=True)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, bandlimit='none')
 
     # check that when calling LookupTable, the outputs have the same form as inputs
     tab = galsim.LookupTable(k_arr, p_arr)
@@ -1144,7 +1164,7 @@ def test_bandlimit():
     do_pickle(ps)
 
     # Generate shears without and with band-limiting
-    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units='degrees',
                           rng=galsim.UniformDeviate(123), bandlimit=None)
     g1b, g2b = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
                             rng=galsim.UniformDeviate(123), bandlimit='hard')
