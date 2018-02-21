@@ -122,10 +122,10 @@ def test_vk_scale():
 def test_vk_ne():
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
-    objs = [galsim.VonKarman(lam=500.0, r0=0.2, L0=25.0),
-            galsim.VonKarman(lam=500.0, r0=0.2, L0=25.0, flux=2.2),
+    objs = [galsim.VonKarman(lam=500.0, r0=0.2),
+            galsim.VonKarman(lam=500.0, r0=0.2, L0=20.0),
+            galsim.VonKarman(lam=500.0, r0=0.2, L0=20.0, flux=2.2),
             galsim.VonKarman(lam=500.0, r0=0.2, L0=1e11),
-            galsim.VonKarman(lam=500.0, r0=0.1, L0=20.0),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, do_delta=True),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, scale_unit=galsim.arcmin),

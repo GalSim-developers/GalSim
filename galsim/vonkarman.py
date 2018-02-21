@@ -61,7 +61,7 @@ class VonKarman(GSObject):
 
     @param lam               Wavelength in nanometers
     @param r0                Fried parameter in meters.
-    @param L0                Outer scale in meters.  [default: np.inf]
+    @param L0                Outer scale in meters.  [default: 25.0]
     @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
                              etc.  Should be a galsim.AngleUnit or a string that can be used to
@@ -77,7 +77,7 @@ class VonKarman(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, L0=np.inf, flux=1, scale_unit=galsim.arcsec,
+    def __init__(self, lam, r0, L0=25.0, flux=1, scale_unit=galsim.arcsec,
                  do_delta=False, suppress_warning=False, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
