@@ -55,9 +55,11 @@ class VonKarman(GSObject):
         exp(-0.5*0.172*(r0/L0)^(-5/3))
 
     In almost all cases of interest this evaluates to something tiny, often on the order of 10^-100
-    or smaller.  By default, GalSim will ignore this delta function entirely.  If for some reason
-    you want to keep the delta function, though, then you can pass the do_delta=True argument to the
-    VonKarman initializer.
+    or smaller.  By default, GalSim will ignore this delta function entirely since it usually
+    doesn't make any difference, but can complicate some calculations like drawing using
+    method='real_space' or by formally requiring huge Fourier transforms for drawing using
+    method='fft'.  If for some reason you want to keep the delta function, though, then you can pass
+    the do_delta=True argument to the VonKarman initializer.
 
     @param lam               Wavelength in nanometers
     @param r0                Fried parameter in meters.
