@@ -602,6 +602,11 @@ def test_delta2():
             np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
             np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
 
+    # The above ps isn't picklable, since we use a lambda function for dfunc.
+    # So give it a string to test the pickling and repr with delta2=True
+    ps_delta = galsim.PowerSpectrum(e_power_function='k**3 / 2*np.pi', units='deg', delta2=True)
+    do_pickle(ps_delta)
+
 
 @timer
 def test_shear_get():

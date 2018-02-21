@@ -653,7 +653,7 @@ class PowerSpectrum(object):
         return pf
 
     # TODO: The unit tests for this function are pretty minimal.  It's really just a convenience
-    #       function, which is not used elsewhere in GalSim.  So it is marked no cover, so its
+    #       function, which is not used elsewhere in GalSim.  It is marked no cover, so its
     #       lack of good unit tests doesn't impact GalSim's overall test coverage.  However, if
     #       anyone starts using this function in earnest, it would be worth bulking up the unit
     #       tests for it.
