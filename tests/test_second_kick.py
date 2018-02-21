@@ -209,7 +209,7 @@ if __name__ == '__main__':
     parser.add_argument("--slow", action='store_true', help="Run slow tests")
     args = parser.parse_args()
 
-    test_sk(args.slow)
+    test_second_kick(args.slow)
     test_structure_function()
     test_limiting_cases()
     test_sf_lut(args.slow)
