@@ -33,12 +33,13 @@ class VonKarman(GSObject):
     profile is that the von Karman profile includes a parameter for the outer scale of atmospheric
     turbulence, which is a physical scale beyond which fluctuations in the refractive index stop
     growing, typically between 10 and 100 meters.  Quantitatively, the von Karman phase fluctuation
-    power spectrum is proportional to
+    power spectrum at spatial frequency f is proportional to
 
-        (f^2 + L0^-2)^(-11/6)
+        r0^(-5/3) (f^2 + L0^-2)^(-11/6)
 
-    where f is a spatial frequency and L0 is the outer scale in meters.  The Kolmogorov power
-    spectrum proportional to f^(-11/3) is recovered as L0 -> infinity,
+    where r0 is the Fried parameter which sets the overall turbulence amplitude and L0 is the outer
+    scale in meters.  The Kolmogorov power spectrum proportional to r0^(-5/3) f^(-11/3) is recovered
+    as L0 -> infinity.
 
     For more information, we recommend the following references:
 
