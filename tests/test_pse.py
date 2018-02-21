@@ -79,6 +79,12 @@ def test_PSE_basic():
     np.testing.assert_allclose(P_eb1[1:]/P_theory[1:], 0., atol=zero_tolerance,
                                err_msg='PSE found EB cross-power')
 
+    # Test theory_func
+    ell, P_e1, P_b1, P_eb1, t = pse.estimate(g1, g2, theory_func=tab)
+    # This isn't super accurate.  I think just because of binning.  But I'm not sure.
+    np.testing.assert_allclose(t, P_theory, rtol=0.3,
+                               err_msg='PSE returned wrong theory binning')
+
     # Also check the case where P_e=P_b.
     ps = galsim.PowerSpectrum(tab, tab, units=galsim.radians)
     g1, g2 = ps.buildGrid(grid_spacing=grid_spacing, ngrid=array_size, units=galsim.degrees,
