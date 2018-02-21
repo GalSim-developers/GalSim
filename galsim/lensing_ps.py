@@ -182,7 +182,7 @@ class PowerSpectrum(object):
         if units == galsim.arcsec:
             self.scale = 1
         else:
-            self.scale = 1. * units / galsim.arcsec
+            self.scale = units / galsim.arcsec
 
     def __repr__(self):
         s = 'galsim.PowerSpectrum(e_power_function=%r'%self.e_power_function

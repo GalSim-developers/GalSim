@@ -542,6 +542,52 @@ def test_shear_reference():
 
 
 @timer
+def test_delta2():
+    """Test that using delta2 gives appropriate equivalent power spectrum. """
+
+    rng = galsim.BaseDeviate(512342)
+    grid_size = 10. # degrees
+    ngrid = 100 # grid points
+    grid_spacing = grid_size / ngrid
+
+    for bandlimit in [None, 'soft', 'hard']:
+        for func in [pk2, pk1, pk_flat_lim]:
+            dfunc = lambda k: k**2 * func(k) / (2.*np.pi)
+
+            # E only
+            ps_ref = galsim.PowerSpectrum(e_power_function=func, units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(e_power_function=dfunc, units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+            # B only
+            ps_ref = galsim.PowerSpectrum(b_power_function=func, units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(b_power_function=dfunc, units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+            # E and B
+            ps_ref = galsim.PowerSpectrum(e_power_function=func, b_power_function=func,
+                                          units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(e_power_function=dfunc, b_power_function=dfunc,
+                                            units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+
+@timer
 def test_shear_get():
     """Check that using gridded outputs and the various getFoo methods gives consistent results"""
     # choose a power spectrum and grid setup
@@ -1046,9 +1092,10 @@ def test_periodic():
     grid_spacing = 0.1 # degrees
 
     # Make shears on the grid.
+    # Also use non-int (but still integral) values of kmin_factor, kmax_factor to test conversion.
     g1, g2, kappa = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
-                                 rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3,
-                                 get_convergence=True)
+                                 rng=galsim.UniformDeviate(314159), interpolant='nearest',
+                                 kmin_factor=3., kmax_factor=1., get_convergence=True)
     g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
     # Set up a new set of x, y.  Make a grid and then shift it coherently:
@@ -1345,6 +1392,7 @@ if __name__ == "__main__":
     test_shear_seeds()
     test_shear_reference()
     test_shear_units()
+    test_delta2()
     test_shear_get()
     test_tabulated()
     test_kappa_gauss()
