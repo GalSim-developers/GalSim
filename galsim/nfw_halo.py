@@ -184,15 +184,14 @@ class NFWHalo(object):
         """
         return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
 
-    def __farcth (self, x, out=None):
+    def __farcth (self, x):
         """Numerical implementation of integral functions of a spherical NFW profile.
 
         All expressions are a function of `x`, which is the radius r in units of the NFW scale
         radius, r_s.  For the derivation of these functions, see for example Wright & Brainerd
         (2000, ApJ, 534, 34).
         """
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
         mask = np.where(x < 0.999)[0]
@@ -206,18 +205,15 @@ class NFWHalo(object):
         # the approximation below has a maximum fractional error of 2.3e-7
         mask = np.where((x >= 0.999) & (x <= 1.001))[0]
         out[mask] = 5./6. - x[mask]/3.
-
         return out
 
-    def __kappa(self, x, ks, out=None):
+    def __kappa(self, x, ks):
         """Calculate convergence of halo.
 
         @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks       Lensing strength prefactor.
-        @param out      NumPy array into which results should be placed. [default: None]
         """
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
         mask = np.where(x < 0.999)[0]
@@ -231,18 +227,15 @@ class NFWHalo(object):
         # the approximation below has a maximum fractional error of 7.4e-7
         mask = np.where((x >= 0.999) & (x <= 1.001))[0]
         out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
-
         return out
 
-    def __gamma(self, x, ks, out=None):
+    def __gamma(self, x, ks):
         """Calculate tangential shear of halo.
 
         @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks       Lensing strength prefactor.
-        @param out      NumPy array into which results should be placed. [default: None]
         """
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
         mask = np.where(x > 0.01)[0]
         out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
@@ -251,7 +244,6 @@ class NFWHalo(object):
         # the approximation below has a maximum fractional error of 1.1e-7
         mask = np.where(x <= 0.01)[0]
         out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
-
         return out
 
     def __ks(self, z_s):
