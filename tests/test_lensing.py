@@ -137,6 +137,33 @@ def test_nfwhalo():
     np.testing.assert_allclose(kappa, ref[:,4], rtol=1e-4,
                                err_msg="Computation of convergence deviates from reference.")
 
+@timer
+def test_halo_pos():
+    """Test an NFWHalo with a non-zero halo_pos"""
+
+    ref = np.loadtxt(refdir + '/nfw_lens.dat')
+    halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, halo_pos=galsim.PositionD(2,3))
+    pos_x = np.arange(1.,600) + 2     # Adjust x,y values by the same amount.
+    pos_y = np.zeros_like(pos_x) + 3
+    z_s = np.zeros_like(pos_x) + 2
+
+    do_pickle(halo)
+
+    # comparison to reference should still work.
+    kappa = halo.getConvergence((pos_x, pos_y), z_s)
+    gamma1, gamma2 = halo.getShear([pos_x, pos_y], z_s, reduced=False)
+    g1, g2 = halo.getShear([pos_x, pos_y], z_s)
+    np.testing.assert_allclose(gamma1, -ref[:,2], rtol=1e-4,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(gamma2, 0., atol=1e-8,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(g1, -ref[:,3], rtol=1e-4,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(g2, 0., atol=1e-8,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(kappa, ref[:,4], rtol=1e-4,
+                               err_msg="Computation of convergence deviates from reference.")
+
 
 @timer
 def test_cosmology():
@@ -1340,6 +1367,7 @@ def test_constant():
 
 if __name__ == "__main__":
     test_nfwhalo()
+    test_halo_pos()
     test_cosmology()
     test_shear_variance()
     test_shear_seeds()

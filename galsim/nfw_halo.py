@@ -81,7 +81,7 @@ class Cosmology(object):
         @param z_ref    Reference redshift, with z_ref <= z. [default: 0]
         """
         if isinstance(z, np.ndarray):
-            da = np.zeros_like(z)
+            da = np.zeros_like(z, dtype=float)
             for i in range(len(da)):
                 da[i] = self.Da(z[i], z_ref)
             return da
