@@ -126,27 +126,16 @@ def test_nfwhalo():
 
     # comparison to reference:
     # tangential shear in x-direction is purely negative in g1
-    try:
-        np.testing.assert_allclose(
-            -ref[:,2], gamma1, rtol=1e-4,
-            err_msg="Computation of shear deviates from reference.")
-        np.testing.assert_allclose(
-            -ref[:,3], g1, rtol=1e-4,
-            err_msg="Computation of reduced shear deviates from reference.")
-        np.testing.assert_allclose(
-            ref[:,4], kappa, rtol=1e-4,
-            err_msg="Computation of convergence deviates from reference.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            -ref[:,2], gamma1, decimal=4,
-            err_msg="Computation of shear deviates from reference.")
-        np.testing.assert_array_almost_equal(
-            -ref[:,3], g1, decimal=4,
-            err_msg="Computation of reduced shear deviates from reference.")
-        np.testing.assert_array_almost_equal(
-            ref[:,4], kappa, decimal=4,
-            err_msg="Computation of convergence deviates from reference.")
+    np.testing.assert_allclose(gamma1, -ref[:,2], rtol=1e-4,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(gamma2, 0., atol=1e-8,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(g1, -ref[:,3], rtol=1e-4,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(g2, 0., atol=1e-8,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(kappa, ref[:,4], rtol=1e-4,
+                               err_msg="Computation of convergence deviates from reference.")
 
 
 @timer
@@ -1019,14 +1008,8 @@ def test_corr_func():
         theory_val[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
     theory_val /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    try:
-        np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
-    except AttributeError:
-        # Older NumPy versions don't have assert_allclose, so use this instead.
-        np.testing.assert_array_almost_equal(
-            test_xip, theory_val, decimal=10,
-            err_msg='Integrated xi+ differs from reference values')
+    np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
+                               err_msg='Integrated xi+ differs from reference values')
 
     # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
     # engine output:
@@ -1057,14 +1040,8 @@ def test_corr_func():
             galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
     theory_val /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    try:
-        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
-    except AttributeError:
-        # Older NumPy versions don't have assert_allclose, so use this instead.
-        np.testing.assert_array_almost_equal(
-            test_xim, theory_val, decimal=10,
-            err_msg='Integrated xi+ differs from reference values')
+    np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
+                               err_msg='Integrated xi+ differs from reference values')
 
 
 @timer
@@ -1120,27 +1097,15 @@ def test_periodic():
     _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
 
     # Check that they are identical.
-    try:
-        np.testing.assert_allclose(
-            pe_shift, pe, rtol=1e-10,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            pb_shift, pb, rtol=1e-10,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            peb_shift, peb, rtol=1e-10,
-            err_msg="EB power altered by NN periodic interpolation.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            pe_shift, pe, decimal=9,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            pb_shift, pb, decimal=9,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            peb_shift, peb, decimal=9,
-            err_msg="EB power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pe_shift, pe, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_shift, pb, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_shift, peb, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
 
     ### Now, check getLensing ###
     g1_r_shift, g2_r_shift, mu_shift = ps.getLensing(pos=(x.flatten(),y.flatten()),
@@ -1149,27 +1114,15 @@ def test_periodic():
     g1_r_shift = g1_r_shift.reshape((ngrid,ngrid))
     g2_r_shift = g2_r_shift.reshape((ngrid,ngrid))
     _, pe_r_shift, pb_r_shift, peb_r_shift = pse.estimate(g1_r_shift, g2_r_shift)
-    try:
-        np.testing.assert_allclose(
-            pe_r_shift, pe_r, rtol=1e-10,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            pb_r_shift, pb_r, rtol=1e-10,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            peb_r_shift, peb_r, rtol=1e-10,
-            err_msg="EB power altered by NN periodic interpolation.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            pe_r_shift, pe_r, decimal=9,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            pb_r_shift, pb_r, decimal=9,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            peb_r_shift, peb_r, decimal=9,
-            err_msg="EB power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pe_r_shift, pe_r, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_r_shift, pb_r, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_r_shift, peb_r, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
     # Should also check convergences/magnifications.  We don't have a power spectrum measure, so
     # let's just check the mean and variance.
     np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
