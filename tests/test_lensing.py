@@ -1139,6 +1139,40 @@ def test_periodic():
         peb_shift, peb, rtol=1e-10,
         err_msg="EB power altered by NN periodic interpolation.")
 
+    ### Check reduced shear ###
+    g1_r_shift, g2_r_shift = ps.getShear(pos=(x.flatten(),y.flatten()), units=galsim.degrees,
+                                         periodic=True)
+    g1_r_shift = g1_r_shift.reshape((ngrid,ngrid))
+    g2_r_shift = g2_r_shift.reshape((ngrid,ngrid))
+    _, pe_r_shift, pb_r_shift, peb_r_shift = pse.estimate(g1_r_shift, g2_r_shift)
+    np.testing.assert_allclose(
+        pe_r_shift, pe_r, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_r_shift, pb_r, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_r_shift, peb_r, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
+
+    ### Check getConvergence ###
+    kappa_shift = ps.getConvergence(pos=(x.flatten(),y.flatten()),
+                                    units=galsim.degrees, periodic=True)
+    # We don't have a power spectrum measure, so let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(kappa_shift), np.mean(kappa), decimal=8,
+                                   err_msg='Mean convergence altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(kappa_shift), np.var(kappa), decimal=8,
+                                   err_msg='Convergence variance altered by periodic interpolation')
+
+    ### Check getMagnification ###
+    mu_shift = ps.getMagnification(pos=(x.flatten(),y.flatten()),
+                                   units=galsim.degrees, periodic=True)
+    # We don't have a power spectrum measure, so let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
+                                   err_msg='Mean magnification altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
+                                   err_msg='Magnification variance altered by periodic interpolation')
+
     ### Now, check getLensing ###
     g1_r_shift, g2_r_shift, mu_shift = ps.getLensing(pos=(x.flatten(),y.flatten()),
                                                      units=galsim.degrees,
@@ -1157,24 +1191,6 @@ def test_periodic():
         err_msg="EB power altered by NN periodic interpolation.")
     # Should also check convergences/magnifications.  We don't have a power spectrum measure, so
     # let's just check the mean and variance.
-    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
-                                   err_msg='Mean magnification altered by periodic interpolation')
-    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
-                                   err_msg='Magnification variance altered by periodic interpolation')
-
-    ### Check getConvergence ###
-    kappa_shift = ps.getConvergence(pos=(x.flatten(),y.flatten()),
-                                    units=galsim.degrees, periodic=True)
-    # We don't have a power spectrum measure, so let's just check the mean and variance.
-    np.testing.assert_almost_equal(np.mean(kappa_shift), np.mean(kappa), decimal=8,
-                                   err_msg='Mean convergence altered by periodic interpolation')
-    np.testing.assert_almost_equal(np.var(kappa_shift), np.var(kappa), decimal=8,
-                                   err_msg='Convergence variance altered by periodic interpolation')
-
-    ### Check getMagnification ###
-    mu_shift = ps.getMagnification(pos=(x.flatten(),y.flatten()),
-                                   units=galsim.degrees, periodic=True)
-    # We don't have a power spectrum measure, so let's just check the mean and variance.
     np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
                                    err_msg='Mean magnification altered by periodic interpolation')
     np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
