@@ -430,7 +430,7 @@ class InterpolatedImage(GSObject):
             b = self._buildNoisePadImage(noise_pad_size, noise_pad, rng, use_cache)
             nz_bounds += b
 
-        # The the user gives us a pad image to use, fill the relevane portion with that.
+        # The the user gives us a pad image to use, fill the relevant portion with that.
         if pad_image:
             assert self._xim.bounds.includes(pad_image.bounds)
             self._xim[pad_image.bounds] = pad_image
@@ -560,7 +560,7 @@ class InterpolatedImage(GSObject):
             return self._sbii.maxK() / max_scale
         else:
             return self._x_interpolant.krange / max_scale
- 
+
     def __eq__(self, other):
         return (isinstance(other, InterpolatedImage) and
                 self._xim == other._xim and
