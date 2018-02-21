@@ -576,7 +576,10 @@ class PowerSpectrum(object):
             ntot += temp
         return int(ntot)
 
-    def subsampleGrid(self, subsample_fac, get_convergence=False):
+    # TODO: This function is not tested.  I'm leaving it in and just marking it no cover,
+    #       but if someone starts using this for anything real, it would be worth adding unit
+    #       tests for it!
+    def subsampleGrid(self, subsample_fac, get_convergence=False):  # pragma: no cover
         """Routine to use a regular subset of the grid points without a completely new call to
         buildGrid().
 
@@ -649,8 +652,13 @@ class PowerSpectrum(object):
             pf(np.array((0.1,1.)))
         return pf
 
+    # TODO: The unit tests for this function are pretty minimal.  It's really just a convenience
+    #       function, which is not used elsewhere in GalSim.  So it is marked no cover, so its
+    #       lack of good unit tests doesn't impact GalSim's overall test coverage.  However, if
+    #       anyone starts using this function in earnest, it would be worth bulking up the unit
+    #       tests for it.
     def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
-                    units=galsim.arcsec, bandlimit="hard"):
+                    units=galsim.arcsec, bandlimit="hard"):  # pragma: no cover
         """Calculate shear correlation functions for the current power spectrum on the specified
         grid.
 
