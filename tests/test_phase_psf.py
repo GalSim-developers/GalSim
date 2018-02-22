@@ -570,16 +570,16 @@ def test_phase_gradient_shoot():
         exptime = 15.0
         time_step = 0.05
         centroid_tolerance = 0.05
-        size_tolerance = 0.07  # absolute
-        size_bias = 0.018  # as a fraction
+        size_tolerance = 0.05  # absolute
+        size_bias = 0.02  # as a fraction
         shape_tolerance = 0.005
     else:
         exptime = 1.0
         time_step = 0.1
-        centroid_tolerance = 0.2
-        size_tolerance = 0.15
+        centroid_tolerance = 0.3
+        size_tolerance = 0.3
         size_bias = 0.15
-        shape_tolerance = 0.03
+        shape_tolerance = 0.04
 
     psfs = [atm.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper) for th in thetas]
     psfs2 = [atm2.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step)
