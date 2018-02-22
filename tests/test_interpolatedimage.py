@@ -1076,6 +1076,17 @@ def test_stepk_maxk():
         alt_int_im.maxk, mult_val*maxk_val, decimal=7,
         err_msg='_InterpolatedImage did not adopt forced value for maxk')
 
+    # Finally if _InterpolatedImage gets an already good fft size, then it doesn't expand,
+    # so check that case too.
+    alt_int_im = galsim._InterpolatedImage(int_im._xim, force_stepk=mult_val*stepk_val,
+                                           force_maxk=mult_val*maxk_val)
+    np.testing.assert_almost_equal(
+        alt_int_im.stepk, mult_val*stepk_val, decimal=7,
+        err_msg='_InterpolatedImage did not adopt forced value for stepk')
+    np.testing.assert_almost_equal(
+        alt_int_im.maxk, mult_val*maxk_val, decimal=7,
+        err_msg='_InterpolatedImage did not adopt forced value for maxk')
+
     do_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(int_im)
