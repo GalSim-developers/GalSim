@@ -56,7 +56,7 @@ class RandomWalk(GSObject):
                                     any galsim.BaseDeviate.  If None, the rng
                                     is created internally.
                                     [default: None]
-    @param  gsparams                Optional GSParams for the gaussians
+    @param  gsparams                Optional GSParams for the objects
                                     representing each point source.
                                     [default: None]
 
@@ -73,8 +73,8 @@ class RandomWalk(GSObject):
         .npoints
         .input_half_light_radius
         .flux
-        .gaussians
-            The list of galsim.Gaussian objects representing the points
+        .deltas
+            The list of galsim.DeltaFunction objects representing the points
         .points
             The array of x,y offsets used to create the point sources
 
@@ -95,9 +95,6 @@ class RandomWalk(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = True
-
-    # size of the galsim.Gaussian objects to use as delta functions
-    _gaussian_sigma = 1.0e-8
 
     _has_hard_edges = False
     _is_axisymmetric = False
@@ -122,23 +119,23 @@ class RandomWalk(GSObject):
         self._points = self._get_points()
 
     @property
-    def gaussians(self):
-        gaussians = []
-        sigma=self._gaussian_sigma
+    def deltas(self):
+        deltas = []
         fluxper=self._flux/self._npoints
 
         for p in self._points:
-            g = _galsim.SBGaussian(sigma, fluxper, self.gsparams._gsp)
-
-            g = _galsim.SBTransform(g, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
+            d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
+            d = _galsim.SBTransform(d, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
                                     self.gsparams._gsp)
+            deltas.append(d)
+        return deltas
 
-            gaussians.append(g)
-        return gaussians
+    # For backwards compatibility in case anyone referenced this attribute.
+    gaussians = deltas
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBAdd(self.gaussians, self.gsparams._gsp)
+        return _galsim.SBAdd(self.deltas, self.gsparams._gsp)
 
     @property
     def input_half_light_radius(self):
