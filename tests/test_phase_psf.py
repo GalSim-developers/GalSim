@@ -89,6 +89,15 @@ def test_structure_function():
         screen.instantiate()
         vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500)**1.2, L0=L0)
         phase = screen._tab2d.table.getVals()[:-1, :-1] * 2 * np.pi / 500.0  # nm -> radians
+
+        var = np.var(phase)
+        # Conan 2008 eq 16
+        # 0.0863 ~= Gamma(11/6) Gamma(5/6) / (2 pi^(8/3)) (24/5 Gamma(6/5))^(5/6)
+        expected_var = 0.0863 * (r0_500/L0)**(-5/3)
+        np.testing.assert_allclose(
+            var, expected_var, rtol=0.025,
+            err_msg="Simulated variance disagrees with expected variance.")
+
         im = galsim.Image(phase, scale=screen_scale)
         D_sim = galsim.utilities.structure_function(im)
 
