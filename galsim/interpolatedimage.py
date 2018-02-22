@@ -656,7 +656,7 @@ class InterpolatedImage(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _InterpolatedImage(image, x_interpolant, k_interpolant,
+def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
                        use_true_center=True, offset=None, gsparams=None,
                        force_stepk=0., force_maxk=0.):
     """Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.
@@ -666,13 +666,13 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     1. There are no padding options. The image must be provided with all padding already applied.
     2. The stepk and maxk values will not be calculated.  If you want to use values for these other
        than the default, you may provide them as force_stepk and force_maxk.  Otherwise
-       stepk ~= 2pi / image_size and max_k ~= 2pi / pixel_scale.
+       stepk ~= 2pi / image_size and maxk ~= x_interpolant.krange() / pixel_scale.
     3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
     4. The input image must have a defined wcs.
 
     @param image            The Image from which to construct the object.
-    @param x_interpolant    An Interpolant instance for real-space interpolation.
-    @param k_interpolant    An Interpolant instance for k-space interpolation.
+    @param x_interpolant    An Interpolant instance for real-space interpolation [default: Quintic]
+    @param k_interpolant    An Interpolant instance for k-space interpolation [default: Quintic]
     @param use_true_center  Whether to use the true center of the provided image as the center
                             of the profile. [default: True]
     @param offset           The location in the input image to use as the center of the profile.
@@ -700,8 +700,15 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._pad_factor = 1.
     ret._image_flux = np.sum(ret._image.array, dtype=float)
     ret._flux = ret._image_flux
-    ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)
-    ret._maxk = ret._x_interpolant.krange / ret._wcs._maxScale()
+
+    if force_stepk == 0.:
+        ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)
+    else:
+        ret._stepk = force_stepk
+    if force_maxk == 0.:
+        ret._maxk = ret._x_interpolant.krange / ret._wcs._maxScale()
+    else:
+        ret._maxk = force_maxk
     return ret
 
 

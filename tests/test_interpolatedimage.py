@@ -962,8 +962,6 @@ def test_conserve_dc():
     precisely in general.  What we are really testing is that a flat background input
     image has a relatively flat output image.
     """
-    import numpy
-
     im1_size = 40
     scale1 = 0.23
     init_val = 1.
@@ -981,8 +979,8 @@ def test_conserve_dc():
         print('Testing interpolant ',interp)
         obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
-        numpy.testing.assert_array_almost_equal(
+        print('The maximum error is ',np.max(abs(im2.array-init_val)))
+        np.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using xvals.'%interp)
 
@@ -990,8 +988,8 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
-        numpy.testing.assert_array_almost_equal(
+        print('The maximum error is ',np.max(abs(im2.array-init_val)))
+        np.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
 
@@ -1006,8 +1004,8 @@ def test_conserve_dc():
         lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
-        numpy.testing.assert_array_almost_equal(
+        print('The maximum error is ',np.max(abs(im2.array-init_val)))
+        np.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using xvals.'%n)
 
@@ -1015,8 +1013,8 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
-        numpy.testing.assert_array_almost_equal(
+        print('The maximum error is ',np.max(abs(im2.array-init_val)))
+        np.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using uvals.'%n)
 
@@ -1030,8 +1028,6 @@ def test_conserve_dc():
 def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
-    import numpy
-
     scale = 0.18
     n = 101 # use an odd number so profile doesn't get recentered at all, modifying stepk
 
@@ -1040,17 +1036,34 @@ def test_stepk_maxk():
     im = obj.drawImage(image=im, scale=scale)
     int_im = galsim.InterpolatedImage(im)
 
-    step_k_val = int_im.stepk
-    max_k_val = int_im.maxk
+    # These values get calculated automatically with calculateStepK() and calculateMaxK()
+    stepk_val = int_im.stepk
+    maxk_val = int_im.maxk
+    print('From calculate:')
+    print('stepk = ',stepk_val)
+    print('maxk = ',maxk_val)
 
+    # Check the default values of these (without calculate or force)
+    raw_int_im = galsim._InterpolatedImage(im)
+    print('Raw values:')
+    print('stepk = ',raw_int_im.stepk)
+    print('maxk = ',raw_int_im.maxk)
+    print('2pi/image_size = ',2.*np.pi/(n*scale))
+    print('krange/pixel_scale = ',galsim.Quintic().krange/scale)
+    np.testing.assert_allclose(raw_int_im.stepk, 2*np.pi/(n*scale), rtol=0.01,
+                               err_msg="Raw stepk value not as expected")
+    np.testing.assert_allclose(raw_int_im.maxk, galsim.Quintic().krange/scale, rtol=0.01,
+                               err_msg="Raw stepk value not as expected")
+
+    # Now check that we can force the value to be something else
     mult_val = 0.9
-    new_int_im = galsim.InterpolatedImage(im, _force_stepk=mult_val*step_k_val,
-                                          _force_maxk=mult_val*max_k_val)
-    numpy.testing.assert_almost_equal(
-        new_int_im.stepk, mult_val*step_k_val, decimal=7,
+    new_int_im = galsim.InterpolatedImage(im, _force_stepk=mult_val*stepk_val,
+                                          _force_maxk=mult_val*maxk_val)
+    np.testing.assert_almost_equal(
+        new_int_im.stepk, mult_val*stepk_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced value for stepk')
-    numpy.testing.assert_almost_equal(
-        new_int_im.maxk, mult_val*max_k_val, decimal=7,
+    np.testing.assert_almost_equal(
+        new_int_im.maxk, mult_val*maxk_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced value for maxk')
 
     do_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
