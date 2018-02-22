@@ -93,7 +93,7 @@ def test_structure_function():
         var = np.var(phase)
         # Conan 2008 eq 16
         # 0.0863 ~= Gamma(11/6) Gamma(5/6) / (2 pi^(8/3)) (24/5 Gamma(6/5))^(5/6)
-        expected_var = 0.0863 * (r0_500/L0)**(-5/3)
+        expected_var = 0.0863 * (r0_500/L0)**(-5/3.)
         np.testing.assert_allclose(
             var, expected_var, rtol=0.025,
             err_msg="Simulated variance disagrees with expected variance.")
