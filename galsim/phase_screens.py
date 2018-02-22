@@ -558,6 +558,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
 
     if rng is None:
         rng = galsim.BaseDeviate()
+    rng = rng.duplicate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
 
     return galsim.PhaseScreenList(
