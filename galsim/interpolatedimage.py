@@ -575,10 +575,12 @@ class InterpolatedImage(GSObject):
     def __hash__(self):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self.flux, self.gsparams, self._stepk, self._maxk,
-                               self._xim.bounds, self._image.bounds, self._pad_image.bounds,
-                               self._pad_factor, self._offset, self._xim.wcs))
+            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant))
+            self._hash ^= hash((self.flux, self._stepk, self._maxk))
+            self._hash ^= hash((self._xim.bounds, self._image.bounds, self._pad_image.bounds))
+            self._hash ^= hash((self._pad_factor, self._offset))
+            self._hash ^= hash(self._gsparams)
+            self._hash ^= hash(self._xim.wcs)
             # Just hash the diagonal.  Much faster, and usually is unique enough.
             # (Let python handle collisions as needed if multiple similar IIs are used as keys.)
             self._hash ^= hash(tuple(np.diag(self._pad_image.array)))
