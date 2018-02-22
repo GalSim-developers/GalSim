@@ -172,7 +172,7 @@ def test_sk_phase_psf():
     weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
     speed = [rng()*20 for _ in range(6)]
     direction = [rng()*360*galsim.degrees for _ in range(6)]
-    aper = galsim.Aperture(4.0, obscuration=obscuration)
+    aper = galsim.Aperture(4.0, obscuration=obscuration, pad_factor=0.5)
     kcrits = [1, 3, 10] if __name__ == '__main__' else [1]
     for kcrit in kcrits:
         # Technically, we should probably use a smaller screen_scale here, but that runs really
@@ -181,7 +181,7 @@ def test_sk_phase_psf():
                                 speed=speed, direction=direction,
                                 screen_size=102.4, screen_scale=0.05)
         atm.instantiate(kmin=kcrit)
-        psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper)
+        psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper, time_step=0.1)
         phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
         sk = galsim.SecondKick(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0,
                                kcrit=kcrit)
