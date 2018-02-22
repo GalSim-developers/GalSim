@@ -576,9 +576,14 @@ class InterpolatedImage(GSObject):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
             self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant))
-            self._hash ^= hash((self.flux, self._stepk, self._maxk))
+            self._hash ^= hash((self.flux, self._stepk, self._maxk, self._pad_factor))
             self._hash ^= hash((self._xim.bounds, self._image.bounds, self._pad_image.bounds))
-            self._hash ^= hash((self._pad_factor, self._offset))
+            # A common offset is 0.5,0.5, and *sometimes* this produces the same hash as 0,0
+            # (which is also common).  I guess because they are only different in 2 bits.
+            # This mucking of the numbers seems to help make the hash more reliably different for
+            # these two cases.  Note: "sometiems" because of this:
+            # https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
+            self._hash ^= hash((self._offset.x * 1.234, self._offset.y * 0.23424))
             self._hash ^= hash(self._gsparams)
             self._hash ^= hash(self._xim.wcs)
             # Just hash the diagonal.  Much faster, and usually is unique enough.
