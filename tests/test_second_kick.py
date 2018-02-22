@@ -207,10 +207,24 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument("--slow", action='store_true', help="Run slow tests")
+    parser.add_argument("--profile", action='store_true', help="Profile tests")
+    parser.add_argument("--prof_out", default=None, help="Profiler output file")
     args = parser.parse_args()
+
+    if args.profile:
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
 
     test_second_kick(args.slow)
     test_structure_function()
     test_limiting_cases()
     test_sf_lut(args.slow)
     test_sk_phase_psf()
+
+    if args.profile:
+        pr.disable()
+        ps = pstats.Stats(pr).sort_stats('tottime')
+        ps.print_stats(30)
+        if args.prof_out:
+            pr.dump_stats(args.prof_out)
