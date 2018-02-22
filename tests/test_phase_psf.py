@@ -67,41 +67,39 @@ def test_atm_screen_size():
                             "Inconsistent atmospheric screen size and scale.")
 
 
-# @timer
-# def test_structure_function():
-#     """Test that AtmosphericScreen generates approximately the right structure function for infinite
-#     outer scale.
-#     """
-#     rng = galsim.BaseDeviate(4815162342)
-#     r0_500 = 0.2
-#     L0 = None
-#     screen_scale = 0.05
-#     screen_size = 100.0
-#
-#     # Theoretical pure Kolmogorov structure function (at 500 nm!):
-#     D_kolm = lambda r: 6.8839 * (r/r0_500)**(5./3)
-#
-#     atm = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
-#                                    r0_500=r0_500, L0=L0, rng=rng)
-#     atm.instantiate()
-#     phase = atm._tab2d.table.getVals()[:-1, :-1].copy()
-#     phase *= 2 * np.pi / 500.0  # nm -> radians
-#     im = galsim.Image(phase, scale=screen_scale)
-#     D_sim = galsim.utilities.structure_function(im)
-#
-#     print("r   D_kolm   D_sim")
-#     for r in [0.5, 2.0, 5.0]:  # Only check values far from the screen size and scale.
-#         # We're only attempting to verify that we haven't missed a factor of 2 or pi or
-#         # something like that here, so set the rtol below to be *very* forgiving.  Since the
-#         # structure function varies quite quickly as r**(5./3), this is still a useful test.
-#         # For the parameters above (including the random seed), D_kolm(r) and D_sim(r) are actually
-#         # consistent at about the 15% level in the test below.  It's difficult to predict how
-#         # consistent they *should* be though, since the simulated structure function estimate is
-#         # sensitive to resolution and edge effects, as well as the particular realization of the
-#         # field.
-#         print(r, D_kolm(r), D_sim(r))
-#         np.testing.assert_allclose(D_kolm(r), D_sim(r), rtol=0.5,
-#                                    err_msg="Simulated structure function not close to prediction.")
+@timer
+def test_structure_function():
+    """Test that AtmosphericScreen generates the right structure function.
+    """
+    if __name__ == '__main__':
+        L0s = [10.0, 25.0, 100.0]
+        screen_size = 307.2
+    else:
+        L0s = [10.0]
+        screen_size = 102.4
+
+    rng = galsim.BaseDeviate(4815162342)
+    lam = 500.0
+    r0_500 = 0.2
+    screen_scale = 0.05
+
+    for L0 in L0s:
+        screen = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
+                                          r0_500=r0_500, L0=L0, rng=rng)
+        screen.instantiate()
+        vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500)**1.2, L0=L0)
+        phase = screen._tab2d.table.getVals()[:-1, :-1] * 2 * np.pi / 500.0  # nm -> radians
+        im = galsim.Image(phase, scale=screen_scale)
+        D_sim = galsim.utilities.structure_function(im)
+
+        print("r   D_kolm   D_sim")
+        for r in [0.1, 1.0, 10.0]:
+            analytic_SF = vk._structure_function(r)
+            simulated_SF = D_sim(r)
+            print(r, analytic_SF, simulated_SF)
+            np.testing.assert_allclose(
+                    analytic_SF, simulated_SF, rtol=0.05,
+                    err_msg="Simulated structure function not close to prediction.")
 
 
 @timer
@@ -801,7 +799,7 @@ def test_gc():
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
-    # test_structure_function()
+    test_structure_function()
     test_phase_screen_list()
     test_frozen_flow()
     test_phase_psf_reset()
