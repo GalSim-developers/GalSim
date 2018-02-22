@@ -154,7 +154,7 @@ class Airy(GSObject):
         obscuration = 0.).
         """
         if self.obscuration == 0.:
-            return self.lam_over_diam * self._hlr_factor
+            return self.lam_over_diam * Airy._hlr_factor
         else:
             # In principle can find the half light radius as a function of lam_over_diam and
             # obscuration too, but it will be much more involved...!
@@ -167,7 +167,7 @@ class Airy(GSObject):
         """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.obscuration == 0.:
-            return self.lam_over_diam * self._fwhm_factor
+            return self.lam_over_diam * Airy._fwhm_factor
         else:
             # In principle can find the FWHM as a function of lam_over_diam and obscuration too,
             # but it will be much more involved...!
