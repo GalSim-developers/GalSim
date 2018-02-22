@@ -752,7 +752,7 @@ def test_gc():
     """Make sure that pending psfs don't leak memory.
     """
     import gc
-    atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15, suppress_warning=True)
 
     # First check that no PhaseScreenPSFs are known to the garbage collector
     assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
