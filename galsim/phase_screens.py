@@ -28,6 +28,23 @@ class AtmosphericScreen(object):
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
     scale beyond which the turbulence power flattens.
 
+    AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it
+    is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to
+    facilitate automatic truncation of the screen power spectrum depending on the use case.  For
+    example, when drawing a PhaseScreenPSF using Fourier methods, the entire power spectrum should
+    generally be used.  On the other hand, when drawing using photon-shooting and the geometric
+    approximation, it's better to truncate the high-k modes of the power spectrum here so
+    that they can be handled instead by a SecondKick object (which also happens automatically; see
+    the PhaseScreenPSF docstring).  (See Peterson et al. 2015 for more details about the second
+    kick).  Querying the wavefront or wavefront gradient will instantiate the screen using the full
+    power spectrum.
+
+    If you wish to override the automatic truncation determination, then you can directly
+    instantiate the phase screen array using the AtmosphericScreen.instantiate() method.
+
+    Note that once a screen has been instantiated with a particular set of truncation parameters, it
+    cannot be re-instantiated with another set of parameters.  Attempting to use a phase screen
+
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
@@ -65,11 +82,11 @@ class AtmosphericScreen(object):
                          clock time or system entropy to seed a new generator.  [default: None]
     @param suppress_warning   AtmosphericScreens used for drawing using Fourier optics should
                               generally be different than those used for drawing using geometric
-                              optics.  This class will normally attempt to sanity check that an
-                              appropriate screen is being used for both situations, and issue a
-                              warning if it thinks there may be an error.  If you want to turn this
-                              warning off, however, then you can set `suppress_warning=True`.
-                              [default: False]
+                              optics (see above).  This class will normally attempt to sanity check
+                              that an appropriate screen is being used for both situations, and
+                              issue a warning if it thinks there may be an incorrect use.  If you
+                              want to turn this warning off, however, then you can set
+                              `suppress_warning=True`.  [default: False]
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
     simulations"

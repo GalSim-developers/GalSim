@@ -984,6 +984,46 @@ class PhaseScreenPSF(GSObject):
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
     to the `Aperture` constructor.  The `aper` keyword always takes precedence.
 
+    There are effectively three ways to draw a PhaseScreenPSF (or GSObject that includes a
+    PhaseScreenPSF):
+
+    1) Fourier optics
+
+        This is the default, and is performed for all drawImage methods except method='phot'.  This
+        is generally the most accurate option.  For PhaseScreenLists that include an
+        AtmosphericScreen, however, this can be prohibitively slow.  For OpticalPSFs, though, this
+        can sometimes be a good option.
+
+    2) Photon-shooting from an image produced using Fourier optics.
+
+        This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  This actually performs the same calculations as the Fourier optics
+        option above, but then proceeds by shooting photons from that result.  This can sometimes be
+        a good option for OpticalPSFs, especially if the OpticalPSF can be reused for may objects.
+
+    3) Photon-shooting using the "geometric approximation".
+
+        This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  In this case, a completely different algorithm is used make an
+        image.  Photons are uniformly generated in the Aperture pupil, and then the phase gradient
+        at that location is used to deflect each photon in the image plane.  This method, which
+        corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
+        across the aperture, and is usually several orders of magnitude or more faster than Fourier
+        optics.
+
+        One short-coming of this method is that it neglects interference effects, i.e. diffraction.
+        For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
+        "second kick", will automatically be applied to handle both the quickly varying modes of the
+        screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
+        AtmosphericScreen, no correction to handle interference will be automatically applied.  Note
+        that this correction can be overridden using the second_kick keyword argument, and also
+        tuned to some extent using the kcrit_factor keyword argument.
+
+    Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
+    uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
+    instantiation depend on the drawing method used, and also the kcrit_factor keyword argument to
+    PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.
+
     @param screen_list         PhaseScreenList object from which to create PSF.
     @param lam                 Wavelength in nanometers at which to compute PSF.
     @param t0                  Time at which to start exposure in seconds.  [default: 0.0]

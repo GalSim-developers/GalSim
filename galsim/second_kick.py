@@ -21,8 +21,8 @@ This file implements the atmospheric PSF "second kick", which is an analytic cal
 surface brightness profile of an atmospheric PSF convolved with an Airy PSF in the infinite exposure
 limit.  The atmospheric turbulence spectrum follows the von Karman formulation with an optional
 truncation scale.  Generally, this will be used in conjunction with a PhaseScreenPSF being drawn
-using photon-shooting.  In this case, the PhaseScreenPSF will simulate the effects of the low
-frequency turbulence modes, which can be treated purely using refraction, while the SecondKick
+using geometric photon-shooting.  In this case, the PhaseScreenPSF will simulate the effects of the
+low frequency turbulence modes, which can be treated purely using refraction, while the SecondKick
 handles the high frequency modes."""
 
 import numpy as np
@@ -37,17 +37,14 @@ class SecondKick(GSObject):
     """Class describing the infinite exposure limit (or equivalently, the expected value) for the
     surface brightness profile of an atmospheric PSF convolved by an Airy PSF.  The atmospheric PSF
     is assumed to arise from a turbulent phase spectrum following a von Karman power spectrum of
-    fluctuations:
-
-        (f^2 + L0^2)^(-11/6)
-
-    (See the VonKarman docstring for more details).
+    fluctuations (See the VonKarman docstring for more details).
 
     The intended use for this profile is as a correction to applying the geometric approximation to
-    PhaseScreenPSF objects when drawing using photon shooting.  The geometric approximation is only
-    valid for length scales larger than some critical scale where the effects of interference are
-    negligible.  For smaller length scales, interference (diffraction) must be handled using an
-    optical paradigm that acknowledges the wave nature of light, such as Fourier optics.
+    PhaseScreenPSF objects when drawing using geometric photon shooting.  The geometric
+    approximation is only valid for length scales larger than some critical scale where the effects
+    of interference are unimportant.  For smaller length scales, interference (diffraction) must be
+    handled using an optical paradigm that acknowledges the wave nature of light, such as Fourier
+    optics.
 
     Fourier optics calculations are many orders of magnitude slower than geometric optics
     calculations, however, so we implement a scale-splitting algorithm first described in Peterson
@@ -57,8 +54,8 @@ class SecondKick(GSObject):
     analytically by SecondKick.  Because very many oscillations of these high-k modes both fit
     within a given telescope aperture and pass by the aperture during a moderate length exposure
     time, we can use the same analytic expectation value calculation for the high-k component of all
-    PSFs across a field of view, thus incurring the somewhat expensive calculation for Fourier optics
-    only once.
+    PSFs across a field of view, thus incurring the somewhat expensive calculation for Fourier
+    optics only once.
 
     For more details, we refer the reader to the original implementation described in
 
