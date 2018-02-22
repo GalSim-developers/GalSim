@@ -695,11 +695,22 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret._offset = ret._fix_offset(ret._image.bounds, offset, use_true_center)
     im_cen = ret._image.true_center if use_true_center else ret._image.center
     ret._wcs = ret._image.wcs.local(image_pos = im_cen)
-    ret._xim = ret._image
-    ret._pad_image = ret._image
     ret._pad_factor = 1.
     ret._image_flux = np.sum(ret._image.array, dtype=float)
     ret._flux = ret._image_flux
+
+    # If image isn't a good fft size, we may still need to pad it out.
+    size = max(ret._image.array.shape)
+    pad_size = Image.good_fft_size(size)
+    if size == pad_size:
+        ret._xim = ret._image
+    else:
+        ret._xim = Image(pad_size, pad_size, dtype=ret._image.dtype)
+        ret._xim.setCenter(ret._image.center)
+        ret._xim[ret._image.bounds] = ret._image
+        ret._xim.wcs = ret._wcs
+        ret._image = ret._xim[ret._image.bounds]
+    ret._pad_image = ret._image
 
     if force_stepk == 0.:
         ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)

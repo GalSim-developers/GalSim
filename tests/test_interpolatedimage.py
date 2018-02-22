@@ -1033,6 +1033,7 @@ def test_stepk_maxk():
 
     obj = galsim.Exponential(half_light_radius=2.*scale)
     im = galsim.Image(n, n)
+    im.setCenter(0,0)
     im = obj.drawImage(image=im, scale=scale)
     int_im = galsim.InterpolatedImage(im)
 
@@ -1066,10 +1067,23 @@ def test_stepk_maxk():
         new_int_im.maxk, mult_val*maxk_val, decimal=7,
         err_msg='InterpolatedImage did not adopt forced value for maxk')
 
+    alt_int_im = galsim._InterpolatedImage(im, force_stepk=mult_val*stepk_val,
+                                           force_maxk=mult_val*maxk_val)
+    np.testing.assert_almost_equal(
+        alt_int_im.stepk, mult_val*stepk_val, decimal=7,
+        err_msg='_InterpolatedImage did not adopt forced value for stepk')
+    np.testing.assert_almost_equal(
+        alt_int_im.maxk, mult_val*maxk_val, decimal=7,
+        err_msg='_InterpolatedImage did not adopt forced value for maxk')
+
     do_pickle(int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(int_im)
     do_pickle(new_int_im)
+    do_pickle(raw_int_im, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(raw_int_im)
+    do_pickle(alt_int_im, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(alt_int_im)
 
 
 @timer
