@@ -249,7 +249,7 @@ def do_shoot(prof, img, name):
     dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
-    if 'Airy' in name or 'SK' in name:
+    if 'Airy' in name or 'SecondKick' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:
         img = galsim.ImageD(512,512, scale=dx)
