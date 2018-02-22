@@ -497,6 +497,13 @@ def test_shear_variance():
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
 
+    # Warn for accessing values outside of valid bounds (and not periodic)
+    assert_warns(UserWarning, test_ps.getShear, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getShear, pos=(max*2, 0), reduced=False, units='deg')
+    assert_warns(UserWarning, test_ps.getConvergence, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getMagnification, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getLensing, pos=(max*2, 0), units='deg')
+
 
 @timer
 def test_shear_seeds():
