@@ -109,16 +109,18 @@ def make_movie(args):
     # Before either of this has been instantiated, they are identical
     assert fft_atm == geom_atm
 
-    # We manually instantiate here so we can have a uniformly updating ProgressBar both here and
-    # below when actually drawing PSFs.  Normally, it's okay to let the atms automatically
-    # instantiate, which happens when the first PSF is drawn, or the first wavefront is queried.
-    print("Instantiating screens")
-    with ProgressBar(2*args.nlayers) as bar:
-        fft_atm.instantiate(_bar=bar)
-        r0 = args.r0_500*(args.lam/500)**1.2
-        geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
-    # After instantiation, they're no long equal.
-    assert fft_atm != geom_atm
+    # If any AtmosphericScreens are included, we manually instantiate here so we can have a
+    # uniformly updating ProgressBar both here and below when actually drawing PSFs.  Normally, it's
+    # okay to let the atms automatically instantiate, which happens when the first PSF is drawn, or
+    # the first wavefront is queried.
+    if args.nlayers > 0:
+        print("Instantiating screens")
+        with ProgressBar(2*args.nlayers) as bar:
+            fft_atm.instantiate(_bar=bar)
+            r0 = args.r0_500*(args.lam/500)**1.2
+            geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
+        # After instantiation, they're only equal if there's no atmosphere.
+            assert fft_atm != geom_atm
 
     # Setup Fourier and geometric apertures
     fft_aper = galsim.Aperture(args.diam, args.lam, obscuration=args.obscuration,
@@ -210,10 +212,6 @@ def make_movie(args):
 
                 geom_img0 = geom_psf.drawImage(nx=args.nx, ny=args.nx, scale=scale,
                                                method='phot', n_photons=100000)
-
-                assert fft_psl[0].kmax == np.inf
-                assert geom_psl[0].kmax < np.inf
-                assert fft_atm != geom_atm
 
                 t0 += args.time_step
 

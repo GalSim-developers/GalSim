@@ -1015,9 +1015,9 @@ class PhaseScreenPSF(GSObject):
         For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
         "second kick", will automatically be applied to handle both the quickly varying modes of the
         screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
-        AtmosphericScreen, no correction to handle interference will be automatically applied.  Note
-        that this correction can be overridden using the second_kick keyword argument, and also
-        tuned to some extent using the kcrit_factor keyword argument.
+        AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can
+        be overridden using the second_kick keyword argument, and also tuned to some extent using
+        the kcrit_factor keyword argument.
 
     Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
     uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
@@ -1186,7 +1186,6 @@ class PhaseScreenPSF(GSObject):
         if self._kcrit is None:
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
-                self._second_kick = False
                 self._kcrit = float('inf')
             else:
                 L0 = self._screen_list.L0_effective
@@ -1201,7 +1200,8 @@ class PhaseScreenPSF(GSObject):
         if self._second_kick is None:
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
-                self._second_kick = False
+                self._second_kick = galsim.Airy(
+                        lam=self.lam, diam=self.aper.diam, obscuration=self.aper.obscuration)
             else:
                 L0 = self._screen_list.L0_effective
                 r0 = r0_500 * (self.lam/500.)**(6./5)
