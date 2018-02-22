@@ -132,14 +132,6 @@ namespace galsim {
     //
     //
 
-    const double SKInfo::magic1 = 2*boost::math::tgamma(11./6)/(pow(2, 5./6)*pow(M_PI, 8./3))
-                                    * pow(24/5.*boost::math::tgamma(6./5), 5./6);
-    const double SKInfo::magic2 = boost::math::tgamma(5./6)/pow(2., 1./6);
-    const double SKInfo::magic3 = SKInfo::magic1*boost::math::tgamma(-5./6)/pow(2., 11./6);
-    const double SKInfo::magic5 = 2*boost::math::tgamma(11./6)*boost::math::tgamma(11./6)
-                                / pow(M_PI, 8./3)
-                                * pow(24/5.*boost::math::tgamma(6./5), 5./6);
-
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _r0(r0), _r0m53(pow(r0, -5./3)), _diam(diam), _obscuration(obscuration), _L0(L0),
@@ -183,7 +175,15 @@ namespace galsim {
     // }
 
     double SKInfo::vkStructureFunction(double rho) const {
-    // rho in meters
+        // rho in meters
+
+        // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
+        static const double magic1 = 0.1716613621245708932;
+        // gamma(5/6) / 2^(1/6)
+        static const double magic2 = 1.005634917998590172;
+        // magic1 * gamma(-5/6) / 2^(11/6)
+        static const double magic3 = -0.3217609479366896341;
+
         double rhoL0 = rho/_L0;
         if (rhoL0 < 1e-6) {
             return -magic3*fast_pow(2*M_PI*rho/_r0, 5./3);
@@ -194,6 +194,9 @@ namespace galsim {
     }
 
     double SKInfo::structureFunction(double rho) const {
+        // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
+        const static double magic5 = 0.2877144330394485472;
+
         SKISFIntegrand I(rho, _L0invsq);
         double complement = integ::int1d(I, 0, _kcrit,
                                          _gsparams->integration_relerr,

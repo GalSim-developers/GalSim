@@ -73,11 +73,6 @@ namespace galsim {
         double _maxk;
         double _hlr; // half-light-radius
 
-        // Magic constants that we can compute once and store.
-        const static double magic1;
-        const static double magic2;
-        const static double magic3;
-        const static double magic5; // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
         const GSParamsPtr _gsparams;
 
         boost::shared_ptr<SBAiry> _airy;
