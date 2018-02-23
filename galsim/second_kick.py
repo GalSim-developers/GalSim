@@ -66,7 +66,7 @@ class SecondKick(GSObject):
     @param diam              Aperture diameter in meters.
     @param obscuration       Linear dimension of central obscuration as fraction of aperture
                              linear dimension. [0., 1.).  [default: 0.0]
-    @param L0                Outer scale in meters.  [default: np.inf]
+    @param L0                Outer scale in meters.  [default: 25.0]
     @param kcrit             Critical Fourier mode below which the turbulence power spectrum will be
                              truncated.
     @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
@@ -77,7 +77,7 @@ class SecondKick(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, diam, obscuration=0, L0=np.inf, kcrit=None, flux=1,
+    def __init__(self, lam, r0, diam, obscuration=0, L0=25.0, kcrit=None, flux=1,
                  scale_unit=galsim.arcsec, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.

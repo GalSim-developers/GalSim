@@ -1188,7 +1188,6 @@ class PhaseScreenPSF(GSObject):
             if r0_500 is None:  # No AtmosphericScreens in list
                 self._kcrit = float('inf')
             else:
-                L0 = self._screen_list.L0_effective
                 r0 = r0_500 * (self.lam/500.)**(6./5)
                 self._kcrit = self._kcrit_factor / r0
         return self._kcrit
