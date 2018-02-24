@@ -202,6 +202,40 @@ def test_sk_phase_psf():
         # fig.tight_layout()
         # plt.show()
 
+@timer
+def test_sk_scale():
+    """Test sk scale argument"""
+    kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'diam':4.0, 'flux':2.2}
+    sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
+    sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
+    do_pickle(sk_arcmin)
+
+    np.testing.assert_almost_equal(sk_arcsec.flux, sk_arcmin.flux)
+    np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 0.0), sk_arcmin.kValue(0.0, 0.0))
+    np.testing.assert_almost_equal(sk_arcsec.kValue(0.0, 10.0), sk_arcmin.kValue(0.0, 600.0))
+    np.testing.assert_almost_equal(sk_arcsec.xValue(0.0, 6.0), sk_arcmin.xValue(0.0, 0.1))
+
+    img1 = sk_arcsec.drawImage(nx=32, ny=32, scale=0.2)
+    img2 = sk_arcmin.drawImage(nx=32, ny=32, scale=0.2/60.0)
+    np.testing.assert_almost_equal(img1.array, img2.array)
+
+
+@timer
+def test_sk_ne():
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+
+    objs = [galsim.SecondKick(lam=500.0, r0=0.2, diam=4.0),
+            galsim.SecondKick(lam=550.0, r0=0.2, diam=4.0),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.0),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, obscuration=0.4),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e11),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, kcrit=1.234),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, flux=2.2),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, scale_unit='arcmin'),
+            galsim.SecondKick(lam=500.0, r0=0.2, diam=4.0, gsparams=gsp)]
+    all_obj_diff(objs)
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -221,6 +255,8 @@ if __name__ == '__main__':
     test_limiting_cases()
     test_sf_lut(args.slow)
     test_sk_phase_psf()
+    test_sk_scale()
+    test_sk_ne()
 
     if args.profile:
         pr.disable()
