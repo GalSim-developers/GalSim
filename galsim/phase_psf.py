@@ -734,7 +734,7 @@ class PhaseScreenList(object):
                 layer.instantiate(**kwargs)
             except AttributeError:
                 pass
-            if _bar:
+            if _bar:  # pragma: no cover
                 _bar.update()
 
     def _delayCalculation(self, psf):
@@ -1313,7 +1313,7 @@ class PhaseScreenPSF(GSObject):
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
-        if self._bar:
+        if self._bar:  # pragma: no cover
             self._bar.update()
 
     def _finalize(self):
