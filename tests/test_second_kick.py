@@ -104,6 +104,11 @@ def test_limiting_cases():
             limiting_case.kValue(0, k).real,
             rtol=1e-3,
             atol=1e-4)
+    # Check half_light_radius agrees.  Only implemented for obscuration=0, and somewhat
+    # approximate for second kick.
+    airy = galsim.Airy(lam=lam, diam=diam)
+    sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, kcrit=np.inf)
+    assert np.abs(sk.half_light_radius/airy.half_light_radius - 1.0) < 1e-2
 
 
 @timer
