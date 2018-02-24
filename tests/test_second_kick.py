@@ -210,7 +210,7 @@ def test_sk_phase_psf():
 @timer
 def test_sk_scale():
     """Test sk scale argument"""
-    kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'diam':4.0, 'flux':2.2}
+    kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
     sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
     do_pickle(sk_arcmin)
