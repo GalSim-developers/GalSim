@@ -58,7 +58,7 @@ dmag: not used
 
 sn_ellip_gauss: SNR of the galaxy measured with an elliptical gaussian filter.
 
-min_mask_dist_pixels: Distance from the center of postage stamp tp the nearest masked pixel.
+min_mask_dist_pixels: Distance from the center of postage stamp to the nearest masked pixel.
 
 average_mask_adjacent_pixel_count: Average pixel value of the 3*3 pixel region around the nearest masked pixel, before masking.
 
