@@ -376,7 +376,7 @@ Noise maps generated from the mean covariance matrix for each filter are shown i
 To replace nearby objects with noise, a region that is identical in size and shape to the nearby object in the segmentation map is cut from a random location in the noise map shown in \autoref{fig:noise_map} and used to replace the pixel values for the nearby object in the galaxy postage stamp.  
 
 \subsection{Parametric Fits}
-The COSMOS catalog galaxies were subject to an additional step of fitting for parametric models. This step was not performed here, and the values in the output catalogs corresponding to these parameters were manually set to 999.
+The COSMOS catalog galaxies for the GREAT3 challenge were subject to an additional step of fitting for parametric models. This step was not performed here, and the values in the output catalogs corresponding to these parameters were manually set to 999.
 
 \subsection{PSF Postage Stamp}
 The PSF for each galaxy is taken to be the {\tt Tiny Tim} model PSF image whose location in the {\tt Tiny Tim} grid is closest to that galaxy's position in the focal plane, for the best-fit focus offset described in \autoref{ssec:psf}. Square postage stamps ($20 \times 20$ pixels) are drawn for each filter.
