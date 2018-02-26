@@ -430,7 +430,7 @@ class InterpolatedImage(GSObject):
             b = self._buildNoisePadImage(noise_pad_size, noise_pad, rng, use_cache)
             nz_bounds += b
 
-        # The the user gives us a pad image to use, fill the relevane portion with that.
+        # The the user gives us a pad image to use, fill the relevant portion with that.
         if pad_image:
             assert self._xim.bounds.includes(pad_image.bounds)
             self._xim[pad_image.bounds] = pad_image
@@ -560,7 +560,7 @@ class InterpolatedImage(GSObject):
             return self._sbii.maxK() / max_scale
         else:
             return self._x_interpolant.krange / max_scale
- 
+
     def __eq__(self, other):
         return (isinstance(other, InterpolatedImage) and
                 self._xim == other._xim and
@@ -575,9 +575,17 @@ class InterpolatedImage(GSObject):
     def __hash__(self):
         # Definitely want to cache this, since the size of the image could be large.
         if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                               self.flux, self._offset, self.gsparams, self._stepk, self._maxk,
-                               self._xim.bounds, self._xim.wcs))
+            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant))
+            self._hash ^= hash((self.flux, self._stepk, self._maxk, self._pad_factor))
+            self._hash ^= hash((self._xim.bounds, self._image.bounds, self._pad_image.bounds))
+            # A common offset is 0.5,0.5, and *sometimes* this produces the same hash as 0,0
+            # (which is also common).  I guess because they are only different in 2 bits.
+            # This mucking of the numbers seems to help make the hash more reliably different for
+            # these two cases.  Note: "sometiems" because of this:
+            # https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
+            self._hash ^= hash((self._offset.x * 1.234, self._offset.y * 0.23424))
+            self._hash ^= hash(self._gsparams)
+            self._hash ^= hash(self._xim.wcs)
             # Just hash the diagonal.  Much faster, and usually is unique enough.
             # (Let python handle collisions as needed if multiple similar IIs are used as keys.)
             self._hash ^= hash(tuple(np.diag(self._pad_image.array)))
@@ -656,7 +664,7 @@ class InterpolatedImage(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _InterpolatedImage(image, x_interpolant, k_interpolant,
+def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
                        use_true_center=True, offset=None, gsparams=None,
                        force_stepk=0., force_maxk=0.):
     """Approximately equivalent to InterpolatedImage, but with fewer options and no sanity checks.
@@ -666,13 +674,13 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     1. There are no padding options. The image must be provided with all padding already applied.
     2. The stepk and maxk values will not be calculated.  If you want to use values for these other
        than the default, you may provide them as force_stepk and force_maxk.  Otherwise
-       stepk ~= 2pi / image_size and max_k ~= 2pi / pixel_scale.
+       stepk ~= 2pi / image_size and maxk ~= x_interpolant.krange() / pixel_scale.
     3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
     4. The input image must have a defined wcs.
 
     @param image            The Image from which to construct the object.
-    @param x_interpolant    An Interpolant instance for real-space interpolation.
-    @param k_interpolant    An Interpolant instance for k-space interpolation.
+    @param x_interpolant    An Interpolant instance for real-space interpolation [default: Quintic]
+    @param k_interpolant    An Interpolant instance for k-space interpolation [default: Quintic]
     @param use_true_center  Whether to use the true center of the provided image as the center
                             of the profile. [default: True]
     @param offset           The location in the input image to use as the center of the profile.
@@ -695,13 +703,31 @@ def _InterpolatedImage(image, x_interpolant, k_interpolant,
     ret._offset = ret._fix_offset(ret._image.bounds, offset, use_true_center)
     im_cen = ret._image.true_center if use_true_center else ret._image.center
     ret._wcs = ret._image.wcs.local(image_pos = im_cen)
-    ret._xim = ret._image
-    ret._pad_image = ret._image
     ret._pad_factor = 1.
     ret._image_flux = np.sum(ret._image.array, dtype=float)
     ret._flux = ret._image_flux
-    ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)
-    ret._maxk = ret._x_interpolant.krange / ret._wcs._maxScale()
+
+    # If image isn't a good fft size, we may still need to pad it out.
+    size = max(ret._image.array.shape)
+    pad_size = Image.good_fft_size(size)
+    if size == pad_size:
+        ret._xim = ret._image
+    else:
+        ret._xim = Image(pad_size, pad_size, dtype=ret._image.dtype)
+        ret._xim.setCenter(ret._image.center)
+        ret._xim[ret._image.bounds] = ret._image
+        ret._xim.wcs = ret._wcs
+        ret._image = ret._xim[ret._image.bounds]
+    ret._pad_image = ret._image
+
+    if force_stepk == 0.:
+        ret._stepk = ret._getSimpleStepK(np.max(ret._image.array.shape) / 2. - 0.5)
+    else:
+        ret._stepk = force_stepk
+    if force_maxk == 0.:
+        ret._maxk = ret._x_interpolant.krange / ret._wcs._maxScale()
+    else:
+        ret._maxk = force_maxk
     return ret
 
 

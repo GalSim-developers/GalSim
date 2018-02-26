@@ -699,6 +699,7 @@ class AutoConvolution(Convolution):
     def _prepareDraw(self):
         self.orig_obj._prepareDraw()
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, ud)
@@ -841,6 +842,7 @@ class AutoCorrelation(Convolution):
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
 
+    @doc_inherit
     def _shoot(self, photons, ud):
         from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, ud)

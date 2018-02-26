@@ -106,7 +106,7 @@ class Gaussian(GSObject):
         self._gsparams = GSParams.check(gsparams)
         self._sigsq = sigma**2
         self._inv_sigsq = 1./self._sigsq
-        self._norm = self.flux * self._inv_sigsq * self._inv_twopi
+        self._norm = self.flux * self._inv_sigsq * Gaussian._inv_twopi
 
     @lazy_property
     def _sbp(self):
@@ -155,7 +155,7 @@ class Gaussian(GSObject):
     @property
     def _stepk(self):
         R = max(math.sqrt(-2.*math.log(self.gsparams.folding_threshold)),
-                self.gsparams.stepk_minimum_hlr*self._hlr_factor)
+                self.gsparams.stepk_minimum_hlr * Gaussian._hlr_factor)
         return math.pi / (R * self.sigma)
 
     @property

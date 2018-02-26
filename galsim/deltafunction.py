@@ -93,20 +93,20 @@ class DeltaFunction(GSObject):
 
     @property
     def _maxk(self):
-        return self._mock_inf
+        return DeltaFunction._mock_inf
 
     @property
     def _stepk(self):
-        return self._mock_inf
+        return DeltaFunction._mock_inf
 
     @property
     def _max_sb(self):
-        return self._mock_inf
+        return DeltaFunction._mock_inf
 
     @doc_inherit
     def _xValue(self, pos):
         if pos.x == 0. and pos.y == 0.:
-            return self._mock_inf
+            return DeltaFunction._mock_inf
         else:
             return 0.
 

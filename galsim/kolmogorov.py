@@ -158,13 +158,13 @@ class Kolmogorov(GSObject):
                 raise TypeError(
                         "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) may be specified for Kolmogorov")
-            self._lor0 = float(fwhm) / self._fwhm_factor
+            self._lor0 = float(fwhm) / Kolmogorov._fwhm_factor
         elif half_light_radius is not None:
             if any(item is not None for item in (lam_over_r0, lam, r0, r0_500)):
                 raise TypeError(
                         "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) may be specified for Kolmogorov")
-            self._lor0 = float(half_light_radius) / self._hlr_factor
+            self._lor0 = float(half_light_radius) / Kolmogorov._hlr_factor
         elif lam_over_r0 is not None:
             if any(item is not None for item in (lam, r0, r0_500)):
                 raise TypeError("Cannot specify lam, r0 or r0_500 in conjunction with lam_over_r0.")
@@ -183,7 +183,7 @@ class Kolmogorov(GSObject):
                 r0 = r0_500 * (lam/500.)**1.2
             self._lor0 = (1.e-9*float(lam)/float(r0))*(radians/scale_unit)
 
-        self._k0 = self._k0_factor / self._lor0
+        self._k0 = Kolmogorov._k0_factor / self._lor0
 
     @lazy_property
     def _sbp(self):
@@ -196,13 +196,13 @@ class Kolmogorov(GSObject):
     def fwhm(self):
         """Return the FWHM of this Kolmogorov profile.
         """
-        return self._lor0 * self._fwhm_factor
+        return self._lor0 * Kolmogorov._fwhm_factor
 
     @property
     def half_light_radius(self):
         """Return the half light radius of this Kolmogorov profile.
         """
-        return self._lor0 * self._hlr_factor
+        return self._lor0 * Kolmogorov._hlr_factor
 
     def __eq__(self, other):
         return (isinstance(other, Kolmogorov) and
@@ -243,7 +243,7 @@ class Kolmogorov(GSObject):
 
     @property
     def _max_sb(self):
-        return self._flux * self._k0**2 * self._xzero
+        return self._flux * self._k0**2 * Kolmogorov._xzero
 
     @doc_inherit
     def _xValue(self, pos):

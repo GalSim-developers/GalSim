@@ -139,6 +139,7 @@ from .convolve import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelat
 from .fouriersqrt import FourierSqrt, FourierSqrtProfile
 from .randwalk import RandomWalk
 from .transform import Transform, Transformation, _Transform
+from .vonkarman import VonKarman
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum

@@ -79,7 +79,7 @@ class Exponential(GSObject):
                         "Only one of scale_radius and half_light_radius may be " +
                         "specified for Exponential")
             else:
-                scale_radius = half_light_radius / self._hlr_factor
+                scale_radius = half_light_radius / Exponential._hlr_factor
         elif scale_radius is None:
                 raise TypeError(
                         "Either scale_radius or half_light_radius must be " +
@@ -88,7 +88,7 @@ class Exponential(GSObject):
         self._flux = float(flux)
         self._gsparams = GSParams.check(gsparams)
         self._inv_r0 = 1./self._r0
-        self._norm = self._flux * self._inv_twopi * self._inv_r0**2
+        self._norm = self._flux * Exponential._inv_twopi * self._inv_r0**2
 
     @lazy_property
     def _sbp(self):
@@ -97,7 +97,7 @@ class Exponential(GSObject):
     @property
     def scale_radius(self): return self._r0
     @property
-    def half_light_radius(self): return self._r0 * self._hlr_factor
+    def half_light_radius(self): return self._r0 * Exponential._hlr_factor
 
     def __eq__(self, other):
         return (isinstance(other, Exponential) and
@@ -129,7 +129,7 @@ class Exponential(GSObject):
 
     @property
     def _maxk(self):
-        return (self.gsparams.maxk_threshold ** -self._one_third) / self.scale_radius
+        return (self.gsparams.maxk_threshold ** -Exponential._one_third) / self.scale_radius
 
     @property
     def _stepk(self):

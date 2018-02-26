@@ -78,7 +78,7 @@ from .image import Image, _Image
 from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
-from .utilities import doc_inherit
+from .utilities import doc_inherit, OrderedWeakRef, rotate_xy
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -318,7 +318,6 @@ class Aperture(object):
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
         """
-        from . import utilities
         ratio = pupil_plane_size/pupil_plane_scale
         # Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.
         ratio *= (1.0 - 1.0/2**14)
@@ -350,11 +349,11 @@ class Aperture(object):
             # Add the initial rotation if requested, converting to radians.
             rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
+                rot_u, rot_v = rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in range(nstruts):
-                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
+                rot_u, rot_v = rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, pupil_plane_scale, good_pupil_scale,
@@ -660,7 +659,6 @@ class PhaseScreenList(object):
         self._layers = list(layers)
         self._update_attrs()
         self._pending = []  # Pending PSFs to calculate upon first drawImage.
-        self._update_time_heap = []  # Heap to store each PSF's next time-of-update.
 
     def __len__(self):
         return len(self._layers)
@@ -738,40 +736,43 @@ class PhaseScreenList(object):
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
-        self._pending.append(psf)
-        heappush(self._update_time_heap, (psf.t0, len(self._pending)-1))
+        heappush(self._pending, (psf.t0, OrderedWeakRef(psf)))
 
     def _prepareDraw(self):
         """Calculate previously delayed PSFs."""
         if not self._pending:
             return
-            # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
-            # in a simple loop.
+        # See if we have any dynamic screens.  If not, then we can immediately compute each PSF
+        # in a simple loop.
         if not self.dynamic:
-            for psf in self._pending:
-                psf._step()
-                psf._finalize()
+            for _, psfref in self._pending:
+                psf = psfref()
+                if psf is not None:
+                    psf._step()
+                    psf._finalize()
             self._pending = []
             self._update_time_heap = []
             return
 
         # If we do have time-evolving screens, then iteratively increment the time while being
         # careful to always stop at multiples of each PSF's time_step attribute to update that PSF.
-        # Use a heap to track the next time to stop at.
-        while(self._update_time_heap):
+        # Use a heap (in _pending list) to track the next time to stop at.
+        while(self._pending):
             # Get and seek to next time that has a PSF update.
-            t, i = heappop(self._update_time_heap)
-            self._seek(t)
-            # Update that PSF
-            psf = self._pending[i]
-            psf._step()
-            # If that PSF's next possible update time doesn't extend past its exptime, then
-            # push it back on the heap.
-            t += psf.time_step
-            if t < psf.t0 + psf.exptime:
-                heappush(self._update_time_heap, (t, i))
-            else:
-                psf._finalize()
+            t, psfref = heappop(self._pending)
+            # Check if this PSF weakref is still alive
+            psf = psfref()
+            if psf is not None:
+                # If it's alive, update this PSF
+                self._seek(t)
+                psf._step()
+                # If that PSF's next possible update time doesn't extend past its exptime, then
+                # push it back on the heap.
+                t += psf.time_step
+                if t < psf.t0 + psf.exptime:
+                    heappush(self._pending, (t, OrderedWeakRef(psf)))
+                else:
+                    psf._finalize()
         self._pending = []
 
     def wavefront(self, u, v, t, theta=(0.0*radians, 0.0*radians)):

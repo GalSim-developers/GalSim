@@ -22,6 +22,7 @@ import functools
 from contextlib import contextmanager
 from future.utils import iteritems
 from builtins import range, object
+import weakref
 
 
 import numpy as np
@@ -1461,3 +1462,8 @@ class doc_inherit(object):
             raise NameError("Can't find '%s' in parents"%self.name)
         func.__doc__ = source.__doc__
         return func
+
+# Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.
+class OrderedWeakRef(weakref.ref):
+    def __lt__(self, other):
+        return id(self) < id(other)
