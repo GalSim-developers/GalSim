@@ -328,9 +328,9 @@ The combined segmentation-map of the region is used to determine which pixels co
 After the above cleaning step, we find that sometimes the other object is too close to the central galaxy or too bright for it to be effectively masked.
 If a galaxy is too bright, then its segmentation region (computed with bright SExtractor settings)  is not able to encapsulate all the bright pixels, leading to imperfect masking. Also  if two galaxies are close to each other, the segmentation map assigns a pixel to just one galaxy or the other, leading to sharp edges. The segmentation map assigns a pixel to a single galaxy. Thus if two galaxies are close to each other, a pixel in between them  is assigned to just one galaxy. This may result in abrupt changes in the assignment of neighboring pixels, causing sharp edges in the surface brightness profiles in the cleaned galaxy postage stamps. The postage stamp cleaning step  does not take into account blended galaxies, leading to spurious galaxy shapes. 
 
-To help identify such bad postage stamps,
+We use the technique used in creating the dataset for the GREAT3 challenge \citep{Mandelbaum2014} to help identify such bad postage stamps.
 %(see \autoref{sec:rem_bad_stamps}), 
-during the cleaning step we identify the pixel that is closest to the center of the postage stamp (i.e., the center of the selected object) {\em and} has had its value replaced by noise. 
+During the cleaning step we identify the pixel that is closest to the center of the postage stamp (i.e., the center of the selected object) {\em and} has had its value replaced by noise. 
 Two parameters are measured for this pixel:
 \begin{enumerate}
 \item  {\tt min\_mask\_dist\_pixels}: the distance from the center of the postage stamp to the closest replaced pixel;
