@@ -5,7 +5,7 @@
 #   conda install -c conda-forge --file conda_requirements.txt
 # prior to running pip install -r requirements.txt
 setuptools>=38
-eigency>=1.77
+#eigency>=1.78  # 1.77 still doesn't work.  Oops.  (My fault.)
 numpy>=1.13
 future>=0.15
 astropy>=2.0

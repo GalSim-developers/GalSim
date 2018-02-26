@@ -637,7 +637,7 @@ try:
     find_eigen_dir()
 except OSError:
     print('Adding eigency to build_dep')
-    build_dep += ['eigency>=1.77']
+    build_dep += ['eigency>=1.78']
 
 
 with open('README.md') as file:
