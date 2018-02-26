@@ -10,7 +10,7 @@ the final catalog, at a given half light radius. Due to the small number of
 galaxies at high half light radius in the parent sample, this definition  
 breaks down. Thus weight for large galaxies is set to 1, and the weights of
 other galaxies were renormalized. 
-Since the magnitude cut in the parent sample was placed in teh I band, the
+Since the magnitude cut in the parent sample was placed in the I band, the
 weight for each galxy was computed in this band and set the same for all other 
 bands. 
 """
