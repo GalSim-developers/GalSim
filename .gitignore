@@ -25,3 +25,4 @@ examples_bin
 *.egg*
 build
 dist
+.pytest_cache
