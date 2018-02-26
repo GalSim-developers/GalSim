@@ -123,6 +123,28 @@ namespace galsim {
         }
     };
 
+    template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4,
+              typename Key5>
+    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4,Key5> >
+    {
+        static Value* NewValue(const boost::tuple<Key1,Key2,Key3,Key4,Key5>& key)
+        {
+            return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key),
+                             boost::get<3>(key), boost::get<4>(key));
+        }
+    };
+
+    template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4,
+              typename Key5, typename Key6>
+    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4,Key5,Key6> >
+    {
+        static Value* NewValue(const boost::tuple<Key1,Key2,Key3,Key4,Key5,Key6>& key)
+        {
+            return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key),
+                             boost::get<3>(key), boost::get<4>(key), boost::get<5>(key));
+        }
+    };
+
     /**
      * @brief Least Recently Used Cache
      *
@@ -213,4 +235,3 @@ namespace galsim {
 }
 
 #endif
-

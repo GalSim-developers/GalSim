@@ -667,6 +667,55 @@ def test_speedup():
     #print('t = ',t1-t0)
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
+@timer
+def test_gc():
+    """Make sure that pending psfs don't leak memory.
+    """
+    import gc
+    gc.collect()
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15)
+
+    # First check that no PhaseScreenPSFs are known to the garbage collector
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # Make a PhaseScreenPSF and check that it s known to the garbage collector
+    psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    assert any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # If we delete it, it disappears everywhere
+    del psf
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # If we draw one using photon-shooting, it still exists in _pending
+    psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psf.drawImage(nx=10, ny=10, scale=0.2, method='phot', n_photons=100)
+    assert psf in [p[1]() for p in atm._pending]
+
+    # If we draw even one of many using fft, _pending gets completely emptied
+    psf2 = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psf.drawImage(nx=10, ny=10, scale=0.2)
+    assert atm._pending == []
+
+    # And if then deleted, they again don't exist anywhere
+    del psf, psf2
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # A corner case revealed in coverage tests:
+    # Make sure that everything still works if some, but not all static pending PSFs are deleted.
+    screen = galsim.OpticalScreen(diam=1.1)
+    phaseScreenList = galsim.PhaseScreenList(screen)
+    psf1 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf2 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf3 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    del psf2
+    psf1.drawImage(nx=10, ny=10, scale=0.2)
+    del psf1, psf3
+    assert phaseScreenList._pending == []
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
 
 if __name__ == "__main__":
     test_aperture()
@@ -684,3 +733,4 @@ if __name__ == "__main__":
     test_input()
     test_r0_weights()
     test_speedup()
+    test_gc()

@@ -35,7 +35,7 @@ representing the shape.
 The PSF correction includes several algorithms, three that are re-implementations of methods
 originated by others and one that was originated by Hirata & Seljak:
 
-- One from Kaiser, Squires, & Broadhurts (1995), "KSB"
+- One from Kaiser, Squires, & Broadhurst (1995), "KSB"
 
 - One from Bernstein & Jarvis (2002), "BJ"
 

@@ -299,7 +299,7 @@ def do_shoot(prof, img, name):
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
-    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name:
+    elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:
         img = galsim.ImageD(512,512, scale=dx)
     else:
         img = galsim.ImageD(128,128, scale=dx)
@@ -667,10 +667,10 @@ else:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 yield w
-            assert len(w) >= 1, \
-                    "Calling %s did not raise a warning with %s, %s"%(f, args, kwargs)
+            assert len(w) >= 1, "Expected warning %s was not raised."%(wtype)
             assert issubclass(w[0].category, wtype), \
-                    "%s with %s, %s raised the wrong warning type"%(f, args, kwargs)
+                    "Warning raised was the wrong type (got %s, expected %s)"%(
+                    w[0].category, wtype)
         else:
             # When used as a regular function
             func = args[0]
