@@ -51,7 +51,7 @@ namespace galsim {
         double kValue(double) const;
         double xValue(double) const;
         double structureFunction(double rho) const;
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double kValueNoTrunc(double) const;
         double rawXValue(double) const;
@@ -71,10 +71,10 @@ namespace galsim {
         bool _doDelta;
         double _hlr; // half-light-radius
 
-        const GSParamsPtr _gsparams;
+        const GSParamsPtr& _gsparams;
 
-        TableDD _radial;
-        boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        TableBuilder _radial;
+        shared_ptr<OneDimensionalDeviate> _sampler;
 
         void _buildRadialFunc();
     };
@@ -91,7 +91,7 @@ namespace galsim {
     {
     public:
         SBVonKarmanImpl(double lam, double r0, double L0, double flux, double scale, bool doDelta,
-                        const GSParamsPtr& gsparams);
+                        const GSParams& gsparams);
         ~SBVonKarmanImpl() {}
 
         bool isAxisymmetric() const { return true; }
@@ -122,7 +122,7 @@ namespace galsim {
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+        void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
         double xValue(const Position<double>& p) const;
         double xValue(double r) const;
@@ -160,13 +160,13 @@ namespace galsim {
         double _scale;
         bool _doDelta;
 
-        boost::shared_ptr<VonKarmanInfo> _info;
+        shared_ptr<VonKarmanInfo> _info;
 
         // Copy constructor and op= are undefined.
         SBVonKarmanImpl(const SBVonKarmanImpl& rhs);
         void operator=(const SBVonKarmanImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
+        static LRUCache<Tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
     };
 }
 

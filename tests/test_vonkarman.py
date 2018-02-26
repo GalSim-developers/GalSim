@@ -62,8 +62,6 @@ def test_vk(slow=False):
 
                     check_basic(vk, "VonKarman")
                     do_pickle(vk)
-                    do_pickle(vk._sbp)
-                    do_pickle(vk._sbp, lambda x: (x.getFlux(), x.getGSParams()))
 
                     img = galsim.Image(16, 16, scale=0.2)
                     if not do_delta:
