@@ -103,9 +103,6 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
     np.testing.assert_allclose(
             image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
             err_msg="%s profile flux not close to sum of pixel values"%name)
-    np.testing.assert_almost_equal(
-            prof.positive_flux - prof.negative_flux, prof.flux,
-            err_msg="%s profile flux not equal to posflux + negflux"%name)
 
     print('  maxsb: ',prof.max_sb, image.array.max())
     #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
@@ -127,6 +124,25 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
                 err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
+        assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+        assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+
+    # Direct call to drawReal should also work and be equivalent to the above with scale = 1.
+    prof.drawImage(image, method='sb', scale=1., use_true_center=False)
+    image2 = image.copy()
+    prof.drawReal(image2)
+    np.testing.assert_equal(image2.array, image.array,
+                            err_msg="%s drawReal not equivalent to drawImage"%name)
+
+    # If supposed to be axisymmetric, make sure it is.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.xValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.xValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in xValues"%name)
+
 
 def check_basic_k(prof, name):
     """Check drawKImage
@@ -161,6 +177,17 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
                 err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
+        assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+        assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
+
+    # If supposed to be axisymmetric, make sure it is in the kValues.
+    if prof.is_axisymmetric:
+        for r in [0.2, 1.3, 33.4]:
+            ref_value = prof.kValue(0, r)  # Effectively theta = pi/2
+            test_values = [prof.kValue(r*np.cos(t), r*np.sin(t)) for t in [0., 0.3, 0.9, 1.3, 2.9]]
+            print(ref_value,test_values)
+            np.testing.assert_allclose(test_values, ref_value, rtol=1.e-5,
+                                       err_msg="%s profile not axisymmetric in kValues"%name)
 
 def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
     """Do some basic sanity checks that should work for all profiles.
@@ -170,6 +197,22 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
         check_basic_x(prof, name, approx_maxsb, scale)
     if do_k and prof.is_analytic_k:
         check_basic_k(prof, name)
+
+    # A few things that should work regardless of what is analytic
+    np.testing.assert_almost_equal(
+            prof.positive_flux - prof.negative_flux, prof.flux,
+            err_msg="%s profile flux not equal to posflux + negflux"%name)
+    assert isinstance(prof.centroid, galsim.PositionD)
+    assert isinstance(prof.flux, float)
+    assert isinstance(prof.positive_flux, float)
+    assert isinstance(prof.negative_flux, float)
+    assert isinstance(prof.max_sb, float)
+    assert isinstance(prof.stepk, float)
+    assert isinstance(prof.maxk, float)
+    assert isinstance(prof.has_hard_edges, bool)
+    assert isinstance(prof.is_axisymmetric, bool)
+    assert isinstance(prof.is_analytic_x, bool)
+    assert isinstance(prof.is_analytic_k, bool)
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),
@@ -394,6 +437,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision and truncation threshold for testing.
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
+        #print('obj1 = ',repr(obj1))
+        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:

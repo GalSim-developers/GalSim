@@ -195,7 +195,7 @@ def test_kolmogorov_radii():
                 lor, test_gal.lam_over_r0, decimal=9,
                 err_msg="Error in Kolmogorov, lor != lam_over_r0")
 
-        # test that fwhm property provides correct FWHM
+        # test that fwhm provides correct FWHM
         got_fwhm = test_gal.fwhm
         print('got_fwhm = ',got_fwhm)
         test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
@@ -222,7 +222,7 @@ def test_kolmogorov_radii():
             hlr_sum, 0.5, decimal=3,
             err_msg="Error in Kolmogorov constructor with half-light radius")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     print('got_fwhm = ',got_fwhm)
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /

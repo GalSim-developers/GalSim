@@ -150,12 +150,12 @@ class ShapeData(object):
         # The others will raise an appropriate TypeError from the call to _galsim.ShapeData.
 
         self._data = _galsim.ShapeData(
-            image_bounds._b, moments_status, observed_shape.e1, observed_shape.e2,
-            moments_sigma, moments_amp, moments_centroid._p, moments_rho4,
-            moments_n_iter, correction_status, corrected_e1, corrected_e2,
-            corrected_g1, corrected_g2, meas_type, corrected_shape_err,
-            correction_method, resolution_factor, psf_sigma,
-            psf_shape.e1, psf_shape.e2, error_message)
+            image_bounds._b, int(moments_status), observed_shape.e1, observed_shape.e2,
+            float(moments_sigma), float(moments_amp), moments_centroid._p, float(moments_rho4),
+            int(moments_n_iter), int(correction_status), float(corrected_e1), float(corrected_e2),
+            float(corrected_g1), float(corrected_g2), str(meas_type), float(corrected_shape_err),
+            str(correction_method), float(resolution_factor), float(psf_sigma),
+            psf_shape.e1, psf_shape.e2, str(error_message))
 
 
     @property
@@ -347,21 +347,21 @@ class HSMParams(object):
                  num_iter_default=-1, bound_correct_wt=0.25, max_amoment=8000., max_ashift=15.,
                  ksb_moments_max=4, ksb_sig_weight=0.0, ksb_sig_factor=1.0, failed_moments=-1000.):
 
-        self._nsig_rg = nsig_rg
-        self._nsig_rg2 = nsig_rg2
-        self._max_moment_nsig2 = max_moment_nsig2
-        self._regauss_too_small = regauss_too_small
-        self._adapt_order = adapt_order
-        self._convergence_threshold = convergence_threshold
-        self._max_mom2_iter = max_mom2_iter
-        self._num_iter_default = num_iter_default
-        self._bound_correct_wt = bound_correct_wt
-        self._max_amoment = max_amoment
-        self._max_ashift = max_ashift
-        self._ksb_moments_max = ksb_moments_max
-        self._ksb_sig_weight = ksb_sig_weight
-        self._ksb_sig_factor = ksb_sig_factor
-        self._failed_moments = failed_moments
+        self._nsig_rg = float(nsig_rg)
+        self._nsig_rg2 = float(nsig_rg2)
+        self._max_moment_nsig2 = float(max_moment_nsig2)
+        self._regauss_too_small = int(regauss_too_small)
+        self._adapt_order = int(adapt_order)
+        self._convergence_threshold = float(convergence_threshold)
+        self._max_mom2_iter = int(max_mom2_iter)
+        self._num_iter_default = int(num_iter_default)
+        self._bound_correct_wt = float(bound_correct_wt)
+        self._max_amoment = float(max_amoment)
+        self._max_ashift = float(max_ashift)
+        self._ksb_moments_max = int(ksb_moments_max)
+        self._ksb_sig_weight = float(ksb_sig_weight)
+        self._ksb_sig_factor = float(ksb_sig_factor)
+        self._failed_moments = float(failed_moments)
         self._make_hsmp()
 
     def _make_hsmp(self):
@@ -616,14 +616,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         result = ShapeData()
         _galsim._EstimateShearView(result._data,
                                    gal_image._image, PSF_image._image, weight._image,
-                                   sky_var = sky_var,
-                                   shear_est = shear_est.upper(),
-                                   recompute_flux = recompute_flux.upper(),
-                                   guess_sig_gal = guess_sig_gal,
-                                   guess_sig_PSF = guess_sig_PSF,
-                                   precision = precision,
-                                   guess_centroid = guess_centroid._p,
-                                   hsmparams = hsmparams._hsmp)
+                                   float(sky_var), shear_est.upper(), recompute_flux.upper(),
+                                   float(guess_sig_gal), float(guess_sig_PSF), float(precision),
+                                   guess_centroid._p, hsmparams._hsmp)
         return result
     except RuntimeError as err:
         if (strict == True):
@@ -731,8 +726,8 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         result = ShapeData()
         _galsim._FindAdaptiveMomView(result._data,
                                      object_image._image, weight._image,
-                                     guess_sig, precision, guess_centroid._p,
-                                     round_moments, hsmparams._hsmp)
+                                     float(guess_sig), float(precision), guess_centroid._p,
+                                     bool(round_moments), hsmparams._hsmp)
         return result
     except RuntimeError as err:
         if (strict == True):

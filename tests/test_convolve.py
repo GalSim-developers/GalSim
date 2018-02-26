@@ -782,27 +782,48 @@ def test_convolve_noise():
 
     # Convolution of multiple objects with noise attributes raises a warning and fails
     # to propagate noise properly.  (It takes the input noise from the first one.)
-    conv2 = galsim.Convolution([obj1, obj2])
-    conv3 = galsim.Convolution([obj1, obj2, obj3])
-    assert_warns(UserWarning, getattr, conv2, 'noise')
-    assert_warns(UserWarning, getattr, conv3, 'noise')
+    conv2 = galsim.Convolution(obj1, obj2)
+    conv3 = galsim.Convolution(obj1, obj2, obj3)
+    with assert_warns(UserWarning):
+        assert conv2.noise == obj1.noise.convolvedWith(obj2)
+    with assert_warns(UserWarning):
+        assert conv3.noise == obj1.noise.convolvedWith(galsim.Convolve(obj2,obj3))
 
     # Other types don't propagate noise and give a warning about it.
-    assert_warns(UserWarning, galsim.Deconvolve, obj1)
-    assert_warns(UserWarning, galsim.AutoConvolve, obj1)
-    assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
-    assert_warns(UserWarning, galsim.FourierSqrt, obj1)
+    deconv = galsim.Deconvolution(obj2)
+    autoconv = galsim.AutoConvolution(obj2)
+    autocorr = galsim.AutoCorrelation(obj2)
+    four = galsim.FourierSqrt(obj2)
+    with assert_warns(UserWarning):
+        assert deconv.noise is None
+    with assert_warns(UserWarning):
+        assert autoconv.noise is None
+    with assert_warns(UserWarning):
+        assert autocorr.noise is None
+    with assert_warns(UserWarning):
+        assert four.noise is None
 
     obj2.noise = None  # Remove obj2 noise for the rest.
+    conv2 = galsim.Convolution(obj1, obj2)
     noise = galsim.Convolve([obj1.noise._profile, obj2, obj2])
     variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
     np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
             err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+
+    conv3 = galsim.Convolution(obj1, obj2, obj3)
     noise = galsim.Convolve([obj1.noise._profile, obj2, obj2, obj3, obj3])
     variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
     np.testing.assert_almost_equal(conv3.noise.getVariance(), variance,
             err_msg = "Convolution of three objects did not correctly propagate noise varinace")
 
+    deconv = galsim.Deconvolution(obj2)
+    autoconv = galsim.AutoConvolution(obj2)
+    autocorr = galsim.AutoCorrelation(obj2)
+    four = galsim.AutoCorrelation(obj2)
+    assert deconv.noise is None
+    assert autoconv.noise is None
+    assert autocorr.noise is None
+    assert four.noise is None
 
 if __name__ == "__main__":
     test_convolve()

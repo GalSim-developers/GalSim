@@ -193,7 +193,7 @@ def test_moffat_radii():
             test_gal.half_light_radius, test_hlr,
             err_msg="Moffat half_light_radius returned wrong value")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -202,7 +202,7 @@ def test_moffat_radii():
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
 
-    # test that scale_radius property provides correct scale
+    # test that scale_radius provides correct scale
     got_scale = test_gal.scale_radius
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -220,8 +220,14 @@ def test_moffat_radii():
             ratio, pow(2,-test_beta), decimal=4,
             err_msg="Error in Moffat constructor with scale")
     np.testing.assert_equal(
+            test_gal.scale_radius, test_scale,
+            err_msg="Moffat scale_radius not correct")
+    np.testing.assert_equal(
+            test_gal.beta, test_beta,
+            err_msg="Moffat beta not correct")
+    np.testing.assert_equal(
             test_gal.trunc, 0,
-            err_msg="Moffat trunc returned wrong value")
+            err_msg="Moffat trunc not correct")
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.half_light_radius
@@ -231,7 +237,7 @@ def test_moffat_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with scale radius.")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -250,7 +256,7 @@ def test_moffat_radii():
             err_msg="Error in Moffat constructor with fwhm")
     np.testing.assert_equal(
             test_gal.fwhm, test_fwhm,
-            err_msg="Moffat fwhmeturned wrong value")
+            err_msg="Moffat fwhm returned wrong value")
 
     # then test that image indeed has the matching properties when radially integrated
     got_hlr = test_gal.half_light_radius
@@ -259,7 +265,7 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Moffat initialized with FWHM.")
-    # test that scale_radius property provides correct scale
+    # test that scale_radius provides correct scale
     got_scale = test_gal.scale_radius
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -278,8 +284,11 @@ def test_moffat_radii():
     np.testing.assert_almost_equal(
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in Moffat constructor with half-light radius")
+    np.testing.assert_equal(
+            test_gal.half_light_radius, test_hlr,
+            err_msg="Moffat hlr incorrect")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -288,7 +297,7 @@ def test_moffat_radii():
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Moffat initialized with half-light radius")
 
-    # test that scale_radius property provides correct scale
+    # test that scale_radius provides correct scale
     got_scale = test_gal.scale_radius
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -322,7 +331,7 @@ def test_moffat_radii():
             err_msg="Error in half light radius for truncated Moffat "+
                     "initialized with scale radius.")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -349,7 +358,7 @@ def test_moffat_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for truncated Moffat initialized with FWHM.")
 
-    # test that scale_radius property provides correct scale
+    # test that scale_radius provides correct scale
     got_scale = test_gal.scale_radius
     test_scale_ratio = (test_gal.xValue(galsim.PositionD(got_scale, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))

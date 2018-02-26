@@ -19,7 +19,6 @@
 
 #include "galsim/IgnoreWarnings.h"
 #include "boost/python.hpp"
-#include "boost/python/stl_iterator.hpp"
 
 #include "SBConvolve.h"
 
@@ -27,80 +26,26 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBConvolve
+    static SBConvolve* construct(const bp::list& slist, bool real_space, GSParams gsparams)
     {
-
-        // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBConvolve* construct(const bp::object& iterable, bool real_space,
-                                     GSParams gsparams)
-        {
-            bp::stl_input_iterator<SBProfile> begin(iterable), end;
-            std::list<SBProfile> plist(begin, end);
-            return new SBConvolve(plist, real_space, gsparams);
+        std::list<SBProfile> plist;
+        int n = len(slist);
+        for(int i=0; i<n; ++i) {
+            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
         }
-
-        static bp::list getObjs(const SBConvolve& sbp)
-        {
-            const std::list<SBProfile>& objs = sbp.getObjs();
-            std::list<SBProfile>::const_iterator it = objs.begin();
-            bp::list l;
-            for (; it != objs.end(); ++it) l.append(*it);
-            return l;
-        }
-
-        static void wrap()
-        {
-            bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
-                // bp tries the overloads in reverse order, so we wrap the most general one first
-                // to ensure we try it last
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("slist"), bp::arg("real_space"),
-                         bp::arg("gsparams")))
-                )
-                .def(bp::init<const SBConvolve&>())
-                .def("getObjs", getObjs)
-                .def("isRealSpace", &SBConvolve::isRealSpace)
-                ;
-        }
-
-    };
-
-    struct PySBAutoConvolve
-    {
-        static void wrap() {
-            bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBAutoConvolve&>())
-                .def("getObj", &SBAutoConvolve::getObj)
-                .def("isRealSpace", &SBAutoConvolve::isRealSpace)
-                ;
-        }
-
-    };
-
-    struct PySBAutoCorrelate
-    {
-        static void wrap() {
-            bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
-                .def(bp::init<const SBProfile&, bool, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("real_space"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBAutoCorrelate&>())
-                .def("getObj", &SBAutoCorrelate::getObj)
-                .def("isRealSpace", &SBAutoCorrelate::isRealSpace)
-                ;
-        }
-
-    };
+        return new SBConvolve(plist, real_space, gsparams);
+    }
 
     void pyExportSBConvolve()
     {
-        PySBConvolve::wrap();
-        PySBAutoConvolve::wrap();
-        PySBAutoCorrelate::wrap();
+        bp::class_< SBConvolve, bp::bases<SBProfile> >("SBConvolve", bp::no_init)
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+
+        bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
+            .def(bp::init<const SBProfile&, bool, GSParams>());
+
+        bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
+            .def(bp::init<const SBProfile&, bool, GSParams>());
     }
 
 } // namespace galsim

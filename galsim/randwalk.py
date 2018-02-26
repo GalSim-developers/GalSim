@@ -18,12 +18,13 @@
 
 import numpy as np
 
-import galsim
 from . import _galsim
-from .utilities import lazy_property
+from .gsparams import GSParams
+from .gsobject import GSObject
+from .position import PositionD
+from .utilities import lazy_property, doc_inherit
 
-
-class RandomWalk(galsim.GSObject):
+class RandomWalk(GSObject):
     """
     A class for generating a set of point sources distributed using a random
     walk.  Uses of this profile include representing an "irregular" galaxy, or
@@ -55,7 +56,7 @@ class RandomWalk(galsim.GSObject):
                                     any galsim.BaseDeviate.  If None, the rng
                                     is created internally.
                                     [default: None]
-    @param  gsparams                Optional GSParams for the gaussians
+    @param  gsparams                Optional GSParams for the objects
                                     representing each point source.
                                     [default: None]
 
@@ -72,8 +73,8 @@ class RandomWalk(galsim.GSObject):
         .npoints
         .input_half_light_radius
         .flux
-        .gaussians
-            The list of galsim.Gaussian objects representing the points
+        .deltas
+            The list of galsim.DeltaFunction objects representing the points
         .points
             The array of x,y offsets used to create the point sources
 
@@ -88,7 +89,6 @@ class RandomWalk(galsim.GSObject):
         1) there is no outer cutoff to how far a point can wander
         2) We use the approximation of an infinite number of steps.
     """
-
     # these allow use in a galsim configuration context
 
     _req_params = { "npoints" : int, "half_light_radius" : float }
@@ -96,38 +96,65 @@ class RandomWalk(galsim.GSObject):
     _single_params = []
     _takes_rng = True
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
+        from .random import BaseDeviate
 
-        self._half_light_radius = float(half_light_radius)
-
-        self._flux    = float(flux)
         self._npoints = int(npoints)
-
-        # size of the galsim.Gaussian objects to use as delta functions
-        self._gaussian_sigma = 1.0e-8
-
-        self._gsparams = galsim.GSParams.check(gsparams)
+        self._half_light_radius = float(half_light_radius)
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
 
         # we will verify this in the _verify() method
         if rng is None:
-            rng = galsim.BaseDeviate()
-
+            rng = BaseDeviate()
         self._rng=rng
-
         self._verify()
 
         self._set_gaussian_rng()
-
         self._points = self._get_points()
-        self._make_sbp()
 
-    def _make_sbp(self):
-        self._gaussians = self._get_gaussians(self._points)
-        self._sbp = galsim._galsim.SBAdd(self._gaussians, self.gsparams._gsp)
+    @property
+    def deltas(self):
+        deltas = []
+        fluxper=self._flux/self._npoints
+
+        for p in self._points:
+            d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
+            d = _galsim.SBTransform(d, 1.0, 0.0, 0.0, 1.0, _galsim.PositionD(p[0],p[1]), 1.0,
+                                    self.gsparams._gsp)
+            deltas.append(d)
+        return deltas
+
+    # For backwards compatibility in case anyone referenced this attribute.
+    gaussians = deltas
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBAdd(self.deltas, self.gsparams._gsp)
+
+    @property
+    def input_half_light_radius(self):
+        """
+        The input half-light radius is not necessarily the realized hlr.
+        """
+        return self._half_light_radius
+
+    @property
+    def npoints(self):
+        return self._npoints
+
+    @property
+    def points(self):
+        return self._points
 
     def calculateHLR(self):
         """
-        calculate the half light radius of the generated points
+        calculate the half-light radius of the generated points
         """
         pts = self._points
         my,mx=pts.mean(axis=0)
@@ -138,71 +165,6 @@ class RandomWalk(galsim.GSObject):
 
         return hlr
 
-    @property
-    def input_half_light_radius(self):
-        """
-        getter for the input half light radius
-        """
-        return self._half_light_radius
-
-    @property
-    def flux(self):
-        """
-        getter for the total flux
-        """
-        return self._flux
-
-    @property
-    def npoints(self):
-        """
-        getter for the number of points
-        """
-        return self._npoints
-
-    @property
-    def gaussians(self):
-        """
-        getter for the list of gaussians
-        """
-        return self._gaussians
-
-    @property
-    def points(self):
-        """
-        getter for the array of points, shape [npoints, 2]
-        """
-        return self._points.copy()
-
-    def _get_gaussians(self, points):
-        """
-        Create galsim.Gaussian objects for each point.
-
-        Highly optimized
-        """
-
-        gaussians = []
-        sigma=self._gaussian_sigma
-        fluxper=self._flux/self._npoints
-
-        for p in points:
-            g = galsim._galsim.SBGaussian(
-                sigma=sigma,
-                flux=fluxper,
-                gsparams=self.gsparams._gsp,
-            )
-
-            g = galsim._galsim.SBTransform(
-                g,
-                1.0, 0.0, 0.0, 1.0,
-                galsim._galsim.PositionD(p[0],p[1]),
-                1.0,
-                self.gsparams._gsp,
-            )
-
-            gaussians.append(g)
-
-        return gaussians
-
     def _set_gaussian_rng(self):
         """
         Set the random number generator used to create the points
@@ -210,16 +172,11 @@ class RandomWalk(galsim.GSObject):
         We are approximating the random walk to have infinite number
         of steps, which is just a gaussian
         """
-
+        from .random import GaussianDeviate
         # gaussian step size in each dimension for a random walk with infinite
         # number steps
         self._sigma_step = self._half_light_radius/2.3548200450309493*2
-
-        self._gauss_rng = galsim.GaussianNoise(
-            self._rng,
-            sigma=self._sigma_step,
-        )
-
+        self._gauss_rng = GaussianDeviate(self._rng, sigma=self._sigma_step)
 
     def _get_points(self):
         """
@@ -228,19 +185,16 @@ class RandomWalk(galsim.GSObject):
 
         The most efficient way is to write into an image
         """
-        ny=self._npoints
-        nx=2
-        im=galsim.ImageD(nx, ny)
-
-        im.addNoise(self._gauss_rng)
-
-        return im.array
+        ar = np.empty((self._npoints,2))
+        self._gauss_rng.generate(ar)
+        return ar
 
     def _verify(self):
         """
         type and range checking on the inputs
         """
-        if not isinstance(self._rng, galsim.BaseDeviate):
+        from .random import BaseDeviate
+        if not isinstance(self._rng, BaseDeviate):
             raise TypeError("rng must be an instance of galsim.BaseDeviate, "
                             "got %s" % str(self._rng))
 
@@ -274,7 +228,7 @@ class RandomWalk(galsim.GSObject):
         return rep
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.RandomWalk) and
+        return (isinstance(other, RandomWalk) and
                 self._npoints == other._npoints and
                 self._half_light_radius == other._half_light_radius and
                 self._flux == other._flux and
@@ -286,10 +240,44 @@ class RandomWalk(galsim.GSObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['_gaussians']
-        del d['_sbp']
+        d.pop('_sbp',None)
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._make_sbp()
+
+    @property
+    def _maxk(self):
+        return self._sbp.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _centroid(self):
+        return PositionD(self._sbp.centroid())
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
+        self._sbp.shoot(photons._pa, ud._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

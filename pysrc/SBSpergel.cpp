@@ -21,57 +21,19 @@
 #include "boost/python.hpp"
 
 #include "SBSpergel.h"
-#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSpergel
-    {
-
-        static SBSpergel* construct(
-            double nu, const bp::object& scale_radius, const bp::object& half_light_radius,
-            double flux, GSParams gsparams)
-        {
-            double s = 1.0;
-            checkRadii(half_light_radius, scale_radius, bp::object());
-            SBSpergel::RadiusType rType = SBSpergel::HALF_LIGHT_RADIUS;
-            if (half_light_radius.ptr() != Py_None) {
-                s = bp::extract<double>(half_light_radius);
-            }
-            if (scale_radius.ptr() != Py_None) {
-                s = bp::extract<double>(scale_radius);
-                rType = SBSpergel::SCALE_RADIUS;
-            }
-            return new SBSpergel(nu, s, rType, flux, gsparams);
-        }
-
-        static void wrap()
-        {
-            bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
-                .def("__init__",
-                     bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("nu"),
-                         bp::arg("scale_radius"),
-                         bp::arg("half_light_radius"),
-                         bp::arg("flux"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBSpergel &>())
-                .def("getNu", &SBSpergel::getNu)
-                .def("getScaleRadius", &SBSpergel::getScaleRadius)
-                .def("getHalfLightRadius", &SBSpergel::getHalfLightRadius)
-                .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux, bp::arg("r"))
-                .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius, bp::arg("f"))
-                .enable_pickling()
-                ;
-        }
-    };
-
     void pyExportSBSpergel()
     {
-        PySBSpergel::wrap();
+        bp::class_<SBSpergel,bp::bases<SBProfile> >("SBSpergel",bp::no_init)
+            .def(bp::init<double,double,double, GSParams>())
+            .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
+            .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
+
+        bp::def("SpergelCalculateHLR", &SpergelCalculateHLR);
     }
 
 } // namespace galsim

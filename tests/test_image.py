@@ -394,6 +394,21 @@ def test_undefined_image():
         if types[i] == np.complex128:
             assert im8 == im1
 
+        im9 = galsim.Image(0, 0)
+        assert not im9.bounds.isDefined()
+        assert im9.array.shape == (1,1)
+        assert im9 == im1
+
+        im10 = galsim.Image(10, 0)
+        assert not im10.bounds.isDefined()
+        assert im10.array.shape == (1,1)
+        assert im10 == im1
+
+        im11 = galsim.Image(0, 19)
+        assert not im11.bounds.isDefined()
+        assert im11.array.shape == (1,1)
+        assert im11 == im1
+
         assert_raises(RuntimeError,im1.setValue,0,0,1)
         assert_raises(RuntimeError,im1.__call__,0,0)
         assert_raises(RuntimeError,im1.view().setValue,0,0,1)
@@ -2208,6 +2223,15 @@ def test_copy():
     im3.setValue(3,8,11.)
     assert im(3,8) != 11.
 
+    # If copy=False is specified, then it shares the same array
+    im3b = galsim.Image(im, copy=False)
+    assert im3b.wcs == im.wcs
+    assert im3b.bounds == im.bounds
+    np.testing.assert_array_equal(im3b.array, im.array)
+    im3b.setValue(2,3,2.)
+    assert im3b(2,3) == 2.
+    assert im(2,3) == 2.
+
     # Constructor can change the wcs
     im4 = galsim.Image(im, scale=0.6)
     assert im4.wcs != im.wcs            # wcs is not equal this time.
@@ -2255,6 +2279,23 @@ def test_copy():
     im9.setValue(2,3,11.)
     assert im9(2,3) == 11.
     assert im_slice(2,3) != 11.
+
+    # Can also copy by giving the array and specify copy=True
+    im10 = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=False)
+    assert im10.wcs == im.wcs
+    assert im10.bounds == im.bounds
+    np.testing.assert_array_equal(im10.array, im.array)
+    im10[2,3] = 17
+    assert im10(2,3) == 17.
+    assert im(2,3) == 17.
+
+    im10b = galsim.Image(im.array, bounds=im.bounds, wcs=im.wcs, copy=True)
+    assert im10b.wcs == im.wcs
+    assert im10b.bounds == im.bounds
+    np.testing.assert_array_equal(im10b.array, im.array)
+    im10b[2,3] = 27
+    assert im10b(2,3) == 27.
+    assert im(2,3) != 27.
 
     # copyFrom copies the data only.
     im5.copyFrom(im8)

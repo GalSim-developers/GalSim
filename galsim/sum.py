@@ -18,9 +18,10 @@
 
 import numpy as np
 
-import galsim
-from . import _galsim
-from .utilities import lazy_property
+from .gsparams import GSParams
+from .gsobject import GSObject
+from .chromatic import ChromaticObject, ChromaticSum
+from .utilities import lazy_property, doc_inherit
 
 def Add(*args, **kwargs):
     """A function for adding 2 or more GSObject or ChromaticObject instances.
@@ -51,7 +52,7 @@ def Add(*args, **kwargs):
         raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
-        if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
+        if isinstance(args[0], (GSObject, ChromaticObject)):
             args = [args[0]]
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
             args = args[0]
@@ -60,13 +61,13 @@ def Add(*args, **kwargs):
                             + "a (possibly mixed) list of them.")
     # else args is already the list of objects
 
-    if any([isinstance(a, galsim.ChromaticObject) for a in args]):
-        return galsim.ChromaticSum(*args, **kwargs)
+    if any([isinstance(a, ChromaticObject) for a in args]):
+        return ChromaticSum(*args, **kwargs)
     else:
         return Sum(*args, **kwargs)
 
 
-class Sum(galsim.GSObject):
+class Sum(GSObject):
     """A class for adding 2 or more GSObject instances.
 
     The Sum class is used to represent the sum of multiple GSObject instances.  For example, it
@@ -118,7 +119,7 @@ class Sum(galsim.GSObject):
             raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
-            if isinstance(args[0], galsim.GSObject):
+            if isinstance(args[0], GSObject):
                 args = [args[0]]
             elif isinstance(args[0], list) or isinstance(args[0], tuple):
                 args = args[0]
@@ -139,18 +140,31 @@ class Sum(galsim.GSObject):
         self._obj_list = args
 
         for obj in args:
-            if not isinstance(obj, galsim.GSObject):
+            if not isinstance(obj, GSObject):
                 raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
-        self._gsparams = galsim.GSParams.check(gsparams, self._obj_list[0].gsparams)
-        SBList = [obj._sbp for obj in args]
-        self._sbp = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
+        self._gsparams = GSParams.check(gsparams, self._obj_list[0].gsparams)
+
+    @property
+    def obj_list(self): return self._obj_list
+
+    @property
+    def _sbp(self):
+        from . import _galsim
+        # NB. I only need this until compound and transform are reimplemented in Python...
+        sb_list = [obj._sbp for obj in self.obj_list]
+        return _galsim.SBAdd(sb_list, self.gsparams._gsp)
 
     @lazy_property
-    def noise(self):
+    def _flux(self):
+        flux_list = [obj.flux for obj in self.obj_list]
+        return np.sum(flux_list)
+
+    @lazy_property
+    def _noise(self):
         # If any of the objects have a noise attribute, then we propagate the sum of the
         # noises (they add like variances) to the final sum.
         _noise = None
-        for obj in self._obj_list:
+        for obj in self.obj_list:
             if obj.noise is not None:
                 if _noise is None:
                     _noise = obj.noise
@@ -158,11 +172,8 @@ class Sum(galsim.GSObject):
                     _noise += obj.noise
         return _noise
 
-    @property
-    def obj_list(self): return self._obj_list
-
     def __eq__(self, other):
-        return (isinstance(other, galsim.Sum) and
+        return (isinstance(other, Sum) and
                 self.obj_list == other.obj_list and
                 self.gsparams == other.gsparams)
 
@@ -175,35 +186,89 @@ class Sum(galsim.GSObject):
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
         return '(' + ' + '.join(str_list) + ')'
-        #return 'galsim.Sum([%s])'%', '.join(str_list)
 
     def _prepareDraw(self):
-        for obj in self._obj_list:
+        for obj in self.obj_list:
             obj._prepareDraw()
-        SBList = [obj._sbp for obj in self._obj_list]
-        self._sbp = galsim._galsim.SBAdd(SBList, self.gsparams._gsp)
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    @property
+    def _maxk(self):
+        maxk_list = [obj.maxk for obj in self.obj_list]
+        return np.max(maxk_list)
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        if n_photons == 0:
-            return galsim.PhotonArray(0)
-        ud = galsim.UniformDeviate(rng)
+    @property
+    def _stepk(self):
+        stepk_list = [obj.stepk for obj in self.obj_list]
+        return np.min(stepk_list)
+
+    @property
+    def _has_hard_edges(self):
+        hard_list = [obj.has_hard_edges for obj in self.obj_list]
+        return bool(np.any(hard_list))
+
+    @property
+    def _is_axisymmetric(self):
+        axi_list = [obj.is_axisymmetric for obj in self.obj_list]
+        return bool(np.all(axi_list))
+
+    @property
+    def _is_analytic_x(self):
+        ax_list = [obj.is_analytic_x for obj in self.obj_list]
+        return bool(np.all(ax_list))
+
+    @property
+    def _is_analytic_k(self):
+        ak_list = [obj.is_analytic_k for obj in self.obj_list]
+        return bool(np.all(ak_list))
+
+    @property
+    def _centroid(self):
+        cen_list = [obj.centroid * obj.flux for obj in self.obj_list]
+        return sum(cen_list[1:], cen_list[0]) / self.flux
+
+    @property
+    def _positive_flux(self):
+        pflux_list = [obj.positive_flux for obj in self.obj_list]
+        return np.sum(pflux_list)
+
+    @property
+    def _negative_flux(self):
+        nflux_list = [obj.negative_flux for obj in self.obj_list]
+        return np.sum(nflux_list)
+
+    @property
+    def _max_sb(self):
+        sb_list = [obj.max_sb for obj in self.obj_list]
+        return np.sum(sb_list)
+
+    @doc_inherit
+    def _xValue(self, pos):
+        xv_list = [obj.xValue(pos) for obj in self.obj_list]
+        return np.sum(xv_list)
+
+    @doc_inherit
+    def _kValue(self, pos):
+        kv_list = [obj.kValue(pos) for obj in self.obj_list]
+        return np.sum(kv_list)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self.obj_list[0]._drawReal(image)
+        if len(self.obj_list) > 1:
+            im1 = image.copy()
+            for obj in self.obj_list[1:]:
+                obj._drawReal(im1)
+                image += im1
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
+        from .photon_array import PhotonArray
+        from .random import BinomialDeviate
 
         remainingAbsoluteFlux = self.positive_flux + self.negative_flux
-        fluxPerPhoton = remainingAbsoluteFlux / n_photons
+        fluxPerPhoton = remainingAbsoluteFlux / len(photons)
 
-        # Initialize the output array
-        photons = galsim.PhotonArray(n_photons)
-
-        remainingN = n_photons
+        remainingN = len(photons)
         istart = 0  # The location in the photons array where we assign the component arrays.
 
         # Get photons from each summand, using BinomialDeviate to randomize
@@ -215,7 +280,7 @@ class Sum(galsim.GSObject):
             thisN = remainingN  # All of what's left, if this is the last summand...
             if i < len(self.obj_list)-1:
                 # otherwise, allocate a randomized fraction of the remaining photons to summand.
-                bd = galsim.BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
+                bd = BinomialDeviate(ud, remainingN, thisAbsoluteFlux/remainingAbsoluteFlux)
                 thisN = int(bd())
             if thisN > 0:
                 thisPA = obj.shoot(thisN, ud)
@@ -233,13 +298,12 @@ class Sum(galsim.GSObject):
         # This process produces correlated photons, so mark the resulting array as such.
         if len(self.obj_list) > 1:
             photons.setCorrelated()
-        return photons
 
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sbp']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.__init__(self._obj_list, gsparams=self.gsparams)
+    @doc_inherit
+    def _drawKImage(self, image):
+        self.obj_list[0]._drawKImage(image)
+        if len(self.obj_list) > 1:
+            im1 = image.copy()
+            for obj in self.obj_list[1:]:
+                obj._drawKImage(im1)
+                image += im1

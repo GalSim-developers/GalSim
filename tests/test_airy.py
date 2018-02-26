@@ -101,7 +101,7 @@ def test_airy():
     np.testing.assert_almost_equal(airy0.xValue(cen), airy0.max_sb)
     np.testing.assert_array_almost_equal(
             airy0.lam_over_diam, 1./0.7, 5,
-            err_msg="Airy getLamOverD returned wrong value")
+            err_msg="Airy lam_over_diam returned wrong value")
     np.testing.assert_array_equal(
             airy0.obscuration, 0.0,
             err_msg="Airy obscuration returned wrong value")

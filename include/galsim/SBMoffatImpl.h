@@ -30,7 +30,7 @@ namespace galsim {
     class SBMoffat::SBMoffatImpl : public SBProfileImpl
     {
     public:
-        SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
+        SBMoffatImpl(double beta, double scale_radius, double trunc, double flux,
                      const GSParams& gsparams);
 
         ~SBMoffatImpl() {}
@@ -79,9 +79,9 @@ namespace galsim {
 
         double getBeta() const { return _beta; }
         double getScaleRadius() const { return _rD; }
-        double getFWHM() const { return _FWHM; }
         double getTrunc() const { return _trunc; }
         double getHalfLightRadius() const;
+        double getFWHM() const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -109,20 +109,18 @@ namespace galsim {
         double _norm; ///< Normalization. (Including the flux)
         double _knorm; ///< Normalization for kValue. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
-        double _maxR; ///< Maximum `r`
-        double _maxRrD; ///< maxR/rD
-        double _FWHM;  ///< Full Width at Half Maximum.
-        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
-        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _rD_sq;
         double _inv_rD;
         double _inv_rD_sq;
+        double _maxR; ///< Maximum `r`
+        double _maxRrD; ///< maxR/rD
+        double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
+        double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
         double _maxRrD_sq;
         double _maxR_sq;
 
         mutable TableBuilder _ft;  ///< Lookup table for Fourier transform of Moffat.
 
-        mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
         mutable double _stepk;
         mutable double _maxk; ///< Maximum k with kValue > 1.e-3
 

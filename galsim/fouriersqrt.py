@@ -18,9 +18,11 @@
 
 import numpy as np
 
-import galsim
 from . import _galsim
-from .utilities import lazy_property
+from .gsparams import GSParams
+from .gsobject import GSObject
+from .chromatic import ChromaticObject
+from .utilities import lazy_property, doc_inherit
 
 
 def FourierSqrt(obj, gsparams=None):
@@ -42,15 +44,16 @@ def FourierSqrt(obj, gsparams=None):
 
     @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
     """
-    if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
-    elif isinstance(obj, galsim.GSObject):
+    from .chromatic import ChromaticFourierSqrtProfile
+    if isinstance(obj, ChromaticObject):
+        return ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
+    elif isinstance(obj, GSObject):
         return FourierSqrtProfile(obj, gsparams=gsparams)
     else:
         raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
 
 
-class FourierSqrtProfile(galsim.GSObject):
+class FourierSqrtProfile(GSObject):
     """A class for computing the Fourier-space sqrt of a GSObject.
 
     The FourierSqrtProfile class represents the Fourier-space square root of another profile.
@@ -79,24 +82,35 @@ class FourierSqrtProfile(galsim.GSObject):
 
     There are no additional methods for FourierSqrtProfile beyond the usual GSObject methods.
     """
+    _sqrt2 = 1.4142135623730951
+
+    _has_hard_edges = False
+    _is_analytic_x = False
+
     def __init__(self, obj, gsparams=None):
-        if not isinstance(obj, galsim.GSObject):
+        if not isinstance(obj, GSObject):
             raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
 
         # Save the original object as an attribute, so it can be inspected later if necessary.
         self._orig_obj = obj
-        self._gsparams = galsim.GSParams.check(gsparams, self._orig_obj.gsparams)
-
-        self._sbp = galsim._galsim.SBFourierSqrt(obj._sbp, self.gsparams._gsp)
-        if obj.noise is not None:
-            import warnings
-            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
+        self._gsparams = GSParams.check(gsparams, self._orig_obj.gsparams)
 
     @property
     def orig_obj(self): return self._orig_obj
 
+    @property
+    def _sbp(self):
+        return _galsim.SBFourierSqrt(self.orig_obj._sbp, self.gsparams._gsp)
+
+    @property
+    def _noise(self):
+        if self.orig_obj.noise is not None:
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
+        return None
+
     def __eq__(self, other):
-        return (isinstance(other, galsim.FourierSqrtProfile) and
+        return (isinstance(other, FourierSqrtProfile) and
                 self.orig_obj == other.orig_obj and
                 self.gsparams == other.gsparams)
 
@@ -110,14 +124,53 @@ class FourierSqrtProfile(galsim.GSObject):
         return 'galsim.FourierSqrt(%s)'%self.orig_obj
 
     def _prepareDraw(self):
-        self._orig_obj._prepareDraw()
-        self._sbp = galsim._galsim.SBFourierSqrt(self._orig_obj._sbp, self.gsparams._gsp)
+        self.orig_obj._prepareDraw()
 
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['_sbp']
-        return d
+    @property
+    def _maxk(self):
+        return self.orig_obj.maxk
 
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.__init__(self._orig_obj, self._gsparams)
+    @property
+    def _stepk(self):
+        return self.orig_obj.stepk * self._sqrt2
+
+    @property
+    def _is_axisymmetric(self):
+        return self.orig_obj.is_axisymmetric
+
+    @property
+    def _is_analytic_k(self):
+        return self.orig_obj.is_analytic_k
+
+    @property
+    def _centroid(self):
+        return 0.5 * self.orig_obj.centroid
+
+    @property
+    def _flux(self):
+        return np.sqrt(self.orig_obj.flux)
+
+    @property
+    def _positive_flux(self):
+        return np.sqrt(self.orig_obj.positive_flux)
+
+    @property
+    def _negative_flux(self):
+        return np.sqrt(self.orig_obj.negative_flux)
+
+    @property
+    def _max_sb(self):
+        # In this case, we want the autoconvolution of this object to get back to the
+        # maxSB value of the original obj
+        # flux * maxSB / 2 = maxSB_orig
+        # maxSB = 2 * maxSB_orig / flux
+        return 2. * self.orig_obj.max_sb / self.flux
+
+    @doc_inherit
+    def _kValue(self, pos):
+        return np.sqrt(self.orig_obj._kValue(pos))
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self.orig_obj._drawKImage(image)
+        image.array[:,:] = np.sqrt(image.array)

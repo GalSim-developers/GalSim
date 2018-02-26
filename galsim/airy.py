@@ -15,13 +15,15 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file airy.py
-"""
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
 
 
 class Airy(GSObject):
@@ -107,32 +109,50 @@ class Airy(GSObject):
     _hlr_factor = 0.5348321477242647
     _fwhm_factor = 1.028993969962188
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, obscuration=0., flux=1.,
-                 scale_unit=galsim.arcsec, gsparams=None):
+                 scale_unit=None, gsparams=None):
+        from .angle import arcsec, radians, AngleUnit
+
+        self._obscuration = float(obscuration)
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
+
         # Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.
         # If the latter, then get lam_over_diam in units of `scale_unit`, as specified in
         # docstring.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
                 raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+            self._lod = float(lam_over_diam)
         else:
             if lam is None or diam is None:
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, str):
-                scale_unit = galsim.AngleUnit.from_name(scale_unit)
-            lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
+                scale_unit = AngleUnit.from_name(scale_unit)
+            elif scale_unit is None:
+                scale_unit = arcsec
+            self._lod = (1.e-9*float(lam)/float(diam))*(radians/scale_unit)
 
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBAiry(lam_over_diam, obscuration, flux, self.gsparams._gsp)
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBAiry(self._lod, self._obscuration, self._flux, self.gsparams._gsp)
 
     @property
-    def lam_over_diam(self): return self._sbp.getLamOverD()
+    def lam_over_diam(self): return self._lod
     @property
-    def obscuration(self): return self._sbp.getObscuration()
+    def obscuration(self): return self._obscuration
 
     @property
     def half_light_radius(self):
+        """Return the half light radius of this Airy profile (only supported for
+        obscuration = 0.).
+        """
         if self.obscuration == 0.:
             return self.lam_over_diam * Airy._hlr_factor
         else:
@@ -143,6 +163,8 @@ class Airy(GSObject):
 
     @property
     def fwhm(self):
+        """Return the FWHM of this Airy profile (only supported for obscuration = 0.).
+        """
         # As above, likewise, FWHM only easy to define for unobscured Airy
         if self.obscuration == 0.:
             return self.lam_over_diam * Airy._fwhm_factor
@@ -152,9 +174,8 @@ class Airy(GSObject):
             raise NotImplementedError("FWHM calculation not implemented for Airy "+
                                       "objects with non-zero obscuration.")
 
-
     def __eq__(self, other):
-        return (isinstance(other, galsim.Airy) and
+        return (isinstance(other, Airy) and
                 self.lam_over_diam == other.lam_over_diam and
                 self.obscuration == other.obscuration and
                 self.flux == other.flux and
@@ -177,5 +198,42 @@ class Airy(GSObject):
         s += ')'
         return s
 
-_galsim.SBAiry.__getinitargs__ = lambda self: (
-        self.getLamOverD(), self.getObscuration(), self.getFlux(), self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        return 2.*math.pi / self._lod
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

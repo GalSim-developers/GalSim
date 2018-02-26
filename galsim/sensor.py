@@ -31,6 +31,7 @@ import glob
 import os
 
 from . import _galsim
+from .table import LookupTable
 from .position import PositionI, PositionD
 from .table import LookupTable
 from .random import UniformDeviate

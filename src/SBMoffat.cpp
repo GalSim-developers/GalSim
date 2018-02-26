@@ -46,9 +46,9 @@ namespace galsim {
     inline double fast_pow(double x, double y)
     { return fmath::expd(y * std::log(x)); }
 
-    SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
+    SBMoffat::SBMoffat(double beta, double scale_radius, double trunc, double flux,
                        const GSParams& gsparams) :
-        SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux, gsparams)) {}
+        SBProfile(new SBMoffatImpl(beta, scale_radius, trunc, flux, gsparams)) {}
 
     SBMoffat::SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
 
@@ -171,13 +171,14 @@ namespace galsim {
         }
     }
 
-    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
+    SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double scale_radius,
                                          double trunc, double flux,
                                          const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _beta(beta), _flux(flux), _trunc(trunc),
+        _beta(beta), _flux(flux), _rD(scale_radius),
+        _rD_sq(_rD * _rD), _inv_rD(1./_rD), _inv_rD_sq(_inv_rD*_inv_rD),
+        _trunc(trunc),
         _ft(Table::spline),
-        _re(0.), // initially set to zero, may be updated by size or getHalfLightRadius().
         _stepk(0.), // calculated by stepK() and stored.
         _maxk(0.) // calculated by maxK() and stored.
     {
@@ -191,33 +192,6 @@ namespace galsim {
 
         if (_trunc < 0.)
             throw SBError("Invalid negative truncation radius provided to SBMoffat.");
-
-        // First, relation between FWHM and rD:
-        double FWHMrD = 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
-        xdbg<<"FWHMrD = "<<FWHMrD<<"\n";
-
-        // Set size of this instance according to type of size given in constructor:
-        switch (rType) {
-          case FWHM:
-               _rD = size / FWHMrD;
-               break;
-          case HALF_LIGHT_RADIUS:
-               {
-                   _re = size;
-                   // This is a bit complicated, so break it out into its own function.
-                   _rD = MoffatCalculateScaleRadiusFromHLR(_re,_trunc,_beta);
-               }
-               break;
-          case SCALE_RADIUS:
-               _rD = size;
-               break;
-          default:
-               throw SBError("Unknown SBMoffat::RadiusType");
-        }
-
-        _rD_sq = _rD * _rD;
-        _inv_rD = 1./_rD;
-        _inv_rD_sq = _inv_rD*_inv_rD;
 
         if (_trunc > 0.) {
             _maxRrD = _trunc * _inv_rD;
@@ -234,7 +208,6 @@ namespace galsim {
             xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
-        _FWHM = FWHMrD * _rD;
         _maxR = _maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
         _maxRrD_sq = _maxRrD * _maxRrD;
@@ -281,13 +254,12 @@ namespace galsim {
 
     double SBMoffat::SBMoffatImpl::getHalfLightRadius() const
     {
-        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this
-        // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
-        // so we'll just calculate it once if requested and store it.
-        if (_re == 0.) {
-            _re = _rD * std::sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
-        }
-        return _re;
+        return _rD * std::sqrt(std::pow(1.-0.5*_fluxFactor , 1./(1.-_beta)) - 1.);
+    }
+
+    double SBMoffat::SBMoffatImpl::getFWHM() const
+    {
+        return _rD * 2.* std::sqrt(std::pow(2., 1./_beta)-1.);
     }
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const

@@ -129,7 +129,7 @@ def test_gaussian():
     # Finally, test the noise property for things that don't have any noise set.
     assert gauss.noise is None
     # And accessing the attribute from the class should indicate that it is a lazyproperty
-    assert 'lazy_property' in str(galsim.GSObject.noise)
+    assert 'lazy_property' in str(galsim.GSObject._noise)
 
 
 @timer
@@ -183,7 +183,7 @@ def test_gaussian_radii():
             test_fwhm_ratio, 0.5, decimal=4,
             err_msg="Error in FWHM for Gaussian initialized with half-light radius")
 
-    # test that sigma property provides correct sigma
+    # test that sigma provides correct sigma
     got_sigma = test_gal.sigma
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -209,7 +209,7 @@ def test_gaussian_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with sigma.")
 
-    # test that fwhm property provides correct FWHM
+    # test that fwhm provides correct FWHM
     got_fwhm = test_gal.fwhm
     test_fwhm_ratio = (test_gal.xValue(galsim.PositionD(.5 * got_fwhm, 0.)) /
                        test_gal.xValue(galsim.PositionD(0., 0.)))
@@ -235,7 +235,7 @@ def test_gaussian_radii():
             hlr_sum, 0.5, decimal=4,
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
 
-    # test that sigma property provides correct sigma
+    # test that sigma provides correct sigma
     got_sigma = test_gal.sigma
     test_sigma_ratio = (test_gal.xValue(galsim.PositionD(got_sigma, 0.)) /
                         test_gal.xValue(galsim.PositionD(0., 0.)))

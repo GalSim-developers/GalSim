@@ -101,7 +101,7 @@ class _BaseCorrelatedNoise(object):
         self._rootps_whitening_store = []
         self._rootps_symmetrizing_store = []
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
-        # noise field can get convolved with other GSObjects making isAnalyticX() False
+        # noise field can get convolved with other GSObjects making is_analytic_x False
         self._variance_stored = None
 
     @property

@@ -345,12 +345,9 @@ namespace galsim {
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in]        dx, the pixel scale
-         * @param[in]        add to the existing image? (true) or just assign it? (false)
-         *
-         * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double dx, bool add) const;
+        void draw(ImageView<T> image, double dx) const;
 
         /**
          * @brief Draw an image of the SBProfile in k space.
@@ -360,10 +357,9 @@ namespace galsim {
          *
          * @param[in,out]    image in k space (must be an ImageViewC)
          * @param[in]        dk, the step size in k space
-         * @param[in]        add to the existing image? (true) or just assign it? (false)
          */
         template <typename T>
-        void drawK(ImageView<std::complex<T> > image, double dk, bool add) const;
+        void drawK(ImageView<std::complex<T> > image, double dk) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;

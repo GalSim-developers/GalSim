@@ -49,42 +49,23 @@ namespace galsim {
     class SBInclinedSersic : public SBProfile
     {
     public:
-        enum  RadiusType
-        {
-            HALF_LIGHT_RADIUS,
-            SCALE_RADIUS
-        };
-        enum  HeightType
-        {
-            SCALE_H_OVER_R,
-            SCALE_HEIGHT
-        };
-
         /**
          * @brief Constructor.
          *
          * @param[in] n                 Sersic index.
          * @param[in] inclination       Inclination of the disk relative to line of sight,
          *                              in radians, where 0 = face-on and pi/2 = edge-on.
-         * @param[in] size              Size specification.
-         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
-         *                              SCALE_RADIUS).
-         * @param[in] height            Height specification.
-         * @param[in] hType             Kind of height being specified (SCALE_H_OVER_R or
-         *                              SCALE_HEIGHT).
+         * @param[in] scale_radius      Scale radius
+         * @param[in] height            Scale height
          * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                              `trunc = 0.` for no truncation.
-         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n`.  Ignored if
-         *                              `trunc = 0.`.
          * @param[in] gsparams          GSParams object storing constants that control the accuracy
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedSersic(double n, double inclination, double size, RadiusType rType,
-                 double height, HeightType hType, double flux,
-                 double trunc, bool flux_untruncated, const GSParams& gsparams);
+        SBInclinedSersic(double n, double inclination, double scale_radius,
+                 double height, double flux, double trunc, const GSParams& gsparams);
 
         /// @brief Copy constructor.
         SBInclinedSersic(const SBInclinedSersic& rhs);

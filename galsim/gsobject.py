@@ -23,14 +23,28 @@ objects (galaxies, PSFs, pixel response), which defines the top-level interface 
 of these classes.  The following other files include the implementations of various subclasses
 which define specific surface brightness profiles:
 
-    base.py defines simple objects like Gaussian, Moffat, Exponential, Sersic, etc.
-    compound.py defines combinations of multiple GSObjects like Sum, Convolution, etc.
-    inclinedexponential.py defines a 3D exponential disk at a specified inclination angle.
-    interpolatedimage.py defines a surface brightness profile from an arbitrary image.
-    phase_psf.py defines PSF profiles from the wavefront at the pupil plane.
-    real.py defines RealGalaxy, which uses HST images of real observed galaxies.
-    shapelet.py defines a profile from its shapelet (aka Gauss-Laguerre) decomposition.
-    transform.py defines how other profiles can be sheared, rotated, shifted, etc.
+    gaussian.py: a simple Gaussian profile.
+    moffat.py: a Moffat PSF profile.
+    airy.py: a (possibly obscurated) Airy profile.
+    kolmogorov.py: a Kolmogorov atmospheric PSF profile.
+    exponential.py: an Exponential disc.
+    sersic.py: a Sersic profile, along with DeVaucouleurs as a special case.
+    box.py: Box and Pixel, which are 2D box profiles and TopHat a radial top-hat profile.
+    sum.py: Add, Sum, which allow adding two profiles together.
+    convolve.py: Convolve, Convolution which convolve two profiles together, along with special
+                 cases AutoConvolution and AutoCorrelation, and Deconvolve, Deconvolution.
+    transform.py: Transform, Transformation, which allows profiles to be sheared, rotated,
+                  dilated, shifted, or scaled in flux.
+    fourierprofile.py: FourierProfile, which implements a square root in fourier-space.
+    inclinedexponential.py: InclinedExponential, an inclined 3D exponential disk.
+    inclinedsersic.py: InclinedSersic, an inclined 3D sersic profile.
+    interpolatedimage.py: InterpolatedImage, a surface brightness profile from an arbitrary image.
+    phase_psf.py: PhasePSF, OpticalPSF, PSF profiles from the wavefront at the pupil plane.
+    real.py: RealGalaxy, which uses HST images of real observed galaxies.
+    shapelet.py: a Shapelet profile, aka Gauss-Laguerre decomposition.
+    spergel.py: a Spergel profile, which is qualitatively similar to a Sersic profile, but is
+                analytic in k-space.
+    randwalk.py: RandomWalk, which models knots of star formation.
 
 All these classes have associated methods to (a) retrieve information (like the flux, half-light
 radius, or intensity at a particular point); (b) carry out common operations, like shearing,
@@ -39,6 +53,7 @@ brightness profiles.
 """
 
 import numpy as np
+import math
 
 from . import _galsim
 from .position import PositionD, PositionI
@@ -177,16 +192,20 @@ class GSObject(object):
         >>> im = conv.drawImage(image=im)                   # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof._sbp.draw(imview._image)
-        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+          File "galsim/gsobject.py", line 1615, in drawImage
+            added_photons = prof.drawFFT(draw_image, add)
+          File "galsim/gsobject.py", line 1827, in drawFFT
+            kimage, wrap_size = self.drawFFT_makeKImage(image)
+          File "galsim/gsobject.py", line 1753, in drawFFT_makeKImage
+            "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+        RuntimeError: drawFFT requires an FFT that is too large: 6144.
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
         >>> conv = galsim.Convolve([gal,psf],gsparams=big_fft_params)
         >>> im = conv.drawImage(image=im)                   # Now it works (but is slow!)
         >>> im.write('high_res_sersic.fits')
 
-    Note that for compound objects in compound.py, like Convolution or Sum, not all GSParams can be
+    Note that for compound objects such as Convolution or Sum, not all GSParams can be
     changed when the compound object is created.  In the example given here, it is possible to
     change parameters related to the drawing, but not the Fourier space parameters for the
     components that go into the Convolution.  To get better sampling in Fourier space, for example,
@@ -212,10 +231,204 @@ class GSObject(object):
     def __init__(self):
         raise NotImplementedError("The GSObject base class should not be instantiated directly.")
 
-    # Note: subclasses are expected to define self._sbp and self._gsparams in their inits.
+    # Note: subclasses are expected to define the following attributes or properties:
+    #
+    # Required for all profiles:
+    #
+    #     _flux (the object's flux, natch)
+    #     _gsparams (use GSParams.check(None) if you just want the default)
+    #     _stepk (the sampling in k space necessary to avoid folding of image in x space)
+    #     _maxk (the value of k beyond which aliasing can be neglected)
+    #     _has_hard_edges (true if should use real-space convolution with another hard edge profile)
+    #     _is_axisymmetric (true if f(x,y) = f(r)
+    #     _is_analytic_x (true if _xValue and _drawReal are implemented)
+    #     _is_analytic_k (true if _kValue and _drawKImage are implemented)
+    #
+    # Required for use with config processing (typically class attributes):
+    #
+    #     _req_params (dict of required config parameters: name : type)
+    #     _opt_params (dict of optional config parameters)
+    #     _single_params (list of dicts for parameters where exactly one of several is required)
+    #     _takes_rng (bool specifying whether rng is an input parameter)
+    #
+    # Optional
+    #
+    #     _centroid (default = PositionD(0,0), which is often the right value)
+    #     _positive_flux (default = _flux + _negative_flux)
+    #     _negative_flux (default = 0; note: this should be absolute value of the negative flux)
+    #     _max_sb (default 1.e500, which in this context is equivalent to "unknown")
+    #     _noise (default None)
+    #
+    # In addition, subclasses should typically define most of the following methods.
+    # The default in each case is to raise a NotImplementedError, so if you cannot implement one,
+    # you may simply not define it.
+    #
+    #     _xValue(self, pos)
+    #     _kValue(self, kpos)
+    #     _drawReal(self, image)
+    #     _shoot(self, photons, ud):
+    #     _drawKImage(self, image)
+    #
+    # Required for real-space convolution
+    #
+    #     _sbp which must be an attribute or property providing a C++-layer SBProfile instance.
+    #
+    # Note that most objects don't need to implement real-space convolution, so use of a C++-layer
+    # SBProfile sub-class is usually only an implementation detail to improve efficiency.
+    #
+    # TODO: For now, _sbp is also required for transformations, but this is expected to be
+    #       addressed in a future PR.
+
+    @property
+    def flux(self):
+        "The flux of the profile"
+        return self._flux
+    @property
+    def gsparams(self):
+        "A GSParams object that sets various parameters relevant for speed/accuracy trade-offs"
+        return self._gsparams
+
+    @property
+    def maxk(self):
+        "The value of k beyond which aliasing can be neglected."
+        return self._maxk
+
+    @property
+    def stepk(self):
+        "The sampling in k space necessary to avoid folding of image in x space."
+        return self._stepk
+
+    @property
+    def nyquist_scale(self):
+        "The Image pixel spacing that does not alias maxk."
+        return math.pi / self.maxk
+
+    @property
+    def has_hard_edges(self):
+        """Whether there are any hard edges in the profile, which would require very small k
+        spacing when working in the Fourier domain.
+        """
+        return self._has_hard_edges
+
+    @property
+    def is_axisymmetric(self):
+        "Wthether the profile is axially symmetric; affects efficiency of evaluation."
+        return self._is_axisymmetric
+
+    @property
+    def is_analytic_x(self):
+        """Whether the real-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
+        return self._is_analytic_x
+
+    @property
+    def is_analytic_k(self):
+        """Whether the k-space values can be determined immediately at any position without
+        requiring a Discrete Fourier Transform.
+        """
+        return self._is_analytic_k
+
+    @property
+    def centroid(self):
+        "The (x, y) centroid of an object as a Position."
+        return self._centroid
 
     @lazy_property
+    def _centroid(self):
+        # Most profiles are centered at 0,0, so make this the default.
+        return PositionD(0,0)
+
+    @property
+    def positive_flux(self):
+        """The expectation value of flux in positive photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total flux
+        of the positive-valued photons.
+
+        For profiles that don't have this complication, this is equivalent to getFlux().
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._positive_flux
+
+    @property
+    def negative_flux(self):
+        """Returns the expectation value of flux in negative photons.
+
+        Some profiles, when rendered with photon shooting, need to shoot both positive- and
+        negative-flux photons.  For such profiles, this method returns the total absolute flux
+        of the negative-valued photons (i.e. as a positive value).
+
+        For profiles that don't have this complication, this returns 0.
+
+        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
+        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
+        cases involving lookup tables, etc.
+        """
+        return self._negative_flux
+
+    @lazy_property
+    def _positive_flux(self):
+        # The usual case.
+        return self.flux + self._negative_flux
+
+    @lazy_property
+    def _negative_flux(self):
+        # The usual case.
+        return 0.
+
+    @property
+    def max_sb(self):
+        """An estimate of the maximum surface brightness of the object.
+
+        Some profiles will return the exact peak SB, typically equal to the value of
+        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
+        calculate this value without just drawing the image and checking what the maximum value is.
+        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
+        which will generally be conservative on the high side.
+
+        This routine is mainly used by the photon shooting process, where an overestimate of
+        the maximum surface brightness is acceptable.
+
+        Note, for negative-flux profiles, this will return the absolute value of the most negative
+        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
+        rather than the maximum value.  For most profiles, these are the same thing.
+        """
+        return self._max_sb
+
+    @lazy_property
+    def _max_sb(self):
+        # The way this is used, overestimates are conservative.
+        # So the default value of 1.e500 will skip the optimization involving the maximum sb.
+        return 1.e500
+
+    @property
     def noise(self):
+        """An estimate of the noise already in the profile.
+
+        Some profiles have some noise already in their definition.  E.g. those that come from
+        observations of galaxies in real data.  In GalSim, RealGalaxy objects are an example of
+        this.  In these cases, the noise attribute gives an estimate of the Noise object that
+        would generate noise consistent with that already in the profile.
+
+        It is permissible to attach a noise estimate to an existing object with
+
+            >>> obj.noise = noise    # Some BaseNoise instance
+        """
+        return self._noise
+
+    @noise.setter
+    def noise(self, n):
+        # We allow the user to set the noise with obj.noise = n
+        self._noise = n
+
+    @lazy_property
+    def _noise(self):
+        # Most profiles don't have any noise.
         return None
 
     # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
@@ -282,109 +495,6 @@ class GSObject(object):
     def __neg__(self):
         return -1. * self
 
-    # Now define direct access to all SBProfile methods via calls to self._sbp.method_name()
-    @property
-    def maxk(self):
-        """The value of k beyond which aliasing can be neglected.
-        """
-        return self._sbp.maxK()
-
-    @property
-    def stepk(self):
-        """The sampling in k space necessary to avoid folding of image in x space.
-        """
-        return self._sbp.stepK()
-
-    @property
-    def nyquist_scale(self):
-        """The Image pixel spacing that does not alias maxk.
-        """
-        return self._sbp.nyquistDx()
-
-    @property
-    def has_hard_edges(self):
-        """Whether there are any hard edges in the profile, which would require very small k
-        spacing when working in the Fourier domain.
-        """
-        return self._sbp.hasHardEdges()
-
-    @property
-    def is_axisymmetric(self):
-        """Wthether the profile is axially symmetric; affects efficiency of evaluation.
-        """
-        return self._sbp.isAxisymmetric()
-
-    @property
-    def is_analytic_x(self):
-        """Whether the real-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
-        """
-        return self._sbp.isAnalyticX()
-
-    @property
-    def is_analytic_k(self):
-        """Whether the k-space values can be determined immediately at any position without
-        requiring a Discrete Fourier Transform.
-        """
-        return self._sbp.isAnalyticK()
-
-    @property
-    def centroid(self):
-        """The (x, y) centroid of an object as a Position.
-        """
-        return PositionD(self._sbp.centroid())
-
-    @property
-    def positive_flux(self):
-        """The expectation value of flux in positive photons.
-
-        Some profiles, when rendered with photon shooting, need to shoot both positive- and
-        negative-flux photons.  For such profiles, this method returns the total flux
-        of the positive-valued photons.
-
-        For profiles that don't have this complication, this is equivalent to getFlux().
-
-        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
-        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
-        cases involving lookup tables, etc.
-        """
-        return self._sbp.getPositiveFlux()
-
-    @property
-    def negative_flux(self):
-        """Returns the expectation value of flux in negative photons.
-
-        Some profiles, when rendered with photon shooting, need to shoot both positive- and
-        negative-flux photons.  For such profiles, this method returns the total absolute flux
-        of the negative-valued photons (i.e. as a positive value).
-
-        For profiles that don't have this complication, this returns 0.
-
-        It should be generally true that `obj.positive_flux - obj.negative_flux` returns the same
-        thing as `obj.flux`.  Small difference may accrue from finite numerical accuracy in
-        cases involving lookup tables, etc.
-        """
-        return self._sbp.getNegativeFlux()
-
-    @property
-    def max_sb(self):
-        """An estimate of the maximum surface brightness of the object.
-
-        Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
-        calculate this value without just drawing the image and checking what the maximum value is.
-        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
-        which will generally be conservative on the high side.
-
-        This routine is mainly used by the photon shooting process, where an overestimate of
-        the maximum surface brightness is acceptable.
-
-        Note, for negative-flux profiles, this will return the absolute value of the most negative
-        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
-        rather than the maximum value.  For most profiles, these are the same thing.
-        """
-        return self._sbp.maxSB()
-
     # Some calculations that can be done for all GSObjects.
     def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
@@ -440,7 +550,6 @@ class GSObject(object):
 
         center = im.true_center + offset + centroid/scale
         return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
-
 
     def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
         """Returns an estimate of the radius based on unweighted second moments.
@@ -514,7 +623,6 @@ class GSObject(object):
         center = im.true_center + centroid/scale
         return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
 
-
     def calculateFWHM(self, size=None, scale=None, centroid=None):
         """Returns the full-width half-maximum (FWHM) of the object.
 
@@ -563,12 +671,6 @@ class GSObject(object):
         center = im.true_center + offset + centroid/scale
         return im.calculateFWHM(center=center, Imax=Imax)
 
-
-    @property
-    def flux(self): return self._sbp.getFlux()
-    @property
-    def gsparams(self): return self._gsparams
-
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
 
@@ -602,7 +704,7 @@ class GSObject(object):
 
         @returns the surface brightness at that position.
         """
-        return self._sbp.xValue(pos._p)
+        raise NotImplementedError("%s does not implement xValue"%self.__class__.__name__)
 
     def kValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in k space.
@@ -626,7 +728,7 @@ class GSObject(object):
     def _kValue(self, kpos):
         """Equivalent to kValue(kpos), but kpos must be a galsim.PositionD instance.
         """
-        return self._sbp.kValue(kpos._p)
+        raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
 
     def withFlux(self, flux):
         """Create a version of the current object with a different flux.
@@ -737,7 +839,6 @@ class GSObject(object):
 
         @returns the magnified object.
         """
-        import math
         return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
@@ -783,7 +884,7 @@ class GSObject(object):
         @returns the sheared object.
         """
         from .transform import _Transform
-        new_obj = _Transform(self, *shear.getMatrix().ravel().tolist())
+        new_obj = _Transform(self, shear.getMatrix())
         return new_obj
 
     def lens(self, g1, g2, mu):
@@ -990,7 +1091,7 @@ class GSObject(object):
         else:
             return BoundsI()
 
-    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
+    def _fix_offset(self, new_bounds, offset, use_true_center):
         # Note: this assumes self is in terms of image coordinates.
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
@@ -1003,15 +1104,7 @@ class GSObject(object):
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
             offset = PositionD(dx,dy)
-
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse:
-            offset = -offset
-
-        if offset == PositionD(0,0):
-            return self
-        else:
-            return self._shift(offset)
+        return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         from .wcs import BaseWCS, PixelScale
@@ -1429,6 +1522,10 @@ class GSObject(object):
                 raise ValueError("surface_ops are only relevant for method='phot'")
             if save_photons:
                 raise ValueError("save_photons is only valid for method='phot'")
+        else:
+            # If we want to save photons, it doesn't make sense to limit the number per shoot call.
+            if save_photons and maxN is not None:
+                raise ValueError("Setting maxN is incompatible with save_photons=True")
 
         # Do any delayed computation needed by fft or real_space drawing.
         if method != 'phot':
@@ -1474,7 +1571,9 @@ class GSObject(object):
                             real_space=real_space, gsparams=self.gsparams)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+        offset = prof._fix_offset(new_bounds, offset, use_true_center)
+        if offset != PositionD(0,0):
+            prof = prof._shift(offset)
 
         # Make sure image is setup correctly
         image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype)
@@ -1508,7 +1607,8 @@ class GSObject(object):
                             prof_no_pixel,
                             Pixel(scale=1.0/n_subsample, gsparams=self.gsparams),
                             real_space=real_space, gsparams=self.gsparams)
-                    prof = prof._fix_center(new_bounds, offset, use_true_center, reverse=False)
+                    if offset != PositionD(0,0):
+                        prof = prof._shift(offset)
                 elif n_subsample != 1:
                     # We can't just pull off the pixel-free version, so we need to deconvolve
                     # by the original pixel and reconvolve by the smaller one.
@@ -1575,20 +1675,28 @@ class GSObject(object):
         if image.wcs is None or not image.wcs.isPixelScale():
             raise ValueError("drawReal requires an image with a PixelScale wcs")
 
-        if image.dtype in [ np.float64, np.float32 ]:
-            return self._sbp.draw(image._image, image.scale, add_to_image)
+        if image.dtype in [ np.float64, np.float32 ] and not add_to_image and image.iscontiguous:
+            self._drawReal(image)
+            return image.array.sum(dtype=float)
         else:
             # Need a temporary
             if image.dtype in [ np.complex128, np.int32, np.uint32 ]:
-                im1 = ImageD(bounds=image.bounds)
+                im1 = ImageD(bounds=image.bounds, scale=image.scale)
             else:
-                im1 = ImageF(bounds=image.bounds)
-            added_flux = self._sbp.draw(im1._image, image.scale, False)
+                im1 = ImageF(bounds=image.bounds, scale=image.scale)
+            self._drawReal(im1)
             if add_to_image:
                 image.array[:,:] += im1.array.astype(image.dtype, copy=False)
             else:
                 image.array[:,:] = im1.array
-            return added_flux
+            return im1.array.sum(dtype=float)
+
+    def _drawReal(self, image):
+        """Equivalent to the regular drawReal(image, add_to_image=False), but without the usual
+        sanity checks, and the image's dtype must be either float32 or float64, and it must
+        have a c_contiguous array (image.iscontiguous must be True).
+        """
+        raise NotImplementedError("%s does not implement drawReal"%self.__class__.__name__)
 
     def getGoodImageSize(self, pixel_scale):
         """Return a good size to use for drawing this profile.
@@ -1604,7 +1712,16 @@ class GSObject(object):
 
         @returns N, a good (linear) size of an image on which to draw this object.
         """
-        return self._sbp.getGoodImageSize(pixel_scale)
+        # Start with a good size from stepk and the pixel scale
+        Nd = 2. * math.pi / (pixel_scale * self.stepk)
+
+        # Make it an integer
+        # (Some slop to keep from getting extra pixels due to roundoff errors in calculations.)
+        N = int(math.ceil(Nd*(1.-1.e-12)))
+
+        # Round up to an even value
+        N = 2 * ((N+1) // 2)
+        return N
 
     def drawFFT_makeKImage(self, image):
         """
@@ -1678,13 +1795,12 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = _BoundsI(0, wrap_size//2, -wrap_size//2, wrap_size//2-1)
-        _galsim.wrapImage(kimage._image, bwrap._b, True, False)
-        kimage_wrap = kimage.subImage(bwrap)
+        kimage_wrap = kimage._wrap(bwrap, True, False)
 
         # Perform the fourier transform.
         breal = _BoundsI(-wrap_size//2, wrap_size//2+1, -wrap_size//2, wrap_size//2-1)
         real_image = Image(breal, dtype=float)
-        _galsim.irfft(kimage_wrap._image, real_image._image)
+        _galsim.irfft(kimage_wrap._image, real_image._image, True, True)
 
         # Add (a portion of) this to the original image.
         temp = real_image.subImage(image.bounds)
@@ -2007,7 +2123,12 @@ class GSObject(object):
         """
         from .random import UniformDeviate
         from .photon_array import PhotonArray
+
         photons = PhotonArray(n_photons)
+        if n_photons == 0:
+            # It's ok to shoot 0, but downstream can have problems with it, so just stop now.
+            return photons
+
         ud = UniformDeviate(rng)
         self._shoot(photons, ud)
         return photons
@@ -2018,9 +2139,7 @@ class GSObject(object):
         @param photons      A PhotonArray instance into which the photons should be placed.
         @param ud           A UniformDeviate instance to use for the photon shooting,
         """
-        # Note: If sub-class shooting ends up with correlated photons, it should override this
-        # and remember to call photons.setCorrelated()
-        self._sbp.shoot(photons._pa, ud._rng)
+        raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, setup_only=False):
@@ -2112,25 +2231,26 @@ class GSObject(object):
         if setup_only:
             return image
 
-        self._drawKImage(image, add_to_image)
+        if not add_to_image and image.iscontiguous:
+            self._drawKImage(image)
+        else:
+            im2 = Image(bounds=image.bounds, dtype=image.dtype, scale=image.scale)
+            self._drawKImage(im2)
+            image += im2
         return image
 
-    def _drawKImage(self, image, add_to_image=False):
-        """Equivalent to drawKImage(image, add_to_image, recenter=False), but without the normal
-        sanity checks or the option to create the image automatically.
+    def _drawKImage(self, image):
+        """Equivalent to drawKImage(image, add_to_image, recenter=False, add_to_image=False), but
+        without the normal sanity checks or the option to create the image automatically.
 
-        The input image must be provided as a complex Image instancec, and the bounds should be
-        set up appropriately (e.g. with 0,0 in the center if so desired).  This corresponds to
-        recenter=False for the normal drawKImage.
+        The input image must be provided as a complex Image instance (dtype=complex64 or
+        complex128), and the bounds should be set up appropriately (e.g. with 0,0 in the center if
+        so desired).  This corresponds to recenter=False for the normal drawKImage.  And, it must
+        have a c_contiguous array (image.iscontiguous must be True).
 
         @param image        The Image onto which to draw the k-space image. [required]
-        @param add_to_image Whether to add to the existing images rather than clear out
-                            anything in the image before drawing.  [default: False]
-
-        @returns an Image instance (created if necessary)
         """
-        self._sbp.drawK(image._image, image.scale, add_to_image)
-        return image
+        raise NotImplementedError("%s does not implement drawKImage"%self.__class__.__name__)
 
     # Derived classes should define the __eq__ function
     def __ne__(self, other): return not self.__eq__(other)

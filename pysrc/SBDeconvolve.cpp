@@ -26,24 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBDeconvolve
-    {
-
-        static void wrap()
-        {
-            bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
-                .def(bp::init<const SBProfile &, GSParams>(
-                        (bp::arg("adaptee"), bp::arg("gsparams"))))
-                .def(bp::init<const SBDeconvolve &>())
-                .def("getObj", &SBDeconvolve::getObj)
-                ;
-        }
-
-    };
-
     void pyExportSBDeconvolve()
     {
-        PySBDeconvolve::wrap();
+        bp::class_< SBDeconvolve, bp::bases<SBProfile> >("SBDeconvolve", bp::no_init)
+            .def(bp::init<const SBProfile &, GSParams>());
     }
 
 } // namespace galsim

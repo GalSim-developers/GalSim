@@ -26,36 +26,20 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PyCDModels
+    template <typename T>
+    static void WrapTemplates()
     {
-
-        template <typename U>
-        static void wrapTemplates() {
-
-            typedef void (*ApplyCD_func)(
-                ImageView<U>& , const BaseImage<U>& ,
-                const BaseImage<double>& , const BaseImage<double>& ,
-                const BaseImage<double>& , const BaseImage<double>& ,
-                const int , const double );
-            bp::def("_ApplyCD",
-                ApplyCD_func(&ApplyCD),
-                (bp::arg("output"), bp::arg("input"),
-                 bp::arg("aL"), bp::arg("aR"), bp::arg("aB"), bp::arg("aT"),
-                bp::arg("dmax"), bp::arg("gain_ratio")),
-                "Apply an Antilogus et al (2014) charge deflection model to an image.");
-
-        };
-
-        static void wrap(){
-            wrapTemplates<float>();
-            wrapTemplates<double>();
-        }
-
-    };
+        typedef void (*ApplyCD_func)(ImageView<T>& , const BaseImage<T>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const BaseImage<double>& , const BaseImage<double>& ,
+                                     const int , const double );
+        bp::def("_ApplyCD", ApplyCD_func(&ApplyCD));
+    }
 
     void pyExportCDModel()
     {
-        PyCDModels::wrap();
+        WrapTemplates<float>();
+        WrapTemplates<double>();
     }
 
 } // namespace galsim

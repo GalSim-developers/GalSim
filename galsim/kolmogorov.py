@@ -16,10 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
 
 
 class Kolmogorov(GSObject):
@@ -121,50 +125,87 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
+    # This constant comes from the standard form of the Kolmogorov spectrum from
+    # from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
+    # T(k) = exp(-1/2 D(k))
+    # D(k) = 6.8839 (lambda/r0 k/2Pi)^(5/3)
+    #
+    # We convert this into T(k) = exp(-(k/k0)^5/3) for efficiency,
+    # which implies 1/2 6.8839 (lambda/r0 / 2Pi)^5/3 = (1/k0)^5/3
+    # k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
+    _k0_factor = 2.992934
+
+    # The value in real space at (x,y) = (0,0) is analytic:
+    # int( flux (k/2pi) exp(-(k/k0)**(5/3)), k=0..inf)
+    # = flux * k0^2 * (3/5) Gamma(6/5) / 2pi
+    _xzero = 0.08767865636723461
+
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, lam=None, r0=None,
-                 r0_500=None, flux=1., scale_unit=galsim.arcsec, gsparams=None):
+                 r0_500=None, flux=1., scale_unit=None, gsparams=None):
+
+        from .angle import arcsec, radians, AngleUnit
+
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
 
         if fwhm is not None :
             if any(item is not None for item in (lam_over_r0, lam, r0, r0_500, half_light_radius)):
                 raise TypeError(
                         "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) may be specified for Kolmogorov")
-            else:
-                lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
+            self._lor0 = float(fwhm) / Kolmogorov._fwhm_factor
         elif half_light_radius is not None:
             if any(item is not None for item in (lam_over_r0, lam, r0, r0_500)):
                 raise TypeError(
                         "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) may be specified for Kolmogorov")
-            else:
-                lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
+            self._lor0 = float(half_light_radius) / Kolmogorov._hlr_factor
         elif lam_over_r0 is not None:
             if any(item is not None for item in (lam, r0, r0_500)):
                 raise TypeError("Cannot specify lam, r0 or r0_500 in conjunction with lam_over_r0.")
+            self._lor0 = float(lam_over_r0)
         else:
             if lam is None or (r0 is None and r0_500 is None):
                 raise TypeError(
                         "One of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) must be specified for Kolmogorov")
             # In this case we're going to use scale_unit, so parse it in case of string input:
-            if isinstance(scale_unit, str):
-                scale_unit = galsim.AngleUnit.from_name(scale_unit)
+            if scale_unit is None:
+                scale_unit = arcsec
+            elif isinstance(scale_unit, str):
+                scale_unit = AngleUnit.from_name(scale_unit)
             if r0 is None:
                 r0 = r0_500 * (lam/500.)**1.2
-            lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
+            self._lor0 = (1.e-9*float(lam)/float(r0))*(radians/scale_unit)
 
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBKolmogorov(lam_over_r0, flux, self.gsparams._gsp)
+        self._k0 = Kolmogorov._k0_factor / self._lor0
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBKolmogorov(self._lor0, self._flux, self.gsparams._gsp)
 
     @property
-    def lam_over_r0(self): return self._sbp.getLamOverR0()
+    def lam_over_r0(self): return self._lor0
+
     @property
-    def half_light_radius(self): return self.lam_over_r0 * Kolmogorov._hlr_factor
+    def fwhm(self):
+        """Return the FWHM of this Kolmogorov profile.
+        """
+        return self._lor0 * Kolmogorov._fwhm_factor
+
     @property
-    def fwhm(self): return self.lam_over_r0 * Kolmogorov._fwhm_factor
+    def half_light_radius(self):
+        """Return the half light radius of this Kolmogorov profile.
+        """
+        return self._lor0 * Kolmogorov._hlr_factor
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Kolmogorov) and
+        return (isinstance(other, Kolmogorov) and
                 self.lam_over_r0 == other.lam_over_r0 and
                 self.flux == other.flux and
                 self.gsparams == other.gsparams)
@@ -183,5 +224,43 @@ class Kolmogorov(GSObject):
         s += ')'
         return s
 
-_galsim.SBKolmogorov.__getinitargs__ = lambda self: (
-        self.getLamOverR0(), self.getFlux(), self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        # exp(-k^(5/3)) = kvalue_accuracy
+        return (-math.log(self.gsparams.kvalue_accuracy)) ** 0.6 * self._k0
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _max_sb(self):
+        return self._flux * self._k0**2 * Kolmogorov._xzero
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

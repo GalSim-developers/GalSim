@@ -26,22 +26,10 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBDeltaFunction
-    {
-        static void wrap()
-        {
-            bp::class_<SBDeltaFunction,bp::bases<SBProfile> >("SBDeltaFunction", bp::no_init)
-                .def(bp::init<double, GSParams>(
-                        (bp::arg("flux"), bp::arg("gsparams"))))
-                .def(bp::init<const SBDeltaFunction &>())
-                .enable_pickling()
-                ;
-        }
-    };
-
     void pyExportSBDeltaFunction()
     {
-        PySBDeltaFunction::wrap();
+        bp::class_<SBDeltaFunction,bp::bases<SBProfile> >("SBDeltaFunction", bp::no_init)
+            .def(bp::init<double, GSParams>());
     }
 
 } // namespace galsim

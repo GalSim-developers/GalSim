@@ -20,7 +20,7 @@
 #include "galsim/IgnoreWarnings.h"
 
 #define BOOST_PYTHON_MAX_ARITY 22  // We have a function with 21 params here...
-                                   // c.f. www.boost.org/libs/python/doc/v2/configuration.html
+// c.f. www.boost.org/libs/python/doc/v2/configuration.html
 #include "boost/python.hpp"
 
 #include "hsm/PSFCorr.h"
@@ -29,37 +29,6 @@ namespace bp = boost::python;
 
 namespace galsim {
 namespace hsm {
-namespace {
-
-struct PyHSMParams {
-
-    static void wrap() {
-
-        bp::class_<HSMParams> pyHSMParams("HSMParams", bp::no_init);
-        pyHSMParams
-            .def(bp::init<
-                 double, double, double, int, int, double, long, long, double, double, double,
-                 int, double, double, double>(
-                     (bp::arg("nsig_rg"),
-                      bp::arg("nsig_rg2"),
-                      bp::arg("max_moment_nsig2"),
-                      bp::arg("regauss_too_small"),
-                      bp::arg("adapt_order"),
-                      bp::arg("convergence_threshold"),
-                      bp::arg("max_mom2_iter"),
-                      bp::arg("num_iter_default"),
-                      bp::arg("bound_correct_wt"),
-                      bp::arg("max_amoment"),
-                      bp::arg("max_ashift"),
-                      bp::arg("ksb_moments_max"),
-                      bp::arg("ksb_sig_weight"),
-                      bp::arg("ksb_sig_factor"),
-                      bp::arg("failed_moments"))))
-            ;
-    }
-};
-
-struct PyShapeData {
 
     static ShapeData* ShapeData_init(
         const galsim::Bounds<int>& image_bounds, int moments_status,
@@ -99,53 +68,29 @@ struct PyShapeData {
         return data;
     }
 
-    template <typename U, typename V>
-    static void wrapTemplates() {
-        typedef void (*FAM_func)(ShapeData& result, const BaseImage<U>&, const BaseImage<int>&,
+    template <typename T, typename V>
+    static void WrapTemplates() {
+        typedef void (*FAM_func)(ShapeData&t, const BaseImage<T>&, const BaseImage<int>&,
                                  double, double, Position<double>, bool, const HSMParams&);
-        bp::def("_FindAdaptiveMomView",
-                FAM_func(&FindAdaptiveMomView),
-                (bp::args("result"),
-                 bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
-                 bp::arg("round_moments")=false, bp::arg("hsmparams")=bp::object()),
-                "Find adaptive moments of an image (with some optional args).");
+        bp::def("_FindAdaptiveMomView", FAM_func(&FindAdaptiveMomView));
 
-        typedef void (*ESH_func)(ShapeData&, const BaseImage<U>&, const BaseImage<V>&,
+        typedef void (*ESH_func)(ShapeData&, const BaseImage<T>&, const BaseImage<V>&,
                                  const BaseImage<int>&, float, const char *,
                                  const char*, double, double, double, Position<double>,
                                  const HSMParams&);
-        bp::def("_EstimateShearView",
-                ESH_func(&EstimateShearView),
-                (bp::arg("result"),
-                 bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
-                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
-                 bp::arg("recompute_flux")="FIT",
-                 bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
-                 bp::arg("hsmparams")=bp::object()),
-                "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args).");
+        bp::def("_EstimateShearView", ESH_func(&EstimateShearView));
     };
 
-    static void wrap() {
+    void pyExportHSM() {
+
+        bp::class_<HSMParams> pyHSMParams("HSMParams", bp::no_init);
+        pyHSMParams
+            .def(bp::init<
+                 double, double, double, int, int, double, long, long, double, double, double,
+                 int, double, double, double>());
+
         bp::class_<ShapeData>("ShapeData", "", bp::no_init)
-            .def("__init__",
-                 bp::make_constructor(
-                     &ShapeData_init, bp::default_call_policies(), (
-                         bp::arg("image_bounds"), bp::arg("moments_status"),
-                         bp::arg("observed_e1"), bp::arg("observed_e2"),
-                         bp::arg("moments_sigma"), bp::arg("moments_amp"),
-                         bp::arg("moments_centroid"),
-                         bp::arg("moments_rho4"), bp::arg("moments_n_iter"),
-                         bp::arg("correction_status"),
-                         bp::arg("corrected_e1"), bp::arg("corrected_e2"),
-                         bp::arg("corrected_g1"), bp::arg("corrected_g2"), bp::arg("meas_type"),
-                         bp::arg("corrected_shape_err"), bp::arg("correction_method"),
-                         bp::arg("resolution_factor"), bp::arg("psf_sigma"),
-                         bp::arg("psf_e1"), bp::arg("psf_e2"), bp::arg("error_message")
-                     )
-                 )
-            )
+            .def("__init__", bp::make_constructor(&ShapeData_init, bp::default_call_policies()))
             .def_readonly("image_bounds", &ShapeData::image_bounds)
             .def_readonly("moments_status", &ShapeData::moments_status)
             .def_readonly("observed_e1", &ShapeData::observed_e1)
@@ -170,19 +115,11 @@ struct PyShapeData {
             .def_readonly("error_message", &ShapeData::error_message)
             ;
 
-        wrapTemplates<float, float>();
-        wrapTemplates<double, double>();
-        wrapTemplates<double, float>();
-        wrapTemplates<float, double>();
+        WrapTemplates<float, float>();
+        WrapTemplates<double, double>();
+        WrapTemplates<double, float>();
+        WrapTemplates<float, double>();
     }
-};
-
-} // anonymous
-
-void pyExportHSM() {
-    PyShapeData::wrap();
-    PyHSMParams::wrap();
-}
 
 } // namespace hsm
 } // namespace galsim

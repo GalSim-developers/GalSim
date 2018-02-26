@@ -26,59 +26,33 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBShapelet
+    static void fit(double sigma, int order, size_t idata,
+                    const BaseImage<double>& image, double scale,
+                    const Position<double>& center)
     {
-        template <typename U>
-        struct wrapImageTemplates {
-            static void fit(double sigma, int order, size_t idata,
-                     const BaseImage<U>& image, double scale,
-                     const Position<double>& center)
-            {
-                LVector bvec(order);
-                ShapeletFitImage(sigma, bvec, image, scale, center);
+        LVector bvec(order);
+        ShapeletFitImage(sigma, bvec, image, scale, center);
 
-                double* data = reinterpret_cast<double*>(idata);
-                int size = PQIndex::size(order);
-                tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
-                v = bvec.rVector();
-            }
+        double* data = reinterpret_cast<double*>(idata);
+        int size = PQIndex::size(order);
+        tmv::VectorView<double> v = tmv::VectorViewOf(data, size);
+        v = bvec.rVector();
+    }
 
-            static void wrap() {
-                bp::def("ShapeletFitImage", &fit,
-                        bp::args("sigma","order","idata","image","scale","center"),
-                        "Fit a Shapelet decomposition to the provided image");
-            }
-        };
-
-        static SBShapelet* construct(double sigma, int order, size_t idata, GSParams gsparams)
-        {
-            double* data = reinterpret_cast<double*>(idata);
-            int size = PQIndex::size(order);
-            LVector bvec(order, tmv::VectorViewOf(data, size));
-            return new SBShapelet(sigma, bvec, gsparams);
-        }
-
-        static void wrap() {
-            bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("sigma"), bp::arg("order"),  bp::arg("idata"),
-                         bp::arg("gsparams"))))
-                .def("rotate", &SBShapelet::rotate)
-                .enable_pickling()
-                ;
-            wrapImageTemplates<float>::wrap();
-            wrapImageTemplates<double>::wrap();
-            wrapImageTemplates<int16_t>::wrap();
-            wrapImageTemplates<int32_t>::wrap();
-            wrapImageTemplates<uint16_t>::wrap();
-            wrapImageTemplates<uint32_t>::wrap();
-        }
-    };
+    static SBShapelet* construct(double sigma, int order, size_t idata, GSParams gsparams)
+    {
+        double* data = reinterpret_cast<double*>(idata);
+        int size = PQIndex::size(order);
+        LVector bvec(order, tmv::VectorViewOf(data, size));
+        return new SBShapelet(sigma, bvec, gsparams);
+    }
 
     void pyExportSBShapelet()
     {
-        PySBShapelet::wrap();
+        bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
+
+        bp::def("ShapeletFitImage", &fit);
     }
 
 } // namespace galsim

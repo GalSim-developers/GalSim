@@ -131,8 +131,7 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double size, RadiusType rType, double flux,
-                     double trunc, bool flux_untruncated,
+        SBSersicImpl(double n, double scale_radius, double flux, double trunc,
                      const GSParams& gsparams);
 
         ~SBSersicImpl() {}
@@ -146,20 +145,20 @@ namespace galsim {
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+            if (_trunc==0.) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
             else { xmin = -_trunc; xmax = _trunc; }
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (_trunc==0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            if (_trunc==0.) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
             else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
 
@@ -167,7 +166,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return _truncated; }
+        bool hasHardEdges() const { return _trunc != 0.; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -216,7 +215,6 @@ namespace galsim {
         double _r0;      ///< Scale radius specified at the constructor.
         double _re;      ///< Half-light radius specified at the constructor.
         double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.

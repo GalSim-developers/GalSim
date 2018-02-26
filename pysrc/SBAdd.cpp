@@ -20,56 +20,26 @@
 #include "galsim/IgnoreWarnings.h"
 #include "boost/python.hpp"
 
-#include "boost/python/stl_iterator.hpp"
-
 #include "SBAdd.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBAdd
+    static SBAdd* construct(const bp::list& slist, GSParams gsparams)
     {
-
-        // This will be wrapped as a Python constructor; it accepts an arbitrary Python iterable.
-        static SBAdd* construct(const bp::object& iterable, GSParams gsparams)
-        {
-            bp::stl_input_iterator<SBProfile> begin(iterable), end;
-            std::list<SBProfile> plist(begin, end);
-            return new SBAdd(plist, gsparams);
+        std::list<SBProfile> plist;
+        int n = len(slist);
+        for(int i=0; i<n; ++i) {
+            plist.push_back(bp::extract<const SBProfile&>(slist[i]));
         }
-
-        static bp::list getObjs(const SBAdd& sbp)
-        {
-            const std::list<SBProfile>& objs = sbp.getObjs();
-            std::list<SBProfile>::const_iterator it = objs.begin();
-            bp::list l;
-            for (; it != objs.end(); ++it) l.append(*it);
-            return l;
-        }
-
-        static void wrap()
-        {
-            static char const* doc = "Sum of SBProfiles.";
-
-            bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", doc, bp::no_init)
-                // bp tries the overloads in reverse order, so we wrap the most general one first
-                // to ensure we try it last
-                .def("__init__", bp::make_constructor(
-                        &construct, bp::default_call_policies(),
-                        (bp::arg("slist"), bp::arg("gsparams"))
-                ))
-                .def(bp::init<const SBAdd &>())
-                .def("getObjs", getObjs)
-                .enable_pickling()
-                ;
-        }
-
-    };
+        return new SBAdd(plist, gsparams);
+    }
 
     void pyExportSBAdd()
     {
-        PySBAdd::wrap();
+        bp::class_< SBAdd, bp::bases<SBProfile> >("SBAdd", bp::no_init)
+            .def("__init__", bp::make_constructor(&construct, bp::default_call_policies()));
     }
 
 } // namespace galsim

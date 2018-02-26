@@ -21,7 +21,6 @@
 #include "boost/python.hpp"
 
 namespace galsim {
-    void pyExportAngle();
     void pyExportBounds();
     void pyExportPhotonArray();
     void pyExportImage();
@@ -40,7 +39,6 @@ namespace galsim {
     void pyExportSBAiry();
     void pyExportSBShapelet();
     void pyExportSBInterpolatedImage();
-    void pyExportSBInterpolatedKImage();
     void pyExportSBKolmogorov();
     void pyExportSBInclinedExponential();
     void pyExportSBInclinedSersic();
@@ -68,7 +66,6 @@ namespace galsim {
 } // namespace galsim
 
 BOOST_PYTHON_MODULE(_galsim) {
-    galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportImage();
     galsim::pyExportPhotonArray();
@@ -87,7 +84,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBAiry();
     galsim::pyExportSBShapelet();
     galsim::pyExportSBInterpolatedImage();
-    galsim::pyExportSBInterpolatedKImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportSBInclinedExponential();
     galsim::pyExportSBInclinedSersic();

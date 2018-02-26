@@ -16,10 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
 
 
 class Moffat(GSObject):
@@ -68,28 +72,79 @@ class Moffat(GSObject):
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
 
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
     # since we allow it to be truncated, which matters for hlr.  So we do these calculations
     # in the C++-layer constructor.
     def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
                  flux=1., gsparams=None):
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBMoffat(beta, scale_radius, half_light_radius, fwhm,
-                                     trunc, flux, self.gsparams._gsp)
+        self._beta = float(beta)
+        self._trunc = float(trunc)
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
+
+        # Parse the radius options
+        if half_light_radius is not None:
+            if scale_radius is not None or fwhm is not None:
+                raise TypeError(
+                        "Only one of scale_radius, half_light_radius, or fwhm may be " +
+                        "specified for Moffat")
+            self._hlr = float(half_light_radius)
+            self._r0 = _galsim.MoffatCalculateSRFromHLR(self._hlr, self._trunc, self._beta)
+            self._fwhm = 0.
+        elif fwhm is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius, half_light_radius, or fwhm may be " +
+                        "specified for Moffat")
+            self._fwhm = float(fwhm)
+            self._r0 = self._fwhm / (2. * math.sqrt(2.**(1./self._beta) - 1.))
+            self._hlr = 0.
+        elif scale_radius is not None:
+            self._r0 = float(scale_radius)
+            self._hlr = 0.
+            self._fwhm = 0.
+        else:
+            raise TypeError(
+                    "One of scale_radius, half_light_radius, or fwhm must be " +
+                    "specified for Moffat")
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBMoffat(self._beta, self._r0, self._trunc, self._flux, self.gsparams._gsp)
+
+    def getFWHM(self):
+        """Return the FWHM for this Moffat profile.
+        """
+
+    def getHalfLightRadius(self):
+        """Return the half light radius for this Moffat profile.
+        """
 
     @property
-    def beta(self): return self._sbp.getBeta()
+    def beta(self): return self._beta
     @property
-    def scale_radius(self): return self._sbp.getScaleRadius()
+    def scale_radius(self): return self._r0
     @property
-    def half_light_radius(self): return self._sbp.getHalfLightRadius()
+    def trunc(self): return self._trunc
+
     @property
-    def fwhm(self): return self._sbp.getFWHM()
-    @property
-    def trunc(self): return self._sbp.getTrunc()
+    def half_light_radius(self):
+        if self._hlr == 0.:
+            self._hlr = self._sbp.getHalfLightRadius()
+        return self._hlr
+
+    @lazy_property
+    def fwhm(self):
+        if self._fwhm == 0.:
+            self._fwhm = self._r0 * (2. * math.sqrt(2.**(1./self._beta) - 1.))
+        return self._fwhm
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Moffat) and
+        return (isinstance(other, Moffat) and
                 self.beta == other.beta and
                 self.scale_radius == other.scale_radius and
                 self.trunc == other.trunc and
@@ -113,6 +168,46 @@ class Moffat(GSObject):
         s += ')'
         return s
 
-_galsim.SBMoffat.__getinitargs__ = lambda self: (
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
-        self.getFlux(), self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        return self._sbp.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _has_hard_edges(self):
+        return self._trunc != 0.
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

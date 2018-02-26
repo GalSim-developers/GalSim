@@ -219,7 +219,7 @@ class AtmosphericScreen(object):
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
@@ -799,7 +799,7 @@ class OpticalScreen(object):
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepk and OpticalScreen.stepk
     # can use the same signature, even though they depend on different parameters.
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this phase screen.
 
         @param lam         Wavelength in nanometers.

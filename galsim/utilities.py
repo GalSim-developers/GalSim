@@ -18,9 +18,11 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+import functools
 from contextlib import contextmanager
 from future.utils import iteritems
 from builtins import range, object
+
 
 import numpy as np
 
@@ -1190,8 +1192,6 @@ def functionize(f):
     @returns  The decorated function.
 
     """
-    import functools
-
     @functools.wraps(f)
     def ff(*args, **kwargs):
         # First check if any of the arguments are callable...
@@ -1418,3 +1418,46 @@ class lazy_property(object):
         value = self.fget(obj)
         setattr(obj, self.func_name, value)
         return value
+
+# cf. Docstring Inheritance Decorator at:
+# https://github.com/ActiveState/code/wiki/Python_index_1
+# Although I modified it slightly, since the original recipe there had a bug that made it
+# not work properly with 2 levels of sub-classing (e.g. Pixel <- Box <- GSObject)
+class doc_inherit(object):
+    """
+    Docstring inheriting method descriptor
+    The class itself is also used as a decorator
+    """
+
+    def __init__(self, mthd):
+        self.mthd = mthd
+        self.name = mthd.__name__
+
+    def __get__(self, obj, cls):
+        for parent in cls.__bases__: # pragma: no branch
+            parfunc = getattr(parent, self.name, None)
+            if parfunc and getattr(parfunc, '__doc__', None): # pragma: no branch
+                break
+
+        if obj:
+            return self.get_with_inst(obj, cls, parfunc)
+        else:
+            return self.get_no_inst(cls, parfunc)
+
+    def get_with_inst(self, obj, cls, parfunc):
+        @functools.wraps(self.mthd, assigned=('__name__','__module__'))
+        def f(*args, **kwargs):
+            return self.mthd(obj, *args, **kwargs)
+        return self.use_parent_doc(f, parfunc)
+
+    def get_no_inst(self, cls, parfunc):
+        @functools.wraps(self.mthd, assigned=('__name__','__module__'))
+        def f(*args, **kwargs): # pragma: no cover (without inst, this is not normally called.)
+            return self.mthd(*args, **kwargs)
+        return self.use_parent_doc(f, parfunc)
+
+    def use_parent_doc(self, func, source):
+        if source is None: # pragma: no cover
+            raise NameError("Can't find '%s' in parents"%self.name)
+        func.__doc__ = source.__doc__
+        return func

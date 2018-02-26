@@ -92,6 +92,7 @@ def test_OpticalPSF_flux():
     do_pickle(optics_test)
     do_pickle(optics_test._psf)
     do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    check_basic(optics_test, "OpticalPSF")
 
 
 @timer
@@ -236,12 +237,18 @@ def test_OpticalPSF_aberrations_struts():
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
     optics_2 = galsim.OpticalPSF(
-        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=0.*galsim.degrees,
+        lod, obscuration=obscuration, nstruts=4, strut_thick=0.05, strut_angle=0.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
     myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical PSF (with struts) disagrees with expected result")
+    # These are also the defaults for strut_thick and strut_angle
+    optics_3 = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=4,
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
+    assert optics_3 == optics_2
+    do_pickle(optics_3)
 
     # make sure it doesn't completely explode when asked to return a PSF with non-circular pupil and
     # non-zero obscuration

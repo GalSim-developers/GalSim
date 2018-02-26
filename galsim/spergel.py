@@ -16,10 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
 
 
 class Spergel(GSObject):
@@ -94,11 +98,45 @@ class Spergel(GSObject):
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
-                                      self.gsparams._gsp)
+        self._nu = float(nu)
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
+
+        # Parse the radius options
+        if half_light_radius is not None:
+            if scale_radius is not None:
+                raise TypeError(
+                        "Only one of scale_radius or half_light_radius may be " +
+                        "specified for Spergel")
+            self._hlr = float(half_light_radius)
+            self._r0 = self._hlr / _galsim.SpergelCalculateHLR(self._nu)
+        elif scale_radius is not None:
+            self._r0 = float(scale_radius)
+            self._hlr = 0.
+        else:
+            raise TypeError(
+                    "Either scale_radius or half_light_radius must be specified for Spergel")
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBSpergel(self._nu, self._r0, self._flux, self.gsparams._gsp)
+
+    @property
+    def nu(self): return self._nu
+    @property
+    def scale_radius(self): return self._r0
+    @property
+    def half_light_radius(self):
+        if self._hlr == 0.:
+            self._hlr = self._r0 * _galsim.SpergelCalculateHLR(self._nu)
+        return self._hlr
 
     def calculateIntegratedFlux(self, r):
         """Return the integrated flux out to a given radius, r"""
@@ -108,15 +146,8 @@ class Spergel(GSObject):
         """Return the radius within which the total flux is f"""
         return self._sbp.calculateFluxRadius(float(f))
 
-    @property
-    def nu(self): return self._sbp.getNu()
-    @property
-    def scale_radius(self): return self._sbp.getScaleRadius()
-    @property
-    def half_light_radius(self): return self._sbp.getHalfLightRadius()
-
     def __eq__(self, other):
-        return (isinstance(other, galsim.Spergel) and
+        return (isinstance(other, Spergel) and
                 self.nu == other.nu and
                 self.scale_radius == other.scale_radius and
                 self.flux == other.flux and
@@ -136,5 +167,47 @@ class Spergel(GSObject):
         s += ')'
         return s
 
-_galsim.SBSpergel.__getinitargs__ = lambda self: (
-        self.getNu(), self.getScaleRadius(), None, self.getFlux(), self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        # (1+k^2)^(-1-nu) = maxk_threshold
+        return math.sqrt(self._gsparams.maxk_threshold ** (-1./(1.+self._nu)) - 1.0) / self._r0
+
+    @property
+    def _stepk(self):
+        R = self.calculateFluxRadius(1.0 - self.gsparams.folding_threshold) * self._r0
+        # Go to at least 5*hlr
+        R = max(R, self.gsparams.stepk_minimum_hlr * self.half_light_radius)
+        return math.pi / R
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        ksq = (kpos.x**2 + kpos.y**2) * self._r0**2
+        return self._flux * (1.+ksq)**(-1.-self._nu)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

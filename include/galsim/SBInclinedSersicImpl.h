@@ -32,9 +32,8 @@ namespace galsim {
     class SBInclinedSersic::SBInclinedSersicImpl : public SBProfileImpl
     {
     public:
-        SBInclinedSersicImpl(double n, double inclination, double size, RadiusType rType,
-                double height, HeightType hType, double flux,
-                double trunc, bool flux_untruncated, const GSParams& gsparams);
+        SBInclinedSersicImpl(double n, double inclination, double scale_radius,
+                double height, double flux, double trunc, const GSParams& gsparams);
 
         ~SBInclinedSersicImpl() {}
 
@@ -95,7 +94,6 @@ namespace galsim {
         double _re;      ///< Half-light radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
         double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
 

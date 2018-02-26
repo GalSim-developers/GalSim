@@ -24,6 +24,9 @@ import numpy as np
 
 from .gsobject import GSObject
 from .gsparams import GSParams
+from .position import PositionD
+from .image import Image
+from .utilities import doc_inherit
 from . import _galsim
 
 class Shapelet(GSObject):
@@ -108,14 +111,16 @@ class Shapelet(GSObject):
         >>> bvec = shapelet.bvec
         >>> b_pq = shapelet.getPQ(p,q)      # Get b_pq.  Returned as tuple (re, im) (even if p==q).
         >>> b_Nm = shapelet.getNM(N,m)      # Get b_Nm.  Returned as tuple (re, im) (even if m=0).
-
-    Furthermore, there are specializations of the rotate() and expand() methods that let
-    them be performed more efficiently than the usual GSObject implementation.
     """
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
     _single_params = []
     _takes_rng = False
+
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
 
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
@@ -158,24 +163,6 @@ class Shapelet(GSObject):
     def getNM(self,N,m):
         return self.getPQ((N+m)//2,(N-m)//2)
 
-    # These act directly on the bvector, so they may be a bit more efficient than the
-    # regular methods in GSObject
-    def rotate(self, theta):
-        from .angle import Angle
-        if not isinstance(theta, Angle):
-            raise TypeError("Input theta should be an Angle")
-        ret = Shapelet(self.sigma, self.order, self.bvec.copy())
-        ret._sbp.rotate(theta.rad)
-        return ret
-
-    def expand(self, scale):
-        sigma = self.sigma * scale
-        return Shapelet(sigma, self.order, self.bvec * scale**2)
-
-    def dilate(self, scale):
-        sigma = self.sigma * scale
-        return Shapelet(sigma, self.order, self.bvec)
-
     def __eq__(self, other):
         return (isinstance(other, Shapelet) and
                 self.sigma == other.sigma and
@@ -202,6 +189,50 @@ class Shapelet(GSObject):
         self.__dict__ = d
         self._sbp = _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
                                        self.gsparams._gsp)
+
+    @property
+    def _maxk(self):
+        return self._sbp.maxK()
+
+    @property
+    def _stepk(self):
+        return self._sbp.stepK()
+
+    @property
+    def _centroid(self):
+        return PositionD(self._sbp.centroid())
+
+    @property
+    def _flux(self):
+        return self._sbp.getFlux()
+
+    @property
+    def _positive_flux(self):
+        return self._sbp.getPositiveFlux()
+
+    @property
+    def _negative_flux(self):
+        return self._sbp.getNegativeFlux()
+
+    @property
+    def _max_sb(self):
+        return self._sbp.maxSB()
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._sbp.xValue(pos._p)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._sbp.kValue(kpos._p)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)
 
     @classmethod
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
@@ -235,7 +266,6 @@ class Shapelet(GSObject):
 
         @returns the fitted Shapelet profile
         """
-        from .position import PositionD
         if not center:
             center = image.true_center
         # convert from PositionI if necessary
@@ -251,6 +281,9 @@ class Shapelet(GSObject):
             # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
             raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                         "with a non-trivial WCS.")
+
+        # Make it double precision if it is not.
+        image = Image(image, dtype=np.float64, copy=False)
 
         _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
                                  image._image, image.scale, center._p)

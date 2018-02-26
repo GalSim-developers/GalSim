@@ -29,6 +29,9 @@
 
 namespace galsim {
 
+    template <typename T>
+    double CalculateSizeContainingFlux(const BaseImage<T>& im, double target_flux);
+
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
      * tables/images.
@@ -56,7 +59,7 @@ namespace galsim {
      * that, as in Bernstein & Gruen (2012), the accuracy achieved by this interpolant is dependent
      * on our choice of 4x pad factor.  Users who do not wish to pad the arrays to this degree may
      * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
-     * usage.
+     * usage.  (Note: this padding is done by the python layer now, not here.)
      *
      * The surface brightness profile will be in terms of the image pixels.  The python layer
      * InterpolatedImage class takes care of converting between these units and the arcsec units
@@ -70,10 +73,10 @@ namespace galsim {
          * image.
          *
          * @param[in] image       Input Image (ImageF or ImageD).
+         * @param[in] init_bounds The bounds of the original unpadded image.
+         * @param[in] nonzero_bounds  The bounds in which the padded image is non-zero.
          * @param[in] xInterp     Interpolation scheme to adopt between pixels
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
-         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
-         *                        for the Fourier transform.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] maxk        If > 0, force maxk to this value.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
@@ -82,9 +85,9 @@ namespace galsim {
         template <typename T>
         SBInterpolatedImage(
             const BaseImage<T>& image,
-            const Interpolant& xInterp,
-            const Interpolant& kInterp,
-            double pad_factor, double stepk, double maxk, const GSParams& gsparams);
+            const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
+            const Interpolant& xInterp, const Interpolant& kInterp,
+            double stepk, double maxk, const GSParams& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);
@@ -112,8 +115,9 @@ namespace galsim {
          */
         void calculateMaxK(double max_maxk=0.) const;
 
-        ConstImageView<double> getImage() const;
         ConstImageView<double> getPaddedImage() const;
+        ConstImageView<double> getNonZeroImage() const;
+        ConstImageView<double> getImage() const;
 
     protected:
 

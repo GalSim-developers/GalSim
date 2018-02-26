@@ -16,10 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .position import PositionD
+from .utilities import doc_inherit
 
 
 class DeltaFunction(GSObject):
@@ -40,7 +44,7 @@ class DeltaFunction(GSObject):
     Methods and Properties
     ----------------------
 
-    DeltaFunction simply has the usual GSObject properties.
+    DeltaFunction simply has the usual GSObject methods and properties.
     """
     # Initialization parameters of the object, with type information, to indicate
     # which attributes are allowed / required in a config file for this object.
@@ -53,12 +57,24 @@ class DeltaFunction(GSObject):
     _single_params = []
     _takes_rng = False
 
+    _mock_inf = 1.e300  # Some arbitrary very large number to use when we need infinity.
+
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = False
+    _is_analytic_k = True
+
     def __init__(self, flux=1., gsparams=None):
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBDeltaFunction(flux, self.gsparams._gsp)
+        self._gsparams = GSParams.check(gsparams)
+        self._flux = float(flux)
+
+    @property
+    def _sbp(self):
+        # NB. I only need this until compound and transform are reimplemented in Python...
+        return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.DeltaFunction) and
+        return (isinstance(other, DeltaFunction) and
                 self.flux == other.flux and
                 self.gsparams == other.gsparams)
 
@@ -75,5 +91,36 @@ class DeltaFunction(GSObject):
         s += ')'
         return s
 
-_galsim.SBDeltaFunction.__getinitargs__ = lambda self: (
-        self.getFlux(), self.getGSParams())
+    @property
+    def _maxk(self):
+        return DeltaFunction._mock_inf
+
+    @property
+    def _stepk(self):
+        return DeltaFunction._mock_inf
+
+    @property
+    def _max_sb(self):
+        return DeltaFunction._mock_inf
+
+    @doc_inherit
+    def _xValue(self, pos):
+        if pos.x == 0. and pos.y == 0.:
+            return DeltaFunction._mock_inf
+        else:
+            return 0.
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self.flux
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        flux_per_photon = self.flux / len(photons)
+        photons.x = 0.
+        photons.y = 0.
+        photons.flux = flux_per_photon
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        image.array[:,:] = self.flux

@@ -30,22 +30,15 @@ namespace math {
 
     void pyExportBessel() {
 
-        bp::def("j0_root", &getBesselRoot0, bp::args("s"),
-                "Get the sth root of the n=0 Bessel function, J_0(x)");
+        bp::def("j0_root", &getBesselRoot0);
         // In python, with switch from mostly matching the boost names for these to matching
         // the names scipy.special uses.
-        bp::def("j0", &j0, bp::args("x"),
-                "Calculate the cylindrical Bessel function, J_0(x)");
-        bp::def("j1", &j1, bp::args("x"),
-                "Calculate the cylindrical Bessel function, J_1(x)");
-        bp::def("jv", &cyl_bessel_j, bp::args("v","x"),
-                "Calculate the arbitrary v cylindrical Bessel function, J_v(x)");
-        bp::def("yv", &cyl_bessel_y, bp::args("v","x"),
-                "Calculate the arbitrary v cylindrical Bessel function, Y_v(x)");
-        bp::def("iv", &cyl_bessel_i, bp::args("v","x"),
-                "Calculate the arbitrary v modified cylindrical Bessel function, I_v(x)");
-        bp::def("kv", &cyl_bessel_k, bp::args("v","x"),
-                "Calculate the arbitrary v modified cylindrical Bessel function, K_v(x)");
+        bp::def("j0", &j0);
+        bp::def("j1", &j1);
+        bp::def("jv", &cyl_bessel_j);
+        bp::def("yv", &cyl_bessel_y);
+        bp::def("iv", &cyl_bessel_i);
+        bp::def("kv", &cyl_bessel_k);
 
     }
 

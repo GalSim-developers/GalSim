@@ -1349,15 +1349,13 @@ def test_usertype():
     """Test a user-defined type
     """
     # A custom GSObject class that will use BuildSimple
-    class PseudoDelta(galsim.GSObject):
+    class PseudoDelta(galsim.Gaussian):
         _req_params = {}
         _opt_params = { "flux" : float }
         _single_params = []
         _takes_rng = False
         def __init__(self, flux=1., gsparams=None):
-            obj = galsim.Gaussian(sigma=1.e-8, flux=flux, gsparams=gsparams)
-            self._gsparams = gsparams
-            self._sbp = obj._sbp
+            super(PseudoDelta, self).__init__(sigma=1.e-8, flux=flux, gsparams=gsparams)
 
     galsim.config.RegisterObjectType('PseudoDelta', PseudoDelta)
 

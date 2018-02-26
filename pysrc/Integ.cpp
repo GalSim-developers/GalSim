@@ -28,7 +28,6 @@ namespace bp = boost::python;
 
 namespace galsim {
 namespace integ {
-namespace {
 
     // A C++ function object that just calls a python function.
     class PyFunc :
@@ -55,17 +54,11 @@ namespace {
         }
     }
 
-} // anonymous
+    void pyExportInteg() {
 
+        bp::def("PyInt1d", &PyInt1d);
 
-void pyExportInteg() {
-
-    bp::def("PyInt1d",
-            &PyInt1d, (bp::args("func", "min", "max"),
-                       bp::arg("rel_err")=DEFRELERR, bp::arg("abs_err")=DEFABSERR),
-            "Calculate the integral of the given 1-d function from min to max.");
-
-}
+    }
 
 } // namespace integ
 } // namespace galsim

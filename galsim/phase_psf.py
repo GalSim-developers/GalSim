@@ -78,6 +78,7 @@ from .image import Image, _Image
 from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
+from .utilities import doc_inherit
 
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -267,8 +268,8 @@ class Aperture(object):
         if screen_list is not None:
             screen_list = PhaseScreenList(screen_list)
             stepk = min(stepk,
-                        screen_list._stepK(lam=lam, diam=diam, obscuration=obscuration,
-                                          gsparams=self._gsparams))
+                        screen_list._getStepK(lam=lam, diam=diam, obscuration=obscuration,
+                                              gsparams=self._gsparams))
         good_pupil_scale = (stepk * lam * 1.e-9 * (radians / arcsec) / (2 * np.pi * pad_factor))
 
         # Now that we have good candidate sizes and scales, we load or generate the pupil plane
@@ -433,7 +434,7 @@ class Aperture(object):
             b = _BoundsI(1,self.npix,1,self.npix)
             im = _Image(pp_arr, b, PixelScale(1.))
             int_im = InterpolatedImage(im, x_interpolant='linear',
-                                              calculate_stepk=False, calculate_maxk=False)
+                                       calculate_stepk=False, calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
             new_im = Image(pp_arr.shape[1], pp_arr.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
@@ -559,7 +560,7 @@ class Aperture(object):
     def __getstate__(self):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
         # pickle.
-        d = self.__dict__
+        d = self.__dict__.copy()
         for k in ['_rho', '_u', '_v', '_rsqr']:
             d.pop(k, None)
         return d
@@ -577,7 +578,7 @@ class Aperture(object):
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
-    def _stepK(self, lam, scale_unit=arcsec):
+    def _getStepK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
@@ -586,7 +587,7 @@ class Aperture(object):
         """
         return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/radians
 
-    def _maxK(self, lam, scale_unit=arcsec):
+    def _getMaxK(self, lam, scale_unit=arcsec):
         """Return the Fourier grid half-size for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
@@ -914,7 +915,7 @@ class PhaseScreenList(object):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
 
-    def _stepK(self, **kwargs):
+    def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
 
         The required set of parameters depends on the types of the individual PhaseScreens in the
@@ -930,7 +931,7 @@ class PhaseScreenList(object):
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return np.sum([layer._stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
+        return np.sum([layer._getStepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -1022,11 +1023,16 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
                  theta=(0.0*radians, 0.0*radians), interpolant=None,
                  scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
                  geometric_shooting=True, gsparams=None,
-                 _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
+                 _bar=None, _force_stepk=0., _force_maxk=0., **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1051,15 +1057,8 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
-        self._serialize_stepk = _force_stepk
-        self._serialize_maxk = _force_maxk
-
-        # Difference between serialize_maxk and force_maxk in InterpolatedImage is a factor of
-        # scale.
-        if self._serialize_stepk is not None:
-            self._serialize_stepk *= self.scale
-        if self._serialize_maxk is not None:
-            self._serialize_maxk *= self.scale
+        self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -1069,7 +1068,7 @@ class PhaseScreenPSF(GSObject):
         self._ii_pad_factor = ii_pad_factor
 
         self._bar = _bar
-        self._flux = flux
+        self._flux = float(flux)
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
 
@@ -1080,17 +1079,10 @@ class PhaseScreenPSF(GSObject):
         wcs = PixelScale(self.scale)
         image = _Image(array, bounds, wcs)
         dummy_interpolant = 'delta' # so wavefront gradient photon-shooting works.
-        self._dummy = InterpolatedImage(
+        self.ii = InterpolatedImage(
                 image, pad_factor=1.0, x_interpolant=dummy_interpolant,
-                _serialize_stepk=self._serialize_stepk,
-                _serialize_maxk=self._serialize_maxk)
-        self._sbp = self._dummy._sbp
-
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk)
         self._screen_list._delayCalculation(self)
-
-    @property
-    def flux(self):
-        return self._flux
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
@@ -1114,70 +1106,19 @@ class PhaseScreenPSF(GSObject):
                 self.time_step == other.time_step and
                 self._flux == other._flux and
                 self.interpolant == other.interpolant and
-                self._serialize_stepk == other._serialize_stepk and
-                self._serialize_maxk == other._serialize_maxk and
+                self._force_stepk == other._force_stepk and
+                self._force_maxk == other._force_maxk and
                 self._ii_pad_factor == other._ii_pad_factor and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
-                     self._serialize_stepk, self._serialize_maxk, self._ii_pad_factor,
-                     self.gsparams))
+                     self._force_stepk, self._force_maxk, self._ii_pad_factor, self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
         self._screen_list._prepareDraw()
-
-    # A few items which need the InterpolatedImage to have been prepared before accessing.
-    @property
-    def maxk(self):
-        """The value of k beyond which aliasing can be neglected.
-        """
-        self._prepareDraw()
-        return self.ii.maxk
-
-    @property
-    def nyquist_scale(self):
-        """The Image pixel spacing that does not alias maxk.
-        """
-        # Use this instead of self.ii.nyquistScale() so we don't need to _prepareDraw when
-        # photon-shooting into an automatically-sized image.
-        return np.pi/self.aper._maxK(self.lam, self.scale_unit)
-
-    @property
-    def stepk(self):
-        """The sampling in k space necessary to avoid folding of image in x space.
-        """
-        self._prepareDraw()
-        return self.ii.stepk
-
-    @property
-    def centroid(self):
-        """The (x, y) centroid of an object as a Position.
-        """
-        self._prepareDraw()
-        return self.ii.centroid
-
-    @property
-    def max_sb(self):
-        """An estimate of the maximum surface brightness of the object.
-
-        Some profiles will return the exact peak SB, typically equal to the value of
-        obj.xValue(obj.centroid).  However, not all profiles (e.g. Convolution) know how to
-        calculate this value without just drawing the image and checking what the maximum value is.
-        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
-        which will generally be conservative on the high side.
-
-        This routine is mainly used by the photon shooting process, where an overestimate of
-        the maximum surface brightness is acceptable.
-
-        Note, for negative-flux profiles, this will return the absolute value of the most negative
-        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
-        rather than the maximum value.  For most profiles, these are the same thing.
-        """
-        self._prepareDraw()
-        return self.ii.max_sb
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1199,11 +1140,9 @@ class PhaseScreenPSF(GSObject):
 
         self.ii = InterpolatedImage(
                 self.img, x_interpolant=self.interpolant,
-                _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 pad_factor=self._ii_pad_factor,
                 use_true_center=False, gsparams=self._gsparams)
-
-        self._sbp = self.ii._sbp
 
         if not self._suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
@@ -1217,15 +1156,17 @@ class PhaseScreenPSF(GSObject):
                     "This could lead to aliasing problems. " +
                     "Increasing pad_factor is recommended.")
 
+    @property
+    def _sbp(self):
+        return self.ii._sbp
+
     def __getstate__(self):
         # Finish calculating before pickling.
         self._prepareDraw()
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the image and remake the InterpolatedImage.
-        del d['_sbp']
         del d['ii']
-        d.pop('_dummy', None)
         return d
 
     def __setstate__(self, d):
@@ -1233,30 +1174,56 @@ class PhaseScreenPSF(GSObject):
         self.ii = InterpolatedImage(self.img, x_interpolant=self.interpolant,
                                     use_true_center=False,
                                     pad_factor=self._ii_pad_factor,
-                                    _serialize_stepk=self._serialize_stepk,
-                                    _serialize_maxk=self._serialize_maxk,
+                                    _force_stepk=self._force_stepk,
+                                    _force_maxk=self._force_maxk,
                                     gsparams=self._gsparams)
-        self._sbp = self.ii._sbp
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    @property
+    def _maxk(self):
+        return self.ii.maxk
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        from .random import UniformDeviate
-        from .photon_array import PhotonArray
+    @property
+    def _stepk(self):
+        return self.ii.stepk
 
+    @property
+    def _centroid(self):
+        self._prepareDraw()
+        return self.ii.centroid
+
+    @property
+    def _positive_flux(self):
+        return self.ii.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self.ii.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self.ii.max_sb
+
+    @doc_inherit
+    def _xValue(self, pos):
+        self._prepareDraw()
+        return self.ii._xValue(pos)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        self._prepareDraw()
+        return self.ii._kValue(kpos)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self.ii._drawReal(image)
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
         if not self._geometric_shooting:
             self._prepareDraw()
-            return self.ii.shoot(n_photons, rng)
+            return self.ii._shoot(photons, ud)
 
-        ud = UniformDeviate(rng)
-
+        n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
         ud.generate(t)
         t *= self.exptime
@@ -1270,11 +1237,15 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
-        x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
-        x *= 1e-9 * radians / arcsec  # convert from nm/m to arcsec.
-        y *= 1e-9 * radians / arcsec
+        nm_to_arcsec = 1.e-9 * radians / arcsec
+        photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
+        photons.x *= nm_to_arcsec
+        photons.y *= nm_to_arcsec
+        photons.flux = self._flux / n_photons
 
-        return PhotonArray(n_photons, x=x, y=y, flux=self._flux/n_photons)
+    @doc_inherit
+    def _drawKImage(self, image):
+        self.ii._drawKImage(image)
 
 
 class OpticalPSF(GSObject):
@@ -1492,6 +1463,11 @@ class OpticalPSF(GSObject):
     _single_params = [{"lam_over_diam": float, "lam": float}]
     _takes_rng = False
 
+    _has_hard_edges = False
+    _is_axisymmetric = False
+    _is_analytic_x = True
+    _is_analytic_k = True
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, annular_zernike=False,
@@ -1500,7 +1476,7 @@ class OpticalPSF(GSObject):
                  nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
-                 _force_maxk=None, _force_stepk=None,
+                 _force_stepk=0., _force_maxk=0., 
                  suppress_warning=False, geometric_shooting=False):
         from .phase_screens import OpticalScreen
         if isinstance(scale_unit, str):
@@ -1556,16 +1532,16 @@ class OpticalPSF(GSObject):
                 self.obscuration = 0.0
 
         # Save for pickling
-        self._lam = lam
-        self._flux = flux
+        self._lam = float(lam)
+        self._flux = float(flux)
         self._interpolant = interpolant
         self._scale_unit = scale_unit
         self._gsparams = gsparams
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
         self._aper = aper
-        self._force_maxk = _force_maxk
         self._force_stepk = _force_stepk
+        self._force_maxk = _force_maxk
         self._ii_pad_factor = ii_pad_factor
 
         # Finally, put together to make the PSF.
@@ -1574,15 +1550,10 @@ class OpticalPSF(GSObject):
                                    scale_unit=self._scale_unit, gsparams=self._gsparams,
                                    suppress_warning=self._suppress_warning,
                                    geometric_shooting=self._geometric_shooting,
-                                   _force_maxk=_force_maxk, _force_stepk=_force_stepk,
+                                   _force_stepk=_force_stepk, _force_maxk=_force_maxk, 
                                    ii_pad_factor=ii_pad_factor)
 
         self._psf._prepareDraw()  # No need to delay an OpticalPSF.
-        self._sbp = self._psf._sbp
-
-    @property
-    def flux(self):
-        return self._flux
 
     def __str__(self):
         screen = self._psf._screen_list[0]
@@ -1610,11 +1581,11 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
-        if self._force_maxk is not None:
-            s += ", _force_maxk=%r" % self._force_maxk
-        if self._force_stepk is not None:
+        if self._force_stepk != 0.:
             s += ", _force_stepk=%r" % self._force_stepk
-        if self._ii_pad_factor is not None:
+        if self._force_maxk != 0.:
+            s += ", _force_maxk=%r" % self._force_maxk
+        if self._ii_pad_factor != 4.:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
@@ -1637,12 +1608,15 @@ class OpticalPSF(GSObject):
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
+    @property
+    def _sbp(self):
+        return self._psf._sbp
+
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
         d['aper'] = d['_psf'].aper
-        del d['_sbp']
         del d['_psf']
         return d
 
@@ -1653,20 +1627,51 @@ class OpticalPSF(GSObject):
                                    aper=aper, interpolant=self._interpolant,
                                    scale_unit=self._scale_unit, gsparams=self._gsparams,
                                    suppress_warning=self._suppress_warning,
-                                   _force_maxk=self._force_maxk,
                                    _force_stepk=self._force_stepk,
+                                   _force_maxk=self._force_maxk,
                                    ii_pad_factor=self._ii_pad_factor)
         self._psf._prepareDraw()
-        self._sbp = self._psf._sbp
 
-    def shoot(self, n_photons, rng=None):
-        """Shoot photons into a PhotonArray.
+    @property
+    def _maxk(self):
+        return self._psf.maxk
 
-        @param n_photons    The number of photons to use for photon shooting.
-        @param rng          If provided, a random number generator to use for photon shooting,
-                            which may be any kind of BaseDeviate object.  If `rng` is None, one
-                            will be automatically created, using the time as a seed.
-                            [default: None]
-        @returns PhotonArray.
-        """
-        return self._psf.shoot(n_photons, rng)
+    @property
+    def _stepk(self):
+        return self._psf.stepk
+
+    @property
+    def _centroid(self):
+        return self._psf.centroid
+
+    @property
+    def _positive_flux(self):
+        return self._psf.positive_flux
+
+    @property
+    def _negative_flux(self):
+        return self._psf.negative_flux
+
+    @property
+    def _max_sb(self):
+        return self._psf.max_sb
+
+    @doc_inherit
+    def _xValue(self, pos):
+        return self._psf._xValue(pos)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        return self._psf._kValue(kpos)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._psf._drawReal(image)
+
+    @doc_inherit
+    def _shoot(self, photons, ud):
+        self._psf._shoot(photons, ud)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._psf._drawKImage(image)

@@ -16,10 +16,14 @@
 #    and/or other materials provided with the distribution.
 #
 
-import galsim
+import numpy as np
+import math
 
 from . import _galsim
 from .gsobject import GSObject
+from .gsparams import GSParams
+from .utilities import lazy_property, doc_inherit
+from .position import PositionD
 
 
 class Gaussian(GSObject):
@@ -68,7 +72,14 @@ class Gaussian(GSObject):
     # The FWHM of a Gaussian is 2 sqrt(2 ln2) sigma
     _fwhm_factor = 2.3548200450309493
     # The half-light-radius is sqrt(2 ln2) sigma
-    _hlr_factor =  1.1774100225154747
+    _hlr_factor = 1.1774100225154747
+    # 1/(2pi)
+    _inv_twopi = 0.15915494309189535
+
+    _has_hard_edges = False
+    _is_axisymmetric = True
+    _is_analytic_x = True
+    _is_analytic_k = True
 
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         if fwhm is not None :
@@ -90,18 +101,27 @@ class Gaussian(GSObject):
                         "One of sigma, fwhm, or half_light_radius must be " +
                         "specified for Gaussian")
 
-        self._gsparams = galsim.GSParams.check(gsparams)
-        self._sbp = _galsim.SBGaussian(sigma, flux, self.gsparams._gsp)
+        self._sigma = float(sigma)
+        self._flux = float(flux)
+        self._gsparams = GSParams.check(gsparams)
+        self._sigsq = sigma**2
+        self._inv_sigsq = 1./self._sigsq
+        self._norm = self.flux * self._inv_sigsq * Gaussian._inv_twopi
+
+    @lazy_property
+    def _sbp(self):
+        return _galsim.SBGaussian(self._sigma, self._flux, self.gsparams._gsp)
 
     @property
-    def sigma(self): return self._sbp.getSigma()
+    def sigma(self): return self._sigma
+
     @property
     def half_light_radius(self): return self.sigma * Gaussian._hlr_factor
     @property
     def fwhm(self): return self.sigma * Gaussian._fwhm_factor
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.Gaussian) and
+        return (isinstance(other, Gaussian) and
                 self.sigma == other.sigma and
                 self.flux == other.flux and
                 self.gsparams == other.gsparams)
@@ -120,5 +140,46 @@ class Gaussian(GSObject):
         s += ')'
         return s
 
-_galsim.SBGaussian.__getinitargs__ = lambda self: (
-        self.getSigma(), self.getFlux(), self.getGSParams())
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d.pop('_sbp',None)
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+
+    @property
+    def _maxk(self):
+        return math.sqrt(-2.*math.log(self.gsparams.maxk_threshold))/self.sigma
+
+    @property
+    def _stepk(self):
+        R = max(math.sqrt(-2.*math.log(self.gsparams.folding_threshold)),
+                self.gsparams.stepk_minimum_hlr * Gaussian._hlr_factor)
+        return math.pi / (R * self.sigma)
+
+    @property
+    def _max_sb(self):
+        return self._norm
+
+    @doc_inherit
+    def _xValue(self, pos):
+        rsq = pos.x**2 + pos.y**2
+        return self._norm * math.exp(-0.5 * rsq * self._inv_sigsq)
+
+    @doc_inherit
+    def _kValue(self, kpos):
+        ksq = (kpos.x**2 + kpos.y**2) * self._sigsq
+        return self._flux * math.exp(-0.5 * ksq)
+
+    @doc_inherit
+    def _drawReal(self, image):
+        self._sbp.draw(image._image, image.scale)
+
+    @doc_inherit
+    def _shoot(self, photons, rng):
+        self._sbp.shoot(photons._pa, rng._rng)
+
+    @doc_inherit
+    def _drawKImage(self, image):
+        self._sbp.drawK(image._image, image.scale)

@@ -653,12 +653,18 @@ def test_speedup():
     significant speedup.
     """
     import time
+    #import cProfile, pstats
+    #pr = cProfile.Profile()
+    #pr.enable()
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2)
     # Should be ~seconds if _prepareDraw() gets executed, ~0.01s otherwise.
     psf = atm.makePSF(lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)
     t0 = time.time()
     psf.drawImage(method='phot', n_photons=1e3)
     t1 = time.time()
+    #ps = pstats.Stats(pr).sort_stats('cumtime')
+    #ps.print_stats(20)
+    #print('t = ',t1-t0)
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 

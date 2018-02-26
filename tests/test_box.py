@@ -109,6 +109,10 @@ def test_box():
         np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(box.flux, test_flux)
         np.testing.assert_almost_equal(box.xValue(cen), box.max_sb)
+        np.testing.assert_almost_equal(box.xValue(width/2.-0.001, height/2.-0.001), box.max_sb)
+        np.testing.assert_almost_equal(box.xValue(width/2.-0.001, height/2.+0.001), 0.)
+        np.testing.assert_almost_equal(box.xValue(width/2.+0.001, height/2.-0.001), 0.)
+        np.testing.assert_almost_equal(box.xValue(width/2.+0.001, height/2.+0.001), 0.)
         np.testing.assert_array_equal(
                 box.width, width,
                 err_msg="Box width returned wrong value")
@@ -210,7 +214,10 @@ def test_tophat():
         np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
         np.testing.assert_almost_equal(tophat.flux, test_flux)
         np.testing.assert_almost_equal(tophat.xValue(cen), tophat.max_sb)
-
+        np.testing.assert_almost_equal(tophat.xValue(radius-0.001, 0.), tophat.max_sb)
+        np.testing.assert_almost_equal(tophat.xValue(0., radius-0.001), tophat.max_sb)
+        np.testing.assert_almost_equal(tophat.xValue(radius+0.001, 0.), 0.)
+        np.testing.assert_almost_equal(tophat.xValue(0., radius+0.001), 0.)
 
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))

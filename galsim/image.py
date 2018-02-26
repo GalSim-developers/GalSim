@@ -29,30 +29,15 @@ from . import utilities
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
 # when doing arithmetic with images.  So just make sure both of them point to ImageViewI in the
-# ImageView dict.  One of them is what you get when you just write numpy.int32.  The other is
-# what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the
-# ImageView dict, but we assign both versions just to be sure.
-
-_galsim.ImageView[np.int32] = _galsim.ImageViewI
-_galsim.ConstImageView[np.int32] = _galsim.ConstImageViewI
-
-alt_int32 = ( np.array([0]).astype(np.int32) + 1).dtype.type
-_galsim.ImageView[alt_int32] = _galsim.ImageViewI
-_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
-
-# On some systems, the above doesn't work, but this next one does.  I'll leave both active,
-# just in case there are systems where this doesn't work but the above does.
-alt_int32 = ( np.array([0]).astype(np.int16) +
-              np.array([0]).astype(np.int32) ).dtype.type
-_galsim.ImageView[alt_int32] = _galsim.ImageViewI
-_galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
-
-_all_cpp_image_types = tuple(list(_galsim.ImageView.values()) +
-                             list(_galsim.ConstImageView.values()))
-
+# _cpp_type dict.  One of them is what you get when you just write numpy.int32.  The other is
+# what numpy decides an int16 + int32 is.
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
 # http://projects.scipy.org/numpy/ticket/1246
+
+alt_int32 = ( np.array([0]).astype(np.int16) +
+              np.array([0]).astype(np.int32) ).dtype.type
+
 
 class Image(object):
     """A class for storing image data along with the pixel scale or WCS information
@@ -86,6 +71,7 @@ class Image(object):
     --------------
 
     There are several ways to construct an Image:
+    (Optional arguments are shown with their default values after the = sign.)
 
         Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)
 
@@ -106,17 +92,24 @@ class Image(object):
                 specify it.  You can also optionally provide an initial value for the pixels, which
                 defaults to 0.
 
-        Image(array, xmin=1, ymin=1, make_const=False, ...)
+        Image(array, xmin=1, ymin=1, make_const=False, copy=False ...)
 
                 This views an existing NumPy array as an Image, where updates to either the image
-                or the original array will affect the other one.  (To avoid this, you could use
-                `Image(array.copy(), ...)`.) The dtype is taken from `array.dtype`, which must be
-                one of the allowed types listed above.  You can also optionally set the origin
-                `xmin, ymin` if you want it to be something other than (1,1).  You can also
-                optionally force the Image to be read-only with `make_const=True`, though if the
-                original NumPy array is modified then the contents of `Image.array` will change.
+                or the original array will affect the other one.  The dtype is taken from
+                `array.dtype`, which must be one of the allowed types listed above.  You can also
+                optionally set the origin `xmin, ymin` if you want it to be something other than
+                (1,1).
 
-        Image(image, dtype=dtype)
+                You can also optionally force the Image to be read-only with `make_const=True`,
+                though if the original NumPy array is modified then the contents of `Image.array`
+                will change.
+
+                If you want to make a copy of the input array, rather than just view the existing
+                array, you can force a copy with
+
+                    >>> image = galsim.Image(array, copy=True)
+
+        Image(image, dtype=image.dtype, copy=True)
 
                 This creates a copy of an Image, possibly changing the type.  e.g.
 
@@ -127,6 +120,11 @@ class Image(object):
                 Without the `dtype` argument, this is equivalent to `image.copy()`, which makes
                 a deep copy.  If you want a copy that shares data with the original, see
                 the image.view() method.
+
+                If you only want to enforce the image to have a given type and not make a copy
+                if the array is already the correct type, you can use, e.g.
+
+                    >>> image_double = galsim.Image(image, dtype=numpy.float64, copy=False)
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -207,16 +205,16 @@ class Image(object):
 
     """
 
-    _typechar = { np.uint16 : 'US',
-                  np.uint32 : 'UI',
-                  np.int16 : 'S',
-                  np.int32 : 'I',
-                  np.float32 : 'F',
-                  np.float64 : 'D',
-                  np.complex64 : 'CF',
-                  np.complex128 : 'CD',
+    _cpp_type = { np.uint16 : _galsim.ImageViewUS,
+                  np.uint32 : _galsim.ImageViewUI,
+                  np.int16 : _galsim.ImageViewS,
+                  np.int32 : _galsim.ImageViewI,
+                  np.float32 : _galsim.ImageViewF,
+                  np.float64 : _galsim.ImageViewD,
+                  np.complex64 : _galsim.ImageViewCF,
+                  np.complex128 : _galsim.ImageViewCD,
                 }
-    _cpp_valid_dtypes = list(_typechar.keys())
+    _cpp_valid_dtypes = list(_cpp_type.keys())
 
     _alias_dtypes = {
         int : np.int32,          # So that user gets what they would expect
@@ -258,7 +256,7 @@ class Image(object):
                 array = np.array(args[0])
                 array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
-            elif isinstance(args[0], (Image,) + _all_cpp_image_types):
+            elif isinstance(args[0], Image):
                 image = args[0]
             else:
                 raise TypeError("Unable to parse %s as an array, bounds, or image."%args[0])
@@ -282,6 +280,7 @@ class Image(object):
         init_value = kwargs.pop('init_value', None)
         scale = kwargs.pop('scale', None)
         wcs = kwargs.pop('wcs', None)
+        copy = kwargs.pop('copy', None)
 
         # Check that we got them all
         if kwargs:
@@ -295,18 +294,21 @@ class Image(object):
         if array is not None:
             if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
+            if copy is None: copy = False
             if dtype is None:
                 dtype = array.dtype.type
                 if dtype in Image._alias_dtypes:
                     dtype = Image._alias_dtypes[dtype]
-                    array = array.astype(dtype)
+                    array = array.astype(dtype, copy=copy)
                 elif dtype not in Image._cpp_valid_dtypes:
                     raise ValueError(
                         "array's dtype.type must be one of "+str(Image._cpp_valid_dtypes)+
                         ".  Instead got "+str(array.dtype.type)+".  Or can set "+
                         "dtype explicitly.")
-            elif dtype != array.dtype.type:
-                array = array.astype(dtype)
+                elif copy:
+                    array = np.array(array)
+            else:
+                array = array.astype(dtype, copy=copy)
             # Be careful here: we have to watch out for little-endian / big-endian issues.
             # The path of least resistance is to check whether the array.dtype is equal to the
             # native one (using the dtype.isnative flag), and if not, make a new array that has a
@@ -329,13 +331,14 @@ class Image(object):
             nrow = int(nrow)
             self._array = self._make_empty(shape=(nrow,ncol), dtype=self._dtype)
             self._bounds = BoundsI(xmin, xmin+ncol-1, ymin, ymin+nrow-1)
-            self.fill(init_value)
+            if init_value:
+                self.fill(init_value)
         elif bounds is not None:
             if not isinstance(bounds, BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self._array = self._make_empty(bounds.numpyShape(), dtype=self._dtype)
             self._bounds = bounds
-            if bounds.isDefined():
+            if init_value:
                 self.fill(init_value)
         elif array is not None:
             self._array = array.view()
@@ -360,10 +363,13 @@ class Image(object):
                 # e.g. im = ImageF(...)
                 #      im2 = ImageD(im)
                 self._dtype = dtype
-            self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
-            self._array[:,:] = image.array[:,:]
+            if copy is False:
+                self._array = image.array.astype(self._dtype, copy=False)
+            else:
+                self._array = self._make_empty(shape=image.bounds.numpyShape(), dtype=self._dtype)
+                self._array[:,:] = image.array[:,:]
         else:
-            self._array = np.empty(shape=(1,1), dtype=self._dtype)
+            self._array = np.zeros(shape=(1,1), dtype=self._dtype)
             self._bounds = BoundsI()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
@@ -461,11 +467,17 @@ class Image(object):
     def isinteger(self): return self._array.dtype.kind in ['i','u']
 
     @property
+    def iscontiguous(self):
+        """Indicates whether each row of the image is contiguous in memory.
+
+        Note: it is ok for the end of one row to not be contiguous with the start of the
+        next row.  This just checks that each individual row has a stride of 1.
+        """
+        return self._array.strides[1]//self._array.itemsize == 1
+
+    @property
     def _image(self):
-        if not self.array.flags.writeable:
-            cls = _galsim.ConstImageView[self._typechar[self.dtype]]
-        else:
-            cls = _galsim.ImageView[self._typechar[self.dtype]]
+        cls = self._cpp_type[self.dtype]
         return cls(self._array.ctypes.data,
                    self._array.strides[1]//self._array.itemsize,
                    self._array.strides[0]//self._array.itemsize,
@@ -549,7 +561,10 @@ class Image(object):
         """
         # cf. http://stackoverflow.com/questions/9895787/memory-alignment-for-fast-fft-in-python-using-shared-arrrays
         nbytes = shape[0] * shape[1] * np.dtype(dtype).itemsize
-        buf = np.empty(nbytes + 16, dtype=np.uint8)
+        if nbytes == 0:
+            # Make degenerate images have 1 element.  Otherwise things get weird.
+            return np.zeros(shape=(1,1), dtype=self._dtype)
+        buf = np.zeros(nbytes + 16, dtype=np.uint8)
         start_index = -buf.ctypes.data % 16
         a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
         assert a.ctypes.data % 16 == 0
@@ -693,7 +708,7 @@ class Image(object):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         # Get this at the start to check for invalid bounds and raise the exception before
         # possibly writing data past the edge of the image.
-        ret = self.subImage(bounds);
+        ret = self.subImage(bounds)
         if not hermitian:
             _galsim.wrapImage(self._image, bounds._b, False, False)
         elif hermitian == 'x':
@@ -711,6 +726,14 @@ class Image(object):
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return ret;
+
+    def _wrap(self, bounds, hermx, hermy):
+        """Essentially equivalent to Image.wrap(bounds, hermitian=='x', hermitian=='y'), but
+        without some of the sanity checks that the regular function does.
+        """
+        ret = self.subImage(bounds)
+        _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
+        return ret
 
     def bin(self, nx, ny):
         """Bin the image pixels in blocks of nx x ny pixels.
@@ -861,7 +884,7 @@ class Image(object):
         dk = np.pi / (No2 * dx)
 
         out = Image(BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
-        _galsim.rfft(ximage._image, out._image)
+        _galsim.rfft(ximage._image, out._image, True, True)
         out *= dx*dx
         out.setOrigin(0,-No2)
         return out
@@ -914,7 +937,7 @@ class Image(object):
 
         # For the inverse, we need a bit of extra space for the fft.
         out_extra = Image(BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
-        _galsim.irfft(kimage._image, out_extra._image)
+        _galsim.irfft(kimage._image, out_extra._image, True, True)
         # Now cut off the bit we don't need.
         out = out_extra.subImage(BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2
@@ -1245,7 +1268,6 @@ class Image(object):
             raise ValueError("Cannot modify the values of an immutable Image")
         if not self.bounds.isDefined():
             raise RuntimeError("Attempt to set values of an undefined image")
-        if value is None: value = 0
         self._fill(value)
 
     def _fill(self, value):
@@ -1552,9 +1574,7 @@ def ImageCD(*args, **kwargs):
 def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
         raise ValueError("Image must have integer values, not %s"%im1.dtype)
-    if ( isinstance(im2, Image) or
-         type(im2) in _galsim.ImageView.values() or
-         type(im2) in _galsim.ConstImageView.values()):
+    if isinstance(im2, Image):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
         if integer and not im2.isinteger:

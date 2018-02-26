@@ -225,12 +225,3 @@ class GSParams(object):
 
 # We use the default a lot, so make it a class attribute.
 GSParams.default = GSParams()
-
-_galsim.GSParams.__getinitargs__ = lambda self: (
-        self.minimum_fft_size, self.maximum_fft_size,
-        self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
-        self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-        self.realspace_relerr, self.realspace_abserr,
-        self.integration_relerr, self.integration_abserr,
-        self.shoot_accuracy, self.allowed_flux_variation,
-        self.range_division_for_extrema, self.small_fraction_of_flux)

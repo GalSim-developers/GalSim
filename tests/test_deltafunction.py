@@ -23,10 +23,6 @@ import sys
 
 from galsim_test_helpers import *
 
-path, filename = os.path.split(__file__)
-imgdir = os.path.join(path, "SBProfile_comparison_images") # Directory containing the reference
-                                                           # images.
-
 try:
     import galsim
 except ImportError:

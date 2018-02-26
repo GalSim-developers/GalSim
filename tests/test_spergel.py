@@ -48,7 +48,6 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-6,
         integration_abserr = 1.e-8)
 
-
 @timer
 def test_spergel():
     """Test the generation of a specific Spergel profile against a known result.

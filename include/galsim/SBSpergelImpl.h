@@ -77,8 +77,8 @@ namespace galsim {
          */
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
-        double calculateIntegratedFlux(const double& r) const;
-        double calculateFluxRadius(const double& f) const;
+        double calculateIntegratedFlux(double r) const;
+        double calculateFluxRadius(double f) const;
 
     private:
 
@@ -107,7 +107,7 @@ namespace galsim {
     class SBSpergel::SBSpergelImpl : public SBProfileImpl
     {
     public:
-        SBSpergelImpl(double nu, double size, RadiusType rType,
+        SBSpergelImpl(double nu, double scale_radius,
                       double flux, const GSParams& gsparams);
 
         ~SBSpergelImpl() {}
@@ -137,7 +137,7 @@ namespace galsim {
             ymin = -integ::MOCK_INF;
             ymax = integ::MOCK_INF;
 
-            if (std::abs(x/_re) < 1.e-2) splits.push_back(0.);
+            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return true; }
@@ -156,14 +156,12 @@ namespace galsim {
 
         /// @brief Returns the Spergel index nu
         double getNu() const { return _nu; }
-        /// @brief Returns the true half-light radius (may be different from the specified value)
-        double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
         /// @brief Returns enclosed flux
-        double calculateIntegratedFlux(const double& r) const;
+        double calculateIntegratedFlux(double r) const;
         /// @brief Return flux-enclosing-radius
-        double calculateFluxRadius(const double &f) const;
+        double calculateFluxRadius(double f) const;
 
         // Overrides for better efficiency
         template <typename T>
@@ -189,7 +187,6 @@ namespace galsim {
         double _nu;      ///< Spergel index
         double _flux;    ///< Flux
         double _r0;      ///< Scale radius specified at the constructor.
-        double _re;      ///< Half-light radius specified at the constructor.
 
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.

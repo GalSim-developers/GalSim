@@ -325,7 +325,7 @@ def test_photon_io():
     rng = galsim.UniformDeviate(1234)
     image = obj.drawImage(method='phot', n_photons=nphotons, save_photons=True, rng=rng)
     photons = image.photons
-    assert photons.size() == nphotons
+    assert photons.size() == len(photons) == nphotons
 
     file_name = 'output/photons1.dat'
     photons.write(file_name)

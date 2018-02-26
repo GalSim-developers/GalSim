@@ -26,42 +26,13 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBBox
-    {
-
-        static void wrap()
-        {
-            bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
-                .def(bp::init<double,double,double,GSParams>(
-                        (bp::arg("width"), bp::arg("height"), bp::arg("flux"),
-                         bp::arg("gsparams"))))
-                .def(bp::init<const SBBox&>())
-                .def("getWidth", &SBBox::getWidth)
-                .def("getHeight", &SBBox::getHeight)
-                .enable_pickling()
-                ;
-        }
-    };
-
-    struct PySBTopHat
-    {
-
-        static void wrap()
-        {
-            bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
-                .def(bp::init<double,double,GSParams>(
-                        (bp::arg("radius"), bp::arg("flux"), bp::arg("gsparams"))))
-                .def(bp::init<const SBTopHat&>())
-                .def("getRadius", &SBTopHat::getRadius)
-                .enable_pickling()
-                ;
-        }
-    };
-
     void pyExportSBBox()
     {
-        PySBBox::wrap();
-        PySBTopHat::wrap();
+        bp::class_<SBBox,bp::bases<SBProfile> >("SBBox", bp::no_init)
+            .def(bp::init<double,double,double,GSParams>());
+
+        bp::class_<SBTopHat,bp::bases<SBProfile> >("SBTopHat", bp::no_init)
+            .def(bp::init<double,double,GSParams>());
     }
 
 } // namespace galsim
