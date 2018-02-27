@@ -340,6 +340,17 @@ above, we will use eigency automatically if Eigen is not found in one of the
 above locations.  So the above installations will take precendence, but
 eigency should work as a fall-back.
 
+Note: At the time of this writing, installation of eigency depends on having
+cython already installed.  I thought I fixed this with PR #26, but it was
+not quite complete.  There is now an open PR #27, which I believe will
+finish making pip install eigency work, even if you do not have cython
+installed.  But for now, you need to do
+
+    pip install cython
+    pip install eigency
+
+(in that order) for it to work.
+
 
 4. Using Conda
 ==============

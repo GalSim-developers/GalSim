@@ -673,7 +673,8 @@ try:
     find_eigen_dir()
 except OSError:
     print('Adding eigency to build_dep')
-    build_dep += ['eigency>=1.77']
+    # Once 1.78 is out I *think* we can remove the cython dependency here.
+    build_dep += ['cython', 'eigency>=1.77']
 
 
 with open('README.md') as file:
