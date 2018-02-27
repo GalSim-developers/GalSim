@@ -17,6 +17,7 @@ Dependency Changes
 - Added dependency on pybind11. (#809)
 - Added dependency on Eigen. (#809)
 - FFTW is now the only dependency that pip cannot handle automatically. (#809)
+- Officially no longer support Python 2.6. (Pretty sure no one cares.)
 
 
 API Changes
