@@ -402,7 +402,7 @@ def fix_compiler(compiler, parallel):
     if ncpu > 1:
         print('Using %d cpus for compiling'%ncpu)
         if parallel is None:
-            print('To override, you may do python setup.py build -j1')
+            print('To override, you may do python setup.py build -jN')
         compiler.compile = types.MethodType(parallel_compile, compiler)
 
     extra_cflags = copt[comp_type]
