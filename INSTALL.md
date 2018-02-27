@@ -100,7 +100,7 @@ the following commands should work to download and install it:
     wget http://www.fftw.org/fftw-3.3.7.tar.gz
     tar xfz fftw-3.3.7.tar.gz
     cd fftw-3.3.7
-    ./configure
+    ./configure --enable-shared
     make
     sudo make install
 
@@ -108,7 +108,7 @@ If you want to install into a different directory (e.g. because you do not
 have sudo privileges on your machine), then specify the alternate directory
 with the --prefix flag to configure.  E.g.
 
-    ./congigure --prefix=$HOME
+    ./configure --enable-shared --prefix=$HOME
 
 which will install the library into $HOME/lib and the header file into
 $HOME/include.  In this case, leave of the sudo from the last line.
@@ -138,7 +138,8 @@ directory in your LD_LIBRARY_PATH, then GalSim should find it without
 any extra work on your part.
 
 If it is in a non-standard location, and you do not want to add this path
-to your LD_LIBRARY_PATH, then you can instead set the FFTW_DIR environment
+to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
+variable from setup.py), then you can instead set the FFTW_DIR environment
 variable to tell GalSim where to look
 
     export FFTW_DIR=/some/path/to/fftw
