@@ -168,8 +168,16 @@ active environment if appropriate).  GalSim knows to look here, so there is
 nothing dditional you need to do.
 
 
-iv) Using fink
---------------
+iv) Using apt-get
+-----------------
+
+On Linux machines that use apt-get, FFTW can be installed with
+
+    apt-get install libfftw3-dev
+
+
+v) Using fink
+-------------
 
 If you use fink on a Mac, FFTW can be installed with
 
@@ -181,8 +189,8 @@ This will put it into the /sw/lib directory on your system. GalSim knows to
 look here, so there is nothing dditional you need to do.
 
 
-v) Using MacPorts
------------------
+vi) Using MacPorts
+------------------
 
 If you use MacPorts, FFTW can be installed with
 
@@ -292,8 +300,16 @@ your active environment if appropriate).  GalSim knows to look here, so there
 is nothing dditional you need to do.
 
 
-iv) Using fink
---------------
+iv) Using apt-get
+-----------------
+
+On Linux machines that use apt-get, Eigen can be installed with
+
+    apt-get install libeigen3-dev
+
+
+v) Using fink
+-------------
 
 If you use fink on a Mac, Eigen can be installed with
 
@@ -303,8 +319,8 @@ This will put it into the /sw/include directory on your system. GalSim knows
 to look here, so there is nothing dditional you need to do.
 
 
-v) Using MacPorts
------------------
+vi) Using MacPorts
+------------------
 
 If you use MacPorts, Eigen can be installed with
 
@@ -334,6 +350,7 @@ that as follows (from within the main GalSim directory):
     conda create -y -n galsim
     conda activate galsim
     conda install -y -c conda-forge --file conda_requirements.txt
+    pip install -r requirements.txt
     pip install .
 
 The first two lines are optional, but they let you keep the GalSim installation
