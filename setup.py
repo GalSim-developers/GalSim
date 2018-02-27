@@ -413,6 +413,7 @@ def add_dirs(builder, output=False):
     if hasattr(builder, 'library_dirs'):
         if fftw_libpath != '':
             builder.library_dirs.append(fftw_libpath)
+        builder.libraries.append('galsim')  # Make sure galsim comes before fftw3
         builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
     fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
     if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):
@@ -570,6 +571,8 @@ class my_test(test):
             objects.extend(ext.extra_objects)
         extra_args = ext.extra_link_args or []
 
+        libraries.append('galsim')
+
         libraries = builder.get_libraries(ext)
         library_dirs = ext.library_dirs
         fftw_lib = find_fftw_lib()
@@ -577,7 +580,6 @@ class my_test(test):
         if fftw_libpath != '':
             library_dirs.append(fftw_libpath)
         libraries.append(fftw_libname.split('.')[0][3:])
-        libraries.append('galsim')
 
         exe_file = os.path.join(builder.build_temp,'cpp_test')
         compiler.link_executable(
