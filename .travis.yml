@@ -33,6 +33,7 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
 cache:
+    ccache: true
     pip: true
     directories:
     - $HOME/des_data

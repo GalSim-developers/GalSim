@@ -84,6 +84,15 @@ With SCons, the build steps are slightly different.
     2. scons install
     5. scons tests
 
+Note that SCons only remakes files that have changed, so it's not too time consuming to rebuild
+each time.  However, setup.py does not have that feature.  So, with the setup.py workflow, we
+highly recommend installing ccache.  This keeps track of which cc commands have been run
+previously and stores the results, which vastly speeds up builds using setup.py.
+
+You can download ccache from
+
+https://ccache.samba.org/
+
 
 3. Commits
 
