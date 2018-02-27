@@ -5,6 +5,7 @@ import ctypes
 import ctypes.util
 import types
 import subprocess
+import re
 
 try:
     from setuptools import setup, Extension, find_packages
@@ -677,7 +678,8 @@ else:
 print('GalSim version is %s'%(galsim_version))
 
 # Write a Version.h file that has this information for people using the C++ library.
-version_info = tuple(map(int, galsim_version.split('.')))
+vi = re.split('\.|-',galsim_version)
+version_info = tuple([int(x) for x in vi if x.isdigit()])
 if len(version_info) == 2:
     version_info = version_info + (0,)
 version_h_text = """
