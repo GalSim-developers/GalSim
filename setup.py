@@ -105,18 +105,28 @@ def get_compiler(cc):
 def find_fftw_lib(output=False):
     try_libdirs = []
     lib_ext = '.so'
+
+    # Start with the explicit FFTW_DIR, if present.
     if 'FFTW_DIR' in os.environ:
         try_libdirs.append(os.environ['FFTW_DIR'])
         try_libdirs.append(os.path.join(os.environ['FFTW_DIR'],'lib'))
+
+    # Try some standard locations where things get installed
     if 'posix' in os.name.lower():
         try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
     if 'darwin' in platform.system().lower():
         try_libdirs.extend(['/usr/local/lib', '/usr/lib', '/sw/lib', '/opt/local/lib'])
         lib_ext = '.dylib'
+
+    # Check the directories in LD_LIBRARY_PATH.  This doesn't work on OSX >= 10.11
     for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
         if path in os.environ:
             for dir in os.environ[path].split(':'):
                 try_libdirs.append(dir)
+
+    # The user's home directory is often a good place to check.
+    try_libdirs.append(os.path.join(os.path.expanduser("~"),"lib"))
+
     # If the above don't work, the fftw3 module may have the right directory.
     try:
         import fftw3
