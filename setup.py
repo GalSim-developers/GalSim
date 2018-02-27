@@ -399,10 +399,12 @@ def add_dirs(builder, output=False):
         builder.libraries.append(os.path.split(fftw_lib)[1].split('.')[0][3:])
     fftw_include = os.path.join(os.path.split(fftw_libpath)[0], 'include')
     if os.path.isfile(os.path.join(fftw_include, 'fftw3.h')):
+        print('Include directory for fftw3 is ',fftw_include)
         # Usually, the fftw3.h file is in an associated include dir, but not always.
         builder.include_dirs.append(fftw_include)
     else:
         # If not, we have our own copy of fftw3.h here.
+        print('Using local copy of fftw3.h')
         builder.include_dirs.append('include/fftw3')
 
     # Look for Eigen/Core

@@ -19,6 +19,8 @@ before_install:
     - sudo apt-get -qq update
     - sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev
 
+    - dpkg -L libfftw3-dev
+
     # List current contents of directories that should be being cached.
     - ls -l $HOME
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
