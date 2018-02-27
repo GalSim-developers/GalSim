@@ -130,6 +130,7 @@ def find_fftw_lib(output=False):
         if dir == '': continue  # This messes things up if it's in there.
         if dir in tried_dirs: continue
         else: tried_dirs.add(dir)
+        if not os.path.isdir(dir): continue
         if output: print("  ", dir, end='')
         try:
             libpath = os.path.join(dir, name)
@@ -138,11 +139,26 @@ def find_fftw_lib(output=False):
             return libpath
         except OSError as e:
             if output: print("  (no)")
-            continue
+            # Some places use lib64 rather than/in addition to lib.  Try that as well.
+            if dir.endswith('lib') and os.path.isdir(dir + '64'):
+                dir += '64'
+                try:
+                    libpath = os.path.join(dir, name)
+                    lib = ctypes.cdll.LoadLibrary(libpath)
+                    if output: print("  ", dir, "  (yes)")
+                    return libpath
+                except OSError:
+                    pass
     try:
         libpath = ctypes.util.find_library('fftw3')
         if libpath == None:
             raise OSError
+        if os.path.split(libpath)[0] == '':
+            # If the above doesn't return a real path, try this instead.
+            libpath = ctypes.util._findLib_gcc('fftw3')
+            if libpath == None:
+                raise OSError
+        libpath = os.path.realpath(libpath)
         lib = ctypes.cdll.LoadLibrary(libpath)
     except Exception as e:
         if output:
@@ -187,6 +203,7 @@ def find_eigen_dir(output=False):
 
     if output: print("Looking for Eigen:")
     for dir in try_dirs:
+        if not os.path.isdir(dir): continue
         if output: print("  ", dir, end='')
         if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
             if output: print("  (yes)")
@@ -639,7 +656,7 @@ try:
     find_eigen_dir()
 except OSError:
     print('Adding eigency to build_dep')
-    build_dep += ['eigency>=1.78']
+    build_dep += ['eigency>=1.77']
 
 
 with open('README.md') as file:

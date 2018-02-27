@@ -61,8 +61,11 @@ install:
 script:
     # Install GalSim
     - python setup.py install
+    - "ldd build/lib.*/galsim/_galsim.so"
+    - "ldd build/temp.*/libgalsim.a"
 
     # If galsim_download_cosmos.py changed, then run it.
+    - echo $TRAVIS_COMMIT_RANGE
     - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
 
     - cd tests
