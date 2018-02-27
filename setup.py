@@ -611,6 +611,10 @@ class my_test(test):
         if self.pytest_args is None:
             if self.njobs is None:
                 self.njobs = cpu_count()
+                if self.njobs > 4:
+                    # Usually 4 is plenty.  Testing with too many jobs tends to lead to
+                    # memory and timeout errors.  The user can bump this up if they want.
+                    self.njobs = 4
             else:
                 self.njobs = int(self.njobs)
             print('Using %d processes for pytest.'%self.njobs)
