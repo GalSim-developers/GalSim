@@ -660,7 +660,8 @@ ext=Extension("galsim._galsim",
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2']
 run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord']
-test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'scipy']
+test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout',
+            'scipy', 'pyyaml', 'starlink-pyast', 'matplotlib']
 
 # If Eigen doesn't exist in the normal places, add eigency ad a build dependency.
 try:

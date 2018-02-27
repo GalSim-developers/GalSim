@@ -2,3 +2,4 @@ pytest>=3.4
 pytest-xdist>=1.19
 pytest-timeout>=1.2
 scipy>=1.0
+matplotlib>=2.0  # Not needed by GalSim, but an implicit requirement of starlink
