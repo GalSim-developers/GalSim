@@ -571,9 +571,9 @@ class my_test(test):
             objects.extend(ext.extra_objects)
         extra_args = ext.extra_link_args or []
 
+        libraries = builder.get_libraries(ext)
         libraries.append('galsim')
 
-        libraries = builder.get_libraries(ext)
         library_dirs = ext.library_dirs
         fftw_lib = find_fftw_lib()
         fftw_libpath, fftw_libname = os.path.split(fftw_lib)
