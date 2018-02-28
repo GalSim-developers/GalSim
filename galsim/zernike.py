@@ -267,6 +267,7 @@ class ZernikeFitter(object):
     def __init__(self, x, y, z, zerr=None, order=21, zrange=10.0, **kwargs):
         """Fit coefficients to points z evaluated at x, y.
         """
+        import lmfit
         self.x = x
         self.y = y
         self.z = z
@@ -284,6 +285,7 @@ class ZernikeFitter(object):
         self.params = params
 
     def fit(self):
+        import lmfit
         self.result = lmfit.minimize(self._chi, self.params, **self.kwargs)
         return self.result
 
@@ -299,4 +301,5 @@ class ZernikeFitter(object):
         return (self.z - model)/self.zerr
 
     def report(self, **kwargs):
+        import lmfit
         return lmfit.fit_report(self.result, **kwargs)
