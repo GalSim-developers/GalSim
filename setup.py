@@ -354,7 +354,7 @@ def cpu_count():
             return ncpus
     return 1 # Default
 
-def parallel_compile(self, sources, output_dir=None, macros=None,
+def parallel_compile(self, sources, njobs, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
                      extra_postargs=None, depends=None):
     """New compile function that we monkey patch into the existing compiler instance.
@@ -362,7 +362,6 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
     import multiprocessing.pool
 
     # Copied from the regular compile function
-    ncpu = cpu_count()
     macros, objects, extra_postargs, pp_opts, build = \
             self._setup_compile(output_dir, macros, include_dirs, sources,
                                 depends, extra_postargs)
@@ -375,13 +374,13 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
             return
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
-    if ncpu == 1:
+    if njobs == 1:
         # This is equivalent to regular compile function
         for obj in objects:
             _single_compile(obj)
     else:
         # Use ThreadPool, rather than Pool, since the objects are picklable.
-        pool = multiprocessing.pool.ThreadPool(ncpu)
+        pool = multiprocessing.pool.ThreadPool(njobs)
         pool.map(_single_compile, objects)
         pool.close()
         pool.join()
@@ -390,7 +389,7 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
     return objects
 
 
-def fix_compiler(compiler, parallel):
+def fix_compiler(compiler, njobs):
     # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
     try:
         compiler.compiler_so.remove("-Wstrict-prototypes")
@@ -418,17 +417,8 @@ def fix_compiler(compiler, parallel):
         print('Using ccache')
         compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
 
-    if parallel is None or parallel is True:
-        ncpu = cpu_count()
-    elif parallel: # is an integer
-        ncpu = parallel
-    else:
-        ncpu = 1
-    if ncpu > 1:
-        print('Using %d cpus for compiling'%ncpu)
-        if parallel is None:
-            print('To override, you may do python setup.py build -jN')
-        compiler.compile = types.MethodType(parallel_compile, compiler)
+    if njobs > 1:
+        compiler.compile = types.MethodType(parallel_compile, compiler, njobs)
 
     extra_cflags = copt[comp_type]
 
@@ -503,12 +493,10 @@ class my_build_clib(build_clib):
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
 
-        # They didn't put the parallel option into build_clib like they did with build_ext, so
-        # look for the parallel option there instead.
         build_ext = self.distribution.get_command_obj('build_ext')
-        parallel = getattr(build_ext, 'parallel', True)
+        njobs = getattr(build_ext, 'njobs', None)
 
-        cflags = fix_compiler(self.compiler, parallel)
+        cflags = fix_compiler(self.compiler, njobs)
 
         # Add the appropriate extra flags for that compiler.
         for (lib_name, build_info) in libraries:
@@ -520,6 +508,10 @@ class my_build_clib(build_clib):
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_ext(build_ext):
+    def initialize_options(self):
+        build_ext.initialize_options(self)
+        self.njobs = None
+
     def finalize_options(self):
         build_ext.finalize_options(self)
         add_dirs(self)
@@ -527,11 +519,19 @@ class my_build_ext(build_ext):
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
 
-        # The -jN option was new in distutils version 3.5.
-        # If user has older version, just set parallel to True and move on.
-        parallel = getattr(self, 'parallel', True)
-
-        cflags = fix_compiler(self.compiler, parallel)
+        if self.njobs is None:
+            njobs = cpu_count()
+            if njobs > 4:
+                # Usually 4 is plenty.  Testing with too many jobs tends to lead to
+                # memory and timeout errors.  The user can bump this up if they want.
+                njobs = 4
+            print('Using %d cpus for compiling'%njobs)
+            print('To override, you may do python setup.py install -jN')
+        else:
+            njobs = int(self.njobs)
+            print('Using %d cpus for compiling'%njobs)
+ 
+        cflags = fix_compiler(self.compiler, njobs)
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
