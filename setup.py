@@ -354,7 +354,7 @@ def cpu_count():
             return ncpus
     return 1 # Default
 
-def parallel_compile(self, sources, njobs, output_dir=None, macros=None,
+def parallel_compile(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
                      extra_postargs=None, depends=None):
     """New compile function that we monkey patch into the existing compiler instance.
@@ -374,13 +374,15 @@ def parallel_compile(self, sources, njobs, output_dir=None, macros=None,
             return
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
-    if njobs == 1:
+    # Set by fix_compiler
+    global glob_use_njobs
+    if glob_use_njobs == 1:
         # This is equivalent to regular compile function
         for obj in objects:
             _single_compile(obj)
     else:
         # Use ThreadPool, rather than Pool, since the objects are picklable.
-        pool = multiprocessing.pool.ThreadPool(njobs)
+        pool = multiprocessing.pool.ThreadPool(glob_use_njobs)
         pool.map(_single_compile, objects)
         pool.close()
         pool.join()
@@ -418,7 +420,12 @@ def fix_compiler(compiler, njobs):
         compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
 
     if njobs > 1:
-        compiler.compile = types.MethodType(parallel_compile, compiler, njobs)
+        # Global variable for tracking the number of jobs to use.
+        # We can't pass this to parallel compile, since the signature is fixed.
+        # So if using parallel compile, set this value to use within parallel compile.
+        global glob_use_njobs
+        glob_use_njobs = njobs
+        compiler.compile = types.MethodType(parallel_compile, compiler)
 
     extra_cflags = copt[comp_type]
 
@@ -483,18 +490,52 @@ def add_dirs(builder, output=False):
             builder.include_dirs.append(try_dir)
             break
 
+def parse_njobs(njobs, task=None, command=None, maxn=4):
+    """Helper function to parse njobs, which may be None (use ncpu) or an int.
+    Returns an int value for njobs
+    """
+    if njobs is None:
+        njobs = cpu_count()
+        if maxn != None and njobs > maxn:
+            # Usually 4 is plenty.  Testing with too many jobs tends to lead to
+            # memory and timeout errors.  The user can bump this up if they want.
+            njobs = maxn
+        if task is not None:
+            if njobs == 1:
+                print('Using a single process for %s.'%task)
+            else:
+                print('Using %d cpus for %s'%(njobs,task))
+            print('To override, you may do python setup.py %s -jN'%command)
+    else:
+        njobs = int(njobs)
+        if task is not None:
+            if njobs == 1:
+                print('Using a single process for %s.'%task)
+            else:
+                print('Using %d cpus for %s'%(njobs,task))
+    return njobs
+
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_clib(build_clib):
+    user_options = build_ext.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
+
+    def initialize_options(self):
+        build_clib.initialize_options(self)
+        self.njobs = None
+
     def finalize_options(self):
         build_clib.finalize_options(self)
+        if self.njobs is None and 'glob_njobs' in globals():
+            global glob_njobs
+            self.njobs = glob_njobs
         add_dirs(self, output=True)  # This happens first, so only output for this call.
 
     # Add any extra things based on the compiler being used..
     def build_libraries(self, libraries):
 
         build_ext = self.distribution.get_command_obj('build_ext')
-        njobs = getattr(build_ext, 'njobs', None)
+        njobs = parse_njobs(self.njobs, 'compiling', 'install')
 
         cflags = fix_compiler(self.compiler, njobs)
 
@@ -508,29 +549,25 @@ class my_build_clib(build_clib):
 
 # Make a subclass of build_ext so we can add to the -I list.
 class my_build_ext(build_ext):
+    user_options = build_ext.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
+
     def initialize_options(self):
         build_ext.initialize_options(self)
         self.njobs = None
 
     def finalize_options(self):
         build_ext.finalize_options(self)
+        # I couldn't find an easy way to send the user option from my_install to my_buld_ext.
+        # So use a global variable. (UGH!)
+        if self.njobs is None and 'glob_njobs' in globals():
+            global glob_njobs
+            self.njobs = glob_njobs
         add_dirs(self)
 
     # Add any extra things based on the compiler being used..
     def build_extensions(self):
 
-        if self.njobs is None:
-            njobs = cpu_count()
-            if njobs > 4:
-                # Usually 4 is plenty.  Testing with too many jobs tends to lead to
-                # memory and timeout errors.  The user can bump this up if they want.
-                njobs = 4
-            print('Using %d cpus for compiling'%njobs)
-            print('To override, you may do python setup.py install -jN')
-        else:
-            njobs = int(self.njobs)
-            print('Using %d cpus for compiling'%njobs)
- 
+        njobs = parse_njobs(self.njobs, 'compiling', 'install')
         cflags = fix_compiler(self.compiler, njobs)
 
         # Add the appropriate extra flags for that compiler.
@@ -564,6 +601,17 @@ def make_meta_data(install_dir):
     return meta_data_file
 
 class my_install(install):
+    user_options = install.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.njobs = None
+
+    def finalize_options(self):
+        install.finalize_options(self)
+        global glob_njobs
+        glob_njobs = self.njobs
+
     def run(self):
         # Make the meta_data.py file based on the actual installation directory.
         meta_data_file = make_meta_data(self.install_lib)
@@ -588,8 +636,7 @@ class my_install_scripts(install_scripts):  # Used when pip installing.
 
 class my_test(test):
     # cf. https://pytest.readthedocs.io/en/2.7.3/goodpractises.html
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test"),
-                    ('njobs=', 'j', "Number of jobs to use in py.test")]
+    user_options = [('njobs=', 'j', "Number of jobs to use in py.test")]
 
     def initialize_options(self):
         test.initialize_options(self)
@@ -643,52 +690,35 @@ class my_test(test):
         p.communicate()
         for line in lines:
             print(line.decode().strip())
-        if p.returncode == 0:
-            print("All C++ tests passed.")
-        else:
+        if p.returncode != 0:
             raise RuntimeError("C++ tests failed")
+        print("All C++ tests passed.")
 
     def run_tests(self):
 
         # Build and run the C++ tests
         self.run_cpp_tests()
 
-        if self.pytest_args is None:
-            if self.njobs is None:
-                self.njobs = cpu_count()
-                if self.njobs > 4:
-                    # Usually 4 is plenty.  Testing with too many jobs tends to lead to
-                    # memory and timeout errors.  The user can bump this up if they want.
-                    self.njobs = 4
-            else:
-                self.njobs = int(self.njobs)
-            print('Using %d processes for pytest.'%self.njobs)
-            print('To change this use python setup.py test -jN')
-            self.pytest_args = ['-n=%d'%self.njobs, '--timeout=60']
-        else:
-            self.pytest_args = self.pytest_args.split()
+        njobs = parse_njobs(self.njobs, 'pytest', 'test')
+        pytest_args = ['-n=%d'%njobs, '--timeout=60']
 
-        #print('Using pytest args: ',self.pytest_args,' (can update with -a pytest_args)')
         original_dir = os.getcwd()
         os.chdir('tests')
         test_files = glob.glob('test*.py')
 
         if True:
             import pytest
-            errno = pytest.main(self.pytest_args + test_files)
-            errno = 0
+            errno = pytest.main(pytest_args + test_files)
             if errno != 0:
-                sys.exit(errno)
+                raise RuntimeError("Some Python tests failed")
         else:
             # Alternate method calls pytest executable.  But the above code seems to work.
-            p = subprocess.Popen(['pytest'] + self.pytest_args + test_files)
+            p = subprocess.Popen(['pytest'] + pytest_args + test_files)
             p.communicate()
-            if p.returncode == 0:
-                print("All python tests passed.")
-            else:
+            if p.returncode != 0:
                 raise RuntimeError("Some Python tests failed")
-
         os.chdir(original_dir)
+        print("All python tests passed.")
 
 
 lib=("galsim", {'sources' : cpp_sources,
