@@ -229,23 +229,10 @@ def find_eigen_dir(output=False):
     raise OSError("Could not find Eigen")
 
 
-def try_cc(cc, cflags=[], lflags=[]):
-    """Check if compiling a simple bit of c++ code with the given compiler works properly.
+def try_compile(cpp_code, cc, cflags=[], lflags=[]):
+    """Check if compiling some code with the given compiler and flags works properly.
     """
     import tempfile
-    from textwrap import dedent
-    cpp_code = dedent("""
-    #include <iostream>
-    #include <vector>
-    int main() {
-        int n = 500;
-        std::vector<double> x(n,0.);
-        for (int i=0; i<n; ++i) x[i] = 2*i+1;
-        double sum=0.;
-        for (int i=0; i<n; ++i) sum += x[i];
-        return sum;
-    }
-    """)
     cpp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.cpp')
     cpp_file.write(cpp_code.encode())
     cpp_file.close();
@@ -305,6 +292,42 @@ def try_cc(cc, cflags=[], lflags=[]):
     if os.path.exists(exe_file.name):
         os.remove(exe_file.name)
     return p.returncode == 0
+
+
+def try_cpp(cc, cflags=[], lflags=[]):
+    """Check if compiling a simple bit of c++ code with the given compiler works properly.
+    """
+    from textwrap import dedent
+    cpp_code = dedent("""
+    #include <iostream>
+    #include <vector>
+    int main() {
+        int n = 500;
+        std::vector<double> x(n,0.);
+        for (int i=0; i<n; ++i) x[i] = 2*i+1;
+        double sum=0.;
+        for (int i=0; i<n; ++i) sum += x[i];
+        return sum;
+    }
+    """)
+    return try_compile(cpp_code, cc, cflags, lflags)
+
+def try_cpp11(cc, cflags=[], lflags=[]):
+    """Check if compiling c++11 code with the given compiler works properly.
+    """
+    from textwrap import dedent
+    cpp_code = dedent("""
+    #include <iostream>
+    #include <forward_list>
+    #include <cmath>
+
+    int main(void) {
+        std::cout << std::tgamma(1.3) << std::endl;
+        return 0;
+    }
+    """)
+    return try_compile(cpp_code, cc, cflags, lflags)
+
 
 def cpu_count():
     """Get the number of cpus
@@ -384,8 +407,14 @@ def fix_compiler(compiler, parallel):
     else:
         print('Using compiler %s, which is %s'%(cc,comp_type))
 
+    # Make sure the compiler works with a simple c++ code
+    if not try_cpp(cc, cflags):
+        print("There seems to be something wrong with the compiler or cflags")
+        print("%s %s"%(cc, ' '.join(cflags)))
+        raise OSError("Compiler does not work for compiling C++ code")
+
     # Check if we can use ccache to speed up repeated compilation.
-    if try_cc('ccache ' + cc, cflags):
+    if try_cpp('ccache ' + cc, cflags):
         print('Using ccache')
         compiler.set_executable('compiler_so', ['ccache',cc] + cflags)
 
@@ -402,9 +431,19 @@ def fix_compiler(compiler, parallel):
         compiler.compile = types.MethodType(parallel_compile, compiler)
 
     extra_cflags = copt[comp_type]
-    print('Using extra flags ',extra_cflags)
+
+    success = try_cpp11(cc, cflags + extra_cflags)
+    if not success:
+        # Sometimes clang requires an extra flag to use c++11 properly
+        extra_cflags += ['-stdlib=libc++']
+        success = try_cpp11(cc, cflags + extra_cflags)
+    if not success:
+        print('The compiler %s with flags %s did not successfully compile C++11 code'%
+              (cc, ' '.join(extra_cflags)))
+        raise OSError("Compiler is not C++-11 compatible")
 
     # Return the extra cflags, since those will be added to the build step in a different place.
+    print('Using extra flags ',extra_cflags)
     return extra_cflags
 
 def add_dirs(builder, output=False):
