@@ -303,3 +303,10 @@ class ZernikeFitter(object):
     def report(self, **kwargs):
         import lmfit
         return lmfit.fit_report(self.result, **kwargs)
+
+    def getBases(self):
+        out = np.empty((self.order,)+(self.x.shape), dtype=np.float)
+        for j in range(1, self.order+1):
+            a = [0]*(j-1)+[1]
+            out[j-1] = Zernike(a, **self.kwargs).evalCartesian(self.x, self.y)
+        return out
