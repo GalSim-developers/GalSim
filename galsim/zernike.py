@@ -293,8 +293,8 @@ class ZernikeFitter(object):
         a = []
         for j in range(1, self.order+1):
             a.append(params['z{}'.format(j)])
-        zern = Zernike(a)
-        return zern.evalXY(self.x, self.y)
+        zern = Zernike(a, **self.kwargs)
+        return zern.evalCartesian(self.x, self.y)
 
     def _chi(self, params):
         model = self.constructModel(params)
