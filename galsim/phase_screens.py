@@ -922,12 +922,13 @@ class OpticalScreenField(object):
 
     @param a_nmrs       A two-dimensional array of coefficients.  First index is over nm, i.e., the
                         pupil aberrations.  The second index is over rs, i.e., the field dependence.
+    @param diam         Diameter of pupil in meters.
     @param fov_radius   Radius of the field-of-view as a galsim.Angle from which FoV Zernike 
                         polynomials are normalized.
     @param lam_0        Reference wavelength in nanometers at which Zernike aberrations are
                         being specified.  [default: 500]                        
     """
-    def __init__(self, a_nmrs, fov_radius=None, lam_0=500.0):
+    def __init__(self, a_nmrs, diam, fov_radius=None, lam_0=500.0):
         if fov_radius is None:
             raise ValueError("fov_radius is required for OpticalScreenField")
         try:
@@ -935,6 +936,7 @@ class OpticalScreenField(object):
         except:
             raise ValueError("fov_radius must be a galsim.Angle object")
         self.a_nmrs = a_nmrs
+        self.diam = diam
         self.lam_0 = lam_0
         self.jmax_pupil = self.a_nmrs.shape[0]-1
         self.jmax_focal = self.a_nmrs.shape[1]-1
@@ -982,6 +984,13 @@ class OpticalScreenField(object):
         aberr = self.getAberrations(theta[0].tan(), theta[1].tan())
         noll_coef = _noll_coef_array(self.jmax_pupil, 0.0, False)
         coef_array = np.dot(noll_coef, aberr[1:])
+
+        jmax = self.a_nmrs.shape[0] - 1
+        maxn = _noll_to_zern(jmax)[0]
+        shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)        
+        # Convert from unit disk coefficients to full aperture (diam != 2) coefficients.
+        coef_array /= (self.diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+
         r = u + 1j*v
         rsqr = np.abs(r)**2        
         return horner2d(rsqr, r, coef_array).real * self.lam_0
