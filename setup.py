@@ -136,9 +136,10 @@ def find_fftw_lib(output=False):
         if dir in tried_dirs: continue
         else: tried_dirs.add(dir)
         if not os.path.isdir(dir): continue
+        libpath = os.path.join(dir, name)
+        if not os.path.isfile(libpath): continue
         if output: print("  ", dir, end='')
         try:
-            libpath = os.path.join(dir, name)
             lib = ctypes.cdll.LoadLibrary(libpath)
             if output: print("  (yes)")
             return libpath
@@ -149,6 +150,7 @@ def find_fftw_lib(output=False):
                 dir += '64'
                 try:
                     libpath = os.path.join(dir, name)
+                    if not os.path.isfile(libpath): continue
                     lib = ctypes.cdll.LoadLibrary(libpath)
                     if output: print("  ", dir, "  (yes)")
                     return libpath
