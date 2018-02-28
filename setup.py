@@ -188,7 +188,7 @@ def find_eigen_dir(output=False):
     try_dirs = []
     if 'EIGEN_DIR' in os.environ:
         try_dirs.append(os.environ['EIGEN_DIR'])
-        try_dirs.append(os.path.join(os.environ['EIGEN_DIR']))
+        try_dirs.append(os.path.join(os.environ['EIGEN_DIR'], 'include'))
     # This is where conda will install it.
     try_dirs.append(distutils.sysconfig.get_config_var('INCLUDEDIR'))
     if 'posix' in os.name.lower():
