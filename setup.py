@@ -54,7 +54,8 @@ if "--debug" in sys.argv:
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11'],
-    'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden'],
+    'clang' : ['-O2','-msse2','-std=c++11','-Wno-shorten-64-to-32','-fvisibility=hidden',
+               '-stdlib=libc++'],
     'unknown' : [],
 }
 
@@ -398,6 +399,10 @@ def fix_compiler(compiler, njobs):
     except (AttributeError, ValueError):
         pass
 
+    # Remove ccache if present so it isn't interpretted as the compiler
+    if compiler.compiler_so[0] == 'ccache':
+        del compiler.compiler_so[0]
+
     # Figure out what compiler it will use
     #print('compiler = ',compiler.compiler)
     cc = compiler.compiler_so[0]
@@ -431,9 +436,13 @@ def fix_compiler(compiler, njobs):
 
     success = try_cpp11(cc, cflags + extra_cflags)
     if not success:
-        # Sometimes clang requires an extra flag to use c++11 properly
-        extra_cflags += ['-stdlib=libc++']
-        success = try_cpp11(cc, cflags + extra_cflags)
+        # In case libc++ doesn't work, try letting the system use the default stdlib
+        try:
+            extra_cflags.remove('-stdlib=libc++')
+        except (AttributeError, ValueError):
+            pass
+        else:
+            success = try_cpp11(cc, cflags + extra_cflags)
     if not success:
         print('The compiler %s with flags %s did not successfully compile C++11 code'%
               (cc, ' '.join(extra_cflags)))
@@ -573,6 +582,9 @@ class my_build_ext(build_ext):
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
             e.extra_compile_args = cflags
+            for flag in cflags:
+                if 'stdlib' in flag:
+                    e.extra_link_args.append(flag)
 
         # Now run the normal build function.
         build_ext.build_extensions(self)
@@ -663,6 +675,9 @@ class my_test(test):
         if ext.extra_objects:
             objects.extend(ext.extra_objects)
         extra_args = ext.extra_link_args or []
+
+        cflags = fix_compiler(compiler, False)
+        extra_args.extend(cflags)
 
         libraries = builder.get_libraries(ext)
         libraries.append('galsim')
@@ -843,4 +858,3 @@ if hasattr(dist,'script_install_dir'):
         print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
         print('         in which case the scripts will be installed in PREFIX/bin.')
         print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
-
