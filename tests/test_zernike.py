@@ -214,8 +214,20 @@ def test_Zernike_rotate():
             )
 
 
+@timer
+def test_ne():
+    objs = [
+        galsim.zernike.Zernike([0, 1, 2]),
+        galsim.zernike.Zernike([0, 1, 2, 3]),
+        galsim.zernike.Zernike([0, 1, 2, 3], 0.1),
+        galsim.zernike.Zernike([0, 1, 2, 3], diam=1.0),
+    ]
+    all_obj_diff(objs)
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_noll()
     test_Zernike_rotate()
+    test_ne()

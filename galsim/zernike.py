@@ -217,7 +217,7 @@ class Zernike(object):
         So the traditional Z4 coefficient (defocus) is given by a[3]
         eps is fractional linear obscuration.  Implies use of annular Zernikes.
         """
-        self.a = a
+        self.a = np.array(a)
         self.eps = eps
         self.diam = diam
         self._jmax = len(self.a)
@@ -244,6 +244,15 @@ class Zernike(object):
     def rotate(self, theta):
         M = zernikeRotMatrix(len(self.a), theta)
         return Zernike(np.dot(M, self.a), self.eps, self.diam)
+
+    def __eq__(self, other):
+        return (isinstance(other, Zernike) and
+                np.array_equal(self.a, other.a) and
+                self.eps == other.eps and
+                self.diam == other.diam)
+
+    def __hash__(self):
+        return hash(("galsim.Zernike", tuple(self.a.ravel()), self.eps, self.diam))
 
 
 def zernikeRotMatrix(jmax, theta):
