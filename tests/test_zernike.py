@@ -174,7 +174,48 @@ def test_noll():
         np.testing.assert_array_equal(coefs,true_coefs)
 
 
+@timer
+def test_Zernike_rotate():
+    #First check that invalid Zernike rotation matrix sizes are trapped
+    with assert_raises(ValueError):
+        # Can't do size=2, since Z2 mixes into Z3
+        galsim.zernike.zernikeRotMatrix(2, 0.1)
+        # Can't do size=5, since Z5 mixes into Z6
+        galsim.zernike.zernikeRotMatrix(5, 0.2)
+
+    u = galsim.UniformDeviate(12020569031)
+    #Now let's test some actual rotations.
+    for jmax in [1, 3, 10, 11, 13, 21, 22, 34]:
+        # Pick some arbitrary eps and diams
+        eps = (jmax % 5)/10.0
+        diam = ((jmax % 10) + 1)
+        # Test points
+        rhos = np.linspace(0, diam/2, 4)
+        thetas = np.linspace(0, np.pi, 4)
+
+        coefs = [u() for _ in range(jmax)]
+        Z = galsim.zernike.Zernike(coefs, eps, diam)
+
+        for theta in [0.0, 0.1, 1.0, np.pi, 4.0]:
+            R = galsim.zernike.zernikeRotMatrix(jmax, theta)
+            rotCoefs = np.dot(R, coefs)
+            Zrot = galsim.zernike.Zernike(rotCoefs, eps, diam)
+            np.testing.assert_allclose(
+                Z.evalPolar(rhos, thetas),
+                Zrot.evalPolar(rhos, thetas+theta),
+                atol=1e-13, rtol=0
+            )
+
+            Zrot2 = Z.rotate(theta)
+            np.testing.assert_allclose(
+                Z.evalPolar(rhos, thetas),
+                Zrot2.evalPolar(rhos, thetas+theta),
+                atol=1e-13, rtol=0
+            )
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_noll()
+    test_Zernike_rotate()

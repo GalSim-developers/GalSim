@@ -218,6 +218,8 @@ class Zernike(object):
         eps is fractional linear obscuration.  Implies use of annular Zernikes.
         """
         self.a = a
+        self.eps = eps
+        self.diam = diam
         self._jmax = len(self.a)
         self._nmax, _ = _noll_to_zern(self._jmax)
         shape = (self._nmax//2+1, self._nmax+1)  # (max power of |rho|^2, max power of |rho|)
@@ -235,29 +237,43 @@ class Zernike(object):
     def evalPolar(self, rho, theta):
         cth = np.cos(theta)
         sth = np.sin(theta)
-        r = rho * cth + 1j * rho * sth
-        rsqr = rho**2
+        r = rho * (cth + 1j * sth)
+        rsqr = np.abs(rho)**2
         return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
     def rotate(self, theta):
-        # Use formula from Tatulli (2013) arXiv:1302.7106v1
+        M = zernikeRotMatrix(len(self.a), theta)
+        return Zernike(np.dot(M, self.a), self.eps, self.diam)
 
-        # need shape jmax to be odd (even) when nmax is odd (even), so
-        # append zeros to a until jmax+nmax is even.
-        a = self.a
-        if (self._nmax//2 + self._jmax) % 2 == 0:
-            a = np.append(a, [0])
-        M = np.zeros((len(a), len(a)), dtype=np.float64)
-        for i in range(len(a)):
-            ni, mi = _noll_to_zern(i+1)
-            for j in range(len(a)):
-                nj, mj = _noll_to_zern(j+1)
-                if ni != nj:
-                    continue
-                if abs(mi) != abs(mj):
-                    continue
-                if mi == mj:
-                    M[i, j] = np.cos(mj * theta)
-                elif mi == -mj:
-                    M[i, j] = np.sin(mj * theta)
-        return Zernike(np.dot(M, a))
+
+def zernikeRotMatrix(jmax, theta):
+    # Use formula from Tatulli (2013) arXiv:1302.7106v1
+
+    # Note that coefficients mix if and only if they have the same radial index n and the same
+    # absolute azimuthal index m.  This means that to construct a rotation matrix, we need for both
+    # m's in a pair {(n, m), (n, -m)} to be represented, which places constraints on size.
+    # Specifically, if the final Zernike indicated by size includes only one part of the pair, then
+    # the rotation would mix coefficients into the element (size+1).  We simply disallow this here.
+
+    n_jmax, m_jmax = _noll_to_zern(jmax)
+    # If m_jmax is zero, then we don't need to check the next element to ensure we have a complete
+    # rotation matrix.
+    if m_jmax != 0:
+        n_jmaxp1, m_jmaxp1 = _noll_to_zern(jmax+1)
+        if n_jmax == n_jmaxp1 and abs(m_jmaxp1) == abs(m_jmax):
+            raise ValueError("Cannot construct Zernike rotation matrix of size {}".format(jmax))
+
+    R = np.zeros((jmax, jmax), dtype=np.float64)
+    for i in range(jmax):
+        ni, mi = _noll_to_zern(i+1)
+        for j in range(max(0, i-1), min(i+2, jmax)):
+            nj, mj = _noll_to_zern(j+1)
+            if ni != nj:
+                continue
+            if abs(mi) != abs(mj):
+                continue
+            if mi == mj:
+                R[i, j] = np.cos(mj * theta)
+            elif mi == -mj:
+                R[i, j] = np.sin(mj * theta)
+    return R
