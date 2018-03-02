@@ -21,7 +21,7 @@ Module contains code for evaluating and fitting Zernike polynomials
 
 import numpy as np
 
-import galsim
+from .utilities import LRU_Cache, binomial, horner2d
 
 # Some utilities for working with Zernike polynomials
 # Combinations.  n choose r.
@@ -148,7 +148,7 @@ def __noll_coef_array(jmax, obscuration):
         coef = _zern_coef_array(n,m,obscuration,shape1)
         out[:,:,j-1] = coef
     return out
-_noll_coef_array = galsim.utilities.LRU_Cache(__noll_coef_array)
+_noll_coef_array = LRU_Cache(__noll_coef_array)
 
 
 # Following 3 functions from
@@ -164,7 +164,7 @@ def __h(m, j, eps):
         num = -(2*(2*j+2*m-1)) * _Q(m-1, j+1, eps)[0]
         den = (j+m)*(1-eps**2) * _Q(m-1, j, eps)[0]
         return num/den * _h(m-1, j, eps)
-_h = galsim.utilities.LRU_Cache(__h)
+_h = LRU_Cache(__h)
 
 
 # Mahajan's Q-function for annular Zernikes.
@@ -180,7 +180,7 @@ def __Q(m, j, eps):
             qq = qq*qq[0]  # Don't use *= here since it modifies the cache!
             summation[:i+1] += qq/_h(m-1, i, eps)
         return summation * num / den
-_Q = galsim.utilities.LRU_Cache(__Q)
+_Q = LRU_Cache(__Q)
 
 
 def __annular_zern_rho_coefs(n, m, eps):
@@ -198,7 +198,7 @@ def __annular_zern_rho_coefs(n, m, eps):
         for i, coef in enumerate(coefs):
             if i % 2 == 1: continue
             j = i // 2
-            more_coefs = (norm**j) * galsim.utilities.binomial(-eps**2, 1, j)
+            more_coefs = (norm**j) * binomial(-eps**2, 1, j)
             out[0:i+1:2] += coef*more_coefs
     elif m == n:  # Equation (25)
         norm = 1./np.sqrt(np.sum((eps**2)**np.arange(n+1)))
@@ -208,7 +208,7 @@ def __annular_zern_rho_coefs(n, m, eps):
         norm = np.sqrt((1-eps**2)/(2*(2*j+m+1) * _h(m,j,eps)))
         out[m::2] = norm * _Q(m, j, eps)
     return out
-_annular_zern_rho_coefs = galsim.utilities.LRU_Cache(__annular_zern_rho_coefs)
+_annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
 class Zernike(object):
@@ -225,19 +225,19 @@ class Zernike(object):
         noll_coef = _noll_coef_array(self._jmax, eps)
         self._coef_array = np.dot(noll_coef, self.a)
         if diam != 2.0:
-            self._coef_array /= (diam/2)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+            self._coef_array /= (diam/2.0)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
 
     def evalCartesian(self, x, y):
         r = x + 1j * y
         rsqr = np.abs(r)**2
-        return galsim.utilities.horner2d(rsqr, r, self._coef_array, dtype=complex).real
+        return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
     def evalPolar(self, rho, theta):
         cth = np.cos(theta)
         sth = np.sin(theta)
         r = rho * cth + 1j * rho * sth
         rsqr = rho**2
-        return galsim.utilities.horner2d(rsqr, r, self._coef_array, dtype=complex).real
+        return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
     def rotate(self, theta):
         # Use formula from Tatulli (2013) arXiv:1302.7106v1
