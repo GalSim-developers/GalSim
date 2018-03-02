@@ -138,7 +138,8 @@ def test_phase_screen_list():
     # Create a couple new screens with different types/parameters
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, time_step=0.015, rng=rng2)
     assert ar1 != ar2
-    ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
+    ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1],
+                               obscuration=0.3, annular_zernike=True)
     do_pickle(ar3)
     do_pickle(ar3, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
     do_pickle(ar3, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, None, theta0)))
