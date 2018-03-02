@@ -254,6 +254,16 @@ class Zernike(object):
     def __hash__(self):
         return hash(("galsim.Zernike", tuple(self.a.ravel()), self.eps, self.diam))
 
+    def __repr__(self):
+        out = "galsim.zernike.Zernike("
+        out += repr(self.a)
+        if self.eps != 0.0:
+            out += ", eps={}".format(self.eps)
+        if self.diam != 2.0:
+            out += ", diam={}".format(self.diam)
+        out += ")"
+        return out
+
 
 def zernikeRotMatrix(jmax, theta):
     # Use formula from Tatulli (2013) arXiv:1302.7106v1

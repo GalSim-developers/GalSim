@@ -195,6 +195,7 @@ def test_Zernike_rotate():
 
         coefs = [u() for _ in range(jmax)]
         Z = galsim.zernike.Zernike(coefs, eps, diam)
+        do_pickle(Z)
 
         for theta in [0.0, 0.1, 1.0, np.pi, 4.0]:
             R = galsim.zernike.zernikeRotMatrix(jmax, theta)
