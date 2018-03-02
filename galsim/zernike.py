@@ -223,7 +223,6 @@ class Zernike(object):
         self._jmax = len(self.a)
         self._nmax, _ = _noll_to_zern(self._jmax)
         shape = (self._nmax//2+1, self._nmax+1)  # (max power of |rho|^2, max power of |rho|)
-        self._coef_array = np.zeros(shape, dtype=np.complex128)
         noll_coef = _noll_coef_array(self._jmax, eps)
         self._coef_array = np.dot(noll_coef, self.a)
         if diam != 2.0:
@@ -296,3 +295,10 @@ def zernikeRotMatrix(jmax, theta):
             elif mi == -mj:
                 R[i, j] = np.sin(mj * theta)
     return R
+
+
+def zernikeBasisFunctions(jmax, x, y, eps=0.0, diam=2.0):
+    noll_coef = _noll_coef_array(jmax, eps)
+    r = (np.array(x) + 1j * np.array(y))/(diam/2.0)
+    rsqr = np.abs(r)**2
+    return np.array([horner2d(rsqr, r, nc).real for nc in noll_coef.transpose(2,0,1)])

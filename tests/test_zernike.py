@@ -231,9 +231,38 @@ def test_ne():
     all_obj_diff(objs)
 
 
+@timer
+def test_Zernike_basis():
+    """Test the zernikeBasisFunctions function"""
+    eps = 0.2
+    diam = 2.4
+    jmax = 30
+
+    u = galsim.UniformDeviate(4669201609)
+    for i in range(10):
+        # Test at some random points
+        x = np.empty((10000,), dtype=np.float)
+        y = np.empty((10000,), dtype=np.float)
+        u.generate(x)
+        u.generate(y)
+
+        # zBases will generate all basis vectors at once
+        zBases = galsim.zernike.zernikeBasisFunctions(jmax, x, y, eps=eps, diam=diam)
+
+        # Compare to basis vectors generated one at a time
+        for j in range(1, jmax):
+            Z = galsim.zernike.Zernike([0]*(j-1)+[1], eps=eps, diam=diam)
+            zBasis = Z.evalCartesian(x, y)
+            np.testing.assert_allclose(
+                    zBases[j-1],
+                    zBasis,
+                    atol=1e-12, rtol=0)
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
     test_noll()
     test_Zernike_rotate()
     test_ne()
+    test_Zernike_basis()
