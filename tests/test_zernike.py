@@ -260,6 +260,42 @@ def test_Zernike_basis():
                     atol=1e-12, rtol=0)
 
 
+@timer
+def test_fit():
+    """Test fitting values to a Zernike series, using the ZernikeBasis function"""
+    u = galsim.UniformDeviate(161803)
+    for i in range(10):
+        x = np.empty((1000,), dtype=np.float)
+        y = np.empty((1000,), dtype=np.float)
+        u.generate(x)
+        u.generate(y)
+        x -= 0.5
+        y -= 0.5
+
+        # Should be able to fit quintic polynomial by including Zernikes up to Z_21
+        cartesian_coefs = [[u()-0.5, u()-0.5, u()-0.5, u()-0.5, u()-0.5],
+                           [u()-0.5, u()-0.5, u()-0.5, u()-0.5,       0],
+                           [u()-0.5, u()-0.5, u()-0.5,       0,       0],
+                           [u()-0.5, u()-0.5,       0,       0,       0],
+                           [u()-0.5,       0,       0,       0,       0]]
+        z = galsim.utilities.horner2d(x, y, cartesian_coefs)
+
+        basis = galsim.zernike.zernikeBasis(21, x, y)
+        coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
+        resids = galsim.zernike.Zernike(coefs).evalCartesian(x, y) - z
+
+        np.testing.assert_allclose(resids, 0, atol=1e-14)
+
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(ncols=2, figsize=(8, 4))
+        # scat1 = axes[0].scatter(x, y, c=z)
+        # plt.colorbar(scat1, ax=axes[0])
+        # scat2 = axes[1].scatter(x, y, c=resids)
+        # plt.colorbar(scat2, ax=axes[1])
+        # plt.show()
+        # print(np.mean(resids), np.std(resids))
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
@@ -267,3 +303,4 @@ if __name__ == "__main__":
     test_Zernike_rotate()
     test_ne()
     test_Zernike_basis()
+    test_fit()
