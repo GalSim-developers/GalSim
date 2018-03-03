@@ -181,6 +181,7 @@ def test_noll():
 
 @timer
 def test_Zernike_rotate():
+    """Test that rotating Zernike coefficients to another coord sys works as expected"""
     #First check that invalid Zernike rotation matrix sizes are trapped
     with assert_raises(ValueError):
         # Can't do size=2, since Z2 mixes into Z3
@@ -233,7 +234,7 @@ def test_ne():
 
 @timer
 def test_Zernike_basis():
-    """Test the zernikeBasisFunctions function"""
+    """Test the zernikeBasis function"""
     eps = 0.2
     diam = 2.4
     jmax = 30
@@ -247,7 +248,7 @@ def test_Zernike_basis():
         u.generate(y)
 
         # zBases will generate all basis vectors at once
-        zBases = galsim.zernike.zernikeBasisFunctions(jmax, x, y, eps=eps, diam=diam)
+        zBases = galsim.zernike.zernikeBasis(jmax, x, y, eps=eps, diam=diam)
 
         # Compare to basis vectors generated one at a time
         for j in range(1, jmax):

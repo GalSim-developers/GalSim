@@ -212,50 +212,109 @@ _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
 class Zernike(object):
-    def __init__(self, a, eps=0.0, diam=2.0):
-        """a[0] is piston, a[1] is tip, a[2] is tilt, a[3] is defocus, etc.
-        So the traditional Z4 coefficient (defocus) is given by a[3]
-        eps is fractional linear obscuration.  Implies use of annular Zernikes.
-        """
-        self.a = np.array(a)
+    """A class to represent Zernike polynomial series
+    (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
+
+    Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
+    for the normality constant to equal the area of integration, which is pi for the unit circle.
+    I.e.,
+
+        \int_{unit circle} Z_i Z_j dA = \pi \delta_{i, j}.
+
+    Two generalizations of the unit circle Zernike polynomials are also available in this class:
+    annular Zernike polynomials, and polynomials defined over non-unit-radius circles.
+
+    Annular Zernikes are orthonormal over an annulus instead of a circle (see Mahajan, J. Opt. Soc.
+    Am. 71, 1, (1981)).  Similarly, the non-unit-radius polynomials are orthonormal over a region
+    with outer radius not equal to 1.  Taken together, these generalizations yield the
+    orthonormality condition:
+
+        \int_{annulus} Z_i Z_j dA = \pi (R_outer^2 - R_inner^2) \delta_{i, j}
+
+    where 0 < R_inner < R_outer indicate the inner and outer radii of the annulus over which the
+    polynomials are orthonormal.
+
+    The indexing convention for i and j is that from Noll, J. Opt. Soc. Am. 66, 207-2011(1976),
+    though offset by 1 because python is 0-indexed while the Noll indices start at 1.  For example,
+    the first few Zernike polynomials in terms of Cartesian coordinates x and y are
+
+        this index  |  Noll index  |  polynomial
+        -----------------------------------
+             0      |       1      |      1
+             1      |       2      |      2 x
+             2      |       3      |      2 y
+             3      |       4      | sqrt(3) (2 (x^2 + y^2) - 1)
+
+
+    @param coef   Zernike series coefficients.  Note that coef[i] corresponds to Z_(i+1) using the
+                  Noll index convention.  (I.e., coef[0] is 'piston', coef[3] is 'defocus', ...)
+    @param eps    Linear fractional obscuration for defining annular Zernike polynomials.
+                  [default: 0.0]
+    @param diam   Diameter over which polynomials are orthonormal.  [Default: 2.0 (for unit circle)]
+    """
+    def __init__(self, coef, eps=0.0, diam=2.0):
+        self.coef = np.array(coef)
         self.eps = eps
         self.diam = diam
-        self._jmax = len(self.a)
+        self._jmax = len(self.coef)
         self._nmax, _ = _noll_to_zern(self._jmax)
         shape = (self._nmax//2+1, self._nmax+1)  # (max power of |rho|^2, max power of |rho|)
         noll_coef = _noll_coef_array(self._jmax, eps)
-        self._coef_array = np.dot(noll_coef, self.a)
+        self._coef_array = np.dot(noll_coef, self.coef)
         if diam != 2.0:
             self._coef_array /= (diam/2.0)**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
 
     def evalCartesian(self, x, y):
-        r = x + 1j * y
+        """Evaluate this Zernike polynomial series at Cartesian coordiantes x and y.
+
+        @param x  x-coordinate of evaluation points.  Can be list-like.
+        @param y  y-coordinate of evaluation points.  Can be list-like.
+        @returns  Series evaluations as numpy array.
+        """
+        r = np.array(x) + 1j * np.array(y)
         rsqr = np.abs(r)**2
         return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
     def evalPolar(self, rho, theta):
+        """Evaluate this Zernike polynomial series at polar coordiantes rho and theta.
+
+        @param rho    radial coordinate of evaluation points.  Can be list-like.
+        @param theta  azimuthal coordinate of evaluation points.  Can be list-like.
+        @returns  Series evaluations as numpy array.
+        """
+
         cth = np.cos(theta)
         sth = np.sin(theta)
-        r = rho * (cth + 1j * sth)
+        r = np.array(rho) * (cth + 1j * sth)
         rsqr = np.abs(rho)**2
         return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
     def rotate(self, theta):
-        M = zernikeRotMatrix(len(self.a), theta)
-        return Zernike(np.dot(M, self.a), self.eps, self.diam)
+        """Return new Zernike polynomial series rotated by angle theta.  For example:
+
+            >>> Z = Zernike(coefs)
+            >>> Zrot = Z.rotate(theta)
+            >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
+
+        @param theta  Angle in radians.
+        @returns  A new Zernike object.
+        """
+
+        M = zernikeRotMatrix(len(self.coef), theta)
+        return Zernike(np.dot(M, self.coef), self.eps, self.diam)
 
     def __eq__(self, other):
         return (isinstance(other, Zernike) and
-                np.array_equal(self.a, other.a) and
+                np.array_equal(self.coef, other.coef) and
                 self.eps == other.eps and
                 self.diam == other.diam)
 
     def __hash__(self):
-        return hash(("galsim.Zernike", tuple(self.a.ravel()), self.eps, self.diam))
+        return hash(("galsim.Zernike", tuple(self.coef.ravel()), self.eps, self.diam))
 
     def __repr__(self):
         out = "galsim.zernike.Zernike("
-        out += repr(self.a)
+        out += repr(self.coef)
         if self.eps != 0.0:
             out += ", eps={}".format(self.eps)
         if self.diam != 2.0:
@@ -265,6 +324,25 @@ class Zernike(object):
 
 
 def zernikeRotMatrix(jmax, theta):
+    """Construct Zernike basis rotation matrix.  This matrix can be used to convert a set of Zernike
+    polynomial series coefficients expressed in one coordinate system to an equivalent set of
+    coefficients expressed in a rotated coordinate system.  For example:
+
+        >>> Z = Zernike(coefs)
+        >>> R = zernikeRotMatrix(jmax, theta)
+        >>> rotCoefs = np.dot(R, coefs)
+        >>> Zrot = Zernike(rotCoefs)
+        >>> Z.evalPolar(r, th) == Zrot.evalPolar(r, th + theta)
+
+    Note that not all values of `jmax` are allowed.  For example, jmax=2 raises an Exception, since
+    a non-zero Z_2 coefficient will in general rotate into a combination of Z_2 and Z_3
+    coefficients, and therefore the needed rotation matrix requires jmax=3.  If you run into this
+    kind of Exception, raising jmax by 1 will eliminate it.
+
+    @param jmax  Maximum Zernike index (in the Noll convention) over which to construct matrix.
+    @param theta  Angle of rotation in radians.
+    @returns  Matrix of size [jmax, jmax].
+    """
     # Use formula from Tatulli (2013) arXiv:1302.7106v1
 
     # Note that coefficients mix if and only if they have the same radial index n and the same
@@ -297,7 +375,23 @@ def zernikeRotMatrix(jmax, theta):
     return R
 
 
-def zernikeBasisFunctions(jmax, x, y, eps=0.0, diam=2.0):
+def zernikeBasis(jmax, x, y, eps=0.0, diam=2.0):
+    """Construct basis of Zernike polynomial series up to Noll index `jmax`, evaluated at a specific
+    set of points `x` and `y`.  Useful for fitting Zernike polynomials to data, e.g.,
+
+        >>> x, y, z = myDataToFit()
+        >>> basis = zernikeBasis(11, x, y)
+        >>> coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
+        >>> resids = Zernike(coefs).evalCartesian(x, y) - z
+
+    @param  jmax  Maximum Noll index to use.
+    @param  x     x-coordinates (can be list-like, congruent to y)
+    @param  y     y-coordinates (can be list-like, congruent to x)
+    @param  eps   Linear fraction obscuration for annular Zernike polynomials [default: 0.0]
+    @param  diam  Diameter over which polynomials are orthonormal [default: 2.0 (for unit circle)]
+    @returns  [jmax, x.shape] array.  Slicing over first index gives basis vectors corresponding to
+              individual Zernike polynomials.
+    """
     noll_coef = _noll_coef_array(jmax, eps)
     r = (np.array(x) + 1j * np.array(y))/(diam/2.0)
     rsqr = np.abs(r)**2
