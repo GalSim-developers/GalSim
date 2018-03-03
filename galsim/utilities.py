@@ -21,6 +21,7 @@ Module containing general utilities for the GalSim software.
 from contextlib import contextmanager
 from future.utils import iteritems
 from builtins import range, object
+import weakref
 
 import numpy as np
 import galsim
@@ -1419,3 +1420,9 @@ class lazy_property(object):
         value = self.fget(obj)
         setattr(obj, self.func_name, value)
         return value
+
+
+# Assign an arbitrary ordering to weakref.ref so that it can be part of a heap.
+class OrderedWeakRef(weakref.ref):
+    def __lt__(self, other):
+        return id(self) < id(other)
