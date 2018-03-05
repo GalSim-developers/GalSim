@@ -21,24 +21,9 @@ Module contains code for evaluating and fitting Zernike polynomials
 
 import numpy as np
 
-from .utilities import LRU_Cache, binomial, horner2d
+from .utilities import LRU_Cache, binomial, horner2d, nCr
 
 # Some utilities for working with Zernike polynomials
-# Combinations.  n choose r.
-# See http://stackoverflow.com/questions/3025162/statistics-combinations-in-python
-# This is J. F. Sebastian's answer.
-def _nCr(n, r):
-    if 0 <= r <= n:
-        ntok = 1
-        rtok = 1
-        for t in range(1, min(r, n - r) + 1):
-            ntok *= n
-            rtok *= t
-            n -= 1
-        return ntok // rtok
-    else:
-        return 0
-
 
 # Start off with the Zernikes up to j=15
 _noll_n = [0,0,1,1,2,2,2,3,3,3,3,4,4,4,4,4]
@@ -86,7 +71,7 @@ def _zern_rho_coefs(n, m):
     """
     kmax = (n-abs(m)) // 2
     A = [0]*(n+1)
-    val = _nCr(n,kmax) # The value for k = 0 in the equation below.
+    val = nCr(n,kmax) # The value for k = 0 in the equation below.
     for k in range(kmax):
         # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
         # The above formula is faster as a recurrence relation:

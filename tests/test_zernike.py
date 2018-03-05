@@ -164,11 +164,11 @@ def test_noll():
     def zern_rho_coefs(n, m):
         """Compute coefficients of radial part of Zernike (n, m).
         """
-        from galsim.zernike import _nCr
+        from galsim.utilities import nCr
         kmax = (n-abs(m)) // 2
         A = np.zeros(n+1)
         for k in range(kmax+1):
-            A[n-2*k] = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k)
+            A[n-2*k] = (-1)**k * nCr(n-k, k) * nCr(n-2*k, kmax-k)
         return A
 
     for j in range(1,30):
