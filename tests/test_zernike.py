@@ -195,12 +195,12 @@ def test_Zernike_rotate():
     for jmax in [1, 3, 10, 11, 13, 21, 22, 34]:
         # Pick some arbitrary eps and diams
         eps = (jmax % 5)/10.0
-        diam = ((jmax % 10) + 1)
+        diam = ((jmax % 10) + 1.0)
         # Test points
         rhos = np.linspace(0, diam/2, 4)
         thetas = np.linspace(0, np.pi, 4)
 
-        R_outer = diam/2
+        R_outer = diam/2.0
         R_inner = R_outer*eps
 
         coefs = [u() for _ in range(jmax)]
