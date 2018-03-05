@@ -39,19 +39,20 @@ def test_Zernike_orthonormality():
     """
     jmax = 30  # Going up to 30 filled Zernikes takes about ~1 sec on my laptop
     diam = 4.0
+    R_outer = diam/2
     pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
-    x = np.linspace(-diam/2, diam/2, 256)
+    x = np.linspace(-R_outer, R_outer, 256)
     dx = x[1]-x[0]
     x, y = np.meshgrid(x, x)
-    w = np.hypot(x, y) <= diam/2
+    w = np.hypot(x, y) <= R_outer
     x = x[w].ravel()
     y = y[w].ravel()
-    area = np.pi*(diam/2)**2
+    area = np.pi*R_outer**2
     for j1 in range(1, jmax+1):
-        Z1 = galsim.zernike.Zernike([0]*(j1+1)+[1], diam=diam)
+        Z1 = galsim.zernike.Zernike([0]*(j1+1)+[1], R_outer=R_outer)
         val1 = Z1.evalCartesian(x, y)
         for j2 in range(j1, jmax+1):
-            Z2 = galsim.zernike.Zernike([0]*(j2+1)+[1], diam=diam)
+            Z2 = galsim.zernike.Zernike([0]*(j2+1)+[1], R_outer=R_outer)
             val2 = Z2.evalCartesian(x, y)
             integral = np.dot(val1, val2) * dx**2
             if j1 == j2:
@@ -70,20 +71,20 @@ def test_Zernike_orthonormality():
 
     # Repeat for Annular Zernikes
     jmax = 22  # Going up to 22 annular Zernikes takes about ~1 sec on my laptop
-    obscuration = 0.3
-    x = np.linspace(-diam/2, diam/2, 256)
+    R_inner = 0.6
+    x = np.linspace(-R_outer, R_outer, 256)
     dx = x[1]-x[0]
     x, y = np.meshgrid(x, x)
     r = np.hypot(x, y)
-    w = np.logical_and(diam/2*obscuration <= r, r <= diam/2)
+    w = np.logical_and(R_inner <= r, r <= R_outer)
     x = x[w].ravel()
     y = y[w].ravel()
-    area = np.pi*(diam/2)**2*(1 - obscuration**2)
+    area = np.pi*(R_outer**2 - R_inner**2)
     for j1 in range(1, jmax+1):
-        Z1 = galsim.zernike.Zernike([0]*(j1+1)+[1], eps=obscuration, diam=diam)
+        Z1 = galsim.zernike.Zernike([0]*(j1+1)+[1], R_outer=R_outer, R_inner=R_inner)
         val1 = Z1.evalCartesian(x, y)
         for j2 in range(j1, jmax+1):
-            Z2 = galsim.zernike.Zernike([0]*(j2+1)+[1], eps=obscuration, diam=diam)
+            Z2 = galsim.zernike.Zernike([0]*(j2+1)+[1], R_outer=R_outer, R_inner=R_inner)
             val2 = Z2.evalCartesian(x, y)
             integral = np.dot(val1, val2) * dx**2
             if j1 == j2:
@@ -199,14 +200,17 @@ def test_Zernike_rotate():
         rhos = np.linspace(0, diam/2, 4)
         thetas = np.linspace(0, np.pi, 4)
 
+        R_outer = diam/2
+        R_inner = R_outer*eps
+
         coefs = [u() for _ in range(jmax)]
-        Z = galsim.zernike.Zernike(coefs, eps, diam)
+        Z = galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
         do_pickle(Z)
 
         for theta in [0.0, 0.1, 1.0, np.pi, 4.0]:
             R = galsim.zernike.zernikeRotMatrix(jmax, theta)
             rotCoefs = np.dot(R, coefs)
-            Zrot = galsim.zernike.Zernike(rotCoefs, eps, diam)
+            Zrot = galsim.zernike.Zernike(rotCoefs, R_outer=R_outer, R_inner=R_inner)
             np.testing.assert_allclose(
                 Z.evalPolar(rhos, thetas),
                 Zrot.evalPolar(rhos, thetas+theta),
@@ -226,8 +230,8 @@ def test_ne():
     objs = [
         galsim.zernike.Zernike([0, 1, 2]),
         galsim.zernike.Zernike([0, 1, 2, 3]),
-        galsim.zernike.Zernike([0, 1, 2, 3], 0.1),
-        galsim.zernike.Zernike([0, 1, 2, 3], diam=1.0),
+        galsim.zernike.Zernike([0, 1, 2, 3], R_outer=0.2),
+        galsim.zernike.Zernike([0, 1, 2, 3], R_outer=0.2, R_inner=0.1),
     ]
     all_obj_diff(objs)
 
@@ -238,6 +242,8 @@ def test_Zernike_basis():
     eps = 0.2
     diam = 2.4
     jmax = 30
+    R_outer = diam/2
+    R_inner = R_outer*0.2
 
     u = galsim.UniformDeviate(4669201609)
     for i in range(10):
@@ -248,11 +254,11 @@ def test_Zernike_basis():
         u.generate(y)
 
         # zBases will generate all basis vectors at once
-        zBases = galsim.zernike.zernikeBasis(jmax, x, y, eps=eps, diam=diam)
+        zBases = galsim.zernike.zernikeBasis(jmax, x, y, R_outer=R_outer, R_inner=R_inner)
 
         # Compare to basis vectors generated one at a time
         for j in range(1, jmax):
-            Z = galsim.zernike.Zernike([0]*(j-1)+[1], eps=eps, diam=diam)
+            Z = galsim.zernike.Zernike([0]*(j-1)+[1], R_outer=R_outer, R_inner=R_inner)
             zBasis = Z.evalCartesian(x, y)
             np.testing.assert_allclose(
                     zBases[j-1],
@@ -271,6 +277,10 @@ def test_fit():
         u.generate(y)
         x -= 0.5
         y -= 0.5
+        R_outer = (i%5/5.0)+1
+        R_inner = ((i%3/6.0)+0.1)*(R_outer)
+        x *= R_outer
+        y *= R_outer
 
         # Should be able to fit quintic polynomial by including Zernikes up to Z_21
         cartesian_coefs = [[u()-0.5, u()-0.5, u()-0.5, u()-0.5, u()-0.5],
@@ -280,9 +290,11 @@ def test_fit():
                            [u()-0.5,       0,       0,       0,       0]]
         z = galsim.utilities.horner2d(x, y, cartesian_coefs)
 
-        basis = galsim.zernike.zernikeBasis(21, x, y)
+        basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
         coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
-        resids = galsim.zernike.Zernike(coefs).evalCartesian(x, y) - z
+        resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
+                  .evalCartesian(x, y)
+                  - z)
 
         np.testing.assert_allclose(resids, 0, atol=1e-14)
 

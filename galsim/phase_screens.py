@@ -572,11 +572,12 @@ class OpticalScreen(object):
         self.obscuration = obscuration
         self.lam_0 = lam_0
 
+        R_outer = self.diam/2
         if self.annular_zernike and self.obscuration != 0:
-            self._zernike = galsim.zernike.Zernike(self.aberrations[1:], eps=self.obscuration,
-                                                   diam=self.diam)
+            self._zernike = galsim.zernike.Zernike(self.aberrations[1:], R_outer=R_outer,
+                                                   R_inner=R_outer*self.obscuration)
         else:
-            self._zernike = galsim.zernike.Zernike(self.aberrations[1:], diam=self.diam)
+            self._zernike = galsim.zernike.Zernike(self.aberrations[1:], R_outer=R_outer)
 
         self.dynamic = False
         self.reversible = True
