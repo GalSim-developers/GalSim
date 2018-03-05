@@ -95,8 +95,6 @@ def _zern_coef_array(n, m, obscuration, shape):
     @returns    2D array of coefficients in |r|^2 and r, where r = u + 1j * v, and u, v are unit
                 disk coordinates.
     """
-    if shape is None:
-        shape = ((n//2)+1, abs(m)+1)
     out = np.zeros(shape, dtype=np.complex128)
     if 0 < obscuration < 1:
         coefs = np.array(_annular_zern_rho_coefs(n, m, obscuration), dtype=np.complex128)
@@ -355,7 +353,7 @@ def zernikeRotMatrix(jmax, theta):
                 continue
             if mi == mj:
                 R[i, j] = np.cos(mj * theta)
-            elif mi == -mj:
+            else:
                 R[i, j] = np.sin(mj * theta)
     return R
 
