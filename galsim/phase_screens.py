@@ -958,6 +958,26 @@ class OpticalScreenField(object):
         rsqr = np.abs(r)**2
         return [horner2d(rsqr, r, ca).real for ca in self.coef_arrays]
 
+    def stepK(self, **kwargs):
+        """Return an appropriate stepK for this phase screen.
+
+        Method copied from OpticalScreen
+
+        @param lam         Wavelength in nanometers.
+        @param diam        Aperture diameter in meters.
+        @param obscuration Fractional linear aperture obscuration. [default: 0.0]
+        @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
+                           details. [default: None]
+        @returns  stepK in inverse arcsec.
+        """
+        lam = kwargs['lam']
+        diam = kwargs['diam']
+        obscuration = kwargs.get('obscuration', 0.0)
+        gsparams = kwargs.get('gsparams', None)
+        # Use an Airy for get appropriate stepK.
+        obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
+        return obj.stepK()
+
     def wavefront(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront for the optical phase screen.
         

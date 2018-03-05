@@ -360,10 +360,66 @@ def test_opt_indiv_aberrations():
     psf1 = galsim.PhaseScreenList(screen1).makePSF(diam=4.0, lam=500.0)
     psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
 
+    img1 = psf1.drawImage()
+    img2 = psf2.drawImage()
+
     np.testing.assert_array_equal(
             psf1.img, psf2.img,
             "Individually specified aberrations differs from aberrations specified as list.")
 
+@timer
+def test_opt_field_indiv_aberrations():
+    """Test that individual aberrations in OpticalScreenField at a fixed field position match those
+       in OpticalScreen"""
+    for i in xrange(11):
+        aberrations = np.zeros(12, dtype=np.float64)
+        aberrations[i+1] = 0.5
+        screen1 = galsim.OpticalScreen(diam=4.0, aberrations=aberrations)
+
+        a_nmrs = np.zeros((12, 10), dtype=np.float64)
+        a_nmrs[i+1, 1] = 0.5
+        fov_radius = 1.0 * galsim.degrees
+        screen2 = galsim.OpticalScreenField(diam=4.0, a_nmrs=a_nmrs, fov_radius=fov_radius)
+
+        psf1 = galsim.PhaseScreenList(screen1).makePSF(diam=4.0, lam=500.0)
+        psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
+
+        img1 = psf1.drawImage()
+        img2 = psf2.drawImage()
+        
+        np.testing.assert_array_equal(
+                psf1.img.array, psf2.img.array,
+                "Field dependent optical screen does not match fixed optical screen in the right limit")
+
+@timer
+def test_opt_field_dependence():
+    fov_radius = 3.5 * galsim.degrees
+    theta = (1.5*galsim.arcmin, 0.0*galsim.arcmin)
+
+    a_nmrs_val = 120.
+
+    r = (np.sqrt(theta[0].tan()**2 + theta[1].tan()**2)) / fov_radius.tan()
+    Z1 = 2 * r
+
+    aberrations = np.zeros(12, dtype=np.float64)
+    aberrations[9] = a_nmrs_val * Z1
+    screen1 = galsim.OpticalScreen(diam=4.0, aberrations=aberrations)
+
+    a_nmrs = np.zeros((12, 10), dtype=np.float64)
+    a_nmrs[9, 2] = a_nmrs_val
+    screen2 = galsim.OpticalScreenField(diam=4.0, a_nmrs=a_nmrs, fov_radius=fov_radius)
+
+    psf1 = galsim.PhaseScreenList(screen1).makePSF(diam=4.0, lam=500.0,
+                                                   theta=theta)
+    psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0,
+                                                   theta=theta)
+
+    img1 = psf1.drawImage()
+    img2 = psf2.drawImage()
+
+    np.testing.assert_array_equal(
+            psf1.img.array, psf2.img.array,
+            "Field dependent optical screen does not match fixed optical screen in the right limit")
 
 @timer
 def test_scale_unit():
@@ -681,10 +737,12 @@ if __name__ == "__main__":
     test_phase_psf_reset()
     test_phase_psf_batch()
     test_opt_indiv_aberrations()
+    test_opt_field_indiv_aberrations()
+    test_opt_field_dependence()
     test_scale_unit()
     test_stepk_maxk()
     test_ne()
-    test_phase_gradient_shoot()
+    # test_phase_gradient_shoot()
     test_input()
     test_r0_weights()
     test_speedup()
