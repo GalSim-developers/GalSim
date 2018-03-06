@@ -238,13 +238,13 @@ class Zernike(object):
         self.coef = np.array(coef)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
-        self._eps = R_inner / R_outer
-        self._jmax = len(self.coef)
-        self._nmax, _ = _noll_to_zern(self._jmax)
-        shape = (self._nmax//2+1, self._nmax+1)  # (max power of |rho|^2, max power of |rho|)
-        noll_coef = _noll_coef_array(self._jmax, self._eps)
-        self._coef_array = np.dot(noll_coef, self.coef)
+
+        self._coef_array = np.dot(
+                _noll_coef_array(len(self.coef), R_inner/R_outer),
+                self.coef)
+
         if R_outer != 1.0:
+            shape = self._coef_array.shape
             self._coef_array /= R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
 
     def evalCartesian(self, x, y):
