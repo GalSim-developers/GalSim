@@ -67,6 +67,7 @@ namespace galsim {
         double df2 = f3 - f2;
 
         while (df1 * df2 >= 0.) {
+            xdbg<<"df1, df2 = "<<df1<<','<<df2<<std::endl;
             if (x3 >= xmax)
                 return false;  // no extremum bracketed.
             x1 = x2;
@@ -78,6 +79,10 @@ namespace galsim {
             f3 = function(x3);
             df2 = f3 - f2;
         }
+        xdbg<<"df1, df2 = "<<df1<<','<<df2<<std::endl;
+        xdbg<<"f("<<x1<<") = "<<f1<<" = "<<function(x1)<<std::endl;
+        xdbg<<"f("<<x2<<") = "<<f2<<" = "<<function(x2)<<std::endl;
+        xdbg<<"f("<<x3<<") = "<<f3<<" = "<<function(x3)<<std::endl;
 
         // First guess is that minimum is in half of bracket with lowest gradient
         bool fatLeft = std::abs(df1) < std::abs(df2);
@@ -85,12 +90,33 @@ namespace galsim {
         // Then use golden sections to localize - could use Brent's method for speed.
         const double GOLDEN = 2./(1+sqrt(5.));
         while (std::abs(x3-x1) > xTolerance) {
+            xdbg<<"x1,x2,x3 = "<<x1<<','<<x2<<','<<x3<<std::endl;
+            xdbg<<"f1,f2,f3 = "<<f1<<','<<f2<<','<<f3<<std::endl;
+            xdbg<<"df1,df2 = "<<df1<<','<<df2<<std::endl;
+            xdbg<<"fatleft = "<<fatLeft<<"  "<<std::abs(df1)<<" <? "<<std::abs(df2)<<std::endl;
+            // Loop invariants:
+            xassert(x1 < x2);
+            xassert(x2 < x3);
+            xassert(df1 == f2 - f1);
+            xassert(df2 == f3 - f2);
+            xassert(df1 * df2 < 0.);
+            xassert(fatLeft == (std::abs(df1) < std::abs(df2)));
+
             if (fatLeft) {
+                xdbg<<"fat left\n";
                 // Split left-hand interval
                 double xTrial = x1 + GOLDEN*(x2-x1);
                 double fTrial = function(xTrial);
                 double dfTrial = f2 - fTrial;
-                if (df1 * dfTrial <= 0.) {
+                xdbg<<"Trial = "<<xTrial<<","<<fTrial<<","<<dfTrial<<std::endl;
+                if (dfTrial * df2 < 0.) {
+                    xdbg<<"trial/2/3\n";
+                    // Extremum is in trial / 2 / 3
+                    x1 = xTrial;
+                    f1 = fTrial;
+                    df1 = dfTrial;
+                } else {
+                    xdbg<<"1/trial/2\n";
                     // Now bracketed in 1 / trial / 2
                     x3 = x2;
                     f3 = f2;
@@ -98,20 +124,22 @@ namespace galsim {
                     f2 = fTrial;
                     df1 = f2 - f1;
                     df2 = dfTrial;
-                    fatLeft = true;
-                } else {
-                    // Extremum is in trial / 2 / 3
-                    x1 = xTrial;
-                    f1 = fTrial;
-                    df1 = dfTrial;
-                    fatLeft = false;
                 }
             } else {
+                xdbg<<"fat right\n";
                 // Split right-hand interval (2 / trial / 3)
-                double xTrial = x2 - GOLDEN*(x3-x2);
+                double xTrial = x3 - GOLDEN*(x3-x2);
                 double fTrial = function(xTrial);
                 double dfTrial = fTrial - f2;
-                if (dfTrial * df2 <= 0.) {
+                xdbg<<"Trial = "<<xTrial<<","<<fTrial<<","<<dfTrial<<std::endl;
+                if (dfTrial * df1 < 0.) {
+                    xdbg<<"1/2/trial\n";
+                    // Extremum is in 1 / 2 / trial
+                    x3 = xTrial;
+                    f3 = fTrial;
+                    df2 = dfTrial;
+                } else {
+                    xdbg<<"2/trial/3\n";
                     // Now bracketed in 2 / trial / 3
                     x1 = x2;
                     f1 = f2;
@@ -119,15 +147,9 @@ namespace galsim {
                     f2 = fTrial;
                     df1 = dfTrial;
                     df2 = f3 - f2;
-                    fatLeft = false;
-                } else {
-                    // Extremum is in 1 / 2 / trial
-                    x3 = xTrial;
-                    f3 = fTrial;
-                    df2 = dfTrial;
-                    fatLeft = true;
                 }
             }
+            fatLeft = std::abs(df1) < std::abs(df2);
         }
         extremum = x2;
         return true;
@@ -300,6 +322,7 @@ namespace galsim {
                 }
             } else {
                 // Just single Interval in this range, no extremum:
+                xdbg<<"single interval\n";
                 Interval splitit(
                     _fluxDensity, range[iRange], range[iRange+1], _isRadial, _gsparams);
                 std::list<Interval> leftList = splitit.split(
