@@ -311,9 +311,17 @@ Changes from v1.5.0 to v1.5.1
 New Feature
 -----------
 
-- Add option to use circular weight function in HSM adaptive moments code. (#917)
+- Add option to use circular weight function in HSM adaptive moments code.
+  (#917)
 
 Bug Fix
 -------
 
 - Fixed a build problem for Anaconda on Macs using Python 3.6. (#924)
+
+
+Change from v1.5.1 to v1.5.2
+============================
+
+- Fixed bug that could cause Kolmogorov (and probably some other classes) to
+  go into an endless loop. (#952)
