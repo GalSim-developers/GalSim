@@ -295,8 +295,12 @@ def test_fit():
         resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
                   .evalCartesian(x, y)
                   - z)
+        resids2 = np.dot(basis.T, coefs).T - z
+        assert resids.shape == x.shape
+        assert resids2.shape == x.shape
 
         np.testing.assert_allclose(resids, 0, atol=1e-14)
+        np.testing.assert_allclose(resids2, 0, atol=1e-14)
 
         # import matplotlib.pyplot as plt
         # fig, axes = plt.subplots(ncols=2, figsize=(8, 4))
@@ -306,6 +310,43 @@ def test_fit():
         # plt.colorbar(scat2, ax=axes[1])
         # plt.show()
         # print(np.mean(resids), np.std(resids))
+
+    # Should also work, and make congruent output, if the shapes of x and y are multi-dimensional
+    for i in range(10):
+        x = np.empty((1000,), dtype=np.float)
+        y = np.empty((1000,), dtype=np.float)
+        u.generate(x)
+        u.generate(y)
+        x -= 0.5
+        y -= 0.5
+        R_outer = (i%5/5.0)+1
+        R_inner = ((i%3/6.0)+0.1)*(R_outer)
+        x *= R_outer
+        y *= R_outer
+        x = x.reshape(25, 40)
+        y = y.reshape(25, 40)
+
+        # Should be able to fit quintic polynomial by including Zernikes up to Z_21
+        cartesian_coefs = [[u()-0.5, u()-0.5, u()-0.5, u()-0.5, u()-0.5],
+                           [u()-0.5, u()-0.5, u()-0.5, u()-0.5,       0],
+                           [u()-0.5, u()-0.5, u()-0.5,       0,       0],
+                           [u()-0.5, u()-0.5,       0,       0,       0],
+                           [u()-0.5,       0,       0,       0,       0]]
+        z = galsim.utilities.horner2d(x, y, cartesian_coefs)
+        assert z.shape == (25, 40)
+
+        basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
+        assert basis.shape == (22, 25, 40)
+        # lstsq doesn't handle the extra dimension though...
+        coefs, _, _, _ = np.linalg.lstsq(basis.reshape(21+1, 1000).T, z.ravel())
+        resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
+                  .evalCartesian(x, y)
+                  - z)
+        resids2 = np.dot(basis.T, coefs).T - z
+        assert resids.shape == resids2.shape == x.shape
+
+        np.testing.assert_allclose(resids, 0, atol=1e-14)
+        np.testing.assert_allclose(resids2, 0, atol=1e-14)
 
 
 if __name__ == "__main__":
