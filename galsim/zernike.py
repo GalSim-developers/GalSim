@@ -299,9 +299,9 @@ class Zernike(object):
         out = "galsim.zernike.Zernike("
         out += repr(self.coef)
         if self.R_outer != 1.0:
-            out += ", R_outer={}".format(self.R_outer)
+            out += ", R_outer={!r}".format(self.R_outer)
         if self.R_inner != 0.0:
-            out += ", R_inner={}".format(self.R_inner)
+            out += ", R_inner={!r}".format(self.R_inner)
         out += ")"
         return out
 
