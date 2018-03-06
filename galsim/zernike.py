@@ -236,8 +236,8 @@ class Zernike(object):
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
         self.coef = np.array(coef)
-        self.R_outer = R_outer
-        self.R_inner = R_inner
+        self.R_outer = float(R_outer)
+        self.R_inner = float(R_inner)
         self._eps = R_inner / R_outer
         self._jmax = len(self.coef)
         self._nmax, _ = _noll_to_zern(self._jmax)
@@ -375,6 +375,8 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     @returns  [jmax, x.shape] array.  Slicing over first index gives basis vectors corresponding to
               individual Zernike polynomials.
     """
+    R_outer = float(R_outer)
+    R_inner = float(R_inner)
     eps = R_inner / R_outer
     noll_coef = _noll_coef_array(jmax, eps)
     r = (np.array(x) + 1j * np.array(y))/R_outer
