@@ -203,7 +203,7 @@ def test_Zernike_rotate():
         R_outer = diam/2.0
         R_inner = R_outer*eps
 
-        coefs = [u() for _ in range(jmax)]
+        coefs = [u() for _ in range(jmax+1)]
         Z = galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
         do_pickle(Z)
 

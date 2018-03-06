@@ -195,7 +195,7 @@ _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
 class Zernike(object):
-    """A class to represent Zernike polynomial series
+    """A class to represent a Zernike polynomial series
     (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
 
     Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
@@ -214,25 +214,29 @@ class Zernike(object):
 
         \int_{annulus} Z_i Z_j dA = \pi (R_outer^2 - R_inner^2) \delta_{i, j}
 
-    where 0 < R_inner < R_outer indicate the inner and outer radii of the annulus over which the
+    where 0 <= R_inner < R_outer indicate the inner and outer radii of the annulus over which the
     polynomials are orthonormal.
 
-    The indexing convention for i and j is that from Noll, J. Opt. Soc. Am. 66, 207-2011(1976),
-    though offset by 1 because python is 0-indexed while the Noll indices start at 1.  For example,
-    the first few Zernike polynomials in terms of Cartesian coordinates x and y are
+    The indexing convention for i and j above is that from Noll, J. Opt. Soc. Am. 66, 207-211(1976).
+    Note that the Noll indices begin at 1; there is no Z_0.  Because of this, the series
+    coefficients argument `coef` effectively begins with `coef[1]` (`coef[0]` is ignored).  This
+    convention is used consistently throughout GalSim, e.g., `OpticalPSF`, `OpticalScreen`,
+    `zernikeRotMatrix`, and `zernikeBasis`.
 
-        this index  |  Noll index  |  polynomial
-        -----------------------------------
-             0      |       1      |      1
-             1      |       2      |      2 x
-             2      |       3      |      2 y
-             3      |       4      | sqrt(3) (2 (x^2 + y^2) - 1)
+    As an example, the first few Zernike polynomials in terms of Cartesian coordinates x and y are
 
+        Noll index  |  polynomial
+        --------------------------
+             1      |      1
+             2      |      2 x
+             3      |      2 y
+             4      |  sqrt(3) (2 (x^2 + y^2) - 1)
 
-    @param coef     Zernike series coefficients.  Note that coef[i] corresponds to Z_(i+1) using the
-                    Noll index convention.  (I.e., coef[0] is 'piston', coef[3] is 'defocus', ...)
-    @param R_outer  Outer radius.  [Default: 1.0]
-    @param R_inner  Inner radius.  [Default: 0.0]
+    @param coef     Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the
+                    Noll index convention, and coef[0] is ignored.  (I.e., coef[1] is 'piston',
+                    coef[4] is 'defocus', ...)
+    @param R_outer  Outer radius.  [default: 1.0]
+    @param R_inner  Inner radius.  [default: 0.0]
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
         self.coef = np.array(coef)
@@ -240,8 +244,8 @@ class Zernike(object):
         self.R_inner = float(R_inner)
 
         self._coef_array = np.dot(
-                _noll_coef_array(len(self.coef), R_inner/R_outer),
-                self.coef)
+                _noll_coef_array(len(self.coef)-1, R_inner/R_outer),
+                self.coef[1:])
 
         if R_outer != 1.0:
             shape = self._coef_array.shape
@@ -262,7 +266,7 @@ class Zernike(object):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
 
         @param rho    radial coordinate of evaluation points.  Can be list-like.
-        @param theta  azimuthal coordinate of evaluation points.  Can be list-like.
+        @param theta  azimuthal coordinate in radians of evaluation points.  Can be list-like.
         @returns  Series evaluations as numpy array.
         """
 
@@ -283,7 +287,7 @@ class Zernike(object):
         @returns  A new Zernike object.
         """
 
-        M = zernikeRotMatrix(len(self.coef), theta)
+        M = zernikeRotMatrix(len(self.coef)-1, theta)
         return Zernike(np.dot(M, self.coef), self.R_outer, self.R_inner)
 
     def __eq__(self, other):
@@ -293,7 +297,7 @@ class Zernike(object):
                 self.R_inner == other.R_inner)
 
     def __hash__(self):
-        return hash(("galsim.Zernike", tuple(self.coef.ravel()), self.R_outer, self.R_inner))
+        return hash(("galsim.Zernike", tuple(self.coef), self.R_outer, self.R_inner))
 
     def __repr__(self):
         out = "galsim.zernike.Zernike("
@@ -322,9 +326,14 @@ def zernikeRotMatrix(jmax, theta):
     coefficients, and therefore the needed rotation matrix requires jmax=3.  If you run into this
     kind of Exception, raising jmax by 1 will eliminate it.
 
+    Also note that the returned matrix is intended to multiply a vector of Zernike coefficients
+    `coef` indexed following the Noll (1976) convention, which starts at 1.  Since python sequences
+    start at 0, we adopt the convention that `coef[0]` is unused, and `coef[i]` corresponds to the
+    coefficient multiplying Z_i.  As a result, the size of the returned matrix is [jmax+1, jmax+1].
+
     @param jmax  Maximum Zernike index (in the Noll convention) over which to construct matrix.
     @param theta  Angle of rotation in radians.
-    @returns  Matrix of size [jmax, jmax].
+    @returns  Matrix of size [jmax+1, jmax+1].
     """
     # Use formula from Tatulli (2013) arXiv:1302.7106v1
 
@@ -340,9 +349,10 @@ def zernikeRotMatrix(jmax, theta):
     if m_jmax != 0:
         n_jmaxp1, m_jmaxp1 = _noll_to_zern(jmax+1)
         if n_jmax == n_jmaxp1 and abs(m_jmaxp1) == abs(m_jmax):
-            raise ValueError("Cannot construct Zernike rotation matrix of size {}".format(jmax))
+            raise ValueError("Cannot construct Zernike rotation matrix for jmax={}".format(jmax))
 
-    R = np.zeros((jmax, jmax), dtype=np.float64)
+    R = np.zeros((jmax+1, jmax+1), dtype=np.float64)
+    R[0, 0] = 1.0
     for i in range(jmax):
         ni, mi = _noll_to_zern(i+1)
         for j in range(max(0, i-1), min(i+2, jmax)):
@@ -352,9 +362,9 @@ def zernikeRotMatrix(jmax, theta):
             if abs(mi) != abs(mj):
                 continue
             if mi == mj:
-                R[i, j] = np.cos(mj * theta)
+                R[i+1, j+1] = np.cos(mj * theta)
             else:
-                R[i, j] = np.sin(mj * theta)
+                R[i+1, j+1] = np.sin(mj * theta)
     return R
 
 
@@ -367,13 +377,23 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
         >>> coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
         >>> resids = Zernike(coefs).evalCartesian(x, y) - z
 
+        or equivalently
+
+        >>> resids = np.dot(basis.T, coefs).T - z
+
+    Note that since we follow the Noll indexing scheme for Zernike polynomials, which begins at 1,
+    but python sequences are indexed from 0, the length of the leading dimension in the result is
+    `jmax+1` instead of `jmax`.  We somewhat arbitrarily fill the 0th slice along the first
+    dimension with 0s (result[0, ...] == 0) so that it doesn't impact the results of np.linalg.lstsq
+    as in the example above.
+
     @param  jmax     Maximum Noll index to use.
     @param  x        x-coordinates (can be list-like, congruent to y)
     @param  y        y-coordinates (can be list-like, congruent to x)
-    @param  R_outer  Outer radius.  [Default: 1.0]
-    @param  R_inner  Inner radius.  [Default: 0.0]
-    @returns  [jmax, x.shape] array.  Slicing over first index gives basis vectors corresponding to
-              individual Zernike polynomials.
+    @param  R_outer  Outer radius.  [default: 1.0]
+    @param  R_inner  Inner radius.  [default: 0.0]
+    @returns  [jmax+1, x.shape] array.  Slicing over first index gives basis vectors corresponding
+              to individual Zernike polynomials.
     """
     R_outer = float(R_outer)
     R_inner = float(R_inner)
@@ -381,4 +401,6 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     noll_coef = _noll_coef_array(jmax, eps)
     r = (np.array(x) + 1j * np.array(y))/R_outer
     rsqr = np.abs(r)**2
-    return np.array([horner2d(rsqr, r, nc).real for nc in noll_coef.transpose(2,0,1)])
+    out = np.zeros(tuple((jmax+1,)+x.shape), dtype=float)
+    out[1:] = np.array([horner2d(rsqr, r, nc).real for nc in noll_coef.transpose(2,0,1)])
+    return out
