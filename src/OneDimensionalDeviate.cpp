@@ -155,7 +155,15 @@ namespace galsim {
                 }
             }
         }
-        extremum = x2;
+
+        // Finish with a single quadratic step to tighten up the accuracy.
+        double dx1 = x2-x1;
+        double dx2 = x3-x2;
+        xassert(dx1 > 0);
+        xassert(dx2 > 0);
+        xassert(df1 * df2 < 0);
+        extremum = x2 + 0.5 * (df1*dx2*dx2 + df2*dx1*dx1) / (df1*dx2 - df2*dx1);
+
         xdbg<<"Found extrumum at "<<extremum<<std::endl;
         return true;
     }
