@@ -84,23 +84,24 @@ namespace galsim {
         xdbg<<"f("<<x2<<") = "<<f2<<" = "<<function(x2)<<std::endl;
         xdbg<<"f("<<x3<<") = "<<f3<<" = "<<function(x3)<<std::endl;
 
-        // First guess is that minimum is in half of bracket with lowest gradient
-        bool fatLeft = std::abs(df1) < std::abs(df2);
+        // Fat left tells which side is the fatter one.  Keep splitting the fatter side.
+        bool fatLeft = (x2-x1) > (x3-x2);
 
         // Then use golden sections to localize - could use Brent's method for speed.
+        // Based on Numerical Recipes 10.1.
         const double GOLDEN = 2./(1+sqrt(5.));
         while (std::abs(x3-x1) > xTolerance) {
             xdbg<<"x1,x2,x3 = "<<x1<<','<<x2<<','<<x3<<std::endl;
             xdbg<<"f1,f2,f3 = "<<f1<<','<<f2<<','<<f3<<std::endl;
             xdbg<<"df1,df2 = "<<df1<<','<<df2<<std::endl;
-            xdbg<<"fatleft = "<<fatLeft<<"  "<<std::abs(df1)<<" <? "<<std::abs(df2)<<std::endl;
+            xdbg<<"fatleft = "<<fatLeft<<"  "<<x2-x1<<" >? "<<x3-x2<<std::endl;
             // Loop invariants:
             xassert(x1 < x2);
             xassert(x2 < x3);
             xassert(df1 == f2 - f1);
             xassert(df2 == f3 - f2);
             xassert(df1 * df2 < 0.);
-            xassert(fatLeft == (std::abs(df1) < std::abs(df2)));
+            xassert(fatLeft == (x2-x1) > (x3-x2));
 
             if (fatLeft) {
                 xdbg<<"fat left\n";
@@ -115,6 +116,7 @@ namespace galsim {
                     x1 = xTrial;
                     f1 = fTrial;
                     df1 = dfTrial;
+                    fatLeft = (x2-x1) > (x3-x2);
                 } else {
                     xdbg<<"1/trial/2\n";
                     // Now bracketed in 1 / trial / 2
@@ -124,6 +126,7 @@ namespace galsim {
                     f2 = fTrial;
                     df1 = f2 - f1;
                     df2 = dfTrial;
+                    fatLeft = true;
                 }
             } else {
                 xdbg<<"fat right\n";
@@ -138,6 +141,7 @@ namespace galsim {
                     x3 = xTrial;
                     f3 = fTrial;
                     df2 = dfTrial;
+                    fatLeft = (x2-x1) > (x3-x2);
                 } else {
                     xdbg<<"2/trial/3\n";
                     // Now bracketed in 2 / trial / 3
@@ -147,11 +151,12 @@ namespace galsim {
                     f2 = fTrial;
                     df1 = dfTrial;
                     df2 = f3 - f2;
+                    fatLeft = false;
                 }
             }
-            fatLeft = std::abs(df1) < std::abs(df2);
         }
         extremum = x2;
+        xdbg<<"Found extrumum at "<<extremum<<std::endl;
         return true;
     }
 
