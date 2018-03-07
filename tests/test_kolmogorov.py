@@ -308,6 +308,35 @@ def test_kolmogorov_flux_scaling():
         obj2.flux, test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
 
+
+@timer
+def test_kolmogorov_folding_threshold():
+    """Test Kolmogorov with low folding_threshold.
+    """
+    # This test reproduces a bug reported by Jim Chiang when Kolmogorov has a less than
+    # default folding_threshold.  Reported in Issue #952.
+    # It turned out the problem was in OneDimensionalDeviate's findExtremum going into an
+    # endless loop, mostly because it didn't preserve the intended invariant that x1 < x2 < x3.
+    # In this case, x1 became the largest of the three values and ended up getting larger and
+    # larger indefinitely, thus resulting in an endless loop.
+
+    # The test is really just to construct the object in finite time, but we do a few sanity
+    # checks afterward for good measure.
+
+    fwhm = 0.55344217545630736
+    folding_threshold=0.0008316873626901008
+    gsparams = galsim.GSParams(folding_threshold=folding_threshold)
+
+    obj = galsim.Kolmogorov(fwhm=fwhm, gsparams=gsparams)
+    print('obj = ',obj)
+
+    assert obj.flux == 1.0
+    assert obj.fwhm == fwhm
+    assert obj.gsparams.folding_threshold == folding_threshold
+    check_basic(obj, 'Kolmogorov with low folding_threshold')
+    do_pickle(obj)
+
+
 @timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
@@ -335,4 +364,5 @@ if __name__ == "__main__":
     test_kolmogorov_properties()
     test_kolmogorov_radii()
     test_kolmogorov_flux_scaling()
+    test_kolmogorov_folding_threshold()
     test_ne()
