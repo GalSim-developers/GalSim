@@ -17,9 +17,9 @@ bands.
 
 def get_efficiency_with_error(val_s, val_p,
                               bins=10):
-    """ Returns efficiency=# in selction/#in parent
+    """ Returns efficiency=(# in selection)/(# in parent)
     @input param 
-    val_s: Distribution in slection sample
+    val_s: Distribution in selection sample
     val_p: Distribution in parent sample
     returns efficiency of selection and error on efficiency
     """

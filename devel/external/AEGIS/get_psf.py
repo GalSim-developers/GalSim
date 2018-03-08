@@ -4,28 +4,28 @@ estimate the PSF. Postage stamps of select galaxies and their PSF are also drawn
 in get_pstamps.py)
 
 Requirements: A catalog with sextractor output for the given tile(segment), List
-of stars in the segemnt to be used for psf measuremnt, image of region, tt_starfeilds
-which contain psf drawn at difernt focus distance, at various points on the chip
-(size of tt_starfeild, must be same as input image),segmentation map of the
+of stars in the segment to be used for psf measuremnt, image of region, tt_starfields
+which contain psf drawn at different focus distance, at various points on the chip
+(size of tt_starfield, must be same as input image), segmentation map of the
 region. If upon visual inspection, some stars were found to be unsuitable for
 psf measuremnt, then their number must be removed from filter_matched_stars.txt
-file inside the segement directory.
+file inside the segment directory.
 
 PSF estimation:
-The optimal focus and corresponding tt_starfeild in picked in get_pstamps. Here
+The optimal focus and corresponding tt_starfield in picked in get_pstamps. Here
 we compute the focus for a given image while varying number of strs used to 
 measure focus. The focus is given by the minimum of the cost function. The focus 
-is is computed for different number of stars in the feild. The stars used for 
+is is computed for different number of stars in the field. The stars used for 
 measuring focus are sorted in decreasing SNR. The mode of focus values for different
 number of stars used in focus measurement is set as the focus value for the given
 segmenty.   
 
 Cost Function:
-The magnitude of diffrence in ellipticities of stars and its corresponing tiny 
-tim image. 
+The magnitude of difference in ellipticity of stars and the corresponding Tiny 
+Tim PSF image.
 
 Output:
-File with focus while varying nuumber of stars. 
+File with focus while varying number of stars. 
  """
 import subprocess
 import galsim
@@ -37,7 +37,7 @@ from astropy.table import Table, Column
 from scipy import stats
 
 class Main_param:
-    """Class containg parameters to pass to run analysis on each segment file."""
+    """Class containing parameters to pass to run analysis on each segment file."""
     def __init__(self,args):
         self.file_name = args.file_name.replace('seg_id', args.seg_id)
         self.seg_id = args.seg_id
@@ -58,8 +58,8 @@ class Main_param:
             self.tt_file_name[focus] = args.tt_file_name.replace('focus', 'f'+str(focus)) 
 
 def get_moments(params, filter, out_dir):
-    """Computes moments of stars, and moments for of tt_starfeilds at
-    differnt Focus
+    """Computes moments of stars, and moments for of tt_starfields at
+    different Focus
     """
     print "Computing Moments"
     print filter, params.seg_id
@@ -197,7 +197,7 @@ if __name__ == '__main__':
                         [Default:TinyTim_focus.fits]")
     parser.add_argument('--focus',
                         default= [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
-                        help="List containg focus positions that have TT_fields")
+                        help="List containing focus positions that have TT_fields")
     args = parser.parse_args()
     get_psf(args)
 

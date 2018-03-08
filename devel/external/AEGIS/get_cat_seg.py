@@ -2,10 +2,10 @@
 Reduces the full catalog to objects that have postage stamps for each segment.
 Then adds a few columns that are required for the main catalog. If a redshift 
 and photometric catalog are provided, then objects from main catalog are matched
-to the photometric and redshift catlog, and redshift and magnitude values are 
+to the photometric and redshift catalog, and redshift and magnitude values are 
 saved. 
 
-Note: If no photomteric or redshift catalog, set the input argument for the 
+Note: If no photometric or redshift catalog, set the input argument for the 
 file names to be 'None'. The column names of these two catalogs in the code
 need to be changed to their names in the input.
 
@@ -39,10 +39,10 @@ def get_cat_seg(args):
     print " Adding columns for additional catalog information"
     # Columns to add values from photometric and redshift catalog
     col= Column(np.ones(len(temp))*-1,name='zphot',dtype='float',
-                description = 'Redshift measured from other catlog')
+                description = 'Redshift measured from other catalog')
     temp.add_column(col)
     col= Column(np.ones(len(temp))*-1,name='zphot_err',dtype='float',
-                description = 'Error on redshift measured from other catlog')
+                description = 'Error on redshift measured from other catalog')
     temp.add_column(col)
     col= Column(np.ones(len(temp))*99,name='ACS_' + f_str + 'BEST',dtype='float',
                description = 'Magnitude measured by ACS catalog')
@@ -51,10 +51,10 @@ def get_cat_seg(args):
                description = 'Magnitude error measured by ACS catalog')
     temp.add_column(col)
     col= Column(np.ones(len(temp))*-1,name='ACSTILE',dtype='int',
-               description = 'Tile number of object in ACS catlog')
+               description = 'Tile number of object in ACS catalog')
     temp.add_column(col)
     col= Column(np.ones(len(temp))*-1,name='ACSID',dtype='int',
-               description = 'ID of object in ACS catlog')
+               description = 'ID of object in ACS catalog')
     temp.add_column(col)
     temp.rename_column('ALPHA_J2000', 'RA')
     temp.rename_column('DELTA_J2000', 'DEC')

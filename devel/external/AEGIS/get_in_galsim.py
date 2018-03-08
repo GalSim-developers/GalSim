@@ -1,6 +1,6 @@
 """
-Write complete catalog into files that can be opened with galsim.Realgalaxy()
-and galsim.COSMOSCatalog(). For historic reasons, the input files for the 
+Write complete catalog into files that can be opened with galsim.RealGalaxy()
+and galsim.COSMOSCatalog(). For historical reasons, the input files for the 
 galsim modules are:
 1) Main catalog file
 2) Selection file
@@ -129,7 +129,7 @@ def get_images(args, index_table,
     return index_table
   
 def main_table():
-    """Coloumns in main catalog"""
+    """Columns in main catalog"""
     names = ('IDENT', 'RA', 'DEC', 'MAG', 'BAND', 'WEIGHT', 'GAL_FILENAME')
     names+= ('PSF_FILENAME', 'GAL_HDU', 'PSF_HDU', 'PIXEL_SCALE')
     names+= ('NOISE_MEAN', 'NOISE_VARIANCE', 'NOISE_FILENAME', 'stamp_flux')
@@ -140,7 +140,7 @@ def main_table():
     return table
     			
 def selection_table():
-    """Coloumns in selection catalog"""
+    """Columns in selection catalog"""
     names = ('IDENT', 'dmag', 'sn_ellip_gauss', 'min_mask_dist_pixels')
     names+= ('average_mask_adjacent_pixel_count', 'peak_image_pixel_count')
     dtype = ('i4', 'f8', 'f8', 'f8', 'f8', 'f8')
@@ -148,7 +148,7 @@ def selection_table():
     return table
 
 def fits_table():
-    """Coloumns in parametric fit catalog"""
+    """Columns in parametric fit catalog"""
     names = ('IDENT', 'mag_auto', 'flux_radius', 'zphot','fit_mad_s', 'fit_mad_b')
     names+= ('fit_dvc_btt', 'use_bulgefit', 'viable_sersic', 'flux')
     dtype = ('i4', 'f8', 'f8', 'f8', 'f8','f8')

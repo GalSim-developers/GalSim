@@ -7,7 +7,7 @@ postage stamp of galaxy, corresponding segmentation map, noise file
 
 Identification:
 The segmentation map corresponding to the object is used to divide the
-postage stamp pixels into tho belonging to the main galaxy, other 
+postage stamp pixels into those belonging to the main galaxy, other 
 objects and background. The pixels belonging to other objects are replaced
 by pixels from the noise file. 
 
@@ -18,7 +18,7 @@ The noise pixels values are divided by its standard deviation and multiplied
 by the stdev of the background pixels of the postage stamp. 
 
 Stamp Stats:
-Some value are saved so that the GalSim COSMOSCatalog class may use to impose
+Somes values are saved so that the GalSim COSMOSCatalog class may impose
 selection criteria on the quality of the postage stamps. 
 """
 from astropy.table import Table
@@ -27,7 +27,7 @@ import sys
 import os
 
 class Main_param:
-    """Class containg parameters to pass to run analysis on each galaxy file."""
+    """Class containing parameters to pass to run analysis on each galaxy file."""
     def __init__(self,args):
         self.seg_id = args.seg_id
         self.num = args.num
@@ -107,7 +107,7 @@ def get_avg_around_pix(x0, y0,arr):
     return avg
 
 def get_snr(image_data, b_var, hlr):
-    """Returns SNr of shape measurement"""
+    """Returns SNR of shape measurement"""
     img = galsim.Image(image_data)
     try:
         new_params = galsim.hsm.HSMParams(max_amoment=5.0e15, max_mom2_iter=20000,
@@ -132,7 +132,7 @@ def get_min_dist(x0,y0,arr):
     return min_dist, arr[val]
 
 def get_blank_reg(x_r, y_r, noise_file):
-    """Returns reactangular randomly picked region of size x_r * y_r from the 
+    """Returns rectangular randomly picked region of size x_r * y_r from the 
     noise_file"""
     hdu = pyfits.open(noise_file)
     bl_dat = hdu[0].data
@@ -151,7 +151,7 @@ def change_others(arr, to_change,
                   noise_file, b_std):
     """Change pixels of other object to background
     @ arr         Postage stamp image of galaxy
-    @ to_change   coordinates of pixels that be replaced with noise
+    @ to_change   coordinates of pixels that will be replaced with noise
     @ noise_file  File with noise pixels
     @ b_std       Std dev of background pixels of pstamp
     """
@@ -173,12 +173,12 @@ def change_others(arr, to_change,
 
 
 def clean_pstamp(args):
-    """If a postage stamp has object other the central galaxy, the other object
+    """If a postage stamp has an object other the central galaxy, the other object
     is replaced by noise. The postage stamp of image must all have a 
     segmentation map. A value other than the id number of the image+1 is 
     replaced in the segmentation map is detected as other object. Other object
     pixels in the image postage stamp is replaced by pixels from a noise file.
-    the input noise file should represent noise background expected in the 
+    The input noise file should represent noise background expected in the 
     image. The replaced noise pixels are normalized by the standard deviation
     of background pixels in the postage stamp image
     Output: Creates new postage stamp with only the central object, a file
@@ -204,7 +204,7 @@ def clean_pstamp(args):
         # classify pixels as belonging to image, other objects and background
         # using segmentation map
         im, bl, oth, oth_segs, check = div_pixels(seg_dat, params.num)
-        # Some bright object is nearby, and it's seg map overlaps with central object
+        # Some bright object is nearby, and its seg map overlaps with central object
         # manually set output values so it fails selection tests later
         if len(im)==0:
             print "Ignore object"
@@ -251,7 +251,7 @@ def clean_pstamp(args):
         min_dists = []
         pix_min_dists = []
         for oth_seg in oth_segs:
-            print "Other obejct detected with id ", oth_seg
+            print "Other object detected with id ", oth_seg
             print 'MASKING: ', len(oth[oth_seg]) , ' pixels out of ', seg_dat.size 
             print " Noise file used ", params.noise_file
             dist, pix = get_min_dist(x0,y0, np.array(oth[oth_seg]))
