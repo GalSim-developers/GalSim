@@ -27,7 +27,18 @@ import galsim.lsst
 # LSST optics aberrations characterized by Double Zernike expansion
 dz_filepref = "LSST_Double_Zernike_coeffs"
 dz_filesuff = ".csv"
-dz_wavelength = 500. # nm
+dz_wavelength = 600. # nm
+
+
+# Make a lookup table
+noll_tab = np.zeros((58, 2), dtype=int)
+for j in range(58):
+    n, m = galsim.phase_screens._noll_to_zern(j)
+    noll_tab[j, :] = [n, m]
+
+
+def get_noll_index(n, m):
+    return np.where((noll_tab == (n, m)).all(axis=1))[0][0]
 
 
 def getOpticsPSF():
@@ -44,8 +55,30 @@ def _read_aberrations():
     infile = os.path.join(galsim.meta_data.share_dir,
                           dz_filepref + dz_filesuff)
 
-    dat = np.genfromtxt(infile, delimiter=",")[1:40,:]
+    dat = np.genfromtxt(infile, delimiter=",")[1:110,:]
     return dat
+
+
+def _init_optics_dz_coeffs():
+    # Read LSST nominal coefficients
+    dat = _read_aberrations()
+    npupil = 57
+    nfield = 29
+        
+    a_nmrs = np.zeros((npupil, nfield), dtype=np.float64)
+    for i in xrange(dat.shape[0]):
+        n_pupil = int(dat[i, 0])
+        m_pupil = int(dat[i, 1])
+        n_field = int(dat[i, 2])
+        m_field = int(dat[i, 3])
+        
+        for sgn in [-1, 1]:
+            mp = sgn * m_pupil
+            mf = sgn * m_field
+            j_pupil = get_noll_index(n_pupil, mp)
+            j_field = get_noll_index(n_field, mf)
+            a_nmrs[j_pupil, j_field] = dat[i, 4] 
+    return a_nmrs
 
 
 # class LSSTOpticsAberrationsInterp(object):
