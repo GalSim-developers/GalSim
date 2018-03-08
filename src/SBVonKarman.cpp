@@ -134,8 +134,7 @@ namespace galsim {
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
-        _doDelta(doDelta),
-        _gsparams(gsparams),
+        _doDelta(doDelta), _gsparams(gsparams),
         _radial(TableDD::spline)
     {
         // determine maxK

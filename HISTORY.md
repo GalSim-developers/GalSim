@@ -39,6 +39,7 @@ Bug Fixes
   using the config functionality. (#792)
 - Fixed bug in image.subImage that could cause seg faults in some cases. (#848)
 - Fixed bug in GSFitsWCS that made `toImage` sometimes fail to converge. (#880)
+- Fixed bug that could cause Kolmogorov to go into an endless loop. (#952)
 
 
 Deprecated Features
