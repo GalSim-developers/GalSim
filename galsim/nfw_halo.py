@@ -194,7 +194,7 @@ class NFWHalo(object):
         out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
-        mask = np.where(x < 0.999)[0]
+        mask = np.where(x < 0.999)[0]  # Equivalent but usually faster than `mask = (x < 0.999)`
         a = ((1.-x[mask])/(x[mask]+1.))**0.5
         out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
 
