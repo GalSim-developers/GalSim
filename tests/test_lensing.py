@@ -712,12 +712,12 @@ def test_shear_units():
     assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2')
     assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2',
                                       delta2=False, units=galsim.arcsec)
-    for ps2 in [ galsim.PowerSpectrum('k**2', 'k**2', False, 'arcsec'),
-                 galsim.PowerSpectrum('k', 'k', False, 'arcsec'),
-                 galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
-                 galsim.PowerSpectrum('k', 'k**2', False, 'arcmin'),
-               ]:
-        assert ps != ps2
+    diff_ps_list = [ps,
+                    galsim.PowerSpectrum('k**2', 'k**2', False, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k', False, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k**2', False, 'arcmin')]
+    all_obj_diff(diff_ps_list)
 
 
 @timer
@@ -1257,13 +1257,13 @@ def test_psr():
     # Check ne
     assert psr == galsim.lensing_ps.PowerSpectrumRealizer(ngrid=100, pixel_size=0.005,
                                                           p_E=pe, p_B=pb)
-    for psr2 in [ galsim.lensing_ps.PowerSpectrumRealizer(50, 0.005, pe, pb),
-                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.003, pe, pb),
-                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, None),
-                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, None, pb),
-                  galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pb, pe),
-                ]:
-        assert psr != psr2
+    diff_psr_list = [psr,
+                     galsim.lensing_ps.PowerSpectrumRealizer(50, 0.005, pe, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.003, pe, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, None),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, None, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pb, pe)]
+    all_obj_diff(diff_psr_list)
 
 
 @timer
