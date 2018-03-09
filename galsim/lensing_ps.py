@@ -32,14 +32,18 @@ def theoryToObserved(gamma1, gamma2, kappa):
     magnification on the output grid.
 
     @param gamma1       The first shear component, which must be the NON-reduced shear.  This and
-                        all other inputs should be supplied either as individual floating point
-                        numbers or NumPy arrays.
+                        all other inputs may be supplied either as individual floating point
+                        numbers or lists/arrays of floats.
     @param gamma2       The second (x) shear component, which must be the NON-reduced shear.
     @param kappa        The convergence.
 
     @returns the reduced shear and magnification as a tuple `(g1, g2, mu)` where each item has the
              same form as the input gamma1, gamma2, and kappa.
     """
+    gamma1 = np.array(gamma1, copy=False, dtype=float)
+    gamma2 = np.array(gamma2, copy=False, dtype=float)
+    kappa = np.array(kappa, copy=False, dtype=float)
+
     g1 = gamma1/(1.-kappa)
     g2 = gamma2/(1.-kappa)
     mu = 1./((1.-kappa)**2 - (gamma1**2 + gamma2**2))
