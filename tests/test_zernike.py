@@ -291,7 +291,7 @@ def test_fit():
         z = galsim.utilities.horner2d(x, y, cartesian_coefs)
 
         basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
-        coefs, _, _, _ = np.linalg.lstsq(basis.T, z)
+        coefs, _, _, _ = np.linalg.lstsq(basis.T, z, rcond=None)
         resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
                   .evalCartesian(x, y)
                   - z)
@@ -338,7 +338,7 @@ def test_fit():
         basis = galsim.zernike.zernikeBasis(21, x, y, R_outer=R_outer, R_inner=R_inner)
         assert basis.shape == (22, 25, 40)
         # lstsq doesn't handle the extra dimension though...
-        coefs, _, _, _ = np.linalg.lstsq(basis.reshape(21+1, 1000).T, z.ravel())
+        coefs, _, _, _ = np.linalg.lstsq(basis.reshape(21+1, 1000).T, z.ravel(), rcond=None)
         resids = (galsim.zernike.Zernike(coefs, R_outer=R_outer, R_inner=R_inner)
                   .evalCartesian(x, y)
                   - z)
