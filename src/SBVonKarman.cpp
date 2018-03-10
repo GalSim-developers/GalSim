@@ -120,8 +120,8 @@ namespace galsim {
             return val;
         }
     private:
-        const double _mkt;
         const VonKarmanInfo& _vki;
+        const double _mkt;
     };
 
     // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
@@ -130,11 +130,11 @@ namespace galsim {
     // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
-        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)), _gsparams(gsparams),
+        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)),
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
-        _doDelta(doDelta),
+        _doDelta(doDelta), _gsparams(gsparams),
         _radial(TableDD::spline)
     {
         // determine maxK

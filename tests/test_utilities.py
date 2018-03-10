@@ -622,6 +622,23 @@ def test_dol_to_lod():
         list(galsim.utilities.dol_to_lod(dd))
 
 
+@timer
+def test_nCr():
+    """Checking combinations utility."""
+    # Check some combinations that I can do in my head...
+    assert galsim.utilities.nCr(100, 0) == 1
+    assert galsim.utilities.nCr(100, 1) == 100
+    assert galsim.utilities.nCr(100, 2) == 100*99//2
+    assert galsim.utilities.nCr(100, 98) == 100*99//2
+    assert galsim.utilities.nCr(100, 99) == 100
+    assert galsim.utilities.nCr(100, 100) == 1
+    # Check that we get zero if not 0 <= r <= n
+    assert galsim.utilities.nCr(100, 101) == 0
+    assert galsim.utilities.nCr(100, -1) == 0
+    # Check that Sum_r=0^n nCr(n,r) == 2^n
+    for n in range(300):
+        assert sum([galsim.utilities.nCr(n, r) for r in range(n+1)]) == 2**n
+
 if __name__ == "__main__":
     test_roll2d_circularity()
     test_roll2d_fwdbck()
@@ -636,3 +653,4 @@ if __name__ == "__main__":
     test_position_type_promotion()
     test_unweighted_moments()
     test_dol_to_lod()
+    test_nCr()

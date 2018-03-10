@@ -174,3 +174,4 @@ from . import cdmodel
 from . import optics
 from . import utilities
 from . import fft
+from . import zernike
