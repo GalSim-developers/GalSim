@@ -401,6 +401,7 @@ namespace galsim {
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
         _sampler.reset(new OneDimensionalDeviate(_radial, range, true, gsparams));
+        dbg<<"made sampler\n";
 
 #ifdef SOLVE_FWHM_HLR
         // Improve upon the conversion between lam_over_r0 and fwhm:
