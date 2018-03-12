@@ -126,27 +126,55 @@ def test_nfwhalo():
 
     # comparison to reference:
     # tangential shear in x-direction is purely negative in g1
-    try:
-        np.testing.assert_allclose(
-            -ref[:,2], gamma1, rtol=1e-4,
-            err_msg="Computation of shear deviates from reference.")
-        np.testing.assert_allclose(
-            -ref[:,3], g1, rtol=1e-4,
-            err_msg="Computation of reduced shear deviates from reference.")
-        np.testing.assert_allclose(
-            ref[:,4], kappa, rtol=1e-4,
-            err_msg="Computation of convergence deviates from reference.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            -ref[:,2], gamma1, decimal=4,
-            err_msg="Computation of shear deviates from reference.")
-        np.testing.assert_array_almost_equal(
-            -ref[:,3], g1, decimal=4,
-            err_msg="Computation of reduced shear deviates from reference.")
-        np.testing.assert_array_almost_equal(
-            ref[:,4], kappa, decimal=4,
-            err_msg="Computation of convergence deviates from reference.")
+    np.testing.assert_allclose(gamma1, -ref[:,2], rtol=1e-4,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(gamma2, 0., atol=1e-8,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(g1, -ref[:,3], rtol=1e-4,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(g2, 0., atol=1e-8,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(kappa, ref[:,4], rtol=1e-4,
+                               err_msg="Computation of convergence deviates from reference.")
+
+@timer
+def test_halo_pos():
+    """Test an NFWHalo with a non-zero halo_pos"""
+
+    ref = np.loadtxt(refdir + '/nfw_lens.dat')
+    halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, halo_pos=galsim.PositionD(2,3))
+    pos_x = np.arange(1.,600) + 2     # Adjust x,y values by the same amount.
+    pos_y = np.zeros_like(pos_x) + 3
+    z_s = np.zeros_like(pos_x) + 2
+
+    do_pickle(halo)
+
+    # comparison to reference should still work.
+    kappa = halo.getConvergence((pos_x, pos_y), z_s)
+    gamma1, gamma2 = halo.getShear([pos_x, pos_y], z_s, reduced=False)
+    g1, g2 = halo.getShear([pos_x, pos_y], z_s)
+    mu = halo.getMagnification((pos_x, pos_y), z_s)
+    alt_g1, alt_g2, alt_mu = halo.getLensing((pos_x, pos_y), z_s)
+
+    np.testing.assert_allclose(gamma1, -ref[:,2], rtol=1e-4,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(gamma2, 0., atol=1e-8,
+                               err_msg="Computation of shear deviates from reference.")
+    np.testing.assert_allclose(g1, -ref[:,3], rtol=1e-4,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(g2, 0., atol=1e-8,
+                               err_msg="Computation of reduced shear deviates from reference.")
+    np.testing.assert_allclose(kappa, ref[:,4], rtol=1e-4,
+                               err_msg="Computation of convergence deviates from reference.")
+    np.testing.assert_array_equal(mu, 1./( (1-kappa)**2 - gamma1**2 - gamma2**2 ),
+                                  err_msg="Computation of magnification mu incorrect.")
+    np.testing.assert_array_equal(alt_g1, g1,
+                                  err_msg="getLensing returned wrong g1")
+    np.testing.assert_array_equal(alt_g2, g2,
+                                  err_msg="getLensing returned wrong g2")
+    np.testing.assert_array_equal(alt_mu, mu,
+                                  err_msg="getLensing returned wrong mu")
+
 
 
 @timer
@@ -213,6 +241,7 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
     rng2 = rng.duplicate()
+    assert_raises(RuntimeError, test_ps.nRandCallsForBuildGrid)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)
@@ -319,11 +348,6 @@ def test_shear_variance():
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
-    # For explanation of these two variables, see below, the comment starting "Note: the next..."
-    # These numbers are, however, hard-coded up here with the grid parameters because if the grid is
-    # changed, the erfmax and erfmin must change.
-    erfmax = 0.9875806693484477
-    erfmin = 0.007978712629263206
     # Now choose s such that s*kmax=2.5, i.e., very little power at kmax.
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
@@ -333,13 +357,12 @@ def test_shear_variance():
     assert g2.shape == (ngrid, ngrid)
     # For this case, the prediction for the variance is:
     # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
-    # Note: the next two lines of code are commented out because math.erf is not available in python
-    # v2.6, with which we must be compatible.  So instead the values of erf are hard-coded (above)
-    # based on the calculations from a machine that has python v2.7.  The implications here are that
-    # if one changes the grid parameters for this test in a way that also changes the values of
-    # these Erf[...] calculations, then the hard-coded erfmax and erfmin must be changed.
-    # erfmax = math.erf(s*kmax/math.sqrt(2.))
-    # erfmin = math.erf(s*kmin/math.sqrt(2.))
+    try:
+        erfmax = math.erf(s*kmax/math.sqrt(2.))
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except: # For python2.6, which doesn't have math.erf.
+        erfmax = 0.9875806693484477
+        erfmin = 0.007978712629263206
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
@@ -377,7 +400,10 @@ def test_shear_variance():
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
     # Here one of the Erf[...] values does change.
-    erfmin = 0.01595662743380396
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.01595662743380396
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
@@ -401,8 +427,10 @@ def test_shear_variance():
     kmax_factor = 2
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.*kmax_factor
-    # Back to the original erfmin value.
-    erfmin = 0.007978712629263206
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.007978712629263206
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     rng2 = rng.duplicate()
@@ -429,8 +457,12 @@ def test_shear_variance():
     kmax = np.pi/(grid_size/ngrid)/3600.
     s = 2.5/kmax
     # This time, erfmin is smaller.
-    erfmin = 0.003989406181481644
-    test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    try:
+        erfmin = math.erf(s*kmin/math.sqrt(2.))
+    except:
+        erfmin = 0.003989406181481644
+    # Also, for this test, it should be equivalent to use the b-mode instead.
+    test_ps = galsim.PowerSpectrum(b_power_function=lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees, kmin_factor=kmin_factor)
     assert g1.shape == (ngrid, ngrid)
@@ -476,6 +508,13 @@ def test_shear_variance():
     print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
+
+    # Warn for accessing values outside of valid bounds (and not periodic)
+    assert_warns(UserWarning, test_ps.getShear, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getShear, pos=(max*2, 0), reduced=False, units='deg')
+    assert_warns(UserWarning, test_ps.getConvergence, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getMagnification, pos=(max*2, 0), units='deg')
+    assert_warns(UserWarning, test_ps.getLensing, pos=(max*2, 0), units='deg')
 
 
 @timer
@@ -535,6 +574,57 @@ def test_shear_reference():
                                    err_msg = "Shear field differs from reference shear field!")
     np.testing.assert_almost_equal(kappa_in, kappavec, 9,
                                    err_msg = "Convergence differences from references!")
+
+
+@timer
+def test_delta2():
+    """Test that using delta2 gives appropriate equivalent power spectrum. """
+
+    rng = galsim.BaseDeviate(512342)
+    grid_size = 10. # degrees
+    ngrid = 100 # grid points
+    grid_spacing = grid_size / ngrid
+
+    for bandlimit in [None, 'soft', 'hard']:
+        for func in [pk2, pk1, pk_flat_lim]:
+            dfunc = lambda k: k**2 * func(k) / (2.*np.pi)
+
+            # E only
+            ps_ref = galsim.PowerSpectrum(e_power_function=func, units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(e_power_function=dfunc, units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+            # B only
+            ps_ref = galsim.PowerSpectrum(b_power_function=func, units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(b_power_function=dfunc, units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+            # E and B
+            ps_ref = galsim.PowerSpectrum(e_power_function=func, b_power_function=func,
+                                          units='deg')
+            g1_ref, g2_ref = ps_ref.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                              rng=rng.duplicate(), units='deg')
+            ps_delta = galsim.PowerSpectrum(e_power_function=dfunc, b_power_function=dfunc,
+                                            units='deg', delta2=True)
+            g1_delta, g2_delta = ps_delta.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid,
+                                                    rng=rng.duplicate(), units='deg')
+            np.testing.assert_allclose(g1_delta, g1_ref, rtol=1.e-8)
+            np.testing.assert_allclose(g2_delta, g2_ref, rtol=1.e-8)
+
+    # The above ps isn't picklable, since we use a lambda function for dfunc.
+    # So give it a string to test the pickling and repr with delta2=True
+    ps_delta = galsim.PowerSpectrum(e_power_function='k**3 / 2*np.pi', units='deg', delta2=True)
+    do_pickle(ps_delta)
 
 
 @timer
@@ -617,6 +707,18 @@ def test_shear_units():
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
 
+    # Check ne
+    ps = galsim.PowerSpectrum('k', 'k**2', False, 'arcsec')
+    assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2')
+    assert ps == galsim.PowerSpectrum(e_power_function='k', b_power_function='k**2',
+                                      delta2=False, units=galsim.arcsec)
+    diff_ps_list = [ps,
+                    galsim.PowerSpectrum('k**2', 'k**2', False, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k', False, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k**2', True, 'arcsec'),
+                    galsim.PowerSpectrum('k', 'k**2', False, 'arcmin')]
+    all_obj_diff(diff_ps_list)
+
 
 @timer
 def test_tabulated():
@@ -651,8 +753,7 @@ def test_tabulated():
     data = np.column_stack(data_all)
     filename = 'lensing_reference_data/tmp.txt'
     np.savetxt(filename, data)
-    tab2 = galsim.LookupTable.from_file(filename)
-    ps_tab2 = galsim.PowerSpectrum(tab2)
+    ps_tab2 = galsim.PowerSpectrum(filename)
     do_pickle(ps_tab2)
     g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                          rng = galsim.BaseDeviate(seed))
@@ -703,14 +804,34 @@ def test_tabulated():
     ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
     ## exception should be raised)
     t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
-    ps = galsim.PowerSpectrum(t)
-    do_pickle(ps)
+    limited_ps = galsim.PowerSpectrum(t)
+    do_pickle(limited_ps)
     with assert_raises(RuntimeError):
-        ps.buildGrid(grid_spacing=1.7, ngrid=100)
+        limited_ps.buildGrid(grid_spacing=1.7, ngrid=100)
+
     ## try to interpolate in log, but with zero values included
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True)
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), f_log=True)
     assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.), x_log=True, f_log=True)
+
+    # Check some invalid PowerSpectrum parameters
+    assert_raises(AttributeError, galsim.PowerSpectrum)
+    assert_raises(AttributeError, galsim.PowerSpectrum, delta2=True)
+    assert_raises(AttributeError, galsim.PowerSpectrum, delta2=True, units='radians')
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function=tab, units='inches')
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function=tab, units=True)
+    assert_raises(ValueError, galsim.PowerSpectrum, e_power_function='not_a_file')
+    assert_raises(ValueError, galsim.PowerSpectrum, b_power_function='not_a_file')
+    assert_raises(ValueError, ps_tab.buildGrid)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7)
+    assert_raises(ValueError, ps_tab.buildGrid, ngrid=10)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, kmin_factor=2.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, kmax_factor=1.5)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, center=(5,5))
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, units='inches')
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, units=True)
+    assert_raises(ValueError, ps_tab.buildGrid, grid_spacing=1.7, ngrid=10, bandlimit='none')
 
     # check that when calling LookupTable, the outputs have the same form as inputs
     tab = galsim.LookupTable(k_arr, p_arr)
@@ -913,8 +1034,7 @@ def test_corr_func():
     # expression above.
     #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} P(x) J_0(x) x dx
     # We want the integrand to be x J_0(x), which leads me to conclude that we should set
-    # P=1 (i.e., use a power function of lambda k : np.ones_like(k)).  In that case we should
-    # find
+    # P(k)=1.  In that case we should find
     #   xi+(r) = (1/2pi) (1/r)^2 \int_{r*kmin}^{r*kmax} x J_0(x) dx
     #          = (1/2pi) (1/r)^2 [r kmax J_1(r*kmax) - r kmin J_1(r*kmin)]
     #          = (1/2pi) (1/r) [kmax J_1(r*kmax) - kmin J_1(r*kmin)]
@@ -923,7 +1043,7 @@ def test_corr_func():
     # Also, we're going to just work in arcsec, which is the natural set of units for the
     # lensing engine.  Other unit tests already ensure that the units are working out properly
     # so we will not test that here.
-    ps = galsim.PowerSpectrum(lambda k : np.ones_like(k))
+    ps = galsim.PowerSpectrum(lambda k : 1.)
     # Set up a grid, with the expectation that we'll use kmin_factor=kmax_factor=1 in our test:
     ngrid = 100
     grid_spacing = 360. # arcsec, i.e., 0.1 degrees
@@ -934,19 +1054,13 @@ def test_corr_func():
     # 1/arcsec:
     kmin = 2.*np.pi/(ngrid*grid_spacing)
     kmax = np.pi/grid_spacing
-    theory_val = np.zeros_like(t)
-    for ind in range(len(theory_val)):
-        theory_val[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
-    theory_val /= (2.*np.pi*t)
+    theory_xip = np.zeros_like(t)
+    for ind in range(len(theory_xip)):
+        theory_xip[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
+    theory_xip /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    try:
-        np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
-    except AttributeError:
-        # Older NumPy versions don't have assert_allclose, so use this instead.
-        np.testing.assert_array_almost_equal(
-            test_xip, theory_val, decimal=10,
-            err_msg='Integrated xi+ differs from reference values')
+    np.testing.assert_allclose(test_xip, theory_xip, rtol=1.e-5,
+                               err_msg='Integrated xi+ differs from reference values')
 
     # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
     # engine output:
@@ -971,20 +1085,47 @@ def test_corr_func():
     t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
                                     bandlimit='hard')
     # Now we have to calculate the theoretical values.
-    theory_val = np.zeros_like(t)
-    for ind in range(len(theory_val)):
-        theory_val[ind] = \
+    theory_xim = np.zeros_like(t)
+    for ind in range(len(theory_xim)):
+        theory_xim[ind] = \
             galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
-    theory_val /= (2.*np.pi*t)
+    theory_xim /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    try:
-        np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
-                                   err_msg='Integrated xi+ differs from reference values')
-    except AttributeError:
-        # Older NumPy versions don't have assert_allclose, so use this instead.
-        np.testing.assert_array_almost_equal(
-            test_xim, theory_val, decimal=10,
-            err_msg='Integrated xi+ differs from reference values')
+    np.testing.assert_allclose(test_xim, theory_xim, rtol=1.e-5,
+                               err_msg='Integrated xi- differs from reference values')
+
+    # Test for invalid inputs
+    assert_raises(ValueError, ps.calculateXi, grid_spacing='foo', ngrid=10)
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid='bar')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, units='gradians')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, kmin_factor='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, kmax_factor='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, n_theta='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, bandlimit='none')
+
+    # Test B-mode version
+    ps_b = galsim.PowerSpectrum(b_power_function=lambda k : 1.)
+    t, b_xip, _ = ps_b.calculateXi(grid_spacing, ngrid, n_theta=n_theta)
+    np.testing.assert_allclose(b_xip, theory_xip, rtol=1.e-5,
+                               err_msg='B-mode xi+ differs from reference values')
+    ps_b = galsim.PowerSpectrum(b_power_function=lambda k : (k+1.e-12)**(-4))
+    t, _, b_xim = ps_b.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                   bandlimit='hard')
+    np.testing.assert_allclose(b_xim, -theory_xim, rtol=1.e-5,
+                               err_msg='B-mode xi- differs from reference values')
+
+    # Test E and B
+    ps_eb = galsim.PowerSpectrum(e_power_function=lambda k: 1., b_power_function=lambda k : 1.)
+    t, eb_xip, _ = ps_eb.calculateXi(grid_spacing, ngrid, n_theta=n_theta)
+    np.testing.assert_allclose(eb_xip, 2*theory_xip, rtol=1.e-5,
+                               err_msg='E+B xi+ differs from reference values')
+    ps_eb = galsim.PowerSpectrum(e_power_function=lambda k : (k+1.e-12)**(-4),
+                                b_power_function=lambda k : (k+1.e-12)**(-4))
+    t, _, eb_xim = ps_eb.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                     bandlimit='hard')
+    np.testing.assert_allclose(eb_xim/theory_xim, 0., atol=1.e-5,
+                               err_msg='E+B xi- differs from reference values')
+
 
 
 @timer
@@ -1012,9 +1153,10 @@ def test_periodic():
     grid_spacing = 0.1 # degrees
 
     # Make shears on the grid.
+    # Also use non-int (but still integral) values of kmin_factor, kmax_factor to test conversion.
     g1, g2, kappa = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
-                                 rng=galsim.UniformDeviate(314159), interpolant='nearest', kmin_factor=3,
-                                 get_convergence=True)
+                                 rng=galsim.UniformDeviate(314159), interpolant='nearest',
+                                 kmin_factor=3., kmax_factor=1., get_convergence=True)
     g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
     # Set up a new set of x, y.  Make a grid and then shift it coherently:
@@ -1039,62 +1181,31 @@ def test_periodic():
     _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
 
     # Check that they are identical.
-    try:
-        np.testing.assert_allclose(
-            pe_shift, pe, rtol=1e-10,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            pb_shift, pb, rtol=1e-10,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            peb_shift, peb, rtol=1e-10,
-            err_msg="EB power altered by NN periodic interpolation.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            pe_shift, pe, decimal=9,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            pb_shift, pb, decimal=9,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            peb_shift, peb, decimal=9,
-            err_msg="EB power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pe_shift, pe, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_shift, pb, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_shift, peb, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
 
-    ### Now, check getLensing ###
-    g1_r_shift, g2_r_shift, mu_shift = ps.getLensing(pos=(x.flatten(),y.flatten()),
-                                                     units=galsim.degrees,
-                                                     periodic=True)
+    ### Check reduced shear ###
+    g1_r_shift, g2_r_shift = ps.getShear(pos=(x.flatten(),y.flatten()), units=galsim.degrees,
+                                         periodic=True)
     g1_r_shift = g1_r_shift.reshape((ngrid,ngrid))
     g2_r_shift = g2_r_shift.reshape((ngrid,ngrid))
     _, pe_r_shift, pb_r_shift, peb_r_shift = pse.estimate(g1_r_shift, g2_r_shift)
-    try:
-        np.testing.assert_allclose(
-            pe_r_shift, pe_r, rtol=1e-10,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            pb_r_shift, pb_r, rtol=1e-10,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_allclose(
-            peb_r_shift, peb_r, rtol=1e-10,
-            err_msg="EB power altered by NN periodic interpolation.")
-    except AttributeError:
-        # Older numpy versions don't have assert_allclose, so use this instead:
-        np.testing.assert_array_almost_equal(
-            pe_r_shift, pe_r, decimal=9,
-            err_msg="E power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            pb_r_shift, pb_r, decimal=9,
-            err_msg="B power altered by NN periodic interpolation.")
-        np.testing.assert_array_almost_equal(
-            peb_r_shift, peb_r, decimal=9,
-            err_msg="EB power altered by NN periodic interpolation.")
-    # Should also check convergences/magnifications.  We don't have a power spectrum measure, so
-    # let's just check the mean and variance.
-    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
-                                   err_msg='Mean magnification altered by periodic interpolation')
-    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
-                                   err_msg='Magnification variance altered by periodic interpolation')
+    np.testing.assert_allclose(
+        pe_r_shift, pe_r, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_r_shift, pb_r, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_r_shift, peb_r, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
 
     ### Check getConvergence ###
     kappa_shift = ps.getConvergence(pos=(x.flatten(),y.flatten()),
@@ -1109,6 +1220,29 @@ def test_periodic():
     mu_shift = ps.getMagnification(pos=(x.flatten(),y.flatten()),
                                    units=galsim.degrees, periodic=True)
     # We don't have a power spectrum measure, so let's just check the mean and variance.
+    np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
+                                   err_msg='Mean magnification altered by periodic interpolation')
+    np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
+                                   err_msg='Magnification variance altered by periodic interpolation')
+
+    ### Now, check getLensing ###
+    g1_r_shift, g2_r_shift, mu_shift = ps.getLensing(pos=(x.flatten(),y.flatten()),
+                                                     units=galsim.degrees,
+                                                     periodic=True)
+    g1_r_shift = g1_r_shift.reshape((ngrid,ngrid))
+    g2_r_shift = g2_r_shift.reshape((ngrid,ngrid))
+    _, pe_r_shift, pb_r_shift, peb_r_shift = pse.estimate(g1_r_shift, g2_r_shift)
+    np.testing.assert_allclose(
+        pe_r_shift, pe_r, rtol=1e-10,
+        err_msg="E power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        pb_r_shift, pb_r, rtol=1e-10,
+        err_msg="B power altered by NN periodic interpolation.")
+    np.testing.assert_allclose(
+        peb_r_shift, peb_r, rtol=1e-10,
+        err_msg="EB power altered by NN periodic interpolation.")
+    # Should also check convergences/magnifications.  We don't have a power spectrum measure, so
+    # let's just check the mean and variance.
     np.testing.assert_almost_equal(np.mean(mu_shift), np.mean(mu), decimal=8,
                                    err_msg='Mean magnification altered by periodic interpolation')
     np.testing.assert_almost_equal(np.var(mu_shift), np.var(mu), decimal=8,
@@ -1130,7 +1264,7 @@ def test_bandlimit():
     do_pickle(ps)
 
     # Generate shears without and with band-limiting
-    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+    g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units='degrees',
                           rng=galsim.UniformDeviate(123), bandlimit=None)
     g1b, g2b = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
                             rng=galsim.UniformDeviate(123), bandlimit='hard')
@@ -1152,6 +1286,18 @@ def test_psr():
     pb = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
     do_pickle(psr)
+
+    # Check ne
+    assert psr == galsim.lensing_ps.PowerSpectrumRealizer(ngrid=100, pixel_size=0.005,
+                                                          p_E=pe, p_B=pb)
+    diff_psr_list = [psr,
+                     galsim.lensing_ps.PowerSpectrumRealizer(50, 0.005, pe, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.003, pe, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, None),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, None, pb),
+                     galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pb, pe)]
+    all_obj_diff(diff_psr_list)
+
 
 @timer
 def test_normalization():
@@ -1257,14 +1403,50 @@ def test_normalization():
     np.testing.assert_allclose(vark, target_var/2., rtol=1.e-3,
                                err_msg="Incorrect kappa variance using renormalized variance")
 
+@timer
+def test_constant():
+    """Test P(k) = constant"""
+    # We used to require that P(k) return an array, but that's not required anymore.
+    ps_a = galsim.PowerSpectrum(lambda k: 4, units=galsim.arcsec)
+    ps_b = galsim.PowerSpectrum(lambda k: 4.*np.ones_like(k), units=galsim.arcsec)
+    rng_a = galsim.BaseDeviate(1234)
+    rng_b = galsim.BaseDeviate(1234)
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True)
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True)
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
+    # Repeat with bandlimit = None, since that's the only one that could actually be a problem.
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True, bandlimit=None)
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True, bandlimit=None)
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
+    # And might as well hit soft as well for good measure
+    g1_a, g2_a, k_a = ps_a.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_a, get_convergence=True, bandlimit='soft')
+    g1_b, g2_b, k_b = ps_b.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
+                                     rng=rng_b, get_convergence=True, bandlimit='soft')
+    np.testing.assert_allclose(g1_a, g1_b, rtol=1.e-10)
+    np.testing.assert_allclose(g2_a, g2_b, rtol=1.e-10)
+    np.testing.assert_allclose(k_a, k_b, rtol=1.e-10)
+
 
 if __name__ == "__main__":
     test_nfwhalo()
+    test_halo_pos()
     test_cosmology()
     test_shear_variance()
     test_shear_seeds()
     test_shear_reference()
     test_shear_units()
+    test_delta2()
     test_shear_get()
     test_tabulated()
     test_kappa_gauss()
@@ -1274,3 +1456,4 @@ if __name__ == "__main__":
     test_bandlimit()
     test_psr()
     test_normalization()
+    test_constant()

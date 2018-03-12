@@ -611,23 +611,26 @@ else:
     from contextlib import contextmanager
     import warnings
     @contextmanager
+    def assert_warns_context(wtype):
+        # When used as a context manager
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            yield w
+        assert len(w) >= 1, "Expected warning %s was not raised."%(wtype)
+        assert issubclass(w[0].category, wtype), \
+                "Warning raised was the wrong type (got %s, expected %s)"%(
+                w[0].category, wtype)
+
     def assert_warns(wtype, *args, **kwargs):
         if len(args) == 0:
-            # When used as a context manager
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                yield w
-            assert len(w) >= 1, "Expected warning %s was not raised."%(wtype)
-            assert issubclass(w[0].category, wtype), \
-                    "Warning raised was the wrong type (got %s, expected %s)"%(
-                    w[0].category, wtype)
+            return assert_warns_context(wtype)
         else:
             # When used as a regular function
             func = args[0]
             args = args[1:]
             with assert_warns(wtype):
                 res = func(*args, **kwargs)
-            yield res
+            return res
 
 del Dummy
 del _t
