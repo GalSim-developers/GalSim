@@ -20,6 +20,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+import math
 
 import galsim
 from galsim_test_helpers import *
@@ -1001,6 +1002,105 @@ def test_cosmosgalaxy():
         gal1b = cosmos_cat.makeGalaxy(rng=rng)
     gsobject_compare(gal1a, gal1b, conv=conv)
 
+
+@timer
+def test_cosmos_redshift():
+    """Test accessing the redshift of a COSMOSGalaxy.  Useful e.g. when using NFWHalo.
+    """
+
+    # For now, use a custom ValueType.
+    # TODO: Put this into the main GalSim code.  cf. Issue #954
+
+    def COSMOS_ZPhot(config, base, value_type):
+        cosmos_cat = galsim.config.GetInputObj('cosmos_catalog', config, base, 'COSMOS_ZPhot')
+        # Requires that galaxy uses an explicit index.
+        # This will raise an exception if index is not set.
+        index = galsim.config.GetCurrentValue('gal.index', base, value_type=int)
+        record = cosmos_cat.getParametricRecord(index)
+        zphot = record['zphot']
+        return zphot
+
+    galsim.config.RegisterValueType('COSMOS_ZPhot', COSMOS_ZPhot, [float])
+
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+
+    halo_mass = 1.e14  # Solar masses
+    halo_conc = 4
+    halo_z = 0.3
+    config = {
+
+        'input' : {
+            'cosmos_catalog' : {
+                'dir' : real_gal_dir ,
+                'file_name' : real_gal_cat,
+                'use_real' : False,
+                'preload' : True
+            },
+
+            'nfw_halo' : {
+                'mass' : halo_mass,
+                'conc' : halo_conc,
+                'redshift' : halo_z,
+            },
+         },
+
+        'gal' : {
+            'type' : 'COSMOSGalaxy',
+            'index' : { 'type': 'Random' },
+            'shear' : { 'type' : 'NFWHaloShear' },
+            'magnify' : { 'type' : 'NFWHaloMagnification' },
+            'redshift' :  { 'type' : 'COSMOS_ZPhot' },
+        },
+
+        'image' : {
+            'type' : 'Scattered',
+            'size' : 256,
+            'stamp_size' : 32,
+            'nobjects' : 1,
+            'random_seed' : 31415,
+            'image_pos' : {
+                'type' : 'XY' ,
+                'x' : { 'type' : 'Random' , 'min' : 0 , 'max' : 256 },
+                'y' : { 'type' : 'Random' , 'min' : 0 , 'max' : 256 },
+            }
+
+        }
+    }
+
+    logger = logging.getLogger('test_cosmos_redshift')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
+    galsim.config.ProcessInput(config, logger=logger)
+    galsim.config.SetupConfigImageNum(config, 0, 0)
+    galsim.config.SetupInputsForImage(config, logger=logger)
+
+    rng = galsim.UniformDeviate(31416)
+    cosmos_cat = galsim.COSMOSCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
+
+    galsim.config.SetupConfigObjNum(config, 0, logger=logger)
+    galsim.config.SetupConfigRNG(config, seed_offset=1, logger=logger)
+    image_pos = galsim.config.ParseValue(config['image'], 'image_pos', config, galsim.PositionD)[0]
+    galsim.config.SetupConfigStampSize(config,32,32,image_pos,None, logger=logger)
+    gal1a = galsim.config.BuildGSObject(config, 'gal', logger=logger)[0]
+    print('gal1a = ',gal1a)
+    x = float(rng() * 256)
+    y = float(rng() * 256)
+    assert x == image_pos.x
+    assert y == image_pos.y
+    index = int(math.floor(rng() * cosmos_cat.getNObjects()))
+    gal1b = cosmos_cat.makeGalaxy(index)
+    redshift = cosmos_cat.getParametricRecord(index)['zphot']
+    nfw_halo = galsim.NFWHalo(mass=halo_mass, conc=halo_conc, redshift=halo_z)
+    g1,g2 = nfw_halo.getShear(image_pos, redshift)
+    mag = nfw_halo.getMagnification(image_pos, redshift)
+    gal1b = gal1b.shear(g1=g1, g2=g2).magnify(mag)
+    print('gal1b = ',gal1b)
+    gsobject_compare(gal1a, gal1b)
+
+
 @timer
 def test_interpolated_image():
     """Test various ways to build an InterpolatedImage
@@ -1623,6 +1723,7 @@ if __name__ == "__main__":
     test_pixel()
     test_realgalaxy()
     test_cosmosgalaxy()
+    test_cosmos_redshift()
     test_interpolated_image()
     test_add()
     test_convolve()
