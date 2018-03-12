@@ -216,6 +216,45 @@ class PowerSpectrum(object):
 
     def __hash__(self): return hash(repr(self))
 
+    def _get_scale_fac(self, units):
+        if isinstance(units, str):
+            # if the string is invalid, this raises a reasonable error message.
+            units = galsim.angle.get_angle_unit(units)
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("units must be either an AngleUnit or a string")
+        return units / galsim.arcsec
+
+    def _get_bandlimit_func(self, bandlimit):
+        if bandlimit == 'hard':
+            return self._hard_cutoff
+        elif bandlimit == 'soft':
+            return self._softening_function
+        elif bandlimit is None:
+            return lambda k, kmax: 1.0
+        else:
+            raise ValueError("Unrecognized option for band limit!")
+
+    def _get_pk(self, power_function, k_max, bandlimit_func):
+        if power_function is None:
+            return None
+        elif self.delta2:
+            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
+            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
+            # the denominator.  This naturally gives P(k) in arcsec^2.
+            return lambda k : (2.*np.pi) * power_function(self.scale*k)/(k**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        elif self.scale != 1:
+            # Here, the scale comes in two places:
+            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
+            # whatever the power spectrum function was defined to use.
+            # The units of power have to be converted from (input units)^2 as returned by the power
+            # function, to Galsim's units of arcsec^2.
+            # Recall that scale is (input units)/arcsec.
+            return lambda k : power_function(self.scale*k)*(self.scale**2) * \
+                bandlimit_func(self.scale*k, self.scale*k_max)
+        else:
+            return lambda k : power_function(k) * bandlimit_func(k, k_max)
+
     def buildGrid(self, grid_spacing=None, ngrid=None, rng=None, interpolant=None,
                   center=galsim.PositionD(0,0), units=galsim.arcsec, get_convergence=False,
                   kmax_factor=1, kmin_factor=1, bandlimit="hard", variance=None):
@@ -436,15 +475,9 @@ class PowerSpectrum(object):
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, str):
-            # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
-        if not isinstance(units, galsim.AngleUnit):
-            raise ValueError("units must be either an AngleUnit or a string")
-        if units != galsim.arcsec:
-            scale_fac = (1.*units) / galsim.arcsec
-            center *= scale_fac
-            grid_spacing *= scale_fac
+        scale_fac = self._get_scale_fac(units)
+        center *= scale_fac
+        grid_spacing *= scale_fac
 
         # The final grid spacing that will be in the computed images is grid_spacing/kmax_factor.
         self.grid_spacing = grid_spacing // kmax_factor
@@ -492,51 +525,14 @@ class PowerSpectrum(object):
         # internally, and divided it by kmax_factor to get self.grid_spacing, so here we just use
         # pi/self.grid_spacing.
         k_max = np.pi / self.grid_spacing
-        if bandlimit == 'hard':
-            def bandlimit_func(k, k_max):
-                return self._hard_cutoff(k, k_max)
-        elif bandlimit == 'soft':
-            def bandlimit_func(k, k_max):
-                return self._softening_function(k, k_max)
-        elif bandlimit is None:
-            def bandlimit_func(k, k_max):
-                return 1.0
-        else:
-            raise ValueError("Unrecognized option for band limit!")
+        bandlimit_func = self._get_bandlimit_func(bandlimit)
 
         # If we actually have dimensionless Delta^2, then we must convert to power
         # P(k) = 2pi Delta^2 / k^2,
         # which has dimensions of angle^2.
-        if e_power_function is None:
-            p_E = None
-        elif self.delta2:
-            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
-            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
-            # the denominator.  This naturally gives P(k) in arcsec^2.
-            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        elif self.scale != 1:
-            # Here, the scale comes in two places:
-            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
-            # whatever the power spectrum function was defined to use.
-            # The units of power have to be converted from (input units)^2 as returned by the power
-            # function, to Galsim's units of arcsec^2.
-            # Recall that scale is (input units)/arcsec.
-            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        else:
-            p_E = lambda k : e_power_function(k) * bandlimit_func(k, k_max)
-
-        if b_power_function is None:
-            p_B = None
-        elif self.delta2:
-            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        elif self.scale != 1:
-            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        else:
-            p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
+        # Also apply the bandlimit and/or scale as appropriate.
+        p_E = self._get_pk(e_power_function, k_max, bandlimit_func)
+        p_B = self._get_pk(b_power_function, k_max, bandlimit_func)
 
         # Build the grid
         self.ngrid_tot = ngrid * kmin_factor * kmax_factor
@@ -580,9 +576,6 @@ class PowerSpectrum(object):
             ntot += temp
         return int(ntot)
 
-    # TODO: This function is not tested.  I'm leaving it in and just marking it no cover,
-    #       but if someone starts using this for anything real, it would be worth adding unit
-    #       tests for it!
     def subsampleGrid(self, subsample_fac, get_convergence=False):  # pragma: no cover
         """Routine to use a regular subset of the grid points without a completely new call to
         buildGrid().
@@ -597,6 +590,9 @@ class PowerSpectrum(object):
                                   the value of `get_convergence`, the convergence will still be
                                   computed and stored for future use. [default: `False`]
         """
+        from .deprecated import depr
+        depr("subsampleGrid", 1.6, "",
+             "This function is slated to be removed.  If you need it, please open an issue.")
         # Check that buildGrid has already been called.
         if not hasattr(self, 'im_g1'):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before subsampleGrid")
@@ -662,7 +658,7 @@ class PowerSpectrum(object):
     #       anyone starts using this function in earnest, it would be worth bulking up the unit
     #       tests for it.
     def calculateXi(self, grid_spacing, ngrid, kmax_factor=1, kmin_factor=1, n_theta=100,
-                    units=galsim.arcsec, bandlimit="hard"):  # pragma: no cover
+                    units=galsim.arcsec, bandlimit="hard"):
         """Calculate shear correlation functions for the current power spectrum on the specified
         grid.
 
@@ -715,37 +711,18 @@ class PowerSpectrum(object):
         @returns the tuple (theta, xi_p, xi_m), 1-d NumPy arrays for the angular separation theta
                  and the two shear correlation functions.
         """
-        # Check for validity of integer values
-        if not isinstance(ngrid, int):
-            if ngrid != int(ngrid):
-                raise ValueError("ngrid must be an integer")
-            ngrid = int(ngrid)
-        if not isinstance(kmin_factor, int):
-            if kmin_factor != int(kmin_factor):
-                raise ValueError("kmin_factor must be an integer")
-            kmin_factor = int(kmin_factor)
-        if not isinstance(kmax_factor, int):
-            if kmax_factor != int(kmax_factor):
-                raise ValueError("kmax_factor must be an integer")
-            kmax_factor = int(kmax_factor)
-        if not isinstance(n_theta, int):
-            if n_theta != int(n_theta):
-                raise ValueError("n_theta must be an integer")
-            n_theta = int(n_theta)
+        # Normalize inputs
+        grid_spacing = float(grid_spacing)
+        ngrid = int(ngrid)
+        kmin_factor = int(kmin_factor)
+        kmax_factor = int(kmax_factor)
+        n_theta = int(n_theta)
 
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, str):
-            # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
-        if not isinstance(units, galsim.AngleUnit):
-            raise ValueError("units must be either an AngleUnit or a string")
-        if units != galsim.arcsec:
-            scale_fac = (1.*units) / galsim.arcsec
-            grid_spacing *= scale_fac
-        else:
-            scale_fac = 1.
+        scale_fac = self._get_scale_fac(units)
+        grid_spacing *= scale_fac
 
         # Decide on a grid of separation values.  Do this in arcsec, for consistency with the
         # internals of the PowerSpectrum class.
@@ -760,51 +737,14 @@ class PowerSpectrum(object):
 
         # Apply band limit if requested; see comments in 'buildGrid()' for more details.
         k_max = kmax_factor * np.pi / grid_spacing
-        if bandlimit == 'hard':
-            def bandlimit_func(k, k_max):
-                return self._hard_cutoff(k, k_max)
-        elif bandlimit == 'soft':
-            def bandlimit_func(k, k_max):
-                return self._softening_function(k, k_max)
-        elif bandlimit is None:
-            def bandlimit_func(k, k_max):
-                return 1.0
-        else:
-            raise RuntimeError("Unrecognized option for band limit!")
+        bandlimit_func = self._get_bandlimit_func(bandlimit)
 
         # If we actually have dimensionless Delta^2, then we must convert to power
         # P(k) = 2pi Delta^2 / k^2,
         # which has dimensions of angle^2.
-        if e_power_function is None:
-            p_E = None
-        elif self.delta2:
-            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
-            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
-            # the denominator.  This naturally gives P(k) in arcsec^2.
-            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        elif self.scale != 1:
-            # Here, the scale comes in two places:
-            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
-            # whatever the power spectrum function was defined to use.
-            # The units of power have to be converted from (input units)^2 as returned by the power
-            # function, to Galsim's units of arcsec^2.
-            # Recall that scale is (input units)/arcsec.
-            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        else:
-            p_E = lambda k : e_power_function(k) * bandlimit_func(k, k_max)
-
-        if b_power_function is None:
-            p_B = None
-        elif self.delta2:
-            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        elif self.scale != 1:
-            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2) * \
-                bandlimit_func(self.scale*k, self.scale*k_max)
-        else:
-            p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
+        # Also apply the bandlimit and/or scale as appropriate.
+        p_E = self._get_pk(e_power_function, k_max, bandlimit_func)
+        p_B = self._get_pk(b_power_function, k_max, bandlimit_func)
 
         # Get k_min value in arcsec:
         k_min = 2.*np.pi / (ngrid * grid_spacing * kmin_factor)
@@ -820,14 +760,14 @@ class PowerSpectrum(object):
             # xi_p = (1/2pi) \int (P_E + P_B) J_0(k theta) k dk
             # xi_m = (1/2pi) \int (P_E - P_B) J_4(k theta) k dk
             if p_E is not None and p_B is not None:
-                integrand_p = xip_integrand(p_E + p_B, theta[i_theta])
-                integrand_m = xim_integrand(p_E - p_B, theta[i_theta])
+                integrand_p = xip_integrand(lambda k: p_E(k) + p_B(k), theta[i_theta])
+                integrand_m = xim_integrand(lambda k: p_E(k) - p_B(k), theta[i_theta])
             elif p_E is not None:
                 integrand_p = xip_integrand(p_E, theta[i_theta])
                 integrand_m = xim_integrand(p_E, theta[i_theta])
             else:
                 integrand_p = xip_integrand(p_B, theta[i_theta])
-                integrand_m = xim_integrand(-p_B, theta[i_theta])
+                integrand_m = xim_integrand(lambda k: -p_B(k), theta[i_theta])
             xi_p[i_theta] = galsim.integ.int1d(integrand_p, k_min, k_max, rel_err=1.e-6,
                                                abs_err=1.e-12)
             xi_m[i_theta] = galsim.integ.int1d(integrand_m, k_min, k_max, rel_err=1.e-6,
@@ -842,7 +782,8 @@ class PowerSpectrum(object):
         # Return arrays with results.
         return theta, xi_p, xi_m
 
-    def _softening_function(self, k, k_max):
+    @staticmethod
+    def _softening_function(k, k_max):
         """Softening function for the power spectrum band-limiting step, instead of a hard cut in k.
 
         We use an arctan function to go smoothly from 1 to 0 above `k_max`.  The input `k` values
@@ -868,7 +809,8 @@ class PowerSpectrum(object):
         a = (np.tan(0.45*np.pi)-b) / np.log(0.95)
         return (np.arctan(a*np.log(k/k_max)+b) + np.pi/2.)/np.pi
 
-    def _hard_cutoff(self, k, k_max):
+    @staticmethod
+    def _hard_cutoff(k, k_max):
         if isinstance(k, float):
             return float(k < k_max)
         else:

@@ -1054,12 +1054,12 @@ def test_corr_func():
     # 1/arcsec:
     kmin = 2.*np.pi/(ngrid*grid_spacing)
     kmax = np.pi/grid_spacing
-    theory_val = np.zeros_like(t)
-    for ind in range(len(theory_val)):
-        theory_val[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
-    theory_val /= (2.*np.pi*t)
+    theory_xip = np.zeros_like(t)
+    for ind in range(len(theory_xip)):
+        theory_xip[ind] = kmax*galsim.bessel.j1(t[ind]*kmax) - kmin*galsim.bessel.j1(t[ind]*kmin)
+    theory_xip /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    np.testing.assert_allclose(test_xip, theory_val, rtol=1.e-5,
+    np.testing.assert_allclose(test_xip, theory_xip, rtol=1.e-5,
                                err_msg='Integrated xi+ differs from reference values')
 
     # Now, do the test for xi-.  We again have to rearrange equations, starting with the lensing
@@ -1085,14 +1085,47 @@ def test_corr_func():
     t, _, test_xim = ps.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
                                     bandlimit='hard')
     # Now we have to calculate the theoretical values.
-    theory_val = np.zeros_like(t)
-    for ind in range(len(theory_val)):
-        theory_val[ind] = \
+    theory_xim = np.zeros_like(t)
+    for ind in range(len(theory_xim)):
+        theory_xim[ind] = \
             galsim.bessel.jn(3,t[ind]*kmin)/kmin**3 - galsim.bessel.jn(3,t[ind]*kmax)/kmax**3
-    theory_val /= (2.*np.pi*t)
+    theory_xim /= (2.*np.pi*t)
     # Finally, make sure they are equal to 10^{-5}
-    np.testing.assert_allclose(test_xim, theory_val, rtol=1.e-5,
-                               err_msg='Integrated xi+ differs from reference values')
+    np.testing.assert_allclose(test_xim, theory_xim, rtol=1.e-5,
+                               err_msg='Integrated xi- differs from reference values')
+
+    # Test for invalid inputs
+    assert_raises(ValueError, ps.calculateXi, grid_spacing='foo', ngrid=10)
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid='bar')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, units='gradians')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, kmin_factor='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, kmax_factor='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, n_theta='1.5')
+    assert_raises(ValueError, ps.calculateXi, grid_spacing, ngrid, bandlimit='none')
+
+    # Test B-mode version
+    ps_b = galsim.PowerSpectrum(b_power_function=lambda k : 1.)
+    t, b_xip, _ = ps_b.calculateXi(grid_spacing, ngrid, n_theta=n_theta)
+    np.testing.assert_allclose(b_xip, theory_xip, rtol=1.e-5,
+                               err_msg='B-mode xi+ differs from reference values')
+    ps_b = galsim.PowerSpectrum(b_power_function=lambda k : (k+1.e-12)**(-4))
+    t, _, b_xim = ps_b.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                   bandlimit='hard')
+    np.testing.assert_allclose(b_xim, -theory_xim, rtol=1.e-5,
+                               err_msg='B-mode xi- differs from reference values')
+
+    # Test E and B
+    ps_eb = galsim.PowerSpectrum(e_power_function=lambda k: 1., b_power_function=lambda k : 1.)
+    t, eb_xip, _ = ps_eb.calculateXi(grid_spacing, ngrid, n_theta=n_theta)
+    np.testing.assert_allclose(eb_xip, 2*theory_xip, rtol=1.e-5,
+                               err_msg='E+B xi+ differs from reference values')
+    ps_eb = galsim.PowerSpectrum(e_power_function=lambda k : (k+1.e-12)**(-4),
+                                b_power_function=lambda k : (k+1.e-12)**(-4))
+    t, _, eb_xim = ps_eb.calculateXi(grid_spacing=grid_spacing, ngrid=ngrid, n_theta=n_theta,
+                                     bandlimit='hard')
+    np.testing.assert_allclose(eb_xim/theory_xim, 0., atol=1.e-5,
+                               err_msg='E+B xi- differs from reference values')
+
 
 
 @timer

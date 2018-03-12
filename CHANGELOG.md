@@ -30,6 +30,7 @@ Deprecated Features
 - Deprecated the interpolant argument for PowerSpectrum methods getShear,
   getConvergence, getMagnification, and getLensing.  The interpolant should
   be set when calling buildGrid. (#855)
+- Deprectated PowerSpectrum.subsampleGrid. (#855)
 
 
 New Features
