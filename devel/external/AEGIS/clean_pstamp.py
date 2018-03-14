@@ -100,7 +100,7 @@ def get_avg_around_pix(x0, y0, arr):
     if arr.shape[1] - 1 > y0:
         y.append(y0 + 1)
     neighb = [arr[i][j] for i in x for j in y]
-    avg = sum(neighb) / len(neighb)
+    avg = np.mean(neighb)
     return avg
 
 
