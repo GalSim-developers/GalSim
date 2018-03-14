@@ -390,9 +390,9 @@ class GalaxyCatalog:
                 x_vertices = np.array([mask_tab['AX'][m], mask_tab['BX'][m], mask_tab['CX'][m], mask_tab['DX'][m]])
                 y_vertices = np.array([mask_tab['AY'][m], mask_tab['BY'][m], mask_tab['CY'][m], mask_tab['DY'][m]])
                 Xs = np.array([catalog['XMIN_IMAGE'], catalog['XMAX_IMAGE']],
-                             dtype=int)
+                              dtype=int)
                 Ys = np.array([catalog['YMIN_IMAGE'], catalog['YMAX_IMAGE']],
-                             dtype=int)
+                              dtype=int)
                 bottom_pixels = [[(x, Ys[0][i]) for x in range(Xs[0][i],Xs[1][i])]for i in range(len(catalog))]
                 top_pixels = [[(x, Ys[1][i]) for x in range(Xs[0][i], Xs[1][i])]for i in range(len(catalog))]
                 left_pixels = [[(Xs[0][i], y) for y in range(Ys[0][i], Ys[1][i])]for i in range(len(catalog))]
