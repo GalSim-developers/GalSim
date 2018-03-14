@@ -457,7 +457,8 @@ class GalaxyCatalog:
             catalog = fn.mask_it_table(catalog)
             # add columns to catalog that will be useful later
             col = Column(np.zeros(len(catalog)), name='MULTI_DET',
-                         dtype='int', description='detected in another segment')
+                         dtype='int',
+                         description='detected in another segment')
             catalog.add_column(col)
             col = Column(['aa.0000000'] * len(catalog), name='MULTI_DET_OBJ',
                          dtype='S12', description='object id kept')
@@ -537,7 +538,7 @@ class GalaxyCatalog:
         """Makes postage stamps of stars. Ordered in decreasing highest SNR"""
         for filt in self.params.filters:
             cat_name = out_dir + '/' + filt + "_clean.cat"
-            print "Making postage stamps of stars on filter ", cat_name
+            print "Making postage stamps of stars in filter ", cat_name
             catalog = Table.read(cat_name, format="ascii.basic")
             # get indices of stars with highest SNR
             best_stars = fn.select_good_stars_table(catalog)
@@ -552,6 +553,7 @@ class GalaxyCatalog:
                 image = self.params.data_files[filt]
                 dir_star = out_dir + '/stars/'
                 out_name = filt + '_' + str(int(matched_stars[i][0]))
+                # Save image of selected stars
                 sub = fn.get_subImage(int(x0), int(y0), int(stamp_size), image,
                                       dir_star, out_name, save_img=True)
                 num += 1
