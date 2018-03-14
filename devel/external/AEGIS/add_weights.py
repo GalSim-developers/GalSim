@@ -75,8 +75,8 @@ if __name__ == '__main__':
     parser.add_argument('--meas_filter', default='I',
                         help="Name of filter to compute weights for [Default:'I']")
     parser.add_argument('--max_hlr', default=55,
-                        help="maximum half light radius up to which weight definition is valid \
-                         [Default:55]")
+                        help="maximum half light radius (in pixels) up to\
+                        which weight definition is valid [Default:55]")
     parser.add_argument('--file_filter_name', default=['V', 'I'],
                         help="Name of filter to use ")
     parser.add_argument('--main_path',
