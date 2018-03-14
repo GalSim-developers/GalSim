@@ -336,8 +336,6 @@ class GalaxyCatalog:
         b = diff_spike_params[1]  # intercept
         w = diff_spike_params[2] * 0.5  # width
         theta = diff_spike_params[3]  # angle
-        x_vertex_sets = []
-        y_vertex_sets = []
         val = np.zeros(len(catalog))
         col = Column(val, name='IN_DIFF_MASK',
                      description="Close to saturated star", dtype=int)
