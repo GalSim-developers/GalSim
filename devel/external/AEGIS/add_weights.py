@@ -48,7 +48,7 @@ def main(args):
     eff, err = get_efficiency_with_error(select_cat['flux_radius'],
                                          parent_cat['FLUX_RADIUS'],
                                          bins=bins)
-    hlr = [(bins[i] + bins[i - 1]) / 2. for i in range(1, len(bins))]
+    hlr = 0.5 * (bins[1:] + bins[:-1])
     z = np.polyfit(hlr, eff, 3)
     p = np.poly1d(z)
     norm = p(args.max_hlr)
