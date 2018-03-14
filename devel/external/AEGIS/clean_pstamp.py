@@ -9,8 +9,8 @@ postage stamp pixels into those belonging to the main galaxy, other
 objects and background. The pixels belonging to other objects are replaced
 by pixels from the noise file.
 Replace pixels:
-The other object pixels are replaced with a region of noise map identical
-to the region of other object. This is done so as to preserve noise correlations.
+The other object pixels are replaced with a region of noise map with the same
+dimensions as the other object. This is done so as to preserve noise correlations.
 The noise pixels values are divided by its standard deviation and multiplied
 by the stdev of the background pixels of the postage stamp.
 Stamp Stats:
