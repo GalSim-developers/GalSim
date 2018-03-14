@@ -86,9 +86,7 @@ def div_pixels(seg_map, num):
 def get_stats(arr, str=None):
     """Returns mean and stdev of arr """
     mean = np.mean(arr)
-    t2 = arr - mean
     std = np.std(arr)
-    t3 = np.sort(arr)
     if str:
         print 'Measuring', str
     print 'STATS: mean= ', mean, ' stdev=', std
