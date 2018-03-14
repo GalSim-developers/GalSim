@@ -167,8 +167,6 @@ def change_others(arr, to_change,
     bl_dat, bl_std = get_blank_reg(xr0, yr0, noise_file)
     # Change coords of pixels to change to satrt with (0,0)
     bl_change = np.array([to_change.T[0] - xmin, to_change.T[1] - ymin]).T
-    # get noise pixel with same coordinates as to change pixels
-    bl_pixels = [bl_dat[bl_change[i, 0], bl_change[i, 1]] for i in range(len(bl_change))]
     bl_dat = bl_dat / bl_std * b_std
     # change pixels of oth in arr to blank value
     for p in range(len(to_change)):
