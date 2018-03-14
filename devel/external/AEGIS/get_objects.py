@@ -1,45 +1,45 @@
 """ Program Number: 1
 
-Program to detect objects in a given image (segment) and make a catalog 
+Program to detect objects in a given image (segment) and make a catalog
 using sextractor. Objects are detected with the Hot-Cold method employed in
-Rix et al.(2004). 
+Rix et al.(2004).
 
 Requirements:
 SExtractor Detection:
 SExtractor is run in double image mode, with objects detected in det_im_file &
 det_wht_file as weight map. These detected objects are then measures in each
 band(file_name, wht_name). SExtractor WEIGHT_TYPE is set with wht_type and
-det_wht_type for detection and measurement respectively. The config parameters 
+det_wht_type for detection and measurement respectively. The config parameters
 for Hot-Cold detetction are preset and not input parametrs. The hot(faint)
-objects are merged with the cold(bright) catalog that aren't within buffer 
+objects are merged with the cold(bright) catalog that aren't within buffer
 region  --buffer.
 
 Cleanup:
 Since the noise in the image is not uncorrelated (dut to multidrizzle), the snr
 computed from sextractor needs to be modified by parameter scale factr --sf.
 The magnitudes computed by SExtractor have to be corrected for dust extinction.
-The correction function correct_extinction() in functions.py would have to be 
-modified when running script on a survey other then AEGIS. The detected objects 
-are then classified into stars and galaxies depending on their position in the 
-magnitude Vs peak surface brightness plot. The separation line is set 
+The correction function correct_extinction() in functions.py would have to be
+modified when running script on a survey other then AEGIS. The detected objects
+are then classified into stars and galaxies depending on their position in the
+magnitude Vs peak surface brightness plot. The separation line is set
 by star_galaxy_params. Objects that lie on image edge are masked. Region around
-saturated stars are masked: masked region set by diff_spike_params. Regions 
-that were manually observed to have artefacts (eg.ghosts) and are to be masked 
+saturated stars are masked: masked region set by diff_spike_params. Regions
+that were manually observed to have artefacts (eg.ghosts) and are to be masked
 are input as manual_mask_file. final catalog is renumbered begining from 0.
 Bright and faint seg maps are combined to form a single segmentation map.
 The bright seg map objects are expanded by 10 pixels.
-Note: Value of object in seg map will be 1 higher than NUMBER in catalog. Catalog
-numbers start at 0, while 0 in segmap is no object present. 
+Note: Value of object in seg map will be 1 higher than NUMBER in catalog.
+Catalog numbers start at 0, while 0 in segmap is no object present.
 
 Stars for PSF estimation:
-Select upto 25 stars with the highest SNR that are not masked. If they are 
+Select upto 25 stars with the highest SNR that are not masked. If they are
 detected as stars in all bands, have an image in tt_starfield within 200 pixels,
-and do not have any other objects nearby, they are saved to a list for PSF 
+and do not have any other objects nearby, they are saved to a list for PSF
 estimation. Postage stamps of these stars are also saved for manual inspection.
 
 Output:
-Cleaned catalog, combined segmentation map, list of stars for PSF measurement and
-postage stamp images of those stars.
+Cleaned catalog, combined segmentation map, list of stars for PSF measurement
+and postage stamp images of those stars.
 """
 import asciidata
 import subprocess
@@ -110,10 +110,10 @@ def run_segment(params):
     belonging to bright objects expaned by 15 pixels.
     4) Filter faint catalog:  Removes objects in *_faint.cat that are masked in
     the segmentation map for all filters. O/p is *_filteredfaint.cat
-    5) Merges the bright and filtered faint catalogs to give catalog of all objects.
+    5) Merges bright and filtered faint catalogs to give catalog of all objects.
     """
     cat = GalaxyCatalog(params)
-    cat.generate_catalog()    
+    cat.generate_catalog()
 
 
 class GalaxyCatalog:
