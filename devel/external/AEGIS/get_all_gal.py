@@ -1,6 +1,4 @@
-import subprocess
 import numpy as np
-import os
 from astropy.table import Table, vstack, join, Column
 
 
