@@ -32,7 +32,7 @@ Note: Value of object in seg map will be 1 higher than NUMBER in catalog. Catalo
 numbers start at 0, while 0 in segmap is no object present. 
 
 Stars for PSF estimation:
-Select upto 25 stars with the highest SNR that are not masked. If theya are 
+Select upto 25 stars with the highest SNR that are not masked. If they are 
 detected as stars in all bands, have an image in tt_starfield within 200 pixels,
 and do not have any other objects nearby, they are saved to a list for PSF 
 estimation. Postage stamps of these stars are also saved for manual inspection.
@@ -51,7 +51,7 @@ import clean_pstamp as cp
 from astropy.table import Table, Column, vstack
 
 class Main_param:
-    """Class containg parameters to pass to run analysis on each segment file.
+    """Class containing parameters to pass to run analysis on each segment file.
     it adds path name in front of file name and replace seg_id names and filter names.
     """
     def __init__(self,args):
@@ -99,7 +99,7 @@ def run_segment(params):
     Parameters to be measured by SExtractor are written to sex.param file.
 
     Detecting objects, Hot/Cold method :
-    1) SExtractor in then run in dual image mode, detecting in co-added image and 
+    1) SExtractor is run in dual image mode, detecting in co-added image and 
     measuring in individual filter images to give their corresponding 
     *_brigt.cat detected images.
     2) Same step repeated with faint_config_dict SExtractor parameters and 
@@ -108,7 +108,7 @@ def run_segment(params):
     belonging to bright objects expaned by 15 pixels.
     4) Filter faint catalog:  Removes objects in *_faint.cat that are masked in 
     the segmentation map for all filters. O/p is *_filteredfaint.cat
-    5) Merges the bright and filtered faint catologs to give catalog of all objects.
+    5) Merges the bright and filtered faint catalogs to give catalog of all objects.
     """
     cat = GalaxyCatalog(params)
     cat.generate_catalog()    
@@ -521,7 +521,7 @@ class GalaxyCatalog:
         return select_stars
 
     def stars_for_focus(self, out_dir):
-        """Makes postage stamps of stars. Ordered in decresing highest SNR"""
+        """Makes postage stamps of stars. Ordered in decreasing highest SNR"""
         for filt in self.params.filters:
             cat_name = out_dir + '/' + filt + "_clean.cat"
             print "Making postage stamps of stars on filter ", cat_name
@@ -610,12 +610,12 @@ if __name__ == '__main__':
                         'filter' in place of image segment id and filter \
                         [Default:'EGS_10134_seg_id_acs_wfc_f606w_30mas_unrot_drz.fits']")
     parser.add_argument('--wht_name', default='EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_rms.fits',
-                        help="Name of weight map of measurment image with 'seg_id' \
+                        help="Name of weight map of measurement image with 'seg_id' \
                         and 'filter' in place of image segment id and filter  \
                         [Default:'EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_rms.fits']")  
     parser.add_argument('--det_im_file',
                         default='added/EGS_10134_seg_id_acs_wfc_30mas_unrot_added_drz.fits',
-                        help="File name of image to run detetction on with '\
+                        help="File name of image to run detection on with '\
                         'seg_id' in place of image segment id. \
                         [Default:'added/EGS_10134_seg_id_acs_wfc_30mas_unrot_added_drz.fits']") 
     parser.add_argument('--det_wht_file',
@@ -624,10 +624,10 @@ if __name__ == '__main__':
                         'seg_id' in place of image segment id. \
                         [Default:'added/EGS_10134_seg_id_acs_wfc_30mas_unrot_added_rms.fits']") 
     parser.add_argument('--wht_type', default='MAP_RMS',
-                        help="SExtractor Weight file type for measurment image. \
+                        help="SExtractor Weight file type for measurement image. \
                         Default='MAP_RMS'")
     parser.add_argument('--det_wht_type', default='MAP_RMS',
-                        help="SExtractor Weight file type for detetction image. \
+                        help="SExtractor Weight file type for detection image. \
                          Default='MAP_RMS'")
     parser.add_argument('--buffer', default=15,
                         help="Number of pixels used as buffer around bright \
@@ -658,7 +658,7 @@ if __name__ == '__main__':
                         [Default:'manual_masks.txt']")
     parser.add_argument('--tt_file_path', 
                         default='/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/',
-                        help="Path of directory contating modelled TT fileds \
+                        help="Path of directory containing modelled TT fields \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/']")
     args = parser.parse_args()
     params = Main_param(args)

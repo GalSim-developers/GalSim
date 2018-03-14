@@ -1,6 +1,6 @@
 """Makes postage stamps of galaxy, PSF and segmentation _comb_seg_map
 
-Crietrion for making postage stamps:
+Criterion for making postage stamps:
 In ALL filters: 
 * Is NOT a star
 * Is NOT in any masked region
@@ -14,7 +14,7 @@ determined using eqn 2,3 Hausler 2007. XSIZE & YSIZE are individually
 computed for each band and the highest values are picked as dimensions of the 
 postage stamps in both bands.
 
-PSF pstmp size 20*20
+PSF pstamp size 20*20
 
 PSF:
 The focus of image is set to Mode of focus while varying number of stars

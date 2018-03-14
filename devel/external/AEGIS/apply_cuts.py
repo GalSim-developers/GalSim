@@ -1,6 +1,6 @@
 """Program Number: 6
 Applies selection cuts on galaxies in all filters and calls script to
-create catalog in a format that can be read by galsim.Realgalaxy().
+create catalog in a format that can be read by galsim.RealGalaxy().
 
 Note: WEIGHT is still set to 1 for all galaxies. 
 """
@@ -16,7 +16,7 @@ from astropy.table import Table
 
 
 def apply_selection(args, all_seg_ids):
-    """Applies selection cuts to galaxies in each segemnt.
+    """Applies selection cuts to galaxies in each segment.
     galaxy is selected for final catalog if: 
     1) Closest masked pixel is more than 5 pixels away
                   OR
@@ -29,11 +29,11 @@ def apply_selection(args, all_seg_ids):
                    OR
         ELLIPTICITY of galaxy as measured by SEXTRACTOR is greater than 0.75  
 
-    Galaxies statifying these criteria in all filters are selected for the 
+    Galaxies satisfying these criteria in all filters are selected for the 
     final catalog and saved to *_selected.fits file.
 
     Some postage stamps that passed the above cuts, but were found to have defects
-    upon visual inspection are removed manually. The SEG ID and NUMBER of these
+    upon visual inspection, are removed manually. The SEG ID and NUMBER of these
     galaxies is read from args.manual_bad_stamps and removed from the catalog.
     """
     for seg in all_seg_ids:
@@ -53,7 +53,7 @@ def apply_selection(args, all_seg_ids):
         temp=[]
         for f, filt in enumerate(args.filter_names):
             cat[f].remove_rows(remove_gals)
-            #Remove postage stamps with closest pixel masked during cleanin step is less than 5 pixels or
+            #Remove postage stamps with closest pixel masked during cleaning step is less than 5 pixels or
             #if less than 11 and average flux in adjacent pixels is 20% of brightest pixel.
             cond1 = cat[f]['min_mask_dist_pixels'] < 5
             cond2 = cat[f]['min_mask_dist_pixels'] < 11
