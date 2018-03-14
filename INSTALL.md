@@ -24,7 +24,7 @@ Table of Contents:
 ==================
 
 GalSim is a python module that has much of its implementation in C++ for
-improved computational efficiency.  GalSim supports both Python 2 and 
+improved computational efficiency.  GalSim supports both Python 2 and
 Python 3.  It is regularly tested on Python versions (2.7, 3.4, 3.5, 3.6).
 
 The usual way to install GalSim is now (starting with version 2.0) simply
@@ -44,8 +44,8 @@ you can do
 
     python setup.py install
 
-(again possibly with either sudo or --user).  This sometimes does not properly
-install all of the dependencies properly, so you might need to first run
+(again possibly with either sudo or --user).  This sometimes does not install
+all of the dependencies properly, so you might need to first run
 
     pip install -r requirements.txt
 
@@ -53,7 +53,7 @@ Either of these installation methods should handle most of the required
 dependencies for you if you do not have them already installed on your machine.
 There is one exception, however.  FFTW is not directly pip installable, so if
 the above installation fails, you may need to install it separately. See
-sections 2 below for more details about how to do this.
+section 2 below for more details about how to do this.
 
 The other dependencies should all be installed by pip, but we list them here
 for completeness along with versions that are known to work.  In most cases,
@@ -111,12 +111,12 @@ with the --prefix flag to configure.  E.g.
     ./configure --enable-shared --prefix=$HOME
 
 which will install the library into $HOME/lib and the header file into
-$HOME/include.  In this case, leave of the sudo from the last line.
-Also, you should make sure these directories are in your LD_LIBRARY_PATh
+$HOME/include.  In this case, leave off the sudo from the last line.
+Also, you should make sure these directories are in your LD_LIBRARY_PATH
 and C_INCLUDE_PATH environment variables, respectively.
 
 Alternatively, if you do not want to modify your LD_LIBRARY_PATH and/or
-C_INCLUDE_PATH, you can instead set an environment variabe to tell GalSim
+C_INCLUDE_PATH, you can instead set an environment variable to tell GalSim
 where the files are
 
     export FFTW_DIR=/path/to/fftw/prefix
@@ -139,7 +139,7 @@ any extra work on your part.
 
 If it is in a non-standard location, and you do not want to add this path
 to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
-variable from setup.py), then you can instead set the FFTW_DIR environment
+variables from setup.py), then you can instead set the FFTW_DIR environment
 variable to tell GalSim where to look
 
     export FFTW_DIR=/some/path/to/fftw
@@ -163,10 +163,10 @@ iii) Using conda
 If you use conda, FFTW can be install with
 
     conda install fftw
-    
+
 This will put it into the anaconda/lib directory on your system (within your
 active environment if appropriate).  GalSim knows to look here, so there is
-nothing dditional you need to do.
+nothing additional you need to do.
 
 
 iv) Using apt-get
@@ -187,7 +187,7 @@ If you use fink on a Mac, FFTW can be installed with
 (Make sure to use fftw3, not fftw, since fftw is version 2.)
 
 This will put it into the /sw/lib directory on your system. GalSim knows to
-look here, so there is nothing dditional you need to do.
+look here, so there is nothing additional you need to do.
 
 
 vi) Using MacPorts
@@ -197,15 +197,15 @@ If you use MacPorts, FFTW can be installed with
 
     port install fftw-3
 
-This will put it into the /opt/loca/lib directory on your system. GalSim knows
-to look here, so there is nothing dditional you need to do.
+This will put it into the /opt/local/lib directory on your system. GalSim knows
+to look here, so there is nothing additional you need to do.
 
 
 3. Installing Eigen
 ===================
 
 GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
-header-only library, which means that nothing needs to be compiled to use them.
+header-only library, which means that nothing needs to be compiled to use it.
 You can download the header files yourself, but if you do not, then we use
 the pip-installable eigency module, which bundles the header files in their
 installed python directory.  So usually, this dependency should require no
@@ -217,9 +217,9 @@ bundled with eigency.  (Eigen 3.2.8 is bundled with eigency 1.77.)  Therefore,
 this section describes several options for how to obtain and install Eigen.
 
 We require Eigen version >= 3.0.  Most tests have been done with Eigen 3.2.8
-or 3.3.4, but we have also 3.0.4, so probably any 3.x version will work.
-However, if you have trouble with another version, try upgrading to 3.2.8 or
-later.
+or 3.3.4, but we have also tested on 3.0.4, so probably any 3.x version will
+work.  However, if you have trouble with another version, try upgrading to
+3.2.8 or later.
 
 Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
 This is still an option if you prefer (e.g. it may be faster for some use
@@ -250,7 +250,7 @@ as $HOME/include instead and leave off the sudo from the cp command.  In this
 case, make sure this directory is in your C_INCLUDE_PATH environment variable.
 
 Finally, you can also skip the last command above and instead set EIGEN_DIR
-as an environment variabe to tell GalSim where the files are
+as an environment variable to tell GalSim where the files are
 
     export EIGEN_DIR=/some/path/to/eigen
 
@@ -295,10 +295,10 @@ iii) Using conda
 If you use conda, Eigen can be install with
 
     conda install eigen
-    
+
 This will put it into the anaconda/include directory on your system (within
 your active environment if appropriate).  GalSim knows to look here, so there
-is nothing dditional you need to do.
+is nothing additional you need to do.
 
 
 iv) Using apt-get
@@ -317,7 +317,7 @@ If you use fink on a Mac, Eigen can be installed with
     fink install eigen
 
 This will put it into the /sw/include directory on your system. GalSim knows
-to look here, so there is nothing dditional you need to do.
+to look here, so there is nothing additional you need to do.
 
 
 vi) Using MacPorts
@@ -328,14 +328,14 @@ If you use MacPorts, Eigen can be installed with
     port install eigen
 
 This will put it into the /opt/local/include directory on your system. GalSim
-knows to look here, so there is nothing dditional you need to do.
+knows to look here, so there is nothing additional you need to do.
 
 
 vi) Using eigency
 -----------------
 
 Eigency is a pip-installable module that bundles the Eigen header files, so it
-can also be used to install these files on your system.  Indeed, as mentioned 
+can also be used to install these files on your system.  Indeed, as mentioned
 above, we will use eigency automatically if Eigen is not found in one of the
 above locations.  So the above installations will take precendence, but
 eigency should work as a fall-back.
@@ -410,20 +410,20 @@ You can run our test suite by typing
 This should run all the python-layer tests with pytest and also compile and
 run the C++ test suite.
 
-By default, the python tests will use the pytest plugins `pytest-xdist` (for 
-running tests in parallel) and `pytest-timeout` (to manage how much time each 
+By default, the python tests will use the pytest plugins `pytest-xdist` (for
+running tests in parallel) and `pytest-timeout` (to manage how much time each
 test is allowed to run).  These plugins are usually installable using pip:
 
     pip install pytest-xdist pytest-timeout
-    
-Sometimes the `--user` flag may be needed in the above command to make the 
+
+Sometimes the `--user` flag may be needed in the above command to make the
 plugins discoverable.  If you want to run the python tests without these
 plugins (serially!), you can still do this via
 
     python setup.py test -j1
 
 Note: if your system does not have `pytest` installed, and you do not want to
-installq it, you can run all the Python tests with the script run_all_tests in
+install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
 have passed.  However, note that this script runs more tests than our normal
 test run using pytest, so it may take quite a while to finish.  (The *all* in
