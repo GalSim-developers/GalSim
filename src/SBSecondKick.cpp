@@ -135,7 +135,7 @@ namespace galsim {
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _r0(r0), _r0m53(pow(r0, -5./3)), _diam(diam), _obscuration(obscuration), _L0(L0),
-        _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kcrit(kcrit), _gsparams(gsparams),
+        _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kmin(kcrit/r0), _gsparams(gsparams),
         _airy(new SBAiry(lam/diam*ARCSEC2RAD, obscuration, 1, gsparams)),
         _sfLUT(TableDD::spline),
         _radial(TableDD::spline)
@@ -161,13 +161,13 @@ namespace galsim {
         const double _L0invsq;  // inverse meters squared
     };
 
-    // This version of structureFunction explicitly integrates from kcrit to infinity, which is how
+    // This version of structureFunction explicitly integrates from kmin to infinity, which is how
     // the second kick is defined. However, I've found it's more stable to integrate from zero to
-    // kcrit, and then subtract this from the analytic integral from 0 to infinity.  So that's
+    // kmin, and then subtract this from the analytic integral from 0 to infinity.  So that's
     // what's implemented further down.
     // double SKInfo::structureFunction(double rho) const {
     //     SKISFIntegrand I(rho, _L0invsq);
-    //     double result = integ::int1d(I, _kcrit, integ::MOCK_INF,
+    //     double result = integ::int1d(I, _kmin, integ::MOCK_INF,
     //                                  _gsparams->integration_relerr,
     //                                  _gsparams->integration_abserr);
     //     result *= magic5*_r0m53;
@@ -198,7 +198,7 @@ namespace galsim {
         const static double magic5 = 0.2877144330394485472;
 
         SKISFIntegrand I(rho, _L0invsq);
-        double complement = integ::int1d(I, 0, _kcrit,
+        double complement = integ::int1d(I, 0, _kmin,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
         return vkStructureFunction(rho) - magic5*complement*_r0m53;

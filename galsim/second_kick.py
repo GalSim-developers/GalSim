@@ -89,7 +89,7 @@ class SecondKick(GSObject):
         self._scale_unit = scale_unit
         scale = scale_unit/galsim.arcsec
         self._sbp = galsim._galsim.SBSecondKick(
-            lam, r0, diam, obscuration, L0, kcrit/r0, flux, scale, gsparams)
+            lam, r0, diam, obscuration, L0, kcrit, flux, scale, gsparams)
 
     @property
     def lam(self):
@@ -113,7 +113,7 @@ class SecondKick(GSObject):
 
     @property
     def kcrit(self):
-        return self._sbp.getKCrit()*self.r0
+        return self._sbp.getKCrit()
 
     @property
     def scale_unit(self):

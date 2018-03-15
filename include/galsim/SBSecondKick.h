@@ -43,7 +43,7 @@ namespace galsim {
          * @param[in] diam         Telescope diameter in m.
          * @param[in] obscuration  Fractional linear obscuration.
          * @param[in] L0           Outer scale in m.
-         * @param[in] kcrit        Critical turbulence Fourier mode.
+         * @param[in] kcrit        Critical turbulence Fourier mode in units of r0.
          * @param[in] flux         Flux.
          * @param[in] scale        Scale of 'x' in xValue in arcsec.
          * @param[in] gsparams     GSParams.

@@ -68,7 +68,7 @@ namespace galsim {
         double _L0; // Outer scale in meters
         double _L0invsq; // 1/L0/L0
         double _r0L0m53;
-        double _kcrit;
+        double _kmin;
         double _stepk;
         double _maxk;
         double _hlr; // half-light-radius
