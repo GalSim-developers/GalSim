@@ -62,11 +62,9 @@ you can do
 
 (again possibly with either sudo or --user).
 
-<aside>
-If you use Anaconda Python, you can use that to install most of the
+**Note**: If you use Anaconda Python, you can use that to install most of the
 requirements with their conda installer.  See [Using Conda](using-conda)
-below.
-</aside>
+below. {: .note}
 
 Either of these installation methods should handle most of the required
 dependencies for you if you do not have them already installed on your machine.
@@ -446,15 +444,13 @@ you can do this via
 You can also use this to modify how many jobs will be spawned for running the
 tests.
 
-<aside>
-If your system does not have `pytest` installed, and you do not want to
-install it, you can run all the Python tests with the script run_all_tests in
-the `tests` directory. If this finishes without an error, then all the tests
+**Note**: If your system does not have `pytest` installed, and you do not want
+to install it, you can run all the Python tests with the script run_all_tests
+in the `tests` directory. If this finishes without an error, then all the tests
 have passed.  However, note that this script runs more tests than our normal
 test run using pytest, so it may take quite a while to finish.  (The *all* in
 the file name means run all the tests including the slow ones that we normally
-skip.)
-</aside>
+skip.) {: .note}
 
 
 Running example scripts
