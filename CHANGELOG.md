@@ -18,33 +18,30 @@ Dependency Changes
 
 Bug Fixes
 ---------
-
+- Fixed error in amplitude of phase screens created by AtmosphericScreen (#864)
 - Fixed a bug in the DES MEDS writer setting the cutout row/col wrong. (#928)
 - Fixed a number of small bugs in the config processing uncovered by the
   galsim_extra FocalPlane output type. (#928)
 - Fixed python3 unicode/str mismatches in tests/SConscript (#932)
 - Fixed memory leak when drawing PhaseScreenPSFs using photon-shooting (#942)
-- Fixed error in amplitude of phase screens created by AtmosphericScreen (#864)
+
 
 Deprecated Features
 -------------------
-
 - Deprecated passing Image arguments to kappaKaiserSquires function. (#855)
 - Deprecated the interpolant argument for PowerSpectrum methods getShear,
   getConvergence, getMagnification, and getLensing.  The interpolant should
   be set when calling buildGrid. (#855)
-- Deprectated PowerSpectrum.subsampleGrid. (#855)
+- Deprecated PowerSpectrum.subsampleGrid. (#855)
 
 
 New Features
 ------------
-
-- Add option to use circular weight function in HSM adaptive moments code. (#917)
-- Add VonKarman profile GSObject. (#940)
 - Add SecondKick profile GSObject. (#864)
 - Automatically include SecondKick objects when drawing PhaseScreenPSFs using
   geometric photon shooting. (#864)
-
+- Add option to use circular weight function in HSM adaptive moments code. (#917)
+- Add VonKarman profile GSObject. (#940)
 
 
 New config features
