@@ -4,7 +4,7 @@ shows a FFT PSF and the second row shows a first kick geometric PSF.
 """
 
 
-import warnings
+import os
 import numpy as np
 import galsim
 
@@ -177,6 +177,10 @@ def make_plot(args):
     axes[1, 0].set_ylabel("1st Kick")
 
     fig.tight_layout()
+
+    dirname, filename = os.path.split(args.outfile)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
     fig.savefig(args.outfile)
 
 

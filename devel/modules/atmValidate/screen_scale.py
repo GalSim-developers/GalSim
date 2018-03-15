@@ -2,7 +2,7 @@
 4 different PSFs using progressively decreasing screen resolution.
 """
 
-import warnings
+import os
 import numpy as np
 import galsim
 
@@ -202,6 +202,10 @@ def make_plot(args):
                        transform=axes[1,1].transAxes, color='w')
 
     fig.tight_layout()
+
+    dirname, filename = os.path.split(args.outfile)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
     fig.savefig(args.outfile)
 
 

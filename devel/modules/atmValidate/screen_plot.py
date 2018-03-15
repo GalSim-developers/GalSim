@@ -3,7 +3,7 @@ power spectra.
 """
 
 
-import warnings
+import os
 import numpy as np
 import galsim
 
@@ -15,13 +15,17 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from astropy.utils.console import ProgressBar
 
 
-def save_plot(img, filename):
+def save_plot(img, fullpath):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(5,4))
     ax.set_xticks([])
     ax.set_yticks([])
     ax.imshow(img)
     fig.tight_layout()
-    fig.savefig(filename)
+
+    dirname, filename = os.path.split(fullpath)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    fig.savefig(fullpath)
 
 
 def make_plot(args):

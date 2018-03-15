@@ -11,7 +11,7 @@ refractive approximation second kick including Airy in the bottom row.  A differ
 used in each column.  Each panel has inlaid the HSM-measured PSF size sigma.
 """
 
-import warnings
+import os
 import numpy as np
 import galsim
 
@@ -139,8 +139,11 @@ def make_plot(args):
     axes[1, 0].set_ylabel("2nd kick")
 
     fig.tight_layout()
-    fig.savefig(args.outfile)
 
+    dirname, filename = os.path.split(args.outfile)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    fig.savefig(args.outfile)
 
 
 if __name__ == '__main__':

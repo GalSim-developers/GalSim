@@ -3,7 +3,7 @@ as a function of the critical scale kcrit used to separate quickly and slowly va
 the phase screens.
 """
 
-import warnings
+import os
 import numpy as np
 import galsim
 
@@ -175,8 +175,11 @@ def make_plot(args):
     axes[4, 0].set_ylabel("Von Karman")
 
     fig.tight_layout()
-    fig.savefig(args.outfile)
 
+    dirname, filename = os.path.split(args.outfile)
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    fig.savefig(args.outfile)
 
 
 if __name__ == '__main__':
