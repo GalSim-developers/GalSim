@@ -39,11 +39,16 @@ class AtmosphericScreen(object):
     kick).  Querying the wavefront or wavefront gradient will instantiate the screen using the full
     power spectrum.
 
+    This class will normally attempt to sanity check that the screen has been appropriately
+    instantiated depending on the use case, i.e., depending on whether it's being used to draw with
+    Fourier optics or geometric optics.  If you want to turn this warning off, however, you can
+    use the `suppress_warning` keyword argument.
+
     If you wish to override the automatic truncation determination, then you can directly
     instantiate the phase screen array using the AtmosphericScreen.instantiate() method.
 
     Note that once a screen has been instantiated with a particular set of truncation parameters, it
-    cannot be re-instantiated with another set of parameters.  Attempting to use a phase screen
+    cannot be re-instantiated with another set of parameters.
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
@@ -80,13 +85,8 @@ class AtmosphericScreen(object):
                          that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
-    @param suppress_warning   AtmosphericScreens used for drawing using Fourier optics should
-                              generally be different than those used for drawing using geometric
-                              optics (see above).  This class will normally attempt to sanity check
-                              that an appropriate screen is being used for both situations, and
-                              issue a warning if it thinks there may be an incorrect use.  If you
-                              want to turn this warning off, however, then you can set
-                              `suppress_warning=True`.  [default: False]
+    @param suppress_warning   Turn off instantiation sanity checking.  (See above)  [default: False]
+
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
     simulations"

@@ -1003,7 +1003,8 @@ class PhaseScreenPSF(GSObject):
         This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method='phot'
         when calling drawImage.  This actually performs the same calculations as the Fourier optics
         option above, but then proceeds by shooting photons from that result.  This can sometimes be
-        a good option for OpticalPSFs, especially if the OpticalPSF can be reused for may objects.
+        a good option for OpticalPSFs, especially if the same OpticalPSF can be reused for may
+        objects, since the Fourier part of the process would only be performed once in this case.
 
     3) Photon-shooting using the "geometric approximation".
 
@@ -1013,7 +1014,8 @@ class PhaseScreenPSF(GSObject):
         at that location is used to deflect each photon in the image plane.  This method, which
         corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
         across the aperture, and is usually several orders of magnitude or more faster than Fourier
-        optics.
+        optics (depending on the flux of the object, of course, but much faster even for rather
+        bright flux levels).
 
         One short-coming of this method is that it neglects interference effects, i.e. diffraction.
         For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
@@ -1065,10 +1067,11 @@ class PhaseScreenPSF(GSObject):
                                optics and then shoot from the derived InterpolatedImage.
                                [default: True]
     @param aper                Aperture to use to compute PSF(s).  [default: None]
-    @param second_kick         An optional SecondKick to also convolve by when using geometric
-                               photon-shooting.  If None, then a good second kick will be chosen
-                               automatically based on `screen_list`.  If False, then a second kick
-                               won't be applied.  [default: None]
+    @param second_kick         An optional second kick to also convolve by when using geometric
+                               photon-shooting.  (This can technically be any GSObject, though
+                               usually it should probably be a SecondKick object).  If None, then a
+                               good second kick will be chosen automatically based on `screen_list`.
+                               If False, then a second kick won't be applied.  [default: None]
     @param kcrit_factor        Used to determine at what scale to separate low-k and high-k
                                turbulence when using the 2-kick geometric approximation.  The
                                separation will occur at kcrit_factor/r0.  The default value was
