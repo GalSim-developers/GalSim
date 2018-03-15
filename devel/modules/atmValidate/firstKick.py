@@ -143,10 +143,8 @@ def make_plot(args):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser, RawDescriptionHelpFormatter
-    parser = ArgumentParser(description=(
-"""
-"""), formatter_class=RawDescriptionHelpFormatter)
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
 
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed for generating turbulence.  Default: 1")
@@ -193,10 +191,6 @@ if __name__ == '__main__':
     parser.add_argument("--oversampling", type=float, default=1.0,
                         help="Factor by which to oversample the PSF InterpolatedImage. "
                              "Default: 1.0")
-
-    parser.add_argument("--vmax", type=float, default=0.0003,
-                        help="Matplotlib imshow vmax kwarg for PSF image.  Sets value that "
-                             "maxes out the colorbar range.  Default: 0.0003")
 
     parser.add_argument("--outfile", type=str, default="output/firstKick.png",
                         help="Output filename.  Default: output/firstKick.png")

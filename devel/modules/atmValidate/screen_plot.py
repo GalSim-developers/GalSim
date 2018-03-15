@@ -119,10 +119,8 @@ def make_plot(args):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser, RawDescriptionHelpFormatter
-    parser = ArgumentParser(description=(
-"""
-"""), formatter_class=RawDescriptionHelpFormatter)
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
 
     parser.add_argument("--seed", type=int, default=1,
                         help="Random number seed for generating turbulence.  Default: 1")
