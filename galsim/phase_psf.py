@@ -209,7 +209,7 @@ class Aperture(object):
                  gsparams=None):
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
-        self.obscuration = obscuration  # We store this, even though it's not always used.
+        self._obscuration = obscuration  # We store this, even though it's not always used.
         self._gsparams = gsparams
 
         if obscuration >= 1.:
@@ -296,7 +296,7 @@ class Aperture(object):
                                   "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
             else:
                 pupil_plane_size = good_pupil_size
-            self._generate_pupil_plane(circular_pupil, obscuration,
+            self._generate_pupil_plane(circular_pupil,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
 
@@ -310,7 +310,7 @@ class Aperture(object):
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 
-    def _generate_pupil_plane(self, circular_pupil, obscuration, nstruts, strut_thick, strut_angle,
+    def _generate_pupil_plane(self, circular_pupil, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
         """
@@ -323,7 +323,6 @@ class Aperture(object):
         self.pupil_plane_scale = pupil_plane_size / self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
-        self.obscuration = obscuration
         self._nstruts = nstruts
         self._strut_thick = strut_thick
         self._strut_angle = strut_angle
@@ -331,13 +330,13 @@ class Aperture(object):
         radius = 0.5*self.diam
         if circular_pupil:
             self._illuminated = (self.rsqr < radius**2)
-            if obscuration > 0.:
-                self._illuminated *= self.rsqr >= (radius*obscuration)**2
+            if self.obscuration > 0.:
+                self._illuminated *= self.rsqr >= (radius*self.obscuration)**2
         else:
             self._illuminated = (np.abs(self.u) < radius) & (np.abs(self.v) < radius)
-            if obscuration > 0.:
-                self._illuminated *= ((np.abs(self.u) >= radius*obscuration) *
-                                      (np.abs(self.v) >= radius*obscuration))
+            if self.obscuration > 0.:
+                self._illuminated *= ((np.abs(self.u) >= radius*self.obscuration) *
+                                      (np.abs(self.v) >= radius*self.obscuration))
 
         if nstruts > 0:
             if not isinstance(strut_angle, galsim.Angle):
@@ -550,6 +549,11 @@ class Aperture(object):
         if not hasattr(self, '_rsqr'):
             self._rsqr = self.u**2 + self.v**2
         return self._rsqr
+
+    @property
+    def obscuration(self):
+        """Fraction linear obscuration of pupil."""
+        return self._obscuration
 
     def __getstate__(self):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
