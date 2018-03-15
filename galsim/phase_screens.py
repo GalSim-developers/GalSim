@@ -179,14 +179,14 @@ class AtmosphericScreen(object):
 
     def __ne__(self, other): return not self == other
 
-    def instantiate(self, kmin=0., kmax=float('inf'), check=None):
+    def instantiate(self, kmin=0., kmax=np.inf, check=None):
         """
         @param kmin   Minimum k-mode to include when generating phase screens.  Generally this will
                       only be used when testing the geometric approximation for atmospheric PSFs.
                       [default: 0]
         @param kmax   Maximum k-mode to include when generating phase screens.  This may be used in
                       conjunction with SecondKick to complete the geometric approximation for
-                      atmospheric PSFs.  [default: float('inf')]
+                      atmospheric PSFs.  [default: np.inf]
         @param check  Sanity check indicator.  If equal to 'FFT', then check that phase screen
                       Fourier modes are not being truncated, which is appropriate for full Fourier
                       optics.  If equal to 'phot', then check that phase screen Fourier modes *are*
@@ -204,13 +204,13 @@ class AtmosphericScreen(object):
                 del self._psi, self._screen
         if check is not None and not self._suppress_warning:
             if check == 'FFT':
-                if self.kmax != float('inf'):
+                if self.kmax != np.inf:
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax != inf "
                         "may yield surprising results when drawing using Fourier optics.")
             if check == 'phot':
-                if self.kmax == float('inf'):
+                if self.kmax == np.inf:
                     import warnings
                     warnings.warn(
                         "Instantiating AtmosphericScreen with kmax == inf "
