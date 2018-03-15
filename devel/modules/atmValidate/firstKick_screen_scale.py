@@ -26,7 +26,6 @@ def shrink_atm(atm, factor):
     ret.dynamic = atm.dynamic
     ret.reversible = atm.reversible
     ret._pending = atm._pending
-    ret._update_time_heap = atm._update_time_heap
     return ret
 
 
