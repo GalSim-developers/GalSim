@@ -73,6 +73,7 @@ from heapq import heappush, heappop
 import numpy as np
 import galsim
 from galsim import GSObject
+from .utilities import lazy_property
 
 
 class Aperture(object):
@@ -1023,11 +1024,11 @@ class PhaseScreenPSF(GSObject):
         screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
         AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can
         be overridden using the second_kick keyword argument, and also tuned to some extent using
-        the kcrit_factor keyword argument.
+        the kcrit keyword argument.
 
     Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
     uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
-    instantiation depend on the drawing method used, and also the kcrit_factor keyword argument to
+    instantiation depend on the drawing method used, and also the kcrit keyword argument to
     PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.
 
     @param screen_list         PhaseScreenList object from which to create PSF.
@@ -1072,11 +1073,10 @@ class PhaseScreenPSF(GSObject):
                                usually it should probably be a SecondKick object).  If None, then a
                                good second kick will be chosen automatically based on `screen_list`.
                                If False, then a second kick won't be applied.  [default: None]
-    @param kcrit_factor        Used to determine at what scale to separate low-k and high-k
-                               turbulence when using the 2-kick geometric approximation.  The
-                               separation will occur at kcrit_factor/r0.  The default value was
-                               chosen based on comparisons between Fourier optics and geometric
-                               optics.  [default: 0.2]
+    @param kcrit               Critical Fourier scale (in units of 1/r0) at which to separate low-k
+                               and high-k turbulence.  The default value was chosen based on
+                               comparisons between Fourier optics and geometric optics with a second
+                               kick correction.  [default: 0.2]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -1120,7 +1120,7 @@ class PhaseScreenPSF(GSObject):
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
                  scale_unit=galsim.arcsec, ii_pad_factor=4., suppress_warning=False,
-                 geometric_shooting=True, aper=None, second_kick=None, kcrit_factor=0.2,
+                 geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
                  gsparams=None, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
@@ -1168,9 +1168,8 @@ class PhaseScreenPSF(GSObject):
         self._flux = flux
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
-        self._kcrit_factor = kcrit_factor
+        self._kcrit = kcrit
         # We'll set these more intelligently as needed below
-        self._kcrit = None
         self._second_kick = second_kick
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
@@ -1190,32 +1189,35 @@ class PhaseScreenPSF(GSObject):
 
     @property
     def kcrit(self):
-        if self._kcrit is None:
-            r0_500 = self._screen_list.r0_500_effective
-            if r0_500 is None:  # No AtmosphericScreens in list
-                self._kcrit = float('inf')
-            else:
-                r0 = r0_500 * (self.lam/500.)**(6./5)
-                self._kcrit = self._kcrit_factor / r0
         return self._kcrit
 
-    @property
+    @lazy_property
+    def _screen_kmax(self):
+        r0_500 = self._screen_list.r0_500_effective
+        if r0_500 is None:
+            return np.inf
+        else:
+            r0 = r0_500 * (self.lam/500)**(6./5)
+            return self.kcrit / r0
+
+    @lazy_property
     def second_kick(self):
         """Make a SecondKick object based on contents of _screen_list and aper.
         """
+        if self._second_kick == False:
+            return False
         if self._second_kick is None:
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
-                self._second_kick = galsim.Airy(
-                        lam=self.lam, diam=self.aper.diam, obscuration=self.aper.obscuration)
+                return galsim.Airy(lam=self.lam, diam=self.aper.diam,
+                                   obscuration=self.aper.obscuration)
             else:
                 L0 = self._screen_list.L0_effective
                 r0 = r0_500 * (self.lam/500.)**(6./5)
-                self._second_kick = galsim.SecondKick(
+                return galsim.SecondKick(
                         self.lam, r0, self.aper.diam, self.aper.obscuration,
                         L0=L0, kcrit=self.kcrit, scale_unit=self.scale_unit,
                         gsparams=self._gsparams)
-        return self._second_kick
 
     @property
     def flux(self):
@@ -1401,7 +1403,7 @@ class PhaseScreenPSF(GSObject):
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.
-        self._screen_list.instantiate(kmax=self.kcrit, check='phot')
+        self._screen_list.instantiate(kmax=self._screen_kmax, check='phot')
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265

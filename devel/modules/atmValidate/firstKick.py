@@ -89,8 +89,9 @@ def make_plot(args):
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale,
                                 suppress_warning=True)
+        r0 = args.r0_500*(args.lam/500.0)**(6./5)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmax=float(kcrit), _bar=bar)
+            atm.instantiate(kmax=kcrit*r0, _bar=bar)
 
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)

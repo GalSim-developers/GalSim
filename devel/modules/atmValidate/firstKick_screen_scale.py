@@ -116,8 +116,9 @@ def make_plot(args):
     fineAtm = galsim.Atmosphere(r0_500=r0_500, L0=args.L0,
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
+    r0 = args.r0_500*(args.lam/500.0)**(6./5)
     with ProgressBar(args.nlayers) as bar:
-        fineAtm.instantiate(kmax=float(args.kcrit), _bar=bar)
+        fineAtm.instantiate(kmax=args.kcrit*r0, _bar=bar)
     # `fineAtm` is now an instance of a galsim.PhaseScreenList object.
 
     # Construct an Aperture object for computing the PSF.  The Aperture object describes the
@@ -193,8 +194,8 @@ if __name__ == '__main__':
                         help="Fried parameter at wavelength 500 nm in meters.  Default: 0.15")
     parser.add_argument("--L0", type=float, default=25.0,
                         help="Outer scale in meters.  Default: 25.0")
-    parser.add_argument("--kcrit", type=float, default=1.0,
-                        help="Critical Fourier scale for turbulence truncation.  Default: 1.0")
+    parser.add_argument("--kcrit", type=float, default=0.2,
+                        help="Critical Fourier scale in units of 1/r0.  Default: 0.2")
     parser.add_argument("--nlayers", type=int, default=6,
                         help="Number of atmospheric layers.  Default: 6")
     parser.add_argument("--time_step", type=float, default=0.025,

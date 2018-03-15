@@ -81,6 +81,7 @@ def make_plot(args):
         ax.set_yticks([])
 
     kcrits = np.logspace(np.log10(args.kmin), np.log10(args.kmax), 4)
+    r0 = args.r0_500*(args.lam/500.0)**(6./5)
     for icol, kcrit in enumerate(kcrits):
         # Make sure to use a consistent seed for the atmosphere when varying kcrit
         # Additionally, we set the screen size and scale.
@@ -90,7 +91,7 @@ def make_plot(args):
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmin=float(kcrit), _bar=bar)
+            atm.instantiate(kmin=kcrit*r0, _bar=bar)
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)
 

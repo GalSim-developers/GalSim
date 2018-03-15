@@ -67,8 +67,8 @@ class SecondKick(GSObject):
     @param obscuration       Linear dimension of central obscuration as fraction of aperture
                              linear dimension. [0., 1.).  [default: 0.0]
     @param L0                Outer scale in meters.  [default: 25.0]
-    @param kcrit             Critical Fourier mode below which the turbulence power spectrum will be
-                             truncated.
+    @param kcrit             Critical Fourier mode (in units of 1/r0) below which the turbulence
+                             power spectrum will be truncated.  [default: 0.2]
     @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit        Units assumed when drawing this profile or evaluating xValue, kValue,
                              etc.  Should be a galsim.AngleUnit or a string that can be used to
@@ -77,7 +77,7 @@ class SecondKick(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, diam, obscuration=0, L0=25.0, kcrit=None, flux=1,
+    def __init__(self, lam, r0, diam, obscuration=0, L0=25.0, kcrit=0.2, flux=1,
                  scale_unit=galsim.arcsec, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
@@ -85,13 +85,11 @@ class SecondKick(GSObject):
             L0 = 1e10
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
-        if kcrit is None:
-            kcrit = 2*np.pi/r0
         # Need _scale_unit for repr roundtriping.
         self._scale_unit = scale_unit
         scale = scale_unit/galsim.arcsec
         self._sbp = galsim._galsim.SBSecondKick(
-            lam, r0, diam, obscuration, L0, kcrit, flux, scale, gsparams)
+            lam, r0, diam, obscuration, L0, kcrit/r0, flux, scale, gsparams)
 
     @property
     def lam(self):
@@ -115,7 +113,7 @@ class SecondKick(GSObject):
 
     @property
     def kcrit(self):
-        return self._sbp.getKCrit()
+        return self._sbp.getKCrit()*self.r0
 
     @property
     def scale_unit(self):

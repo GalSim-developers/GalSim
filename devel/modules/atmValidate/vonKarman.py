@@ -109,6 +109,7 @@ def make_plot(args):
         ax.set_yticks([])
 
     kcrits = np.logspace(np.log10(args.kmin), np.log10(args.kmax), 4)
+    r0 = args.r0_500*(args.lam/500.0)**(6./5)
     for icol, kcrit in enumerate(kcrits):
         # reset atmRng
         atmRng = galsim.BaseDeviate(args.seed+1)
@@ -117,7 +118,7 @@ def make_plot(args):
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmax=float(kcrit), _bar=bar)
+            atm.instantiate(kmax=kcrit*r0, _bar=bar)
         kick1 = atm.makePSF(lam=args.lam, aper=aper, exptime=args.exptime,
                             time_step=args.time_step, second_kick=False)
         r0 = args.r0_500*(args.lam/500)**(6./5)

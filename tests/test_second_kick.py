@@ -4,7 +4,7 @@ import galsim
 from galsim_test_helpers import *
 
 @timer
-def test_second_kick(slow=False):
+def test_init(slow=False):
     """Test generation of SecondKick profiles
     """
     obscuration = 0.5
@@ -14,12 +14,12 @@ def test_second_kick(slow=False):
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.1, 0.15, 0.3]
         L0s = [1e10, 25.0, 10.0]
-        kcrits = [4.0, 10.0]
+        kcrits = [0.1, 0.2, 0.4]
     else:
         lams = [500.0]
         r0_500s = [0.15]
         L0s = [25.0]
-        kcrits = [4.0]
+        kcrits = [0.2]
     for lam in lams:
         for r0_500 in r0_500s:
             r0 = r0_500*(lam/500)**(6./5)
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         pr = cProfile.Profile()
         pr.enable()
 
-    test_second_kick(args.slow)
+    test_init(args.slow)
     test_structure_function()
     test_limiting_cases()
     test_sf_lut(args.slow)
