@@ -62,7 +62,7 @@ you can do
 
 (again possibly with either sudo or --user).
 
-<aside, class="notice">
+<aside>
 If you use Anaconda Python, you can use that to install most of the
 requirements with their conda installer.  See [Using Conda](using-conda)
 below.
@@ -446,7 +446,7 @@ you can do this via
 You can also use this to modify how many jobs will be spawned for running the
 tests.
 
-<aside, class="notice">
+<aside>
 If your system does not have `pytest` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
