@@ -150,6 +150,9 @@ class AtmosphericScreen(object):
     # try for hash(a) == hash(b) to imply that it's very likely that a == b, too.  This is mostly
     # True for AtmosphericScreen (and derived objects, like PSFs), but note that while we don't
     # use the object's mutable internal state for the hash value, we do use it for the __eq__ test.
+    # In particular, the hash value doesn't change after the screen is instantiated from its value
+    # before instantiation.  Equality, on the other hand, does change.  An instantiated screen is
+    # not equal to an otherwise identical uninstantiated screen.
 
     def __eq__(self, other):
         return (isinstance(other, galsim.AtmosphericScreen) and
