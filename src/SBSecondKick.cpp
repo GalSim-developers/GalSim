@@ -134,7 +134,8 @@ namespace galsim {
 
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
-        _lam(lam), _r0(r0), _r0m53(pow(r0, -5./3)), _diam(diam), _obscuration(obscuration), _L0(L0),
+        _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(pow(r0, -5./3)),
+        _diam(diam), _obscuration(obscuration), _L0(L0),
         _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kmin(kcrit/r0), _gsparams(gsparams),
         _airy(new SBAiry(lam/diam*ARCSEC2RAD, obscuration, 1, gsparams)),
         _sfLUT(TableDD::spline),
@@ -226,7 +227,7 @@ namespace galsim {
     //  This version doesn't use the lookup table.  Used for testing.
     double SKInfo::kValueSlow(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam*k*ARCSEC2RAD/(2*M_PI)))
+        return fmath::expd(-0.5*structureFunction(_lam_factor*k))
             * _airy->kValue(Position<double>(0, k)).real();
     }
 

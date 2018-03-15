@@ -61,6 +61,7 @@ namespace galsim {
         void operator=(const SKInfo& rhs); ///<Hide the assignment operator
 
         double _lam; // Wavelength in meters
+        double _lam_factor; // lam*ARCSEC2RAD/(2*M_PI)
         double _r0; // Fried parameter in meters
         double _r0m53; // r0^(-5/3)
         double _diam;
