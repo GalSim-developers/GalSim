@@ -119,7 +119,7 @@ def make_movie(args):
             fft_atm.instantiate(_bar=bar)
             r0 = args.r0_500*(args.lam/500)**1.2
             geom_atm.instantiate(kmax=0.2/r0, _bar=bar)
-        # After instantiation, they're only equal if there's no atmosphere.
+            # After instantiation, they're only equal if there's no atmosphere.
             assert fft_atm != geom_atm
 
     # Setup Fourier and geometric apertures
