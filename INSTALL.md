@@ -5,23 +5,23 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
-1) [Overall summary](#1-overall-summary)
+1) [Overall summary](overall-summary)
 
-2) [Installing FFTW](#2-installing-fftw)
+2) [Installing FFTW](installing-fftw)
 
-3) [Installing Eigen](#3-installing-eigen)
+3) [Installing Eigen](installing-eigen)
 
-4) [Using Conda](#4-using-conda)
+4) [Using Conda](using-conda)
 
-5) [Installing With SCons](#5-installing-with-scons)
+5) [Installing With SCons](installing-with-scons)
 
-6) [Running tests](#6-running-tests)
+6) [Running tests](running-tests)
 
-7) [Running example scripts](#7-running-example-scripts)
+7) [Running example scripts](running-example-scripts)
 
 
-1. Overall summary
-==================
+Overall summary
+===============
 
 GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
@@ -42,12 +42,18 @@ or $HOME/.local, depending on your system.)
 If you would rather install from source (e.g. to work on a development branch),
 you can do
 
+    git clone git@github.com:GalSim-developers/GalSim.git
+    cd GalSim
+    pip install -r requirements.txt
     python setup.py install
 
-(again possibly with either sudo or --user).  This sometimes does not install
-all of the dependencies properly, so you might need to first run
+(again possibly with either sudo or --user).
 
-    pip install -r requirements.txt
+<aside, class="notice">
+If you use Anaconda Python, you can use that to install most of the
+requirements with their conda installer.  See [Using Conda](using-conda)
+below.
+</aside>
 
 Either of these installation methods should handle most of the required
 dependencies for you if you do not have them already installed on your machine.
@@ -57,12 +63,12 @@ section 2 below for more details about how to do this.
 
 The other dependencies should all be installed by pip, but we list them here
 for completeness along with versions that are known to work.  In most cases,
-other recent versions will also work:
+other recent (especially later) versions will also work:
 
-- Eigen (3.2.8)  (via eigency 1.77)
-- NumPy (1.14.0)
+- Eigen (3.2.5)
+- NumPy (1.13.1)
 - Future (0.16.0)
-- Astropy (2.0.3)
+- Astropy (2.0.1)
 - PyBind11 (2.2.1)
 - LSSTDESC.Coord (1.0.5)
 
@@ -77,8 +83,8 @@ pip uses to determine what else to install.  But if you install with
 - Pandas (0.20)      (Faster reading of ASCII input files)
 
 
-2. Installing FFTW
-==================
+Installing FFTW
+===============
 
 GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
 fast fourier transforms.
@@ -86,7 +92,7 @@ fast fourier transforms.
 We require FFTW version >= 3.0.  Most tests have been done with FFTW 3.3.7,
 so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.
 
-
+o
 i) Installing it yourself
 -------------------------
 
@@ -125,8 +131,8 @@ E.g. in the above case where prefix is $HOME, you would do
 
     export FFTW_DIR=$HOME
 
-Probably, you should put this into your .bash_profile file so it always gets
-set when you log in.
+Probably, you should put this into your shell login file (e.g. .bash_profile)
+so it always gets set when you log in.
 
 
 ii) Using an existing installation
@@ -201,8 +207,8 @@ This will put it into the /opt/local/lib directory on your system. GalSim knows
 to look here, so there is nothing additional you need to do.
 
 
-3. Installing Eigen
-===================
+Installing Eigen
+================
 
 GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
 header-only library, which means that nothing needs to be compiled to use it.
@@ -352,8 +358,8 @@ installed.  But for now, you need to do
 (in that order) for it to work.
 
 
-4. Using Conda
-==============
+Using Conda
+===========
 
 If you use conda (normally via the Anaconda Python distribution), then all of
 the prerequisites are available from the conda-forge channel, so you can use
@@ -383,8 +389,8 @@ defaults, then that should still work and pybind11 will be the only one that
 will need the conda-forge channel.
 
 
-5. Installing With SCons
-========================
+Installing With SCons
+=====================
 
 Prior to version 2.0, GalSim installation used SCons.  This installation
 mode is still supported, but is not recommended unless you have difficulties
@@ -400,8 +406,8 @@ See the file INSTALL_SCONS.md for complete details about this method of
 installation.
 
 
-6. Running tests
-================
+Running tests
+=============
 
 You can run our test suite by typing
 
@@ -410,29 +416,37 @@ You can run our test suite by typing
 This should run all the python-layer tests with pytest and also compile and
 run the C++ test suite.
 
-By default, the python tests will use the pytest plugins `pytest-xdist` (for
-running tests in parallel) and `pytest-timeout` (to manage how much time each
-test is allowed to run).  These plugins are usually installable using pip:
+There are a number of packages that are used by the tests, but which are not
+required for GalSim installation and running.  These should be installed
+automatically by the above command, but you can install them manually via
 
-    pip install pytest-xdist pytest-timeout
+    pip install -r test_requirements.txt
 
-Sometimes the `--user` flag may be needed in the above command to make the
-plugins discoverable.  If you want to run the python tests without these
-plugins (serially!), you can still do this via
+(As usually, you may need to add either `sudo` or `--user`.)
+
+By default, the tests will run in parallel using the pytest plugins
+`pytest-xdist` and `pytest-timeout` (to manage how much time each test is
+allowed to run).  If you want to run the python tests in serial instead,
+you can do this via
 
     python setup.py test -j1
 
-Note: if your system does not have `pytest` installed, and you do not want to
+You can also use this to modify how many jobs will be spawned for running the
+tests.
+
+<aside, class="notice">
+If your system does not have `pytest` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
 the `tests` directory. If this finishes without an error, then all the tests
 have passed.  However, note that this script runs more tests than our normal
 test run using pytest, so it may take quite a while to finish.  (The *all* in
 the file name means run all the tests including the slow ones that we normally
 skip.)
+</aside>
 
 
-7. Running example scripts
-==========================
+Running example scripts
+=======================
 
 The `examples` directory has a series of demo scripts:
 

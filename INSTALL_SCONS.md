@@ -9,8 +9,8 @@ Please see the instructions in INSTALL.md first to see if that method
 will work for you.
 
 
-1. Software required before building GalSim
-===========================================
+Software required before building GalSim
+========================================
 
 Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.
@@ -136,8 +136,8 @@ options to the ./bootstrap.sh installation script (defaults in `[]` brackets):
                            it detected the wrong one]
 
 
-2. Installing the GalSim Python package
-=======================================
+Installing the GalSim Python package
+====================================
 
 Once you have installed all the dependencies described above, you are ready to
 build GalSim. From the GalSim base directory (in which this file is found) type
@@ -169,7 +169,7 @@ need to set are:
 * `TMV_DIR`: Explicitly give the TMV prefix
 * `EIGEN_DIR`: Explicitly give the Eigen prefix
 
-# `USE_BOOST`: Specify that you want to use Boost rather than PyBind11.
+* `USE_BOOST`: Specify that you want to use Boost rather than PyBind11.
 * `BOOST_DIR`: Explicitly give the Boost prefix
 
 * `EXTRA_LIBS`: Additional libraries to send to the linker
@@ -274,8 +274,8 @@ explaining what your particular problem is, and hopefully someone can help
 you figure out a solution.
 
 
-3. Running tests and installing example executables
-===================================================
+Running tests and installing example executables
+================================================
 
 You can run our test suite by typing
 
@@ -292,13 +292,13 @@ above (see also https://docs.pytest.org/en/latest/). Many third party-
 maintained Python distributions, such as the Enthought Python Distribution,
 include `pytest`.
 
-By default, the python tests will use the pytest plugins `pytest-xdist` (for 
-running tests in parallel) and `pytest-timeout` (to manage how much time each 
+By default, the python tests will use the pytest plugins `pytest-xdist` (for
+running tests in parallel) and `pytest-timeout` (to manage how much time each
 test is allowed to run).  These plugins are usually installable using pip:
 
     pip install pytest-xdist pytest-timeout
-    
-Sometimes the `--user` flag may be needed in the above command to make the 
+
+Sometimes the `--user` flag may be needed in the above command to make the
 plugins discoverable.  If you want to run the python tests without these
 plugins (serially!), you can still do this via
 
@@ -310,8 +310,8 @@ the `tests` directory. If this finishes without an error, then all the tests
 have passed.
 
 
-4. Running example scripts
-==========================
+Running example scripts
+=======================
 
 The `examples` directory has a series of demo scripts:
 
@@ -349,8 +349,8 @@ Some of them access files in subdirectories of the `examples` directory, so they
 would not work correctly from other locations.
 
 
-5. Platform-specific notes
-==========================
+Platform-specific notes
+=======================
 
 i) Linux
 --------
@@ -491,8 +491,8 @@ Karen Ng has created a Docker file for containerizing GalSim.  See her repo:
 for instructions about how to either use her image or create your own.
 
 
-6. More SCons options
-=====================
+More SCons options
+==================
 
 Here is a fairly complete list of the options you can pass to SCons to control
 the build process. The options are listed with their default value. You change
