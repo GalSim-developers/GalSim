@@ -83,7 +83,7 @@ def get_angle_unit(unit):
     elif unit.startswith('arcsec') :
         return galsim.arcsec
     else :
-        raise AttributeError("Unknown Angle unit: %s"%unit)
+        raise ValueError("Unknown Angle unit: %s"%unit)
 
 
 
