@@ -36,7 +36,7 @@ namespace py = boost::python;
 // macros allow us to write code that works for either boost python or pybind11.
 
 // First some things where the boost equivalent of some pybind11 function is different:
-#define PYBIND11_MODULE(x,x) BOOST_PYTHON_MODULE(x)
+#define PYBIND11_MODULE(x,y) BOOST_PYTHON_MODULE(x)
 #define PY_MODULE py::scope
 #define PY_CAST py::extract
 #define PY_INIT(args...) "__init__", py::make_constructor(args, py::default_call_policies())
