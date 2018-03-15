@@ -97,7 +97,8 @@ def make_movie(args):
     if args.nlayers > 0:
         # Make two identical Atmospheres.  They will diverge when one gets drawn using Fourier
         # optics and the other gets drawn with geometric optics.
-        fft_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
+        fft_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts,
+                                    rng=rng.duplicate(),
                                     screen_size=args.screen_size, screen_scale=args.screen_scale)
         geom_atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts,
                                      rng=rng.duplicate(), screen_size=args.screen_size,
