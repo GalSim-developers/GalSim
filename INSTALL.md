@@ -5,19 +5,32 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 
 Table of Contents:
 
-1) [Overall summary](overall-summary)
+1) [Overall summary](#overall-summary)
 
-2) [Installing FFTW](installing-fftw)
+2) [Installing FFTW](#installing-fftw)
+* [Installing FFTW yourself](#i-installing-fftw-yourself)
+* [Using an existing installation](#ii-using-an-existing-installation-of-fftw)
+* [Using conda](#iii-installing-fftw-with-conda)
+* [Using apt-get](#iv-installing-fftw-with-apt-get)
+* [Using fink](#v-installing-fftw-with-fink)
+* [Using MacPorts](#vi-installing-fftw-with-macports)
 
-3) [Installing Eigen](installing-eigen)
+3) [Installing Eigen](#installing-eigen)
+* [Installing Eigen yourself](#i-installing-eigen-yourself)
+* [Using an existing installation](#ii-using-an-existing-installation-of-eigen)
+* [Using conda](#iii-installing-eigen-with-conda)
+* [Using apt-get](#iv-installing-eigen-with-apt-get)
+* [Using fink](#v-installing-eigen-with-fink)
+* [Using MacPorts](#vi-installing-eigen-with-macports)
+* [Using eigency](#vii-using-eigency)
 
-4) [Using Conda](using-conda)
+4) [Using Conda](#using-conda)
 
-5) [Installing With SCons](installing-with-scons)
+5) [Installing With SCons](#installing-with-scons)
 
-6) [Running tests](running-tests)
+6) [Running tests](#running-tests)
 
-7) [Running example scripts](running-example-scripts)
+7) [Running example scripts](#running-example-scripts)
 
 
 Overall summary
@@ -92,8 +105,7 @@ fast fourier transforms.
 We require FFTW version >= 3.0.  Most tests have been done with FFTW 3.3.7,
 so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.
 
-o
-i) Installing it yourself
+i) Installing FFTW yourself
 -------------------------
 
 FFTW is available at the URL
@@ -135,8 +147,8 @@ Probably, you should put this into your shell login file (e.g. .bash_profile)
 so it always gets set when you log in.
 
 
-ii) Using an existing installation
-----------------------------------
+ii) Using an existing installation of FFTW
+------------------------------------------
 
 If FFTW is already installed on your system, there may be nothing to do.
 If it is in a standard location like /usr/local/lib or in some other
@@ -163,8 +175,8 @@ can be used to specify which version you want GalSim to use as this will be
 the first location it will check during the installation process.
 
 
-iii) Using conda
-----------------
+iii) Installing FFTW with conda
+-------------------------------
 
 If you use conda, FFTW can be install with
 
@@ -175,16 +187,16 @@ active environment if appropriate).  GalSim knows to look here, so there is
 nothing additional you need to do.
 
 
-iv) Using apt-get
------------------
+iv) Installing FFTW with apt-get
+--------------------------------
 
 On Linux machines that use apt-get, FFTW can be installed with
 
     apt-get install libfftw3-dev
 
 
-v) Using fink
--------------
+v) Installing FFTW with fink
+----------------------------
 
 If you use fink on a Mac, FFTW can be installed with
 
@@ -196,8 +208,8 @@ This will put it into the /sw/lib directory on your system. GalSim knows to
 look here, so there is nothing additional you need to do.
 
 
-vi) Using MacPorts
-------------------
+vi) Installing FFTW with MacPorts
+---------------------------------
 
 If you use MacPorts, FFTW can be installed with
 
@@ -233,8 +245,8 @@ cases, since it can use an optimized BLAS library on your system), but to
 use TMV, you need to use the SCons installation option described below.
 
 
-i) Installing it yourself
--------------------------
+i) Installing Eigen yourself
+----------------------------
 
 Eigen is available at the URL
 
@@ -268,8 +280,8 @@ Probably, you should put this into your .bash_profile file so it always gets
 set when you log in.
 
 
-ii) Using an existing installation
-----------------------------------
+ii) Using an existing installation of Eigen
+-------------------------------------------
 
 If Eigen is already installed on your system, there may be nothing to do.
 If it is in a standard location like /usr/local/include or in some other
@@ -295,8 +307,8 @@ can be used to specify which version you want GalSim to use as this will be
 the first location it will check during the installation process.
 
 
-iii) Using conda
-----------------
+iii) Installing Eigen with conda
+--------------------------------
 
 If you use conda, Eigen can be install with
 
@@ -307,16 +319,16 @@ your active environment if appropriate).  GalSim knows to look here, so there
 is nothing additional you need to do.
 
 
-iv) Using apt-get
------------------
+iv) Installing Eigen with apt-get
+---------------------------------
 
 On Linux machines that use apt-get, Eigen can be installed with
 
     apt-get install libeigen3-dev
 
 
-v) Using fink
--------------
+v) Installing Eigen with fink
+-----------------------------
 
 If you use fink on a Mac, Eigen can be installed with
 
@@ -326,8 +338,8 @@ This will put it into the /sw/include directory on your system. GalSim knows
 to look here, so there is nothing additional you need to do.
 
 
-vi) Using MacPorts
-------------------
+vi) Installing Eigen with MacPorts
+----------------------------------
 
 If you use MacPorts, Eigen can be installed with
 
@@ -337,8 +349,8 @@ This will put it into the /opt/local/include directory on your system. GalSim
 knows to look here, so there is nothing additional you need to do.
 
 
-vi) Using eigency
------------------
+vii) Using eigency
+------------------
 
 Eigency is a pip-installable module that bundles the Eigen header files, so it
 can also be used to install these files on your system.  Indeed, as mentioned
