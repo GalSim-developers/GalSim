@@ -26,6 +26,7 @@
 #include "OneDimensionalDeviate.h"
 #include "Table.h"
 #include "SBAiryImpl.h"
+#include <boost/move/unique_ptr.hpp>
 
 namespace galsim {
 
@@ -78,7 +79,7 @@ namespace galsim {
 
         const GSParamsPtr _gsparams;
 
-        boost::shared_ptr<AiryInfo> _airy_info;
+        boost::movelib::unique_ptr<AiryInfo> _airy_info;
 
         TableDD _sfLUT;
         TableDD _radial;

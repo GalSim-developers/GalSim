@@ -141,8 +141,8 @@ namespace galsim {
         _4_over_diamsq(4.0/diam/diam),
         _gsparams(gsparams),
         _airy_info((obscuration==0.0) ?
-                   boost::shared_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
-                   boost::shared_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
+                   boost::movelib::unique_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
+                   boost::movelib::unique_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
         _sfLUT(TableDD::spline),
         _radial(TableDD::spline)
     {
