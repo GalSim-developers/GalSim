@@ -136,13 +136,18 @@ namespace galsim {
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(pow(r0, -5./3)),
         _diam(diam), _obscuration(obscuration), _L0(L0),
-        _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kmin(kcrit/r0), _gsparams(gsparams),
-        _airy(new SBAiry(lam/diam*ARCSEC2RAD, obscuration, 1, gsparams)),
+        _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kmin(kcrit/r0),
+        _knorm(1./(M_PI*(1.-obscuration*obscuration))),
+        _4_over_diamsq(4.0/diam/diam),
+        _gsparams(gsparams),
+        _airy_info((obscuration==0.0) ?
+                   boost::shared_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
+                   boost::shared_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
         _sfLUT(TableDD::spline),
         _radial(TableDD::spline)
     {
-        // a conservative maxK is that of the embedded Airy profile.
-        _maxk = _airy->maxK();
+        // a conservative maxK is that of the embedded Airy profile.  We just hard code it here.
+        _maxk = _diam/_lam_factor;
         _stepk = 0;
 
         // build the radial function, and along the way, set _stepk, _hlr.
@@ -220,15 +225,19 @@ namespace galsim {
 
     double SKInfo::kValue(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*_sfLUT(_lam_factor*k))
-            * _airy->kValue(Position<double>(0, k)).real();
+        double kp = _lam_factor*k;
+        double kpkp = kp*kp;
+        return fmath::expd(-0.5*_sfLUT(kp))
+            * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
     }
 
     //  This version doesn't use the lookup table.  Used for testing.
     double SKInfo::kValueSlow(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam_factor*k))
-            * _airy->kValue(Position<double>(0, k)).real();
+        double kp = _lam_factor*k;
+        double kpkp = kp*kp;
+        return fmath::expd(-0.5*structureFunction(kp))
+            * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
     }
 
     class SKIXIntegrand : public std::unary_function<double,double>

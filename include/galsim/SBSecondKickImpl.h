@@ -25,7 +25,7 @@
 #include "LRUCache.h"
 #include "OneDimensionalDeviate.h"
 #include "Table.h"
-#include "SBAiry.h"
+#include "SBAiryImpl.h"
 
 namespace galsim {
 
@@ -73,10 +73,12 @@ namespace galsim {
         double _stepk;
         double _maxk;
         double _hlr; // half-light-radius
+        double _knorm;
+        double _4_over_diamsq;
 
         const GSParamsPtr _gsparams;
 
-        boost::shared_ptr<SBAiry> _airy;
+        boost::shared_ptr<AiryInfo> _airy_info;
 
         TableDD _sfLUT;
         TableDD _radial;
