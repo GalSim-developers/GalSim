@@ -220,7 +220,7 @@ namespace galsim {
 
     double SKInfo::kValue(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*_sfLUT(_lam*k*ARCSEC2RAD/(2*M_PI)))
+        return fmath::expd(-0.5*_sfLUT(_lam_factor*k))
             * _airy->kValue(Position<double>(0, k)).real();
     }
 
