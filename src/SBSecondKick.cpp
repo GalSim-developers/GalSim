@@ -18,7 +18,6 @@
  */
 
 // #define DEBUGLOGGING
-// #define COUNTFEVAL
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -112,16 +111,34 @@ namespace galsim {
         return static_cast<const SBSecondKickImpl&>(*_pimpl).structureFunction(rho);
     }
 
-    double SBSecondKick::kValueSlow(double k) const
+    double SBSecondKick::kValue(double k) const
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).kValueSlow(k);
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).kValue(k);
     }
 
-    double SBSecondKick::xValueSlow(double k) const
+    double SBSecondKick::kValueRaw(double k) const
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).xValueSlow(k);
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).kValueRaw(k);
+    }
+
+    double SBSecondKick::xValue(double k) const
+    {
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).xValue(k);
+    }
+
+    double SBSecondKick::xValueRaw(double k) const
+    {
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).xValueRaw(k);
+    }
+
+    double SBSecondKick::xValueExact(double k) const
+    {
+        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).xValueExact(k);
     }
 
     //
@@ -143,7 +160,7 @@ namespace galsim {
         _airy_info((obscuration==0.0) ?
                    boost::movelib::unique_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
                    boost::movelib::unique_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
-        _sfLUT(TableDD::spline),
+        _kvLUT(TableDD::spline),
         _radial(TableDD::spline)
     {
         // a conservative maxK is that of the embedded Airy profile.  We just hard code it here.
@@ -151,7 +168,7 @@ namespace galsim {
         _stepk = 0;
 
         // build the radial function, and along the way, set _stepk, _hlr.
-        _buildSFLUT();
+        _buildKVLUT();
         _buildRadial();
     }
 
@@ -210,29 +227,48 @@ namespace galsim {
         return vkStructureFunction(rho) - magic5*complement*_r0m53;
     }
 
-    void SKInfo::_buildSFLUT() {
-        double dlogrho = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
-        dbg<<"Using dlogrho = "<<dlogrho<<std::endl;
-        double rhomin = 1e-6; // micron, we can't possibly care about things this small...
-        // maximum rho is the telescope diameter.
-        for (double logrho = std::log(rhomin)-0.001; logrho < std::log(_diam); logrho += dlogrho){
-            double rho = std::exp(logrho);
-            double val = structureFunction(rho);
-            xdbg<<"rho = "<<rho<<", I("<<rho<<") = "<<val<<std::endl;
-            _sfLUT.addEntry(rho,val);
+    class SKIkValueResid {
+    public:
+        SKIkValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
+        double operator()(double k) const {
+            double val = _ski.kValueRaw(k)-_thresh;
+            xdbg<<"resid(k="<<k<<")="<<val<<'\n';
+            return val;
         }
+    private:
+        const SKInfo& _ski;
+        const double _thresh;
+    };
+
+    void SKInfo::_buildKVLUT() {
+        _kvLUT.addEntry(0, kValueRaw(0));
+
+        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.0));
+        dbg<<"Using dlogk = "<<dlogk<<'\n';
+
+        SKIkValueResid skikvr(*this, 1.0-_gsparams->kvalue_accuracy);
+        Solve<SKIkValueResid> solver(skikvr, 0.0, 0.1);
+        solver.bracket();
+        solver.setMethod(Brent);
+        double k = solver.root();
+        dbg<<"Initial k = "<<k<<'\n';
+
+        for (double logk=std::log(k); logk < std::log(_maxk)+dlogk; logk += dlogk) {
+            dbg<<"logk = "<<logk<<'\n';
+            k = std::exp(logk);
+            dbg<<"k = "<<k<<'\n';
+            double val = kValueRaw(k);
+            dbg<<"val = "<<val<<'\n';
+            _kvLUT.addEntry(k, val);
+        }
+        dbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
     }
 
     double SKInfo::kValue(double k) const {
-        // k in inverse arcsec
-        double kp = _lam_factor*k;
-        double kpkp = kp*kp;
-        return fmath::expd(-0.5*_sfLUT(kp))
-            * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
+        return k < _kvLUT.argMax() ? _kvLUT(k) : 0.;
     }
 
-    //  This version doesn't use the lookup table.  Used for testing.
-    double SKInfo::kValueSlow(double k) const {
+    double SKInfo::kValueRaw(double k) const {
         // k in inverse arcsec
         double kp = _lam_factor*k;
         double kpkp = kp*kp;
@@ -250,8 +286,8 @@ namespace galsim {
         const SKInfo& _ski;
     };
 
-    double SKInfo::xValue(double r) const {
-    // r in arcsec
+    double SKInfo::xValueRaw(double r) const {
+        // r in arcsec
         SKIXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, _maxk);
         if (r > 0) {
@@ -265,31 +301,29 @@ namespace galsim {
             }
             xdbg<<s<<" zeros found for r = "<<r<<'\n';
         }
-#ifdef COUNTFEVAL
-        int nfevinit = integ::nfeval;
-#endif
         double result = integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
-#ifdef COUNTFEVAL
-        xdbg<<"NFEVAL = "<<integ::nfeval-nfevinit<<'\n';
-#endif
         return result;
     }
 
-    class SKIXSlowIntegrand : public std::unary_function<double,double>
+    double SKInfo::xValue(double r) const {
+        return r < _radial.argMax() ? _radial(r) : 0.;
+    }
+
+    class SKIExactXIntegrand : public std::unary_function<double,double>
     {
     public:
-        SKIXSlowIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
-        double operator()(double k) const { return _ski.kValueSlow(k)*j0(k*_r)*k; }
+        SKIExactXIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
+        double operator()(double k) const { return _ski.kValueRaw(k)*j0(k*_r)*k; }
     private:
         const double _r;  //arcsec
         const SKInfo& _ski;
     };
 
-    double SKInfo::xValueSlow(double r) const {
-    // r in arcsec
-        SKIXSlowIntegrand I(r, *this);
+    double SKInfo::xValueExact(double r) const {
+        // r in arcsec
+        SKIExactXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, _maxk);
         if (r > 0) {
             // Add BesselJ0 zeros up to _maxk
@@ -300,10 +334,12 @@ namespace galsim {
                 s++;
                 zero = bessel::getBesselRoot0(s)/r;
             }
+            xdbg<<s<<" zeros found for r = "<<r<<'\n';
         }
-        return integ::int1d(I, reg,
+        double result = integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
+        return result;
     }
 
     // \int 2 pi r dr f(r) from a to b, where f(r) = f(a) + (f(b) - f(a))/(b-a) * (r-a)
@@ -314,16 +350,16 @@ namespace galsim {
     void SKInfo::_buildRadial() {
         // set_verbose(2);
         double r = 0.0;
-        double val = xValue(0.0);
+        double val = xValueRaw(0.0);
         _radial.addEntry(r, val);
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
         // double r0 = 0.05*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double r0 = 0.05*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        double r0 = 0.025*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
         double logr = log(r0);
         double dr = 0;
         // double dlogr = 0.1*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        double dlogr = 0.5*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
         dbg<<"r0 = "<<r0<<" arcsec\n";
         dbg<<"dlogr = "<<dlogr<<"\n";
 
@@ -342,7 +378,7 @@ namespace galsim {
             // logr += dlogr, nextr=exp(logr), dr=nextr*(1-exp(-dlogr)))
             logr += dlogr, nextr=exp(logr))
         {
-            nextval = xValue(nextr);
+            nextval = xValueRaw(nextr);
             xdbg<<"f("<<nextr<<") = "<<nextval<<'\n';
             _radial.addEntry(nextr, nextval);
 
@@ -376,7 +412,7 @@ namespace galsim {
         dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
         if (sum < 0.997)
             throw SBError("Could not find folding_threshold");
-
+        dbg<<"_radial.size() = "<<_radial.size()<<'\n';
         std::vector<double> ranges(1, 0.);
         // Copy Airy algorithm for assigning ranges that will not have >1 extremum.
         double rmin = (1.1 - 0.5*_obscuration)*_lam/_diam*ARCSEC2RAD;
@@ -450,55 +486,46 @@ namespace galsim {
         return _info->structureFunction(rho);
     }
 
-    double SBSecondKick::SBSecondKickImpl::kValue(double k) const
-    // this kValue assumes k is in inverse arcsec
-    {
-        return _info->kValue(k)*_flux;
-    }
-
     std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
-    // k in units of _scale.
     {
+        // k in units of 1/_scale
         return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
     }
 
-    double SBSecondKick::SBSecondKickImpl::kValueSlow(double k) const
-    // k in units of _scale.
+    double SBSecondKick::SBSecondKickImpl::kValue(double k) const
     {
-        return _info->kValueSlow(k/_scale)*_flux;
+        // k in inverse arcsec
+        return _info->kValue(k)*_flux;
     }
 
-    class SKXIntegrand : public std::unary_function<double,double>
+    double SBSecondKick::SBSecondKickImpl::kValueRaw(double k) const
     {
-    public:
-        SKXIntegrand(double r, const SBSecondKick::SBSecondKickImpl& sbski) :
-            _r(r), _sbski(sbski)
-        {}
-
-        double operator()(double k) const { return _sbski.kValue(k)*k*j0(k*_r); }
-    private:
-        double _r;
-        const SBSecondKick::SBSecondKickImpl& _sbski;
-    };
-
-    double SBSecondKick::SBSecondKickImpl::xValue(double r) const {
-    // r in arcsec.
-        // SKXIntegrand I(r, *this);
-        // return integ::int1d(I, 0.0, integ::MOCK_INF,
-        //                     gsparams->integration_relerr, gsparams->integration_abserr)/(2*M_PI);
-        return _info->xValue(r)*_flux;
+        // k in inverse arcsec
+        return _info->kValueRaw(k)*_flux;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValue(const Position<double>& p) const
-    // r in units of _scale
     {
+        // r in units of _scale
         return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
     }
 
-    double SBSecondKick::SBSecondKickImpl::xValueSlow(double r) const
+    double SBSecondKick::SBSecondKickImpl::xValue(double r) const
     {
-    //r in units of _scale
-        return _info->xValueSlow(r*_scale);
+        // r in arcsec
+        return _info->xValue(r)*_flux;
+    }
+
+    double SBSecondKick::SBSecondKickImpl::xValueRaw(double r) const
+    {
+        //r in arcsec
+        return _info->xValueRaw(r);
+    }
+
+    double SBSecondKick::SBSecondKickImpl::xValueExact(double r) const
+    {
+        //r in arcsec
+        return _info->xValueExact(r);
     }
 
     boost::shared_ptr<PhotonArray> SBSecondKick::SBSecondKickImpl::shoot(

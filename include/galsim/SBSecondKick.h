@@ -67,12 +67,13 @@ namespace galsim {
         double getScale() const;
         double getHalfLightRadius() const;
         /// Alternate versions of x/k Value for testing purposes
-        double kValueSlow(double) const;
-        double xValueSlow(double) const;
+        double kValue(double) const;
+        double kValueRaw(double) const;
+        double xValue(double) const;
+        double xValueRaw(double) const;
+        double xValueExact(double) const;
 
         double structureFunction(double) const;
-
-        friend class SKXIntegrand;
 
     protected:
 

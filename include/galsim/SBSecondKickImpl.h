@@ -50,9 +50,10 @@ namespace galsim {
         double getHalfLightRadius() const {return _hlr; }
 
         double kValue(double) const;
-        double kValueSlow(double) const;
+        double kValueRaw(double) const;
         double xValue(double) const;
-        double xValueSlow(double) const;
+        double xValueRaw(double) const;
+        double xValueExact(double) const;
         double vkStructureFunction(double rho) const;
         double structureFunction(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
@@ -81,12 +82,12 @@ namespace galsim {
 
         boost::movelib::unique_ptr<AiryInfo> _airy_info;
 
-        TableDD _sfLUT;
         TableDD _radial;
+        TableDD _kvLUT;
         boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
-        void _buildSFLUT();
         void _buildRadial();
+        void _buildKVLUT();
     };
 
     //
@@ -137,10 +138,11 @@ namespace galsim {
 
         double xValue(const Position<double>& p) const;
         double xValue(double r) const;
-        double xValueSlow(double k) const;
+        double xValueRaw(double k) const;
+        double xValueExact(double k) const;
         std::complex<double> kValue(const Position<double>& p) const;
         double kValue(double k) const;
-        double kValueSlow(double k) const;
+        double kValueRaw(double k) const;
 
         double structureFunction(double rho) const;
 

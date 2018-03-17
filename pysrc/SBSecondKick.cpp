@@ -33,6 +33,9 @@ namespace galsim {
     {
         static void wrap()
         {
+            double (SBSecondKick::*kv)(double) const = &SBSecondKick::kValue;
+            double (SBSecondKick::*xv)(double) const = &SBSecondKick::xValue;
+
             bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
                 .def(bp::init<double,double,double,double,double,double,double,double,
                               boost::shared_ptr<GSParams> >(
@@ -51,8 +54,11 @@ namespace galsim {
                 .def("getScale", &SBSecondKick::getScale)
                 .def("getHalfLightRadius", &SBSecondKick::getHalfLightRadius)
                 .def("structureFunction", &SBSecondKick::structureFunction)
-                .def("kValueSlow", &SBSecondKick::kValueSlow)
-                .def("xValueSlow", &SBSecondKick::xValueSlow)
+                .def("kValueRaw", &SBSecondKick::kValueRaw)
+                .def("xValueRaw", &SBSecondKick::xValueRaw)
+                .def("kValueDouble", kv)
+                .def("xValueDouble", xv)
+                .def("xValueExact", &SBSecondKick::xValueExact)
                 .enable_pickling()
                 ;
         }

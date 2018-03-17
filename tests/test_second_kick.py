@@ -124,18 +124,20 @@ def test_sf_lut(slow=False):
     kcrit = 2*np.pi/r0
 
     sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, 0.5*kcrit)
+    print("stepk = {}".format(sk.stepk))
+    print("maxk = {}".format(sk.maxk))
 
     print("Testing kValue")
     for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
         print()
         print("k = {}".format(k))
-        print(sk.kValue(0, k).real)
-        print(sk._sbp.kValueSlow(k))
+        print(sk._sbp.kValueDouble(k))
+        print(sk._sbp.kValueRaw(k))
         np.testing.assert_allclose(
-            sk.kValue(0, k).real,   # Uses LUT
-            sk._sbp.kValueSlow(k),  # No LUT
-            rtol=1e-5,
-            atol=1e-5
+            sk._sbp.kValueDouble(k),     # Uses LUT
+            sk._sbp.kValueRaw(k),  # No LUT
+            rtol=1e-3,
+            atol=1e-3
         )
 
     print()
@@ -150,12 +152,20 @@ def test_sf_lut(slow=False):
     for x in xs:
         print()
         print("x = {}".format(x))
-        print(sk.xValue(0, x))
-        print(sk._sbp.xValueSlow(x))
+        print(sk._sbp.xValueDouble(x))
+        print(sk._sbp.xValueRaw(x))
+        print(sk._sbp.xValueExact(x))
         np.testing.assert_allclose(
-            sk.xValue(0, x),        # Uses LUT
-            sk._sbp.xValueSlow(x),  # No LUT
-            rtol=1e-5,
+            sk._sbp.xValueDouble(x),     # Uses LUT
+            sk._sbp.xValueRaw(x),  # No LUT
+            rtol=1e-3,
+            atol=1e-3
+        )
+
+        np.testing.assert_allclose(
+            sk._sbp.xValueDouble(x), # Uses LUT
+            sk._sbp.xValueExact(x),  # No LUT
+            rtol=1e-2,
             atol=1e-2
         )
 
