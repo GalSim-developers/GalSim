@@ -243,7 +243,7 @@ namespace galsim {
     void SKInfo::_buildKVLUT() {
         _kvLUT.addEntry(0, kValueRaw(0));
 
-        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.0));
+        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 80.0));
         dbg<<"Using dlogk = "<<dlogk<<'\n';
 
         SKIkValueResid skikvr(*this, 1.0-_gsparams->kvalue_accuracy);
@@ -254,11 +254,11 @@ namespace galsim {
         dbg<<"Initial k = "<<k<<'\n';
 
         for (double logk=std::log(k); logk < std::log(_maxk)+dlogk; logk += dlogk) {
-            dbg<<"logk = "<<logk<<'\n';
+            xdbg<<"logk = "<<logk<<'\n';
             k = std::exp(logk);
-            dbg<<"k = "<<k<<'\n';
+            xdbg<<"k = "<<k<<'\n';
             double val = kValueRaw(k);
-            dbg<<"val = "<<val<<'\n';
+            xdbg<<"val = "<<val<<'\n';
             _kvLUT.addEntry(k, val);
         }
         dbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
@@ -374,18 +374,15 @@ namespace galsim {
         solver.bracket();
         solver.setMethod(Brent);
         double r0 = solver.root();
-        dbg<<"Initial r0 = "<<r0<<'\n';
 
         double logr = log(r0);
         double dr = 0;
-        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 20.));
 
         dbg<<"r0 = "<<r0<<" arcsec\n";
         dbg<<"dlogr = "<<dlogr<<"\n";
 
         double sum = 0.0;
-        xdbg<<"sum = "<<sum<<'\n';
-
         double thresh1 = (1.-_gsparams->folding_threshold);
         double thresh2 = (1.-_gsparams->folding_threshold/5);
         double R = 1e10;
