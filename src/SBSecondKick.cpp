@@ -347,6 +347,19 @@ namespace galsim {
         return M_PI*(b-a)/3.0*(a*(2*fa+fb)+b*(fa+2*fb));
     }
 
+    class SKIxValueResid {
+    public:
+        SKIxValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
+        double operator()(double x) const {
+            double val = _ski.xValueRaw(x)-_thresh;
+            xdbg<<"resid(x="<<x<<")="<<val<<'\n';
+            return val;
+        }
+    private:
+        const SKInfo& _ski;
+        const double _thresh;
+    };
+
     void SKInfo::_buildRadial() {
         // set_verbose(2);
         double r = 0.0;
@@ -354,12 +367,19 @@ namespace galsim {
         _radial.addEntry(r, val);
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
-        // double r0 = 0.05*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double r0 = 0.025*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        // Figure out where to start.  A good guess is where
+        // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
+        SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
+        Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
+        solver.bracket();
+        solver.setMethod(Brent);
+        double r0 = solver.root();
+        dbg<<"Initial r0 = "<<r0<<'\n';
+
         double logr = log(r0);
         double dr = 0;
-        // double dlogr = 0.1*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
-        double dlogr = 0.5*_gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
+
         dbg<<"r0 = "<<r0<<" arcsec\n";
         dbg<<"dlogr = "<<dlogr<<"\n";
 
@@ -367,7 +387,7 @@ namespace galsim {
         xdbg<<"sum = "<<sum<<'\n';
 
         double thresh1 = (1.-_gsparams->folding_threshold);
-        double thresh2 = (1.-_gsparams->folding_threshold/2);
+        double thresh2 = (1.-_gsparams->folding_threshold/5);
         double R = 1e10;
         _hlr = 1e10;
         double maxR = 600.0; // hard cut at 10 arcminutes.
@@ -375,16 +395,13 @@ namespace galsim {
         double nextval;
         for(nextr = exp(logr);
             (nextr < _gsparams->stepk_minimum_hlr*_hlr) || (nextr < R) || (sum < thresh2);
-            // logr += dlogr, nextr=exp(logr), dr=nextr*(1-exp(-dlogr)))
             logr += dlogr, nextr=exp(logr))
         {
             nextval = xValueRaw(nextr);
             xdbg<<"f("<<nextr<<") = "<<nextval<<'\n';
             _radial.addEntry(nextr, nextval);
 
-            // sum += 2*M_PI*val*r*dr;
             sum += volume(r, nextr, val, nextval);
-            // xdbg<<"dr = "<<dr<<'\n';
             xdbg<<"sum = "<<sum<<'\n';
 
             if (_hlr == 1e10 && sum > 0.5) {
@@ -410,7 +427,7 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
         dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
-        if (sum < 0.997)
+        if (sum < 1-_gsparams->folding_threshold)
             throw SBError("Could not find folding_threshold");
         dbg<<"_radial.size() = "<<_radial.size()<<'\n';
         std::vector<double> ranges(1, 0.);
