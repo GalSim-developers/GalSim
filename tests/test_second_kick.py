@@ -111,63 +111,63 @@ def test_limiting_cases():
     assert np.abs(sk.half_light_radius/airy.half_light_radius - 1.0) < 1e-2
 
 
-@timer
-def test_sf_lut(slow=False):
-    """Test the suitability of the lookup table used to store the structure function by comparing
-    results of xValue and kValue both with and without using the LUT.
-    """
-    lam = 500.0
-    r0 = 0.2
-    L0 = 30.0
-    diam = 8.36
-    obscuration = 0.61
-    kcrit = 2*np.pi/r0
-
-    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, 0.5*kcrit)
-    print("stepk = {}".format(sk.stepk))
-    print("maxk = {}".format(sk.maxk))
-
-    print("Testing kValue")
-    for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
-        print()
-        print("k = {}".format(k))
-        print(sk._sbp.kValueDouble(k))
-        print(sk._sbp.kValueRaw(k))
-        np.testing.assert_allclose(
-            sk._sbp.kValueDouble(k),     # Uses LUT
-            sk._sbp.kValueRaw(k),  # No LUT
-            rtol=1e-3,
-            atol=1e-3
-        )
-
-    print()
-    print()
-    print("Testing xValue")
-    if __name__ == '__main__':
-        xs = [0.0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.2]
-        if slow:
-            xs.extend([0.3, 0.6, 1.0, 2.0, 3.0, 6.0])
-    else:
-        xs = [0.0, 0.001, 0.003, 0.01, 0.03]
-    for x in xs:
-        print()
-        print("x = {}".format(x))
-        print(sk._sbp.xValueDouble(x))
-        print(sk._sbp.xValueRaw(x))
-        print(sk._sbp.xValueExact(x))
-        np.testing.assert_allclose(
-            sk._sbp.xValueDouble(x),     # Uses LUT
-            sk._sbp.xValueRaw(x),  # No LUT
-            rtol=1e-3,
-            atol=1e-3
-        )
-
-        np.testing.assert_allclose(
-            sk._sbp.xValueDouble(x), # Uses LUT
-            sk._sbp.xValueExact(x),  # No LUT
-            rtol=1e-2,
-            atol=1e-2
-        )
+# @timer
+# def test_sf_lut(slow=False):
+#     """Test the suitability of the lookup table used to store the structure function by comparing
+#     results of xValue and kValue both with and without using the LUT.
+#     """
+#     lam = 500.0
+#     r0 = 0.2
+#     L0 = 30.0
+#     diam = 8.36
+#     obscuration = 0.61
+#     kcrit = 2*np.pi/r0
+#
+#     sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, 0.5*kcrit)
+#     print("stepk = {}".format(sk.stepk))
+#     print("maxk = {}".format(sk.maxk))
+#
+#     print("Testing kValue")
+#     for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
+#         print()
+#         print("k = {}".format(k))
+#         print(sk._sbp.kValueDouble(k))
+#         print(sk._sbp.kValueRaw(k))
+#         np.testing.assert_allclose(
+#             sk._sbp.kValueDouble(k),     # Uses LUT
+#             sk._sbp.kValueRaw(k),  # No LUT
+#             rtol=1e-3,
+#             atol=1e-3
+#         )
+#
+#     print()
+#     print()
+#     print("Testing xValue")
+#     if __name__ == '__main__':
+#         xs = [0.0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.2]
+#         if slow:
+#             xs.extend([0.3, 0.6, 1.0, 2.0, 3.0, 6.0])
+#     else:
+#         xs = [0.0, 0.001, 0.003, 0.01, 0.03]
+#     for x in xs:
+#         print()
+#         print("x = {}".format(x))
+#         print(sk._sbp.xValueDouble(x))
+#         print(sk._sbp.xValueRaw(x))
+#         print(sk._sbp.xValueExact(x))
+#         np.testing.assert_allclose(
+#             sk._sbp.xValueDouble(x),     # Uses LUT
+#             sk._sbp.xValueRaw(x),  # No LUT
+#             rtol=1e-3,
+#             atol=1e-3
+#         )
+#
+#         np.testing.assert_allclose(
+#             sk._sbp.xValueDouble(x), # Uses LUT
+#             sk._sbp.xValueExact(x),  # No LUT
+#             rtol=1e-2,
+#             atol=1e-2
+#         )
 
 
 @timer
@@ -268,7 +268,7 @@ if __name__ == '__main__':
     test_init(args.slow)
     test_structure_function()
     test_limiting_cases()
-    test_sf_lut(args.slow)
+    # test_sf_lut(args.slow)
     test_sk_phase_psf()
     test_sk_scale()
     test_sk_ne()
