@@ -30,6 +30,7 @@
 #include "fmath/fmath.hpp"
 #include "Solve.h"
 #include "bessel/Roots.h"
+#include <ctime>
 
 namespace galsim {
 
@@ -168,8 +169,13 @@ namespace galsim {
         _stepk = 0;
 
         // build the radial function, and along the way, set _stepk, _hlr.
+        std::clock_t t0 = std::clock();
         _buildKVLUT();
+        std::clock_t t1 = std::clock();
         _buildRadial();
+        std::clock_t t2 = std::clock();
+        std::cout << "buildKV time = " << (double)(t1-t0)/CLOCKS_PER_SEC << '\n';
+        std::cout << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
     }
 
     class SKISFIntegrand : public std::unary_function<double,double>
