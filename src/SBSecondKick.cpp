@@ -178,18 +178,6 @@ namespace galsim {
         std::cout << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
     }
 
-    class SKISFIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        SKISFIntegrand(double rho, double L0invsq) : _rho(rho), _L0invsq(L0invsq) {}
-        double operator()(double kappa) const {
-            return fast_pow(kappa*kappa+_L0invsq, -11./6)*kappa*(1-j0(2*M_PI*kappa*_rho));
-        }
-    private:
-        const double _rho;  // meters
-        const double _L0invsq;  // inverse meters squared
-    };
-
     // This version of structureFunction explicitly integrates from kmin to infinity, which is how
     // the second kick is defined. However, I've found it's more stable to integrate from zero to
     // kmin, and then subtract this from the analytic integral from 0 to infinity.  So that's
@@ -222,12 +210,30 @@ namespace galsim {
         }
     }
 
+    class SKISFIntegrand : public std::unary_function<double,double>
+    {
+    public:
+        SKISFIntegrand(double rho, double L0invsq) : _2pirho(2*M_PI*rho), _L0invsq(L0invsq) {}
+        double operator()(double kappa) const {
+            return fast_pow(kappa*kappa+_L0invsq, -11./6)*kappa*(1-j0(_2pirho*kappa));
+        }
+    private:
+        const double _2pirho; // 2*pi*rho
+        const double _L0invsq;  // inverse meters squared
+    };
     double SKInfo::structureFunction(double rho) const {
         // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
         const static double magic5 = 0.2877144330394485472;
 
         SKISFIntegrand I(rho, _L0invsq);
-        double complement = integ::int1d(I, 0, _kmin,
+        integ::IntRegion<double> reg(0., _kmin);
+        for (int s=1; s<10; s++) {
+            double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
+            if (zero >= _kmin) break;
+            reg.addSplit(zero);
+        }
+
+        double complement = integ::int1d(I, reg,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
         return vkStructureFunction(rho) - magic5*complement*_r0m53;
@@ -247,7 +253,7 @@ namespace galsim {
     };
 
     void SKInfo::_buildKVLUT() {
-        _kvLUT.addEntry(0, kValueRaw(0));
+        _kvLUT.addEntry(0, 1.0);
 
         double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 80.0));
         dbg<<"Using dlogk = "<<dlogk<<'\n';
