@@ -372,6 +372,19 @@ namespace galsim {
         const double _thresh;
     };
 
+    class SKIxValueVolumeResid {
+    public:
+        SKIxValueVolumeResid(const SKInfo & ski, double f0, double thresh) :
+            _ski(ski), _f0(f0), _thresh(thresh) {}
+        double operator()(double x) const {
+            return volume(0, x, _f0, _ski.xValueRaw(x)) - _thresh;
+        }
+    private:
+        const SKInfo& _ski;
+        const double _f0;
+        const double _thresh;
+    };
+
     void SKInfo::_buildRadial() {
         // set_verbose(2);
         double r = 0.0;
@@ -379,13 +392,27 @@ namespace galsim {
         _radial.addEntry(r, val);
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
-        // Figure out where to start.  A good guess is where
-        // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
-        SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
-        Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
-        solver.bracket();
-        solver.setMethod(Brent);
-        double r0 = solver.root();
+        double r0 = 0.0;
+
+        // // Figure out where to start.  A good guess is where
+        // // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
+        // SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
+        // Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
+        // solver.bracketUpper();
+        // solver.setMethod(Brent);
+        // r0 = solver.root();
+        // dbg<<'\n';
+        // dbg<<"r0 method(1) = " << r0 << '\n';
+        // dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
+
+        // Another guess is where the volume between r=0 and r=r0 is xvalue_accuracy
+        SKIxValueVolumeResid skixvvr(*this, val, _gsparams->xvalue_accuracy);
+        Solve<SKIxValueVolumeResid> solver2(skixvvr, 0.0, 1e-3);
+        solver2.bracketUpper();
+        solver2.setMethod(Brent);
+        r0 = solver2.root();
+        dbg<<"r0 method(2) = " << r0 << '\n';
+        dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
 
         double logr = log(r0);
         double dr = 0;
