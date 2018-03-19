@@ -216,9 +216,19 @@ namespace galsim {
     // _radial lookup table is built, use that.
     double VonKarmanInfo::rawXValue(double r) const
     {
+        xdbg<<"rawXValue at r = "<<r<<std::endl;
         // r in arcsec
         VKXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
+        if (r > 0.) {
+            // Add explicit splits at first several roots of J0.
+            // This tends to make the integral more accurate.
+            for (int s=1; s<=10; ++s) {
+                double root = bessel::getBesselRoot0(s);
+                xdbg<<"Add split at "<<root/r<<std::endl;
+                reg.addSplit(root/r);
+            }
+        }
         return integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
@@ -303,7 +313,7 @@ namespace galsim {
         sum *= 2.*M_PI * dlogr;
         dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
         if (sum < 1-_gsparams->folding_threshold)
-            throw SBError("Could not find folding_threshold");
+            throw SBError("Could not determine appropriate stepk, given folding_threshold");
 
         std::vector<double> range(2, 0.);
         range[1] = _radial.argMax();
