@@ -194,6 +194,16 @@ namespace galsim {
         Solve<SKIkValueResid> solver(skikvr, 0.0, _maxk);
         solver.setMethod(Brent);
         _maxk = solver.root();
+
+        // And rebuild kvLUT limiting to the new _maxk.
+        // With fewer entries, lookups should be quicker.
+        std::vector<double>::const_iterator p = std::upper_bound(
+                _kvLUT.getArgs().begin(), _kvLUT.getArgs().end(), _maxk);
+        int N = p - _kvLUT.getArgs().begin();
+        _kvLUT = TableDD(
+            &(*_kvLUT.getArgs().begin()),
+            &(*_kvLUT.getVals().begin()),
+            N, TableDD::spline);
     }
 
     // This version of structureFunction explicitly integrates from kmin to infinity, which is how
