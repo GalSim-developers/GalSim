@@ -313,7 +313,7 @@ namespace galsim {
         sum *= 2.*M_PI * dlogr;
         dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
         if (sum < 1-_gsparams->folding_threshold)
-            throw SBError("Could determine appropriate stepk, given folding_threshold");
+            throw SBError("Could not determine appropriate stepk, given folding_threshold");
 
         std::vector<double> range(2, 0.);
         range[1] = _radial.argMax();
