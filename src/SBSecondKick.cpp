@@ -165,9 +165,9 @@ namespace galsim {
 
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
-        _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(pow(r0, -5./3)),
-        _diam(diam), _obscuration(obscuration), _L0(L0),
-        _L0invsq(1/L0/L0), _r0L0m53(pow(r0/L0, -5./3)), _kmin(kcrit/r0),
+        _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(fast_pow(_r0, -5./3)),
+        _diam(diam), _obscuration(obscuration), _L0(L0/_r0),
+        _L0invsq(1/_L0/_L0), _r0L0m53(fast_pow(_L0, 5./3)), _kmin(kcrit),
         _knorm(1./(M_PI*(1.-obscuration*obscuration))),
         _4_over_diamsq(4.0/diam/diam),
         _gsparams(gsparams),
@@ -220,7 +220,7 @@ namespace galsim {
     // }
 
     double SKInfo::vkStructureFunction(double rho) const {
-        // rho in meters
+        // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
         static const double magic1 = 0.1716613621245708932;
@@ -231,7 +231,7 @@ namespace galsim {
 
         double rhoL0 = rho/_L0;
         if (rhoL0 < 1e-10) {
-            return -magic3*fast_pow(2*M_PI*rho/_r0, 5./3);
+            return -magic3*fast_pow(2*M_PI*rho, 5./3);
         } else {
             double x = 2*M_PI*rhoL0;
             return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6)*boost::math::cyl_bessel_k(5./6, x));
@@ -246,11 +246,12 @@ namespace galsim {
             return fast_pow(kappa*kappa+_L0invsq, -11./6)*kappa*(1-j0(_2pirho*kappa));
         }
     private:
-        const double _2pirho; // 2*pi*rho
+        const double _2pirho;   // 2*pi*rho
         const double _L0invsq;  // inverse meters squared
     };
 
     double SKInfo::structureFunction(double rho) const {
+        // rho in units of r0
         // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
         const static double magic5 = 0.2877144330394485472;
 
@@ -266,7 +267,7 @@ namespace galsim {
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
 
-        return vkStructureFunction(rho) - magic5*complement*_r0m53;
+        return vkStructureFunction(rho) - magic5*complement;
     }
 
     void SKInfo::_buildKVLUT() {
@@ -301,7 +302,7 @@ namespace galsim {
         // k in inverse arcsec
         double kp = _lam_factor*k;
         double kpkp = kp*kp;
-        return fmath::expd(-0.5*structureFunction(kp))
+        return fmath::expd(-0.5*structureFunction(kp/_r0))
             * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
     }
 
@@ -553,7 +554,7 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
-        return _info->structureFunction(rho);
+        return _info->structureFunction(rho/_r0);
     }
 
     std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
