@@ -150,6 +150,19 @@ namespace galsim {
     //
     //
 
+    class SKIkValueResid {
+    public:
+        SKIkValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
+        double operator()(double k) const {
+            double val = _ski.kValueRaw(k)-_thresh;
+            xdbg<<"resid(k="<<k<<")="<<val<<'\n';
+            return val;
+        }
+    private:
+        const SKInfo& _ski;
+        const double _thresh;
+    };
+
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(pow(r0, -5./3)),
@@ -161,10 +174,9 @@ namespace galsim {
         _airy_info((obscuration==0.0) ?
                    boost::movelib::unique_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
                    boost::movelib::unique_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
-        _kvLUT(TableDD::spline),
-        _radial(TableDD::spline)
+        _radial(TableDD::spline),
+        _kvLUT(TableDD::spline)
     {
-        // a conservative maxK is that of the embedded Airy profile.  We just hard code it here.
         _maxk = _diam/_lam_factor;
         _stepk = 0;
 
@@ -176,6 +188,12 @@ namespace galsim {
         std::clock_t t2 = std::clock();
         std::cout << "buildKV time = " << (double)(t1-t0)/CLOCKS_PER_SEC << '\n';
         std::cout << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
+
+        // Find a potentially smaller maxk now that LUTs have been built.
+        SKIkValueResid skikvr(*this, _gsparams->maxk_threshold);
+        Solve<SKIkValueResid> solver(skikvr, 0.0, _maxk);
+        solver.setMethod(Brent);
+        _maxk = solver.root();
     }
 
     // This version of structureFunction explicitly integrates from kmin to infinity, which is how
@@ -241,19 +259,6 @@ namespace galsim {
         return vkStructureFunction(rho) - magic5*complement*_r0m53;
     }
 
-    class SKIkValueResid {
-    public:
-        SKIkValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
-        double operator()(double k) const {
-            double val = _ski.kValueRaw(k)-_thresh;
-            xdbg<<"resid(k="<<k<<")="<<val<<'\n';
-            return val;
-        }
-    private:
-        const SKInfo& _ski;
-        const double _thresh;
-    };
-
     void SKInfo::_buildKVLUT() {
         _kvLUT.addEntry(0, 1.0);
 
@@ -262,7 +267,7 @@ namespace galsim {
 
         SKIkValueResid skikvr(*this, 1.0-_gsparams->kvalue_accuracy);
         Solve<SKIkValueResid> solver(skikvr, 0.0, 0.1);
-        solver.bracket();
+        solver.bracketUpper();
         solver.setMethod(Brent);
         double k = solver.root();
         dbg<<"Initial k = "<<k<<'\n';
@@ -338,12 +343,12 @@ namespace galsim {
     double SKInfo::xValueExact(double r) const {
         // r in arcsec
         SKIExactXIntegrand I(r, *this);
-        integ::IntRegion<double> reg(0, _maxk);
+        integ::IntRegion<double> reg(0, _diam/_lam_factor);
         if (r > 0) {
-            // Add BesselJ0 zeros up to _maxk
+            // Add BesselJ0 zeros up to _diam/_lam_factor
             int s=1;
             double zero=bessel::getBesselRoot0(s)/r;
-            while(zero < _maxk) {
+            while(zero < _diam/_lam_factor) {
                 reg.addSplit(zero);
                 s++;
                 zero = bessel::getBesselRoot0(s)/r;

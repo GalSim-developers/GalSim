@@ -87,7 +87,7 @@ def test_limiting_cases():
     print(sk.stepk, sk.maxk)
     print(limiting_case.stepk, limiting_case.maxk)
 
-    for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0]:
+    for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 20.0]:
         np.testing.assert_allclose(
             sk.kValue(0, k).real,
             limiting_case.kValue(0, k).real,
@@ -98,7 +98,7 @@ def test_limiting_cases():
     sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=np.inf)
     limiting_case = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
 
-    for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0]:
+    for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 20.0]:
         np.testing.assert_allclose(
             sk.kValue(0, k).real,
             limiting_case.kValue(0, k).real,
