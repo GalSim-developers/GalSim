@@ -13,7 +13,7 @@ def test_init(slow=False):
     if __name__ == '__main__' and slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.1, 0.15, 0.3]
-        L0s = [1e10, 25.0, 10.0]
+        L0s = [1000.0, 25.0, 10.0]
         kcrits = [0.1, 0.2, 0.4]
     else:
         lams = [500.0]
@@ -104,11 +104,14 @@ def test_limiting_cases():
             limiting_case.kValue(0, k).real,
             rtol=1e-3,
             atol=1e-4)
+
     # Check half_light_radius agrees.  Only implemented for obscuration=0, and somewhat
     # approximate for second kick.
     airy = galsim.Airy(lam=lam, diam=diam)
     sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, kcrit=np.inf)
-    assert np.abs(sk.half_light_radius/airy.half_light_radius - 1.0) < 1e-2
+    print(airy.half_light_radius)
+    print(sk.half_light_radius)
+    assert abs(sk.half_light_radius/airy.half_light_radius - 1.0) < 3e-2
 
 
 # @timer
@@ -244,7 +247,7 @@ def test_sk_ne():
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.0),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, obscuration=0.4),
-            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e11),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e7),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, kcrit=1.234),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, flux=2.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, scale_unit='arcmin'),

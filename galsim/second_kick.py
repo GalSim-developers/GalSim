@@ -92,8 +92,8 @@ class SecondKick(GSObject):
                  scale_unit=galsim.arcsec, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
-        if L0 > 1e10:
-            L0 = 1e10
+        if L0 > 1e6:
+            L0 = 1e6
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need _scale_unit for repr roundtriping.

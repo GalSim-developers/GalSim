@@ -202,7 +202,7 @@ namespace galsim {
         static const double magic3 = -0.3217609479366896341;
 
         double rhoL0 = rho/_L0;
-        if (rhoL0 < 1e-6) {
+        if (rhoL0 < 1e-10) {
             return -magic3*fast_pow(2*M_PI*rho/_r0, 5./3);
         } else {
             double x = 2*M_PI*rhoL0;
@@ -221,6 +221,7 @@ namespace galsim {
         const double _2pirho; // 2*pi*rho
         const double _L0invsq;  // inverse meters squared
     };
+
     double SKInfo::structureFunction(double rho) const {
         // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
         const static double magic5 = 0.2877144330394485472;
@@ -236,6 +237,7 @@ namespace galsim {
         double complement = integ::int1d(I, reg,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
+
         return vkStructureFunction(rho) - magic5*complement*_r0m53;
     }
 
@@ -267,7 +269,7 @@ namespace galsim {
 
         for (double logk=std::log(k); logk < std::log(_maxk)+dlogk; logk += dlogk) {
             xdbg<<"logk = "<<logk<<'\n';
-            k = std::exp(logk);
+            k = fmath::expd(logk);
             xdbg<<"k = "<<k<<'\n';
             double val = kValueRaw(k);
             xdbg<<"val = "<<val<<'\n';
