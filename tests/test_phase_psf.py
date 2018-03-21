@@ -76,10 +76,10 @@ def test_structure_function():
     """
     if __name__ == '__main__':
         L0s = [10.0, 25.0, 100.0]
-        screen_size = 307.2
+        screen_size = 300.0
     else:
         L0s = [10.0]
-        screen_size = 102.4
+        screen_size = 100.0
 
     rng = galsim.BaseDeviate(4815162342)
     lam = 500.0
@@ -90,7 +90,7 @@ def test_structure_function():
         screen = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
                                           r0_500=r0_500, L0=L0, rng=rng)
         screen.instantiate()
-        vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500)**1.2, L0=L0)
+        vk = galsim.VonKarman(lam=lam, r0=r0_500*(lam/500.0)**1.2, L0=L0)
         phase = screen._tab2d.table.getVals()[:-1, :-1] * 2 * np.pi / 500.0  # nm -> radians
 
         var = np.var(phase)
@@ -104,7 +104,7 @@ def test_structure_function():
         im = galsim.Image(phase, scale=screen_scale)
         D_sim = galsim.utilities.structure_function(im)
 
-        print("r   D_kolm   D_sim")
+        print("r     D_VK     D_sim")
         for r in [0.1, 1.0, 10.0]:
             analytic_SF = vk._structure_function(r)
             simulated_SF = D_sim(r)
