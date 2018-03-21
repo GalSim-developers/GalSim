@@ -608,11 +608,11 @@ def test_phase_gradient_shoot():
         shoot_moment = galsim.hsm.FindAdaptiveMom(im_shoot)
         fft_moment = galsim.hsm.FindAdaptiveMom(im_fft)
 
-        # print()
-        # print()
-        # print()
-        # print(shoot_moment.observed_shape.g1)
-        # print(fft_moment.observed_shape.g1)
+        print()
+        print()
+        print()
+        print(shoot_moment.observed_shape.g1)
+        print(fft_moment.observed_shape.g1)
 
         # import matplotlib.pyplot as plt
         # fig, axes = plt.subplots(ncols=2)
@@ -620,23 +620,23 @@ def test_phase_gradient_shoot():
         # axes[1].imshow(im_fft.array)
         # plt.show()
 
-        # np.testing.assert_allclose(
-        #     shoot_moment.moments_centroid.x,
-        #     fft_moment.moments_centroid.x,
-        #     rtol=0, atol=centroid_tolerance,
-        #     err_msg='Phase gradient centroid x not close to fft centroid')
-        #
-        # np.testing.assert_allclose(
-        #     shoot_moment.moments_centroid.y,
-        #     fft_moment.moments_centroid.y,
-        #     rtol=0, atol=centroid_tolerance,
-        #     err_msg='Phase gradient centroid y not close to fft centroid')
-        #
-        # np.testing.assert_allclose(
-        #     shoot_moment.moments_sigma,
-        #     fft_moment.moments_sigma*(1+size_bias),
-        #     rtol=0, atol=size_tolerance,
-        #     err_msg='Phase gradient sigma not close to fft sigma')
+        np.testing.assert_allclose(
+            shoot_moment.moments_centroid.x,
+            fft_moment.moments_centroid.x,
+            rtol=0, atol=centroid_tolerance,
+            err_msg='Phase gradient centroid x not close to fft centroid')
+
+        np.testing.assert_allclose(
+            shoot_moment.moments_centroid.y,
+            fft_moment.moments_centroid.y,
+            rtol=0, atol=centroid_tolerance,
+            err_msg='Phase gradient centroid y not close to fft centroid')
+
+        np.testing.assert_allclose(
+            shoot_moment.moments_sigma,
+            fft_moment.moments_sigma*(1+size_bias),
+            rtol=0, atol=size_tolerance,
+            err_msg='Phase gradient sigma not close to fft sigma')
 
         np.testing.assert_allclose(
             shoot_moment.moments_sigma,
@@ -645,17 +645,17 @@ def test_phase_gradient_shoot():
             err_msg='Phase gradient sigma not close to infinite exposure analytic sigma'
         )
 
-        # np.testing.assert_allclose(
-        #     shoot_moment.observed_shape.g1,
-        #     fft_moment.observed_shape.g1,
-        #     rtol=0, atol=shape_tolerance,
-        #     err_msg='Phase gradient shape g1 not close to fft shape')
-        #
-        # np.testing.assert_allclose(
-        #     shoot_moment.observed_shape.g2,
-        #     fft_moment.observed_shape.g2,
-        #     rtol=0, atol=shape_tolerance,
-        #     err_msg='Phase gradient shape g2 not close to fft shape')
+        np.testing.assert_allclose(
+            shoot_moment.observed_shape.g1,
+            fft_moment.observed_shape.g1,
+            rtol=0, atol=shape_tolerance,
+            err_msg='Phase gradient shape g1 not close to fft shape')
+
+        np.testing.assert_allclose(
+            shoot_moment.observed_shape.g2,
+            fft_moment.observed_shape.g2,
+            rtol=0, atol=shape_tolerance,
+            err_msg='Phase gradient shape g2 not close to fft shape')
 
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
