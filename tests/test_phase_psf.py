@@ -512,12 +512,25 @@ def test_ne():
 
 @timer
 def test_phase_gradient_shoot():
+    """Test that photon-shooting PSFs match Fourier optics PSFs when using the same phase screens,
+    and also match the expected size from an analytic VonKarman-convolved-with-Airy PSF.
+    """
     # Make the atmosphere
     seed = 12345
     r0_500 = 0.15  # m
     L0 = 20.0  # m
     nlayers = 6
     screen_size = 102.4  # m
+
+    # Ideally, we'd use as small a screen scale as possible here.  The runtime for generating
+    # phase screens scales like `screen_scale`^-2 though, which is pretty steep, so we use a larger-
+    # than-desireable scale for the __name__ != '__main__' branch.  This is known to lead to a bias
+    # in PSF size, which we attempt to account for below when actually comparing FFT PSF moments to
+    # photon-shooting PSF moments.  Note that we don't need to apply such a correction when
+    # comparing the photon-shooting PSF to the analytic VonKarman PSF since these both avoid the
+    # screen_scale problem to begin with.  (Even though we do generate screens for the
+    # photon-shooting PSF, because we truncate the power spectrum above kcrit, we don't require as
+    # high of resolution).
     if __name__ == '__main__':
         screen_scale = 0.025 # m
     else:
