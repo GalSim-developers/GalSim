@@ -729,6 +729,7 @@ def test_r0_weights():
     atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=r0_500)
     r0s = [screen.r0_500 for screen in atm]
     np.testing.assert_almost_equal(np.sum([r0**(-5./3) for r0 in r0s])**(-3./5), r0_500)
+    np.testing.assert_almost_equal(atm.r0_500_effective, r0_500)
 
     # Check that old manual calculation matches automatic calculation inside Atmosphere()
     weights = [1, 2, 3, 4]
@@ -738,6 +739,7 @@ def test_r0_weights():
     r0s_test = [screen.r0_500 for screen in atm]
     np.testing.assert_almost_equal(r0s_test, r0s_ref)
     np.testing.assert_almost_equal(np.sum([r0**(-5./3) for r0 in r0s_test])**(-3./5), r0_500)
+    np.testing.assert_almost_equal(atm.r0_500_effective, r0_500)
 
 
 @timer
@@ -820,8 +822,8 @@ if __name__ == "__main__":
     # test_scale_unit()
     # test_stepk_maxk()
     # test_ne()
-    test_phase_gradient_shoot()
+    # test_phase_gradient_shoot()
     # test_input()
-    # test_r0_weights()
+    test_r0_weights()
     # test_speedup()
     # test_gc()
