@@ -574,10 +574,10 @@ def test_phase_gradient_shoot():
     if __name__ == '__main__':
         exptime = 15.0
         time_step = 0.05
-        centroid_tolerance = 0.05
-        size_tolerance = 0.05  # absolute
+        centroid_tolerance = 0.06
+        size_tolerance = 0.06  # absolute
         size_bias = 0.02  # as a fraction
-        shape_tolerance = 0.007
+        shape_tolerance = 0.01
     else:
         exptime = 1.0
         time_step = 0.1
