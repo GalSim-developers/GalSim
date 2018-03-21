@@ -206,18 +206,20 @@ namespace galsim {
             N, TableDD::spline);
     }
 
+#if 0
     // This version of structureFunction explicitly integrates from kmin to infinity, which is how
     // the second kick is defined. However, I've found it's more stable to integrate from zero to
     // kmin, and then subtract this from the analytic integral from 0 to infinity.  So that's
     // what's implemented further down.
-    // double SKInfo::structureFunction(double rho) const {
-    //     SKISFIntegrand I(rho, _L0invsq);
-    //     double result = integ::int1d(I, _kmin, integ::MOCK_INF,
-    //                                  _gsparams->integration_relerr,
-    //                                  _gsparams->integration_abserr);
-    //     result *= magic5*_r0m53;
-    //     return result;
-    // }
+    double SKInfo::structureFunction(double rho) const {
+        SKISFIntegrand I(rho, _L0invsq);
+        double result = integ::int1d(I, _kmin, integ::MOCK_INF,
+                                     _gsparams->integration_relerr,
+                                     _gsparams->integration_abserr);
+        result *= magic5*_r0m53;
+        return result;
+    }
+#endif
 
     double SKInfo::vkStructureFunction(double rho) const {
         // rho in units of r0
@@ -412,16 +414,18 @@ namespace galsim {
 
         double r0 = 0.0;
 
-        // // Figure out where to start.  A good guess is where
-        // // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
-        // SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
-        // Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
-        // solver.bracketUpper();
-        // solver.setMethod(Brent);
-        // r0 = solver.root();
-        // dbg<<'\n';
-        // dbg<<"r0 method(1) = " << r0 << '\n';
-        // dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
+#if 0
+        // Figure out where to start.  A good guess is where
+        // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
+        SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
+        Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
+        solver.bracketUpper();
+        solver.setMethod(Brent);
+        r0 = solver.root();
+        dbg<<'\n';
+        dbg<<"r0 method(1) = " << r0 << '\n';
+        dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
+#endif
 
         // Another guess is where the volume between r=0 and r=r0 is xvalue_accuracy
         SKIxValueVolumeResid skixvvr(*this, val, _gsparams->xvalue_accuracy);
