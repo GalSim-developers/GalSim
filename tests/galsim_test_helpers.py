@@ -457,7 +457,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     #print("SUCCESS\n")
 
 
-def all_obj_diff(objs):
+def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
@@ -475,6 +475,8 @@ def all_obj_diff(objs):
             assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
                                   .format(obji, objj, i, j))
 
+    if not check_hash:
+        return
     # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
         return

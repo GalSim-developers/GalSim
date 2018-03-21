@@ -457,6 +457,7 @@ def test_ne():
     # Test AtmosphericScreen __ne__
     rng = galsim.BaseDeviate(1)
     objs = [galsim.AtmosphericScreen(10.0, rng=rng),
+            galsim.AtmosphericScreen(1.0, rng=rng),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vy=1.0),
             galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999, time_step=0.01),
@@ -467,12 +468,15 @@ def test_ne():
             galsim.AtmosphericScreen(10.0, rng=rng, L0=10.0),
             galsim.AtmosphericScreen(10.0, rng=rng, vx=10.0),
             ]
-    for obj in objs:
-        obj.instantiate()
     all_obj_diff(objs)
+    objs.append(galsim.AtmosphericScreen(10.0, rng=rng))
+    objs[-1].instantiate()
+    # Should still all be __ne__, but first and last will have the same hash this time.
+    assert hash(objs[0]) == hash(objs[-1])
+    all_obj_diff(objs, check_hash=False)
 
     # Test OpticalScreen __ne__
-    objs = [galsim.OpticalScreen(diam=1.0, ),
+    objs = [galsim.OpticalScreen(diam=1.0),
             galsim.OpticalScreen(diam=1.0, tip=1.0),
             galsim.OpticalScreen(diam=1.0, tilt=1.0),
             galsim.OpticalScreen(diam=1.0, defocus=1.0),
