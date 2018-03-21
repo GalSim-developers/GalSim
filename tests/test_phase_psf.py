@@ -143,8 +143,15 @@ def test_phase_screen_list():
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, time_step=0.01, rng=rng)
+    # Before ar2 is instantiated, it's unequal to ar1, even though they were initialized with the
+    # same arguments (the hashes are the same though).  After both have been instantiated with the
+    # same range of k (ar1 through use of .wavefront() and ar2 explicitly), then they are equal (
+    # and the hashes are still the same).
+    assert hash(ar1) == hash(ar2)
+    assert ar1 != ar2
     ar2.instantiate()
     assert ar1 == ar2
+    assert hash(ar1) == hash(ar2)
     # Create a couple new screens with different types/parameters
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, time_step=0.015, rng=rng2)
     ar2.instantiate()
