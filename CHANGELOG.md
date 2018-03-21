@@ -5,7 +5,10 @@ API Changes
 -----------
 - AtmosphericScreen instantiation is now delayed until first use, and the
   nature of the first use can change the value of the generated screens.  Use
-  the .instantiate() method to manually override auto-instantiation. (#846)
+  the .instantiate() method to manually override auto-instantiation. (#864)
+- PhaseScreen wavefront and wavefront_gradient methods now accept `None` as a
+  valid time argument, which means to use the internally stored time in the
+  screen(s). (#864)
 - Reduced the number of types for the return value of various NFWHalo and
   PowerSpectrum methods.  Now they either return a single value if the input
   `pos` is a single Position or a numpy array if multiple positions were

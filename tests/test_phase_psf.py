@@ -125,8 +125,6 @@ def test_phase_screen_list():
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, time_step=0.01, rng=rng)
     assert ar1._time == 0.0, "AtmosphericScreen initialized with non-zero time."
     do_pickle(ar1)
-    # do_pickle(ar1, func=lambda x: x._tab2d(12.3, 45.6))
-    # do_pickle(ar1, func=lambda x: x._wavefront(aper.u, aper.v, None, theta0).sum())
     do_pickle(ar1, func=lambda x: x.wavefront(aper.u, aper.v, 0.0).sum())
     do_pickle(ar1, func=lambda x: np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
     t = np.empty_like(aper.u)
@@ -154,8 +152,6 @@ def test_phase_screen_list():
     ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1],
                                obscuration=0.3, annular_zernike=True)
     do_pickle(ar3)
-    # do_pickle(ar3, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
-    # do_pickle(ar3, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, None, theta0)))
     do_pickle(ar3, func=lambda x:x.wavefront(aper.u, aper.v).sum())
     do_pickle(ar3, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v)))
     atm = galsim.Atmosphere(screen_size=30.0,
@@ -166,10 +162,8 @@ def test_phase_screen_list():
                             rng=rng)
     atm.append(ar3)
     do_pickle(atm)
-    # do_pickle(atm, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
     do_pickle(atm, func=lambda x:x.wavefront(aper.u, aper.v, 0.0, theta0).sum())
     do_pickle(atm, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
-    # do_pickle(atm, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, 0.0, theta0)))
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
@@ -200,12 +194,10 @@ def test_phase_screen_list():
     atm4[0], atm4[1] = atm4[1], atm4[0]
     assert atm == atm4
 
-    for a in [atm, atm2, atm3, atm4]:
-        a.instantiate()
-    wf = atm._wavefront(aper.u, aper.v, None, theta0)
-    wf2 = atm2._wavefront(aper.u, aper.v, None, theta0)
-    wf3 = atm3._wavefront(aper.u, aper.v, None, theta0)
-    wf4 = atm4._wavefront(aper.u, aper.v, None, theta0)
+    wf = atm.wavefront(aper.u, aper.v, None, theta0)
+    wf2 = atm2.wavefront(aper.u, aper.v, None, theta0)
+    wf3 = atm3.wavefront(aper.u, aper.v, None, theta0)
+    wf4 = atm4.wavefront(aper.u, aper.v, None, theta0)
 
     np.testing.assert_array_equal(wf, wf2, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(wf, wf3, "PhaseScreenLists are inconsistent")
@@ -234,7 +226,7 @@ def test_phase_screen_list():
     atm6 = galsim.PhaseScreenList(atm[0])
     atm7 = galsim.PhaseScreenList([atm[0]])
     assert atm6 == atm7
-    # do_pickle(atm6, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
+    do_pickle(atm6, func=lambda x:x.wavefront(aper.u, aper.v, None, theta0).sum())
     do_pickle(atm6, func=lambda x:np.sum(x.wavefront_gradient(aper.u, aper.v, 0.0)))
 
     atm6 = galsim.PhaseScreenList(atm[0], atm[1])
@@ -276,12 +268,11 @@ def test_frozen_flow():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
-    screen.instantiate()
-    wf0 = screen._wavefront(aper.u, aper.v, None, theta0)
+    wf0 = screen.wavefront(aper.u, aper.v, None, theta0)
     dwdu0, dwdv0 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time)
     screen._seek(t)
     assert screen._time == t, "Wrong time for AtmosphericScreen"
-    wf1 = screen._wavefront(aper.u, aper.v, None, theta=(45*galsim.degrees, 0*galsim.degrees))
+    wf1 = screen.wavefront(aper.u, aper.v, None, theta=(45*galsim.degrees, 0*galsim.degrees))
     dwdu1, dwdv1 = screen.wavefront_gradient(aper.u, aper.v, t=screen._time,
                                              theta=(45*galsim.degrees, 0*galsim.degrees))
 
@@ -303,14 +294,13 @@ def test_phase_psf_reset():
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(diam=1.0, lam=500.0)
-    atm.instantiate()
-    wf1 = atm._wavefront(aper.u, aper.v, None, theta0)
     wf2 = atm.wavefront(aper.u, aper.v, 0.0, theta0)
+    wf1 = atm._wavefront(aper.u, aper.v, None, theta0)
     assert np.all(wf1 == wf2)
 
     atm._seek(1.0)
-    wf3 = atm._wavefront(aper.u, aper.v, None, theta0)
     wf4 = atm.wavefront(aper.u, aper.v, 1.0, theta0)
+    wf3 = atm._wavefront(aper.u, aper.v, None, theta0)
     assert np.all(wf3 == wf4)
 
     # Verify that atmosphere did advance

@@ -793,9 +793,11 @@ class PhaseScreenList(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
+                        an iterable.  If None, then the internal time of the phase screens will be
+                        used for all u, v.  If scalar, then the size will be broadcast up to match
+                        that of u and v.  If iterable, then the shape must match the shapes of u and
+                        v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -813,9 +815,11 @@ class PhaseScreenList(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+                        scalar or an iterable.  If None, then the internal time of the phase screens
+                        will be used for all u, v.  If scalar, then the size will be broadcast up to
+                        match that of u and v.  If iterable, then the shape must match the shapes of
+                        u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
