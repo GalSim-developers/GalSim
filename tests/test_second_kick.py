@@ -229,6 +229,7 @@ def test_sk_scale():
     kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
     sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
+    do_pickle(sk_arcsec)
     do_pickle(sk_arcmin)
 
     np.testing.assert_almost_equal(sk_arcsec.flux, sk_arcmin.flux)
@@ -239,6 +240,15 @@ def test_sk_scale():
     img1 = sk_arcsec.drawImage(nx=32, ny=32, scale=0.2)
     img2 = sk_arcmin.drawImage(nx=32, ny=32, scale=0.2/60.0)
     np.testing.assert_almost_equal(img1.array, img2.array)
+
+    # Also check that default flux works
+    del kwargs['flux']
+    sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
+    sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
+    do_pickle(sk_arcsec)
+    do_pickle(sk_arcmin)
+    np.testing.assert_almost_equal(sk_arcmin.flux, 1.0)
+    np.testing.assert_almost_equal(sk_arcsec.flux, 1.0)
 
 
 @timer
