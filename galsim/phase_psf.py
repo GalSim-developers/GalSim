@@ -1415,9 +1415,7 @@ class PhaseScreenPSF(GSObject):
         photon_array.y = y
         photon_array.flux = self._flux/n_photons
 
-        if self.second_kick == False:
-            return photon_array
-        else:
+        if self.second_kick:
             photon_array.convolve(self.second_kick.shoot(n_photons, ud), ud)
 
         return photon_array
