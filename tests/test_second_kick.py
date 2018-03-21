@@ -3,6 +3,7 @@ import galsim
 
 from galsim_test_helpers import *
 
+
 @timer
 def test_init(slow=False):
     """Test generation of SecondKick profiles
@@ -197,11 +198,12 @@ def test_sk_phase_psf():
         # slowly.  The below seems to work well enough for the tested kcrits.
         atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, rng=rng,
                                 speed=speed, direction=direction,
-                                screen_size=102.4, screen_scale=0.05)
+                                screen_size=102.4, screen_scale=0.05,
+                                suppress_warning=True)
         atm.instantiate(kmin=kcrit)
-        psf = galsim.PhaseScreenPSF(atm, lam=500, t0=0, exptime=10, aper=aper, time_step=0.1)
+        psf = galsim.PhaseScreenPSF(atm, lam=lam, exptime=10, aper=aper, time_step=0.1)
         phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
-        sk = galsim.SecondKick(lam=500, r0=r0, diam=diam, obscuration=obscuration, L0=L0,
+        sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, obscuration=obscuration, L0=L0,
                                kcrit=kcrit)
         skImg = sk.drawImage(nx=64, ny=64, scale=0.02)
         phaseMom = galsim.hsm.FindAdaptiveMom(phaseImg)
@@ -219,6 +221,7 @@ def test_sk_phase_psf():
         # axes[1].set_title("SecondKick")
         # fig.tight_layout()
         # plt.show()
+
 
 @timer
 def test_sk_scale():

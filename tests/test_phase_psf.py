@@ -36,6 +36,7 @@ pp_file = 'sample_pupil_rolled.fits'
 
 theta0 = (0*galsim.arcmin, 0*galsim.arcmin)
 
+
 @timer
 def test_aperture():
     """Test various ways to construct Apertures."""
@@ -658,7 +659,6 @@ def test_phase_gradient_shoot():
         shoot_moments.append(shoot_moment)
         fft_moments.append(fft_moment)
 
-
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.
     best_size_bias = np.mean([s1.moments_sigma/s2.moments_sigma
@@ -699,6 +699,13 @@ def test_phase_gradient_shoot():
 
     # Verify that shoot with rng=None runs
     psf.shoot(100, rng=None)
+
+    # Check that second_kick=False and second_kick=GSObject also run, and that we can shoot
+    # photons with these settings.
+    for second_kick in [False, galsim.Gaussian(fwhm=1)]:
+        psf = atm.makePSF(lam=500.0, exptime=10, aper=aper, second_kick=second_kick)
+        assert psf.second_kick == second_kick
+        img = psf.drawImage(nx=64, ny=64, scale=0.1, method='phot', n_photons=100)
 
 
 @timer
@@ -811,19 +818,19 @@ def test_gc():
 
 
 if __name__ == "__main__":
-    # test_aperture()
-    # test_atm_screen_size()
-    # test_structure_function()
-    # test_phase_screen_list()
-    # test_frozen_flow()
-    # test_phase_psf_reset()
-    # test_phase_psf_batch()
-    # test_opt_indiv_aberrations()
-    # test_scale_unit()
-    # test_stepk_maxk()
-    # test_ne()
-    # test_phase_gradient_shoot()
-    # test_input()
+    test_aperture()
+    test_atm_screen_size()
+    test_structure_function()
+    test_phase_screen_list()
+    test_frozen_flow()
+    test_phase_psf_reset()
+    test_phase_psf_batch()
+    test_opt_indiv_aberrations()
+    test_scale_unit()
+    test_stepk_maxk()
+    test_ne()
+    test_phase_gradient_shoot()
+    test_input()
     test_r0_weights()
-    # test_speedup()
-    # test_gc()
+    test_speedup()
+    test_gc()

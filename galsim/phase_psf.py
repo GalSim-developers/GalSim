@@ -1206,8 +1206,6 @@ class PhaseScreenPSF(GSObject):
     def second_kick(self):
         """Make a SecondKick object based on contents of _screen_list and aper.
         """
-        if self._second_kick == False:
-            return False
         if self._second_kick is None:
             r0_500 = self._screen_list.r0_500_effective
             if r0_500 is None:  # No AtmosphericScreens in list
@@ -1220,6 +1218,8 @@ class PhaseScreenPSF(GSObject):
                         self.lam, r0, self.aper.diam, self.aper.obscuration,
                         L0=L0, kcrit=self.kcrit, scale_unit=self.scale_unit,
                         gsparams=self._gsparams)
+        else:
+            return self._second_kick
 
     @property
     def flux(self):
