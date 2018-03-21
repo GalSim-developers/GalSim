@@ -43,8 +43,10 @@ def test_aperture():
     aper1 = galsim.Aperture(diam=1.0)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
+    aper3 = galsim.Aperture(diam=1.0, nstruts=4)
     do_pickle(aper1)
     do_pickle(aper2)
+    do_pickle(aper3)
     # Automatically created Aperture should match one created via OpticalScreen
     aper1 = galsim.Aperture(diam=1.0)
     aper2 = galsim.Aperture(diam=1.0, lam=500, screen_list=[galsim.OpticalScreen(diam=1.0)])
