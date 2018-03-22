@@ -210,6 +210,16 @@ def vk_benchmark():
     t3 = time.time()
     print("Time to photon-shoot 100 more with 50000 photons each: {:6.3f}s".format(t3-t2))  # ~0.9s
 
+def test_vk_r0():
+    """Test a special r0 value that resulted in an error, reported in issue #957.
+    """
+    r0 = 0.146068884
+    vk = galsim.VonKarman(L0=25.,lam=700.,r0=r0)
+    # Note: the resolution of the bug was to add explicit split points for the first several
+    # j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
+    # an invalid estimate of the total integrated flux within R=pi/stepk.
+    check_basic(vk, "VonKarman, r0=%s"%r0)
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -231,6 +241,7 @@ if __name__ == "__main__":
     test_vk_eq_kolm()
     test_vk_fitting_formulae()
     test_vk_gsp()
+    test_vk_r0()
     if args.benchmark:
         vk_benchmark()
 
