@@ -167,8 +167,8 @@ namespace galsim {
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(fast_pow(_r0, -5./3)),
         _diam(diam), _obscuration(obscuration), _L0(L0/_r0),
-        _L0invsq(1/_L0/_L0), _r0L0m53(fast_pow(_L0, 5./3)), _kmin(kcrit),
-        _knorm(1./(M_PI*(1.-obscuration*obscuration))),
+        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L0invsq(1/_L0/_L0), _r0L0m53(fast_pow(_L0, 5./3)),
+        _kmin(kcrit), _knorm(1./(M_PI*(1.-obscuration*obscuration))),
         _4_over_diamsq(4.0/diam/diam),
         _gsparams(gsparams),
         _airy_info((obscuration==0.0) ?
@@ -221,24 +221,8 @@ namespace galsim {
     }
 #endif
 
-    double SKInfo::vkStructureFunction(double rho) const {
-        // rho in units of r0
-
-        // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
-        static const double magic1 = 0.1716613621245708932;
-        // gamma(5/6) / 2^(1/6)
-        static const double magic2 = 1.005634917998590172;
-        // magic1 * gamma(-5/6) / 2^(11/6)
-        static const double magic3 = -0.3217609479366896341;
-
-        double rhoL0 = rho/_L0;
-        if (rhoL0 < 1e-10) {
-            return -magic3*fast_pow(2*M_PI*rho, 5./3);
-        } else {
-            double x = 2*M_PI*rhoL0;
-            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6)*boost::math::cyl_bessel_k(5./6, x));
-        }
-    }
+    // Defined in SBVonKarman.cpp
+    extern double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double r0L0m53);
 
     class SKISFIntegrand : public std::unary_function<double,double>
     {
@@ -269,7 +253,7 @@ namespace galsim {
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
 
-        return vkStructureFunction(rho) - magic5*complement;
+        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _r0L0m53) - magic5*complement;
     }
 
     void SKInfo::_buildKVLUT() {

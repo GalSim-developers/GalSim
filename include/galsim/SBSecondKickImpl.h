@@ -54,7 +54,6 @@ namespace galsim {
         double xValue(double) const;
         double xValueRaw(double) const;
         double xValueExact(double) const;
-        double vkStructureFunction(double rho) const;
         double structureFunction(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
@@ -69,6 +68,7 @@ namespace galsim {
         double _diam;
         double _obscuration;
         double _L0; // Outer scale in meters
+        double _L0_invcuberoot;  // (r0/L0)^(1/3)
         double _L0invsq; // 1/L0/L0
         double _r0L0m53;
         double _kmin;

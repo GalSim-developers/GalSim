@@ -130,7 +130,8 @@ namespace galsim {
     // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
-        _lam(lam), _L0(L0), _r0L0m53(pow(L0, 5./3)),
+        _lam(lam), _L0(L0),
+        _L0_invcuberoot(fast_pow(_L0, -1./3)), _r0L0m53(pow(L0, 5./3)),
         _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
@@ -166,28 +167,30 @@ namespace galsim {
         _buildRadialFunc();
     }
 
-    double VonKarmanInfo::structureFunction(double rho) const {
+    double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double r0L0m53) {
         // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
         static const double magic1 = 0.1716613621245708932;
         // gamma(5/6) / 2^(1/6)
         static const double magic2 = 1.005634917998590172;
-        // magic1 * gamma(-5/6) / 2^(11/6)
-        static const double magic3 = -0.3217609479366896341;
+        // 8 sqrt(2) (3/5 gamma(6/5))^(5/6)
+        static const double magic3 = 6.883877182293811615;
+        // 24 (sqrt(2) gamma(5/6)(3/5 gamma(6/5))^(5/6) gamma(11/6)) / pi^(2/3)
+        static const double magic5 = 10.222659484499054723;
 
-        double rhoL0 = rho/_L0;
+        double rhoL0 = rho/L0;
         if (rhoL0 < 1e-6) {
-            return -magic3*fast_pow(2*M_PI*rho, 5./3.);
+            return magic3*fast_pow(rho, 5./3.)-magic5*L0_invcuberoot*rho*rho;
         } else {
             double x = 2.*M_PI*rhoL0;
-            return magic1*_r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
+            return magic1*r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
         }
     }
 
     double VonKarmanInfo::kValueNoTrunc(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*structureFunction(_lam_arcsec*k));
+        return fmath::expd(-0.5*vkStructureFunction(_lam_arcsec*k, _L0, _L0_invcuberoot, _r0L0m53));
     }
 
     double VonKarmanInfo::kValue(double k) const {
@@ -370,7 +373,8 @@ namespace galsim {
     double SBVonKarman::SBVonKarmanImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
-        return _info->structureFunction(rho/_r0);
+        return vkStructureFunction(rho/_r0, _L0/_r0, fast_pow(_r0/_L0, 1./3),
+                                   fast_pow(_L0/_r0, 5./3));
     }
 
     std::complex<double> SBVonKarman::SBVonKarmanImpl::kValue(const Position<double>& p) const

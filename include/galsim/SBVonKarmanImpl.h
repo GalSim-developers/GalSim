@@ -50,7 +50,6 @@ namespace galsim {
 
         double kValue(double) const;
         double xValue(double) const;
-        double structureFunction(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double kValueNoTrunc(double) const;
@@ -62,6 +61,7 @@ namespace galsim {
 
         double _lam; // Wavelength in units of the Fried parameter, r0
         double _L0; // Outer scale in units of the Fried parameter, r0
+        double _L0_invcuberoot;  // (r0/L0)^(1/3)
         double _r0L0m53; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
