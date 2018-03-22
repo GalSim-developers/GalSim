@@ -183,3 +183,4 @@ from . import cdmodel
 from . import utilities
 from . import fft
 from . import download_cosmos
+from . import zernike

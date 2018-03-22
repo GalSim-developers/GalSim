@@ -107,13 +107,13 @@ class VonKarman(GSObject):
             self._scale_unit = scale_unit
         self._scale = self._scale_unit/arcsec
 
-        self._lam = lam
-        self._r0 = r0
-        self._L0 = L0
-        self._flux = flux
-        self._do_delta = do_delta
+        self._lam = float(lam)
+        self._r0 = float(r0)
+        self._L0 = float(L0)
+        self._flux = float(flux)
+        self._do_delta = bool(do_delta)
         self._gsparams = GSParams.check(gsparams)
-        self._suppress = suppress_warning
+        self._suppress = bool(suppress_warning)
         self._sbvk  # Make this now, so we get the warning if appropriate.
 
     @lazy_property

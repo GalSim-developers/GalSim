@@ -83,7 +83,7 @@ class Cosmology(object):
         @param z_ref    Reference redshift, with z_ref <= z. [default: 0]
         """
         if isinstance(z, np.ndarray):
-            da = np.zeros_like(z)
+            da = np.zeros_like(z, dtype=float)
             for i in range(len(da)):
                 da[i] = self.Da(z[i], z_ref)
             return da
@@ -143,12 +143,11 @@ class NFWHalo(object):
         elif not isinstance(cosmo,Cosmology):
             raise TypeError("Invalid cosmo parameter in NFWHalo constructor")
 
-        halo_pos = PositionD(halo_pos)
-
+        # Make sure things are the right types.
         self.M = float(mass)
         self.c = float(conc)
         self.z = float(redshift)
-        self.halo_pos = halo_pos
+        self.halo_pos = PositionD(halo_pos)
         self.cosmo = cosmo
 
         # calculate scale radius
@@ -187,91 +186,72 @@ class NFWHalo(object):
         """
         return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
 
-    def __farcth (self, x, out=None):
+    def __farcth (self, x):
         """Numerical implementation of integral functions of a spherical NFW profile.
 
         All expressions are a function of `x`, which is the radius r in units of the NFW scale
         radius, r_s.  For the derivation of these functions, see for example Wright & Brainerd
         (2000, ApJ, 534, 34).
         """
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
-        mask = (x < 0.999)
-        if mask.any():
-            a = ((1.-x[mask])/(x[mask]+1.))**0.5
-            out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
+        mask = np.where(x < 0.999)[0]  # Equivalent but usually faster than `mask = (x < 0.999)`
+        a = ((1.-x[mask])/(x[mask]+1.))**0.5
+        out[mask] = 0.5*np.log((1.+a)/(1.-a))/(1-x[mask]**2)**0.5
 
-        mask = (x > 1.001)
-        if mask.any():
-            a = ((x[mask]-1.)/(x[mask]+1.))**0.5
-            out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
+        mask = np.where(x > 1.001)[0]
+        a = ((x[mask]-1.)/(x[mask]+1.))**0.5
+        out[mask] = np.arctan(a)/(x[mask]**2 - 1)**0.5
 
         # the approximation below has a maximum fractional error of 2.3e-7
-        mask = (x >= 0.999) & (x <= 1.001)
-        if mask.any():
-            out[mask] = 5./6. - x[mask]/3.
-
+        mask = np.where((x >= 0.999) & (x <= 1.001))[0]
+        out[mask] = 5./6. - x[mask]/3.
         return out
 
-    def __kappa(self, x, ks, out=None):
+    def __kappa(self, x, ks):
         """Calculate convergence of halo.
 
         @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks       Lensing strength prefactor.
-        @param out      NumPy array into which results should be placed. [default: None]
         """
         # convenience: call with single number
-        if isinstance(x, np.ndarray) == False:
+        if not isinstance(x, np.ndarray):
             return self.__kappa(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
-
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
         # 3 cases: x > 1, x < 1, and |x-1| < 0.001
-        mask = (x < 0.999)
-        if mask.any():
-            a = ((1 - x[mask])/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
-                (1 - np.log((1 + a)/(1 - a))/(1 - x[mask]**2)**0.5)
+        mask = np.where(x < 0.999)[0]
+        a = ((1 - x[mask])/(x[mask] + 1))**0.5
+        out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * (1 - np.log((1+a)/(1-a)) / (1-x[mask]**2)**0.5)
 
-        mask = (x > 1.001)
-        if mask.any():
-            a = ((x[mask] - 1)/(x[mask] + 1))**0.5
-            out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * \
-                (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
+        mask = np.where(x > 1.001)[0]
+        a = ((x[mask] - 1)/(x[mask] + 1))**0.5
+        out[mask] = 2*ks[mask]/(x[mask]**2 - 1) * (1 - 2*np.arctan(a)/(x[mask]**2 - 1)**0.5)
 
         # the approximation below has a maximum fractional error of 7.4e-7
-        mask = (x >= 0.999) & (x <= 1.001)
-        if mask.any():
-            out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
-
+        mask = np.where((x >= 0.999) & (x <= 1.001))[0]
+        out[mask] = ks[mask]*(22./15. - 0.8*x[mask])
         return out
 
-    def __gamma(self, x, ks, out=None):
+    def __gamma(self, x, ks):
         """Calculate tangential shear of halo.
 
         @param x        Radial coordinate in units of rs (scale radius of halo), i.e., `x=r/rs`.
         @param ks       Lensing strength prefactor.
-        @param out      NumPy array into which results should be placed. [default: None]
         """
         # convenience: call with single number
-        if isinstance(x, np.ndarray) == False:
+        if not isinstance(x, np.ndarray):
             return self.__gamma(np.array([x], dtype='float'), np.array([ks], dtype='float'))[0]
-        if out is None:
-            out = np.zeros_like(x)
+        out = np.zeros_like(x, dtype=float)
 
-        mask = (x > 0.01)
-        if mask.any():
-            out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
-                x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
+        mask = np.where(x > 0.01)[0]
+        out[mask] = 4*ks[mask]*(np.log(x[mask]/2) + 2*self.__farcth(x[mask])) * \
+            x[mask]**(-2) - self.__kappa(x[mask], ks[mask])
 
         # the approximation below has a maximum fractional error of 1.1e-7
-        mask = (x <= 0.01)
-        if mask.any():
-            out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
-
+        mask = np.where(x <= 0.01)[0]
+        out[mask] = 4*ks[mask]*(0.25 + 0.125 * x[mask]**2 * (3.25 + 3.0*np.log(x[mask]/2)))
         return out
 
     def __ks(self, z_s):
@@ -297,22 +277,20 @@ class NFWHalo(object):
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
         @param reduced      Whether returned shear(s) should be reduced shears. [default: True]
 
-        @returns the (possibly reduced) shears as a tuple (g1,g2) (either scalars or numpy arrays)
+        @returns the (possibly reduced) shears as a tuple (g1,g2)
+
+        If the input `pos` is given a single position, (g1,g2) are the two shear components.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
-        # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getShear')
         return self._getShear(pos_x, pos_y, z_s, reduced)
 
@@ -329,7 +307,7 @@ class NFWHalo(object):
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
-        if isinstance(z_s, np.ndarray) == False:
+        if not isinstance(z_s, np.ndarray):
             ks = ks*np.ones_like(r)
         g = self.__gamma(r, ks)
 
@@ -349,24 +327,24 @@ class NFWHalo(object):
         g2 = -g*sin2phi
         return g1, g2
 
+
     def getConvergence(self, pos, z_s, units=arcsec):
         """Calculate convergence of halo at specified positions.
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the convergence as either a scalar or a numpy array
+        @returns the convergence, kappa
+
+        If the input `pos` is given a single position, kappa is the convergence value.
+        If the input `pos` is given a list/array of positions, kappa is a NumPy array.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -385,7 +363,7 @@ class NFWHalo(object):
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
-        if isinstance(z_s, np.ndarray) == False:
+        if not isinstance(z_s, np.ndarray):
             ks = ks*np.ones_like(r)
         kappa = self.__kappa(r, ks)
         return kappa
@@ -395,19 +373,18 @@ class NFWHalo(object):
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the magnification as either a scalar or a numpy array
+        @returns the magnification mu
+
+        If the input `pos` is given a single position, mu is the magnification value.
+        If the input `pos` is given a list/array of positions, mu is a NumPy array.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getMagnification')
@@ -425,7 +402,7 @@ class NFWHalo(object):
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
-        if isinstance(z_s, np.ndarray) == False:
+        if not isinstance(z_s, np.ndarray):
             ks = ks*np.ones_like(r)
         g = self.__gamma(r, ks)
         kappa = self.__kappa(r, ks)
@@ -438,20 +415,19 @@ class NFWHalo(object):
 
         @param pos          Position(s) of the source(s), assumed to be post-lensing!
                             Valid ways to input this:
-                                - Single PositionD (or PositionI) instance
+                                - single PositionD (or PositionI) instance
                                 - tuple of floats: (x,y)
-                                - list of PositionD (or PositionI) instances
-                                - tuple of lists: ( xlist, ylist )
-                                - NumPy array of PositionD (or PositionI) instances
-                                - tuple of NumPy arrays: ( xarray, yarray )
-                                - Multidimensional NumPy array, as long as array[0] contains
-                                  x-positions and array[1] contains y-positions
+                                - list/array of PositionD (or PositionI) instances
+                                - tuple of lists/arrays: ( xlist, ylist )
         @param z_s          Source redshift(s).
         @param units        Angular units of coordinates (only arcsec implemented so far).
                             [default: galsim.arcsec]
 
-        @returns the reduced shears and magnifications as a tuple (g1,g2,mu) (each being
-                 either a scalar or a numpy array)
+        @returns the reduced shears and magnifications as a tuple (g1,g2,mu)
+
+        If the input `pos` is given a single position, the return values are the shear and
+        magnification values at that position.
+        If the input `pos` is given a list/array of positions, they are NumPy arrays.
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = utilities._convertPositions(pos, units, 'getLensing')
@@ -470,7 +446,7 @@ class NFWHalo(object):
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
         ks = self.__ks(z_s)
-        if isinstance(z_s, np.ndarray) == False:
+        if not isinstance(z_s, np.ndarray):
             ks = ks*np.ones_like(r)
         g = self.__gamma(r, ks)
         kappa = self.__kappa(r, ks)

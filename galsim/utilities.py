@@ -1467,3 +1467,14 @@ class doc_inherit(object):
 class OrderedWeakRef(weakref.ref):
     def __lt__(self, other):
         return id(self) < id(other)
+
+
+def nCr(n, r):
+    """Combinations.  I.e., the number of ways to choose `r` distiguishable things from `n`
+    distinguishable things.
+    """
+    from math import factorial
+    if 0 <= r <= n:
+        return factorial(n) // (factorial(r) * factorial(n-r))
+    else:
+        return 0
