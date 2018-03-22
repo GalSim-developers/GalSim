@@ -260,7 +260,7 @@ def test_sk_ne():
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.0),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, obscuration=0.4),
-            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e7),
+            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e11),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, kcrit=1.234),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, flux=2.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, scale_unit='arcmin'),

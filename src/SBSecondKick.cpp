@@ -259,7 +259,7 @@ namespace galsim {
     void SKInfo::_buildKVLUT() {
         _kvLUT.addEntry(0, 1.0);
 
-        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 80.0));
+        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 40.0));
         dbg<<"Using dlogk = "<<dlogk<<'\n';
 
         SKIkValueResid skikvr(*this, 1.0-_gsparams->kvalue_accuracy);
