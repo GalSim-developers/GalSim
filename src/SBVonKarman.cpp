@@ -125,14 +125,14 @@ namespace galsim {
     };
 
     // gamma(11/6) gamma(5/6) / pi^(8/3) * (24/5 gamma(6/5))^(5/6)
-    const double magic4 = 0.1726286598236691505;
+    const double magic1 = 0.1726286598236691505;
 
     // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
         _lam(lam), _L0(L0),
         _L0_invcuberoot(fast_pow(_L0, -1./3)), _r0L0m53(pow(L0, 5./3)),
-        _deltaAmplitude(exp(-0.5*magic4*_r0L0m53)),
+        _deltaAmplitude(exp(-0.5*magic1*_r0L0m53)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta), _gsparams(gsparams),
@@ -171,20 +171,20 @@ namespace galsim {
         // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
-        static const double magic1 = 0.1716613621245708932;
+        static const double magic2 = 0.1716613621245708932;
         // gamma(5/6) / 2^(1/6)
-        static const double magic2 = 1.005634917998590172;
+        static const double magic3 = 1.005634917998590172;
         // 8 sqrt(2) (3/5 gamma(6/5))^(5/6)
-        static const double magic3 = 6.883877182293811615;
+        static const double magic4 = 6.883877182293811615;
         // 24 (sqrt(2) gamma(5/6)(3/5 gamma(6/5))^(5/6) gamma(11/6)) / pi^(2/3)
         static const double magic5 = 10.222659484499054723;
 
         double rhoL0 = rho/L0;
         if (rhoL0 < 1e-6) {
-            return magic3*fast_pow(rho, 5./3.)-magic5*L0_invcuberoot*rho*rho;
+            return magic4*fast_pow(rho, 5./3.)-magic5*L0_invcuberoot*rho*rho;
         } else {
             double x = 2.*M_PI*rhoL0;
-            return magic1*r0L0m53*(magic2-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
+            return magic2*r0L0m53*(magic3-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
         }
     }
 

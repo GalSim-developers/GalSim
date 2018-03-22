@@ -216,7 +216,7 @@ namespace galsim {
         double result = integ::int1d(I, _kmin, integ::MOCK_INF,
                                      _gsparams->integration_relerr,
                                      _gsparams->integration_abserr);
-        result *= magic5*_r0m53;
+        result *= magic6*_r0m53;
         return result;
     }
 #endif
@@ -239,7 +239,7 @@ namespace galsim {
     double SKInfo::structureFunction(double rho) const {
         // rho in units of r0
         // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
-        const static double magic5 = 0.2877144330394485472;
+        const static double magic6 = 0.2877144330394485472;
 
         SKISFIntegrand I(rho, _L0invsq);
         integ::IntRegion<double> reg(0., _kmin);
@@ -253,7 +253,7 @@ namespace galsim {
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
 
-        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _r0L0m53) - magic5*complement;
+        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _r0L0m53) - magic6*complement;
     }
 
     void SKInfo::_buildKVLUT() {
