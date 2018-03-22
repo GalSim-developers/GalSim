@@ -45,8 +45,8 @@ namespace galsim {
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
-        double getDeltaAmplitude() const {return _deltaAmplitude; }
-        double getHalfLightRadius() const {return _hlr; }
+        double getDeltaAmplitude() const { return _deltaAmplitude; }
+        double getHalfLightRadius() const { return _hlr; }
 
         double kValue(double) const;
         double xValue(double) const;
@@ -62,7 +62,7 @@ namespace galsim {
         double _lam; // Wavelength in units of the Fried parameter, r0
         double _L0; // Outer scale in units of the Fried parameter, r0
         double _L0_invcuberoot;  // (r0/L0)^(1/3)
-        double _r0L0m53; // (r0/L0)^(-5/3)
+        double _L053; // (r0/L0)^(-5/3)
         double _stepk;
         double _maxk;
         double _deltaAmplitude;

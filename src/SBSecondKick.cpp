@@ -165,11 +165,11 @@ namespace galsim {
 
     SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
                    double kcrit, const GSParamsPtr& gsparams) :
-        _lam(lam), _lam_factor(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0), _r0m53(fast_pow(_r0, -5./3)),
+        _lam(lam), _lam_arcsec(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0),
         _diam(diam), _obscuration(obscuration), _L0(L0/_r0),
-        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L0invsq(1/_L0/_L0), _r0L0m53(fast_pow(_L0, 5./3)),
-        _kmin(kcrit), _knorm(1./(M_PI*(1.-obscuration*obscuration))),
-        _4_over_diamsq(4.0/diam/diam),
+        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L0invsq(1./_L0/_L0), _L053(fast_pow(_L0, 5./3)),
+        _kcrit(kcrit), _knorm(1./(M_PI*(1.-obscuration*obscuration))),
+        _4_over_diamsq(4.0/(diam*diam)),
         _gsparams(gsparams),
         _airy_info((obscuration==0.0) ?
                    boost::movelib::unique_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
@@ -177,7 +177,7 @@ namespace galsim {
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        _maxk = _diam/_lam_factor;
+        _maxk = _diam/_lam_arcsec;
         _stepk = 0;
 
         // build the radial function, and along the way, set _stepk, _hlr.
@@ -207,22 +207,22 @@ namespace galsim {
     }
 
 #if 0
-    // This version of structureFunction explicitly integrates from kmin to infinity, which is how
+    // This version of structureFunction explicitly integrates from kcrit to infinity, which is how
     // the second kick is defined. However, I've found it's more stable to integrate from zero to
-    // kmin, and then subtract this from the analytic integral from 0 to infinity.  So that's
+    // kcrit, and then subtract this from the analytic integral from 0 to infinity.  So that's
     // what's implemented further down.
     double SKInfo::structureFunction(double rho) const {
         SKISFIntegrand I(rho, _L0invsq);
-        double result = integ::int1d(I, _kmin, integ::MOCK_INF,
+        double result = integ::int1d(I, _kcrit, integ::MOCK_INF,
                                      _gsparams->integration_relerr,
                                      _gsparams->integration_abserr);
-        result *= magic6*_r0m53;
+        result *= magic6;
         return result;
     }
 #endif
 
     // Defined in SBVonKarman.cpp
-    extern double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double r0L0m53);
+    extern double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053);
 
     class SKISFIntegrand : public std::unary_function<double,double>
     {
@@ -242,10 +242,10 @@ namespace galsim {
         const static double magic6 = 0.2877144330394485472;
 
         SKISFIntegrand I(rho, _L0invsq);
-        integ::IntRegion<double> reg(0., _kmin);
+        integ::IntRegion<double> reg(0., _kcrit);
         for (int s=1; s<10; s++) {
             double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
-            if (zero >= _kmin) break;
+            if (zero >= _kcrit) break;
             reg.addSplit(zero);
         }
 
@@ -253,7 +253,7 @@ namespace galsim {
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
 
-        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _r0L0m53) - magic6*complement;
+        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053) - magic6*complement;
     }
 
     void SKInfo::_buildKVLUT() {
@@ -286,7 +286,7 @@ namespace galsim {
 
     double SKInfo::kValueRaw(double k) const {
         // k in inverse arcsec
-        double kp = _lam_factor*k;
+        double kp = _lam_arcsec*k;
         double kpkp = kp*kp;
         return fmath::expd(-0.5*structureFunction(kp/_r0))
             * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
@@ -340,12 +340,12 @@ namespace galsim {
     double SKInfo::xValueExact(double r) const {
         // r in arcsec
         SKIExactXIntegrand I(r, *this);
-        integ::IntRegion<double> reg(0, _diam/_lam_factor);
+        integ::IntRegion<double> reg(0, _diam/_lam_arcsec);
         if (r > 0) {
-            // Add BesselJ0 zeros up to _diam/_lam_factor
+            // Add BesselJ0 zeros up to _diam/_lam_arcsec
             int s=1;
             double zero=bessel::getBesselRoot0(s)/r;
-            while(zero < _diam/_lam_factor) {
+            while(zero < _diam/_lam_arcsec) {
                 reg.addSplit(zero);
                 s++;
                 zero = bessel::getBesselRoot0(s)/r;

@@ -131,8 +131,8 @@ namespace galsim {
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
                                  const GSParamsPtr& gsparams) :
         _lam(lam), _L0(L0),
-        _L0_invcuberoot(fast_pow(_L0, -1./3)), _r0L0m53(pow(L0, 5./3)),
-        _deltaAmplitude(exp(-0.5*magic1*_r0L0m53)),
+        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L053(fast_pow(L0, 5./3)),
+        _deltaAmplitude(exp(-0.5*magic1*_L053)),
         _deltaScale(1./(1.-_deltaAmplitude)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta), _gsparams(gsparams),
@@ -167,7 +167,7 @@ namespace galsim {
         _buildRadialFunc();
     }
 
-    double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double r0L0m53) {
+    double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053) {
         // rho in units of r0
 
         // 2 gamma(11/6) / (2^(5/6) pi^(8/3)) * (24/5 gamma(6/5))^(5/6)
@@ -184,13 +184,13 @@ namespace galsim {
             return magic4*fast_pow(rho, 5./3.)-magic5*L0_invcuberoot*rho*rho;
         } else {
             double x = 2.*M_PI*rhoL0;
-            return magic2*r0L0m53*(magic3-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
+            return magic2*L053*(magic3-fast_pow(x, 5./6.)*boost::math::cyl_bessel_k(5./6., x));
         }
     }
 
     double VonKarmanInfo::kValueNoTrunc(double k) const {
         // k in inverse arcsec
-        return fmath::expd(-0.5*vkStructureFunction(_lam_arcsec*k, _L0, _L0_invcuberoot, _r0L0m53));
+        return fmath::expd(-0.5*vkStructureFunction(_lam_arcsec*k, _L0, _L0_invcuberoot, _L053));
     }
 
     double VonKarmanInfo::kValue(double k) const {
@@ -239,7 +239,7 @@ namespace galsim {
         set_verbose(2);
         double val = rawXValue(0.0); // This is the value without the delta function (clearly).
         _radial.addEntry(0., val);
-        dbg<<"(1/L0)^-5/3 = "<<_r0L0m53<<std::endl;
+        dbg<<"L0^5/3 = "<<_L053<<std::endl;
         dbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
         // For small values of r, the function goes as

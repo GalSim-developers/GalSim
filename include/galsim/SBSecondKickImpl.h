@@ -47,7 +47,7 @@ namespace galsim {
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
-        double getHalfLightRadius() const {return _hlr; }
+        double getHalfLightRadius() const { return _hlr; }
 
         double kValue(double) const;
         double kValueRaw(double) const;
@@ -62,16 +62,15 @@ namespace galsim {
         void operator=(const SKInfo& rhs); ///<Hide the assignment operator
 
         double _lam; // Wavelength in meters
-        double _lam_factor; // lam*ARCSEC2RAD/(2*M_PI)
+        double _lam_arcsec; // lam * ARCSEC2RAD / 2pi
         double _r0; // Fried parameter in meters
-        double _r0m53; // r0^(-5/3)
-        double _diam;
-        double _obscuration;
-        double _L0; // Outer scale in meters
+        double _diam; // in meters
+        double _obscuration; // linear fractional circular obscuration
+        double _L0; // // Outer scale in units of the Fried parameter, r0.  I.e., L0/r0.
         double _L0_invcuberoot;  // (r0/L0)^(1/3)
-        double _L0invsq; // 1/L0/L0
-        double _r0L0m53;
-        double _kmin;
+        double _L0invsq; // (r0/L0)^2
+        double _L053; // (L0/r0)^(5/3)
+        double _kcrit;
         double _stepk;
         double _maxk;
         double _hlr; // half-light-radius
