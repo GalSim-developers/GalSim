@@ -9,6 +9,17 @@ by default here.
 This script makes plots of the full Fourier PSF with truncated scales in the top row, and the
 refractive approximation first kick convolved by Airy in the bottom row.  A different cutoff scale
 is used in each column.  Each panel has inlaid the HSM-measured PSF size sigma.
+
+What we're really looking for with this script is how large can we make kcrit and still have roughly
+the right size PSF.  If we make kcrit too large, then the first kick calculation produces a PSF that
+is significantly larger than the FFT PSF, which should be a good match if we're really isolating
+k-modes for which the geometric approximation is valid.  OTOH, we also don't want to make the first
+kick too small, since in that case we lose all effects from the specific realization of phases
+(including, e.g., any PSF ellipticity), and just approach the (circular) analytic expectation value
+for the surface brightness.
+
+Using kcrit=0.2 seems about the right maximum that doesn't yield a very discrepant PSF size, though
+using smaller values also yields pretty good agreement.
 """
 
 
@@ -91,7 +102,7 @@ def make_plot(args):
                                 suppress_warning=True)
         r0 = args.r0_500*(args.lam/500.0)**(6./5)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmax=kcrit*r0, _bar=bar)
+            atm.instantiate(kmax=kcrit/r0, _bar=bar)
 
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)
@@ -171,10 +182,10 @@ if __name__ == '__main__':
                         help="Resolution of atmospheric screen in meters.  Default: 0.0125")
     parser.add_argument("--max_speed", type=float, default=20.0,
                         help="Maximum wind speed in m/s.  Default: 20.0")
-    parser.add_argument("--kmin", type=float, default=0.1,
-                        help="Minimum kcrit to plot.  Default: 0.1")
-    parser.add_argument("--kmax", type=float, default=1.0,
-                        help="Maximum kcrit to plot.  Default: 1.0")
+    parser.add_argument("--kmin", type=float, default=0.05,
+                        help="Minimum kcrit to plot.  Default: 0.05")
+    parser.add_argument("--kmax", type=float, default=0.5,
+                        help="Maximum kcrit to plot.  Default: 0.5")
     parser.add_argument("--nphot", type=int, default=int(3e6),
                         help="Number of photons to shoot.  Default: 3e6")
 
