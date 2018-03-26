@@ -1,5 +1,6 @@
-"""Script that just generates plots of phase screens with upper and lower truncations in their
-power spectra.
+"""Script that generates plots of phase screens with upper and lower truncations in their power
+spectra.  This is mostly just to sanity check that we're able to generate screens with the same
+turbulent phases, but with different amplitudes for different k-modes.
 """
 
 
@@ -105,7 +106,7 @@ def make_plot(args):
                                     speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                     screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atmLowK.instantiate(kmax=kcrit*r0, _bar=bar)
+            atmLowK.instantiate(kmax=kcrit/r0, _bar=bar)
 
         img = atmLowK.wavefront(x, y, 0)
         save_plot(img, "{}{}_{}".format(args.outprefix, icol, "low.png"))
@@ -116,7 +117,7 @@ def make_plot(args):
                                      speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                      screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atmHighK.instantiate(kmin=kcrit*r0, _bar=bar)
+            atmHighK.instantiate(kmin=kcrit/r0, _bar=bar)
 
         img = atmHighK.wavefront(x, y, 0)
         save_plot(img, "{}{}_{}".format(args.outprefix, icol, "high.png"))
@@ -145,6 +146,8 @@ if __name__ == '__main__':
     parser.add_argument("--kmax", type=float, default=1.0,
                         help="Maximum kcrit to plot.  Default: 1.0")
 
+    parser.add_argument("--lam", type=float, default=700.0,
+                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--diam", type=float, default=8.36,
                         help="Size of circular telescope pupil in meters.  Default: 8.36")
     parser.add_argument("--obscuration", type=float, default=0.61,
