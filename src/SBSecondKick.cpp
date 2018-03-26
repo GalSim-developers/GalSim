@@ -578,13 +578,13 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::xValueRaw(double r) const
     {
         //r in arcsec
-        return _info->xValueRaw(r);
+        return _info->xValueRaw(r)*_flux;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValueExact(double r) const
     {
         //r in arcsec
-        return _info->xValueExact(r);
+        return _info->xValueExact(r)*_flux;
     }
 
     boost::shared_ptr<PhotonArray> SBSecondKick::SBSecondKickImpl::shoot(
