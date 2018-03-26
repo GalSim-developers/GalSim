@@ -1,6 +1,12 @@
 """Script to investigate the dependence of the first kick on the resolution of the phase screens.
 Produces a plot in which each column uses progressively less resolution screens.  The first row
 shows a FFT PSF and the second row shows a first kick geometric PSF.
+
+The screen_scale.py script also in this directory demonstrates that FFT PSFs require ~cm resolution
+before their sizes converge, but this script shows that first kick PSFs seem to be reasonably
+converged with only ~10 cm resolution.  This is important in that it allows us to use memory to
+make physically larger screens instead of high resolution screens.  With a screen_scale of 0.2m, the
+first kick sizes (with kcrit=0.2) only change ~1.5% wrt to 1cm resolution.
 """
 
 
@@ -118,7 +124,7 @@ def make_plot(args):
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
     r0 = args.r0_500*(args.lam/500.0)**(6./5)
     with ProgressBar(args.nlayers) as bar:
-        fineAtm.instantiate(kmax=args.kcrit*r0, _bar=bar)
+        fineAtm.instantiate(kmax=args.kcrit/r0, _bar=bar)
     # `fineAtm` is now an instance of a galsim.PhaseScreenList object.
 
     # Construct an Aperture object for computing the PSF.  The Aperture object describes the
