@@ -1198,7 +1198,7 @@ class PhaseScreenPSF(GSObject):
         return self._kcrit
 
     @lazy_property
-    def _screen_kmax(self):
+    def screen_kmax(self):
         r0_500 = self._screen_list.r0_500_effective
         if r0_500 is None:
             return np.inf
@@ -1409,7 +1409,7 @@ class PhaseScreenPSF(GSObject):
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.
-        self._screen_list.instantiate(kmax=self._screen_kmax, check='phot')
+        self._screen_list.instantiate(kmax=self.screen_kmax, check='phot')
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265
