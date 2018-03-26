@@ -1,5 +1,8 @@
-"""Script to investigate the FFT PSF dependence on phase screen resolution.  Produces a plot of
-4 different PSFs using progressively decreasing screen resolution.
+"""Script to investigate the FFT PSF dependence on phase screen resolution.  Produces a plot of 4
+different PSFs using progressively decreasing screen resolution.  We find that the size of the PSF
+produced increases as resolution increases, with the difference between 1.25 cm and 2.5 cm
+resolution being less than 1%, but the difference between 1.25 cm and 10 cm resolution being about
+6%.
 """
 
 import os
@@ -22,7 +25,6 @@ def shrink_atm(atm, factor):
     ret.dynamic = atm.dynamic
     ret.reversible = atm.reversible
     ret._pending = atm._pending
-    ret._update_time_heap = atm._update_time_heap
     return ret
 
 
