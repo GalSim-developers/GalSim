@@ -9,6 +9,10 @@ times.
 This script makes plots of the full Fourier PSF with truncated scales in the top row, and the
 refractive approximation second kick including Airy in the bottom row.  A different cutoff scale is
 used in each column.  Each panel has inlaid the HSM-measured PSF size sigma.
+
+We find generally good agreement between the analytic calculation and the Fourier optics simulation
+over a fairly wide range of kcrit from 0.05 to 0.5, which produce surface brightness profiles
+spanning a range in size (HSM-sigma) from 4.8 to 0.7 pixels.
 """
 
 import os
@@ -91,7 +95,7 @@ def make_plot(args):
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmin=kcrit*r0, _bar=bar)
+            atm.instantiate(kmin=kcrit/r0, _bar=bar)
         print(atm[0].screen_scale, atm[0].screen_size)
         print(atm[0]._tab2d.f.shape)
 
@@ -173,10 +177,10 @@ if __name__ == '__main__':
                         help="Resolution of atmospheric screen in meters.  Default: 0.0125")
     parser.add_argument("--max_speed", type=float, default=20.0,
                         help="Maximum wind speed in m/s.  Default: 20.0")
-    parser.add_argument("--kmin", type=float, default=0.1,
-                        help="Minimum kcrit to plot.  Default: 0.1")
-    parser.add_argument("--kmax", type=float, default=1.0,
-                        help="Maximum kcrit to plot.  Default: 1.0")
+    parser.add_argument("--kmin", type=float, default=0.05,
+                        help="Minimum kcrit to plot.  Default: 0.05")
+    parser.add_argument("--kmax", type=float, default=0.5,
+                        help="Maximum kcrit to plot.  Default: 0.5")
     parser.add_argument("--nphot", type=int, default=int(3e6),
                         help="Number of photons to shoot.  Default: 3e6")
 
