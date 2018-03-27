@@ -30,7 +30,10 @@
 #include "fmath/fmath.hpp"
 #include "Solve.h"
 #include "bessel/Roots.h"
+
+#if DEBUGLOGGING
 #include <ctime>
+#endif
 
 namespace galsim {
 
@@ -181,6 +184,7 @@ namespace galsim {
         _stepk = 0;
 
         // build the radial function, and along the way, set _stepk, _hlr.
+#if DEBUGLOGGING
         std::clock_t t0 = std::clock();
         _buildKVLUT();
         std::clock_t t1 = std::clock();
@@ -188,7 +192,10 @@ namespace galsim {
         std::clock_t t2 = std::clock();
         std::cout << "buildKV time = " << (double)(t1-t0)/CLOCKS_PER_SEC << '\n';
         std::cout << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
-
+#else
+        _buildKVLUT();
+        _buildRadial();
+#endif
         // Find a potentially smaller maxk now that LUTs have been built.
         SKIkValueResid skikvr(*this, _gsparams->maxk_threshold);
         Solve<SKIkValueResid> solver(skikvr, 0.0, _maxk);
