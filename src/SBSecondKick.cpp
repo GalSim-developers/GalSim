@@ -27,6 +27,7 @@
 
 #include "SBSecondKick.h"
 #include "SBSecondKickImpl.h"
+#include "SBVonKarmanImpl.h"
 #include "fmath/fmath.hpp"
 #include "Solve.h"
 #include "bessel/Roots.h"
@@ -227,9 +228,6 @@ namespace galsim {
         return result;
     }
 #endif
-
-    // Defined in SBVonKarman.cpp
-    extern double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053);
 
     class SKISFIntegrand : public std::unary_function<double,double>
     {

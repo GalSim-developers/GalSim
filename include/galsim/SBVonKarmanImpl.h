@@ -168,6 +168,9 @@ namespace galsim {
 
         static LRUCache<boost::tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
     };
+
+    double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053);
+
 }
 
 #endif
