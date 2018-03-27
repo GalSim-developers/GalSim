@@ -1,6 +1,21 @@
 """Script to compare FFT PSF, first kick, second kick, full geometric PSF, and von Karman profile,
 as a function of the critical scale kcrit used to separate quickly and slowly varying turbulence in
 the phase screens.
+
+There are a few interesting comparisons to check with this script.  The first row shows a FFT
+computed PSF using high-resolution phase screens.  This can be thought of as the truth image for the
+geometrically-computed PSF to try and match.  The 1st and 2nd kicks are both shown so that one can
+see the relative contributions of each as the value of kcrit is varied.  The 4th row shows the
+geometrically-computed PSF that should hopefully match the FFT computed PSF.  Finally, the 5th row
+shows a circular vonKarman PSF computed with the same parameters as the FFT and geometric PSFs.
+This profile is the analytic expectation value for the PSF, or equivalently, the infinite exposure
+limit.  Checking that it's size is consistent with the FFT and geometric images is a good
+consistency check.
+
+The main conclusions from this script are that the value of kcrit can be varied over a fairly wide
+range and the PSF sizes are still consistent.  The main potential trouble seems to be if kcrit is
+too large, then the geometric PSF also becomes too large.  We find that kcrit < ~0.2 is reasonable
+though for wavelengths between 350nm and 1100nm and r0_500s between 0.05 and 0.25.
 """
 
 import os
@@ -118,7 +133,7 @@ def make_plot(args):
                                 speed=spd, direction=dirn, altitude=alts, rng=atmRng,
                                 screen_size=args.screen_size, screen_scale=args.screen_scale)
         with ProgressBar(args.nlayers) as bar:
-            atm.instantiate(kmax=kcrit*r0, _bar=bar)
+            atm.instantiate(kmax=kcrit/r0, _bar=bar)
         kick1 = atm.makePSF(lam=args.lam, aper=aper, exptime=args.exptime,
                             time_step=args.time_step, second_kick=False)
         r0 = args.r0_500*(args.lam/500)**(6./5)
@@ -209,10 +224,10 @@ if __name__ == '__main__':
                         help="Resolution of atmospheric screen in meters.  Default: 0.0125")
     parser.add_argument("--max_speed", type=float, default=20.0,
                         help="Maximum wind speed in m/s.  Default: 20.0")
-    parser.add_argument("--kmin", type=float, default=0.1,
-                        help="Minimum kcrit to plot.  Default: 0.1")
-    parser.add_argument("--kmax", type=float, default=1.0,
-                        help="Maximum kcrit to plot.  Default: 1.0")
+    parser.add_argument("--kmin", type=float, default=0.05,
+                        help="Minimum kcrit to plot.  Default: 0.05")
+    parser.add_argument("--kmax", type=float, default=0.5,
+                        help="Maximum kcrit to plot.  Default: 0.5")
     parser.add_argument("--nphot", type=int, default=int(3e6),
                         help="Number of photons to shoot.  Default: 3e6")
 
