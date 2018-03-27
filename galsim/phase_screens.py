@@ -227,21 +227,28 @@ class AtmosphericScreen(object):
     def _init_psi(self):
         """Assemble 2D von Karman sqrt power spectrum.
         """
-
         fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
-        ksq = (fx*fx + fy*fy)
+        # Faster to avoid as many temporary arrays as possible.  This is just ksq = fx**2 + fy**2.
+        ksq = fx
+        ksq[:,:] *= fx
+        ksq[:,:] += fy*fy
 
-        L0_inv = 1./self.L0 if self.L0 is not None else 0.0
+        # We'll use ksq as our array for psi too.  So save this mask for later.
+        m = (ksq < self.kmin**2) | (ksq > self.kmax**2)
+
         old_settings = np.seterr(all='ignore')
-        self._psi = (1./self.screen_size*self._kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                     (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                     self.npix)
-        np.seterr(**old_settings)
-        self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
+        self._psi = ksq
+        if self.L0 is not None:
+            L0_inv = 1./self.L0
+            self._psi[:,:] += L0_inv*L0_inv
+        self._psi[:,:] **= -11./12.
+        # Note the multiplication by 500 here so we can divide by arbitrary lam later.
+        self._psi[:,:] *= (self._kolmogorov_constant * self.r0_500**(-5.0/6.0) * self.npix *
+                           500. / self.screen_size)
         self._psi[0, 0] = 0.0
-        self._psi[ksq < self.kmin**2] = 0.0
-        self._psi[ksq > self.kmax**2] = 0.0
+        self._psi[m] = 0.0
+        np.seterr(**old_settings)
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self._psi**2"""
