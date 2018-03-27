@@ -1082,7 +1082,10 @@ class PhaseScreenPSF(GSObject):
     @param kcrit               Critical Fourier scale (in units of 1/r0) at which to separate low-k
                                and high-k turbulence.  The default value was chosen based on
                                comparisons between Fourier optics and geometric optics with a second
-                               kick correction.  [default: 0.2]
+                               kick correction.  While most values of kcrit smaller than the default
+                               produce similar results, we caution the user to compare the affected
+                               geometric PSFs against Fourier optics PSFs carefully before changing
+                               this value.  [default: 0.2]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
