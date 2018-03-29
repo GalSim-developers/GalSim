@@ -52,15 +52,15 @@ def _BuildRing(config, base, ignore, gsparams, logger):
 
     dtheta = full_rotation / num
     if logger:
-        logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
+        logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad)
 
     if index % num == 0:
         # Then this is the first in the Ring.
         gsobject = galsim.config.BuildGSObject(config, 'first', base, gsparams, logger)[0]
     else:
-        if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
-            raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].rotate(index*dtheta)
+        if not isinstance(config['first'],dict) or 'current' not in config['first']:
+            raise RuntimeError("Building Ring after the first item, but no current val stored.")
+        gsobject = config['first']['current'][0].rotate(index*dtheta)
 
     return gsobject, False
 

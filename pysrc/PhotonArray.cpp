@@ -31,8 +31,15 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    struct PyPhotonArray {
+    template <typename T>
+    boost::shared_ptr<PhotonArray> MakePhotonsFromImage(
+        const BaseImage<T>& image, double maxFlux, UniformDeviate ud)
+    {
+        return boost::shared_ptr<PhotonArray>(new PhotonArray(image,maxFlux,ud));
+    }
 
+
+    struct PyPhotonArray {
         template <typename U, typename W>
         static void wrapTemplates(W & wrapper) {
             wrapper
@@ -41,6 +48,10 @@ namespace {
                      (bp::arg("image")),
                      "Add flux of photons to an image by binning into pixels.")
                 ;
+            bp::def("MakePhotonsFromImage",
+                (boost::shared_ptr<PhotonArray> (*)(const BaseImage<U>&, double, UniformDeviate))
+                &MakePhotonsFromImage<U>,
+                bp::args("image", "maxFlux", "ud"));
         }
 
         static bp::object GetXArray(PhotonArray& phot)
@@ -86,36 +97,21 @@ namespace {
                 .def(bp::init<int>(bp::args("N")))
                 .def("size", &PhotonArray::size,
                      "Return the number of photons")
-                .def("setPhoton", &PhotonArray::setPhoton,
-                     (bp::arg("i"), bp::arg("x"), bp::arg("y"), bp::arg("flux")),
-                     "Set x,y,flux for photon number i")
-                .def("getX", &PhotonArray::getX, (bp::arg("i")),
-                     "Get x for photon number i")
-                .def("getY", &PhotonArray::getY, (bp::arg("i")),
-                     "Get y for photon number i")
-                .def("getFlux", &PhotonArray::getFlux, (bp::arg("i")),
-                     "Get flux for photon number i")
-                .def("getDXDZ", &PhotonArray::getDXDZ, (bp::arg("i")),
-                     "Get dxdz for photon number i")
-                .def("getDYDZ", &PhotonArray::getDYDZ, (bp::arg("i")),
-                     "Get dydz for photon number i")
-                .def("getWavelength", &PhotonArray::getWavelength, (bp::arg("i")),
-                     "Get wavelength for photon number i")
-                .def("getXArray", GetXArray,
+                .def("_getXArray", GetXArray,
                      "Get numpy array of x positions")
-                .def("getYArray", GetYArray,
+                .def("_getYArray", GetYArray,
                      "Get numpy array of y positions")
-                .def("getFluxArray", GetFluxArray,
+                .def("_getFluxArray", GetFluxArray,
                      "Get numpy array of fluxes")
                 .def("hasAllocatedAngles", &PhotonArray::hasAllocatedAngles,
                      "Returns whether the dxdz and dydz arrays are allocated")
                 .def("hasAllocatedWavelengths", &PhotonArray::hasAllocatedWavelengths,
                      "Returns whether the wavelength arrays are allocated")
-                .def("getDXDZArray", GetDXDZArray,
+                .def("_getDXDZArray", GetDXDZArray,
                      "Get numpy array of dxdz values")
-                .def("getDYDZArray", GetDYDZArray,
+                .def("_getDYDZArray", GetDYDZArray,
                      "Get numpy array of dydz values")
-                .def("getWavelengthArray", GetWavelengthArray,
+                .def("_getWavelengthArray", GetWavelengthArray,
                      "Get numpy array of wavelengths")
                 .def("getTotalFlux", &PhotonArray::getTotalFlux,
                      "Return the total flux of all photons")
@@ -123,6 +119,8 @@ namespace {
                      "Set the total flux to a new value")
                 .def("scaleFlux", &PhotonArray::scaleFlux, (bp::arg("scale")),
                      "Scale the total flux by a given factor")
+                .def("scaleXY", &PhotonArray::scaleXY, (bp::arg("scale")),
+                     "Scale the photon positions (x,y) a given factor")
                 .def("assignAt", &PhotonArray::assignAt, (bp::args("istart", "rhs")),
                      "Assign the contents of another PhotonArray to this one starting at istart.")
                 .def("convolve", &PhotonArray::convolve, (bp::args("rhs", "ud")),

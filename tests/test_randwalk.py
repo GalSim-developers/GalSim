@@ -41,7 +41,8 @@ def test_randwalk_defaults():
     # try constructing with mostly defaults
     npoints=100
     hlr = 8.0
-    rw=galsim.RandomWalk(npoints, hlr)
+    rng = galsim.BaseDeviate(1234)
+    rw=galsim.RandomWalk(npoints, hlr, rng=rng)
 
     assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
@@ -53,6 +54,16 @@ def test_randwalk_defaults():
 
     pts=rw.points
     assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
+
+    # Run some basic tests of correctness
+    psf = galsim.Gaussian(sigma=0.8)
+    conv = galsim.Convolve(rw, psf)
+    check_basic(conv, "RandomWalk")
+    im = galsim.ImageD(64,64, scale=0.5)
+    do_shoot(conv, im, "RandomWalk")
+    do_kvalue(conv, im, "RandomWalk")
+    do_pickle(rw)
+    do_pickle(conv)
 
 
 @timer
@@ -98,57 +109,58 @@ def test_randwalk_invalid_inputs():
     hlr = 8.0
     rng=37
 
-    # this test requires nose, but nose is not a GalSim requirement.  So
-    # allow this test to pass if an ImportError is raised
+    args=(npoints, hlr)
+    kwargs={'rng':rng}
+    with assert_raises(TypeError):
+        galsim.RandomWalk(*args, **kwargs)
 
-    try:
-        args=(npoints, hlr)
-        kwargs={'rng':rng}
-        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
+    # try sending wrong type for npoints
+    npoints=[35]
+    hlr = 8.0
+    args=(npoints, hlr)
+    with assert_raises(TypeError):
+        galsim.RandomWalk(*args)
 
+    # try sending wrong type for hlr
+    npoints=100
+    hlr=[1.5]
+    args=(npoints, hlr)
+    with assert_raises(TypeError):
+        galsim.RandomWalk(*args)
 
-        # try sending wrong type for npoints
-        npoints=[35]
-        hlr = 8.0
-        args=(npoints, hlr)
-        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
+    # try sending wrong type for flux
+    npoints=100
+    hlr=8.0
+    flux=[3.5]
+    args=(npoints, hlr)
+    kwargs={'flux':flux}
+    with assert_raises(TypeError):
+        galsim.RandomWalk(*args, **kwargs)
 
-        # try sending wrong type for hlr
-        npoints=100
-        hlr=[1.5]
-        args=(npoints, hlr)
-        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
+    # send bad value for npoints
 
-        # try sending wrong type for flux
-        npoints=100
-        hlr=8.0
-        flux=[3.5]
-        args=(npoints, hlr)
-        kwargs={'flux':flux}
-        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
+    npoints=-35
+    hlr = 8.0
+    args=(npoints, hlr)
+    with assert_raises(ValueError):
+        galsim.RandomWalk(*args)
 
-        # send bad value for npoints
+    # try sending bad value for hlr
+    npoints=100
+    hlr=-1.5
+    args=(npoints, hlr)
+    with assert_raises(ValueError):
+        galsim.RandomWalk(*args)
 
-        npoints=-35
-        hlr = 8.0
-        args=(npoints, hlr)
-        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
+    # try sending wrong type for flux
+    npoints=100
+    hlr=8.0
+    flux=-35.0
+    args=(npoints, hlr)
+    kwargs={'flux':flux}
+    with assert_raises(ValueError):
+        galsim.RandomWalk(*args, **kwargs)
 
-        # try sending bad value for hlr
-        npoints=100
-        hlr=-1.5
-        args=(npoints, hlr)
-        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
-
-        # try sending wrong type for flux
-        npoints=100
-        hlr=8.0
-        flux=-35.0
-        args=(npoints, hlr)
-        kwargs={'flux':flux}
-        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
-    except ImportError:
-        pass
 
 @timer
 def test_randwalk_repr():
@@ -204,7 +216,7 @@ def test_randwalk_config():
         gal_config['half_light_radius'],
         flux=gal_config['flux'],
     )
- 
+
     assert rw.npoints==rwc.npoints,\
         "expected npoints==%d, got %d" % (rw.npoints, rwc.npoints)
 

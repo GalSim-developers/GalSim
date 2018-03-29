@@ -60,6 +60,7 @@ def test_table():
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
+        assert len(table1) == len(args1)
 
         # The 4th item is in the args list, so it should be exactly the same as the
         # corresponding item in the vals list.
@@ -94,14 +95,11 @@ def test_table():
                     "data for non-evenly-spaced args, with interpolant %s."%interp)
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
-        try:
-            np.testing.assert_raises(RuntimeError,table1,args1[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table1,args1[-1]+0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[0]-0.01)
-            np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
-            np.testing.assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
-        except ImportError:
-            print('The assert_raises tests require nose')
+        assert_raises(RuntimeError,table1,args1[0]-0.01)
+        assert_raises(RuntimeError,table1,args1[-1]+0.01)
+        assert_raises(RuntimeError,table2,args2[0]-0.01)
+        assert_raises(RuntimeError,table2,args2[-1]+0.01)
+        assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
 
         # These shouldn't raise any exception:
         table1(args1[0]+0.01)
@@ -129,28 +127,18 @@ def test_table():
 @timer
 def test_init():
     """Some simple tests of LookupTable initialization."""
-    interp = 'linear'
-    try:
-        # Check for bad input: 1 column file, or specifying file and x, or just x, or bad
-        # interpolant.
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp),
-                                 x = interp)
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 x=os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 file='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
-                                 interpolant='foo')
-    except ImportError:
-        print('The assert_raises tests require nose')
-    # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
-    # we can use the default interpolant (spline).
-    tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
 
-    # Check picklability
+    # Make sure nothing bad happens when we try to read in a stored power spectrum and assume
+    # we can use the default interpolant (spline).
+    tab_ps = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
     do_pickle(tab_ps)
+
+    # Check for bad inputs
+    assert_raises(TypeError, galsim.LookupTable, x='foo')
+    assert_raises(TypeError, galsim.LookupTable)
+    assert_raises(TypeError, galsim.LookupTable, x=tab_ps.x)
+    assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
+    assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f, interpolant='foo')
 
 
 @timer
@@ -212,13 +200,61 @@ def test_log():
 
     # Check that an appropriate exception is thrown when trying to do interpolation using negative
     # ones.
-    try:
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, f_log=True)
-        np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True,
-                                 f_log=True)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, f_log=True)
+    assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True, f_log=True)
+
+
+@timer
+def test_from_func():
+    """Test the LookupTable.from_func factory function"""
+    x_min = 2
+    x_max = 200
+
+    # Linear interpolation
+    x1 = np.linspace(x_min, x_max, 2000)
+    f1 = [x**3 for x in x1]
+    tab1 = galsim.LookupTable(x1, f1, interpolant='linear')
+    tab2 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, interpolant='linear')
+    print('tab1 = ',tab1, tab1(10))
+    print('tab2 = ',tab2, tab2(10))
+
+    # Spline interpolation
+    tab3 = galsim.LookupTable(x1, f1)
+    tab4 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max)
+    print('tab3 = ',tab3, tab3(10))
+    print('tab4 = ',tab4, tab4(10))
+
+    # Log interpolation
+    x5 = np.exp(np.linspace(np.log(x_min), np.log(x_max), 2000))
+    f5 = [x**3 for x in x5]
+    tab5 = galsim.LookupTable(x5, f5, x_log=True, f_log=True)
+    tab6 = galsim.LookupTable.from_func(lambda x:x**3, x_min, x_max, x_log=True, f_log=True)
+    print('tab5 = ',tab5, tab5(10))
+    print('tab6 = ',tab6, tab6(10))
+
+    test_x_vals = [2.641, 39.85, 81.23125]
+    for x in test_x_vals:
+        truth = x**3
+        f1 = tab1(x)
+        f2 = tab2(x)
+        f3 = tab3(x)
+        f4 = tab4(x)
+        f5 = tab5(x)
+        f6 = tab6(x)
+        print(truth, f1, f2, f3, f4, f5, f6)
+        np.testing.assert_almost_equal(f1/truth, 1.0, decimal=2)
+        np.testing.assert_almost_equal(f2/truth, 1.0, 2,
+                                       "LookupTable.from_func (linear) gave wrong answer")
+        np.testing.assert_almost_equal(f3/truth, 1.0, decimal=6)
+        np.testing.assert_almost_equal(f4/truth, 1.0, 6,
+                                       "LookupTable.from_func (spline) gave wrong answer")
+        np.testing.assert_almost_equal(f5/truth, 1.0, decimal=11)
+        np.testing.assert_almost_equal(f6/truth, 1.0, 11,
+                                       "LookupTable.from_func (log-log) gave wrong answer")
+    do_pickle(tab2)
+    do_pickle(tab4)
+    do_pickle(tab6)
 
 
 @timer
@@ -229,11 +265,8 @@ def test_roundoff():
         table1(10.0 + 1.e-7)
     except:
         raise ValueError("c++ LookupTable roundoff guard failed.")
-    try:
-        np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
-        np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, table1, 1.0-1.e5)
+    assert_raises(RuntimeError, table1, 10.0+1.e5)
 
 
 @timer
@@ -305,18 +338,13 @@ def test_table2d():
                                                                     for x0 in newx]))
 
     # Test edge exception
-    try:
-        np.testing.assert_raises(ValueError, tab2d, 1e6, 1e6)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(ValueError):
+        tab2d(1e6, 1e6)
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
-    try:
-        np.testing.assert_raises(ValueError, galsim.LookupTable,
-                                 (x, y, z), dict(edge_mode='wrap'))
-    except ImportError:
-        print('The assert_warns tests require nose')
+    with assert_raises(ValueError):
+        galsim.LookupTable((x, y, z), dict(edge_mode='wrap'))
 
     # Extend edges and make vals match
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
@@ -347,18 +375,15 @@ def test_table2d():
     assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
 
     # Test that x,y arrays need to be strictly increasing.
-    try:
-        x[0] = x[1]
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        x[0] = x[1]+1
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        x[0] = x[1]-1
-        y[0] = y[1]
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-        y[0] = y[1]+1
-        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    x[0] = x[1]
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    x[0] = x[1]+1
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    x[0] = x[1]-1
+    y[0] = y[1]
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    y[0] = y[1]+1
+    assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
 
 
 @timer
@@ -518,6 +543,7 @@ if __name__ == "__main__":
     test_table()
     test_init()
     test_log()
+    test_from_func()
     test_roundoff()
     test_table2d()
     test_table2d_gradient()

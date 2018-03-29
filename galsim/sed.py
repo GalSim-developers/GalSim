@@ -24,6 +24,7 @@ import numpy as np
 
 import galsim
 
+
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
 
@@ -46,10 +47,9 @@ class SED(object):
     originating SEDs unaltered.
 
     SEDs have `blue_limit` and `red_limit` attributes, which indicate the range over which the SED
-    is defined.  (`None` means there is no limit in the blue or red direction respectively.)  An
-    exception will be raised if the flux density or normalization is requested outside of this
-    range.  Note that `blue_limit` and `red_limit` are always in nanometers and in the observed
-    frame when `redshift != 0`.
+    is defined.  An exception will be raised if the flux density or normalization is requested
+    outside of this range.  Note that `blue_limit` and `red_limit` are always in nanometers and in
+    the observed frame when `redshift != 0`.
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.  In particular, an SED
     multiplied by a `Bandpass` will yield the appropriately filtered SED.  Two SEDs may be
@@ -104,7 +104,7 @@ class SED(object):
     @param fast          Convert units on initialization instead of on __call__. [default: True]
     """
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
-                 _blue_limit=None, _red_limit=None, _wave_list=None, _spectral=None):
+                 _blue_limit=0.0, _red_limit=float('inf'), _wave_list=None, _spectral=None):
         from astropy import units
 
         self._orig_spec = spec  # Save this for pickling
@@ -153,19 +153,20 @@ class SED(object):
         # Finish re-evaluating __init__() here.
         if _wave_list is not None:
             self.wave_list = _wave_list
-            self.blue_limit = _blue_limit
-            self.red_limit = _red_limit
+            # Cast numpy.float to python float for more consistent reprs
+            self.blue_limit = float(_blue_limit)
+            self.red_limit = float('inf') if _red_limit == "float('inf')" else float(_red_limit)
             return
 
         if isinstance(self._spec, galsim.LookupTable):
             self.wave_list = ((self._spec.getArgs() * self.wave_type)
                               .to(units.nm, units.spectral()).value)
             self.wave_list *= (1.0 + self.redshift)
-            self.blue_limit = np.min(self.wave_list)
-            self.red_limit = np.max(self.wave_list)
+            self.blue_limit = float(np.min(self.wave_list))
+            self.red_limit = float(np.max(self.wave_list))
         else:
-            self.blue_limit = None
-            self.red_limit = None
+            self.blue_limit = 0.0
+            self.red_limit = float('inf')
             self.wave_list = np.array([], dtype=float)
 
     def _initialize_spec(self):
@@ -180,9 +181,9 @@ class SED(object):
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, basestring):
-            import os
-            if os.path.isfile(self._orig_spec):
-                self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
+            isfile, filename = galsim.utilities.check_share_file(self._orig_spec, 'SEDs')
+            if isfile:
+                self._spec = galsim.LookupTable.from_file(filename, interpolant='linear')
             else:
                 # Don't catch ArithmeticErrors when testing to see if the the result of `eval()`
                 # is valid since `spec = '1./(wave-700)'` will generate a ZeroDivisionError (which
@@ -227,23 +228,6 @@ class SED(object):
     def dimensionless(self):  # for convenience
         return not self.spectral
 
-    def _wavelength_intersection(self, other):
-        blue_limit = self.blue_limit
-        if other.blue_limit is not None:
-            if blue_limit is None:
-                blue_limit = other.blue_limit
-            else:
-                blue_limit = max([blue_limit, other.blue_limit])
-
-        red_limit = self.red_limit
-        if other.red_limit is not None:
-            if red_limit is None:
-                red_limit = other.red_limit
-            else:
-                red_limit = min([red_limit, other.red_limit])
-
-        return blue_limit, red_limit
-
     def _rest_nm_to_photons(self, wave):
         from astropy import units
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
@@ -275,14 +259,12 @@ class SED(object):
             wmin = wmax = wave
 
         extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
-        if self.blue_limit is not None:
-            if wmin < self.blue_limit - extrapolation_slop:
-                raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
-                                 .format(wmin, self.blue_limit))
-        if self.red_limit is not None:
-            if wmax > self.red_limit + extrapolation_slop:
-                raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
-                                 .format(wmax, self.red_limit))
+        if wmin < self.blue_limit - extrapolation_slop:
+            raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
+                             .format(wmin, self.blue_limit))
+        if wmax > self.red_limit + extrapolation_slop:
+            raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
+                             .format(wmax, self.red_limit))
 
     def _make_fast_spec(self):
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
@@ -632,14 +614,12 @@ class SED(object):
 
         @returns the redshifted SED.
         """
+        if redshift <= -1:
+            raise ValueError("Invalid redshift {0}".format(redshift))
         wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
         wave_list = self.wave_list * wave_factor
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-        if blue_limit is not None:
-            blue_limit *= wave_factor
-        if red_limit is not None:
-            red_limit *= wave_factor
+        blue_limit = self.blue_limit * wave_factor
+        red_limit = self.red_limit * wave_factor
 
         return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
@@ -649,29 +629,27 @@ class SED(object):
 
         @param bandpass   A Bandpass object representing a filter, or None to compute the bolometric
                           flux.  For the bolometric flux the integration limits will be set to
-                          (0, infinity) unless overridden by non-`None` SED attributes `blue_limit`
-                          or `red_limit`.  Note that SEDs defined using `LookupTable`s automatically
-                          have `blue_limit` and `red_limit` set.
+                          (0, infinity), which implies that the SED needs to be evaluable over
+                          this entire range.
 
         @returns the flux through the bandpass.
         """
         if self.dimensionless:
             raise TypeError("Cannot calculate flux of dimensionless SED.")
         if bandpass is None: # do bolometric flux
-            if self.blue_limit is None:
-                blue_limit = 0.0
-            else:
-                blue_limit = self.blue_limit
-            if self.red_limit is None:
-                red_limit = 1.e11 # = infinity in int1d
-            else:
-                red_limit = self.red_limit
-            if len(self.wave_list) > 0:
-                return(np.trapz(self(self.wave_list), self.wave_list))
-            else:
-                return galsim.integ.int1d(self, blue_limit, red_limit)
+            from galsim.deprecated import depr
+            depr('Using calculateFlux(bandpass=None) to compute a bolometric flux', 1.5, '',
+                 "If you need this functionality, you can use a pseudo-bolometric Bandpass created "
+                 "with:  bp = Bandpass('1', 'nm', blue_limit=sed.blue_limit, "
+                 "red_limit=sed.red_limit)")
+            bp = galsim.Bandpass('1', 'nm', self.blue_limit, self.red_limit)
+            return self.calculateFlux(bp)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+                slop = 1e-6 # nm
+                if (self.blue_limit > bandpass.blue_limit + slop
+                        or self.red_limit < bandpass.red_limit - slop):
+                    raise ValueError("SED undefined within Bandpass")
                 x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
                 return np.trapz(bandpass(x) * self(x), x)
             else:
@@ -684,9 +662,8 @@ class SED(object):
 
         @param bandpass   A Bandpass object representing a filter, or None to compute the
                           bolometric magnitude.  For the bolometric magnitude the integration
-                          limits will be set to (0, infinity) unless overridden by non-`None` SED
-                          attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
-                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
+                          limits will be set to (0, infinity), which implies that the SED needs to
+                          be evaluable over this entire range.
 
         @returns the bandpass magnitude.
         """
@@ -915,7 +892,8 @@ class SED(object):
         outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
                       self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
-                      self.wave_list, self.blue_limit, self.red_limit)
+                      self.wave_list, self.blue_limit,
+                      "float('inf')" if self.red_limit == float('inf') else self.red_limit)
         return outstr
 
     def __str__(self):

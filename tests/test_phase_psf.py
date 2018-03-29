@@ -19,7 +19,7 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import timer, do_shoot, do_pickle, all_obj_diff
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -129,10 +129,8 @@ def test_phase_screen_list():
     assert ar1._time > 0.0
     ar1._seek(0.0)
     # But not before t=0.0
-    try:
-        np.testing.assert_raises(ValueError, ar1._seek, -1.0)
-    except ImportError:
-        pass
+    with assert_raises(ValueError):
+        ar1._seek(-1.0)
 
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, time_step=0.01, rng=rng)
@@ -140,7 +138,8 @@ def test_phase_screen_list():
     # Create a couple new screens with different types/parameters
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, time_step=0.015, rng=rng2)
     assert ar1 != ar2
-    ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
+    ar3 = galsim.OpticalScreen(diam=1.0, aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1],
+                               obscuration=0.3, annular_zernike=True)
     do_pickle(ar3)
     do_pickle(ar3, func=lambda x:x._wavefront(aper.u, aper.v, None, theta0).sum())
     do_pickle(ar3, func=lambda x:np.sum(x._wavefront_gradient(aper.u, aper.v, None, theta0)))
@@ -432,8 +431,8 @@ def test_scale_unit():
     im1 = psf.drawImage(nx=32, ny=32, scale=0.1, method='no_pixel')
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcmin)
     im2 = psf2.drawImage(nx=32, ny=32, scale=0.1/60.0, method='no_pixel')
-    np.testing.assert_array_equal(
-            im1.array, im2.array,
+    np.testing.assert_almost_equal(
+            im1.array, im2.array, 8,
             'PhaseScreenPSF inconsistent use of scale_unit')
 
     opt_psf1 = galsim.OpticalPSF(lam=500.0, diam=1.0, scale_unit=galsim.arcsec)
@@ -446,21 +445,21 @@ def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
     aper = galsim.Aperture(diam=1.0)
-    rng = galsim.BaseDeviate(1234)
+    rng = galsim.BaseDeviate(123456)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
-    stepk = psf.stepK()
-    maxk = psf.maxK()
+    stepk = psf.stepk
+    maxk = psf.maxk
 
     psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec,
                                  _force_stepk=stepk/1.5, _force_maxk=maxk*2.0)
     np.testing.assert_almost_equal(
-            psf2.stepK(), stepk/1.5, decimal=7,
-            err_msg="PhaseScreenPSF did not adopt forced value for stepK")
+            psf2.stepk, stepk/1.5, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for stepk")
     np.testing.assert_almost_equal(
-            psf2.maxK(), maxk*2.0, decimal=7,
-            err_msg="PhaseScreenPSF did not adopt forced value for maxK")
+            psf2.maxk, maxk*2.0, decimal=7,
+            err_msg="PhaseScreenPSF did not adopt forced value for maxk")
     do_pickle(psf)
     do_pickle(psf2)
 
@@ -469,8 +468,8 @@ def test_stepk_maxk():
     img = galsim.Image(32, 32, scale=0.2)
     do_shoot(psf3, img, "PhaseScreenPSF")
     # Also make sure a few other methods at least run
-    psf3.centroid()
-    psf3.maxSB()
+    psf3.centroid
+    psf3.max_sb
 
 
 @timer
@@ -539,8 +538,8 @@ def test_ne():
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
-    stepk = objs[0].stepK()
-    maxk = objs[0].maxK()
+    stepk = objs[0].stepk
+    maxk = objs[0].maxk
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_stepk=stepk/1.5)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, _force_maxk=maxk*2.0)]
     all_obj_diff(objs)
@@ -671,26 +670,18 @@ def test_input():
     """Check that exceptions are raised for invalid input"""
 
     # Specifying only one of alpha and time_step is an error.
-    try:
-        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
-                                 screen_size=10.0, time_step=0.01)
-        np.testing.assert_raises(ValueError, galsim.AtmosphericScreen,
-                                 screen_size=10.0, alpha=0.997)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, time_step=0.01)
+    assert_raises(ValueError, galsim.AtmosphericScreen, screen_size=10.0, alpha=0.997)
     # But specifying both is alright.
     galsim.AtmosphericScreen(screen_size=10.0, alpha=0.997, time_step=0.01)
 
     # Try some variations for Atmosphere
-    try:
-        np.testing.assert_raises(ValueError, galsim.Atmosphere,
-                                 screen_size=10.0, altitude=[0., 1.],
-                                 r0_500=[0.2, 0.3, 0.2])
-        np.testing.assert_raises(ValueError, galsim.Atmosphere,
-                                 screen_size=10.0, r0_500=[0.4, 0.4, 0.4],
-                                 r0_weights=[0.1, 0.3, 0.6])
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(ValueError, galsim.Atmosphere,
+                  screen_size=10.0, altitude=[0., 1.],
+                  r0_500=[0.2, 0.3, 0.2])
+    assert_raises(ValueError, galsim.Atmosphere,
+                  screen_size=10.0, r0_500=[0.4, 0.4, 0.4],
+                  r0_weights=[0.1, 0.3, 0.6])
 
 
 @timer
@@ -728,6 +719,55 @@ def test_speedup():
     assert (t1-t0) < 0.1, "Photon-shooting took too long ({0} s).".format(t1-t0)
 
 
+@timer
+def test_gc():
+    """Make sure that pending psfs don't leak memory.
+    """
+    import gc
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=0, r0_500=0.15)
+
+    # First check that no PhaseScreenPSFs are known to the garbage collector
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # Make a PhaseScreenPSF and check that it s known to the garbage collector
+    psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    assert any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # If we delete it, it disappears everywhere
+    del psf
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # If we draw one using photon-shooting, it still exists in _pending
+    psf = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psf.drawImage(nx=10, ny=10, scale=0.2, method='phot', n_photons=100)
+    assert psf in [p[1]() for p in atm._pending]
+
+    # If we draw even one of many using fft, _pending gets completely emptied
+    psf2 = atm.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
+    psf.drawImage(nx=10, ny=10, scale=0.2)
+    assert atm._pending == []
+
+    # And if then deleted, they again don't exist anywhere
+    del psf, psf2
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+    # A corner case revealed in coverage tests:
+    # Make sure that everything still works if some, but not all static pending PSFs are deleted.
+    screen = galsim.OpticalScreen(diam=1.1)
+    phaseScreenList = galsim.PhaseScreenList(screen)
+    psf1 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf2 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    psf3 = phaseScreenList.makePSF(lam=1000.0, diam=1.1)
+    del psf2
+    psf1.drawImage(nx=10, ny=10, scale=0.2)
+    del psf1, psf3
+    assert phaseScreenList._pending == []
+    gc.collect()
+    assert not any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -746,3 +786,4 @@ if __name__ == "__main__":
     test_input()
     test_r0_weights()
     test_speedup()
+    test_gc()

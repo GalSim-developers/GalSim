@@ -39,13 +39,14 @@ New features introduced in this demo:
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - dist = galsim.DistDeviate(rng, function, x_min, x_max)
-- pos = bounds.trueCenter()
+- pos = image.true_center
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
 - wcs.makeSkyImage(image, sky_level)
 - image_pos = wcs.toImage(pos)
 - image.invertSelf()
 - truth_cat = galsim.OutputCatalog(names, types)
+- bounds.isDefined()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -133,9 +134,9 @@ def main(argv):
         full_image = galsim.ImageF(image_size, image_size)
 
         # The "true" center of the image is allowed to be halfway between two pixels, as is the
-        # case for even-sized images.  full_image.bounds.center() is an integer position,
+        # case for even-sized images.  full_image.center is an integer position,
         # which would be 1/2 pixel up and to the right of the true center in this case.
-        im_center = full_image.bounds.trueCenter()
+        im_center = full_image.true_center
 
         # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
         # and v(x,y) functions.  We use a simple cubic radial function to create a
@@ -279,9 +280,10 @@ def main(argv):
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
             # in order to avoid placing galaxies too close to the halo center where the lensing
-            # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 12 arcsec,
-            # which takes us essentially to the edge of the image.
-            radius = 12
+            # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 21 arcsec,
+            # which is large enough to cover all the way to the corners, although we'll need
+            # to watch out for galaxies that are fully off the edge of the image.
+            radius = 21
             inner_radius = 3
             max_rsq = radius**2
             min_rsq = inner_radius**2
@@ -296,10 +298,10 @@ def main(argv):
             # stamp on the full image.
             image_pos = wcs.toImage(pos)
 
-            # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
-            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage
-            # stamp, since the nominal center values have to be integers.  Thus, the nominal center
-            # is 1/2 pixel up and to the right of the true center.
+            # For even-sized postage stamps, the nominal center (available as stamp.center)
+            # cannot be at the true center (available as stamp.true_center) of the postage stamp,
+            # since the nominal center values have to be integers.  Thus, the nominal center is
+            # 1/2 pixel up and to the right of the true center.
             # If we used odd-sized postage stamps, we wouldn't need to do this.
             x_nominal = image_pos.x + 0.5
             y_nominal = image_pos.y + 0.5
@@ -418,6 +420,11 @@ def main(argv):
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds
+            # If there is no overlap, then the intersection comes out as not defined, which we
+            # can check with bounds.isDefined().
+            if not bounds.isDefined():
+                logger.info("object %d is fully off the edge of the image.  Skipping this one.", k)
+                continue
             full_image[bounds] += stamp[bounds]
 
             # Also draw the PSF
@@ -427,7 +434,7 @@ def main(argv):
 
             # Add the truth information for this object to the truth catalog
             row = ( (first_obj_id + k), halo_id,
-                    flux, radius, h_over_r, inclination.rad(), theta.rad(),
+                    flux, radius, h_over_r, inclination.rad, theta.rad,
                     nfw_mu, nfw_z_source, total_shear.g1, total_shear.g2,
                     pos.x, pos.y, image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )

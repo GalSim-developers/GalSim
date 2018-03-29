@@ -31,8 +31,10 @@ namespace galsim {
     struct PyInterpolant
     {
 
-        static Interpolant* ConstructInterpolant(std::string str, double tol)
+        static Interpolant* ConstructInterpolant(const char* str_c, double tol)
         {
+            std::string str = str_c;
+
             // Make it lowercase
             std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
@@ -79,6 +81,10 @@ namespace galsim {
                 .def("getTol", &Interpolant::getTolerance)
                 .enable_pickling()
                 ;
+
+            def("Interpolant_from_name", &ConstructInterpolant,
+                bp::return_value_policy<bp::manage_new_object>(),
+                (bp::arg("str"), bp::arg("tol")=1.e-4));
 
             static const char* delta_doc =
             "Delta-function interpolant in 1d: The interpolant for when you do not want to\n"

@@ -59,13 +59,19 @@ namespace hsm {
 
     unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
+        ObjectData& gal_data, ObjectData& PSF_data, const char* shear_est_c,
         unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
 
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
         int& num_iter, boost::shared_ptr<HSMParams> hsmparams);
+
+      void find_mom_2(
+        ConstImageView<double> data,
+        tmv::Matrix<double>& moments, int max_order,
+        double& x0, double& y0, double& sigma, double convergence_threshold, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
 
     // Make a masked_image based on the input image and mask.  The returned ImageView is a
     // sub-image of the given masked_image.  It is the smallest sub-image that contains all the
@@ -96,7 +102,7 @@ namespace hsm {
     CppShapeData EstimateShearView(
         const BaseImage<T>& gal_image, const BaseImage<U>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux_c,
         double guess_sig_gal, double guess_sig_PSF,
         double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams)
@@ -106,6 +112,8 @@ namespace hsm {
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
         unsigned long flags=0;
+
+        const std::string recompute_flux = recompute_flux_c;
 
         if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
@@ -209,7 +217,7 @@ namespace hsm {
     CppShapeData FindAdaptiveMomView(
         const BaseImage<T>& object_image, const BaseImage<int>& object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams)
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams)
     {
         dbg<<"Start FindAdaptiveMomView"<<std::endl;
         dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
@@ -245,18 +253,34 @@ namespace hsm {
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
         try {
-            dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
-            find_ellipmom_2(masked_object_image_cview, amp, results.moments_centroid.x,
-                            results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter, hsmparams);
-            dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
+             if (!round_moments) {
+                  dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
+                  find_ellipmom_2(masked_object_image_cview, amp, results.moments_centroid.x,
+                                  results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
+                                  precision, results.moments_n_iter, hsmparams);
+                  dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
 
-            // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
-            results.moments_amp = 2.0*amp;
-            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-            results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
-            results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
-            results.moments_status = 0;
+                  // repackage outputs from find_ellipmom_2 to the output CppShapeData struct
+                  results.moments_amp = 2.0*amp;
+                  results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+                  results.observed_e1 = (m_xx-m_yy) / (m_xx+m_yy);
+                  results.observed_e2 = 2.*m_xy / (m_xx+m_yy);
+                  results.moments_status = 0;
+             } else {
+                  dbg<<"About to get moments using find_mom_2"<<std::endl;
+                  tmv::Matrix<double> moments(3,3);
+                  double sig = guess_sig;
+                  find_mom_2(masked_object_image_cview, moments, 2,
+                             results.moments_centroid.x, results.moments_centroid.y, sig,
+                             hsmparams->convergence_threshold, results.moments_n_iter, hsmparams);
+                  dbg<<"Repackaging find_mom_2 results"<<std::endl;
+                  // flux calculation taken from formula in psf_corr_ksb_1
+                  results.moments_amp =  3.544907701811*sig*moments(0,0);
+                  results.moments_sigma = sig;
+                  results.observed_e1 = std::sqrt(2.)*0.5*(moments(2,0)-moments(0,2)) / moments(0,0);
+                  results.observed_e2 = (moments(1,1)) / moments(0,0);
+                  results.moments_status = 0;
+             }
         }
         catch (char *err_msg) {
             results.error_message = err_msg;
@@ -1720,7 +1744,7 @@ namespace hsm {
 
     unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
+        ObjectData& gal_data, ObjectData& PSF_data, const char* shear_est_c,
         unsigned long flags, boost::shared_ptr<HSMParams> hsmparams)
     {
         unsigned int status = 0;
@@ -1728,6 +1752,8 @@ namespace hsm {
         double x0, y0, R;
         double A_gal, Mxx_gal, Mxy_gal, Myy_gal, rho4_gal;
         double A_psf, Mxx_psf, Mxy_psf, Myy_psf, rho4_psf;
+
+        const std::string shear_est = shear_est_c;
 
         if (shear_est == "BJ" || shear_est == "LINEAR" || shear_est == "KSB") {
             /* Measure the PSF so its size and shape can get propagated up to python layer */
@@ -1815,40 +1841,40 @@ namespace hsm {
     template CppShapeData EstimateShearView(
         const BaseImage<float>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const BaseImage<double>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const BaseImage<float>& gal_image, const BaseImage<double>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData EstimateShearView(
         const BaseImage<double>& gal_image, const BaseImage<float>& PSF_image,
         const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        float sky_var, const char* shear_est, const char* recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
 
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<float>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<double>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
-        
+        bool round_moments, boost::shared_ptr<HSMParams> hsmparams);
+
 }
 }

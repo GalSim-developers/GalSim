@@ -174,6 +174,7 @@ class PowerSpectrumEstimator(object):
         # then some non-flat weighting scheme is used for averaging over the ell values within a
         # bin.
         if ell_weight is not None:
+            ell_weight = np.abs(ell_weight)
             P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C*ell_weight)
             count,_ = np.histogram(self.l_abs, self.bin_edges, weights=ell_weight)
         else:
@@ -200,9 +201,7 @@ class PowerSpectrumEstimator(object):
                                 rest of the PowerSpectrumEstimator functionality.  [default: False]
         @param theory_func      An optional callable function that can be used to get an idealized
                                 value of power at each point on the grid, and then see what results
-                                it gives for our chosen ell binning.  Unlike the main
-                                PowerSpectrumEstimator, this option requires a usable GalSim
-                                installation. [default: None]
+                                it gives for our chosen ell binning. [default: None]
         """
         # Check for the expected square geometry consistent with the previously-defined grid size.
         if g1.shape != g2.shape:
@@ -227,9 +226,6 @@ class PowerSpectrumEstimator(object):
         C_BB = self._bin_power(B*np.conjugate(B))*(self.dx/self.N)**2
         C_EB = self._bin_power(E*np.conjugate(B))*(self.dx/self.N)**2
 
-        if theory_func or weight_EE or weight_BB:
-            import galsim
-
         if theory_func is not None:
             # theory_func needs to be a callable function
             C_theory_ell = np.zeros_like(self.l_abs)
@@ -237,6 +233,7 @@ class PowerSpectrumEstimator(object):
             C_theory = self._bin_power(C_theory_ell)
 
         if weight_EE or weight_BB:
+            import galsim
             # Need to interpolate C_EE to values of self.l_abs.  A bit of kludginess as we go off
             # the end of our final ell grid...
             new_ell = np.zeros(len(self.ell)+2)

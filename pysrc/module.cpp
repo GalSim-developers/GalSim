@@ -58,6 +58,8 @@ namespace galsim {
     void pyExportSBKolmogorov();
     void pyExportSBInclinedExponential();
     void pyExportSBInclinedSersic();
+    void pyExportSBDeltaFunction();
+    void pyExportSBVonKarman();
     void pyExportRandom();
     void pyExportNoise();
     void pyExportTable();
@@ -65,6 +67,9 @@ namespace galsim {
     void pyExportInterpolant();
     void pyExportCorrelationFunction();
     void pyExportCDModel();
+    void pyExportSilicon();
+    void pyExportRealGalaxy();
+    void pyExportWCS();
 
     namespace hsm {
         void pyExportHSM();
@@ -105,6 +110,8 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBKolmogorov();
     galsim::pyExportSBInclinedExponential();
     galsim::pyExportSBInclinedSersic();
+    galsim::pyExportSBDeltaFunction();
+    galsim::pyExportSBVonKarman();
     galsim::pyExportRandom();
     galsim::pyExportNoise();
     galsim::pyExportInterpolant();
@@ -115,4 +122,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportTable();
     galsim::pyExportTable2D();
     galsim::bessel::pyExportBessel();
+    galsim::pyExportSilicon();
+    galsim::pyExportRealGalaxy();
+    galsim::pyExportWCS();
 }

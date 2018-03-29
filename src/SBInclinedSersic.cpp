@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2017 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -113,8 +113,8 @@ namespace galsim {
         _inclination(inclination),
         _flux(flux),
         _trunc(trunc),
-        _trunc_sq(trunc*trunc),
         _cosi(std::abs(inclination.cos())),
+        _trunc_sq(trunc*trunc),
         _ksq_max(integ::MOCK_INF), // Start with infinite _ksq_max so we can use kValueHelper to
                                   // get a better value
         // Start with untruncated SersicInfo regardless of value of trunc
@@ -324,7 +324,8 @@ namespace galsim {
         return _flux * kValueHelper(kx,ky);
     }
 
-    void SBInclinedSersic::SBInclinedSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBInclinedSersic::SBInclinedSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
@@ -338,7 +339,7 @@ namespace galsim {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
             const int n = im.getNRow();
-            std::complex<double>* ptr = im.getData();
+            std::complex<T>* ptr = im.getData();
             int skip = im.getNSkip();
             assert(im.getStep() == 1);
 
@@ -355,7 +356,8 @@ namespace galsim {
         }
     }
 
-    void SBInclinedSersic::SBInclinedSersicImpl::fillKImage(ImageView<std::complex<double> > im,
+    template <typename T>
+    void SBInclinedSersic::SBInclinedSersicImpl::fillKImage(ImageView<std::complex<T> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
@@ -364,7 +366,7 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-        std::complex<double>* ptr = im.getData();
+        std::complex<T>* ptr = im.getData();
         int skip = im.getNSkip();
         assert(im.getStep() == 1);
 

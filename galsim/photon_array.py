@@ -20,9 +20,9 @@ Implements the PhotonArray class describing a collection of photons incident on 
 Also includes classes that modify PhotonArray objects in a number of ways.
 """
 
+import numpy as np
 # Most of the functionality comes from the C++ layer
 from ._galsim import PhotonArray
-import numpy as np
 import galsim
 
 # Add on more methods in the python layer
@@ -138,24 +138,135 @@ PhotonArray.__eq__ = lambda self, other: (
 PhotonArray.__ne__ = lambda self, other: not self == other
 
 # Make properties for convenient access to the various arrays
-def PhotonArray_setx(self, x): self.getXArray()[:] = x
-PhotonArray.x = property(PhotonArray.getXArray, PhotonArray_setx)
+def PhotonArray_setx(self, x): self._getXArray()[:] = x
+PhotonArray.x = property(PhotonArray._getXArray, PhotonArray_setx)
 
-def PhotonArray_sety(self, y): self.getYArray()[:] = y
-PhotonArray.y = property(PhotonArray.getYArray, PhotonArray_sety)
+def PhotonArray_sety(self, y): self._getYArray()[:] = y
+PhotonArray.y = property(PhotonArray._getYArray, PhotonArray_sety)
 
-def PhotonArray_setflux(self, flux): self.getFluxArray()[:] = flux
-PhotonArray.flux = property(PhotonArray.getFluxArray, PhotonArray_setflux)
+def PhotonArray_setflux(self, flux): self._getFluxArray()[:] = flux
+PhotonArray.flux = property(PhotonArray._getFluxArray, PhotonArray_setflux)
 
-def PhotonArray_setdxdz(self, dxdz): self.getDXDZArray()[:] = dxdz
-PhotonArray.dxdz = property(PhotonArray.getDXDZArray, PhotonArray_setdxdz)
+def PhotonArray_setdxdz(self, dxdz): self._getDXDZArray()[:] = dxdz
+PhotonArray.dxdz = property(PhotonArray._getDXDZArray, PhotonArray_setdxdz)
 
-def PhotonArray_setdydz(self, dydz): self.getDYDZArray()[:] = dydz
-PhotonArray.dydz = property(PhotonArray.getDYDZArray, PhotonArray_setdydz)
+def PhotonArray_setdydz(self, dydz): self._getDYDZArray()[:] = dydz
+PhotonArray.dydz = property(PhotonArray._getDYDZArray, PhotonArray_setdydz)
 
-def PhotonArray_setwavelength(self, wavelength): self.getWavelengthArray()[:] = wavelength
-PhotonArray.wavelength = property(PhotonArray.getWavelengthArray, PhotonArray_setwavelength)
+def PhotonArray_setwavelength(self, wavelength): self._getWavelengthArray()[:] = wavelength
+PhotonArray.wavelength = property(PhotonArray._getWavelengthArray, PhotonArray_setwavelength)
 
+def PhotonArray_makeFromImage(cls, image, max_flux=1., rng=None):
+    """Turn an existing image into a PhotonArray that would accumulate into this image.
+
+    The flux in each non-zero pixel will be turned into 1 or more photons with random positions
+    within the pixel bounds.  The `max_flux` parameter (which defaults to 1) sets an upper
+    limit for the absolute value of the flux of any photon.  Pixels with abs values > maxFlux will
+    spawn multiple photons.
+
+    TODO: This corresponds to the `Nearest` interpolant.  It would be worth figuring out how
+          to implement other (presumably better) interpolation options here.
+
+    @param image        The image to turn into a PhotonArray
+    @param max_flux     The maximum flux value to use for any output photon [default: 1]
+    @param rng          A BaseDeviate to use for the random number generation [default: None]
+
+    @returns a PhotonArray
+    """
+    ud = galsim.UniformDeviate(rng)
+    max_flux = float(max_flux)
+    if (max_flux <= 0):
+        raise ValueError("max_flux must be positive")
+    photons = galsim._galsim.MakePhotonsFromImage(image._image, max_flux, ud)
+    if image.scale != 1.:
+        photons.scaleXY(image.scale)
+    return photons
+
+PhotonArray.makeFromImage = classmethod(PhotonArray_makeFromImage)
+
+def PhotonArray_write(self, file_name):
+    """Write a PhotonArray to a FITS file.
+
+    The output file will be a FITS binary table with a row for each photon in the PhotonArray.
+    Columns will include 'id' (sequential from 1 to nphotons), 'x', 'y', and 'flux'.
+    Additionally, the columns 'dxdz', 'dydz', and 'wavelength' will be included if they are
+    set for this PhotonArray object.
+
+    The file can be read back in with the classmethod `PhotonArray.read`.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the output FITS file.
+    """
+    from galsim._pyfits import pyfits
+
+    cols = []
+    cols.append(pyfits.Column(name='id', format='J', array=range(self.size())))
+    cols.append(pyfits.Column(name='x', format='D', array=self.x))
+    cols.append(pyfits.Column(name='y', format='D', array=self.y))
+    cols.append(pyfits.Column(name='flux', format='D', array=self.flux))
+
+    if self.hasAllocatedAngles():
+        cols.append(pyfits.Column(name='dxdz', format='D', array=self.dxdz))
+        cols.append(pyfits.Column(name='dydz', format='D', array=self.dydz))
+
+    if self.hasAllocatedWavelengths():
+        cols.append(pyfits.Column(name='wavelength', format='D', array=self.wavelength))
+
+    cols = pyfits.ColDefs(cols)
+    try:
+        table = pyfits.BinTableHDU.from_columns(cols)
+    except AttributeError:  # pragma: no cover  (Might need this for older pyfits versions)
+        table = pyfits.new_table(cols)
+    galsim.fits.writeFile(file_name, table)
+
+def PhotonArray_read(cls, file_name):
+    """Create a PhotonArray, reading the photon data from a FITS file.
+
+    The file being read in is not arbitrary.  It is expected to be a file that was written
+    out with the PhotonArray `write` method.
+
+        >>> photons.write('photons.fits')
+        >>> photons2 = galsim.PhotonArray.read('photons.fits')
+
+    @param file_name    The file name of the input FITS file.
+    """
+    from galsim._pyfits import pyfits, pyfits_version
+    with pyfits.open(file_name) as fits:
+        data = fits[1].data
+    N = len(data)
+    if pyfits_version > '3.0':
+        names = data.columns.names
+    else: # pragma: no cover
+        names = data.dtype.names
+
+    ret = cls.__new__(cls)
+    _PhotonArray_empty_init(ret, N)
+    ret.x = data['x']
+    ret.y = data['y']
+    ret.flux = data['flux']
+    if 'dxdz' in names:
+        ret.dxdz = data['dxdz']
+        ret.dydz = data['dydz']
+    if 'wavelength' in names:
+        ret.wavelength = data['wavelength']
+    return ret
+
+PhotonArray.write = PhotonArray_write
+PhotonArray.read = classmethod(PhotonArray_read)
+
+orig_addTo = PhotonArray.addTo
+def PhotonArray_addTo(self, image):
+    """Add flux of photons to an image by binning into pixels.
+    """
+    if isinstance(image, galsim.Image):
+        return orig_addTo(self, image._image.view())
+    else:
+        from .deprecated import depr
+        depr("C++-layer image as argument to PhotonArray.addTo", 1.5, "Use a regular galsim.Image")
+        return orig_addTo(self, image.view())
+PhotonArray.addTo = PhotonArray_addTo
 
 class WavelengthSampler(object):
     """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
@@ -180,7 +291,6 @@ class WavelengthSampler(object):
         """Assign wavelengths to the photons sampled from the SED * Bandpass."""
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
-
 
 class FRatioAngles(object):
     """A surface-layer operator that assigns photon directions based on the f/ratio and
@@ -213,8 +323,8 @@ class FRatioAngles(object):
     def applyTo(self, photon_array):
         """Assign directions to the photons in photon_array."""
 
-        dxdz = photon_array.getDXDZArray()
-        dydz = photon_array.getDYDZArray()
+        dxdz = photon_array.dxdz
+        dydz = photon_array.dydz
         n_photons = len(dxdz)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of

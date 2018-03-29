@@ -67,9 +67,9 @@ struct PyBounds {
             .def(bp::init< const Position<T>&, const Position<T>& >(bp::args("pos1", "pos2")))
             .def("copy", &Bounds<T>::copy)
             .def("isDefined", &Bounds<T>::isDefined)
-            .def("origin", &Bounds<T>::origin)
-            .def("center", &Bounds<T>::center)
-            .def("trueCenter", &Bounds<T>::trueCenter)
+            .def("_origin", &Bounds<T>::origin)
+            .def("_center", &Bounds<T>::center)
+            .def("_trueCenter", &Bounds<T>::trueCenter)
             // Note: the python methods always use the version that returns a new bounds object.
             // This matches the typical python style of objects being immutable, and you get
             // new objects back when you want to change them.
@@ -89,10 +89,6 @@ struct PyBounds {
             .def(bp::self + bp::self)
             .def(bp::self + bp::other< Position<T> >())
             .def(bp::self + bp::other<T>())
-            .def("getXMin", &Bounds<T>::getXMin)
-            .def("getXMax", &Bounds<T>::getXMax)
-            .def("getYMin", &Bounds<T>::getYMin)
-            .def("getYMax", &Bounds<T>::getYMax)
             .add_property("xmin", &Bounds<T>::getXMin)
             .add_property("xmax", &Bounds<T>::getXMax)
             .add_property("ymin", &Bounds<T>::getYMin)

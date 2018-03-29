@@ -37,7 +37,7 @@ New features introduced in this demo:
 - cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.DeVaucouleurs(flux, half_light_radius)
-- obj = galsim.RandomWalk(npoints, half_light_radius, flux=)
+- obj = galsim.RandomWalk(npoints, half_light_radius, flux)
 - obj = galsim.Add([list of objects])
 - obj = obj.shift(dx,dy)
 - galsim.fits.writeMulti([list of images], file_name)

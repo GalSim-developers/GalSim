@@ -27,7 +27,7 @@ def LVectorSize(order):
 def Shapelet_setSigma(self,sigma):
     """Deprecated method to change the value of sigma"""
     depr('setSigma',1.1,'shapelet = galsim.Shapelet(sigma, order, ...)')
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(sigma, self.SBProfile.getBVec()))
+    self._sbp = galsim._galsim.SBShapelet(sigma, self._sbp.getBVec())
 
 def Shapelet_setOrder(self,order):
     """Deprecated method to change the order"""
@@ -41,7 +41,7 @@ def Shapelet_setOrder(self,order):
         a = numpy.zeros(galsim.ShapeletSize(order))
         a[0:len(self.bvec)] = self.bvec
         bvec = galsim.shapelet.LVector(order,a)
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    self._sbp = galsim._galsim.SBShapelet(self.sigma, bvec)
 
 def Shapelet_setBVec(self,bvec):
     """Deprecated method to change the bvec"""
@@ -51,21 +51,21 @@ def Shapelet_setBVec(self,bvec):
         raise ValueError("bvec is the wrong size for the Shapelet order")
     import numpy
     bvec = galsim.shapelet.LVector(self.order,numpy.array(bvec))
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    self._sbp = galsim._galsim.SBShapelet(self.sigma, bvec)
 
 def Shapelet_setPQ(self,p,q,re,im=0.):
     """Deprecated method to change a single element (p,q)"""
     depr('setPQ',1.1,'bvec with correct values in the constructor')
-    bvec = self.SBProfile.getBVec().copy()
+    bvec = self._sbp.getBVec().copy()
     bvec.setPQ(p,q,re,im)
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    self._sbp = galsim._galsim.SBShapelet(self.sigma, bvec)
 
 def Shapelet_setNM(self,N,m,re,im=0.):
     """Deprecated method to change a single element (N,m)"""
     depr('setNM',1.1,'bvec with correct values in the constructor')
-    bvec = self.SBProfile.getBVec().copy()
+    bvec = self._sbp.getBVec().copy()
     bvec.setPQ((N+m)//2,(N-m)//2,re,im)
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    self._sbp = galsim._galsim.SBShapelet(self.sigma, bvec)
 
 def Shapelet_fitImage(self, image, center=None, normalization='flux'):
     """A deprecated method that is roughly equivalent to
@@ -73,10 +73,22 @@ def Shapelet_fitImage(self, image, center=None, normalization='flux'):
     """
     depr('fitImage', 1.1, 'galsim.FitShapelet')
     new_obj = galsim.FitShapelet(self.sigma, self.order, image, center, normalization)
-    bvec = new_obj.SBProfile.getBVec()
-    galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    bvec = new_obj._sbp.getBVec()
+    self._sbp = galsim._galsim.SBShapelet(self.sigma, bvec)
+
+def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
+    "Deprecated function equivalent to Shapelet.fit"
+    depr("FitShapelet", 1.5, 'galsim.Shapelet.fit(...)')
+    return galsim.Shapelet.fit(sigma, order, image, center, normalization, gsparams)
+
+def ShapeletSize(order):
+    "Deprecated function equivalent to Shapelet.size"
+    depr("ShapeletSize", 1.5, 'galsim.Shapelet.size(order)')
+    return galsim.Shapelet.size(order)
 
 galsim.LVectorSize = LVectorSize
+galsim.ShapeletSize = ShapeletSize
+galsim.FitShapelet = FitShapelet
 galsim.Shapelet.setSigma = Shapelet_setSigma
 galsim.Shapelet.setOrder = Shapelet_setOrder
 galsim.Shapelet.setBVec = Shapelet_setBVec

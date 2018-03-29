@@ -73,6 +73,28 @@ class CelestialCoord(object):
         self._dec = dec
         self._x = None  # Indicate that x,y,z are not set yet.
 
+    def get_xyz(self):
+        """Get the (x,y,z) coordinates on the unit sphere corresponding to this (RA, Dec).
+
+        @returns a tuple (x,y,z)
+        """
+        self._set_aux()
+        return self._x, self._y, self._z
+
+    @classmethod
+    def from_xyz(cls, x, y, z):
+        """Construct a CelestialCoord from a given (x,y,z) position in three dimensions.
+
+        The 3D (x,y,z) position does not need to fall on the unit sphere.
+
+        @returns a CelestialCoord instance
+        """
+        ret = cls.__new__(cls)
+        ret._ra = np.arctan2(y, x) * galsim.radians
+        ret._dec = np.arctan2(z, np.sqrt(x*x + y*y)) * galsim.radians
+        ret._x = None
+        return ret
+
     @property
     def ra(self): return self._ra
     @property
@@ -260,34 +282,46 @@ class CelestialCoord(object):
         # where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
 
         # cos(dra) = cos(ra-ra0) = cos(ra0) cos(ra) + sin(ra0) sin(ra)
-        cosdra = self._cosra * cosra + self._sinra * sinra
+        cosdra = self._cosra * cosra
+        cosdra += self._sinra * sinra
 
         # sin(dra) = -sin(ra - ra0)
         # Note: - sign here is to make +x correspond to -ra,
         #       so x increases for decreasing ra.
         #       East is to the left on the sky!
         # sin(dra) = -cos(ra0) sin(ra) + sin(ra0) cos(ra)
-        sindra = -self._cosra * sinra + self._sinra * cosra
+        sindra = self._sinra * cosra
+        sindra -= self._cosra * sinra
 
         # Calculate k according to which projection we are using
-        cosc = self._sindec * sindec + self._cosdec * cosdec * cosdra
+        cosc = cosdec * cosdra
+        cosc *= self._cosdec
+        cosc += self._sindec * sindec
         if projection[0] == 'l':
             k = np.sqrt( 2. / (1.+cosc) )
         elif projection[0] == 's':
             k = 2. / (1. + cosc)
         elif projection[0] == 'g':
             k = 1. / cosc
+        elif cosc == 1.:
+            k = 1.
         else:
             c = np.arccos(cosc)
             k = c / np.sin(c)
 
-        u = k * cosdec * sindra
-        v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
+        # u = k * cosdec * sindra
+        # v = k * ( self._cosdec * sindec - self._sindec * cosdec * cosdra )
+        # (Save k multiplication for later when we also multiply by factor.)
+        u = cosdec * sindra
+        v = cosdec * cosdra
+        v *= -self._sindec
+        v += self._cosdec * sindec
 
         # Convert to arcsec
         factor = galsim.radians / galsim.arcsec
-        u *= factor
-        v *= factor
+        k *= factor
+        u *= k
+        v *= k
 
         return u, v
 
@@ -343,8 +377,8 @@ class CelestialCoord(object):
 
         # Convert from arcsec to radians
         factor = galsim.arcsec / galsim.radians
-        u = u * factor
-        v = v * factor
+        u *= factor
+        v *= factor
 
         # Note that we can rewrite the formulae as:
         #
@@ -354,7 +388,8 @@ class CelestialCoord(object):
         # which means we only need cos(c) and sin(c)/r.  For most of the projections,
         # this saves us from having to take sqrt(rsq).
 
-        rsq = u*u + v*v
+        rsq = u*u
+        rsq += v*v
         if projection[0] == 'l':
             # c = 2 * arcsin(r/2)
             # Some trig manipulations reveal:
@@ -380,14 +415,22 @@ class CelestialCoord(object):
             sinc_over_r = np.sinc(r/np.pi)
 
         # Compute sindec, tandra
+        # Note: more efficient to use numpy op= as much as possible to avoid temporary arrays.
         self._set_aux()
-        sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec
+        # sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec
+        sindec = v * sinc_over_r
+        sindec *= self._cosdec
+        sindec += cosc * self._sindec
         # Remember the - sign so +dra is -u.  East is left.
-        tandra_num = -u * sinc_over_r
-        tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
+        tandra_num = u * sinc_over_r
+        tandra_num *= -1.
+        # tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
+        tandra_denom = v * sinc_over_r
+        tandra_denom *= -self._sindec
+        tandra_denom += cosc * self._cosdec
 
         dec = np.arcsin(sindec)
-        ra = self.ra.rad() + np.arctan2(tandra_num, tandra_denom)
+        ra = self.ra.rad + np.arctan2(tandra_num, tandra_denom)
 
         return ra, dec
 
@@ -462,13 +505,16 @@ class CelestialCoord(object):
             r = np.sqrt(rsq)
             if r == 0.:
                 c = s = 1
+                dcdu = -u
+                dcdv = -v
+                dsdu = dsdv = 0
             else:
                 c = np.cos(r)
                 s = np.sin(r)/r
-            dcdu = -s*u
-            dcdv = -s*v
-            dsdu = (c-s)*u/rsq
-            dsdv = (c-s)*v/rsq
+                dcdu = -s*u
+                dcdv = -s*v
+                dsdu = (c-s)*u/rsq
+                dsdv = (c-s)*v/rsq
 
         self._set_aux()
         s0 = self._sindec
@@ -551,24 +597,54 @@ class CelestialCoord(object):
         # cos(b) cos(el-33) = cos(dec) cos(ra-282.25)
         # cos(b) sin(el-33) = sin(dec) sin(62.6) + cos(dec) sin(ra-282.25) cos(62.6)
         #            sin(b) = sin(dec) sin(62.6) - cos(dec) sin(ra-282.25) sin(62.6)
-        import math
-        el0 = 33. * galsim.degrees
-        r0 = 282.25 * galsim.degrees
-        d0 = 62.6 * galsim.degrees
+        #
+        # Those formulae were for the 1950 epoch.  The corresponding numbers for J2000 are:
+        # (cf. https://arxiv.org/pdf/1010.3773.pdf)
+        el0 = 32.93191857 * galsim.degrees
+        r0 = 282.859481208 * galsim.degrees
+        d0 = 62.8717488056 * galsim.degrees
         sind0, cosd0 = d0.sincos()
 
-        temp = self.precess(epoch, 1950.)
-        sind, cosd = temp.dec.sincos()
-        sinr, cosr = (temp.ra-r0).sincos()
+        sind, cosd = self.dec.sincos()
+        sinr, cosr = (self.ra-r0).sincos()
 
         cbcl = cosd*cosr
         cbsl = sind*sind0 + cosd*sinr*cosd0
         sb = sind*cosd0 - cosd*sinr*sind0
 
+        import math
         b = math.asin(sb) * galsim.radians
-        el = math.atan2(cbsl,cbcl) * galsim.radians + el0
+        el = (math.atan2(cbsl,cbcl) * galsim.radians + el0).wrap(math.pi * galsim.radians)
 
         return (el, b)
+
+    @staticmethod
+    def from_galactic(el, b, epoch=2000.):
+        """Create a CelestialCoord from the given galactic coordinates
+
+        :param el:          The longitude in galactic coordinates (an Angle instance)
+        :param b:           The latitude in galactic coordinates (an Angle instance)
+        :param epoch:       The epoch of the returned coordinate. [default: 2000.]
+
+        :returns: the CelestialCoord corresponding to these galactic coordinates.
+        """
+        el0 = 32.93191857 * galsim.degrees
+        r0 = 282.859481208 * galsim.degrees
+        d0 = 62.8717488056 * galsim.degrees
+        sind0, cosd0 = d0.sincos()
+
+        sinb, cosb = b.sincos()
+        sinl, cosl = (el-el0).sincos()
+        x1 = cosb*cosl
+        y1 = cosb*sinl
+        z1 = sinb
+
+        x2 = x1
+        y2 = y1 * cosd0 - z1 * sind0
+        z2 = y1 * sind0 + z1 * cosd0
+
+        temp = CelestialCoord.from_xyz(x2, y2, z2)
+        return CelestialCoord((temp.ra + r0).wrap(np.pi*galsim.radians), temp.dec)
 
     def ecliptic(self, epoch=2000., date=None):
         """Get the longitude and latitude in ecliptic coordinates corresponding to this position.
@@ -597,8 +673,8 @@ class CelestialCoord(object):
         if date is not None:
             epoch = date.year
         ep = _ecliptic_obliquity(epoch)
-        cos_ep = math.cos(ep.rad())
-        sin_ep = math.sin(ep.rad())
+        cos_ep = np.cos(ep)
+        sin_ep = np.sin(ep)
 
         # Coordinate transformation here, from celestial to ecliptic:
         x_ecl = self._x
@@ -612,11 +688,50 @@ class CelestialCoord(object):
             # Find the sun position in ecliptic coordinates on this date.  We have to convert to
             # Julian day in order to use our helper routine to find the Sun position in ecliptic
             # coordinates.
-            lam_sun, _ = _sun_position_ecliptic(date)
+            lam_sun = _sun_position_ecliptic(date)
             # Subtract it off, to get ecliptic coordinates relative to the sun.
             lam -= lam_sun
 
         return (lam.wrap(), beta)
+
+    @staticmethod
+    def from_ecliptic(lam, beta, epoch=2000., date=None):
+        """Create a CelestialCoord from the given ecliptic coordinates
+
+        :param lam:         The longitude in ecliptic coordinates (an Angle instance)
+        :param beta:        The latitude in ecliptic coordinates (an Angle instance)
+        :param epoch:       The epoch to be used for estimating the obliquity of the ecliptic, if
+                            `date` is None.  But if `date` is given, then use that to determine the
+                            epoch.  [default: 2000.]
+        :param date:        If a date is given as a python datetime object, then return the
+                            position in ecliptic coordinates with respect to the sun position at
+                            that date.  If None, then return the true ecliptic coordiantes.
+                            [default: None]
+
+        :returns: the CelestialCoord corresponding to these ecliptic coordinates.
+        """
+        if date is not None:
+            lam += _sun_position_ecliptic(date)
+
+        # Get the (x, y, z)_ecliptic from (lam, beta).
+        sinbeta, cosbeta = beta.sincos()
+        sinlam, coslam = lam.sincos()
+        x_ecl = cosbeta*coslam
+        y_ecl = cosbeta*sinlam
+        z_ecl = sinbeta
+
+        # Get the obliquity of the ecliptic.
+        if date is not None:
+            epoch = date.year
+        ep = _ecliptic_obliquity(epoch)
+
+        # Transform to (x, y, z)_equatorial.
+        sin_ep, cos_ep = ep.sincos()
+        x_eq = x_ecl
+        y_eq = cos_ep*y_ecl - sin_ep*z_ecl
+        z_eq = sin_ep*y_ecl + cos_ep*z_ecl
+
+        return CelestialCoord.from_xyz(x_eq, y_eq, z_eq)
 
     def copy(self): return CelestialCoord(self._ra, self._dec)
 
@@ -639,9 +754,8 @@ def _sun_position_ecliptic(date):
     n = jd - 2451545.0
     L = (280.46*galsim.degrees + (0.9856474*galsim.degrees)*n).wrap()
     g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
-    lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
-        (0.020*galsim.degrees)*math.sin((2*g).rad())
-    return (lam.wrap(), 0.*galsim.degrees)
+    lam = L + (1.915*galsim.degrees)*np.sin(g) + (0.020*galsim.degrees)*np.sin(2*g)
+    return lam.wrap()
 
 def _date_to_julian_day(date):
     # From http://code-highlights.blogspot.com/2013/01/julian-date-in-python.html, this code returns
@@ -661,33 +775,6 @@ def _date_to_julian_day(date):
         retval += dayfrac
     return retval
 
-def _ecliptic_to_equatorial(ecliptic_pos, epoch):
-    # Helper routine to go backwards from ecliptic coordinates to equatorial using a given epoch for
-    # the obliquity of the ecliptic.
-    # Should input a tuple of (lam, beta) values and an epoch, and get back a CelestialCoord.
-    lam, beta = ecliptic_pos
-    import math
-    # Get the (x, y, z)_ecliptic from (lam, beta).
-    cosbeta = math.cos(beta.rad())
-    sinbeta = math.sin(beta.rad())
-    coslam = math.cos(lam.rad())
-    sinlam = math.sin(lam.rad())
-    x_ecl = cosbeta*coslam
-    y_ecl = cosbeta*sinlam
-    z_ecl = sinbeta
-    # Transform to (x, y, z)_equatorial.
-    ep = _ecliptic_obliquity(epoch)
-    cos_ep = math.cos(ep.rad())
-    sin_ep = math.sin(ep.rad())
-    x_eq = x_ecl
-    y_eq = cos_ep*y_ecl - sin_ep*z_ecl
-    z_eq = sin_ep*y_ecl + cos_ep*z_ecl
-    # Transform to RA, dec.
-    dec = math.asin(z_eq)*galsim.radians
-    ra = math.atan2(y_eq, x_eq)*galsim.radians
-    # Return as a CelestialCoord
-    return galsim.CelestialCoord(ra, dec)
-
 def _ecliptic_obliquity(epoch):
     # Routine to return the obliquity of the ecliptic for a given date.
     # We need to figure out the time in Julian centuries from J2000 for this epoch.
@@ -695,10 +782,16 @@ def _ecliptic_obliquity(epoch):
     # Then we use the last (most recent) formula listed under
     # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
     # JPL's 2010 calculations.
-    ep = galsim.DMS_Angle('23:26:21.406')
-    ep -= galsim.DMS_Angle('00:00:46.836769')*t
-    ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
-    ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
+    ep = galsim.Angle.from_dms('23:26:21.406')
+    ep -= galsim.Angle.from_dms('00:00:46.836769')*t
+    ep -= galsim.Angle.from_dms('00:00:0.0001831')*(t**2)
+    ep += galsim.Angle.from_dms('00:00:0.0020034')*(t**3)
     # There are even higher order terms, but they are really not important for any reasonable
     # calculation we could ever do with GalSim.
     return ep
+
+def _ecliptic_to_equatorial(ecliptic_pos, epoch):
+    from .deprecated import depr
+    depr('_ecliptic_to_equatorial', 1.5, 'CelestialCoord.from_ecliptic(lam, beta)')
+    lam, beta = ecliptic_pos
+    return CelestialCoord.from_ecliptic(lam, beta, epoch)

@@ -24,7 +24,7 @@
 
     "ellip" : {
         "type" : "E1E2",
-        "e1" : { "type" : "Catalog", "col" : 2 }, 
+        "e1" : { "type" : "Catalog", "col" : 2 },
         "e2" : { "type" : "Catalog", "col" : 3 }
     }
 },
@@ -32,26 +32,26 @@
 "gal" : {
     "type" : "Sum",
     "items" : [
-        { 
-            "type" : "Exponential",
-            "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
-            "ellip" : {
-                "type" : "E1E2",
-                "e1" : { "type" : "Catalog" , "col" : 6 },
-                "e2" : { "type" : "Catalog" , "col" : 7 }
-            },
-            "flux" : 0.18
-        },
         {
-            "type" : "RandomWalk",
-            "npoints": 10,
-            "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
+            "type" : "Sum",
+            "items" : [
+                {
+                    "type" : "Exponential",
+                    "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
+                    "flux" : 0.18
+                },
+                {
+                    "type" : "RandomWalk",
+                    "npoints": 10,
+                    "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
+                    "flux" : 0.42
+                }
+            ],
             "ellip" : {
                 "type" : "E1E2",
                 "e1" : { "type" : "Catalog" , "col" : 6 },
                 "e2" : { "type" : "Catalog" , "col" : 7 }
-            },
-            "flux" : 0.42
+            }
         },
         {
             "type" : "DeVaucouleurs",

@@ -93,14 +93,14 @@ version = __version__
 # First some basic building blocks that don't usually depend on anything else
 from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD, _BoundsI
-from .shear import Shear
-from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
+from .shear import Shear, _Shear
+from .angle import Angle, _Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC, ImageUS, ImageUI, _Image
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
 
 # PhotonArray
 from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles
@@ -110,27 +110,30 @@ from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from .random import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .noise import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from .noise import DeviateNoise, VariableGaussianNoise
-from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
+from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise, CovarianceSpectrum
 
 # GSObject
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
-from .base import Exponential, Sersic, DeVaucouleurs, Spergel
-from .real import RealGalaxy, RealGalaxyCatalog, simReal
+from .base import Exponential, Sersic, DeVaucouleurs, Spergel, DeltaFunction
+from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, OpticalScreenField
-from .shapelet import Shapelet, ShapeletSize, FitShapelet
+from .shapelet import Shapelet
+from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
+from .shapelet import Shapelet
 from .inclinedexponential import InclinedExponential
 from .inclinedsersic import InclinedSersic
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
-from .interpolatedimage import InterpolatedImage, InterpolatedKImage
+from .interpolatedimage import InterpolatedImage, InterpolatedKImage, _InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile
 from .compound import RandomWalk
 from .transform import Transform, Transformation, _Transform
+from .vonkarman import VonKarman
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
@@ -153,8 +156,8 @@ from .lensing_ps import PowerSpectrum
 from .nfw_halo import NFWHalo, Cosmology
 
 # Detector effects
-# Everything here is migrated into the Image class, so nothing to import by name.
-from . import detectors
+from .sensor import Sensor, SiliconSensor
+from . import detectors  # Everything here is a method of Image, so nothing to import by name.
 
 # Deprecation warning class
 from .deprecated import GalSimDeprecationWarning
@@ -172,3 +175,4 @@ from . import cdmodel
 from . import optics
 from . import utilities
 from . import fft
+from . import zernike

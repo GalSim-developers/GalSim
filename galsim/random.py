@@ -285,7 +285,7 @@ class DistDeviate(_galsim.BaseDeviate):
                 if x_min or x_max:
                     raise TypeError('Cannot pass x_min or x_max alongside a '
                                     'filename in arguments to DistDeviate')
-                function = galsim.LookupTable(file=function, interpolant=interpolant)
+                function = galsim.LookupTable.from_file(function, interpolant=interpolant)
                 x_min = function.x_min
                 x_max = function.x_max
             else:
@@ -493,8 +493,6 @@ Draw a new random number from the distribution.
 
 Returns a Gaussian deviate with current `mean` and `sigma`.
 """)
-set_func_doc(_galsim.GaussianDeviate.getMean, "Get current distribution `mean`.")
-set_func_doc(_galsim.GaussianDeviate.getSigma, "Get current distribution `sigma`.")
 
 
 # BinomialDeviate docstrings
@@ -531,8 +529,6 @@ Draw a new random number from the distribution.
 
 Returns a Binomial deviate with current `N` and `p`.
 """)
-set_func_doc(_galsim.BinomialDeviate.getN, "Get current distribution `N`.")
-set_func_doc(_galsim.BinomialDeviate.getP, "Get current distribution `p`.")
 
 
 # PoissonDeviate docstrings
@@ -568,7 +564,6 @@ Draw a new random number from the distribution.
 
 Returns a Poisson deviate with current `mean`.
 """)
-set_func_doc(_galsim.PoissonDeviate.getMean, "Get current distribution `mean`.")
 
 
 # WeibullDeviate docstrings
@@ -607,8 +602,6 @@ Draw a new random number from the distribution.
 
 Returns a Weibull-distributed deviate with current `a` and `b`.
 """)
-set_func_doc(_galsim.WeibullDeviate.getA, "Get current distribution shape parameter `a`.")
-set_func_doc(_galsim.WeibullDeviate.getB, "Get current distribution shape parameter `b`.")
 
 
 # GammaDeviate docstrings
@@ -644,8 +637,6 @@ Draw a new random number from the distribution.
 
 Returns a Gamma-distributed deviate with current k and theta.
 """)
-set_func_doc(_galsim.GammaDeviate.getK, "Get current distribution shape parameter `k`.")
-set_func_doc(_galsim.GammaDeviate.getTheta, "Get current distribution shape parameter `theta`.")
 
 
 # Chi2Deviate docstrings
@@ -682,46 +673,44 @@ Draw a new random number from the distribution.
 
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
 """)
-set_func_doc(_galsim.Chi2Deviate.getN, "Get current distribution `n` degrees of freedom.")
 
 
 # Some functions to enable pickling of deviates
 _galsim.BaseDeviate.__getinitargs__ = lambda self: (self.serialize(),)
 _galsim.UniformDeviate.__getinitargs__ = lambda self: (self.serialize(),)
-_galsim.GaussianDeviate.__getinitargs__ = lambda self: \
-        (self.serialize(), self.getMean(), self.getSigma())
-_galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getN(), self.getP())
-_galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
-_galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
-_galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
-_galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())
+_galsim.GaussianDeviate.__getinitargs__ = lambda self: (self.serialize(), self.mean, self.sigma)
+_galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.n, self.p)
+_galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.mean)
+_galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.a, self.b)
+_galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.k, self.theta)
+_galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.n)
 
 # Deviate __eq__
 _galsim.GaussianDeviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.GaussianDeviate) and
         self.serialize() == other.serialize() and
-        self.getMean() == other.getMean() and
-        self.getSigma() == other.getSigma())
+        self.mean == other.mean and
+        self.sigma == other.sigma)
 _galsim.BinomialDeviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.BinomialDeviate) and
         self.serialize() == other.serialize() and
-        self.getN() == other.getN() and
-        self.getP() == other.getP())
+        self.n == other.n and
+        self.p == other.p)
 _galsim.PoissonDeviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.PoissonDeviate) and
         self.serialize() == other.serialize() and
-        self.getMean() == other.getMean())
+        self.mean == other.mean)
 _galsim.WeibullDeviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.WeibullDeviate) and
         self.serialize() == other.serialize() and
-        self.getA() == other.getA() and
-        self.getB() == other.getB())
+        self.a == other.a and
+        self.b == other.b)
 _galsim.GammaDeviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.GammaDeviate) and
         self.serialize() == other.serialize() and
-        self.getK() == other.getK() and
-        self.getTheta() == other.getTheta())
+        self.k == other.k and
+        self.theta == other.theta)
 _galsim.Chi2Deviate.__eq__ = lambda self, other: (
         isinstance(other, _galsim.Chi2Deviate) and
         self.serialize() == other.serialize() and
-        self.getN() == other.getN())
+        self.n == other.n)

@@ -1,0 +1,68 @@
+This README file describes the AEGIS F814W<25.2 training sample, which is a
+randomly ordered sample of galaxies in the AEGIS field in F606W(V) and F814W(I) bands with AB magnitude in I band <25.2.
+The galaxies were detected in the summed V+I image 
+and the entries in the V and I catalog files correspond to the same galaxies.
+
+NOTE: The columns in the catalog are those expected by galsim.RealGalaxyCatalog.
+The catalog can also be used with galsim.COSMOSCatalog() without parametric fits. 
+Drawing parametric galaxy in galsim.COSMOSCatalog() requires another file 
+with information on parametric fits performed on galaxy images.
+
+(1) The catalogs themselves are in AEGIS_galaxy_catalog_[VI]_25.2.fits (where
+[VI] indicates either V or I). These files can be used to initialize a
+galsim.RealGalaxyCatalog or galsim.COSMOSCatalog instance, and contain a FITS
+tables that could also be  read in directly using, e.g., python or IDL.  The
+fields that are included for each galaxy are:
+
+IDENT: AEGIS object identifier. This value is internally derived. Therefore
+do not rely on this IDENT for cross-matching between other AEGIS catalogs.
+IDENT in V and I catalogs correspond to the same galaxies. 
+
+RA, DEC: Right ascension and declination (J2000, degrees).  While this is not
+needed for image simulation, it is necessary for proper cross-matching with
+other catalogs.
+
+MAG: magnitude (MAG_AUTO calculated from sextractor).
+
+BAND: Passband for the observed image (F814W/F606W).
+
+WEIGHT: A weight factor to use to account for size dependent selection effects.
+
+GAL_FILENAME: Name of the file containing the galaxy image.  This is just a
+filename, not including a full path.
+
+PSF_FILENAME: Name of the file containing the PSF image for this galaxy.
+This is just a filename, not including a full path.
+
+GAL_HDU: HDU containing the image of this galaxy in the file called GAL_FILENAME.
+
+PSF_HDU: HDU containing the image of the PSF for this galaxy in the file called PSF_FILENAME.
+
+PIXEL_SCALE: pixel scale for the galaxy and PSF images in arcsec (0.03 for all bands).
+
+NOISE_MEAN: mean value of the pixels in the image that do not contain the galaxy.
+
+NOISE_VARIANCE: variance of the pixel values for pixels in the image that do not contain the galaxy.
+
+
+(2) The files containing galaxy and PSF images are
+AEGIS_galaxy_images_[VI]_25.2_n?.fits and AEGIS_galaxy_PSF_images_[VI]_25.2_n?.fits. The number that goes in place of the "?" ranges from 0 to 29.
+
+(3) Files (AEGIS_galaxy_catalog_[VI]_25.2_selection.fits) with some selection
+flags that the GalSim COSMOSCatalog class may use to impose selection criteria
+on the quality of the postage stamps and/or fits.
+
+IDENT: AEGIS identifier.
+
+dmag: not used
+
+sn_ellip_gauss: SNR of the galaxy measured with an elliptical gaussian filter.
+
+min_mask_dist_pixels: Distance from the center of postage stamp to the nearest masked pixel.
+
+average_mask_adjacent_pixel_count: Average pixel value of the 3*3 pixel region around the nearest masked pixel, before masking.
+
+peak_image_pixel_count: Highest pixel value of central object in postage stamp.
+
+(5) Files acs_[VI]_unrot_sci_20_cf.fits containing information that GalSim
+needs to understand the noise fields in the postage stamps.

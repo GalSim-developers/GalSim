@@ -25,8 +25,6 @@ from copy import deepcopy
 import os
 import sys
 
-from scipy.special import gamma
-
 from galsim_test_helpers import *
 import numpy as np
 
@@ -158,7 +156,7 @@ def test_regression():
 
             image_core = image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
             test_image_core = test_image.array[ nx//2-2 : nx//2+3 , ny//2-2 : ny//2+3 ]
-            
+
             # Be a bit more lenient in the edge-on case, since it has greater errors in the FFT
             if np.cos(inc_angle) < 0.01:
                 rtol = 5e-2
@@ -248,8 +246,8 @@ def test_exponential():
     # Check that they're the same
     np.testing.assert_array_almost_equal(inc_image.array, exp_image.array, decimal=4)
 
-    # The face-on version should get the maxSB value exactly right
-    np.testing.assert_array_almost_equal(inc_profile.maxSB(), exp_profile.maxSB())
+    # The face-on version should get the max_sb value exactly right
+    np.testing.assert_array_almost_equal(inc_profile.max_sb, exp_profile.max_sb)
 
     check_basic(inc_profile, "Face-on " + mode)
 
@@ -294,8 +292,8 @@ def test_sersic():
 
         np.testing.assert_allclose(inc_image.array, sersic_image.array, rtol=rtol, atol=atol)
 
-        # The face-on version should get the maxSB value exactly right
-        np.testing.assert_almost_equal(inc_profile.maxSB(), sersic_profile.maxSB())
+        # The face-on version should get the max_sb value exactly right
+        np.testing.assert_almost_equal(inc_profile.max_sb, sersic_profile.max_sb)
 
         check_basic(inc_profile, "Face-on " + mode)
 
@@ -338,11 +336,15 @@ def test_edge_on():
         np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
-        # Also the edge-on version should get the maxSB value exactly right
-        np.testing.assert_allclose(prof.maxSB(), comp_prof.maxSB() * 10. * n / gamma(n))
+        # Also the edge-on version should get the max_sb value exactly right
+        try:
+            from scipy.special import gamma
+        except ImportError:
+            continue
+        np.testing.assert_allclose(prof.max_sb, comp_prof.max_sb * 10. * n / gamma(n))
         prof.drawImage(image, method='sb', use_true_center=False)
-        print('max pixel: ', image.array.max(), ' cf.', prof.maxSB())
-        np.testing.assert_allclose(image.array.max(), prof.maxSB(), rtol=0.01)
+        print('max pixel: ', image.array.max(), ' cf.', prof.max_sb)
+        np.testing.assert_allclose(image.array.max(), prof.max_sb, rtol=0.01)
 
 
 @timer
@@ -362,19 +364,13 @@ def test_sanity():
 
         # Check accessing construction args
         np.testing.assert_equal(test_profile.inclination, inc_angle * galsim.radians)
-        np.testing.assert_equal(test_profile.getInclination(), inc_angle * galsim.radians)
         np.testing.assert_equal(test_profile.scale_radius, scale_radius)
-        np.testing.assert_equal(test_profile.getScaleRadius(), scale_radius)
         np.testing.assert_equal(test_profile.scale_height, scale_height)
-        np.testing.assert_equal(test_profile.getScaleHeight(), scale_height)
         np.testing.assert_equal(test_profile.flux, flux)
-        np.testing.assert_equal(test_profile.getFlux(), flux)
 
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_allclose(test_profile.scale_height / test_profile.scale_radius,
                                        test_profile.scale_h_over_r, rtol=1e-4)
-        np.testing.assert_allclose(test_profile.getScaleHeight() / test_profile.getScaleRadius(),
-                                       test_profile.getScaleHOverR(), rtol=1e-4)
 
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle * galsim.radians)
@@ -394,16 +390,16 @@ def test_sanity():
         np.testing.assert_allclose(test_flux, flux, rtol=rtol)
 
         # Check that the centroid is (0,0)
-        centroid = test_profile.centroid()
+        centroid = test_profile.centroid
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
 
-        # Check maxSB - just ensure it's not under by more than the empirical limit for this
+        # Check max_sb - just ensure it's not under by more than the empirical limit for this
         # approximation
         test_profile.drawImage(test_image, use_true_center=False)
-        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.maxSB())
+        print('max pixel: ', test_image.array.max(), ' cf.', test_profile.max_sb)
 
-        np.testing.assert_array_less(test_image.array.max(), test_profile.maxSB()*1.56)
+        np.testing.assert_array_less(test_image.array.max(), test_profile.max_sb*1.56)
 
     # Run tests applicable to both profiles
     for mode in ("InclinedExponential", "InclinedSersic"):
@@ -411,7 +407,7 @@ def test_sanity():
         print('flux, inc_angle, scale_radius, scale_height, pos_angle, n, trunc')
         for (flux, _sersic_n, inc_angle, scale_radius, scale_height,
              _trunc_factor, pos_angle) in inclined_exponential_test_parameters:
-            
+
             flux = float(flux)
             inc_angle = float(inc_angle)
             scale_radius = float(scale_radius)
@@ -430,12 +426,12 @@ def test_sanity():
         pos_angle = float(pos_angle)
         n = float(sersic_n)
         trunc = float(trunc_factor) * float(scale_radius)
-        
+
         run_sanity_checks("InclinedSersic", flux, inc_angle, scale_radius, scale_height, pos_angle,
                           n=n, trunc=trunc)
-        
+
         # Run specific tests for InclinedSersic
-        
+
         # Check that flux_untruncated behaves as expected
         prof1a = get_prof("InclinedSersic",n=n,flux=flux,inclination=inc_angle*galsim.radians,
                          scale_radius=scale_radius,scale_height=scale_height,trunc=trunc)
@@ -445,7 +441,7 @@ def test_sanity():
         prof2 = get_prof("InclinedSersic",n=n,flux=flux,inclination=inc_angle*galsim.radians,
                          scale_radius=scale_radius,scale_height=scale_height,trunc=trunc,
                          flux_untruncated=True)
-        
+
         np.testing.assert_almost_equal(prof1a.flux, prof1b.flux, 9)
         if trunc > 0:
             assert(prof1a.flux > prof2.flux)
@@ -474,9 +470,9 @@ def test_k_limits():
             test_profile = get_prof(mode, inc_angle * galsim.radians, scale_radius,
                                     scale_height)
 
-            # Check that the k value at maxK() is below maxk_threshold in both the x and y dimensions
-            kx = test_profile.maxK()
-            ky = test_profile.maxK()
+            # Check that the k value at maxk is below maxk_threshold in both the x and y dimensions
+            kx = test_profile.maxk
+            ky = test_profile.maxk
 
             kx_value = test_profile.kValue(kx=kx, ky=0.)
             np.testing.assert_(np.abs(kx_value) < gsparams.maxk_threshold,
@@ -488,15 +484,16 @@ def test_k_limits():
                                msg="ky_value is not below maxk_threshold: " + str(ky_value) + " >= "
                                 + str(gsparams.maxk_threshold))
 
-            # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
-            rmax = np.pi / test_profile.stepK()
+            # Check that less than folding_threshold fraction of light falls outside r = pi/stepk
+            rmax = np.pi / test_profile.stepk
 
             pixel_scale = 0.1
 
-            test_image = galsim.Image(int(10 * rmax / pixel_scale), int(10 * rmax / pixel_scale), scale=pixel_scale)
+            test_image = galsim.Image(int(10 * rmax / pixel_scale), int(10 * rmax / pixel_scale),
+                                      scale=pixel_scale)
             test_profile.drawImage(test_image)
 
-            image_center = test_image.center()
+            image_center = test_image.center
 
             # Get an array of indices within the limits
             image_shape = np.shape(test_image.array)
@@ -588,7 +585,7 @@ def test_pickle():
         prof = get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                          scale_height=0.3)
         do_pickle(prof)
-        do_pickle(prof.SBProfile)
+        do_pickle(prof._sbp)
 
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0))
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
@@ -601,61 +598,66 @@ def test_pickle():
         do_pickle(get_prof(mode, trunc=4.5, inclination=0.1 * galsim.radians, scale_radius=3.0,
                                              scale_height=0.3, flux=10.0,
                                              gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
-        
+
 @timer
 def test_exceptions():
     """ Tests to make sure that proper exceptions are thrown when expected. """
-    
+
     for mode in ("InclinedExponential", "InclinedSersic"):
-    
+
         # Need at least one radius specification
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees)
-        
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees)
+
         # Can't have two radius specifications
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., half_light_radius = 1.)
-        
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., half_light_radius = 1.)
+
         # Radius specification must be > 0
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = -1.)
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 half_light_radius = -1.)
-        
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, scale_radius = -1.)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, half_light_radius = -1.)
+
         # Can't have both height specifications
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_height = 0.2, scale_h_over_r = 0.1)
-        
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., scale_height = 0.2, scale_h_over_r = 0.1)
+
         # Radius specification must be > 0
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_height = -0.2)
-        np.testing.assert_raises(ValueError, get_prof, mode, inclination = 0.*galsim.degrees,
-                                 scale_radius = 1., scale_h_over_r = -0.1)
-        
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees, scale_radius = 1., scale_height = -0.2)
+        with assert_raises(ValueError):
+            get_prof(mode, inclination = 0.*galsim.degrees,
+                     scale_radius = 1., scale_h_over_r = -0.1)
+
         # Enforce inclination is an angle type
-        np.testing.assert_raises(TypeError, get_prof, mode, inclination = 0.,
-                                 scale_radius = 1.)
-        
+        with assert_raises(TypeError):
+            get_prof(mode, inclination = 0., scale_radius = 1.)
+
     # Can't have negative truncation for InclinedSersic
-    np.testing.assert_raises(ValueError, get_prof, "InclinedSersic", inclination = 0.*galsim.degrees,
-                             scale_radius = 1., trunc = -4.5)
-    
+    with assert_raises(ValueError):
+        get_prof("InclinedSersic", inclination = 0.*galsim.degrees,
+                 scale_radius = 1., trunc = -4.5)
+
 @timer
 def test_value_retrieval():
     """ Tests to make sure that if a parameter is passed to a profile, we get back the same
         value from it. Only parameters not tested by the pickling are tested here.
     """
-    
+
     for mode in ("InclinedExponential", "InclinedSersic"):
-    
+
         half_light_radius = 1.6342
         scale_h_over_r = 0.2435
-        
+
         prof = get_prof(mode, inclination = 0.*galsim.degrees, half_light_radius = half_light_radius,
                         scale_h_over_r = scale_h_over_r)
-        
+
         np.testing.assert_almost_equal(half_light_radius, prof.half_light_radius, 9)
         np.testing.assert_almost_equal(scale_h_over_r, prof.scale_h_over_r, 9)
-    
+
 
 if __name__ == "__main__":
     test_regression()

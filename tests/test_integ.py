@@ -193,12 +193,8 @@ def test_invroot_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="x^(-2) integral failed across interval [1, inf].")
 
-    try:
-        np.testing.assert_raises(
-            RuntimeError,
-            galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    with assert_raises(RuntimeError):
+        galsim.integ.int1d(test_func, 0., 1., test_rel_err, test_abs_err)
 
 
 @timer
@@ -213,6 +209,13 @@ def test_midpoint_basic():
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
+
+    # Also test midptRule
+    result = galsim.integ.midptRule(lambda x:x**2, x)
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=2, verbose=True,
+        err_msg='Simple test of midptRule() method failed for f(x)=x^2 from 0 to 10')
+
 
 @timer
 def test_trapz_basic():
@@ -231,6 +234,12 @@ def test_trapz_basic():
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
+
+    #Also test trapzRule
+    result = galsim.integ.trapzRule(func, np.linspace(0, 1, 100000))
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Test of trapzRule() with points failed for f(x)=x^2 from 0 to 1')
 
 
 if __name__ == "__main__":

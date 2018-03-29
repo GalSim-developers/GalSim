@@ -190,10 +190,6 @@ namespace galsim {
         return int(k-_Nd*std::floor(k*_invNd)) - _No2;
     }
 
-    template <typename T>
-    inline bool IsAligned(const T* p)
-    { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
-
     template <bool yn>
     struct Maybe // true
     {

@@ -258,12 +258,9 @@ def test_uniform():
     assert u1 != u2, "Consecutive UniformDeviate(None) compared equal!"
     # We shouldn't be able to construct a UniformDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.UniformDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.UniformDeviate, dict())
+    assert_raises(RuntimeError, galsim.UniformDeviate, list())
+    assert_raises(RuntimeError, galsim.UniformDeviate, set())
 
 
 @timer
@@ -402,8 +399,8 @@ def test_gaussian():
             gn.getVariance(), gSigma**2, precision,
             err_msg="GaussianNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
-            gn.getSigma(), gSigma, precision,
-            err_msg="GaussianNoise getSigma returns wrong value")
+            gn.sigma, gSigma, precision,
+            err_msg="GaussianNoise sigma returns wrong value")
 
     # Check that the noise model really does produce this variance.
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -421,7 +418,7 @@ def test_gaussian():
             gn.getVariance(), 9, precision,
             err_msg="GaussianNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            gn.getSigma(), 3., precision,
+            gn.sigma, 3., precision,
             err_msg="GaussianNoise withVariance results in wrong sigma")
 
     # Check withScaledVariance
@@ -430,7 +427,7 @@ def test_gaussian():
             gn.getVariance(), 36., precision,
             err_msg="GaussianNoise withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            gn.getSigma(), 6., precision,
+            gn.sigma, 6., precision,
             err_msg="GaussianNoise withScaledVariance results in wrong sigma")
 
     # Check arithmetic
@@ -472,7 +469,7 @@ def test_gaussian():
             gn.getVariance(), 9, precision,
             err_msg="GaussianNoise().withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            gn.getSigma(), 3., precision,
+            gn.sigma, 3., precision,
             err_msg="GaussianNoise().withVariance results in wrong sigma")
 
     gn = galsim.GaussianNoise()
@@ -481,11 +478,11 @@ def test_gaussian():
             gn.getVariance(), 4., precision,
             err_msg="GaussianNoise().withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            gn.getSigma(), 2., precision,
+            gn.sigma, 2., precision,
             err_msg="GaussianNoise().withScaledVariance results in wrong sigma")
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getMean(), x.getSigma()))
+    do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(gn, lambda x: (x.rng.serialize(), x.sigma))
     do_pickle(gn, drawNoise)
@@ -500,12 +497,9 @@ def test_gaussian():
     assert g1 != g2, "Consecutive GaussianDeviate(None) compared equal!"
     # We shouldn't be able to construct a GaussianDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.GaussianDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.GaussianDeviate, dict())
+    assert_raises(RuntimeError, galsim.GaussianDeviate, list())
+    assert_raises(RuntimeError, galsim.GaussianDeviate, set())
 
 
 @timer
@@ -622,7 +616,7 @@ def test_binomial():
             err_msg='Wrong binomial random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(b, lambda x: (x.serialize(), x.getN(), x.getP()))
+    do_pickle(b, lambda x: (x.serialize(), x.n, x.p))
     do_pickle(b, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(b), drawNoise)
     do_pickle(b)
@@ -634,12 +628,9 @@ def test_binomial():
     assert b1 != b2, "Consecutive BinomialDeviate(None) compared equal!"
     # We shouldn't be able to construct a BinomialDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.BinomialDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.BinomialDeviate, dict())
+    assert_raises(RuntimeError, galsim.BinomialDeviate, list())
+    assert_raises(RuntimeError, galsim.BinomialDeviate, set())
 
 
 @timer
@@ -777,8 +768,8 @@ def test_poisson():
             pn.getVariance(), pMean, precision,
             err_msg="PoissonNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
-            pn.getSkyLevel(), pMean, precision,
-            err_msg="PoissonNoise getSkyLevel returns wrong value")
+            pn.sky_level, pMean, precision,
+            err_msg="PoissonNoise sky_level returns wrong value")
 
     # Check that the noise model really does produce this variance.
     big_im = galsim.Image(2048,2048,dtype=float)
@@ -796,7 +787,7 @@ def test_poisson():
             pn.getVariance(), 9., precision,
             err_msg="PoissonNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            pn.getSkyLevel(), 9., precision,
+            pn.sky_level, 9., precision,
             err_msg="PoissonNoise withVariance results in wrong skyLevel")
 
     # Check withScaledVariance
@@ -805,7 +796,7 @@ def test_poisson():
             pn.getVariance(), 36, precision,
             err_msg="PoissonNoise withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            pn.getSkyLevel(), 36., precision,
+            pn.sky_level, 36., precision,
             err_msg="PoissonNoise withScaledVariance results in wrong skyLevel")
 
     # Check arithmetic
@@ -847,18 +838,18 @@ def test_poisson():
             pn.getVariance(), 9., precision,
             err_msg="PoissonNoise().withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            pn.getSkyLevel(), 9., precision,
+            pn.sky_level, 9., precision,
             err_msg="PoissonNoise().withVariance results in wrong skyLevel")
     pn = pn.withScaledVariance(4.)
     np.testing.assert_almost_equal(
             pn.getVariance(), 36, precision,
             err_msg="PoissonNoise().withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            pn.getSkyLevel(), 36., precision,
+            pn.sky_level, 36., precision,
             err_msg="PoissonNoise().withScaledVariance results in wrong skyLevel")
 
     # Check picklability
-    do_pickle(p, lambda x: (x.serialize(), x.getMean()))
+    do_pickle(p, lambda x: (x.serialize(), x.mean))
     do_pickle(p, lambda x: (x(), x(), x(), x()))
     do_pickle(pn, lambda x: (x.rng.serialize(), x.sky_level))
     do_pickle(pn, drawNoise)
@@ -873,12 +864,108 @@ def test_poisson():
     assert p1 != p2, "Consecutive PoissonDeviate(None) compared equal!"
     # We shouldn't be able to construct a PoissonDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.PoissonDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.PoissonDeviate, dict())
+    assert_raises(RuntimeError, galsim.PoissonDeviate, list())
+    assert_raises(RuntimeError, galsim.PoissonDeviate, set())
+
+
+@timer
+def test_poisson_highmean():
+    """Test Poisson random number generator with high (>2^30) mean (cf. Issue #881)
+
+    It turns out that the boost poisson deviate class that we use maxes out at 2^31 and wraps
+    around to -2^31.  We have code to automatically switch over to using a Gaussian deviate
+    instead if the mean > 2^30 (factor of 2 from the problem to be safe).  Check that this
+    works properly.
+    """
+    mean_vals =[ 2**30 + 50,  # Uses Gaussian
+                 2**30 - 50,  # Uses Poisson
+                 2**30,       # Uses Poisson (highest value of mean that does)
+                 2**31,       # This is where problems happen if not using Gaussian
+                 5.e20,       # Definitely would have problems with normal implementation.
+               ]
+
+    if __name__ == '__main__':
+        nvals = 10000000
+        rtol_var = 1.e-3
+    else:
+        nvals = 100000
+        rtol_var = 1.e-2
+
+    for mean in mean_vals:
+        print('Test PoissonDeviate with mean = ',mean)
+        p = galsim.PoissonDeviate(testseed, mean=mean)
+        p2 = p.duplicate()
+        p3 = galsim.PoissonDeviate(p.serialize(), mean=mean)
+        testResult = (p(), p(), p())
+        testResult2 = (p2(), p2(), p2())
+        testResult3 = (p3(), p3(), p3())
+        np.testing.assert_allclose(
+                testResult2, testResult, rtol=1.e-8,
+                err_msg='PoissonDeviate.duplicate not equivalent for mean=%s'%mean)
+        np.testing.assert_allclose(
+                testResult3, testResult, rtol=1.e-8,
+                err_msg='PoissonDeviate from serialize not equivalent for mean=%s'%mean)
+
+        # Check that the mean and variance come out right
+        vals = [p() for i in range(nvals)]
+        mu = np.mean(vals)
+        var = np.var(vals)
+        print('mean = ',mu,'  true mean = ',mean)
+        print('var = ',var,'   true var = ',mean)
+        np.testing.assert_allclose(mu, mean, rtol=1.e-5,
+                err_msg='Wrong mean from PoissonDeviate with mean=%s'%mean)
+        np.testing.assert_allclose(var, mean, rtol=rtol_var,
+                err_msg='Wrong variance from PoissonDeviate with mean=%s'%mean)
+
+        # Check that two connected poisson deviates work correctly together.
+        p2 = galsim.PoissonDeviate(testseed, mean=mean)
+        p.reset(p2)
+        testResult2 = (p(), p(), p2())
+        np.testing.assert_array_equal(
+                testResult2, testResult,
+                err_msg='Wrong poisson random number sequence generated using two pds')
+        p.seed(testseed)
+        p2.clearCache()
+        testResult2 = (p2(), p2(), p())
+        np.testing.assert_array_equal(
+                testResult2, testResult,
+                err_msg='Wrong poisson random number sequence generated using two pds after seed')
+
+        # Test filling an image
+        p.seed(testseed)
+        testimage = galsim.ImageD(np.zeros((3, 1)))
+        testimage.addNoise(galsim.DeviateNoise(p))
+        np.testing.assert_array_equal(
+                testimage.array.flatten(), testResult,
+                err_msg='Wrong poisson random number sequence generated when applied to image.')
+
+        # The PoissonNoise version also subtracts off the mean value
+        rng = galsim.BaseDeviate(testseed)
+        pn = galsim.PoissonNoise(rng, sky_level=mean)
+        testimage.fill(0)
+        testimage.addNoise(pn)
+        np.testing.assert_array_equal(
+                testimage.array.flatten(), np.array(testResult)-mean,
+                err_msg='Wrong poisson random number sequence generated using PoissonNoise')
+
+        # Check PoissonNoise variance:
+        np.testing.assert_allclose(
+                pn.getVariance(), mean, rtol=1.e-8,
+                err_msg="PoissonNoise getVariance returns wrong variance")
+        np.testing.assert_allclose(
+                pn.sky_level, mean, rtol=1.e-8,
+                err_msg="PoissonNoise sky_level returns wrong value")
+
+        # Check that the noise model really does produce this variance.
+        big_im = galsim.Image(2048,2048,dtype=float)
+        big_im.addNoise(pn)
+        var = np.var(big_im.array)
+        print('variance = ',var)
+        print('getVar = ',pn.getVariance())
+        np.testing.assert_allclose(
+                var, pn.getVariance(), rtol=rtol_var,
+                err_msg='Realized variance for PoissonNoise did not match getVariance()')
 
 
 @timer
@@ -1003,7 +1090,7 @@ def test_weibull():
             err_msg='Wrong weibull random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(w, lambda x: (x.serialize(), x.getA(), x.getB()))
+    do_pickle(w, lambda x: (x.serialize(), x.a, x.b))
     do_pickle(w, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(w), drawNoise)
     do_pickle(w)
@@ -1015,12 +1102,9 @@ def test_weibull():
     assert w1 != w2, "Consecutive WeibullDeviate(None) compared equal!"
     # We shouldn't be able to construct a WeibullDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.WeibullDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.WeibullDeviate, dict())
+    assert_raises(RuntimeError, galsim.WeibullDeviate, list())
+    assert_raises(RuntimeError, galsim.WeibullDeviate, set())
 
 
 @timer
@@ -1135,7 +1219,7 @@ def test_gamma():
             err_msg='Wrong gamma random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(g, lambda x: (x.serialize(), x.getK(), x.getTheta()))
+    do_pickle(g, lambda x: (x.serialize(), x.k, x.theta))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(g), drawNoise)
     do_pickle(g)
@@ -1147,12 +1231,9 @@ def test_gamma():
     assert g1 != g2, "Consecutive GammaDeviate(None) compared equal!"
     # We shouldn't be able to construct a GammaDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.GammaDeviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.GammaDeviate, dict())
+    assert_raises(RuntimeError, galsim.GammaDeviate, list())
+    assert_raises(RuntimeError, galsim.GammaDeviate, set())
 
 
 @timer
@@ -1267,7 +1348,7 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence generated when applied to image.')
 
     # Check picklability
-    do_pickle(c, lambda x: (x.serialize(), x.getN()))
+    do_pickle(c, lambda x: (x.serialize(), x.n))
     do_pickle(c, lambda x: (x(), x(), x(), x()))
     do_pickle(galsim.DeviateNoise(c), drawNoise)
     do_pickle(c)
@@ -1279,40 +1360,32 @@ def test_chi2():
     assert c1 != c2, "Consecutive Chi2Deviate(None) compared equal!"
     # We shouldn't be able to construct a Chi2Deviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, list())
-        np.testing.assert_raises(RuntimeError, galsim.Chi2Deviate, set())
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.Chi2Deviate, dict())
+    assert_raises(RuntimeError, galsim.Chi2Deviate, list())
+    assert_raises(RuntimeError, galsim.Chi2Deviate, set())
 
 
 @timer
 def test_distfunction():
     """Test distribution-defined random number generator with a function
     """
-    try:
-        # Make sure it requires an input function in order to work.
-        np.testing.assert_raises(TypeError, galsim.DistDeviate)
-        # Make sure it does appropriate input sanity checks.
-        np.testing.assert_raises(TypeError, galsim.DistDeviate,
-                                 function='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
-                                 x_min=1.)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function=1.0)
-        np.testing.assert_raises(ValueError, galsim.DistDeviate, function='foo.dat')
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
-                                 interpolant='linear')
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x,
-                                 x_min=1.)
-        test_vals = range(10)
-        np.testing.assert_raises(TypeError, galsim.DistDeviate,
-                                 function=galsim.LookupTable(test_vals, test_vals),
-                                 x_min = 1.)
-        foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
-        np.testing.assert_raises(ValueError, foo.val, -1.)
-    except ImportError:
-        print('The assert_raises test requires nose')
+    # Make sure it requires an input function in order to work.
+    assert_raises(TypeError, galsim.DistDeviate)
+    # Make sure it does appropriate input sanity checks.
+    assert_raises(TypeError, galsim.DistDeviate,
+                  function='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
+                  x_min=1.)
+    assert_raises(TypeError, galsim.DistDeviate, function=1.0)
+    assert_raises(ValueError, galsim.DistDeviate, function='foo.dat')
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x, interpolant='linear')
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x)
+    assert_raises(TypeError, galsim.DistDeviate, function = lambda x : x*x, x_min=1.)
+    test_vals = range(10)
+    assert_raises(TypeError, galsim.DistDeviate,
+                  function=galsim.LookupTable(test_vals, test_vals),
+                  x_min = 1.)
+    foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
+    assert_raises(ValueError, foo.val, -1.)
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1449,12 +1522,9 @@ def test_distfunction():
     assert c1 != c2, "Consecutive DistDeviate(None) compared equal!"
     # We shouldn't be able to construct a DistDeviate from anything but a BaseDeviate, int, str,
     # or None.
-    try:
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
-        np.testing.assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
-    except ImportError:
-        print('The assert_raises tests require nose')
+    assert_raises(RuntimeError, galsim.DistDeviate, dict(), lambda x:1, 0, 1)
+    assert_raises(RuntimeError, galsim.DistDeviate, list(), lambda x:1, 0, 1)
+    assert_raises(RuntimeError, galsim.DistDeviate, set(), lambda x:1, 0, 1)
 
 
 @timer
@@ -1636,14 +1706,14 @@ def test_ccdnoise():
             ccdnoise.getVariance(), var1, precision,
             err_msg="CCDNoise getVariance returns wrong variance")
     np.testing.assert_almost_equal(
-            ccdnoise.getSkyLevel(), sky, precision,
-            err_msg="CCDNoise getSkyLevel returns wrong value")
+            ccdnoise.sky_level, sky, precision,
+            err_msg="CCDNoise sky_level returns wrong value")
     np.testing.assert_almost_equal(
-            ccdnoise.getGain(), cGain, precision,
-            err_msg="CCDNoise getGain returns wrong value")
+            ccdnoise.gain, cGain, precision,
+            err_msg="CCDNoise gain returns wrong value")
     np.testing.assert_almost_equal(
-            ccdnoise.getReadNoise(), cReadNoise, precision,
-            err_msg="CCDNoise getReadNoise returns wrong value")
+            ccdnoise.read_noise, cReadNoise, precision,
+            err_msg="CCDNoise read_noise returns wrong value")
 
     # Check that the noise model really does produce this variance.
     # NB. If default float32 is used here, older versions of numpy will compute the variance
@@ -1665,13 +1735,13 @@ def test_ccdnoise():
             ccdnoise.getVariance(), 9., precision,
             err_msg="CCDNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            ccdnoise.getSkyLevel(), (9./var1)*sky, precision,
+            ccdnoise.sky_level, (9./var1)*sky, precision,
             err_msg="CCDNoise withVariance results in wrong SkyLevel")
     np.testing.assert_almost_equal(
-            ccdnoise.getGain(), cGain, precision,
+            ccdnoise.gain, cGain, precision,
             err_msg="CCDNoise withVariance results in wrong Gain")
     np.testing.assert_almost_equal(
-            ccdnoise.getReadNoise(), np.sqrt(9./var1) * cReadNoise, precision,
+            ccdnoise.read_noise, np.sqrt(9./var1) * cReadNoise, precision,
             err_msg="CCDNoise withVariance results in wrong ReadNoise")
 
     # Check withScaledVariance
@@ -1680,13 +1750,13 @@ def test_ccdnoise():
             ccdnoise.getVariance(), 36., precision,
             err_msg="CCDNoise withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            ccdnoise.getSkyLevel(), (36./var1)*sky, precision,
+            ccdnoise.sky_level, (36./var1)*sky, precision,
             err_msg="CCDNoise withVariance results in wrong SkyLevel")
     np.testing.assert_almost_equal(
-            ccdnoise.getGain(), cGain, precision,
+            ccdnoise.gain, cGain, precision,
             err_msg="CCDNoise withVariance results in wrong Gain")
     np.testing.assert_almost_equal(
-            ccdnoise.getReadNoise(), np.sqrt(36./var1) * cReadNoise, precision,
+            ccdnoise.read_noise, np.sqrt(36./var1) * cReadNoise, precision,
             err_msg="CCDNoise withVariance results in wrong ReadNoise")
 
     # Check arithmetic
@@ -1728,26 +1798,26 @@ def test_ccdnoise():
             ccdnoise.getVariance(), 9., precision,
             err_msg="CCDNoise().withVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            ccdnoise.getSkyLevel(), 9., precision,
+            ccdnoise.sky_level, 9., precision,
             err_msg="CCDNoise().withVariance results in wrong SkyLevel")
     np.testing.assert_almost_equal(
-            ccdnoise.getGain(), 1., precision,
+            ccdnoise.gain, 1., precision,
             err_msg="CCDNoise().withVariance results in wrong Gain")
     np.testing.assert_almost_equal(
-            ccdnoise.getReadNoise(), 0., precision,
+            ccdnoise.read_noise, 0., precision,
             err_msg="CCDNoise().withVariance results in wrong ReadNoise")
     ccdnoise = ccdnoise.withScaledVariance(4.)
     np.testing.assert_almost_equal(
             ccdnoise.getVariance(), 36., precision,
             err_msg="CCDNoise().withScaledVariance results in wrong variance")
     np.testing.assert_almost_equal(
-            ccdnoise.getSkyLevel(), 36., precision,
+            ccdnoise.sky_level, 36., precision,
             err_msg="CCDNoise().withScaledVariance results in wrong SkyLevel")
     np.testing.assert_almost_equal(
-            ccdnoise.getGain(), 1., precision,
+            ccdnoise.gain, 1., precision,
             err_msg="CCDNoise().withScaledVariance results in wrong Gain")
     np.testing.assert_almost_equal(
-            ccdnoise.getReadNoise(), 0., precision,
+            ccdnoise.read_noise, 0., precision,
             err_msg="CCDNoise().withScaledVariance results in wrong ReadNoise")
 
     # Check picklability
@@ -1843,7 +1913,7 @@ def test_addnoisesnr():
     # Use a default-constructed rng (i.e. rng=None) since we had initially had trouble
     # with that.  And use the duplicate feature to get a second copy of this rng.
     gn = galsim.GaussianNoise()
-    rng2 = gn.getRNG().duplicate()
+    rng2 = gn.rng.duplicate()
 
     # Try addNoiseSNR with preserve_flux=True, so the RNG needs a different variance.
     # Check what variance was added for this SNR, and that the RNG still has its original variance
@@ -1889,11 +1959,9 @@ def test_permute():
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
-    try:
-        # permute with no lists should raise TypeError
-        np.testing.assert_raises(TypeError, galsim.random.permute, 312)
-    except ImportError:
-        pass
+    # permute with no lists should raise TypeError
+    with assert_raises(TypeError):
+        galsim.random.permute(312)
 
 
 @timer
@@ -1912,12 +1980,116 @@ def test_ne():
     assert repr(d1) == repr(d2)
     assert d1 != d2
 
+@timer
+def test_variable_gaussian_noise():
+    """Test VariableGaussian random number generator
+    """
+    # Make a checkerboard image with two values for the variance
+    gSigma1 = 1.7
+    gSigma2 = 2.85
+    var_image = galsim.ImageD(galsim.BoundsI(0,29,0,29))
+    coords = np.ogrid[0:30, 0:30]
+    mask1 = (coords[0] + coords[1]) % 2 == 0
+    mask2 = (coords[0] + coords[1]) % 2 == 1
+    var_image.array[mask1] = gSigma1**2
+    var_image.array[mask2] = gSigma2**2
+    print('var_image.array = ',var_image.array)
+
+    # Test filling an image
+    vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), var_image)
+    testimage = galsim.ImageD(30,30)
+    testimage.addNoise(vgn)
+    print('rms1 = ',np.std(testimage.array[mask1]))
+    print('rms2 = ',np.std(testimage.array[mask2]))
+    np.testing.assert_almost_equal(np.std(testimage.array[mask1])/10, gSigma1/10, decimal=1)
+    np.testing.assert_almost_equal(np.std(testimage.array[mask2])/100, gSigma2/100, decimal=1)
+
+    # Test filling an image with Fortran ordering
+    vgn.rng.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((30,30)).T)
+    testimage.addNoise(vgn)
+    print('rms1 = ',np.std(testimage.array[mask1]))
+    print('rms2 = ',np.std(testimage.array[mask2]))
+    np.testing.assert_almost_equal(np.std(testimage.array[mask1])/10, gSigma1/10, decimal=1)
+    np.testing.assert_almost_equal(np.std(testimage.array[mask2])/100, gSigma2/100, decimal=1)
+
+    # Check var_image property
+    np.testing.assert_almost_equal(
+            vgn.var_image.array, var_image.array, 5,
+            err_msg="VariableGaussianNoise var_image returns wrong var_image")
+
+    # Check the measured variance vs the nominal variance.  And go bigger to be more precise.
+    big_var_image = galsim.ImageD(galsim.BoundsI(0,2047,0,2047))
+    big_coords = np.ogrid[0:2048, 0:2048]
+    mask1 = (big_coords[0] + big_coords[1]) % 2 == 0
+    mask2 = (big_coords[0] + big_coords[1]) % 2 == 1
+    big_var_image.array[mask1] = gSigma1**2
+    big_var_image.array[mask2] = gSigma2**2
+    big_vgn = galsim.VariableGaussianNoise(galsim.BaseDeviate(testseed), big_var_image)
+
+    big_im = galsim.Image(2048,2048,dtype=float)
+    big_im.addNoise(big_vgn)
+    var = np.var(big_im.array)
+    print('variance = ',var)
+    print('mean of var_image = ',big_vgn.var_image.array.mean())
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='Realized variance for VariableGaussianNoise did not match var_image')
+
+    # Check that VariableGaussianNoise adds to the image, not overwrites the image.
+    gal = galsim.Exponential(half_light_radius=2.3, flux=1.e4)
+    gal.drawImage(image=big_im)
+    big_vgn.rng.seed(testseed)
+    big_im.addNoise(big_vgn)
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='VariableGaussianNoise wrong when already an object drawn on the image')
+
+    # Check that DeviateNoise adds to the image, not overwrites the image.
+    gal.drawImage(image=big_im)
+    big_vgn.rng.seed(testseed)
+    big_im.addNoise(big_vgn)
+    gal.withFlux(-1.e4).drawImage(image=big_im, add_to_image=True)
+    var = np.var(big_im.array)
+    np.testing.assert_almost_equal(
+            var, big_vgn.var_image.array.mean(), 1,
+            err_msg='DeviateNoise wrong when already an object drawn on the image')
+
+    # Check picklability
+    do_pickle(vgn, lambda x: (x.rng.serialize(), x.var_image))
+    do_pickle(vgn)
+
+    # Check copy, eq and ne
+    vgn2 = galsim.VariableGaussianNoise(vgn.rng.duplicate(), var_image)
+    vgn3 = vgn.copy()
+    vgn4 = vgn.copy(rng=galsim.BaseDeviate(11))
+    vgn5 = galsim.VariableGaussianNoise(vgn.rng, 2.*var_image)
+    assert vgn == vgn2
+    assert vgn == vgn3
+    assert vgn != vgn4
+    assert vgn != vgn5
+    assert vgn.rng.raw() == vgn2.rng.raw()
+    assert vgn == vgn2
+    assert vgn == vgn3
+    vgn.rng.raw()
+    assert vgn != vgn2
+    assert vgn == vgn3
+
+    assert_raises(AttributeError, vgn.applyTo, 23)
+    assert_raises(RuntimeError, vgn.applyTo, galsim.ImageF(3,3))
+    assert_raises(RuntimeError, vgn.getVariance)
+    assert_raises(RuntimeError, vgn.withVariance, 23)
+    assert_raises(RuntimeError, vgn.withScaledVariance, 23)
+
 
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
     test_binomial()
     test_poisson()
+    test_poisson_highmean()
     test_weibull()
     test_gamma()
     test_chi2()
@@ -1928,3 +2100,4 @@ if __name__ == "__main__":
     test_addnoisesnr()
     test_permute()
     test_ne()
+    test_variable_gaussian_noise()

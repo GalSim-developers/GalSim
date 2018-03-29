@@ -482,7 +482,7 @@ class OutputCatalog(object):
                 new_cols.append(col)
             elif t == galsim.Angle:
                 dtypes.append( (name + ".rad", float) )
-                new_cols.append( [ val.rad() for val in col ] )
+                new_cols.append( [ val.rad for val in col ] )
             elif t == galsim.PositionI:
                 dtypes.append( (name + ".x", int) )
                 dtypes.append( (name + ".y", int) )
@@ -549,12 +549,7 @@ class OutputCatalog(object):
         @param file_name    The name of the file to write to.
         """
         tbhdu = self.writeFitsHdu()
-        # Don't use astropy's clobber feature, since it's now (as of astropy version 1.3) called
-        # overwrite and dealing with two incompatible APIs is more than I want to deal with.
-        # Just do it ourselves.
-        if os.path.isfile(file_name):
-            os.remove(file_name)
-        tbhdu.writeto(file_name)
+        galsim.fits.writeFile(file_name, tbhdu)
 
     def writeFitsHdu(self):
         """Write catalog to a FITS hdu.
@@ -583,7 +578,7 @@ class OutputCatalog(object):
         # Depending on the version of pyfits, one of these should work:
         try:
             tbhdu = pyfits.BinTableHDU.from_columns(cols)
-        except:  # pragma: no cover
+        except AttributeError:  # pragma: no cover
             tbhdu = pyfits.new_table(cols)
         return tbhdu
 

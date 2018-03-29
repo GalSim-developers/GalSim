@@ -170,10 +170,10 @@ struct PyShapeData {
         const galsim::Position<double>& moments_centroid,
         double moments_rho4, int moments_n_iter,
         int correction_status, float corrected_e1, float corrected_e2,
-        float corrected_g1, float corrected_g2, std::string meas_type,
-        float corrected_shape_err, std::string correction_method,
+        float corrected_g1, float corrected_g2, const char* meas_type,
+        float corrected_shape_err, const char* correction_method,
         float resolution_factor, float psf_sigma,
-        float psf_e1, float psf_e2, std::string error_message)
+        float psf_e1, float psf_e2, const char* error_message)
     {
         CppShapeData* data = new CppShapeData();
         data->image_bounds = image_bounds;
@@ -204,18 +204,18 @@ struct PyShapeData {
     template <typename U, typename V>
     static void wrapTemplates() {
         typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&,
-                                         double, double, Position<double>,
+                                         double, double, Position<double>, bool, 
                                          boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
                  bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
-                 bp::arg("hsmparams")=bp::object()),
+                 bp::arg("round_moments")=false, bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
         typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&,
                                          const BaseImage<int>&, float, const char *,
-                                         const std::string&, double, double, double, Position<double>,
+                                         const char*, double, double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearView",
                 ESH_func(&EstimateShearView),
