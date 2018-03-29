@@ -35,7 +35,7 @@ try:
         from lsst.afw.cameraGeom import PUPIL, PIXELS, TAN_PIXELS, FOCAL_PLANE
         from lsst.obs.lsstSim import LsstSimMapper
 except ImportError:
-    raise ImportError("You cannot use the LSST module.\n"
+    warnings.warn("You cannot use the LSST module.\n"
                       "You either do not have the LSST stack installed,\n"
                       "or you have it installed, but have not set it up.\n"
                       "------------\n"
