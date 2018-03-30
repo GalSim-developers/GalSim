@@ -113,7 +113,7 @@ def make_plot(args):
             fftImg = psf.drawImage(nx=args.nx, ny=args.nx, scale=args.scale)
 
         secondKick = galsim.SecondKick(lam=args.lam, r0=args.r0_500*(args.lam/500.)**(6./5),
-                                       diam=args.diam, obscuration=args.obscuration, L0=args.L0,
+                                        diam=args.diam, obscuration=args.obscuration,
                                        kcrit=kcrit)
         secondKickImg = secondKick.drawImage(nx=args.nx, ny=args.nx, scale=args.scale,
                                              method='phot', n_photons=args.nphot)

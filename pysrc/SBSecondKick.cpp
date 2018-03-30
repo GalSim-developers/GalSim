@@ -37,11 +37,11 @@ namespace galsim {
             double (SBSecondKick::*xv)(double) const = &SBSecondKick::xValue;
 
             bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
-                .def(bp::init<double,double,double,double,double,double,double,double,
+                .def(bp::init<double,double,double,double,double,double,double,
                               boost::shared_ptr<GSParams> >(
                         (bp::arg("lam"), bp::arg("r0"),
                          bp::arg("diam"), bp::arg("obscuration"),
-                         bp::arg("L0"), bp::arg("kcrit"), bp::arg("flux")=1.,
+                         bp::arg("kcrit"), bp::arg("flux")=1.,
                          bp::arg("scale")=1.0, bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBSecondKick &>())
@@ -49,7 +49,6 @@ namespace galsim {
                 .def("getR0", &SBSecondKick::getR0)
                 .def("getDiam", &SBSecondKick::getDiam)
                 .def("getObscuration", &SBSecondKick::getObscuration)
-                .def("getL0", &SBSecondKick::getL0)
                 .def("getKCrit", &SBSecondKick::getKCrit)
                 .def("getScale", &SBSecondKick::getScale)
                 .def("getDelta", &SBSecondKick::getDelta)

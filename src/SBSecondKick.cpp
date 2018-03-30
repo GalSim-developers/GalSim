@@ -52,10 +52,10 @@ namespace galsim {
     //
     //
 
-    SBSecondKick::SBSecondKick(double lam, double r0, double diam, double obscuration, double L0,
+    SBSecondKick::SBSecondKick(double lam, double r0, double diam, double obscuration,
                                double kcrit, double flux, double scale,
                                const GSParamsPtr& gsparams) :
-        SBProfile(new SBSecondKickImpl(lam, r0, diam, obscuration, L0, kcrit, flux, scale,
+        SBProfile(new SBSecondKickImpl(lam, r0, diam, obscuration, kcrit, flux, scale,
                                        gsparams)) {}
 
     SBSecondKick::SBSecondKick(const SBSecondKick &rhs) : SBProfile(rhs) {}
@@ -84,12 +84,6 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
         return static_cast<const SBSecondKickImpl&>(*_pimpl).getObscuration();
-    }
-
-    double SBSecondKick::getL0() const
-    {
-        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getL0();
     }
 
     double SBSecondKick::getKCrit() const
@@ -167,11 +161,10 @@ namespace galsim {
         const double _thresh;
     };
 
-    SKInfo::SKInfo(double lam, double r0, double diam, double obscuration, double L0,
+    SKInfo::SKInfo(double lam, double r0, double diam, double obscuration,
                    double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _lam_arcsec(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0),
-        _diam(diam), _obscuration(obscuration), _L0(L0/_r0),
-        _L0_invcuberoot(fast_pow(_L0, -1./3)), _L0invsq(1./_L0/_L0), _L053(fast_pow(_L0, 5./3)),
+        _diam(diam), _obscuration(obscuration), 
         _kcrit(kcrit), _knorm(1./(M_PI*(1.-obscuration*obscuration))),
         _4_over_diamsq(4.0/(diam*diam)),
         _gsparams(gsparams),
@@ -181,7 +174,7 @@ namespace galsim {
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<diam<<","<<obscuration<<","<<L0<<","<<kcrit<<std::endl;
+        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<diam<<","<<obscuration<<","<<kcrit<<std::endl;
         _lam_over_r0 = _lam_arcsec/_r0;
         _maxk = 2.*M_PI * _diam/_r0;
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
@@ -200,35 +193,6 @@ namespace galsim {
         _buildRadial();
 #endif
     }
-
-    class SKISFIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        SKISFIntegrand(double rho, double L0invsq) : _2pirho(2*M_PI*rho), _L0invsq(L0invsq) {}
-        double operator()(double kappa) const {
-            return fast_pow(kappa*kappa+_L0invsq, -11./6)*kappa*(1-j0(_2pirho*kappa));
-        }
-    private:
-        const double _2pirho;   // 2*pi*rho
-        const double _L0invsq;  // inverse meters squared
-    };
-
-#if 0
-    // This version of structureFunction explicitly integrates from kcrit to infinity, which is how
-    // the second kick is defined. However, I've found it's more stable to integrate from zero to
-    // kcrit, and then subtract this from the analytic integral from 0 to infinity.  So that's
-    // what's implemented further down.
-    double SKInfo::structureFunction2(double rho) const {
-        const static double magic6 = 0.2877144330394485472;
-        SKISFIntegrand I(rho, _L0invsq);
-        xdbg<<"structureFunction2("<<rho<<")\n";
-        double result = integ::int1d(I, _kcrit, integ::MOCK_INF,
-                                     _gsparams->integration_relerr,
-                                     _gsparams->integration_abserr);
-        result *= magic6;
-        return result;
-    }
-#endif
 
     class SKISFIntegrand3 : public std::unary_function<double,double>
     {
@@ -251,13 +215,12 @@ namespace galsim {
     };
 
 
-    double SKInfo::structureFunction2(double rho) const {
+    double SKInfo::structureFunction(double rho) const {
         const static double magic6 = 0.2877144330394485472;
         SKISFIntegrand3 I(rho, _kcrit);
         integ::IntRegion<double> reg(0., integ::MOCK_INF);
         for (int s=1; s<10; s++) {
             double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
-            if (zero >= _kcrit) break;
             reg.addSplit(zero);
         }
         double result = integ::int1d(I, reg,
@@ -265,31 +228,6 @@ namespace galsim {
                                      _gsparams->integration_abserr);
         result *= magic6;
         return result;
-    }
-
-    double SKInfo::structureFunction(double rho) const {
-        // rho in units of r0
-        // 2 gamma(11/6)^2 / pi^(8/3) (24/5 gamma(6/5))^(5/6)
-        const static double magic6 = 0.2877144330394485472;
-
-        SKISFIntegrand I(rho, _L0invsq);
-        integ::IntRegion<double> reg(0., _kcrit);
-        for (int s=1; s<10; s++) {
-            double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
-            if (zero >= _kcrit) break;
-            reg.addSplit(zero);
-        }
-
-        double complement = integ::int1d(I, reg,
-                                         _gsparams->integration_relerr,
-                                         _gsparams->integration_abserr);
-
-        //return vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053) - magic6*complement;
-        double vk = vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053);
-        //xdbg<<"SF("<<rho<<") = "<<vk<<" - "<<magic6*complement<<std::endl;
-        //xdbg<<"   = "<<(vk-magic6*complement)<<std::endl;
-        //xdbg<<"   = "<<(vk-magic6*complement)<<"  "<<structureFunction2(rho)<<std::endl;
-        return vk - magic6*complement;
     }
 
     void SKInfo::_buildKVLUT() {
@@ -303,15 +241,7 @@ namespace galsim {
             return;
         }
 
-        //set_verbose(2);
-        // The shape of the structure function here is to rise quickly from 0 to near the 
-        // limiting value and then oscillate around it with smaller and smaller amplitude.
-        // (It looks qualitatively like the Si function, FWIW.)  This mean the kvalues level
-        // off to a constant, which implies that there is a delta function component.
-        // We separate that off and model it separately in the python layer.  Here, we
-        // only store the kValue of the non-delta function component.
         const static double magic6 = 0.2877144330394485472;
-        //double limit = magic6*0.6*std::pow(_kcrit*_kcrit + _L0invsq, -5./6.);
         //double limit = magic6*M_PI*std::pow(_kcrit, -5./3.);
         double limit = magic6*M_PI*std::pow(_kcrit, -5./3.) / (4.*std::sin(5.*M_PI/12.));
         dbg<<"limit = "<<limit<<std::endl;
@@ -321,13 +251,9 @@ namespace galsim {
         xdbg<<"Using dk = "<<dk<<'\n';
 
         double k=0.;
-        // Independent of kc or L0, the oscillations become very small by k=100, but above
-        // this value, there start to be numerical inaccuracies that lead to some apparent
-        // oscillations again.  To avoid this, we cut off the function at k=100 and just
-        // use 0 for the non-delta component part above that.
         _kvLUT.addEntry(0, 1.-_delta);
         for (k=dk; k<1.; k+=dk) {
-            double val = structureFunction2(k);
+            double val = structureFunction(k);
             xdbg<<"sf("<<k<<") "<<val<<std::endl;
             double kv = fmath::exp(-0.5*val)-_delta;
             dbg<<"kv("<<k<<") "<<kv<<std::endl;
@@ -337,7 +263,7 @@ namespace galsim {
         // Switch to logarithmic spacing.  dk -> dlogk
         double expdlogk = exp(dk);
         for (; k<_maxk; k*=expdlogk) {
-            double val = structureFunction2(k);
+            double val = structureFunction(k);
             xdbg<<"sf("<<k<<") "<<val<<std::endl;
             double kv = fmath::exp(-0.5*val)-_delta;
             dbg<<"kv("<<k<<") "<<kv<<std::endl;
@@ -554,14 +480,13 @@ namespace galsim {
 
     boost::shared_ptr<PhotonArray> SKInfo::shoot(int N, UniformDeviate ud) const
     {
-        std::cerr<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
         assert(_sampler.get());
         boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
         //result->scaleXY(_lam_over_r0);
         return result;
     }
 
-    LRUCache<boost::tuple<double,double,double,double,double,double,GSParamsPtr>,SKInfo>
+    LRUCache<boost::tuple<double,double,double,double,double,GSParamsPtr>,SKInfo>
         SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
@@ -573,7 +498,7 @@ namespace galsim {
     //
 
     SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam, double r0, double diam,
-                                                     double obscuration, double L0, double kcrit,
+                                                     double obscuration, double kcrit,
                                                      double flux, double scale,
                                                      const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
@@ -581,11 +506,10 @@ namespace galsim {
         _r0(r0),
         _diam(diam),
         _obscuration(obscuration),
-        _L0(L0),
         _kcrit(kcrit),
         _flux(flux),
         _scale(scale),
-        _info(cache.get(boost::make_tuple(1e-9*lam, r0, diam, obscuration, L0, kcrit, this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(1e-9*lam, r0, diam, obscuration, kcrit, this->gsparams.duplicate())))
     { }
 
     double SBSecondKick::SBSecondKickImpl::maxK() const
@@ -606,7 +530,6 @@ namespace galsim {
             <<getR0()<<", "
             <<getDiam()<<", "
             <<getObscuration()<<", "
-            <<getL0()<<", "
             <<getKCrit()<<", "
             <<getFlux()<<", "
             <<getScale()<<", "

@@ -77,7 +77,6 @@ class SecondKick(GSObject):
     @param diam              Aperture diameter in meters.
     @param obscuration       Linear dimension of central obscuration as fraction of aperture
                              linear dimension. [0., 1.).  [default: 0.0]
-    @param L0                Outer scale in meters.  [default: 25.0]
     @param kcrit             Critical Fourier mode (in units of 1/r0) below which the turbulence
                              power spectrum will be truncated.  [default: 0.2]
     @param flux              The flux (in photons/cm^2/s) of the profile. [default: 1]
@@ -88,12 +87,8 @@ class SecondKick(GSObject):
     @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
                              details. [default: None]
     """
-    def __init__(self, lam, r0, diam, obscuration=0, L0=25.0, kcrit=0.2, flux=1,
+    def __init__(self, lam, r0, diam, obscuration=0, kcrit=0.2, flux=1,
                  scale_unit=galsim.arcsec, gsparams=None):
-        # We lose stability if L0 gets too large.  This should be close enough to infinity for
-        # all practical purposes though.
-        if L0 > 1e10:
-            L0 = 1e10
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need _scale_unit for repr roundtriping.
@@ -101,7 +96,7 @@ class SecondKick(GSObject):
         self._flux = flux
         scale = scale_unit/galsim.arcsec
         self._sbs = galsim._galsim.SBSecondKick(
-            lam, r0, diam, obscuration, L0, kcrit, flux, scale, gsparams)
+            lam, r0, diam, obscuration, kcrit, flux, scale, gsparams)
         lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         self._sba = galsim._galsim.SBAiry(lam_over_diam, obscuration, 1., gsparams)
         self._sbd = galsim._galsim.SBDeltaFunction(self._sbs.getDelta())
@@ -134,10 +129,6 @@ class SecondKick(GSObject):
         return self._sbs.getObscuration()
 
     @property
-    def L0(self):
-        return self._sbs.getL0()
-
-    @property
     def kcrit(self):
         return self._sbs.getKCrit()
 
@@ -159,14 +150,13 @@ class SecondKick(GSObject):
         self.r0 == other.r0 and
         self.diam == other.diam and
         self.obscuration == other.obscuration and
-        self.L0 == other.L0 and
         self.kcrit == other.kcrit and
         self.flux == other.flux and
         self.scale_unit == other.scale_unit and
         self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.SecondKick", self.lam, self.r0, self.diam, self.obscuration, self.L0,
+        return hash(("galsim.SecondKick", self.lam, self.r0, self.diam, self.obscuration,
                      self.kcrit, self.flux, self.scale_unit, self.gsparams))
 
     def __repr__(self):
@@ -176,7 +166,6 @@ class SecondKick(GSObject):
         out += ", diam=%r"%self.diam
         if self.obscuration != 0.0:
             out += ", obscuration=%r"%self.obscuration
-        out += ", L0=%r"%self.L0
         out += ", kcrit=%r"%self.kcrit
         if self.flux != 1:
             out += ", flux=%r"%self.flux
@@ -189,8 +178,8 @@ class SecondKick(GSObject):
         return "galsim.SecondKick(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
 
 _galsim.SBSecondKick.__getinitargs__ = lambda self: (
-    self.getLam(), self.getR0(), self.getDiam(), self.getObscuration(), self.getL0(),
+    self.getLam(), self.getR0(), self.getDiam(), self.getObscuration(),
     self.getKCrit(), self.getFlux()+self.getDelta(), self.getScale(), self.getGSParams())
 _galsim.SBSecondKick.__getstate__ = lambda self: None
 _galsim.SBSecondKick.__repr__ = lambda self: \
-    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
+    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()

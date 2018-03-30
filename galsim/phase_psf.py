@@ -1219,11 +1219,10 @@ class PhaseScreenPSF(GSObject):
                 return galsim.Airy(lam=self.lam, diam=self.aper.diam,
                                    obscuration=self.aper.obscuration)
             else:
-                L0 = self._screen_list.L0_effective
                 r0 = r0_500 * (self.lam/500.)**(6./5)
                 return galsim.SecondKick(
                         self.lam, r0, self.aper.diam, self.aper.obscuration,
-                        L0=L0, kcrit=self.kcrit, scale_unit=self.scale_unit,
+                        kcrit=self.kcrit, scale_unit=self.scale_unit,
                         gsparams=self._gsparams)
         else:
             return self._second_kick

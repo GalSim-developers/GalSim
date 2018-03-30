@@ -138,7 +138,7 @@ def make_plot(args):
                             time_step=args.time_step, second_kick=False)
         r0 = args.r0_500*(args.lam/500)**(6./5)
         kick2 = galsim.SecondKick(lam=args.lam, r0=r0, diam=args.diam, obscuration=args.obscuration,
-                                  L0=args.L0, kcrit=kcrit)
+                                  kcrit=kcrit)
         img1 = kick1.drawImage(nx=args.nx, ny=args.nx, scale=args.scale, method='phot',
                                n_photons=args.nphot)
         try:

@@ -34,45 +34,41 @@ def test_init(slow=False):
     if __name__ == '__main__' and slow:
         lams = [300.0, 500.0, 1100.0]
         r0_500s = [0.1, 0.15, 0.3]
-        #L0s = [1000.0, 25.0, 10.0]
-        L0s = [25.0]
         kcrits = [0.1, 0.2, 0.4]
     else:
         lams = [500.0]
         r0_500s = [0.15]
-        L0s = [25.0]
         kcrits = [0.2]
     for lam in lams:
         for r0_500 in r0_500s:
             r0 = r0_500*(lam/500)**(6./5)
-            for L0 in L0s:
-                for kcrit in kcrits:
-                    t0 = time.time()
-                    kwargs = {'lam':lam, 'r0':r0, 'L0':L0, 'kcrit':kcrit, 'diam':4.0}
-                    print(kwargs)
-                    kwargs['gsparams'] = bigGSP
+            for kcrit in kcrits:
+                t0 = time.time()
+                kwargs = {'lam':lam, 'r0':r0, 'kcrit':kcrit, 'diam':4.0}
+                print(kwargs)
+                kwargs['gsparams'] = bigGSP
 
-                    sk = galsim.SecondKick(flux=2.2, **kwargs)
-                    t1 = time.time()
-                    print('   stepk, maxk = ',sk.stepk, sk.maxk)
-                    np.testing.assert_almost_equal(sk.flux, 2.2)
-                    do_pickle(sk)
-                    do_pickle(sk._sbs)
-                    do_pickle(sk._sbs, lambda x: (x.getFlux(), x.getGSParams()))
-                    t2 = time.time()
+                sk = galsim.SecondKick(flux=2.2, **kwargs)
+                t1 = time.time()
+                print('   stepk, maxk = ',sk.stepk, sk.maxk)
+                np.testing.assert_almost_equal(sk.flux, 2.2)
+                do_pickle(sk)
+                do_pickle(sk._sbs)
+                do_pickle(sk._sbs, lambda x: (x.getFlux(), x.getGSParams()))
+                t2 = time.time()
 
-                    # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
-                    # Decrease maxk by convolving in a smallish Gaussian.
-                    obj = galsim.Convolve(sk, galsim.Gaussian(fwhm=0.2))
-                    print('   obj stepk, maxk = ',obj.stepk, obj.maxk)
-                    check_basic(obj, "SecondKick")
-                    t3 = time.time()
-                    img = galsim.Image(16, 16, scale=0.2)
-                    do_shoot(obj, img, "SecondKick")
-                    t4 = time.time()
-                    do_kvalue(obj, img, "SecondKick")
-                    t5 = time.time()
-                    print(' times = ',t1-t0,t2-t1,t3-t2,t4-t3,t5-t4)
+                # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
+                # Decrease maxk by convolving in a smallish Gaussian.
+                obj = galsim.Convolve(sk, galsim.Gaussian(fwhm=0.2))
+                print('   obj stepk, maxk = ',obj.stepk, obj.maxk)
+                check_basic(obj, "SecondKick")
+                t3 = time.time()
+                img = galsim.Image(16, 16, scale=0.2)
+                do_shoot(obj, img, "SecondKick")
+                t4 = time.time()
+                do_kvalue(obj, img, "SecondKick")
+                t5 = time.time()
+                print(' times = ',t1-t0,t2-t1,t3-t2,t4-t3,t5-t4)
 
 
 @timer
@@ -83,17 +79,17 @@ def test_structure_function():
     """
     lam = 500.0
     r0 = 0.2
-    L0 = 30.0
     diam = 8.36
     obscuration = 0.61
 
-    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=0.0)
-    vk = galsim.VonKarman(lam, r0, L0=L0)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, kcrit=0.0)
+    vk = galsim.VonKarman(lam, r0, L0=1.e10)
 
     for rho in [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]:
         sksf = sk._structure_function(rho)
         vksf = vk._structure_function(rho)
-        np.testing.assert_allclose(sksf, vksf, rtol=1e-6)
+        print(sksf,vksf)
+        np.testing.assert_allclose(sksf, vksf, rtol=2e-3, atol=1.e-3)
 
 
 @timer
@@ -105,14 +101,13 @@ def test_limiting_cases():
     """
     lam = 500.0
     r0 = 0.2
-    L0 = 1.e8  # SecondKick is technically the limit as L0->inf.  But it doesn't matter much.
     diam = 8.36
     obscuration = 0.61
 
     # First kcrit=0
-    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=0.0)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, kcrit=0.0)
     limiting_case = galsim.Convolve(
-        galsim.VonKarman(lam, r0, L0=L0),
+        galsim.VonKarman(lam, r0, L0=1.e8),
         galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
     )
     print(sk.stepk, sk.maxk)
@@ -127,7 +122,7 @@ def test_limiting_cases():
             atol=1e-4)
 
     # kcrit=inf
-    sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, kcrit=np.inf)
+    sk = galsim.SecondKick(lam, r0, diam, obscuration, kcrit=np.inf)
     limiting_case = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
 
     for k in [0.0, 0.1, 0.3, 1.0, 3.0, 10.0, 20.0]:
@@ -136,74 +131,6 @@ def test_limiting_cases():
             limiting_case.kValue(0, k).real,
             rtol=1e-3,
             atol=1e-4)
-
-    # Check half_light_radius agrees.  Only implemented for obscuration=0, and somewhat
-    # approximate for second kick.
-    #airy = galsim.Airy(lam=lam, diam=diam)
-    #sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, kcrit=np.inf)
-    #print(airy.half_light_radius)
-    #print(sk.half_light_radius)
-    #assert abs(sk.half_light_radius/airy.half_light_radius - 1.0) < 3e-2
-
-
-# @timer
-# def test_sf_lut(slow=False):
-#     """Test the suitability of the lookup table used to store the structure function by comparing
-#     results of xValue and kValue both with and without using the LUT.
-#     """
-#     lam = 500.0
-#     r0 = 0.2
-#     L0 = 30.0
-#     diam = 8.36
-#     obscuration = 0.61
-#     kcrit = 2*np.pi/r0
-#
-#     sk = galsim.SecondKick(lam, r0, diam, obscuration, L0, 0.5*kcrit)
-#     print("stepk = {}".format(sk.stepk))
-#     print("maxk = {}".format(sk.maxk))
-#
-#     print("Testing kValue")
-#     for k in [0.0, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 600.0]:
-#         print()
-#         print("k = {}".format(k))
-#         print(sk._sbp.kValueDouble(k))
-#         print(sk._sbp.kValueRaw(k))
-#         np.testing.assert_allclose(
-#             sk._sbp.kValueDouble(k),     # Uses LUT
-#             sk._sbp.kValueRaw(k),  # No LUT
-#             rtol=1e-3,
-#             atol=1e-3
-#         )
-#
-#     print()
-#     print()
-#     print("Testing xValue")
-#     if __name__ == '__main__':
-#         xs = [0.0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.2]
-#         if slow:
-#             xs.extend([0.3, 0.6, 1.0, 2.0, 3.0, 6.0])
-#     else:
-#         xs = [0.0, 0.001, 0.003, 0.01, 0.03]
-#     for x in xs:
-#         print()
-#         print("x = {}".format(x))
-#         print(sk._sbp.xValueDouble(x))
-#         print(sk._sbp.xValueRaw(x))
-#         print(sk._sbp.xValueExact(x))
-#         np.testing.assert_allclose(
-#             sk._sbp.xValueDouble(x),     # Uses LUT
-#             sk._sbp.xValueRaw(x),  # No LUT
-#             rtol=1e-3,
-#             atol=1e-3
-#         )
-#
-#         np.testing.assert_allclose(
-#             sk._sbp.xValueDouble(x), # Uses LUT
-#             sk._sbp.xValueExact(x),  # No LUT
-#             rtol=1e-2,
-#             atol=1e-2
-#         )
-
 
 @timer
 def test_sk_phase_psf():
@@ -214,7 +141,6 @@ def test_sk_phase_psf():
 
     lam = 500.0
     r0 = 0.2
-    L0 = 3000.0
     diam = 4.0
     obscuration = 0.5
 
@@ -227,7 +153,7 @@ def test_sk_phase_psf():
     for kcrit in kcrits:
         # Technically, we should probably use a smaller screen_scale here, but that runs really
         # slowly.  The below seems to work well enough for the tested kcrits.
-        atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, L0=L0, rng=rng,
+        atm = galsim.Atmosphere(r0_500=r0, r0_weights=weights, rng=rng,
                                 speed=speed, direction=direction,
                                 screen_size=102.4, screen_scale=0.05,
                                 suppress_warning=True)
@@ -236,7 +162,7 @@ def test_sk_phase_psf():
         psf = galsim.PhaseScreenPSF(atm, lam=lam, exptime=10, aper=aper, time_step=0.1)
         print('made psf')
         phaseImg = psf.drawImage(nx=64, ny=64, scale=0.02)
-        sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, obscuration=obscuration, L0=L0,
+        sk = galsim.SecondKick(lam=lam, r0=r0, diam=diam, obscuration=obscuration,
                                kcrit=kcrit)
         print('made sk')
         skImg = sk.drawImage(nx=64, ny=64, scale=0.02)
@@ -261,7 +187,7 @@ def test_sk_phase_psf():
 @timer
 def test_sk_scale():
     """Test sk scale argument"""
-    kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
+    kwargs = {'lam':500, 'r0':0.2, 'diam':4.0, 'flux':2.2, 'obscuration':0.3}
     sk_arcsec = galsim.SecondKick(scale_unit=galsim.arcsec, **kwargs)
     sk_arcmin = galsim.SecondKick(scale_unit='arcmin', **kwargs)
     do_pickle(sk_arcsec)
@@ -316,7 +242,6 @@ def test_sk_ne():
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.0),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, obscuration=0.4),
-            galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, L0=1e11),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, kcrit=1.234),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, flux=2.2),
             galsim.SecondKick(lam=500.0, r0=0.25, diam=4.2, scale_unit='arcmin'),
