@@ -66,6 +66,7 @@ namespace galsim {
         double getKCrit() const;
         double getScale() const;
         double getHalfLightRadius() const;
+        double getDelta() const;
         /// Alternate versions of x/k Value for testing purposes
         double kValue(double) const;
         double kValueRaw(double) const;

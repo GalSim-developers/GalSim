@@ -240,7 +240,7 @@ def do_shoot(prof, img, name):
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img2.sum => ',img2.array.sum(dtype=float))
-    #printval(img2,img)
+    printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -249,6 +249,7 @@ def do_shoot(prof, img, name):
     dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
+    print('stepk, maxk = ',prof.stepk,prof.maxk)
     if 'Airy' in name or 'SecondKick' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:

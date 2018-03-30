@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-// #define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -32,7 +32,7 @@
 #include "Solve.h"
 #include "bessel/Roots.h"
 
-#if DEBUGLOGGING
+#ifdef DEBUGLOGGING
 #include <ctime>
 #endif
 
@@ -104,10 +104,10 @@ namespace galsim {
         return static_cast<const SBSecondKickImpl&>(*_pimpl).getScale();
     }
 
-    double SBSecondKick::getHalfLightRadius() const
+    double SBSecondKick::getDelta() const
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getHalfLightRadius();
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getDelta();
     }
 
     double SBSecondKick::structureFunction(double rho) const
@@ -181,53 +181,25 @@ namespace galsim {
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        _maxk = _diam/_lam_arcsec;
-        _stepk = 0;
+        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<diam<<","<<obscuration<<","<<L0<<","<<kcrit<<std::endl;
+        _lam_over_r0 = _lam_arcsec/_r0;
+        _maxk = 2.*M_PI * _diam/_r0;
+        dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
 
-        // build the radial function, and along the way, set _stepk, _hlr.
-#if DEBUGLOGGING
+        // build the radial function
+#ifdef DEBUGLOGGING
         std::clock_t t0 = std::clock();
         _buildKVLUT();
         std::clock_t t1 = std::clock();
         _buildRadial();
         std::clock_t t2 = std::clock();
-        std::cout << "buildKV time = " << (double)(t1-t0)/CLOCKS_PER_SEC << '\n';
-        std::cout << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
+        dbg << "buildKV time = " << (double)(t1-t0)/CLOCKS_PER_SEC << '\n';
+        dbg << "buildRad time = " << (double)(t2-t1)/CLOCKS_PER_SEC << '\n';
 #else
         _buildKVLUT();
         _buildRadial();
 #endif
-        // Find a potentially smaller maxk now that LUTs have been built.
-        SKIkValueResid skikvr(*this, _gsparams->maxk_threshold);
-        Solve<SKIkValueResid> solver(skikvr, 0.0, _maxk);
-        solver.setMethod(Brent);
-        _maxk = solver.root();
-
-        // And rebuild kvLUT limiting to the new _maxk.
-        // With fewer entries, lookups should be quicker.
-        std::vector<double>::const_iterator p = std::upper_bound(
-                _kvLUT.getArgs().begin(), _kvLUT.getArgs().end(), _maxk);
-        int N = p - _kvLUT.getArgs().begin();
-        _kvLUT = TableDD(
-            &(*_kvLUT.getArgs().begin()),
-            &(*_kvLUT.getVals().begin()),
-            N, TableDD::spline);
     }
-
-#if 0
-    // This version of structureFunction explicitly integrates from kcrit to infinity, which is how
-    // the second kick is defined. However, I've found it's more stable to integrate from zero to
-    // kcrit, and then subtract this from the analytic integral from 0 to infinity.  So that's
-    // what's implemented further down.
-    double SKInfo::structureFunction(double rho) const {
-        SKISFIntegrand I(rho, _L0invsq);
-        double result = integ::int1d(I, _kcrit, integ::MOCK_INF,
-                                     _gsparams->integration_relerr,
-                                     _gsparams->integration_abserr);
-        result *= magic6;
-        return result;
-    }
-#endif
 
     class SKISFIntegrand : public std::unary_function<double,double>
     {
@@ -240,6 +212,60 @@ namespace galsim {
         const double _2pirho;   // 2*pi*rho
         const double _L0invsq;  // inverse meters squared
     };
+
+#if 0
+    // This version of structureFunction explicitly integrates from kcrit to infinity, which is how
+    // the second kick is defined. However, I've found it's more stable to integrate from zero to
+    // kcrit, and then subtract this from the analytic integral from 0 to infinity.  So that's
+    // what's implemented further down.
+    double SKInfo::structureFunction2(double rho) const {
+        const static double magic6 = 0.2877144330394485472;
+        SKISFIntegrand I(rho, _L0invsq);
+        xdbg<<"structureFunction2("<<rho<<")\n";
+        double result = integ::int1d(I, _kcrit, integ::MOCK_INF,
+                                     _gsparams->integration_relerr,
+                                     _gsparams->integration_abserr);
+        result *= magic6;
+        return result;
+    }
+#endif
+
+    class SKISFIntegrand3 : public std::unary_function<double,double>
+    {
+    public:
+        SKISFIntegrand3(double rho, double kcrit) :
+            _2pirho(2*M_PI*rho), _kcrit(kcrit) {}
+        double operator()(double k) const {
+            double ret = fast_pow(k, -8./3)*(1-j0(_2pirho*k));
+            if (_kcrit > 0.) {
+                //ret *= (0.5*tanh(2*log(k/_kcrit))+0.5);
+                double k4 = k*k*k*k;
+                double kc4 = _kcrit*_kcrit*_kcrit*_kcrit;
+                ret *= k4 / (k4 + kc4);
+            }
+            return ret;
+        }
+    private:
+        const double _2pirho;   // 2*pi*rho
+        const double _kcrit;  // inverse meters squared
+    };
+
+
+    double SKInfo::structureFunction2(double rho) const {
+        const static double magic6 = 0.2877144330394485472;
+        SKISFIntegrand3 I(rho, _kcrit);
+        integ::IntRegion<double> reg(0., integ::MOCK_INF);
+        for (int s=1; s<10; s++) {
+            double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
+            if (zero >= _kcrit) break;
+            reg.addSplit(zero);
+        }
+        double result = integ::int1d(I, reg,
+                                     _gsparams->integration_relerr,
+                                     _gsparams->integration_abserr);
+        result *= magic6;
+        return result;
+    }
 
     double SKInfo::structureFunction(double rho) const {
         // rho in units of r0
@@ -258,43 +284,86 @@ namespace galsim {
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr);
 
-        return vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053) - magic6*complement;
+        //return vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053) - magic6*complement;
+        double vk = vkStructureFunction(rho, _L0, _L0_invcuberoot, _L053);
+        //xdbg<<"SF("<<rho<<") = "<<vk<<" - "<<magic6*complement<<std::endl;
+        //xdbg<<"   = "<<(vk-magic6*complement)<<std::endl;
+        //xdbg<<"   = "<<(vk-magic6*complement)<<"  "<<structureFunction2(rho)<<std::endl;
+        return vk - magic6*complement;
     }
 
     void SKInfo::_buildKVLUT() {
-        _kvLUT.addEntry(0, 1.0);
-
-        double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 40.0));
-        dbg<<"Using dlogk = "<<dlogk<<'\n';
-
-        SKIkValueResid skikvr(*this, 1.0-_gsparams->kvalue_accuracy);
-        Solve<SKIkValueResid> solver(skikvr, 0.0, 0.1);
-        solver.bracketUpper();
-        solver.setMethod(Brent);
-        double k = solver.root();
-        dbg<<"Initial k = "<<k<<'\n';
-
-        for (double logk=std::log(k); logk < std::log(_maxk)+dlogk; logk += dlogk) {
-            xdbg<<"logk = "<<logk<<'\n';
-            k = fmath::expd(logk);
-            xdbg<<"k = "<<k<<'\n';
-            double val = kValueRaw(k);
-            xdbg<<"val = "<<val<<'\n';
-            _kvLUT.addEntry(k, val);
+        if (_kcrit > 1.e10) {
+            dbg<<"large kcrit = "<<_kcrit<<std::endl;
+            _delta = 1.;
+            _maxk = 1.;
+            _kvLUT.addEntry(0, 0.);
+            _kvLUT.addEntry(0.5, 0.);
+            _kvLUT.addEntry(1., 0.);
+            return;
         }
-        dbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
+
+        //set_verbose(2);
+        // The shape of the structure function here is to rise quickly from 0 to near the 
+        // limiting value and then oscillate around it with smaller and smaller amplitude.
+        // (It looks qualitatively like the Si function, FWIW.)  This mean the kvalues level
+        // off to a constant, which implies that there is a delta function component.
+        // We separate that off and model it separately in the python layer.  Here, we
+        // only store the kValue of the non-delta function component.
+        const static double magic6 = 0.2877144330394485472;
+        //double limit = magic6*0.6*std::pow(_kcrit*_kcrit + _L0invsq, -5./6.);
+        //double limit = magic6*M_PI*std::pow(_kcrit, -5./3.);
+        double limit = magic6*M_PI*std::pow(_kcrit, -5./3.) / (4.*std::sin(5.*M_PI/12.));
+        dbg<<"limit = "<<limit<<std::endl;
+        _delta = fmath::expd(-0.5*limit);
+        dbg<<"_delta = "<<_delta<<std::endl;
+        double dk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.0));
+        xdbg<<"Using dk = "<<dk<<'\n';
+
+        double k=0.;
+        // Independent of kc or L0, the oscillations become very small by k=100, but above
+        // this value, there start to be numerical inaccuracies that lead to some apparent
+        // oscillations again.  To avoid this, we cut off the function at k=100 and just
+        // use 0 for the non-delta component part above that.
+        _kvLUT.addEntry(0, 1.-_delta);
+        for (k=dk; k<1.; k+=dk) {
+            double val = structureFunction2(k);
+            xdbg<<"sf("<<k<<") "<<val<<std::endl;
+            double kv = fmath::exp(-0.5*val)-_delta;
+            dbg<<"kv("<<k<<") "<<kv<<std::endl;
+            _kvLUT.addEntry(k, kv);
+            if (val > limit) { k += dk; break; }
+        }
+        // Switch to logarithmic spacing.  dk -> dlogk
+        double expdlogk = exp(dk);
+        for (; k<_maxk; k*=expdlogk) {
+            double val = structureFunction2(k);
+            xdbg<<"sf("<<k<<") "<<val<<std::endl;
+            double kv = fmath::exp(-0.5*val)-_delta;
+            dbg<<"kv("<<k<<") "<<kv<<std::endl;
+            _kvLUT.addEntry(k, kv);
+            if (std::abs(kv) < _gsparams->kvalue_accuracy) {
+                _maxk = k;
+                break;
+            }
+        }
+        _maxk /= _lam_over_r0;
+        xdbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
+        //set_verbose(1);
     }
 
     double SKInfo::kValue(double k) const {
-        return k < _kvLUT.argMax() ? _kvLUT(k) : 0.;
+        // k in inverse arcsec
+        double kp = _lam_over_r0*k;
+        return kp < _kvLUT.argMax() ? _kvLUT(kp) : 0.;
     }
 
     double SKInfo::kValueRaw(double k) const {
         // k in inverse arcsec
-        double kp = _lam_arcsec*k;
-        double kpkp = kp*kp;
-        return fmath::expd(-0.5*structureFunction(kp/_r0))
-            * _knorm*_airy_info->kValue(kpkp*_4_over_diamsq);
+        double kp = _lam_over_r0*k;
+        double f = fmath::expd(-0.5*structureFunction(kp));
+        xdbg<<"kValueRaw("<<k<<") = "<<f<<std::endl;
+        return f;
     }
 
     class SKIXIntegrand : public std::unary_function<double,double>
@@ -313,23 +382,22 @@ namespace galsim {
         integ::IntRegion<double> reg(0, _maxk);
         if (r > 0) {
             // Add BesselJ0 zeros up to _maxk
-            int s=1;
-            double zero=bessel::getBesselRoot0(s)/r;
-            while(zero < _maxk) {
+            for (int s=1; s<10; ++s) {
+                double zero=bessel::getBesselRoot0(s)/r;
+                if (zero >= _maxk) break;
                 reg.addSplit(zero);
-                s++;
-                zero = bessel::getBesselRoot0(s)/r;
             }
-            xdbg<<s<<" zeros found for r = "<<r<<'\n';
         }
         double result = integ::int1d(I, reg,
-                            _gsparams->integration_relerr,
-                            _gsparams->integration_abserr)/(2.*M_PI);
+                                     _gsparams->integration_relerr,
+                                     _gsparams->integration_abserr)/(2.*M_PI);
+        dbg<<"xValueRaw("<<r<<") = "<<result<<"\n";
         return result;
     }
 
     double SKInfo::xValue(double r) const {
-        return r < _radial.argMax() ? _radial(r) : 0.;
+        double rp = r/_lam_over_r0;
+        return rp < _radial.argMax() ? _radial(rp) : 0.;
     }
 
     class SKIExactXIntegrand : public std::unary_function<double,double>
@@ -348,18 +416,16 @@ namespace galsim {
         integ::IntRegion<double> reg(0, _diam/_lam_arcsec);
         if (r > 0) {
             // Add BesselJ0 zeros up to _diam/_lam_arcsec
-            int s=1;
-            double zero=bessel::getBesselRoot0(s)/r;
-            while(zero < _diam/_lam_arcsec) {
+            for (int s=1; s<10; ++s) {
+                double zero=bessel::getBesselRoot0(s)/r;
+                if (zero >= _maxk) break;
                 reg.addSplit(zero);
-                s++;
-                zero = bessel::getBesselRoot0(s)/r;
             }
-            xdbg<<s<<" zeros found for r = "<<r<<'\n';
         }
         double result = integ::int1d(I, reg,
                             _gsparams->integration_relerr,
                             _gsparams->integration_abserr)/(2.*M_PI);
+        xdbg<<"xValueExact("<<r<<") = "<<result<<"\n";
         return result;
     }
 
@@ -386,6 +452,7 @@ namespace galsim {
         SKIxValueVolumeResid(const SKInfo & ski, double f0, double thresh) :
             _ski(ski), _f0(f0), _thresh(thresh) {}
         double operator()(double x) const {
+            xdbg<<volume(0, x, _f0, _ski.xValueRaw(x))<<"  "<< _thresh<<std::endl;
             return volume(0, x, _f0, _ski.xValueRaw(x)) - _thresh;
         }
     private:
@@ -395,100 +462,103 @@ namespace galsim {
     };
 
     void SKInfo::_buildRadial() {
-        // set_verbose(2);
-        double r = 0.0;
+        //set_verbose(2);
+        if (_delta > 1.-_gsparams->folding_threshold) {
+            dbg<<"large delta = "<<_delta<<std::endl;
+            _radial.addEntry(0, 0.);
+            _radial.addEntry(1., 0.);
+            _radial.addEntry(2., 0.);
+            _stepk = 1.e10;
+            std::vector<double> range(2,0.);
+            range[1] = _radial.argMax();
+            dbg<<"range = "<<range[0]<<"  "<<range[1]<<std::endl;
+            dbg<<"Make ODD\n";
+            _sampler.reset(new OneDimensionalDeviate(_radial, range, true, _gsparams));
+            dbg<<"Made ODD\n";
+            return;
+        }
+
         double val = xValueRaw(0.0);
-        _radial.addEntry(r, val);
-        dbg<<"f(0) = "<<val<<" arcsec^-2\n";
+        xdbg<<"f(0) = "<<val<<" arcsec^-2\n";
 
-        double r0 = 0.0;
+        double dr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
 
-#if 0
-        // Figure out where to start.  A good guess is where
-        // xValueRaw(0) - xValueRaw(r0) = xvalue_accuracy
-        SKIxValueResid skixvr(*this, val-_gsparams->xvalue_accuracy);
-        Solve<SKIxValueResid> solver(skixvr, 0.0, 1e-3);
-        solver.bracketUpper();
-        solver.setMethod(Brent);
-        r0 = solver.root();
-        dbg<<'\n';
-        dbg<<"r0 method(1) = " << r0 << '\n';
-        dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
-#endif
+        // Along the way accumulate the flux integral to determine the radius
+        // that encloses (1-folding_threshold) of the flux.
+        double thresh0 = (0.5 - _delta) / (2.*M_PI*dr);
+        double thresh1 = (1.-_delta-_gsparams->folding_threshold) / (2.*M_PI*dr);
+        double thresh2 = (1.-_delta-_gsparams->folding_threshold/5.) / (2.*M_PI*dr);
+        double R = 0., hlr = 0.;
 
-        // Another guess is where the volume between r=0 and r=r0 is xvalue_accuracy
-        SKIxValueVolumeResid skixvvr(*this, val, _gsparams->xvalue_accuracy);
-        Solve<SKIxValueVolumeResid> solver2(skixvvr, 0.0, 1e-3);
-        solver2.bracketUpper();
-        solver2.setMethod(Brent);
-        r0 = solver2.root();
-        dbg<<"r0 method(2) = " << r0 << '\n';
-        dbg<<"xValue(r0) = " << xValueRaw(r0) << '\n';
+        _radial.addEntry(0., val);
+        double maxR = 60.;  // Fairly arbitrary, but usually irrelevant
+        double r = dr;
+        double sum = 0.5*r*val;
 
-        double logr = log(r0);
-        double dr = 0;
-        double dlogr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 20.));
+        // Continue until accumulate 0.999 of the flux
+        for (; r<1.; r+=dr) {
+            val = xValueRaw(r);
+            xdbg<<"f("<<r<<") = "<<val<<std::endl;
 
-        dbg<<"r0 = "<<r0<<" arcsec\n";
-        dbg<<"dlogr = "<<dlogr<<"\n";
+            // The result should be positive, but numerical inaccuracies can mean that some
+            // values go negative.  It seems that this happens once all further values are
+            // basically zero, so just stop here if/when this happens.
+            if (val < _gsparams->xvalue_accuracy) break;
+            _radial.addEntry(r,val);
 
-        double sum = 0.0;
-        double thresh1 = (1.-_gsparams->folding_threshold);
-        double thresh2 = (1.-_gsparams->folding_threshold/5);
-        double R = 1e10;
-        _hlr = 1e10;
-        double maxR = 600.0; // hard cut at 10 arcminutes.
-        double nextr;
-        double nextval;
-        for(nextr = exp(logr);
-            (nextr < _gsparams->stepk_minimum_hlr*_hlr) || (nextr < R) || (sum < thresh2);
-            logr += dlogr, nextr=exp(logr))
-        {
-            nextval = xValueRaw(nextr);
-            xdbg<<"f("<<nextr<<") = "<<nextval<<'\n';
-            _radial.addEntry(nextr, nextval);
+            // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
+            sum += r * val;
+            dbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
+            xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
+            if (R == 0. && sum > thresh1) R = r;
+            if (hlr == 0. && sum > thresh0) hlr = r;
+        }
+        // Switch to logarithmic binning
+        double expdlogr = std::exp(dr);
+        for (; r<maxR; r *= expdlogr) {
+            val = xValueRaw(r);
+            xdbg<<"f("<<r<<") = "<<val<<std::endl;
 
-            sum += volume(r, nextr, val, nextval);
-            xdbg<<"sum = "<<sum<<'\n';
+            // The result should be positive, but numerical inaccuracies can mean that some
+            // values go negative.  It seems that this happens once all further values are
+            // basically zero, so just stop here if/when this happens.
+            if (val < _gsparams->xvalue_accuracy) break;
+            _radial.addEntry(r,val);
 
-            if (_hlr == 1e10 && sum > 0.5) {
-                _hlr = r;
-                dbg<<"hlr = "<<_hlr<<" arcsec\n";
-            }
-            if (R == 1e10 && sum > thresh1) R=r;
-            if (r >= maxR) {
-                if (_hlr == 1e10) {
-                    dbg << "sum = " << sum << '\n';
-                    throw SBError("Cannot find SecondKick half-light-radius.");
-                }
-                R = maxR;
-                break;
-            }
-            val = nextval;
-            r = nextr;
+            // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
+            sum += r * r * val;
+            dbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
+            xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
+            if (hlr == 0. && sum > thresh0) hlr = r;
+            if (R == 0. && sum > thresh1) R = r;
+            if (sum > thresh2) break;
         }
         dbg<<"Finished building radial function.\n";
-        dbg<<"R = "<<R<<" arcsec\n";
-        dbg<<"HLR = "<<_hlr<<" arcsec\n";
-        R = std::max(R, _gsparams->stepk_minimum_hlr*_hlr);
-        _stepk = M_PI / R;
-        dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
-        dbg<<"sum = "<<sum<<"   (should be ~= 0.997)\n";
-        if (sum < 1-_gsparams->folding_threshold)
-            throw SBError("Could not find folding_threshold");
         dbg<<"_radial.size() = "<<_radial.size()<<'\n';
-        std::vector<double> ranges(1, 0.);
-        // Copy Airy algorithm for assigning ranges that will not have >1 extremum.
-        double rmin = (1.1 - 0.5*_obscuration)*_lam/_diam*ARCSEC2RAD;
-        for(r=rmin; r<=_radial.argMax(); r+=0.5*_lam/_diam*ARCSEC2RAD) ranges.push_back(r);
-        dbg<<"ranges.size() = "<<ranges.size()<<'\n';
-        _sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, _gsparams));
+        dbg<<"sum*2*pi*dr + delta = "<<sum*2.*M_PI*dr+_delta<<"   (should >= 0.999)\n";
+
+        dbg<<"R = "<<R<<std::endl;
+        dbg<<"hlr = "<<hlr<<std::endl;
+        // Make sure it is at least 5 hlr
+        if (R == 0) R = _radial.argMax();
+        R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
+        _stepk = M_PI / R / _lam_over_r0;
+        dbg<<"stepk = "<<_stepk<<std::endl;
+
+        std::vector<double> range(2,0.);
+        range[1] = _radial.argMax();
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, _gsparams));
+        dbg<<"made sampler\n";
+        //set_verbose(1);
     }
 
     boost::shared_ptr<PhotonArray> SKInfo::shoot(int N, UniformDeviate ud) const
     {
+        std::cerr<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
         assert(_sampler.get());
-        return _sampler->shoot(N,ud);
+        boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
+        //result->scaleXY(_lam_over_r0);
+        return result;
     }
 
     LRUCache<boost::tuple<double,double,double,double,double,double,GSParamsPtr>,SKInfo>
@@ -524,8 +594,8 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::stepK() const
     { return _info->stepK()*_scale; }
 
-    double SBSecondKick::SBSecondKickImpl::getHalfLightRadius() const
-    { return _info->getHalfLightRadius()/_scale; }
+    double SBSecondKick::SBSecondKickImpl::getDelta() const
+    { return _info->getDelta() * _flux; }
 
     std::string SBSecondKick::SBSecondKickImpl::serialize() const
     {
@@ -552,6 +622,9 @@ namespace galsim {
 
     std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
     {
+        xdbg<<"p = "<<p<<std::endl;
+        xdbg<<"scale = "<<_scale<<std::endl;
+        xdbg<<"Call kValue with k = "<<sqrt(p.x*p.x+p.y*p.y)/_scale<<std::endl;
         // k in units of 1/_scale
         return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
     }
@@ -570,8 +643,11 @@ namespace galsim {
 
     double SBSecondKick::SBSecondKickImpl::xValue(const Position<double>& p) const
     {
+        xdbg<<"p = "<<p<<std::endl;
+        xdbg<<"scale = "<<_scale<<std::endl;
+        xdbg<<"Call xValue with r = "<<sqrt(p.x*p.x+p.y*p.y)*_scale<<std::endl;
         // r in units of _scale
-        return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale);
+        return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale) * _scale*_scale;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValue(double r) const
@@ -599,8 +675,9 @@ namespace galsim {
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         // Get photons from the SKInfo structure, rescale flux and size for this instance
         boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_flux);
-        result->scaleXY(_scale);
+        dbg<<"SK shoot returned flux = "<<result->getTotalFlux()<<std::endl;
+        result->setTotalFlux(getFlux());
+        result->scaleXY(1./_scale);
         dbg<<"SK Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }

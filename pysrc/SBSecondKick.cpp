@@ -52,7 +52,7 @@ namespace galsim {
                 .def("getL0", &SBSecondKick::getL0)
                 .def("getKCrit", &SBSecondKick::getKCrit)
                 .def("getScale", &SBSecondKick::getScale)
-                .def("getHalfLightRadius", &SBSecondKick::getHalfLightRadius)
+                .def("getDelta", &SBSecondKick::getDelta)
                 .def("structureFunction", &SBSecondKick::structureFunction)
                 .def("kValueRaw", &SBSecondKick::kValueRaw)
                 .def("xValueRaw", &SBSecondKick::xValueRaw)

@@ -47,7 +47,7 @@ namespace galsim {
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
-        double getHalfLightRadius() const { return _hlr; }
+        double getDelta() const { return _delta; }
 
         double kValue(double) const;
         double kValueRaw(double) const;
@@ -55,6 +55,7 @@ namespace galsim {
         double xValueRaw(double) const;
         double xValueExact(double) const;
         double structureFunction(double rho) const;
+        double structureFunction2(double rho) const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
@@ -64,6 +65,7 @@ namespace galsim {
         double _lam; // Wavelength in meters
         double _lam_arcsec; // lam * ARCSEC2RAD / 2pi
         double _r0; // Fried parameter in meters
+        double _lam_over_r0; // Wavelength in meters
         double _diam; // in meters
         double _obscuration; // linear fractional circular obscuration
         double _L0; // // Outer scale in units of the Fried parameter, r0.  I.e., L0/r0.
@@ -73,9 +75,9 @@ namespace galsim {
         double _kcrit;
         double _stepk;
         double _maxk;
-        double _hlr; // half-light-radius
         double _knorm;
         double _4_over_diamsq;
+        double _delta;
 
         const GSParamsPtr _gsparams;
 
@@ -106,16 +108,17 @@ namespace galsim {
 
         bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return true; }
+        bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
         double maxK() const;
         double stepK() const;
         double getHalfLightRadius() const;
+        double getDelta() const;
 
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
-        double getFlux() const { return _flux; }
+        double getFlux() const { return _flux-getDelta(); }
         double getLam() const { return _lam; }
         double getR0() const { return _r0; }
         double getDiam() const { return _diam; }
