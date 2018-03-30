@@ -93,20 +93,21 @@ class SecondKick(GSObject):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need _scale_unit for repr roundtriping.
         self._scale_unit = scale_unit
-        self._flux = flux
         scale = scale_unit/galsim.arcsec
-        self._sbs = galsim._galsim.SBSecondKick(
-            lam, r0, diam, obscuration, kcrit, flux, scale, gsparams)
+
+        self._flux = float(flux)
+        self._r0 = float(r0)
+        self._lam = float(lam)
+        self._diam = float(diam)
+        self._obscuration = float(obscuration)
+        self._kcrit = float(kcrit)
+
+        self._sbs = galsim._galsim.SBSecondKick(lam, r0, kcrit, flux, scale, gsparams)
         lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         self._sba = galsim._galsim.SBAiry(lam_over_diam, obscuration, 1., gsparams)
         self._sbd = galsim._galsim.SBDeltaFunction(self._sbs.getDelta())
         full_sbs = galsim._galsim.SBAdd([self._sbs, self._sbd], gsparams)
         self._sbp = galsim._galsim.SBConvolve([full_sbs, self._sba], False, gsparams)
-        #print('Made SecondKick with flux = ',flux)
-        #print('sbs flux = ',self._sbs.getFlux())
-        #print('delta = ',self._sbs.getDelta())
-        #print('full_sbs flux = ',full_sbs.getFlux())
-        #print('sbp flux = ',self._sbp.getFlux())
 
     @property
     def flux(self):
@@ -114,23 +115,23 @@ class SecondKick(GSObject):
 
     @property
     def lam(self):
-        return self._sbs.getLam()
+        return self._lam
 
     @property
     def r0(self):
-        return self._sbs.getR0()
+        return self._r0;
 
     @property
     def diam(self):
-        return self._sbs.getDiam()
+        return self._diam;
 
     @property
     def obscuration(self):
-        return self._sbs.getObscuration()
+        return self._obscuration;
 
     @property
     def kcrit(self):
-        return self._sbs.getKCrit()
+        return self._kcrit;
 
     @property
     def scale_unit(self):
@@ -143,8 +144,6 @@ class SecondKick(GSObject):
         return self._sbs.structureFunction(rho)
 
     def __eq__(self, other):
-        #print('self = ',self)
-        #print('other = ',other)
         return (isinstance(other, galsim.SecondKick) and
         self.lam == other.lam and
         self.r0 == other.r0 and
@@ -178,8 +177,8 @@ class SecondKick(GSObject):
         return "galsim.SecondKick(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
 
 _galsim.SBSecondKick.__getinitargs__ = lambda self: (
-    self.getLam(), self.getR0(), self.getDiam(), self.getObscuration(),
-    self.getKCrit(), self.getFlux()+self.getDelta(), self.getScale(), self.getGSParams())
+    self.getLam(), self.getR0(), self.getKCrit(), self.getFlux()+self.getDelta(),
+    self.getScale(), self.getGSParams())
 _galsim.SBSecondKick.__getstate__ = lambda self: None
 _galsim.SBSecondKick.__repr__ = lambda self: \
-    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
+    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r)"%self.__getinitargs__()

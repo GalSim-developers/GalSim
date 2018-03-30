@@ -40,15 +40,13 @@ namespace galsim {
          *
          * @param[in] lam          Wavelength in nm.
          * @param[in] r0           Fried parameter in m (at given wavelength lam).
-         * @param[in] diam         Telescope diameter in m.
-         * @param[in] obscuration  Fractional linear obscuration.
          * @param[in] kcrit        Critical turbulence Fourier mode in units of r0.
          * @param[in] flux         Flux.
          * @param[in] scale        Scale of 'x' in xValue in arcsec.
          * @param[in] gsparams     GSParams.
          */
-        SBSecondKick(double lam, double r0, double diam, double obscuration,
-                     double kcrit, double flux, double scale, const GSParamsPtr& gsparams);
+        SBSecondKick(double lam, double r0, double kcrit, double flux,
+                     double scale, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor
         SBSecondKick(const SBSecondKick& rhs);
@@ -59,11 +57,8 @@ namespace galsim {
         /// Getters
         double getLam() const;
         double getR0() const;
-        double getDiam() const;
-        double getObscuration() const;
         double getKCrit() const;
         double getScale() const;
-        double getHalfLightRadius() const;
         double getDelta() const;
         /// Alternate versions of x/k Value for testing purposes
         double kValue(double) const;

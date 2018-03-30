@@ -52,10 +52,10 @@ namespace galsim {
     //
     //
 
-    SBSecondKick::SBSecondKick(double lam, double r0, double diam, double obscuration,
+    SBSecondKick::SBSecondKick(double lam, double r0,
                                double kcrit, double flux, double scale,
                                const GSParamsPtr& gsparams) :
-        SBProfile(new SBSecondKickImpl(lam, r0, diam, obscuration, kcrit, flux, scale,
+        SBProfile(new SBSecondKickImpl(lam, r0, kcrit, flux, scale,
                                        gsparams)) {}
 
     SBSecondKick::SBSecondKick(const SBSecondKick &rhs) : SBProfile(rhs) {}
@@ -72,18 +72,6 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
         return static_cast<const SBSecondKickImpl&>(*_pimpl).getR0();
-    }
-
-    double SBSecondKick::getDiam() const
-    {
-        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getDiam();
-    }
-
-    double SBSecondKick::getObscuration() const
-    {
-        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getObscuration();
     }
 
     double SBSecondKick::getKCrit() const
@@ -161,22 +149,14 @@ namespace galsim {
         const double _thresh;
     };
 
-    SKInfo::SKInfo(double lam, double r0, double diam, double obscuration,
-                   double kcrit, const GSParamsPtr& gsparams) :
+    SKInfo::SKInfo(double lam, double r0, double kcrit, const GSParamsPtr& gsparams) :
         _lam(lam), _lam_arcsec(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0),
-        _diam(diam), _obscuration(obscuration), 
-        _kcrit(kcrit), _knorm(1./(M_PI*(1.-obscuration*obscuration))),
-        _4_over_diamsq(4.0/(diam*diam)),
-        _gsparams(gsparams),
-        _airy_info((obscuration==0.0) ?
-                   boost::movelib::unique_ptr<AiryInfo>(new AiryInfoNoObs(gsparams)) :
-                   boost::movelib::unique_ptr<AiryInfo>(new AiryInfoObs(obscuration,gsparams))),
+        _kcrit(kcrit), _gsparams(gsparams),
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<diam<<","<<obscuration<<","<<kcrit<<std::endl;
+        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<kcrit<<std::endl;
         _lam_over_r0 = _lam_arcsec/_r0;
-        _maxk = 2.*M_PI * _diam/_r0;
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
 
         // build the radial function
@@ -231,6 +211,9 @@ namespace galsim {
     }
 
     void SKInfo::_buildKVLUT() {
+        // Start with the regular Kolmogorov maxk
+        _maxk = std::pow(-std::log(_gsparams->kvalue_accuracy),3./5.);
+
         if (_kcrit > 1.e10) {
             dbg<<"large kcrit = "<<_kcrit<<std::endl;
             _delta = 1.;
@@ -339,7 +322,7 @@ namespace galsim {
     double SKInfo::xValueExact(double r) const {
         // r in arcsec
         SKIExactXIntegrand I(r, *this);
-        integ::IntRegion<double> reg(0, _diam/_lam_arcsec);
+        integ::IntRegion<double> reg(0., integ::MOCK_INF);
         if (r > 0) {
             // Add BesselJ0 zeros up to _diam/_lam_arcsec
             for (int s=1; s<10; ++s) {
@@ -486,7 +469,7 @@ namespace galsim {
         return result;
     }
 
-    LRUCache<boost::tuple<double,double,double,double,double,GSParamsPtr>,SKInfo>
+    LRUCache<boost::tuple<double,double,double,GSParamsPtr>,SKInfo>
         SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
@@ -497,19 +480,16 @@ namespace galsim {
     //
     //
 
-    SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam, double r0, double diam,
-                                                     double obscuration, double kcrit,
+    SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam, double r0, double kcrit,
                                                      double flux, double scale,
                                                      const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _lam(lam),
         _r0(r0),
-        _diam(diam),
-        _obscuration(obscuration),
         _kcrit(kcrit),
         _flux(flux),
         _scale(scale),
-        _info(cache.get(boost::make_tuple(1e-9*lam, r0, diam, obscuration, kcrit, this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(1e-9*lam, r0, kcrit, this->gsparams.duplicate())))
     { }
 
     double SBSecondKick::SBSecondKickImpl::maxK() const
@@ -528,8 +508,6 @@ namespace galsim {
         oss << "galsim._galsim.SBSecondKick("
             <<getLam()<<", "
             <<getR0()<<", "
-            <<getDiam()<<", "
-            <<getObscuration()<<", "
             <<getKCrit()<<", "
             <<getFlux()<<", "
             <<getScale()<<", "

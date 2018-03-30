@@ -41,8 +41,7 @@ namespace galsim {
     class SKInfo
     {
     public:
-        SKInfo(double lam, double r0, double diam, double obscuration, double kcrit,
-               const GSParamsPtr& gsparams);
+        SKInfo(double lam, double r0, double kcrit, const GSParamsPtr& gsparams);
         ~SKInfo() {}
 
         double stepK() const { return _stepk; }
@@ -65,18 +64,13 @@ namespace galsim {
         double _lam_arcsec; // lam * ARCSEC2RAD / 2pi
         double _r0; // Fried parameter in meters
         double _lam_over_r0; // Wavelength in meters
-        double _diam; // in meters
-        double _obscuration; // linear fractional circular obscuration
         double _kcrit;
         double _stepk;
         double _maxk;
         double _knorm;
-        double _4_over_diamsq;
         double _delta;
 
         const GSParamsPtr _gsparams;
-
-        boost::movelib::unique_ptr<AiryInfo> _airy_info;
 
         TableDD _radial;
         TableDD _kvLUT;
@@ -97,8 +91,8 @@ namespace galsim {
     class SBSecondKick::SBSecondKickImpl : public SBProfileImpl
     {
     public:
-        SBSecondKickImpl(double lam, double r0, double diam, double obscuration,
-                         double kcrit, double flux, double scale, const GSParamsPtr& gsparams);
+        SBSecondKickImpl(double lam, double r0, double kcrit, double flux,
+                         double scale, const GSParamsPtr& gsparams);
         ~SBSecondKickImpl() {}
 
         bool isAxisymmetric() const { return true; }
@@ -108,7 +102,6 @@ namespace galsim {
 
         double maxK() const;
         double stepK() const;
-        double getHalfLightRadius() const;
         double getDelta() const;
 
         Position<double> centroid() const { return Position<double>(0., 0.); }
@@ -116,8 +109,6 @@ namespace galsim {
         double getFlux() const { return _flux-getDelta(); }
         double getLam() const { return _lam; }
         double getR0() const { return _r0; }
-        double getDiam() const { return _diam; }
-        double getObscuration() const { return _obscuration; }
         double getKCrit() const { return _kcrit; }
         double getScale() const { return _scale; }
         double maxSB() const { return _flux * _info->xValue(0.); }
@@ -148,8 +139,6 @@ namespace galsim {
 
         double _lam;
         double _r0;
-        double _diam;
-        double _obscuration;
         double _kcrit;
         double _flux;
         double _scale;
@@ -160,8 +149,7 @@ namespace galsim {
         SBSecondKickImpl(const SBSecondKickImpl& rhs);
         void operator=(const SBSecondKickImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,double,double,double,GSParamsPtr>,SKInfo>
-            cache;
+        static LRUCache<boost::tuple<double,double,double,GSParamsPtr>,SKInfo> cache;
     };
 }
 
