@@ -38,9 +38,6 @@
 
 namespace galsim {
 
-    const double ARCSEC2RAD = 180.*60*60/M_PI;  // ~206265
-    const double MOCK_INF = 1.e300;
-
     inline double fast_pow(double x, double y)
     { return fmath::expd(y * std::log(x)); }
 
@@ -122,26 +119,11 @@ namespace galsim {
     //
     //
 
-    class SKIkValueResid {
-    public:
-        SKIkValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
-        double operator()(double k) const {
-            double val = _ski.kValueRaw(k)-_thresh;
-            xdbg<<"resid(k="<<k<<")="<<val<<'\n';
-            return val;
-        }
-    private:
-        const SKInfo& _ski;
-        const double _thresh;
-    };
-
-    SKInfo::SKInfo(double k0, double kcrit, const GSParamsPtr& gsparams) :
-        _k0(k0), _kcrit(kcrit), _gsparams(gsparams),
+    SKInfo::SKInfo(double kcrit, const GSParamsPtr& gsparams) :
+        _kcrit(kcrit), _gsparams(gsparams),
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        dbg<<"k0 = "<<_k0<<std::endl;
-
         // build the radial function
 #ifdef DEBUGLOGGING
         std::clock_t t0 = std::clock();
@@ -157,26 +139,26 @@ namespace galsim {
 #endif
     }
 
+    inline double pow4(double x) { double x2 = x*x; return x2*x2; }
+
     class SKISFIntegrand : public std::unary_function<double,double>
     {
     public:
         SKISFIntegrand(double rho, double kcrit) :
-            _2pirho(2*M_PI*rho), _kcrit(kcrit) {}
+            _2pirho(2*M_PI*rho), _kc4(pow4(kcrit)) {}
         double operator()(double k) const {
             double ret = fast_pow(k, -8./3)*(1-j0(_2pirho*k));
-            if (_kcrit > 0.) {
+            if (_kc4 > 0.) {
                 //ret *= (0.5*tanh(2*log(k/_kcrit))+0.5);
-                double k4 = k*k*k*k;
-                double kc4 = _kcrit*_kcrit*_kcrit*_kcrit;
-                ret *= k4 / (k4 + kc4);
+                double k4 = pow4(k);
+                ret *= k4 / (k4 + _kc4);
             }
             return ret;
         }
     private:
         const double _2pirho;   // 2*pi*rho
-        const double _kcrit;  // inverse meters squared
+        const double _kc4;      // kcrit^4
     };
-
 
     double SKInfo::structureFunction(double rho) const {
         const static double magic6 = 0.2877144330394485472;
@@ -239,23 +221,18 @@ namespace galsim {
                 break;
             }
         }
-        _maxk *= _k0;
         xdbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
         //set_verbose(1);
     }
 
     double SKInfo::kValue(double k) const {
-        // k in inverse arcsec
-        double kp = k/_k0;
-        return kp < _kvLUT.argMax() ? _kvLUT(kp) : 0.;
+        // k in units of k0 = 2pi r0/lambda
+        return k < _kvLUT.argMax() ? _kvLUT(k) : 0.;
     }
 
     double SKInfo::kValueRaw(double k) const {
-        // k in inverse arcsec
-        double kp = k/_k0;
-        double f = fmath::expd(-0.5*structureFunction(kp));
-        xdbg<<"kValueRaw("<<k<<") = "<<f<<std::endl;
-        return f;
+        // k in units of k0 = 2pi r0/lambda
+        return fmath::expd(-0.5*structureFunction(k));
     }
 
     class SKIXIntegrand : public std::unary_function<double,double>
@@ -264,12 +241,12 @@ namespace galsim {
         SKIXIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
         double operator()(double k) const { return _ski.kValue(k)*j0(k*_r)*k; }
     private:
-        const double _r;  //arcsec
+        const double _r;
         const SKInfo& _ski;
     };
 
     double SKInfo::xValueRaw(double r) const {
-        // r in arcsec
+        // r in units of 1/k0 = lambda/(2pi r0)
         SKIXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0, _maxk);
         if (r > 0) {
@@ -288,8 +265,8 @@ namespace galsim {
     }
 
     double SKInfo::xValue(double r) const {
-        double rp = r*_k0;
-        return rp < _radial.argMax() ? _radial(rp) : 0.;
+        // r in units of 1/k0 = lambda/(2pi r0)
+        return r < _radial.argMax() ? _radial(r) : 0.;
     }
 
     class SKIExactXIntegrand : public std::unary_function<double,double>
@@ -298,16 +275,16 @@ namespace galsim {
         SKIExactXIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
         double operator()(double k) const { return _ski.kValueRaw(k)*j0(k*_r)*k; }
     private:
-        const double _r;  //arcsec
+        const double _r;
         const SKInfo& _ski;
     };
 
     double SKInfo::xValueExact(double r) const {
-        // r in arcsec
+        // r in units of 1/k0 = lambda/(2pi r0)
         SKIExactXIntegrand I(r, *this);
         integ::IntRegion<double> reg(0., integ::MOCK_INF);
         if (r > 0) {
-            // Add BesselJ0 zeros up to _diam/_lam_arcsec
+            // Add BesselJ0 zeros up to maxk
             for (int s=1; s<10; ++s) {
                 double zero=bessel::getBesselRoot0(s)/r;
                 if (zero >= _maxk) break;
@@ -320,38 +297,6 @@ namespace galsim {
         xdbg<<"xValueExact("<<r<<") = "<<result<<"\n";
         return result;
     }
-
-    // \int 2 pi r dr f(r) from a to b, where f(r) = f(a) + (f(b) - f(a))/(b-a) * (r-a)
-    double volume(double a, double b, double fa, double fb) {
-        return M_PI*(b-a)/3.0*(a*(2*fa+fb)+b*(fa+2*fb));
-    }
-
-    class SKIxValueResid {
-    public:
-        SKIxValueResid(const SKInfo& ski, double thresh) : _ski(ski), _thresh(thresh) {}
-        double operator()(double x) const {
-            double val = _ski.xValueRaw(x)-_thresh;
-            xdbg<<"resid(x="<<x<<")="<<val<<'\n';
-            return val;
-        }
-    private:
-        const SKInfo& _ski;
-        const double _thresh;
-    };
-
-    class SKIxValueVolumeResid {
-    public:
-        SKIxValueVolumeResid(const SKInfo & ski, double f0, double thresh) :
-            _ski(ski), _f0(f0), _thresh(thresh) {}
-        double operator()(double x) const {
-            xdbg<<volume(0, x, _f0, _ski.xValueRaw(x))<<"  "<< _thresh<<std::endl;
-            return volume(0, x, _f0, _ski.xValueRaw(x)) - _thresh;
-        }
-    private:
-        const SKInfo& _ski;
-        const double _f0;
-        const double _thresh;
-    };
 
     void SKInfo::_buildRadial() {
         //set_verbose(2);
@@ -371,7 +316,7 @@ namespace galsim {
         }
 
         double val = xValueRaw(0.0);
-        xdbg<<"f(0) = "<<val<<" arcsec^-2\n";
+        xdbg<<"f(0) = "<<val<<std::endl;
 
         double dr = _gsparams->table_spacing * sqrt(sqrt(_gsparams->xvalue_accuracy / 10.));
 
@@ -434,7 +379,7 @@ namespace galsim {
         // Make sure it is at least 5 hlr
         if (R == 0) R = _radial.argMax();
         R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
-        _stepk = M_PI / R * _k0;
+        _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
         std::vector<double> range(2,0.);
@@ -448,11 +393,10 @@ namespace galsim {
     {
         assert(_sampler.get());
         boost::shared_ptr<PhotonArray> result = _sampler->shoot(N,ud);
-        //result->scaleXY(_lam_over_r0);
         return result;
     }
 
-    LRUCache<boost::tuple<double,double,GSParamsPtr>,SKInfo>
+    LRUCache<boost::tuple<double,GSParamsPtr>,SKInfo>
         SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
@@ -466,17 +410,16 @@ namespace galsim {
     SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam_over_r0, double kcrit, double flux,
                                                      const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _lam_over_r0(lam_over_r0), _k0(2.*M_PI/lam_over_r0),
-        _kcrit(kcrit),
-        _flux(flux),
-        _info(cache.get(boost::make_tuple(_k0, kcrit, this->gsparams.duplicate())))
+        _lam_over_r0(lam_over_r0), _k0(2.*M_PI/lam_over_r0), _inv_k0(1./_k0),
+        _kcrit(kcrit), _flux(flux), _xnorm(flux * _k0*_k0),
+        _info(cache.get(boost::make_tuple(kcrit, this->gsparams.duplicate())))
     { }
 
     double SBSecondKick::SBSecondKickImpl::maxK() const
-    { return _info->maxK(); }
+    { return _info->maxK()*_k0; }
 
     double SBSecondKick::SBSecondKickImpl::stepK() const
-    { return _info->stepK(); }
+    { return _info->stepK()*_k0; }
 
     double SBSecondKick::SBSecondKickImpl::getDelta() const
     { return _info->getDelta() * _flux; }
@@ -495,52 +438,47 @@ namespace galsim {
 
     double SBSecondKick::SBSecondKickImpl::structureFunction(double rho) const
     {
-        xdbg<<"rho = "<<rho<<'\n';
         return _info->structureFunction(rho);
     }
 
     std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
     {
-        xdbg<<"p = "<<p<<std::endl;
-        xdbg<<"Call kValue with k = "<<sqrt(p.x*p.x+p.y*p.y)<<std::endl;
         return kValue(sqrt(p.x*p.x+p.y*p.y));
     }
 
     double SBSecondKick::SBSecondKickImpl::kValue(double k) const
     {
         // k in inverse arcsec
-        return _info->kValue(k)*_flux;
+        return _info->kValue(k*_inv_k0)*_flux;
     }
 
     double SBSecondKick::SBSecondKickImpl::kValueRaw(double k) const
     {
         // k in inverse arcsec
-        return _info->kValueRaw(k)*_flux;
+        return _info->kValueRaw(k*_inv_k0)*_flux;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValue(const Position<double>& p) const
     {
-        xdbg<<"p = "<<p<<std::endl;
-        xdbg<<"Call xValue with r = "<<sqrt(p.x*p.x+p.y*p.y)<<std::endl;
         return xValue(sqrt(p.x*p.x+p.y*p.y));
     }
 
     double SBSecondKick::SBSecondKickImpl::xValue(double r) const
     {
         // r in arcsec
-        return _info->xValue(r)*_flux;
+        return _info->xValue(r*_k0)*_xnorm;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValueRaw(double r) const
     {
-        //r in arcsec
-        return _info->xValueRaw(r)*_flux;
+        // r in arcsec
+        return _info->xValueRaw(r*_k0)*_xnorm;
     }
 
     double SBSecondKick::SBSecondKickImpl::xValueExact(double r) const
     {
-        //r in arcsec
-        return _info->xValueExact(r)*_flux;
+        // r in arcsec
+        return _info->xValueExact(r*_k0)*_xnorm;
     }
 
     boost::shared_ptr<PhotonArray> SBSecondKick::SBSecondKickImpl::shoot(
@@ -552,6 +490,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
         dbg<<"SK shoot returned flux = "<<result->getTotalFlux()<<std::endl;
         result->setTotalFlux(getFlux());
+        result->scaleXY(_inv_k0);
         dbg<<"SK Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }

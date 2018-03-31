@@ -41,7 +41,7 @@ namespace galsim {
     class SKInfo
     {
     public:
-        SKInfo(double k0, double kcrit, const GSParamsPtr& gsparams);
+        SKInfo(double kcrit, const GSParamsPtr& gsparams);
         ~SKInfo() {}
 
         double stepK() const { return _stepk; }
@@ -60,11 +60,9 @@ namespace galsim {
         SKInfo(const SKInfo& rhs); ///<Hide the copy constructor
         void operator=(const SKInfo& rhs); ///<Hide the assignment operator
 
-        double _k0;
         double _kcrit;
         double _stepk;
         double _maxk;
-        double _knorm;
         double _delta;
 
         const GSParamsPtr _gsparams;
@@ -134,8 +132,10 @@ namespace galsim {
 
         double _lam_over_r0;
         double _k0;
+        double _inv_k0;
         double _kcrit;
         double _flux;
+        double _xnorm;
 
         boost::shared_ptr<SKInfo> _info;
 
@@ -143,7 +143,7 @@ namespace galsim {
         SBSecondKickImpl(const SBSecondKickImpl& rhs);
         void operator=(const SBSecondKickImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,GSParamsPtr>,SKInfo> cache;
+        static LRUCache<boost::tuple<double,GSParamsPtr>,SKInfo> cache;
     };
 }
 
