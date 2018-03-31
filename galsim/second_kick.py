@@ -102,7 +102,8 @@ class SecondKick(GSObject):
         self._obscuration = float(obscuration)
         self._kcrit = float(kcrit)
 
-        self._sbs = galsim._galsim.SBSecondKick(lam, r0, kcrit, flux, scale, gsparams)
+        lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
+        self._sbs = galsim._galsim.SBSecondKick(lam_over_r0, kcrit, flux, gsparams)
         lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
         self._sba = galsim._galsim.SBAiry(lam_over_diam, obscuration, 1., gsparams)
         self._sbd = galsim._galsim.SBDeltaFunction(self._sbs.getDelta())
@@ -136,9 +137,6 @@ class SecondKick(GSObject):
     @property
     def scale_unit(self):
         return self._scale_unit
-        # Type conversion makes the following not repr-roundtrip-able, so we store init input as a
-        # hidden attribute.
-        # return galsim.AngleUnit(self._sbvk.getScale())
 
     def _structure_function(self, rho):
         return self._sbs.structureFunction(rho)
@@ -177,8 +175,7 @@ class SecondKick(GSObject):
         return "galsim.SecondKick(lam=%r, r0=%r, kcrit=%r)"%(self.lam, self.r0, self.kcrit)
 
 _galsim.SBSecondKick.__getinitargs__ = lambda self: (
-    self.getLam(), self.getR0(), self.getKCrit(), self.getFlux()+self.getDelta(),
-    self.getScale(), self.getGSParams())
+    self.getLamOverR0(), self.getKCrit(), self.getFlux()+self.getDelta(), self.getGSParams())
 _galsim.SBSecondKick.__getstate__ = lambda self: None
 _galsim.SBSecondKick.__repr__ = lambda self: \
-    "galsim._galsim.SBSecondKick(%r, %r, %r, %r, %r, %r)"%self.__getinitargs__()
+    "galsim._galsim.SBSecondKick(%r, %r, %r, %r)"%self.__getinitargs__()

@@ -41,7 +41,7 @@ namespace galsim {
     class SKInfo
     {
     public:
-        SKInfo(double lam, double r0, double kcrit, const GSParamsPtr& gsparams);
+        SKInfo(double k0, double kcrit, const GSParamsPtr& gsparams);
         ~SKInfo() {}
 
         double stepK() const { return _stepk; }
@@ -60,10 +60,7 @@ namespace galsim {
         SKInfo(const SKInfo& rhs); ///<Hide the copy constructor
         void operator=(const SKInfo& rhs); ///<Hide the assignment operator
 
-        double _lam; // Wavelength in meters
-        double _lam_arcsec; // lam * ARCSEC2RAD / 2pi
-        double _r0; // Fried parameter in meters
-        double _lam_over_r0; // Wavelength in meters
+        double _k0;
         double _kcrit;
         double _stepk;
         double _maxk;
@@ -91,8 +88,8 @@ namespace galsim {
     class SBSecondKick::SBSecondKickImpl : public SBProfileImpl
     {
     public:
-        SBSecondKickImpl(double lam, double r0, double kcrit, double flux,
-                         double scale, const GSParamsPtr& gsparams);
+        SBSecondKickImpl(double lam_over_r0, double kcrit, double flux,
+                         const GSParamsPtr& gsparams);
         ~SBSecondKickImpl() {}
 
         bool isAxisymmetric() const { return true; }
@@ -107,10 +104,8 @@ namespace galsim {
         Position<double> centroid() const { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux-getDelta(); }
-        double getLam() const { return _lam; }
-        double getR0() const { return _r0; }
+        double getLamOverR0() const { return _lam_over_r0; }
         double getKCrit() const { return _kcrit; }
-        double getScale() const { return _scale; }
         double maxSB() const { return _flux * _info->xValue(0.); }
 
         /**
@@ -137,11 +132,10 @@ namespace galsim {
 
     private:
 
-        double _lam;
-        double _r0;
+        double _lam_over_r0;
+        double _k0;
         double _kcrit;
         double _flux;
-        double _scale;
 
         boost::shared_ptr<SKInfo> _info;
 
@@ -149,7 +143,7 @@ namespace galsim {
         SBSecondKickImpl(const SBSecondKickImpl& rhs);
         void operator=(const SBSecondKickImpl& rhs);
 
-        static LRUCache<boost::tuple<double,double,double,GSParamsPtr>,SKInfo> cache;
+        static LRUCache<boost::tuple<double,double,GSParamsPtr>,SKInfo> cache;
     };
 }
 

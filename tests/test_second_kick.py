@@ -86,7 +86,7 @@ def test_structure_function():
     vk = galsim.VonKarman(lam, r0, L0=1.e10)
 
     for rho in [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]:
-        sksf = sk._structure_function(rho)
+        sksf = sk._structure_function(rho/r0)
         vksf = vk._structure_function(rho)
         print(sksf,vksf)
         np.testing.assert_allclose(sksf, vksf, rtol=2e-3, atol=1.e-3)

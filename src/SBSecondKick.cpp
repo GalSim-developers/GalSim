@@ -52,38 +52,24 @@ namespace galsim {
     //
     //
 
-    SBSecondKick::SBSecondKick(double lam, double r0,
-                               double kcrit, double flux, double scale,
+    SBSecondKick::SBSecondKick(double lam_over_r0, double kcrit, double flux,
                                const GSParamsPtr& gsparams) :
-        SBProfile(new SBSecondKickImpl(lam, r0, kcrit, flux, scale,
-                                       gsparams)) {}
+        SBProfile(new SBSecondKickImpl(lam_over_r0, kcrit, flux, gsparams)) {}
 
     SBSecondKick::SBSecondKick(const SBSecondKick &rhs) : SBProfile(rhs) {}
 
     SBSecondKick::~SBSecondKick() {}
 
-    double SBSecondKick::getLam() const
+    double SBSecondKick::getLamOverR0() const
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getLam();
-    }
-
-    double SBSecondKick::getR0() const
-    {
-        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getR0();
+        return static_cast<const SBSecondKickImpl&>(*_pimpl).getLamOverR0();
     }
 
     double SBSecondKick::getKCrit() const
     {
         assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
         return static_cast<const SBSecondKickImpl&>(*_pimpl).getKCrit();
-    }
-
-    double SBSecondKick::getScale() const
-    {
-        assert(dynamic_cast<const SBSecondKickImpl*>(_pimpl.get()));
-        return static_cast<const SBSecondKickImpl&>(*_pimpl).getScale();
     }
 
     double SBSecondKick::getDelta() const
@@ -149,15 +135,12 @@ namespace galsim {
         const double _thresh;
     };
 
-    SKInfo::SKInfo(double lam, double r0, double kcrit, const GSParamsPtr& gsparams) :
-        _lam(lam), _lam_arcsec(lam*ARCSEC2RAD/(2*M_PI)), _r0(r0),
-        _kcrit(kcrit), _gsparams(gsparams),
+    SKInfo::SKInfo(double k0, double kcrit, const GSParamsPtr& gsparams) :
+        _k0(k0), _kcrit(kcrit), _gsparams(gsparams),
         _radial(TableDD::spline),
         _kvLUT(TableDD::spline)
     {
-        dbg<<"SKInfo: "<<lam<<","<<r0<<","<<kcrit<<std::endl;
-        _lam_over_r0 = _lam_arcsec/_r0;
-        dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
+        dbg<<"k0 = "<<_k0<<std::endl;
 
         // build the radial function
 #ifdef DEBUGLOGGING
@@ -174,10 +157,10 @@ namespace galsim {
 #endif
     }
 
-    class SKISFIntegrand3 : public std::unary_function<double,double>
+    class SKISFIntegrand : public std::unary_function<double,double>
     {
     public:
-        SKISFIntegrand3(double rho, double kcrit) :
+        SKISFIntegrand(double rho, double kcrit) :
             _2pirho(2*M_PI*rho), _kcrit(kcrit) {}
         double operator()(double k) const {
             double ret = fast_pow(k, -8./3)*(1-j0(_2pirho*k));
@@ -197,7 +180,7 @@ namespace galsim {
 
     double SKInfo::structureFunction(double rho) const {
         const static double magic6 = 0.2877144330394485472;
-        SKISFIntegrand3 I(rho, _kcrit);
+        SKISFIntegrand I(rho, _kcrit);
         integ::IntRegion<double> reg(0., integ::MOCK_INF);
         for (int s=1; s<10; s++) {
             double zero = bessel::getBesselRoot0(s)/(2*M_PI*rho);
@@ -256,20 +239,20 @@ namespace galsim {
                 break;
             }
         }
-        _maxk /= _lam_over_r0;
+        _maxk *= _k0;
         xdbg<<"kvLUT.size() = "<<_kvLUT.size()<<'\n';
         //set_verbose(1);
     }
 
     double SKInfo::kValue(double k) const {
         // k in inverse arcsec
-        double kp = _lam_over_r0*k;
+        double kp = k/_k0;
         return kp < _kvLUT.argMax() ? _kvLUT(kp) : 0.;
     }
 
     double SKInfo::kValueRaw(double k) const {
         // k in inverse arcsec
-        double kp = _lam_over_r0*k;
+        double kp = k/_k0;
         double f = fmath::expd(-0.5*structureFunction(kp));
         xdbg<<"kValueRaw("<<k<<") = "<<f<<std::endl;
         return f;
@@ -305,7 +288,7 @@ namespace galsim {
     }
 
     double SKInfo::xValue(double r) const {
-        double rp = r/_lam_over_r0;
+        double rp = r*_k0;
         return rp < _radial.argMax() ? _radial(rp) : 0.;
     }
 
@@ -451,7 +434,7 @@ namespace galsim {
         // Make sure it is at least 5 hlr
         if (R == 0) R = _radial.argMax();
         R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
-        _stepk = M_PI / R / _lam_over_r0;
+        _stepk = M_PI / R * _k0;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
         std::vector<double> range(2,0.);
@@ -469,7 +452,7 @@ namespace galsim {
         return result;
     }
 
-    LRUCache<boost::tuple<double,double,double,GSParamsPtr>,SKInfo>
+    LRUCache<boost::tuple<double,double,GSParamsPtr>,SKInfo>
         SBSecondKick::SBSecondKickImpl::cache(sbp::max_SK_cache);
 
     //
@@ -480,23 +463,20 @@ namespace galsim {
     //
     //
 
-    SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam, double r0, double kcrit,
-                                                     double flux, double scale,
+    SBSecondKick::SBSecondKickImpl::SBSecondKickImpl(double lam_over_r0, double kcrit, double flux,
                                                      const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _lam(lam),
-        _r0(r0),
+        _lam_over_r0(lam_over_r0), _k0(2.*M_PI/lam_over_r0),
         _kcrit(kcrit),
         _flux(flux),
-        _scale(scale),
-        _info(cache.get(boost::make_tuple(1e-9*lam, r0, kcrit, this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(_k0, kcrit, this->gsparams.duplicate())))
     { }
 
     double SBSecondKick::SBSecondKickImpl::maxK() const
-    { return _info->maxK()*_scale; }
+    { return _info->maxK(); }
 
     double SBSecondKick::SBSecondKickImpl::stepK() const
-    { return _info->stepK()*_scale; }
+    { return _info->stepK(); }
 
     double SBSecondKick::SBSecondKickImpl::getDelta() const
     { return _info->getDelta() * _flux; }
@@ -506,11 +486,9 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBSecondKick("
-            <<getLam()<<", "
-            <<getR0()<<", "
+            <<getLamOverR0()<<", "
             <<getKCrit()<<", "
             <<getFlux()<<", "
-            <<getScale()<<", "
             <<"galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
@@ -518,16 +496,14 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';
-        return _info->structureFunction(rho/_r0);
+        return _info->structureFunction(rho);
     }
 
     std::complex<double> SBSecondKick::SBSecondKickImpl::kValue(const Position<double>& p) const
     {
         xdbg<<"p = "<<p<<std::endl;
-        xdbg<<"scale = "<<_scale<<std::endl;
-        xdbg<<"Call kValue with k = "<<sqrt(p.x*p.x+p.y*p.y)/_scale<<std::endl;
-        // k in units of 1/_scale
-        return kValue(sqrt(p.x*p.x+p.y*p.y)/_scale);
+        xdbg<<"Call kValue with k = "<<sqrt(p.x*p.x+p.y*p.y)<<std::endl;
+        return kValue(sqrt(p.x*p.x+p.y*p.y));
     }
 
     double SBSecondKick::SBSecondKickImpl::kValue(double k) const
@@ -545,10 +521,8 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::xValue(const Position<double>& p) const
     {
         xdbg<<"p = "<<p<<std::endl;
-        xdbg<<"scale = "<<_scale<<std::endl;
-        xdbg<<"Call xValue with r = "<<sqrt(p.x*p.x+p.y*p.y)*_scale<<std::endl;
-        // r in units of _scale
-        return xValue(sqrt(p.x*p.x+p.y*p.y)*_scale) * _scale*_scale;
+        xdbg<<"Call xValue with r = "<<sqrt(p.x*p.x+p.y*p.y)<<std::endl;
+        return xValue(sqrt(p.x*p.x+p.y*p.y));
     }
 
     double SBSecondKick::SBSecondKickImpl::xValue(double r) const
@@ -578,7 +552,6 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
         dbg<<"SK shoot returned flux = "<<result->getTotalFlux()<<std::endl;
         result->setTotalFlux(getFlux());
-        result->scaleXY(1./_scale);
         dbg<<"SK Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }

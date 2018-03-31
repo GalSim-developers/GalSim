@@ -37,16 +37,13 @@ namespace galsim {
             double (SBSecondKick::*xv)(double) const = &SBSecondKick::xValue;
 
             bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
-                .def(bp::init<double,double,double,double,double,boost::shared_ptr<GSParams> >(
-                        (bp::arg("lam"), bp::arg("r0"),
-                         bp::arg("kcrit"), bp::arg("flux")=1.,
-                         bp::arg("scale")=1.0, bp::arg("gsparams")=bp::object()))
+                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("lam_over_r0"), bp::arg("kcrit"), bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBSecondKick &>())
-                .def("getLam", &SBSecondKick::getLam)
-                .def("getR0", &SBSecondKick::getR0)
+                .def("getLamOverR0", &SBSecondKick::getLamOverR0)
                 .def("getKCrit", &SBSecondKick::getKCrit)
-                .def("getScale", &SBSecondKick::getScale)
                 .def("getDelta", &SBSecondKick::getDelta)
                 .def("structureFunction", &SBSecondKick::structureFunction)
                 .def("kValueRaw", &SBSecondKick::kValueRaw)
