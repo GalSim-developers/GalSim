@@ -950,20 +950,6 @@ class PhaseScreenList(object):
         else:
             return np.sum(r0_500s**(-5./3))**(-3./5)
 
-    @property
-    def L0_effective(self):
-        """Weighted average of individual screen outer scale L0 values."""
-        # This is just a guess.  It corresponds to weighting the layers by their relative phase
-        # variance
-        def has_both(layer):
-            return hasattr(layer, 'r0_500') and hasattr(layer, 'L0')
-        weights = np.array([l.r0_500**(-5./3) for l in self if has_both(l)])
-        L0s = np.array([l.L0 for l in self if has_both(l)])
-        if len(weights) == 0:
-            return None
-        else:
-            return np.sum(weights*L0s)/np.sum(weights)
-
     def _stepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
 
