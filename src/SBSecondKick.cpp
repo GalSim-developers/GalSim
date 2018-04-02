@@ -232,7 +232,9 @@ namespace galsim {
 
     double SKInfo::kValueRaw(double k) const {
         // k in units of k0 = 2pi r0/lambda
-        return fmath::expd(-0.5*structureFunction(k));
+        if (k == 0)
+            return 1-_delta;
+        return fmath::expd(-0.5*structureFunction(k))-_delta;
     }
 
     class SKIXIntegrand : public std::unary_function<double,double>
