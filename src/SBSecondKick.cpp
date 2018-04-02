@@ -176,8 +176,8 @@ namespace galsim {
     }
 
     void SKInfo::_buildKVLUT() {
-        // Start with the regular Kolmogorov maxk
-        _maxk = std::pow(-std::log(_gsparams->kvalue_accuracy),3./5.);
+        // Start with 10x the regular Kolmogorov maxk (fairly arbitrarily)
+        _maxk = 10*std::pow(-std::log(_gsparams->kvalue_accuracy),3./5.);
 
         if (_kcrit > 1.e10) {
             dbg<<"large kcrit = "<<_kcrit<<std::endl;
@@ -210,6 +210,7 @@ namespace galsim {
         }
         // Switch to logarithmic spacing.  dk -> dlogk
         double expdlogk = exp(dk);
+        int nsmall=0;
         for (; k<_maxk; k*=expdlogk) {
             double val = structureFunction(k);
             xdbg<<"sf("<<k<<") "<<val<<std::endl;
@@ -217,6 +218,11 @@ namespace galsim {
             dbg<<"kv("<<k<<") "<<kv<<std::endl;
             _kvLUT.addEntry(k, kv);
             if (std::abs(kv) < _gsparams->kvalue_accuracy) {
+                nsmall++;
+            } else {
+                nsmall=0;
+            }
+            if (nsmall == 5) {
                 _maxk = k;
                 break;
             }
