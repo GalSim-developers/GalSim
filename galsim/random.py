@@ -248,7 +248,7 @@ class DistDeviate(_galsim.BaseDeviate):
     -0.00909781188974034
     """
     def __init__(self, seed=0, function=None, x_min=None,
-                 x_max=None, interpolant=None, npoints=256, _init=True, lseed=None):
+                 x_max=None, interpolant=None, npoints=256, lseed=None):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
@@ -257,9 +257,6 @@ class DistDeviate(_galsim.BaseDeviate):
             depr('lseed', 1.1, 'seed')
             seed = lseed
         import galsim
-
-        # Special internal "private" constructor option that doesn't do any initialization.
-        if not _init: return
 
         # Set up the PRNG
         _galsim.BaseDeviate.__init__(self,seed)
@@ -401,7 +398,8 @@ class DistDeviate(_galsim.BaseDeviate):
         self._ud.reset(self)
 
     def duplicate(self):
-        dup = DistDeviate(_init=False)
+        cls = self.__class__
+        dup = cls.__new__(cls)
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
