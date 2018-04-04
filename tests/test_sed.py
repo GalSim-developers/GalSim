@@ -601,26 +601,29 @@ def test_SED_sampleWavelength():
     sedbp = sed*bandpass
 
     out = sed.sampleWavelength(3,None)
-    np.testing.assert_equal(hasattr(sed,'deviate'),True,"Creating SED deviate cache failed.")
-    np.testing.assert_equal(len(sed.deviate),1,"Creating SED deviate failed.")
+    print('out = ',out)
+    np.testing.assert_equal(hasattr(sed,'_cache_deviate'),True,"Creating SED deviate cache failed.")
+    np.testing.assert_equal(len(sed._cache_deviate),1,"Creating SED deviate failed.")
 
     out = sed.sampleWavelength(3,None,rng=seed)
-    np.testing.assert_equal(len(sed.deviate),1,"Accessing existing SED deviate failed.")
+    print('out = ',out)
+    np.testing.assert_equal(len(sed._cache_deviate),1,"Accessing existing SED deviate failed.")
 
     test0 = np.array([ 4.15562438,  4.737775  ,  1.93594078])
+    print('test0 = ',test0)
     np.testing.assert_array_almost_equal(out,test0,8,"Unexpected SED sample values.")
 
     out = sed.sampleWavelength(3,None,rng=rng)
     np.testing.assert_array_almost_equal(out,test0,8,"Failed to pass 'UniformDeviate'.")
 
     out = sed.sampleWavelength(3,bandpass,rng=seed)
-    np.testing.assert_equal(len(sed.deviate),2,"Creating new SED deviate failed.")
+    np.testing.assert_equal(len(sed._cache_deviate),2,"Creating new SED deviate failed.")
 
     test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
     np.testing.assert_array_almost_equal(out,test1,8,"Unexpected SED sample values.")
 
     out = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=256)
-    np.testing.assert_equal(len(sed.deviate),2,"Unexpected number of SED deviates.")
+    np.testing.assert_equal(len(sed._cache_deviate),2,"Unexpected number of SED deviates.")
     np.testing.assert_equal(len(out),1e3,"Unexpected number of SED samples.")
 
     np.testing.assert_equal(np.sum(out > sedbp.red_limit),0,
@@ -629,7 +632,7 @@ def test_SED_sampleWavelength():
                             "SED sample outside of function bounds.")
 
     out2 = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=512)
-    np.testing.assert_equal(len(sed.deviate),3,"Unexpected number of SED deviates.")
+    np.testing.assert_equal(len(sed._cache_deviate),3,"Unexpected number of SED deviates.")
     np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
                                    "to the nearest integer.")
 
