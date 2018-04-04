@@ -1386,6 +1386,8 @@ def test_distfunction():
                   x_min = 1.)
     foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
     assert_raises(ValueError, foo.val, -1.)
+    assert_raises(ValueError, galsim.DistDeviate, function = lambda x : -1, x_min=dmin, x_max=dmax)
+    assert_raises(ValueError, galsim.DistDeviate, function = lambda x : x**2-1, x_min=dmin, x_max=dmax)
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1590,6 +1592,22 @@ def test_distLookupTable():
             err_msg='Wrong DistDeviate random number sequence for LookupTable with default '
             'interpolant')
 
+    # Test generate
+    d.seed(testseed)
+    test_array = np.empty(3)
+    d.generate(test_array)
+    np.testing.assert_array_almost_equal(
+            test_array, np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence from generate.')
+
+    # Test filling an image
+    d.seed(testseed)
+    testimage = galsim.ImageD(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(d))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
+
     # Test a case with nearly flat probabilities
     # x and p arrays with and without a small (epsilon) step
     dx_eps = np.arange(6)
@@ -1620,22 +1638,6 @@ def test_distLookupTable():
     ar2 = np.empty(100); d2.generate(ar2)
     np.testing.assert_array_almost_equal(ar1, ar2, precision,
             err_msg='Two DistDeviates with near-flat probabilities generated different values.')
-
-    # Test generate
-    d.seed(testseed)
-    test_array = np.empty(3)
-    d.generate(test_array)
-    np.testing.assert_array_almost_equal(
-            test_array, np.array(dLookupTableResult), precision,
-            err_msg='Wrong DistDeviate random number sequence from generate.')
-
-    # Test filling an image
-    d.seed(testseed)
-    testimage = galsim.ImageD(np.zeros((3, 1)))
-    testimage.addNoise(galsim.DeviateNoise(d))
-    np.testing.assert_array_almost_equal(
-            testimage.array.flatten(), np.array(dLookupTableResult), precision,
-            err_msg='Wrong DistDeviate random number sequence generated when applied to image.')
 
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))

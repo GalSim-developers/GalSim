@@ -317,19 +317,26 @@ class DistDeviate(_galsim.BaseDeviate):
                     raise TypeError('Must provide x_min and x_max when function argument is a '+
                                     'regular python callable function')
 
-        # Compute the cumulative distribution function
+        # Compute the probability distribution function, pdf(x)
         xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-        # cdf is the cumulative distribution function--just easier to type!
-        dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
-        cdf = [sum(dcdf[0:i]) for i in range(npoints)]
+
+        # Integrate over the range of x in case the function is doing something weird here.
+        pdf = [0] + [galsim.integ.int1d(function, xarray[i], xarray[i+1])
+                     for i in range(npoints - 1)]
+        pdf = np.array(pdf)
+
+        # Check that the probability is nonnegative
+        if not np.all(pdf >= 0.):
+            raise ValueError('Negative probability passed to DistDeviate: %s'%function)
+
+        # Compute the cumulative distribution function = int(pdf(x),x)
+        cdf = np.cumsum(pdf)
+
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
-        cdf = np.array(cdf)/totalprobability
-        # Recompute delta CDF in case of floating-point differences in near-flat probabilities
-        dcdf = np.diff(cdf)
-        # Check that the probability is nonnegative
-        if not np.all(dcdf >= 0):
+        if totalprobability < 0.:
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
+        cdf /= totalprobability
 
         self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
@@ -348,7 +355,7 @@ class DistDeviate(_galsim.BaseDeviate):
     # This is the private function that is required to make DistDeviate work as a derived
     # class of BaseDeviate.  See pysrc/Random.cpp.
     def _val(self):
-        return self.val(self._ud())
+        return self._inverseprobabilitytable(self._ud())
 
     def __call__(self):
         return self._val()
