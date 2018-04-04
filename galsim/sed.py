@@ -108,7 +108,7 @@ class SED(object):
     _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
-                 _blue_limit=0.0, _red_limit=float('inf'), _wave_list=None, _spectral=None):
+                 _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
 
         self._orig_spec = spec  # Save this for pickling
 
@@ -163,7 +163,7 @@ class SED(object):
             self.wave_list = _wave_list
             # Cast numpy.float to python float for more consistent reprs
             self.blue_limit = float(_blue_limit)
-            self.red_limit = float('inf') if _red_limit == "float('inf')" else float(_red_limit)
+            self.red_limit = float(_red_limit)
             self._setup_funcs()
             return
 
@@ -178,7 +178,7 @@ class SED(object):
             self.red_limit = float(np.max(self.wave_list))
         else:
             self.blue_limit = 0.0
-            self.red_limit = float('inf')
+            self.red_limit = np.inf
             self.wave_list = np.array([], dtype=float)
 
         # Define the appropriate functions to call
@@ -923,10 +923,10 @@ class SED(object):
         # we use a custom repr for this case.
         flux_type = "Unit(1)" if self.dimensionless else repr(self.flux_type)
         outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
-                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
+                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
                       self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,
-                      "float('inf')" if self.red_limit == float('inf') else self.red_limit)
+                      "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
 
     def __str__(self):
