@@ -23,7 +23,6 @@ from past.builtins import basestring
 import numpy as np
 
 import galsim
-import weakref
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -832,10 +831,9 @@ class SED(object):
         nphotons=int(nphotons)
 
         key = (bandpass,npoints)
-        dev = None
         if key in self._cache_deviate:
-            dev = self._cache_deviate[key]()
-        if dev is None:
+            dev = self._cache_deviate[key]
+        else:
             if bandpass is None:
                 sed = self
             else:
@@ -849,7 +847,7 @@ class SED(object):
             xmax = sed.red_limit
             dev = galsim.DistDeviate(function=fn, x_min=xmin, x_max=xmax,
                                      npoints=npoints)
-            self._cache_deviate[key] = weakref.ref(dev)
+            self._cache_deviate[key] = dev
 
         # Reset the deviate explicitly
         if rng is not None: dev.reset(rng)
