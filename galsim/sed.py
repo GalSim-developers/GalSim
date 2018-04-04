@@ -22,6 +22,7 @@ Spectral energy distribution class.  Used by galsim/chromatic.py
 from past.builtins import basestring
 import numpy as np
 from astropy import units
+from astropy import constants
 
 import galsim
 
@@ -106,6 +107,10 @@ class SED(object):
     # We'll use this several times below, and it's ridiculously slow to construct, so just make
     # it once at the class level.
     _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
+    _flambda = units.erg/(units.s * units.cm**2 * units.nm)
+    _fnu = units.erg / (units.s * units.Hz * units.cm**2)
+    _c = constants.c.to('nm/s').value
+    _h = constants.h.to('erg s').value
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
@@ -129,7 +134,7 @@ class SED(object):
                 flux_type = units.astrophys.photon/(units.s * units.cm**2 * self.wave_type)
                 _spectral = True
             elif flux_type.lower() == 'fnu':
-                flux_type = units.erg / (units.s * units.Hz * units.cm**2)
+                flux_type = SED._fnu
                 _spectral = True
             elif flux_type.lower() == '1':
                 flux_type = units.dimensionless_unscaled
@@ -154,9 +159,24 @@ class SED(object):
             self.wave_factor = (1*self.wave_type).to(units.nm).value
         except units.UnitConversionError:
             self.wave_factor = None
-            # Silently switch to slow calls, since can't do fast for this.
-            # MJ: I think this is ok, but do we want to emit a warning here?
-            self.fast = False
+
+        try:
+            if self.wave_factor:
+                self.flux_factor = (1*self.flux_type).to(SED._photons).value
+            else:
+                self.flux_factor = self.flambda_factor = self.fnu_factor = None
+        except units.UnitConversionError:
+            self.flux_factor = None
+            try:
+                self.flambda_factor = (1*self.flux_type).to(SED._flambda).value
+                self.flambda_factor /= SED._h * SED._c / self.wave_factor
+            except units.UnitConversionError:
+                self.flambda_factor = None
+                try:
+                    self.fnu_factor = (1*self.flux_type).to(SED._fnu).value
+                    self.fnu_factor /= SED._h * self.wave_factor
+                except units.UnitConversionError:
+                    self.fnu_factor = None
 
         # Finish re-evaluating __init__() here.
         if _wave_list is not None:
@@ -201,6 +221,14 @@ class SED(object):
             self._get_rest_native_waves = self._get_rest_native_waves_fast
         else:
             self._get_rest_native_waves = self._get_rest_native_waves_slow
+        if self.flux_factor:
+            self._flux_to_photons = self._flux_to_photons_fphot
+        elif self.flambda_factor:
+            self._flux_to_photons = self._flux_to_photons_flam
+        elif self.fnu_factor:
+            self._flux_to_photons = self._flux_to_photons_fnu
+        else:
+            self._flux_to_photons = self._flux_to_photons_slow
 
     def _get_native_waves_trivial(self, wave):
         return wave
@@ -216,6 +244,19 @@ class SED(object):
 
     def _get_rest_native_waves_slow(self, wave):
         return (wave / (1.0+self.redshift) * units.nm).to(self.wave_type, units.spectral()).value
+
+    def _flux_to_photons_fphot(self, flux_native, wave_native):
+        return flux_native * self.flux_factor
+
+    def _flux_to_photons_flam(self, flux_native, wave_native):
+        return flux_native * wave_native * self.flambda_factor
+
+    def _flux_to_photons_fnu(self, flux_native, wave_native):
+        return flux_native / wave_native * self.fnu_factor
+
+    def _flux_to_photons_slow(self, flux_native, wave_native):
+        return (flux_native * self.flux_type).to(
+                SED._photons, units.spectral_density(wave_native * self.wave_type)).value
 
     def _initialize_spec(self):
         # Turn the input _orig_spec into a real function _spec.
@@ -271,10 +312,9 @@ class SED(object):
         return not self.spectral
 
     def _rest_nm_to_photons(self, wave):
-        wave_native_value = self._get_native_waves(wave)
-        flux_native_quantity = self._spec(wave_native_value) * self.flux_type
-        return flux_native_quantity.to(
-                SED._photons, units.spectral_density(wave_native_value * self.wave_type)).value
+        wave_native = self._get_native_waves(wave)
+        flux_native = self._spec(wave_native)
+        return self._flux_to_photons(flux_native, wave_native)
 
     def _obs_nm_to_photons(self, wave):
         return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
@@ -304,7 +344,7 @@ class SED(object):
     @galsim.utilities.lazy_property
     def _fast_spec(self):
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
-        if (self.wave_type == units.nm and self.flux_type == SED._photons):
+        if self.wave_factor == 1. and self.flux_factor == 1.:
             return self._spec
         else:
             if len(self.wave_list) == 0:
@@ -362,9 +402,7 @@ class SED(object):
 
         # Manipulate output units
         if self.spectral:
-            out = out * self.flux_type
-            rest_wave_quantity = wave / (1.0 + self.redshift) * units.nm
-            out = out.to(SED._photons, units.spectral_density(rest_wave_quantity)).value
+            out = self._flux_to_photons(out, rest_wave_native)
 
         # Return same format as received (except Quantity -> ndarray)
         if isinstance(wave_in, tuple):
@@ -943,6 +981,7 @@ class SED(object):
         del d['_call']
         del d['_get_native_waves']
         del d['_get_rest_native_waves']
+        del d['_flux_to_photons']
         return d
 
     def __setstate__(self, d):
