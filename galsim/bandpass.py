@@ -314,28 +314,21 @@ class Bandpass(object):
         Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
         attributes, the throughput is assumed to be zero.
 
-        @param wave   Wavelength in nanometers.
+        @param wave   Wavelength in nanometers. (Either a scalar or a numpy array)
 
         @returns the dimensionless throughput.
         """
-        # figure out what we received, and return the same thing
-        # option 1: a NumPy array
-        if isinstance(wave, np.ndarray):
+        wave = np.asarray(wave)
+        if wave.shape == ():
+            if (wave >= self.blue_limit and wave <= self.red_limit):
+                return self.func(float(wave))
+            else:
+                return 0.0
+        else:
             wgood = (wave >= self.blue_limit) & (wave <= self.red_limit)
             ret = np.zeros(wave.shape, dtype=np.float)
             np.place(ret, wgood, self.func(wave[wgood]))
             return ret
-        # option 2: a tuple
-        elif isinstance(wave, tuple):
-            return tuple([self.func(w) if (w >= self.blue_limit and w <= self.red_limit) else 0.0
-                          for w in wave])
-        # option 3: a list
-        elif isinstance(wave, list):
-            return [self.func(w) if (w >= self.blue_limit and w <= self.red_limit) else 0.0
-                    for w in wave]
-        # option 4: a single value
-        else:
-            return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
     @property
     def effective_wavelength(self):

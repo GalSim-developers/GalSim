@@ -246,13 +246,13 @@ class SED(object):
         return wave
 
     def _get_native_waves_fast(self, wave):
-        return wave / self.wave_factor
+        return np.asarray(wave) / self.wave_factor
 
     def _get_native_waves_slow(self, wave):
         return (wave * units.nm).to(self.wave_type, units.spectral()).value
 
     def _get_rest_native_waves_fast(self, wave):
-        return wave / ((1.0+self.redshift) * self.wave_factor)
+        return np.asarray(wave) / ((1.0+self.redshift) * self.wave_factor)
 
     def _get_rest_native_waves_slow(self, wave):
         return (wave / (1.0+self.redshift) * units.nm).to(self.wave_type, units.spectral()).value
@@ -384,13 +384,7 @@ class SED(object):
         @returns     Flux or normalization.
         """
         self._check_bounds(wave)
-
-        if isinstance(wave, tuple):
-            return tuple(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        elif isinstance(wave, list):
-            return list(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
-        else:  # ndarray or scalar
-            return self._fast_spec(wave / (1.0 + self.redshift))
+        return self._fast_spec(np.asarray(wave) / (1.0 + self.redshift))
 
     def _call_slow(self, wave):
         """ Return flux in photons / sec / cm^2 / nm or dimensionless normalization.
@@ -417,14 +411,7 @@ class SED(object):
         # Manipulate output units
         if self.spectral:
             out = self._flux_to_photons(out, rest_wave_native)
-
-        # Return same format as received (except Quantity -> ndarray)
-        if isinstance(wave_in, tuple):
-            return tuple(out)
-        elif isinstance(wave_in, list):
-            return list(out)
-        else:
-            return out # Works for np.ndarray, Quantity, or scalar.
+        return out
 
     def __call__(self, wave):
         """ Return photon flux density or dimensionless normalization at wavelength `wave`.
