@@ -8,8 +8,8 @@ API Changes
   PowerSpectrum methods.  Now they either return a single value if the input
   `pos` is a single Position or a numpy array if multiple positions were
   provided. (#855)
-- SED and Bandpass when used as a function now only return either a float or
-  a numpy array. (#955)
+- When using LookupTable, SED or Bandpass as a function only return either a
+  float or a numpy array. (#955)
 
 
 Dependency Changes

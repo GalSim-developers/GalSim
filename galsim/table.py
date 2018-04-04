@@ -176,13 +176,14 @@ class LookupTable(object):
         """
         # first, keep track of whether interpolation was done in x or log(x)
         if self.x_log:
-            if np.any(np.array(x) <= 0.):
+            if np.any(np.asarray(x) <= 0.):
                 raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
-        # figure out what we received, and return the same thing
-        # option 1: a NumPy array
-        if isinstance(x, np.ndarray):
+        x = np.asarray(x)
+        if x.shape == ():
+            f = self.table(float(x))
+        else:
             dimen = len(x.shape)
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
@@ -193,19 +194,6 @@ class LookupTable(object):
             else:
                 f = np.empty_like(x, dtype=float)
                 self.table.interpMany(x.astype(float,copy=False),f)
-        # option 2: a tuple
-        elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = tuple(f)
-        # option 3: a list
-        elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float),f)
-            f = list(f)
-        # option 4: a single value
-        else:
-            f = self.table(x)
 
         if self.f_log:
             f = np.exp(f)
