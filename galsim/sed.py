@@ -813,7 +813,7 @@ class SED(object):
     def _cache_deviate(self):
         return dict()
 
-    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=256):
+    def sampleWavelength(self, nphotons, bandpass, rng=None, npoints=None):
         """ Sample a number of random wavelength values from the SED, possibly as observed through
         a bandpass.
 
@@ -824,10 +824,8 @@ class SED(object):
                          object. If `rng` is None, one will be automatically created, using the
                          time as a seed. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
-                         tables. [default: 256]
+                         tables. [default: None, which uses the DistDeviate default]
         """
-        if int(nphotons) != nphotons:
-            raise TypeError("'nphotons' must be integer type")
         nphotons=int(nphotons)
 
         key = (bandpass,npoints)
@@ -839,14 +837,13 @@ class SED(object):
             else:
                 sed = self * bandpass
 
-            # Speed up the integration by skipping the overhead of __call__
-            a = 1/(1.0 + sed.redshift)
-            fn = lambda x: sed._fast_spec(a*x)
-
-            xmin = sed.blue_limit
-            xmax = sed.red_limit
-            dev = galsim.DistDeviate(function=fn, x_min=xmin, x_max=xmax,
-                                     npoints=npoints)
+            if isinstance(sed._fast_spec, galsim.LookupTable):
+                dev = galsim.DistDeviate(function=sed._fast_spec, npoints=npoints)
+            else:
+                xmin = sed.blue_limit / (1.+self.redshift)
+                xmax = sed.red_limit / (1.+self.redshift)
+                dev = galsim.DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
+                                         npoints=npoints)
             self._cache_deviate[key] = dev
 
         # Reset the deviate explicitly
@@ -854,6 +851,7 @@ class SED(object):
 
         ret = np.empty(nphotons)
         dev.generate(ret)
+        ret *= (1. + self.redshift)
         return ret
 
     def __eq__(self, other):

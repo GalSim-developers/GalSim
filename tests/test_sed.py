@@ -600,12 +600,13 @@ def test_SED_sampleWavelength():
                                'nm')
     sedbp = sed*bandpass
 
-    out = sed.sampleWavelength(3,None)
+    # Need to use 256 here to get the regression test to work, since that used to be the default.
+    out = sed.sampleWavelength(3,None,npoints=256)
     print('out = ',out)
     np.testing.assert_equal(hasattr(sed,'_cache_deviate'),True,"Creating SED deviate cache failed.")
     np.testing.assert_equal(len(sed._cache_deviate),1,"Creating SED deviate failed.")
 
-    out = sed.sampleWavelength(3,None,rng=seed)
+    out = sed.sampleWavelength(3,None,rng=seed, npoints=256)
     print('out = ',out)
     np.testing.assert_equal(len(sed._cache_deviate),1,"Accessing existing SED deviate failed.")
 
@@ -613,10 +614,10 @@ def test_SED_sampleWavelength():
     print('test0 = ',test0)
     np.testing.assert_array_almost_equal(out,test0,8,"Unexpected SED sample values.")
 
-    out = sed.sampleWavelength(3,None,rng=rng)
+    out = sed.sampleWavelength(3,None,rng=rng, npoints=256)
     np.testing.assert_array_almost_equal(out,test0,8,"Failed to pass 'UniformDeviate'.")
 
-    out = sed.sampleWavelength(3,bandpass,rng=seed)
+    out = sed.sampleWavelength(3,bandpass,rng=seed, npoints=256)
     np.testing.assert_equal(len(sed._cache_deviate),2,"Creating new SED deviate failed.")
 
     test1 = np.array([ 4.16227593,  4.6166918 ,  2.95075946])
@@ -633,6 +634,11 @@ def test_SED_sampleWavelength():
 
     out2 = sed.sampleWavelength(1e3,bandpass,rng=seed,npoints=512)
     np.testing.assert_equal(len(sed._cache_deviate),3,"Unexpected number of SED deviates.")
+    np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
+                                   "to the nearest integer.")
+
+    out2 = sed.sampleWavelength(1e3,bandpass,rng=seed)
+    np.testing.assert_equal(len(sed._cache_deviate),4,"Unexpected number of SED deviates.")
     np.testing.assert_almost_equal(out,out2,0,"SED samples using different npoints don't match "
                                    "to the nearest integer.")
 
@@ -658,7 +664,7 @@ def test_SED_sampleWavelength():
         return centers,(cts1, cts2)
 
     # Test the output distribution
-    out = sed.sampleWavelength(1e5,None,rng=seed)
+    out = sed.sampleWavelength(1e5,None,rng=seed,npoints=256)
 
     _,(cts1,cts2) = create_counts(sed,out)
     chisq = np.sum( (cts1 - cts2)**2 / cts1 )/len(cts1)
@@ -670,7 +676,7 @@ def test_SED_sampleWavelength():
     # Test redshift dependence
     z = 2.0
     sedz = sed.atRedshift(z)
-    outz = sedz.sampleWavelength(1e5,None,rng=seed)
+    outz = sedz.sampleWavelength(1e5,None,rng=seed,npoints=256)
     np.testing.assert_almost_equal(out, outz/(1 + z), 8,
                                    "Redshifted wavelengths are not shifted by 1/(1+z).")
 
