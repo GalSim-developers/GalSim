@@ -1615,6 +1615,11 @@ def test_distLookupTable():
             d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
+    # And that they generate the same values
+    ar1 = np.empty(100); d1.generate(ar1)
+    ar2 = np.empty(100); d2.generate(ar2)
+    np.testing.assert_array_almost_equal(ar1, ar2, precision,
+            err_msg='Two DistDeviates with near-flat probabilities generated different values.')
 
     # Test generate
     d.seed(testseed)

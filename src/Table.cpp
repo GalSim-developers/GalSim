@@ -43,8 +43,8 @@ namespace galsim {
         equalSpaced = true;
         for (int i=1; i<N; i++) {
             if (std::abs((vec[i] - vec.front())/da - i) > tolerance) equalSpaced = false;
-            if (vec[i] <= vec[i-1])
-                throw TableError("Table arguments not strictly increasing.");
+            if (vec[i] < vec[i-1])
+                throw TableError("Table arguments not increasing.");
         }
         lastIndex = 1;
         lower_slop = (vec[1]-vec[0]) * 1.e-6;
