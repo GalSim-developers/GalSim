@@ -139,19 +139,24 @@ class SED(object):
         self.flux_type = flux_type
         if _spectral is None:
             _spectral = self.check_spectral()
-            dimensionless = self.check_dimensionless()
-        else:
-            dimensionless = not _spectral
-
-        if not (dimensionless or _spectral):
+        if not _spectral and not self.check_dimensionless():
             raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
         self.spectral = _spectral
 
         self.redshift = redshift
         self.fast = fast
+
         # Convert string input into a real function (possibly a LookupTable)
         self._const = False
         self._initialize_spec()
+
+        try:
+            self.wave_factor = (1*self.wave_type).to(units.nm).value
+        except units.UnitConversionError:
+            self.wave_factor = None
+            # Silently switch to slow calls, since can't do fast for this.
+            # MJ: I think this is ok, but do we want to emit a warning here?
+            self.fast = False
 
         # Finish re-evaluating __init__() here.
         if _wave_list is not None:
@@ -159,18 +164,58 @@ class SED(object):
             # Cast numpy.float to python float for more consistent reprs
             self.blue_limit = float(_blue_limit)
             self.red_limit = float('inf') if _red_limit == "float('inf')" else float(_red_limit)
+            self._setup_funcs()
             return
 
         if isinstance(self._spec, galsim.LookupTable):
-            self.wave_list = ((self._spec.getArgs() * self.wave_type)
-                              .to(units.nm, units.spectral()).value)
-            self.wave_list *= (1.0 + self.redshift)
+            self.wave_list = np.array(self._spec.getArgs())
+            if self.wave_factor:
+                self.wave_list *= self.wave_factor * (1.0 + self.redshift)
+            else:
+                self.wave_list = (self.wave_list*self.wave_type).to(units.nm, units.spectral()).value
+                self.wave_list *= (1.0 + self.redshift)
             self.blue_limit = float(np.min(self.wave_list))
             self.red_limit = float(np.max(self.wave_list))
         else:
             self.blue_limit = 0.0
             self.red_limit = float('inf')
             self.wave_list = np.array([], dtype=float)
+
+        # Define the appropriate functions to call
+        self._setup_funcs()
+
+    def _setup_funcs(self):
+        if self.fast:
+            self._call = self._call_fast
+        else:
+            self._call = self._call_slow
+        if self.wave_factor == 1:
+            self._get_native_waves = self._get_native_waves_trivial
+        elif self.wave_factor:
+            self._get_native_waves = self._get_native_waves_fast
+        else:
+            self._get_native_waves = self._get_native_waves_slow
+        if self.redshift == 0.:
+            self._get_rest_native_waves = self._get_native_waves
+        elif self.wave_factor:
+            self._get_rest_native_waves = self._get_rest_native_waves_fast
+        else:
+            self._get_rest_native_waves = self._get_rest_native_waves_slow
+
+    def _get_native_waves_trivial(self, wave):
+        return wave
+
+    def _get_native_waves_fast(self, wave):
+        return wave / self.wave_factor
+
+    def _get_native_waves_slow(self, wave):
+        return (wave * units.nm).to(self.wave_type, units.spectral()).value
+
+    def _get_rest_native_waves_fast(self, wave):
+        return wave / ((1.0+self.redshift) * self.wave_factor)
+
+    def _get_rest_native_waves_slow(self, wave):
+        return (wave / (1.0+self.redshift) * units.nm).to(self.wave_type, units.spectral()).value
 
     def _initialize_spec(self):
         # Turn the input _orig_spec into a real function _spec.
@@ -226,19 +271,16 @@ class SED(object):
         return not self.spectral
 
     def _rest_nm_to_photons(self, wave):
-        wave_native_quantity = (wave * units.nm).to(self.wave_type, units.spectral())
-        wave_native_value = wave_native_quantity.value
+        wave_native_value = self._get_native_waves(wave)
         flux_native_quantity = self._spec(wave_native_value) * self.flux_type
-        return (flux_native_quantity
-                .to(SED._photons, units.spectral_density(wave_native_quantity))
-                .value)
+        return flux_native_quantity.to(
+                SED._photons, units.spectral_density(wave_native_value * self.wave_type)).value
 
     def _obs_nm_to_photons(self, wave):
         return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
 
     def _rest_nm_to_dimensionless(self, wave):
-        wave_native_value = (wave * units.nm).to(self.wave_type, units.spectral()).value
-        return self._spec(wave_native_value)
+        return self._spec(self._get_native_waves(wave))
 
     # Does it ever actually make sense for an SED with a redshift to be dimensionless?
     def _obs_nm_to_dimensionless(self, wave):
@@ -314,15 +356,14 @@ class SED(object):
         self._check_bounds(wave)
 
         # Figure out rest-frame wave_type wavelength array for query to self._spec.
-        rest_wave = wave / (1.0 + self.redshift)
-        rest_wave_quantity = rest_wave * units.nm
-        rest_wave_native = rest_wave_quantity.to(self.wave_type, units.spectral()).value
+        rest_wave_native = self._get_rest_native_waves(wave)
 
         out = self._spec(rest_wave_native)
 
         # Manipulate output units
         if self.spectral:
             out = out * self.flux_type
+            rest_wave_quantity = wave / (1.0 + self.redshift) * units.nm
             out = out.to(SED._photons, units.spectral_density(rest_wave_quantity)).value
 
         # Return same format as received (except Quantity -> ndarray)
@@ -345,10 +386,7 @@ class SED(object):
         @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or
                  dimensionless normalization if self.dimensionless.
         """
-        if self.fast:
-            return self._call_fast(wave)
-        else:
-            return self._call_slow(wave)
+        return self._call(wave)
 
     def _mul_sed(self, other):
         """Equivalent to self * other when other is an SED, but no sanity checks."""
@@ -563,10 +601,10 @@ class SED(object):
             raise TypeError("Cannot set flux density of dimensionless SED.")
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
-            current_flux_density = self(wavelength_nm.value)
+            current_flux_density = self._call(wavelength_nm.value)
         else:
             wavelength_nm = wavelength * units.nm
-            current_flux_density = self(wavelength)
+            current_flux_density = self._call(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
                     SED._photons, units.spectral_density(wavelength_nm)).value
@@ -614,10 +652,10 @@ class SED(object):
         """
         if redshift <= -1:
             raise ValueError("Invalid redshift {0}".format(redshift))
-        wave_factor = (1.0 + redshift) / (1.0 + self.redshift)
-        wave_list = self.wave_list * wave_factor
-        blue_limit = self.blue_limit * wave_factor
-        red_limit = self.red_limit * wave_factor
+        zfactor = (1.0 + redshift) / (1.0 + self.redshift)
+        wave_list = self.wave_list * zfactor
+        blue_limit = self.blue_limit * zfactor
+        red_limit = self.red_limit * zfactor
 
         return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
@@ -699,15 +737,13 @@ class SED(object):
 
         @returns the thinned SED.
         """
-        from astropy import units
         if len(self.wave_list) > 0:
-            rest_wave_nm = self.wave_list / (1.0 + self.redshift) * units.nm
-            rest_wave_native_units = rest_wave_nm.to(self.wave_type, units.spectral()).value
-            spec_native_units = self._spec(rest_wave_native_units)
+            rest_wave_native = self._get_rest_native_waves(self.wave_list)
+            spec_native = self._spec(rest_wave_native)
 
             # Note that this is thinning in native units, not nm and photons/nm.
             newx, newf = galsim.utilities.thin_tabulated_values(
-                    rest_wave_native_units, spec_native_units,
+                    rest_wave_native, spec_native,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
             newspec = galsim.LookupTable(newx, newf, interpolant='linear')
@@ -903,11 +939,14 @@ class SED(object):
         d = self.__dict__.copy()
         if not isinstance(d['_spec'], galsim.LookupTable):
             del d['_spec']
-        if '_fast_spec' in d:
-            del d['_fast_spec']
+        d.pop('_fast_spec',None)
+        del d['_call']
+        del d['_get_native_waves']
+        del d['_get_rest_native_waves']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         if '_spec' not in d:
             self._initialize_spec()
+        self._setup_funcs()
