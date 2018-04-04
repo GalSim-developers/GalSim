@@ -234,7 +234,8 @@ class DistDeviate(_galsim.BaseDeviate):
                         passed alongside a callable function).  Options are given in the
                         documentation for LookupTable. [default: 'linear']
     @param npoints      Number of points DistDeviate should create for its internal interpolation
-                        tables. [default: 256]
+                        tables. [default: 256, unless the function is a non-log LookupTable, in
+                        which case it uses the table's x values]
 
     Calling
     -------
@@ -248,7 +249,7 @@ class DistDeviate(_galsim.BaseDeviate):
     -0.00909781188974034
     """
     def __init__(self, seed=0, function=None, x_min=None,
-                 x_max=None, interpolant=None, npoints=256, lseed=None):
+                 x_max=None, interpolant=None, npoints=None, lseed=None):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
@@ -318,12 +319,21 @@ class DistDeviate(_galsim.BaseDeviate):
                                     'regular python callable function')
 
         # Compute the probability distribution function, pdf(x)
-        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
-
-        # Integrate over the range of x in case the function is doing something weird here.
-        pdf = [0] + [galsim.integ.int1d(function, xarray[i], xarray[i+1])
-                     for i in range(npoints - 1)]
-        pdf = np.array(pdf)
+        if (npoints is None and isinstance(function, galsim.LookupTable) and
+            not function.x_log and not function.f_log):
+            xarray = np.array(function.x, dtype=float)
+            pdf = np.array(function.f, dtype=float)
+            # Set up pdf, so cumsum basically does a cumulative trapz integral
+            pdf[1:] += pdf[:-1]
+            pdf[1:] *= np.diff(xarray)
+            pdf[0] = 0.
+        else:
+            if npoints is None: npoints = 256
+            xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
+            # Integrate over the range of x in case the function is doing something weird here.
+            pdf = [0] + [galsim.integ.int1d(function, xarray[i], xarray[i+1])
+                         for i in range(npoints - 1)]
+            pdf = np.array(pdf)
 
         # Check that the probability is nonnegative
         if not np.all(pdf >= 0.):

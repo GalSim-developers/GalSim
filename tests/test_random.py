@@ -1533,9 +1533,12 @@ def test_distfunction():
 def test_distLookupTable():
     """Test distribution-defined random number generator with a LookupTable
     """
-    d = galsim.DistDeviate(testseed, function=dLookupTable)
+    precision = 9
+    # Note: 256 used to be the default, so this is a regression test
+    # We check below that it works with the default npoints=None
+    d = galsim.DistDeviate(testseed, function=dLookupTable, npoints=256)
     d2 = d.duplicate()
-    d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable)
+    d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable, npoints=256)
     np.testing.assert_equal(
             d.x_min, dLookupTable.x_min,
             err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
@@ -1577,6 +1580,14 @@ def test_distLookupTable():
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable with 5 points')
+
+    # And it should also work if npoints is None
+    d = galsim.DistDeviate(testseed, function=dLookupTable)
+    testResult = (d(), d(), d())
+    assert len(dLookupTable.x) == len(d._inverseprobabilitytable.x)
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence for LookupTable with npoints=None')
 
     # Also read these values from a file
     d = galsim.DistDeviate(testseed, function=dLookupTableFile, interpolant='linear')
