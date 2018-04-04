@@ -336,11 +336,14 @@ namespace galsim {
         double R = 0., hlr = 0.;
 
         _radial.addEntry(0., val);
-        double maxR = 60.;  // Fairly arbitrary, but usually irrelevant
+	// Smallest reasonable 1/k0 is about 0.06 arcsec, so this maxR corresponds to about
+	// 60 arcsec in that case.
+        double maxR = 1000.;
         double r = dr;
         double sum = 0.5*r*val;
 
         // Continue until accumulate 0.999 of the flux
+	int nsmall=0;
         for (; r<1.; r+=dr) {
             val = xValueRaw(r);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
@@ -348,7 +351,11 @@ namespace galsim {
             // The result should be positive, but numerical inaccuracies can mean that some
             // values go negative.  It seems that this happens once all further values are
             // basically zero, so just stop here if/when this happens.
-            if (val < _gsparams->xvalue_accuracy) break;
+            if (val < _gsparams->xvalue_accuracy)
+                nsmall++;
+	    else
+                nsmall=0;
+            if (nsmall==5) break;
             _radial.addEntry(r,val);
 
             // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
@@ -360,6 +367,7 @@ namespace galsim {
         }
         // Switch to logarithmic binning
         double expdlogr = std::exp(dr);
+	nsmall=0;
         for (; r<maxR; r *= expdlogr) {
             val = xValueRaw(r);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
@@ -367,7 +375,11 @@ namespace galsim {
             // The result should be positive, but numerical inaccuracies can mean that some
             // values go negative.  It seems that this happens once all further values are
             // basically zero, so just stop here if/when this happens.
-            if (val < _gsparams->xvalue_accuracy) break;
+            if (val < _gsparams->xvalue_accuracy)
+                nsmall++;
+	    else
+                nsmall=0;
+            if (nsmall==5) break;
             _radial.addEntry(r,val);
 
             // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
@@ -387,6 +399,7 @@ namespace galsim {
         // Make sure it is at least 5 hlr
         if (R == 0) R = _radial.argMax();
         R = std::max(R,_gsparams->stepk_minimum_hlr*hlr);
+        dbg<<"final R = "<<R<<std::endl;
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
