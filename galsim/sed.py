@@ -362,6 +362,78 @@ class SED(object):
         else:
             return self._call_slow(wave)
 
+    def _mul_sed(self, other):
+        """Equivalent to self * other when other is an SED, but no sanity checks."""
+        if self.spectral:
+            redshift = self.redshift
+        elif other.spectral:
+            redshift = other.redshift
+        else:
+            redshift = 0.0
+
+        fast = self.fast and other.fast
+
+        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        if fast:
+            # Make sure _fast_spec exists in both
+            zfactor1 = (1.+redshift) / (1.+self.redshift)
+            zfactor2 = (1.+redshift) / (1.+other.redshift)
+            spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
+        else:
+            spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
+        _spectral = self.spectral or other.spectral
+        return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                   _spectral=_spectral)
+
+    def _mul_bandpass(self, other):
+        """Equivalent to self * other when other is a Bandpass"""
+        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        zfactor = (1.0+self.redshift) * other.wave_factor
+        if self.fast:
+            if (isinstance(self._fast_spec, galsim.LookupTable)
+                and not self._fast_spec.x_log
+                and not self._fast_spec.f_log
+                and self._fast_spec.interpolant == 'linear'):
+                x = wave_list / (1.0 + self.redshift)
+                f = self._fast_spec(x) * other._tp(x*zfactor)
+                spec = galsim.LookupTable(x, f, interpolant='linear')
+            else:
+                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
+        else:
+            spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
+        return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
+                   _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
+                   _spectral=self.spectral)
+
+
+    def _mul_scalar(self, other):
+        """Equivalent to self * other when other is a scalar"""
+        # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
+        if isinstance(self._spec, galsim.LookupTable):
+            wave_type = self.wave_type
+            flux_type = self.flux_type
+            x = self._spec.getArgs()
+            f = np.array(self._spec.getVals()) * other
+            spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                                      interpolant=self._spec.interpolant)
+        elif self._const:
+            spec = self._spec(42.0) * other
+            wave_type = 'nm'
+            flux_type = '1'
+        else:
+            wave_type = 'nm'
+            flux_type = 'fphotons' if self.spectral else '1'
+            if self.fast:
+                spec = lambda w: self._fast_spec(w) * other
+            else:
+                spec = lambda w: self(w*(1.0+self.redshift)) * other
+        return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
+                   _blue_limit=self.blue_limit, _red_limit=self.red_limit,
+                   _wave_list=self.wave_list,
+                   _spectral=self.spectral)
+
+
     def __mul__(self, other):
         # Watch out for 5 types of `other`:
         # 1.  SED: Check that not both spectral densities.
@@ -378,31 +450,11 @@ class SED(object):
                 raise TypeError("Cannot multiply two spectral densities together.")
 
             if other._const:
-                return self.__mul__(other._spec(42.0))  # const, so can eval anywhere.
+                return self._mul_scalar(other._spec(42.0))  # const, so can eval anywhere.
             elif self._const:
-                return other.__mul__(self._spec(42.0))
-
-            if self.spectral:
-                redshift = self.redshift
-            elif other.spectral:
-                redshift = other.redshift
+                return other._mul_scalar(self._spec(42.0))
             else:
-                redshift = 0.0
-
-            fast = self.fast and other.fast
-
-            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            if fast:
-                # Make sure _fast_spec exists in both
-                zfactor1 = (1.+redshift) / (1.+self.redshift)
-                zfactor2 = (1.+redshift) / (1.+other.redshift)
-                spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
-            else:
-                spec = lambda w: self(w * (1.+redshift)) * other(w * (1.+redshift))
-            _spectral = self.spectral or other.spectral
-            return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
-                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                       _spectral=_spectral)
+                return self._mul_sed(other)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
         if isinstance(other, galsim.GSObject):
@@ -410,15 +462,7 @@ class SED(object):
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):
-            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            zfactor = (1.0+self.redshift) * other.wave_factor
-            if self.fast:
-                spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
-            else:
-                spec = lambda w: self(w*(1.0+self.redshift)) * other._tp(w*zfactor)
-            return SED(spec, 'nm', 'fphotons', redshift=self.redshift, fast=self.fast,
-                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                       _spectral=self.spectral)
+            return self._mul_bandpass(other)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
         if hasattr(other, '__call__'):
@@ -433,29 +477,7 @@ class SED(object):
                        _spectral=self.spectral)
 
         if isinstance(other, (int, float)):
-            # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
-            if isinstance(self._spec, galsim.LookupTable):
-                wave_type = self.wave_type
-                flux_type = self.flux_type
-                x = self._spec.getArgs()
-                f = [ val * other for val in self._spec.getVals() ]
-                spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
-                                          interpolant=self._spec.interpolant)
-            elif self._const:
-                spec = self._spec(42.0) * other
-                wave_type = 'nm'
-                flux_type = '1'
-            else:
-                wave_type = 'nm'
-                flux_type = 'fphotons' if self.spectral else '1'
-                if self.fast:
-                    spec = lambda w: self._fast_spec(w) * other
-                else:
-                    spec = lambda w: self(w*(1.0+self.redshift)) * other
-            return SED(spec, wave_type, flux_type, redshift=self.redshift, fast=self.fast,
-                       _blue_limit=self.blue_limit, _red_limit=self.red_limit,
-                       _wave_list=self.wave_list,
-                       _spectral=self.spectral)
+            return self._mul_scalar(other)
 
     def __rmul__(self, other):
         return self*other
@@ -518,10 +540,10 @@ class SED(object):
                 and other.fast
                 and isinstance(self._fast_spec, galsim.LookupTable)
                 and isinstance(other._fast_spec, galsim.LookupTable)
-                and self._fast_spec.x_log == False
-                and other._fast_spec.x_log == False
-                and self._fast_spec.f_log == False
-                and other._fast_spec.f_log == False
+                and not self._fast_spec.x_log
+                and not other._fast_spec.x_log
+                and not self._fast_spec.f_log
+                and not other._fast_spec.f_log
                 and self._fast_spec.interpolant == 'linear'
                 and other._fast_spec.interpolant == 'linear'):
             x = wave_list / (1.0 + self.redshift)
@@ -821,8 +843,8 @@ class SED(object):
         @param bandpass  A Bandpass object representing a filter, or None to sample over the full
                          SED wavelength range.
         @param rng       If provided, a random number generator that is any kind of BaseDeviate
-                         object. If `rng` is None, one will be automatically created, using the
-                         time as a seed. [default: None]
+                         object. If `rng` is None, one will be automatically created from the
+                         system. [default: None]
         @param npoints   Number of points DistDeviate should use for its internal interpolation
                          tables. [default: None, which uses the DistDeviate default]
         """
@@ -835,7 +857,7 @@ class SED(object):
             if bandpass is None:
                 sed = self
             else:
-                sed = self * bandpass
+                sed = self._mul_bandpass(bandpass)
 
             if isinstance(sed._fast_spec, galsim.LookupTable):
                 dev = galsim.DistDeviate(function=sed._fast_spec, npoints=npoints)

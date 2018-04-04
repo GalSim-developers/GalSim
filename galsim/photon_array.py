@@ -279,9 +279,9 @@ class WavelengthSampler(object):
                         object. If `rng` is None, one will be automatically created, using the
                         time as a seed. [default: None]
     @param npoints      Number of points DistDeviate should use for its internal interpolation
-                        tables. [default: 256]
+                        tables. [default: None, which uses the DistDeviate default]
     """
-    def __init__(self, sed, bandpass, rng=None, npoints=256):
+    def __init__(self, sed, bandpass, rng=None, npoints=None):
         self.sed = sed
         self.bandpass = bandpass
         self.rng = rng
