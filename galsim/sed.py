@@ -104,90 +104,92 @@ class SED(object):
     @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     @param fast          Convert units on initialization instead of on __call__. [default: True]
     """
-    # We'll use this several times below, and it's ridiculously slow to construct, so just make
-    # it once at the class level.
-    _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
-    _flambda = units.erg/(units.s * units.cm**2 * units.nm)
+    # We'll use these multiple times below, and they are ridiculously slow to construct,
+    # so just make them once at the class level.
+    _fphotons_base = units.astrophys.photon/(units.s * units.cm**2)
+    _flambda_base = units.erg/(units.s * units.cm**2)
+    _fphotons = _fphotons_base / units.nm
+    _flambda = _flambda_base / units.nm
     _fnu = units.erg / (units.s * units.Hz * units.cm**2)
+    _spec_nm = units.spectral_density(1*units.nm)
     _c = constants.c.to('nm/s').value
     _h = constants.h.to('erg s').value
+    _dimensionless = units.dimensionless_unscaled
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
 
-        self._orig_spec = spec  # Save this for pickling
-
+        # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
-                wave_type = units.nm
+                self.wave_type = units.nm
+                self.wave_factor = 1
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-                wave_type = units.AA
+                self.wave_type = units.AA
+                self.wave_factor = 0.1
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
-        self.wave_type = wave_type
+        else:
+            self.wave_type = wave_type
+            try:
+                self.wave_factor = (1*self.wave_type).to(units.nm).value
+            except units.UnitConversionError:
+                self.wave_factor = None
 
+        # Parse the various options for flux_type
+        self.flux_factor = self.flambda_factor = self.fnu_factor = None
         if isinstance(flux_type, str):
             if flux_type.lower() == 'flambda':
-                flux_type = units.erg / (units.s * self.wave_type * units.cm**2)
-                _spectral = True
+                self.flux_type = SED._flambda_base / self.wave_type
+                self.spectral = True
+                self.flambda_factor = 1. / (SED._h * SED._c)
             elif flux_type.lower() == 'fphotons':
-                flux_type = units.astrophys.photon/(units.s * units.cm**2 * self.wave_type)
-                _spectral = True
+                self.flux_type = SED._fphotons_base / self.wave_type
+                self.spectral = True
+                if self.wave_factor is not None:
+                    self.flux_factor = 1 / self.wave_factor
             elif flux_type.lower() == 'fnu':
-                flux_type = SED._fnu
-                _spectral = True
+                self.flux_type = SED._fnu
+                self.spectral = True
+                if self.wave_factor is not None:
+                    self.fnu_factor = 1. / (SED._h * self.wave_factor)
             elif flux_type.lower() == '1':
-                flux_type = units.dimensionless_unscaled
-                _spectral = False
+                self.flux_type = SED._dimensionless
+                self.spectral = False
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
-        self.flux_type = flux_type
-        if _spectral is None:
-            _spectral = self.check_spectral()
-        if not _spectral and not self.check_dimensionless():
-            raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
-        self.spectral = _spectral
+        else:
+            self.flux_type = flux_type
+            self.spectral = self.check_spectral()
+            if not self.spectral and not self.check_dimensionless():
+                raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
+            try:
+                if self.wave_factor:
+                    self.flux_factor = (1*self.flux_type).to(SED._fphotons).value
+            except units.UnitConversionError:
+                try:
+                    self.flambda_factor = (1*self.flux_type).to(SED._flambda).value
+                    self.flambda_factor /= SED._h * SED._c / self.wave_factor
+                except units.UnitConversionError:
+                    try:
+                        self.fnu_factor = (1*self.flux_type).to(SED._fnu).value
+                        self.fnu_factor /= SED._h * self.wave_factor
+                    except units.UnitConversionError:
+                        pass
 
         self.redshift = redshift
         self.fast = fast
 
         # Convert string input into a real function (possibly a LookupTable)
-        self._const = False
+        self._orig_spec = spec  # Save this for pickling
         self._initialize_spec()
 
-        try:
-            self.wave_factor = (1*self.wave_type).to(units.nm).value
-        except units.UnitConversionError:
-            self.wave_factor = None
-
-        try:
-            if self.wave_factor:
-                self.flux_factor = (1*self.flux_type).to(SED._photons).value
-            else:
-                self.flux_factor = self.flambda_factor = self.fnu_factor = None
-        except units.UnitConversionError:
-            self.flux_factor = None
-            try:
-                self.flambda_factor = (1*self.flux_type).to(SED._flambda).value
-                self.flambda_factor /= SED._h * SED._c / self.wave_factor
-            except units.UnitConversionError:
-                self.flambda_factor = None
-                try:
-                    self.fnu_factor = (1*self.flux_type).to(SED._fnu).value
-                    self.fnu_factor /= SED._h * self.wave_factor
-                except units.UnitConversionError:
-                    self.fnu_factor = None
-
-        # Finish re-evaluating __init__() here.
+        # Setup the wave_list, red_limit, blue_limit
         if _wave_list is not None:
             self.wave_list = _wave_list
-            # Cast numpy.float to python float for more consistent reprs
             self.blue_limit = float(_blue_limit)
             self.red_limit = float(_red_limit)
-            self._setup_funcs()
-            return
-
-        if isinstance(self._spec, galsim.LookupTable):
+        elif isinstance(self._spec, galsim.LookupTable):
             self.wave_list = np.array(self._spec.getArgs())
             if self.wave_factor:
                 self.wave_list *= self.wave_factor * (1.0 + self.redshift)
@@ -205,22 +207,25 @@ class SED(object):
         self._setup_funcs()
 
     def _setup_funcs(self):
-        if self.fast:
-            self._call = self._call_fast
-        else:
-            self._call = self._call_slow
+        # Set up the various functions we use to do the right calculation based on which
+        # wave type and/or flux type we have for _spec.
+        # The astropy unit functions are horribly slow, so we want to avoid them as much as
+        # possible.  If the wave_type and flux_type are one of the simpler (and most common)
+        # types, then we have custom functions that do the necessary conversions directly.
         if self.wave_factor == 1:
             self._get_native_waves = self._get_native_waves_trivial
         elif self.wave_factor:
             self._get_native_waves = self._get_native_waves_fast
         else:
             self._get_native_waves = self._get_native_waves_slow
+
         if self.redshift == 0.:
             self._get_rest_native_waves = self._get_native_waves
         elif self.wave_factor:
             self._get_rest_native_waves = self._get_rest_native_waves_fast
         else:
             self._get_rest_native_waves = self._get_rest_native_waves_slow
+
         if self.flux_factor:
             self._flux_to_photons = self._flux_to_photons_fphot
         elif self.flambda_factor:
@@ -230,6 +235,13 @@ class SED(object):
         else:
             self._flux_to_photons = self._flux_to_photons_slow
 
+        if self.fast:
+            self._call = self._call_fast
+        else:
+            self._call = self._call_slow
+
+    # Here are the definitions for the various functions we can use depending on the wave_type
+    # and flux_type (cf. _setup_funcs).
     def _get_native_waves_trivial(self, wave):
         return wave
 
@@ -256,12 +268,14 @@ class SED(object):
 
     def _flux_to_photons_slow(self, flux_native, wave_native):
         return (flux_native * self.flux_type).to(
-                SED._photons, units.spectral_density(wave_native * self.wave_type)).value
+                SED._fphotons, units.spectral_density(wave_native * self.wave_type)).value
+
 
     def _initialize_spec(self):
         # Turn the input _orig_spec into a real function _spec.
         # The function cannot be pickled, so will need to do this in getstate as well as init.
 
+        self._const = False
         if hasattr(self, '_spec'):
             return
         if isinstance(self._orig_spec, (int, float)):
@@ -301,11 +315,11 @@ class SED(object):
 
     def check_spectral(self):
         """Return boolean indicating if SED has units compatible with a spectral density."""
-        return self.flux_type.is_equivalent(SED._photons, units.spectral_density(1*units.nm))
+        return self.flux_type.is_equivalent(SED._fphotons, SED._spec_nm)
 
     def check_dimensionless(self):
         """Return boolean indicating if SED is dimensionless."""
-        return self.flux_type.is_equivalent(units.dimensionless_unscaled)
+        return self.flux_type.is_equivalent(SED._dimensionless)
 
     @property
     def dimensionless(self):  # for convenience
@@ -645,7 +659,7 @@ class SED(object):
             current_flux_density = self._call(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
-                    SED._photons, units.spectral_density(wavelength_nm)).value
+                    SED._fphotons, units.spectral_density(wavelength_nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
 
