@@ -912,8 +912,10 @@ class SED(object):
 
         key = (bandpass,npoints)
         if key in self._cache_deviate:
+            print('in cache')
             dev = self._cache_deviate[key]
         else:
+            print('not in cache')
             if bandpass is None:
                 sed = self
             else:
@@ -927,13 +929,16 @@ class SED(object):
                 dev = galsim.DistDeviate(function=sed._fast_spec, x_min=xmin, x_max=xmax,
                                          npoints=npoints)
             self._cache_deviate[key] = dev
+        print('dev = ',repr(dev))
 
         # Reset the deviate explicitly
         if rng is not None: dev.reset(rng)
 
         ret = np.empty(nphotons)
         dev.generate(ret)
+        print('ret = ',repr(ret))
         ret *= (1. + self.redshift)
+        print('ret => ',repr(ret))
         return ret
 
     def __eq__(self, other):
