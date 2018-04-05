@@ -1,6 +1,7 @@
 branches:
     only:
         - master
+        - '#955'
 
 language: python
 python:
