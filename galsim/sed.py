@@ -119,6 +119,11 @@ class SED(object):
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
 
+        # These are only used for the repr to ensure numerical rounding differences don't
+        # impact the eval(repr) equality.
+        self._wave_type = wave_type
+        self._flux_type = flux_type
+
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
@@ -960,10 +965,9 @@ class SED(object):
     def __repr__(self):
         # For some reason, the dimensionless astropy unit, Unit(), doesn't eval/repr roundtrip, so
         # we use a custom repr for this case.
-        flux_type = "Unit(1)" if self.dimensionless else repr(self.flux_type)
-        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%s, redshift=%r, fast=%r,' +
+        outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
-                      self._orig_spec, self.wave_type, flux_type, self.redshift, self.fast,
+                      self._orig_spec, self._wave_type, self._flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,
                       "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
