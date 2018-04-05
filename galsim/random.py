@@ -348,7 +348,7 @@ class DistDeviate(_galsim.BaseDeviate):
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
         cdf /= totalprobability
 
-        self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
+        self._inverse_cdf = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
 
@@ -360,15 +360,22 @@ class DistDeviate(_galsim.BaseDeviate):
         if p<0 or p>1:
             raise ValueError('Cannot request cumulative probability value from DistDeviate for '
                              'p<0 or p>1!  You entered: %f'%p)
-        return self._inverseprobabilitytable(p)
+        return self._inverse_cdf(p)
 
     # This is the private function that is required to make DistDeviate work as a derived
     # class of BaseDeviate.  See pysrc/Random.cpp.
     def _val(self):
-        return self._inverseprobabilitytable(self._ud())
+        return self._inverse_cdf(self._ud())
 
     def __call__(self):
         return self._val()
+
+    def generate(self, array):
+        """Generate many pseudo-random values, filling in the values of a numpy array.
+        """
+        p = np.empty_like(array)
+        self._ud.generate(p)  # Fill with unform deviate values
+        np.copyto(array, self._inverse_cdf(p)) # Convert from p -> x
 
     def seed(self, seed=0):
         _galsim.BaseDeviate.seed(self,seed)

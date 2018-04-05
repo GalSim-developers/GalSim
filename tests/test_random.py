@@ -1584,7 +1584,7 @@ def test_distLookupTable():
     # And it should also work if npoints is None
     d = galsim.DistDeviate(testseed, function=dLookupTable)
     testResult = (d(), d(), d())
-    assert len(dLookupTable.x) == len(d._inverseprobabilitytable.x)
+    assert len(dLookupTable.x) == len(d._inverse_cdf.x)
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable with npoints=None')
@@ -1637,11 +1637,11 @@ def test_distLookupTable():
     # If these were successfully created everything is probably fine, but check they create the same
     # internal LookupTable
     np.testing.assert_array_almost_equal(
-            d1._inverseprobabilitytable.getArgs(), d2._inverseprobabilitytable.getArgs(), precision,
+            d1._inverse_cdf.getArgs(), d2._inverse_cdf.getArgs(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
     np.testing.assert_array_almost_equal(
-            d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
+            d1._inverse_cdf.getVals(), d2._inverse_cdf.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
     # And that they generate the same values
