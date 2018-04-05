@@ -141,7 +141,9 @@ class LookupTable(object):
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
         # as _LookupTable.  Note x must be sorted.
         s = np.argsort(x)
-        self.table = _galsim._LookupTable(x[s], f[s], interpolant)
+        x = np.ascontiguousarray(x[s])
+        f = np.ascontiguousarray(f[s])
+        self.table = _galsim._LookupTable(x, f, interpolant)
 
         # Get the min/max x values, making sure to account properly for x_log.
         self._x_min = self.table.argMin()
@@ -189,11 +191,13 @@ class LookupTable(object):
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
                 f = np.empty_like(x.ravel(), dtype=float)
-                self.table.interpMany(x.astype(float,copy=False).ravel(),f)
+                xx = x.astype(float,copy=False).ravel()
+                self.table.interpMany(xx,f)
                 f = f.reshape(x.shape)
             else:
                 f = np.empty_like(x, dtype=float)
-                self.table.interpMany(x.astype(float,copy=False),f)
+                xx = x.astype(float,copy=False)
+                self.table.interpMany(xx,f)
 
         if self.f_log:
             f = np.exp(f)

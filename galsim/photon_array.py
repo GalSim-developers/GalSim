@@ -289,14 +289,8 @@ class WavelengthSampler(object):
 
     def applyTo(self, photon_array):
         """Assign wavelengths to the photons sampled from the SED * Bandpass."""
-        print('sed = ',repr(self.sed))
-        print('bandpass = ',repr(self.bandpass))
-        print('rng = ',repr(self.rng))
-        print('npoints = ',repr(self.npoints))
-        print('size = ',photon_array.size())
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
-        print('waves = ',photon_array.wavelength.tolist())
 
 class FRatioAngles(object):
     """A surface-layer operator that assigns photon directions based on the f/ratio and

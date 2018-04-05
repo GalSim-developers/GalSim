@@ -324,7 +324,10 @@ class DistDeviate(_galsim.BaseDeviate):
             xarray = np.array(function.x, dtype=float)
             pdf = np.array(function.f, dtype=float)
             # Set up pdf, so cumsum basically does a cumulative trapz integral
-            pdf[1:] += pdf[:-1]
+            # On Python 3.4, doing pdf[1:] += pdf[:-1] the last value gets messed up.
+            # Writing it this way works.  (Maybe slightly slower though, so if we stop
+            # supporting python 3.4, consider switching to the += version.)
+            pdf[1:] = pdf[1:] + pdf[:-1]
             pdf[1:] *= np.diff(xarray)
             pdf[0] = 0.
         else:
