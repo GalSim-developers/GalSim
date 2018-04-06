@@ -1441,9 +1441,9 @@ def nCr(n, r):
 # From http://code.activestate.com/recipes/81253-weakmethod/
 class WeakMethod(object):
     def __init__(self, f):
-        self.f = f.im_func
-        self.c = weakref.ref(f.im_self)
+        self.f = f.__func__
+        self.c = weakref.ref(f.__self__)
     def __call__(self, *args):
         if self.c() == None :
-            raise TypeError , 'Method called on dead object'
+            raise TypeError('Method called on dead object')
         return self.f(self.c(), *args)
