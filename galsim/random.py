@@ -25,6 +25,7 @@ from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviat
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .utilities import set_func_doc
 import numpy as np
+import weakref
 
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
@@ -267,7 +268,6 @@ class DistDeviate(_galsim.BaseDeviate):
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
 
-        self._function = function # Save the inputs to be used in repr
         self._interpolant = interpolant
         self._npoints = npoints
         self._xmin = x_min
@@ -275,7 +275,7 @@ class DistDeviate(_galsim.BaseDeviate):
 
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
-            input_function = function
+            self.__function = function # Save the inputs to be used in repr
             import os.path
             if os.path.isfile(function):
                 if interpolant is None:
@@ -299,9 +299,10 @@ class DistDeviate(_galsim.BaseDeviate):
                     raise ValueError(
                         "String function must either be a valid filename or something that "+
                         "can eval to a function of x.\n"+
-                        "Input provided: {0}\n".format(input_function)+
+                        "Input provided: {0}\n".format(self.__function)+
                         "Caught error: {0}".format(e))
         else:
+            self.__function = weakref.ref(function) # Save the inputs to be used in repr
             # Check that the function is actually a function
             if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
                 raise TypeError('Keyword function must be a callable function or a string')
@@ -396,6 +397,10 @@ class DistDeviate(_galsim.BaseDeviate):
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
+
+    @property
+    def _function(self):
+        return  self.__function if isinstance(self.__function, str) else self.__function()
 
     def __copy__(self):
         return self.duplicate()

@@ -23,8 +23,10 @@ from past.builtins import basestring
 import numpy as np
 from astropy import units
 from astropy import constants
+import weakref
 
 import galsim
+from galsim.utilities import WeakMethod, lazy_property, combine_wave_list
 
 class SED(object):
     """Object to represent the spectral energy distributions of stars and galaxies.
@@ -218,32 +220,32 @@ class SED(object):
         # possible.  If the wave_type and flux_type are one of the simpler (and most common)
         # types, then we have custom functions that do the necessary conversions directly.
         if self.wave_factor == 1:
-            self._get_native_waves = self._get_native_waves_trivial
+            self._get_native_waves = WeakMethod(self._get_native_waves_trivial)
         elif self.wave_factor:
-            self._get_native_waves = self._get_native_waves_fast
+            self._get_native_waves = WeakMethod(self._get_native_waves_fast)
         else:
-            self._get_native_waves = self._get_native_waves_slow
+            self._get_native_waves = WeakMethod(self._get_native_waves_slow)
 
         if self.redshift == 0.:
             self._get_rest_native_waves = self._get_native_waves
         elif self.wave_factor:
-            self._get_rest_native_waves = self._get_rest_native_waves_fast
+            self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_fast)
         else:
-            self._get_rest_native_waves = self._get_rest_native_waves_slow
+            self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_slow)
 
         if self.flux_factor:
-            self._flux_to_photons = self._flux_to_photons_fphot
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_fphot)
         elif self.flambda_factor:
-            self._flux_to_photons = self._flux_to_photons_flam
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_flam)
         elif self.fnu_factor:
-            self._flux_to_photons = self._flux_to_photons_fnu
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_fnu)
         else:
-            self._flux_to_photons = self._flux_to_photons_slow
+            self._flux_to_photons = WeakMethod(self._flux_to_photons_slow)
 
         if self.fast:
-            self._call = self._call_fast
+            self._call = WeakMethod(self._call_fast)
         else:
-            self._call = self._call_slow
+            self._call = WeakMethod(self._call_slow)
 
     # Here are the definitions for the various functions we can use depending on the wave_type
     # and flux_type (cf. _setup_funcs).
@@ -335,15 +337,8 @@ class SED(object):
         flux_native = self._spec(wave_native)
         return self._flux_to_photons(flux_native, wave_native)
 
-    def _obs_nm_to_photons(self, wave):
-        return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
-
     def _rest_nm_to_dimensionless(self, wave):
         return self._spec(self._get_native_waves(wave))
-
-    # Does it ever actually make sense for an SED with a redshift to be dimensionless?
-    def _obs_nm_to_dimensionless(self, wave):
-        return self._rest_nm_to_dimensionless(wave / (1.0 + self.redshift))
 
     def _check_bounds(self, wave):
         if hasattr(wave, '__iter__'):
@@ -360,7 +355,7 @@ class SED(object):
             raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                              .format(wmax, self.red_limit))
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def _fast_spec(self):
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
         if self.wave_factor == 1. and self.flux_factor == 1.:
@@ -368,9 +363,9 @@ class SED(object):
         else:
             if len(self.wave_list) == 0:
                 if self.spectral:
-                    return self._rest_nm_to_photons
+                    return WeakMethod(self._rest_nm_to_photons)
                 else:
-                    return self._rest_nm_to_dimensionless
+                    return WeakMethod(self._rest_nm_to_dimensionless)
             else:
                 x = self.wave_list / (1.0 + self.redshift)
                 if self.spectral:
@@ -443,7 +438,7 @@ class SED(object):
 
         fast = self.fast and other.fast
 
-        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
         if fast:
             # Make sure _fast_spec exists in both
             zfactor1 = (1.+redshift) / (1.+self.redshift)
@@ -458,7 +453,7 @@ class SED(object):
 
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
-        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
         zfactor = (1.0+self.redshift) * other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, galsim.LookupTable)
@@ -598,7 +593,7 @@ class SED(object):
         else:
             raise TypeError("Cannot add SEDs with incompatible dimensions.")
 
-        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+        wave_list, blue_limit, red_limit = combine_wave_list(self, other)
 
         # If both SEDs are `fast`, and both `_fast_spec`s are LookupTables, then make a new
         # LookupTable instead and preserve picklability.
@@ -730,7 +725,7 @@ class SED(object):
                 if (self.blue_limit > bandpass.blue_limit + slop
                         or self.red_limit < bandpass.red_limit - slop):
                     raise ValueError("SED undefined within Bandpass")
-                x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
+                x, _, _ = combine_wave_list(self, bandpass)
                 return np.trapz(bandpass(x) * self(x), x)
             else:
                 return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
@@ -849,7 +844,7 @@ class SED(object):
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+            x, _, _ = combine_wave_list([self, bandpass])
             R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
             photons = self(x)
             throughput = bandpass(x)
@@ -886,7 +881,7 @@ class SED(object):
             raise TypeError("Cannot calculate seeing moment ratio of dimensionless SED.")
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+            x, _, _ = combine_wave_list([self, bandpass])
             photons = self(x)
             throughput = bandpass(x)
             return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
@@ -896,7 +891,7 @@ class SED(object):
             return galsim.integ.int1d(lambda w: weight(w) * kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit) / flux
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def _cache_deviate(self):
         return dict()
 

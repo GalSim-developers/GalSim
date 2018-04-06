@@ -22,6 +22,7 @@ A class that handles affine tranformations of a profile including a possible flu
 import galsim
 import numpy as np
 from . import _galsim
+from galsim.utilities import WeakMethod, lazy_property
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
               gsparams=None):
@@ -156,7 +157,7 @@ class Transformation(galsim.GSObject):
         depr("transform.getFluxRatio()", 1.5, "transform.flux_radio")
         return self.flux_ratio
 
-    @galsim.utilities.lazy_property
+    @lazy_property
     def noise(self):
         if self.original.noise is None:
             return None
@@ -264,13 +265,13 @@ class Transformation(galsim.GSObject):
         # Depending on the jacobian, it can be significantly faster to use a specialized fwd func.
         if np.array_equal(self._jac[1:3], (0,0)):
             if np.array_equal(self._jac[::3], (1,1)):   # jac is (1,0,0,1)
-                fwd = self._fwd_ident
+                fwd = WeakMethod(self._fwd_ident)
                 det = 1
             else:                                       # jac is (a,0,0,b)
-                fwd = self._fwd_diag
+                fwd = WeakMethod(self._fwd_diag)
                 det = abs(self._jac[0] * self._jac[3])
         else:                                           # Fully general case
-            fwd = self._fwd_normal
+            fwd = WeakMethod(self._fwd_normal)
             det = abs(self._jac[0] * self._jac[3] - self._jac[1] * self._jac[2])
 
         ud = galsim.UniformDeviate(rng)
