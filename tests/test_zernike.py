@@ -349,6 +349,77 @@ def test_fit():
         np.testing.assert_allclose(resids2, 0, atol=1e-14)
 
 
+@timer
+def test_gradient():
+    # Start with a few that just quote the literature, e.g., Stephenson (2014).
+
+    Z11 = galsim.zernike.Zernike([0]*11+[1])
+
+    x = np.linspace(-1, 1, 100)
+    x, y = np.meshgrid(x, x)
+
+    def Z11_grad(x, y):
+        r2 = x**2 + y**2
+        gradx = 12*np.sqrt(5)*x*(2*r2-1)
+        grady = 12*np.sqrt(5)*y*(2*r2-1)
+        return gradx, grady
+
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y))
+
+    Z28 = galsim.zernike.Zernike([0]*28+[1])
+
+    def Z28_grad(x, y):
+        gradx = 6*np.sqrt(14)*x*(x**4-10*x**2*y**2+5*y**4)
+        grady = -6*np.sqrt(14)*y*(5*x**4-10*x**2*y**2+y**4)
+        return gradx, grady
+
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y))
+
+    # Now try some finite differences on a broader set of input
+
+    def finite_difference_gradient(Z, x, y):
+        dh = 1e-5
+        return ((Z.evalCartesian(x+dh, y)-Z.evalCartesian(x-dh, y))/(2*dh),
+                (Z.evalCartesian(x, y+dh)-Z.evalCartesian(x, y-dh))/(2*dh))
+
+
+    u = galsim.UniformDeviate(1234)
+
+    for j in range(100):
+        nj = int(u()*55)
+        Z = galsim.zernike.Zernike([0]+[u()]*nj)
+
+        np.testing.assert_allclose(
+                finite_difference_gradient(Z, x, y),
+                Z.evalCartesianGrad(x, y),
+                rtol=2e-4)
+
+    # Try R_outer != 1
+
+    for j in range(100):
+        nj = int(u()*55)
+        Z = galsim.zernike.Zernike([0]+[u()]*nj, R_outer=1+u())
+
+        np.testing.assert_allclose(
+                finite_difference_gradient(Z, x, y),
+                Z.evalCartesianGrad(x, y),
+                rtol=2e-4)
+
+    # # Try annular Zernike
+    #
+    # for j in range(100):
+    #     print(j)
+    #     nj = int(u()*55)
+    #     R_inner = 0.2+0.6*u()
+    #     print(R_inner)
+    #     Z = galsim.zernike.Zernike([0]+[u()]*nj, R_inner=R_inner)
+    #
+    #     np.testing.assert_allclose(
+    #             finite_difference_gradient(Z, x, y),
+    #             Z.evalCartesianGrad(x, y),
+    #             rtol=2e-4)
+
+
 if __name__ == "__main__":
     test_Zernike_orthonormality()
     test_annular_Zernike_limit()
@@ -357,3 +428,4 @@ if __name__ == "__main__":
     test_ne()
     test_Zernike_basis()
     test_fit()
+    test_gradient()
