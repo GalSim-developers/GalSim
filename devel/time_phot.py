@@ -4,6 +4,7 @@
 #  - Surface layer ops, including wavelenght, angles
 #  - Silicon sensor to get brighter-fatter
 
+from __future__ import print_function
 import galsim
 import time
 import os
@@ -11,10 +12,11 @@ import sys
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-#import psutil
 import resource
 import cProfile
 import pstats
+import gc
+import astropy.time
 
 # Some global variables that we might want to adjust
 nobjects = 10**4
@@ -125,7 +127,7 @@ def calculate_bounds(obj, pos, image):
     """Calculate a good bounds to use for this object based on its position.
     Also return the offset to use when drawing onto the postage stamp.
     """
-    obj_on_image = image.wcs.toImage(obj)
+    obj_on_image = image.wcs.toImage(obj, image_pos=pos)
     N = obj_on_image.getGoodImageSize(1.0)
     xmin = int(math.floor(pos.x) - N/2)
     xmax = int(math.ceil(pos.x) + N/2)
@@ -143,13 +145,26 @@ def main():
 
     rng = galsim.UniformDeviate(8675309)
 
-    image = galsim.Image(xsize, ysize, scale=0.2)
+    wcs = galsim.FitsWCS('../tests/des_data/DECam_00154912_12_header.fits')
+    image = galsim.Image(xsize, ysize, wcs=wcs)
     bandpass = galsim.Bandpass('LSST_r.dat', wave_type='nm').thin(0.1)
+    base_wavelength = bandpass.effective_wavelength
 
     angles = galsim.FRatioAngles(fratio, obscuration, rng)
     sensor = galsim.SiliconSensor(rng=rng, nrecalc=nrecalc)
 
-    #process = psutil.Process(os.getpid())
+    # Figure out the local_sidereal time from the observation location and time.
+    lsst_lat = '-30:14:23.76'
+    lsst_long = '-70:44:34.67'
+    obs_time = '2012-11-24 03:37:25.023964'  # From the header of the wcs file
+
+    obs = astropy.time.Time(obs_time, scale='utc', location=(lsst_long + 'd', lsst_lat + 'd'))
+    local_sidereal_time = obs.sidereal_time('apparent').value
+
+    # Convert the ones we need below to galsim Angles.
+    local_sidereal_time *= galsim.hours
+    lsst_lat = galsim.Angle.from_dms(lsst_lat)
+
     times = []
     mem = []
     phot = []
@@ -163,17 +178,22 @@ def main():
 
         sed = get_sed(rng)
         waves = galsim.WavelengthSampler(sed=sed, bandpass=bandpass, rng=rng)
-        surface_ops = (waves, angles)
 
-        pos = get_pos(rng)
-        bounds, offset = calculate_bounds(obj, pos, image)
+        image_pos = get_pos(rng)
+        sky_coord = wcs.toWorld(image_pos)
+        bounds, offset = calculate_bounds(obj, image_pos, image)
+
+        ha = local_sidereal_time - sky_coord.ra
+        dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
+                               obj_coord=sky_coord, HA=ha, latitude=lsst_lat)
+
+        surface_ops = (waves, angles, dcr)
 
         obj.drawImage(method='phot', image=image[bounds], offset=offset,
                       rng=rng, sensor=sensor,
                       surface_ops=surface_ops)
 
         times.append(time.clock() - t0)
-        #mem.append(process.memory_info().rss)
         mem.append(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
         phot.append(obj.flux)
 
@@ -186,4 +206,24 @@ def main():
     ps.print_stats(20)
 
 if __name__ == "__main__":
+    # Uncomment this to get everything.  Without it, gc.garbage is pretty much always 0.
+    #gc.set_debug(gc.DEBUG_SAVEALL)
+
     main()
+
+    del sed_list
+    gc.collect()
+    print('garbage includes %d items'%len(gc.garbage))
+    for item in gc.garbage:
+        if 'galsim' in str(type(item)) or 'instancemethod' in str(type(item)):
+            print('garbage item = ',type(item))
+            print('includes in dict: ',item.__dict__.keys())
+            print('referrers = ',[type(r) for r in gc.get_referrers(item)])
+            if 'DistDeviate' in str(type(item)):
+                print(item.__dict__)
+            if 'SED' in str(type(item)):
+                last_sed = item
+            if 'instancemethod' in str(type(item)):
+                print('metareferrers = ',[type(r) for r in gc.get_referrers(*gc.get_referrers(item)[1:])])
+            print()
+
