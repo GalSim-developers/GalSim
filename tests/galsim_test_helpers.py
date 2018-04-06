@@ -51,7 +51,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
-def printval(image1, image2):
+def printval(image1, image2, show=False):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
     print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
@@ -68,7 +68,7 @@ def printval(image1, image2):
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
-    if False:
+    if show:
         import matplotlib.pylab as plt
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)

@@ -287,7 +287,7 @@ class WavelengthSampler(object):
         self.rng = rng
         self.npoints = npoints
 
-    def applyTo(self, photon_array):
+    def applyTo(self, photon_array, local_wcs=None):
         """Assign wavelengths to the photons sampled from the SED * Bandpass."""
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
@@ -320,7 +320,7 @@ class FRatioAngles(object):
         self.ud = ud
 
 
-    def applyTo(self, photon_array):
+    def applyTo(self, photon_array, local_wcs=None):
         """Assign directions to the photons in photon_array."""
 
         dxdz = photon_array.dxdz
@@ -351,3 +351,102 @@ class FRatioAngles(object):
         tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
+
+class PhotonDCR(object):
+    """A surface-layer operator that applies the effect of differential chromatic aberration (DCR).
+
+    Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
+    also predicts that blue photons get spread out more by the atmosphere than red photons,
+    specifically FWHM is proportional to wavelength^(-0.2).  Both of these effects can be
+    implemented by wavelength-dependent shifts of the photons.
+
+    Since DCR depends on the zenith angle and the parallactic angle (which is the position angle of
+    the zenith measured from North through East) of the object being drawn, these must be specified
+    via keywords.  There are four ways to specify these values:
+      1) explicitly provide `zenith_angle = ...` as a keyword of type Angle, and
+         `parallactic_angle` will be assumed to be 0 by default.
+      2) explicitly provide both `zenith_angle = ...` and `parallactic_angle = ...` as
+         keywords of type Angle.
+      3) provide the coordinates of the object `obj_coord = ...` and the coordinates of the zenith
+         `zenith_coord = ...` as keywords of type CelestialCoord.
+      4) provide the coordinates of the object `obj_coord = ...` as a CelestialCoord, the
+         hour angle of the object `HA = ...` as an Angle, and the latitude of the observer
+         `latitude = ...` as an Angle.
+
+    DCR also depends on temperature, pressure and water vapor pressure of the atmosphere.  The
+    default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
+    they are broadly reasonable for most observatories.
+
+    This surface op is intended to match the functionality of ChromaticAtmosphere, but acting
+    on the photon array rather than as a ChromaticObject.  The photons will need to have
+    wavelengths defined in order to work.
+
+    @param base_wavelength      Wavelength represented by the fiducial photon positions in nm.
+    @param scale_unit           Units used for the positions of the photons.  [default:
+                                galsim.arcsec]
+    @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
+                                the prediction for Kolmogorov turbulence]
+    @param zenith_angle         Angle from object to zenith, expressed as an Angle
+                                [default: 0]
+    @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
+                                from North through East.  [default: 0]
+    @param obj_coord            Celestial coordinates of the object being drawn as a
+                                CelestialCoord. [default: None]
+    @param zenith_coord         Celestial coordinates of the zenith as a CelestialCoord.
+                                [default: None]
+    @param HA                   Hour angle of the object as an Angle. [default: None]
+    @param latitude             Latitude of the observer as an Angle. [default: None]
+    @param pressure             Air pressure in kiloPascals.  [default: 69.328 kPa]
+    @param temperature          Temperature in Kelvins.  [default: 293.15 K]
+    @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
+    """
+    def __init__(self, base_wavelength, scale_unit=galsim.arcsec, **kwargs):
+        from .chromatic import parse_dcr_angles
+
+        # This matches the code in ChromaticAtmosphere.
+        self.base_wavelength = base_wavelength
+
+        if isinstance(scale_unit, str):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+        self.alpha = kwargs.pop('alpha', -0.2)
+
+        self.zenith_angle, self.parallactic_angle, self.kw = parse_dcr_angles(kwargs)
+
+        # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
+        # Check that they're valid
+        for kw in self.kw:
+            if kw not in ['temperature', 'pressure', 'H2O_pressure']:
+                raise TypeError("Got unexpected keyword: {0}".format(kw))
+
+        self.base_refraction = galsim.dcr.get_refraction(self.base_wavelength, self.zenith_angle,
+                                                         **self.kw)
+
+    def applyTo(self, photon_array, local_wcs):
+        """Apply the DCR effect to the photons"""
+        if not photon_array.hasAllocatedWavelengths():
+            raise RuntimeError("PhotonDCR requires that wavelengths be set")
+
+        w = photon_array.wavelength
+        cenx = local_wcs.origin.x
+        ceny = local_wcs.origin.y
+
+        # Apply the wavelength-dependent scaling
+        if self.alpha != 0.:
+            scale = (w/self.base_wavelength)**self.alpha
+            photon_array.x = scale * (photon_array.x - cenx) + cenx
+            photon_array.y = scale * (photon_array.y - ceny) + ceny
+
+        # Apply DCR
+        shift_magnitude = galsim.dcr.get_refraction(w, self.zenith_angle, **self.kw)
+        shift_magnitude -= self.base_refraction
+        shift_magnitude = shift_magnitude * (galsim.radians / self.scale_unit)
+        sinp, cosp = self.parallactic_angle.sincos()
+
+        du = -shift_magnitude * sinp
+        dv = shift_magnitude * cosp
+
+        dx = local_wcs._x(du, dv)
+        dy = local_wcs._y(du, dv)
+        photon_array.x += dx
+        photon_array.y += dy

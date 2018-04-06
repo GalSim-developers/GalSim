@@ -177,7 +177,7 @@ def test_wavelength_sampler():
 
     # Make a dummy surface op that clips any photons with lambda < 600
     class Clip600(object):
-        def applyTo(self, photon_array):
+        def applyTo(self, photon_array, local_wcs=None):
             photon_array.flux[photon_array.wavelength < 600] = 0.
 
     # Use (a new) sampler and clip600 as surface_ops in drawImage
@@ -309,9 +309,76 @@ def test_photon_io():
     np.testing.assert_array_equal(photons2.dydz, photons.dydz)
     np.testing.assert_array_equal(photons2.wavelength, photons.wavelength)
 
+def test_dcr():
+    """Test the dcr surface op
+    """
+    # This tests that implementing DCR with the surface op is equivalent to using
+    # ChromaticAtmosphere.
+    # We use fairly extreme choices for the parameters to make the comparison easier, so
+    # we can still get good discrimination of any errors with only 10^6 photons.
+    zenith_angle = 45 * galsim.degrees  # Larger angle has larger DCR.
+    parallactic_angle = 129 * galsim.degrees  # Something random, not near 0 or 180
+    pixel_scale = 0.03  # Small pixel scale means shifts are many pixels, rather than a fraction.
+    alpha = -1.2  # The normal alpha is -0.2, so this is exaggerates the effect.
+
+    bandpass = galsim.Bandpass('LSST_r.dat', 'nm')
+    base_wavelength = bandpass.effective_wavelength
+    base_wavelength += 500  # This exaggerates the effects fairly substantially.
+
+    sed = galsim.SED('CWW_E_ext.sed', wave_type='ang', flux_type='flambda')
+
+    flux = 1.e6
+    base_PSF = galsim.Kolmogorov(fwhm=0.3)
+
+    # Use ChromaticAtmosphere
+    im1 = galsim.ImageD(50, 50, scale=pixel_scale)
+    star = galsim.DeltaFunction() * sed
+    star = star.withFlux(flux, bandpass=bandpass)
+    chrom_PSF = galsim.ChromaticAtmosphere(base_PSF,
+                                           base_wavelength=base_wavelength,
+                                           zenith_angle=zenith_angle,
+                                           parallactic_angle=parallactic_angle,
+                                           alpha=alpha)
+    chrom = galsim.Convolve(star, chrom_PSF)
+    chrom.drawImage(bandpass, image=im1)
+
+    # Use PhotonDCR
+    im2 = galsim.ImageD(50, 50, scale=pixel_scale)
+    dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
+                           zenith_angle=zenith_angle,
+                           parallactic_angle=parallactic_angle,
+                           alpha=alpha)
+    achrom = base_PSF.withFlux(flux)
+    rng = galsim.BaseDeviate(31415)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+    surface_ops = [wave_sampler, dcr]
+    achrom.drawImage(image=im2, method='phot', rng=rng, surface_ops=surface_ops)
+
+    im1 /= flux  # Divide by flux, so comparison is on a relative basis.
+    im2 /= flux
+    printval(im2, im1, show=False)
+    np.testing.assert_almost_equal(im2.array, im1.array, decimal=4,
+                                   err_msg="PhotonDCR didn't match ChromaticAtmosphere")
+
+    # Repeat with thinned bandpass and SED to check how thin still works well.
+    im3 = galsim.ImageD(50, 50, scale=pixel_scale)
+    thin = 0.1  # Even higher also works.  But this is probably enough.
+    thin_bandpass = bandpass.thin(thin)
+    thin_sed = sed.thin(thin)
+    print('len bp = %d => %d'%(len(bandpass.wave_list), len(thin_bandpass.wave_list)))
+    print('len sed = %d => %d'%(len(sed.wave_list), len(thin_sed.wave_list)))
+    wave_sampler = galsim.WavelengthSampler(thin_sed, thin_bandpass, rng)
+    achrom.drawImage(image=im3, method='phot', rng=rng, surface_ops=surface_ops)
+
+    im3 /= flux
+    printval(im3, im1, show=False)
+    np.testing.assert_almost_equal(im3.array, im1.array, decimal=4,
+                                   err_msg="thinning factor %f led to 1.e-4 level inaccuracy"%thin)
+
 
 if __name__ == '__main__':
     test_photon_array()
     test_wavelength_sampler()
     test_photon_angles()
     test_photon_io()
+    test_dcr()
