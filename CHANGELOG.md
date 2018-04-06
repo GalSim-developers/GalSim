@@ -39,7 +39,8 @@ New Features
 ------------
 
 - Add option to use circular weight function in HSM adaptive moments code. (#917)
-- Add VonKarman profile GSObject.
+- Add VonKarman profile GSObject. (#940)
+- Add PhotonDCR surface op to apply DCR for photon shooting. (#955)
 
 
 
