@@ -487,6 +487,11 @@ def test_SED_withFlux():
             np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
+            # Multiplying in the other order also works.
+            ba = rband * a
+            np.testing.assert_array_almost_equal(ba.calculateFlux(bolo_bp), 1.0, 5,
+                                                 "Calculating SED flux from sed * bp failed.")
+
 
 @timer
 def test_SED_withFluxDensity():
