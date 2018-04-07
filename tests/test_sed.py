@@ -281,6 +281,8 @@ def test_SED_mul():
         np.testing.assert_almost_equal(h2(x), g(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
 
+        assert_raises(TypeError, a.__mul__, 'invalid')
+
 
     sed1 = galsim.SED('1', 'nm', 'fphotons', redshift=1)
     sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)

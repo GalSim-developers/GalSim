@@ -535,15 +535,15 @@ class SED(object):
                 return self._mul_sed(other)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
-        if isinstance(other, galsim.GSObject):
+        elif isinstance(other, galsim.GSObject):
             return galsim.Transform(other, flux_ratio=self)
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
-        if isinstance(other, galsim.Bandpass):
+        elif isinstance(other, galsim.Bandpass):
             return self._mul_bandpass(other)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
-        if hasattr(other, '__call__'):
+        elif hasattr(other, '__call__'):
             if self.fast:
                 spec = lambda w: self._fast_spec(w) * other(w*(1.0+self.redshift))
             else:
@@ -554,8 +554,11 @@ class SED(object):
                        _wave_list=self.wave_list,
                        _spectral=self.spectral)
 
-        if isinstance(other, (int, float)):
+        elif isinstance(other, (int, float)):
             return self._mul_scalar(other)
+
+        else:
+            raise TypeError("Cannot multiply an SED by %s"%(other))
 
     def __rmul__(self, other):
         return self*other
