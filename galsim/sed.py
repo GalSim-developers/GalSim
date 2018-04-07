@@ -121,18 +121,13 @@ class SED(object):
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
 
-        # These are only used for the repr to ensure numerical rounding differences don't
-        # impact the eval(repr) equality.
-        self._wave_type = wave_type
-        self._flux_type = flux_type
-
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
-                self.wave_type = units.nm
+                self.wave_type = 'nm'
                 self.wave_factor = 1
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-                self.wave_type = units.AA
+                self.wave_type = 'A'
                 self.wave_factor = 0.1
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
@@ -140,28 +135,36 @@ class SED(object):
             self.wave_type = wave_type
             try:
                 self.wave_factor = (1*self.wave_type).to(units.nm).value
+                if self.wave_factor == 1.:
+                    self.wave_type = 'nm'
+                elif self.wave_factor == 0.1:
+                    self.wave_type = 'A'
             except units.UnitConversionError:
                 self.wave_factor = None
 
         # Parse the various options for flux_type
-        self.flux_factor = self.flambda_factor = self.fnu_factor = None
+        self.flux_factor = None
         if isinstance(flux_type, str):
             if flux_type.lower() == 'flambda':
-                self.flux_type = SED._flambda_base / self.wave_type
+                self.flux_type = 'flambda'
                 self.spectral = True
-                self.flambda_factor = 1. / (SED._h * SED._c)
+                self.flux_factor = 1. / (SED._h * SED._c)
             elif flux_type.lower() == 'fphotons':
-                self.flux_type = SED._fphotons_base / self.wave_type
                 self.spectral = True
                 if self.wave_factor is not None:
+                    self.flux_type = 'fphotons'
                     self.flux_factor = 1 / self.wave_factor
+                else:
+                    self.flux_type = SED._fphotons
             elif flux_type.lower() == 'fnu':
-                self.flux_type = SED._fnu
                 self.spectral = True
                 if self.wave_factor is not None:
-                    self.fnu_factor = 1. / (SED._h * self.wave_factor)
-            elif flux_type.lower() == '1':
-                self.flux_type = SED._dimensionless
+                    self.flux_type = 'fnu'
+                    self.flux_factor = 1. / (SED._h * self.wave_factor)
+                else:
+                    self.flux_type = SED._fnu
+            elif flux_type == '1':
+                self.flux_type = '1'
                 self.spectral = False
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
@@ -171,16 +174,19 @@ class SED(object):
             if not self.spectral and not self.check_dimensionless():
                 raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
             try:
-                if self.wave_factor:
+                if self.wave_factor and self.spectral:
                     self.flux_factor = (1*self.flux_type).to(SED._fphotons).value
+                    self.flux_type = 'fphotons'
             except units.UnitConversionError:
                 try:
-                    self.flambda_factor = (1*self.flux_type).to(SED._flambda).value
-                    self.flambda_factor /= SED._h * SED._c / self.wave_factor
+                    self.flux_factor = (1*self.flux_type).to(SED._flambda).value
+                    self.flux_factor /= SED._h * SED._c / self.wave_factor
+                    self.flux_type = 'flambda'
                 except units.UnitConversionError:
                     try:
-                        self.fnu_factor = (1*self.flux_type).to(SED._fnu).value
-                        self.fnu_factor /= SED._h * self.wave_factor
+                        self.flux_factor = (1*self.flux_type).to(SED._fnu).value
+                        self.flux_factor /= SED._h * self.wave_factor
+                        self.flux_type = 'fnu'
                     except units.UnitConversionError:
                         pass
 
@@ -233,11 +239,14 @@ class SED(object):
         else:
             self._get_rest_native_waves = WeakMethod(self._get_rest_native_waves_slow)
 
-        if self.flux_factor:
+        if self.flux_type == 'fphotons':
+            assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fphot)
-        elif self.flambda_factor:
+        elif self.flux_type == 'flambda':
+            assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_flam)
-        elif self.fnu_factor:
+        elif self.flux_type == 'fnu':
+            assert self.flux_factor is not None
             self._flux_to_photons = WeakMethod(self._flux_to_photons_fnu)
         else:
             self._flux_to_photons = WeakMethod(self._flux_to_photons_slow)
@@ -268,10 +277,10 @@ class SED(object):
         return flux_native * self.flux_factor
 
     def _flux_to_photons_flam(self, flux_native, wave_native):
-        return flux_native * wave_native * self.flambda_factor
+        return flux_native * wave_native * self.flux_factor
 
     def _flux_to_photons_fnu(self, flux_native, wave_native):
-        return flux_native / wave_native * self.fnu_factor
+        return flux_native / wave_native * self.flux_factor
 
     def _flux_to_photons_slow(self, flux_native, wave_native):
         return (flux_native * self.flux_type).to(
@@ -283,8 +292,6 @@ class SED(object):
         # The function cannot be pickled, so will need to do this in getstate as well as init.
 
         self._const = False
-        if hasattr(self, '_spec'):
-            return
         if isinstance(self._orig_spec, (int, float)):
             if not self.dimensionless:
                 raise ValueError("Attempt to set spectral SED using float or integer.")
@@ -326,7 +333,13 @@ class SED(object):
 
     def check_dimensionless(self):
         """Return boolean indicating if SED is dimensionless."""
-        return self.flux_type.is_equivalent(SED._dimensionless)
+        if self.flux_type.is_equivalent(SED._dimensionless):
+            self.flux_type = '1'
+            # The astropy.units.dimensionless_unscaled object isn't properly reprable.
+            # So switch to using '1' in these cases.
+            return True
+        else:
+            return False
 
     @property
     def dimensionless(self):  # for convenience
@@ -962,7 +975,7 @@ class SED(object):
         # we use a custom repr for this case.
         outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
-                      self._orig_spec, self._wave_type, self._flux_type, self.redshift, self.fast,
+                      self._orig_spec, self.wave_type, self.flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,
                       "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr

@@ -21,8 +21,7 @@ import os
 import numpy as np
 from galsim_test_helpers import *
 import sys
-from astropy import units
-from astropy import constants
+from astropy import units, constants
 
 try:
     import galsim
@@ -49,14 +48,15 @@ def test_SED_basic():
         galsim.SED(spec="'eggs'", wave_type='A', flux_type='flambda')
 
     # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
+    warnings.simplefilter('ignore', units.UnitsWarning)
     s_list = [
         galsim.SED(spec=lambda x: 200., flux_type='flambda', wave_type='nm'),
         galsim.SED(spec='200', flux_type='flambda', wave_type='nanometers'),
         galsim.SED('200', wave_type='nanometers', flux_type='flambda'),
-        galsim.SED('200', 'nm', 'flambda'),
-        galsim.SED('np.sqrt(4.e4)', 'nm', 'flambda'),
-        galsim.SED('numpy.sqrt(4.e4)', 'nm', 'flambda'),
-        galsim.SED('math.sqrt(4.e4)', 'nm', 'flambda'),
+        galsim.SED('200', 'nm', 'flambda', fast=False),
+        galsim.SED('np.sqrt(4.e4)', units.nm, units.erg/(units.s * units.cm**2 * units.nm)),
+        galsim.SED('numpy.sqrt(4.e4)', units.Unit('nm'), 'flambda'),
+        galsim.SED('math.sqrt(4.e4) * 1.e9', units.Unit('m'), units.Unit('erg/s/cm^2/m')),
         # 200 erg/nm / 10 A/nm = 20 erg/A
         galsim.SED(spec='20', flux_type='flambda', wave_type='Angstroms'),
         # 200 erg/nm / (hc/w erg/photon) = 200 w/hc photons/nm
@@ -82,15 +82,18 @@ def test_SED_basic():
                    flux_type='fnu', wave_type='A'),
         galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), wave_type='nanometers',
                    flux_type='flambda'),
-        galsim.SED(galsim.LookupTable(A_w, 20.*np.ones(100)), flux_type='flambda', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 20.*np.ones(100)), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('erg/s/cm^2/Angstrom')),
         galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w/(h*c)), flux_type='fphotons', wave_type='nm'),
-        galsim.SED(galsim.LookupTable(A_w, 2.*A_w/(h*c)), flux_type='fphotons', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w/(h*c)), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('photon/s/cm^2/Angstrom')),
         galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w**2/c), flux_type='fnu',
                    wave_type='nanometers'),
-        galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), flux_type='fnu', wave_type='A'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), wave_type=units.Unit('Angstrom'),
+                flux_type=units.Unit('erg/s/cm^2/Hz')),
         galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
                                       [0., 0., 200., 200., 0., 0.], interpolant='linear'),
-                   wave_type='nm', flux_type='flambda')
+                   wave_type='nm', flux_type='flambda'),
     ]
     s_list += [
         s_list[9].thin(),
@@ -111,6 +114,8 @@ def test_SED_basic():
 
     for k,s in enumerate(s_list):
         print(k,' s = ', s)
+        assert s.spectral
+        assert not s.dimensionless
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
         np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
         waves = np.arange(700,800,10)
@@ -120,6 +125,36 @@ def test_SED_basic():
             np.testing.assert_equal(s.redshift, 0.)
         else:
             np.testing.assert_almost_equal(s.redshift, 4.)
+
+        # Only the first one is not picklable
+        if k > 0:
+            do_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            do_pickle(s)
+
+    # Check some dimensionless spectra
+    d_list = [
+        galsim.SED(spec=lambda x: 200., flux_type='1', wave_type='nm'),
+        galsim.SED(spec='200', flux_type=units.dimensionless_unscaled, wave_type='nanometers'),
+        galsim.SED(spec='200', flux_type='1', wave_type='Angstroms'),
+        galsim.SED(spec='200', flux_type='1', wave_type=units.Unit('m')),
+        galsim.SED(spec='200', flux_type='1', wave_type=units.Unit('km'), fast=False),
+        galsim.SED(galsim.LookupTable([1,1e3],[200,200], interpolant='linear'),
+                   wave_type='nanometers', flux_type='1'),
+        galsim.SED(galsim.LookupTable(A_w, 200.*np.ones(100)), flux_type='1', wave_type='A'),
+        galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
+                                      [0., 0., 200., 200., 0., 0.], interpolant='linear'),
+                   wave_type='nm', flux_type='1'),
+    ]
+    for k,s in enumerate(d_list):
+        print(k,' s = ', s)
+        assert not s.spectral
+        assert s.dimensionless
+        np.testing.assert_almost_equal(s(400), 200, decimal=10)
+        np.testing.assert_almost_equal(s(900), 200, decimal=10)
+        waves = np.arange(700,800,10)
+        np.testing.assert_array_almost_equal(s(waves), 200, decimal=10)
+
+        np.testing.assert_equal(s.redshift, 0.)
 
         # Only the first one is not picklable
         if k > 0:
@@ -386,6 +421,7 @@ def test_SED_init():
     galsim.SED(spec='1./(wave-700)', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave', wave_type=units.nm, flux_type='flambda')
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type='fphotons')
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.nm*units.m**2))
     galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.Hz*units.m**2))
     galsim.SED(spec='wave', wave_type=units.Hz,
@@ -395,17 +431,18 @@ def test_SED_init():
 
     # Also check for invalid calls
     foo = np.arange(10.)+1.
-    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda')
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type=units.Hz, flux_type='flambda')
     assert_raises(ValueError, sed, 0.5)
     assert_raises(ValueError, sed, 12.0)
     assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
     assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
 
     # Check a few valid calls for when fast=False
-    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda',
-                     fast=False)
-    sed(1.5)
-    sed(1.5*units.nm)
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type=units.GHz,
+                     flux_type=units.erg/(units.s*units.Hz*units.m**2), fast=False)
+    sed(1.5*units.GHz)
+    sed(3e8/1.5)  # lambda = c/nu = 3e8 m/s / 1.5e9 Hz * 1.e9 nm/m
+    sed(3e8/1.5*units.nm)
 
     # And check the redshift kwarg.
     foo = np.arange(10.)+1.
