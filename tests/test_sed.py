@@ -48,7 +48,7 @@ def test_SED_basic():
     with assert_raises(ValueError):
         galsim.SED(spec="'eggs'", wave_type='A', flux_type='flambda')
 
-    # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
+    # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/s/cm^2/nm
     warnings.simplefilter('ignore', units.UnitsWarning)
     s_list = [
         galsim.SED(spec=lambda x: 200., flux_type='flambda', wave_type='nm'),
@@ -92,6 +92,9 @@ def test_SED_basic():
                    wave_type='nanometers'),
         galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), wave_type=units.Unit('Angstrom'),
                 flux_type=units.Unit('erg/s/cm^2/Hz')),
+        galsim.SED('200*wave**3/%r'%(h*c**2), 'nm', units.Unit('ph/s/cm^2/Hz')),
+        galsim.SED('0.2*wave**3/%r'%(h*c**2), 'A', units.Unit('ph/s/cm^2/Hz')),
+        galsim.SED('2.e33*wave**3/%r'%(h*c**2), units.Unit('m'), units.Unit('ph/s/m^2/Hz')),
         galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
                                       [0., 0., 200., 200., 0., 0.], interpolant='linear'),
                    wave_type='nm', flux_type='flambda'),

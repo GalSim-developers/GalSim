@@ -127,7 +127,7 @@ class SED(object):
                 self.wave_type = 'nm'
                 self.wave_factor = 1
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-                self.wave_type = 'A'
+                self.wave_type = 'Angstrom'
                 self.wave_factor = 0.1
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
@@ -138,7 +138,7 @@ class SED(object):
                 if self.wave_factor == 1.:
                     self.wave_type = 'nm'
                 elif self.wave_factor == 0.1:
-                    self.wave_type = 'A'
+                    self.wave_type = 'Angstrom'
             except units.UnitConversionError:
                 self.wave_factor = None
 
@@ -188,7 +188,7 @@ class SED(object):
                         self.flux_factor /= SED._h * self.wave_factor
                         self.flux_type = 'fnu'
                     except units.UnitConversionError:
-                        pass
+                        self.wave_type = units.Unit(self.wave_type)
 
         self.redshift = redshift
         self.fast = fast
