@@ -25,6 +25,7 @@ Bug Fixes
 - Fixed python3 unicode/str mismatches in tests/SConscript (#932)
 - Fixed memory leak when drawing PhaseScreenPSFs using photon-shooting (#942)
 
+
 Deprecated Features
 -------------------
 
@@ -41,7 +42,7 @@ New Features
 - Add option to use circular weight function in HSM adaptive moments code. (#917)
 - Add VonKarman profile GSObject. (#940)
 - Add PhotonDCR surface op to apply DCR for photon shooting. (#955)
-
+- Allow astropy units as wave_type in Bandpass. (#955)
 
 
 New config features

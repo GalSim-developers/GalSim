@@ -21,6 +21,7 @@ import os
 import numpy as np
 from galsim_test_helpers import *
 import sys
+from astropy import units
 
 try:
     import galsim
@@ -36,13 +37,6 @@ datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 def test_Bandpass_basic():
     """Basic tests of Bandpass functionality
     """
-    # Cannot initialize bandpass without wave_type:
-    with assert_raises(TypeError):
-        galsim.Bandpass(throughput=lambda x:x)
-    # eval-str must return a Real
-    with assert_raises(ValueError):
-        galsim.Bandpass(throughput="'spam'", wave_type='A')
-
     # All of these should be equivalent
     b_list = [
         galsim.Bandpass(throughput=lambda x: x/1000, wave_type='nm', blue_limit=400, red_limit=550),
@@ -53,13 +47,14 @@ def test_Bandpass_basic():
         galsim.Bandpass('wave/numpy.sqrt(1.e6)', 'nm', 400, 550, 30.),
         galsim.Bandpass('wave/math.sqrt(1.e6)', 'nm', 400, 550, 30.),
         galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear'),
-                        wave_type='nm'),
+                        wave_type=units.Unit('nm')),
         galsim.Bandpass(galsim.LookupTable([4000,5500], [0.4, 0.55], interpolant='linear'),
-                        wave_type='ang'),
+                        wave_type=units.Unit('Angstrom')),
         galsim.Bandpass(galsim.LookupTable([3000,8700], [0.3, 0.87], interpolant='linear'),
-                        wave_type='Angstroms', red_limit=5500, blue_limit=4000),
-        galsim.Bandpass(galsim.LookupTable(np.arange(300,651,10),np.arange(0.3,0.651,0.01)),
-                        'nm', 400, 550),
+                        wave_type='ang', red_limit=5500, blue_limit=4000),
+        galsim.Bandpass(galsim.LookupTable(np.arange(3.e-7,6.51e-7,1.e-8),
+                                           np.arange(0.3,0.651,0.01)),
+                        units.Unit('m'), 4.e-7, 5.5e-7),
         galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm'),
         galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm',
                         blue_limit=400, red_limit=550),
@@ -124,6 +119,16 @@ def test_Bandpass_basic():
         if k > 0:
             do_pickle(b)
             do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
+
+    assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+    assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A',
+                  blue_limit=400, red_limit=700)
+    assert_raises(TypeError, galsim.Bandpass, throughput='1', wave_type='nm')
+    assert_raises(TypeError, galsim.Bandpass, throughput=lambda w: 1, wave_type='nm')
+    assert_raises(ValueError, galsim.Bandpass, throughput='1', wave_type='nm',
+                  blue_limit=700, red_limit=400)
+    assert_raises(ValueError, galsim.Bandpass, throughput=lambda w: 1, wave_type='inches')
+    assert_raises(ValueError, galsim.Bandpass, throughput=lambda w: 1, wave_type=units.Unit('Hz'))
 
 
 @timer

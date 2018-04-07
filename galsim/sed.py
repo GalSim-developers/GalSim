@@ -120,25 +120,26 @@ class SED(object):
 
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
                  _blue_limit=0.0, _red_limit=np.inf, _wave_list=None, _spectral=None):
-
+        self._flux_type = flux_type  # Need to save the original for repr
         # Parse the various options for wave_type
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
                 self.wave_type = 'nm'
-                self.wave_factor = 1
+                self.wave_factor = 1.
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
                 self.wave_type = 'Angstrom'
-                self.wave_factor = 0.1
+                self.wave_factor = 10.
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
         else:
             self.wave_type = wave_type
             try:
-                self.wave_factor = (1*self.wave_type).to(units.nm).value
+                self.wave_factor = (1*units.nm).to(self.wave_type).value
                 if self.wave_factor == 1.:
                     self.wave_type = 'nm'
-                elif self.wave_factor == 0.1:
+                elif abs(self.wave_factor-10.) < 2.e-15:  # This doesn't come out exactly 10.
                     self.wave_type = 'Angstrom'
+                    self.wave_factor = 10.
             except units.UnitConversionError:
                 self.wave_factor = None
 
@@ -153,14 +154,14 @@ class SED(object):
                 self.spectral = True
                 if self.wave_factor is not None:
                     self.flux_type = 'fphotons'
-                    self.flux_factor = 1 / self.wave_factor
+                    self.flux_factor = self.wave_factor
                 else:
                     self.flux_type = SED._fphotons
             elif flux_type.lower() == 'fnu':
                 self.spectral = True
                 if self.wave_factor is not None:
                     self.flux_type = 'fnu'
-                    self.flux_factor = 1. / (SED._h * self.wave_factor)
+                    self.flux_factor = self.wave_factor / SED._h
                 else:
                     self.flux_type = SED._fnu
             elif flux_type == '1':
@@ -180,12 +181,12 @@ class SED(object):
             except units.UnitConversionError:
                 try:
                     self.flux_factor = (1*self.flux_type).to(SED._flambda).value
-                    self.flux_factor /= SED._h * SED._c / self.wave_factor
+                    self.flux_factor /= SED._h * SED._c * self.wave_factor
                     self.flux_type = 'flambda'
                 except units.UnitConversionError:
                     try:
                         self.flux_factor = (1*self.flux_type).to(SED._fnu).value
-                        self.flux_factor /= SED._h * self.wave_factor
+                        self.flux_factor *= self.wave_factor / SED._h
                         self.flux_type = 'fnu'
                     except units.UnitConversionError:
                         self.wave_type = units.Unit(self.wave_type)
@@ -205,7 +206,7 @@ class SED(object):
         elif isinstance(self._spec, galsim.LookupTable):
             self.wave_list = np.array(self._spec.getArgs())
             if self.wave_factor:
-                self.wave_list *= self.wave_factor * (1.0 + self.redshift)
+                self.wave_list *= (1.0 + self.redshift) / self.wave_factor
             else:
                 self.wave_list = (self.wave_list*self.wave_type).to(units.nm, units.spectral()).value
                 self.wave_list *= (1.0 + self.redshift)
@@ -262,13 +263,13 @@ class SED(object):
         return wave
 
     def _get_native_waves_fast(self, wave):
-        return np.asarray(wave) / self.wave_factor
+        return np.asarray(wave) * self.wave_factor
 
     def _get_native_waves_slow(self, wave):
         return (wave * units.nm).to(self.wave_type, units.spectral()).value
 
     def _get_rest_native_waves_fast(self, wave):
-        return np.asarray(wave) / ((1.0+self.redshift) * self.wave_factor)
+        return np.asarray(wave) * (self.wave_factor / (1.0+self.redshift))
 
     def _get_rest_native_waves_slow(self, wave):
         return (wave / (1.0+self.redshift) * units.nm).to(self.wave_type, units.spectral()).value
@@ -334,7 +335,7 @@ class SED(object):
     def check_dimensionless(self):
         """Return boolean indicating if SED is dimensionless."""
         if self.flux_type.is_equivalent(SED._dimensionless):
-            self.flux_type = '1'
+            self._flux_type = '1'
             # The astropy.units.dimensionless_unscaled object isn't properly reprable.
             # So switch to using '1' in these cases.
             return True
@@ -467,7 +468,7 @@ class SED(object):
     def _mul_bandpass(self, other):
         """Equivalent to self * other when other is a Bandpass"""
         wave_list, blue_limit, red_limit = combine_wave_list(self, other)
-        zfactor = (1.0+self.redshift) * other.wave_factor
+        zfactor = (1.0+self.redshift) / other.wave_factor
         if self.fast:
             if (isinstance(self._fast_spec, galsim.LookupTable)
                 and not self._fast_spec.x_log
@@ -965,7 +966,7 @@ class SED(object):
         # we use a custom repr for this case.
         outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
-                      self._orig_spec, self.wave_type, self.flux_type, self.redshift, self.fast,
+                      self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
                       self.wave_list, self.blue_limit,
                       "float('inf')" if self.red_limit == np.inf else repr(self.red_limit))
         return outstr
