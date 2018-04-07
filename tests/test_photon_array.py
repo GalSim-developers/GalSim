@@ -375,6 +375,87 @@ def test_dcr():
     np.testing.assert_almost_equal(im3.array, im1.array, decimal=4,
                                    err_msg="thinning factor %f led to 1.e-4 level inaccuracy"%thin)
 
+    # Check scale_unit
+    im4 = galsim.ImageD(50, 50, scale=pixel_scale/60)
+    dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
+                           zenith_angle=zenith_angle,
+                           parallactic_angle=parallactic_angle,
+                           scale_unit='arcmin',
+                           alpha=alpha)
+    surface_ops = [wave_sampler, dcr]
+    achrom.dilate(1./60).drawImage(image=im4, method='phot', rng=rng, surface_ops=surface_ops)
+    im4 /= flux
+    printval(im4, im1, show=False)
+    np.testing.assert_almost_equal(im4.array, im1.array, decimal=4,
+                                   err_msg="PhotonDCR with scale_unit=arcmin, didn't match")
+
+    # Check some other valid options
+    # alpha = 0 means don't do any size scaling.
+    # obj_coord, HA and latitude are another option for setting the angles
+    # pressure, temp, and water pressure are settable.
+    # Also use a non-trivial WCS.
+    wcs = galsim.FitsWCS('des_data/DECam_00154912_12_header.fits')
+    image = galsim.Image(50, 50, wcs=wcs)
+    bandpass = galsim.Bandpass('LSST_r.dat', wave_type='nm').thin(0.1)
+    base_wavelength = bandpass.effective_wavelength
+    lsst_lat = galsim.Angle.from_dms('-30:14:23.76')
+    lsst_long = galsim.Angle.from_dms('-70:44:34.67')
+    local_sidereal_time = 3.14 * galsim.hours  # Not pi. This is the time for this observation.
+
+    im5 = galsim.ImageD(50, 50, wcs=wcs)
+    obj_coord = wcs.toWorld(im5.true_center)
+    base_PSF = galsim.Kolmogorov(fwhm=0.9)
+    achrom = base_PSF.withFlux(flux)
+    dcr = galsim.PhotonDCR(base_wavelength=bandpass.effective_wavelength,
+                           obj_coord=obj_coord,
+                           HA=local_sidereal_time-obj_coord.ra,
+                           latitude=lsst_lat,
+                           pressure=72,         # default is 69.328
+                           temperature=290,     # default is 293.15
+                           H2O_pressure=0.9,    # default is 1.067
+                           alpha=0)             # default is -0.2
+    surface_ops = [wave_sampler, dcr]
+    achrom.drawImage(image=im5, method='phot', rng=rng, surface_ops=surface_ops)
+
+    im6 = galsim.ImageD(50, 50, wcs=wcs)
+    star = galsim.DeltaFunction() * sed
+    star = star.withFlux(flux, bandpass=bandpass)
+    chrom_PSF = galsim.ChromaticAtmosphere(base_PSF,
+                                           base_wavelength=bandpass.effective_wavelength,
+                                           obj_coord=obj_coord,
+                                           HA=local_sidereal_time-obj_coord.ra,
+                                           latitude=lsst_lat,
+                                           pressure=72,
+                                           temperature=290,
+                                           H2O_pressure=0.9,
+                                           alpha=0)
+    chrom = galsim.Convolve(star, chrom_PSF)
+    chrom.drawImage(bandpass, image=im6)
+
+    im5 /= flux  # Divide by flux, so comparison is on a relative basis.
+    im6 /= flux
+    printval(im5, im6, show=False)
+    np.testing.assert_almost_equal(im5.array, im6.array, decimal=3,
+                                   err_msg="PhotonDCR with alpha=0 didn't match")
+
+    # Also check invalid parameters
+    assert_raises(TypeError, galsim.PhotonDCR,
+                  zenith_angle=zenith_angle,
+                  parallactic_angle=parallactic_angle)  # base_wavelength is required
+    assert_raises(TypeError, galsim.PhotonDCR,
+                  base_wavelength=500,
+                  parallactic_angle=parallactic_angle)  # zenith_angle (somehow) is required
+    assert_raises(TypeError, galsim.PhotonDCR,
+                  base_wavelength=500,
+                  zenith_angle=zenith_angle,
+                  parallactic_angle=parallactic_angle,
+                  H20_pressure=1.)                      # invalid (misspelled)
+    assert_raises(ValueError, galsim.PhotonDCR,
+                  base_wavelength=500,
+                  zenith_angle=zenith_angle,
+                  parallactic_angle=parallactic_angle,
+                  scale_unit='inches')                  # invalid scale_unit
+
 
 if __name__ == '__main__':
     test_photon_array()
