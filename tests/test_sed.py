@@ -611,6 +611,25 @@ def test_SED_calculateDCRMomentShifts():
     Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
+    # Repeat with a function bandpass, since different path in code.
+    bp2 = galsim.Bandpass('1', 'nm', blue_limit=bandpass.blue_limit, red_limit=bandpass.red_limit)
+    Rbar, V = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees)
+    Rbar2, V2 = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=180*galsim.degrees)
+    np.testing.assert_array_almost_equal(Rbar, -Rbar2, 15)
+    np.testing.assert_array_almost_equal(V, V2, 25)
+    Rbar3, V3 = sed.calculateDCRMomentShifts(bp2, zenith_angle=45*galsim.degrees,
+                                             parallactic_angle=90*galsim.degrees)
+    np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
+    np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
+    waves = (sed*bp2).wave_list
+    R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
+    Rnum = np.trapz(sed(waves) * R, waves)
+    den = np.trapz(sed(waves), waves)
+    np.testing.assert_almost_equal(Rnum/den, Rbar[1], 4)
+    Vnum = np.trapz(sed(waves) * (R - Rnum/den)**2, waves)
+    np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
+
 
 @timer
 def test_SED_calculateSeeingMomentRatio():
@@ -625,8 +644,16 @@ def test_SED_calculateSeeingMomentRatio():
     waves = np.union1d(sed.wave_list, bandpass.wave_list)
     num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
     den = np.trapz(sed(waves) * bandpass(waves), waves)
-
     np.testing.assert_almost_equal(relative_size, num/den, 5)
+
+    # Repeat with a function bandpass, since different path in code
+    bp2 = galsim.Bandpass('1', 'nm', blue_limit=bandpass.blue_limit, red_limit=bandpass.red_limit)
+    relative_size = sed.calculateSeeingMomentRatio(bp2)
+    waves = (sed*bp2).wave_list
+    num = np.trapz(sed(waves) * (waves/500.0)**(-0.4), waves)
+    den = np.trapz(sed(waves), waves)
+    np.testing.assert_almost_equal(relative_size, num/den, 4)
+
 
 @timer
 def test_SED_sampleWavelength():

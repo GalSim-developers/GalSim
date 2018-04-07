@@ -871,9 +871,11 @@ class SED(object):
             Rbar_kernel = lambda w: galsim.dcr.get_refraction(w, zenith_angle, **kwargs)
             Rbar = galsim.integ.int1d(lambda w: weight(w) * Rbar_kernel(w),
                                       bandpass.blue_limit, bandpass.red_limit)
+            Rbar /= flux
             V_kernel = lambda w: (galsim.dcr.get_refraction(w, zenith_angle, **kwargs) - Rbar)**2
             V = galsim.integ.int1d(lambda w: weight(w) * V_kernel(w),
                                    bandpass.blue_limit, bandpass.red_limit)
+            V /= flux
         # Rbar and V are computed above assuming that the parallactic angle is 0.  Hence we
         # need to rotate our frame by the parallactic angle to get the desired output.
         sinp, cosp = parallactic_angle.sincos()
