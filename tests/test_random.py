@@ -1405,6 +1405,21 @@ def test_distfunction():
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated from serialize')
 
+    # Check val() method
+    # pdf(x) = x^2
+    # cdf(x) = (x/2)^3
+    # val(y) = 2 y^(1/3)
+    np.testing.assert_almost_equal(d.val(0), 0, 4)
+    np.testing.assert_almost_equal(d.val(1), 2, 4)
+    np.testing.assert_almost_equal(d.val(0.125), 1, 4)
+    np.testing.assert_almost_equal(d.val(0.027), 0.6, 4)
+    np.testing.assert_almost_equal(d.val(0.512), 1.6, 4)
+    u = galsim.UniformDeviate(testseed)
+    testResult = (d.val(u()), d.val(u()), d.val(u()))
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate sequence using d.val(u())')
+
     # Check that the mean and variance come out right
     vals = [d() for i in range(nvals)]
     mean = np.mean(vals)
