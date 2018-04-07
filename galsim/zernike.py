@@ -189,6 +189,65 @@ def __noll_coef_array_grady(jmax, obscuration):
 _noll_coef_array_grady = LRU_Cache(__noll_coef_array_grady)
 
 
+def _xy_contribution(rho2_power, rho_power, shape=None):
+    # rho = (x + iy), so multiplying an xy coefficient by rho, and again by rho is equivalent to:
+    #
+    # 1 0 0      0 i 0      0 0 -1
+    # 0 0 0  ->  1 0 0  ->  0 2i 0
+    # 0 0 0      0 0 0      1 0  0
+    #
+    # where the rows indicate powers of x and the columns indicate powers of y.
+    # So the last array above indicates (x + iy)^2 = (x^2 + 2ixy - y^2)
+    # Similarly, multiplying by |rho|^2 = x^2 + y^2 is equivalent to
+    #
+    # 1 0 0 0 0     0 0 1 0 0      0 0 0 0 1
+    # 0 0 0 0 0     0 0 0 0 0      0 0 0 0 0
+    # 0 0 0 0 0  -> 1 0 0 0 0  ->  0 0 2 0 0
+    # 0 0 0 0 0     0 0 0 0 0      0 0 0 0 0
+    # 0 0 0 0 0     0 0 0 0 0      1 0 0 0 0
+    #
+    # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
+    # |rho|^2.
+
+    if shape is None:
+        size = 2*rho2_power + rho_power + 1
+        shape = (size, size)
+    out = np.zeros(shape, dtype=np.complex128)
+    out[0,0] = 1
+    while rho2_power >= 1:
+        new = np.zeros_like(out)
+        for (i, j) in zip(*np.nonzero(out)):
+            val = out[i, j]
+            new[i+2, j] += val
+            new[i, j+2] += val
+        rho2_power -= 1
+        out = new
+    while rho_power >= 1:
+        new = np.zeros_like(out)
+        for (i, j) in zip(*np.nonzero(out)):
+            val = out[i, j]
+            new[i+1, j] += val
+            new[i, j+1] += 1j*val
+        rho_power -= 1
+        out = new
+    return out
+
+
+def _rrsq_to_xy(coefs):
+    """Convert coefficient array from rho and |rho|^2 to x and y.
+    """
+    rho2_order = coefs.shape[0] - 1
+    rho_order = coefs.shape[1] - 1
+    out_order = rho_order + 2*rho2_order
+    out_shape = (out_order+1, out_order+1)
+    new_coefs = np.zeros(out_shape, dtype=np.float64)
+
+    # Now we loop through the elements of coefs and compute their contribution to new_coefs
+    for (i, j) in zip(*np.nonzero(coefs)):
+        new_coefs += (coefs[i, j]*_xy_contribution(i, j, out_shape)).real
+    return new_coefs
+
+
 # Following 3 functions from
 #
 # "Zernike annular polynomials for imaging systems with annular pupils"
