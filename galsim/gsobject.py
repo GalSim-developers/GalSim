@@ -1054,17 +1054,6 @@ class GSObject(object):
             offset = galsim.PositionD(dx,dy)
         return offset
 
-    def _fix_center(self, new_bounds, offset, use_true_center, reverse):
-        offset = self._adjust_offset(new_bounds, offset, use_true_center)
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse:
-            offset = -offset
-
-        if offset == galsim.PositionD(0,0):
-            return self
-        else:
-            return self._shift(offset)
-
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
         # Determine the correct wcs given the input scale, wcs and image.
         if wcs is not None:

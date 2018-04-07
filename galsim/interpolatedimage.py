@@ -483,14 +483,12 @@ class InterpolatedImage(GSObject):
         offset = self._parse_offset(offset)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        # Note reverse=True, since we want to fix the center in the opposite sense of what the
-        # draw function does.
-        prof = self._fix_center(self.image.bounds, offset, use_true_center, reverse=True)
-
-        # Save the offset we will need when pickling.
-        if hasattr(prof, 'offset'):
-            self._offset = -prof.offset
+        offset = self._adjust_offset(self.image.bounds, offset, use_true_center)
+        if offset != galsim.PositionD(0,0):
+            prof = self._shift(-offset)
+            self._offset = offset
         else:
+            prof = self
             self._offset = None
 
         # Bring the profile from image coordinates into world coordinates
