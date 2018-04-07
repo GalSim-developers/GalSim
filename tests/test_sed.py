@@ -22,6 +22,7 @@ import numpy as np
 from galsim_test_helpers import *
 import sys
 from astropy import units, constants
+import warnings
 
 try:
     import galsim
