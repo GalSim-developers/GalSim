@@ -829,34 +829,19 @@ class SED(object):
         @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
                  second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
+        from .chromatic import parse_dcr_angles
         if self.dimensionless:
             raise TypeError("Cannot calculate DCR shifts of dimensionless SED.")
-        if 'zenith_angle' in kwargs:
-            zenith_angle = kwargs.pop('zenith_angle')
-            parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
-        elif 'obj_coord' in kwargs:
-            obj_coord = kwargs.pop('obj_coord')
-            if 'zenith_coord' in kwargs:
-                zenith_coord = kwargs.pop('zenith_coord')
-                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, zenith_coord=zenith_coord)
-            else:
-                if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("calculateDCRMomentShifts requires either zenith_coord or "+
-                                    "(HA, latitude) when obj_coord is specified!")
-                HA = kwargs.pop('HA')
-                latitude = kwargs.pop('latitude')
-                zenith_angle, parallactic_angle = galsim.dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, HA=HA, latitude=latitude)
-        else:
-            raise TypeError(
-                "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
+
+        zenith_angle, parallactic_angle, kw = parse_dcr_angles(kwargs)
+
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
         for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise (TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}"
                                  .format(kw)))
+
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:

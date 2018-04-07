@@ -634,6 +634,13 @@ def test_SED_calculateDCRMomentShifts():
     Vnum = np.trapz(sed(waves) * (R - Rnum/den)**2, waves)
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
+    dim = galsim.SED('200', 'nm', '1')
+    assert_raises(TypeError, dim.calculateDCRMomentShifts, bandpass,
+                  zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees)
+    assert_raises(TypeError, sed.calculateDCRMomentShifts, bandpass,
+                  zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees,
+                  invalid=True)
+
 
 @timer
 def test_SED_calculateSeeingMomentRatio():
