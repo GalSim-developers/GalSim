@@ -414,8 +414,8 @@ def test_dcr():
                            latitude=lsst_lat,
                            pressure=72,         # default is 69.328
                            temperature=290,     # default is 293.15
-                           H2O_pressure=0.9,    # default is 1.067
-                           alpha=0)             # default is -0.2
+                           H2O_pressure=0.9)    # default is 1.067
+                           #alpha=0)            # default is 0, so don't need to set it.
     surface_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im5, method='phot', rng=rng, surface_ops=surface_ops)
 

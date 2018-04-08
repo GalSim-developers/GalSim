@@ -381,11 +381,18 @@ class PhotonDCR(object):
     on the photon array rather than as a ChromaticObject.  The photons will need to have
     wavelengths defined in order to work.
 
+    IMPORTANT: The alpha parameter is only appropriate for stars.  This surface op will act on
+               all of the photons, so applying a chromatic dilation according to the chromatic
+               seeing is the wrong thing to do when the surface brightness being rendered is
+               not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
+               appropriate for Kolmogorov turbulence.
+
     @param base_wavelength      Wavelength represented by the fiducial photon positions in nm.
     @param scale_unit           Units used for the positions of the photons.  [default:
                                 galsim.arcsec]
-    @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
-                                the prediction for Kolmogorov turbulence]
+    @param alpha                Power law index for wavelength-dependent seeing.  This should only
+                                be used if doing a star-only simulation.  It is not correct when
+                                drawing galaxies. [default: 0.]
     @param zenith_angle         Angle from object to zenith, expressed as an Angle
                                 [default: 0]
     @param parallactic_angle    Parallactic angle, i.e. the position angle of the zenith, measured
