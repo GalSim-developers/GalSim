@@ -416,7 +416,7 @@ class PhotonDCR(object):
         if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
-        self.alpha = kwargs.pop('alpha', -0.2)
+        self.alpha = kwargs.pop('alpha', 0.)
 
         self.zenith_angle, self.parallactic_angle, self.kw = parse_dcr_angles(**kwargs)
 
