@@ -20,6 +20,13 @@ from __future__ import print_function
 import numpy as np
 import os
 import sys
+from unittest import skipIf
+
+try:
+    import astroplan
+    no_astroplan = False
+except ImportError:
+    no_astroplan = True
 
 from galsim_test_helpers import *
 
@@ -458,6 +465,67 @@ def test_dcr():
                   parallactic_angle=parallactic_angle,
                   scale_unit='inches')                  # invalid scale_unit
 
+@skipIf(no_astroplan, 'Unable to import astroplan')
+@timer
+def test_dcr_angles():
+    """Check the DCR angle calculations by comparing to astroplan's calculations of the same.
+    """
+    # Note: test_chromatic.py and test_sed.py both also test aspects of the dcr module, so
+    # this particular test could belong in either of them too.  But I (MJ) put it here, since
+    # I wrote it in conjunction with the tests of PhotonDCR to try to make sure that code
+    # is working properly.
+    import astropy.time
+
+    # Set up an observation date, time, location, coordinate
+    # These are arbitrary, so ripped from astroplan's docs
+    # https://media.readthedocs.org/pdf/astroplan/latest/astroplan.pdf
+    subaru = astroplan.Observer.at_site('subaru')
+    print(subaru)
+    time = astropy.time.Time('2015-06-16 12:00:00')
+    print(time)
+    vega = astroplan.FixedTarget.from_name('Vega')
+    print(vega)
+
+    ap_z = subaru.altaz(time, vega).zen
+    print('zenith angle is ',ap_z.deg)
+    ap_p = subaru.parallactic_angle(time, vega)
+    print('parallactic angle is ',ap_p.deg)
+
+    local_sidereal_time = subaru.local_sidereal_time(time)
+    print('local_sidereal_time = ',local_sidereal_time)
+
+    # Repeat with GalSim
+    print('vega = ',vega)
+    print('ra,dec = ',vega.ra.deg, vega.dec.deg)
+    coord = galsim.CelestialCoord(vega.ra.deg * galsim.degrees, vega.dec.deg * galsim.degrees)
+    print('coord = ',coord.ra/galsim.degrees, coord.dec/galsim.degrees)
+    print('lat = ',subaru.location.lat)
+    lat = subaru.location.lat.deg * galsim.degrees
+    ha = local_sidereal_time.deg * galsim.degrees - coord.ra
+    zenith = galsim.CelestialCoord(local_sidereal_time.deg * galsim.degrees, lat)
+    print('zenith = ',zenith)
+
+    # Two ways to calculate it
+    # 1. From coord, ha, lat
+    z,p,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, HA=ha, latitude=lat)
+    print('z,p = ',z/galsim.degrees,p/galsim.degrees)
+
+    np.testing.assert_almost_equal(z.rad, ap_z.rad, 3,
+                                   "zenith angle doesn't agree with astroplan's calculation.")
+    # XXX: Currently our calculation seems to return -p - pi.  ???  Are we wrong? or just use
+    # a different definition of what parallactic angle means?
+    np.testing.assert_almost_equal(p.rad, -ap_p.rad - np.pi, 3,
+                                   "parallactic angle doesn't agree with astroplan's calculation.")
+
+    # 2. From coord, zenith_coord
+    z,p,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, zenith_coord=zenith)
+    print('z,p = ',z/galsim.degrees,p/galsim.degrees)
+
+    np.testing.assert_almost_equal(z.rad, ap_z.rad, 3,
+                                   "zenith angle doesn't agree with astroplan's calculation.")
+    np.testing.assert_almost_equal(p.rad, -ap_p.rad - np.pi, 3,
+                                   "parallactic angle doesn't agree with astroplan's calculation.")
+
 
 if __name__ == '__main__':
     test_photon_array()
@@ -465,3 +533,4 @@ if __name__ == '__main__':
     test_photon_angles()
     test_photon_io()
     test_dcr()
+    test_dcr_angles()
