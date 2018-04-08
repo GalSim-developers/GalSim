@@ -120,6 +120,10 @@ def test_Bandpass_basic():
             do_pickle(b)
             do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
+    assert_raises(ValueError, galsim.Bandpass, throughput="'eggs'", wave_type='nm',
+                  blue_limit=400, red_limit=700)
+    assert_raises(ValueError, galsim.Bandpass, throughput="'eggs)", wave_type='nm',
+                  blue_limit=400, red_limit=700)
     assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
     assert_raises(ValueError, galsim.Bandpass, throughput="'spam'", wave_type='A',
                   blue_limit=400, red_limit=700)

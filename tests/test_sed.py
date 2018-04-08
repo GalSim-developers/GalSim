@@ -44,10 +44,6 @@ def test_SED_basic():
     nm_w = np.arange(10,1002,10)
     A_w = np.arange(100,10002,100)
 
-    # Eval-str must return a Real
-    with assert_raises(ValueError):
-        galsim.SED(spec="'eggs'", wave_type='A', flux_type='flambda')
-
     # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/s/cm^2/nm
     warnings.simplefilter('ignore', units.UnitsWarning)
     s_list = [
@@ -410,6 +406,7 @@ def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
     """
     # These fail.
+    assert_raises(ValueError, galsim.SED, spec="'eggs'", wave_type='A', flux_type='flambda')
     assert_raises(ValueError, galsim.SED, spec='blah', wave_type='nm', flux_type='flambda')
     assert_raises(ValueError, galsim.SED, spec='wave+',wave_type='nm', flux_type='flambda')
     assert_raises(ValueError, galsim.SED, spec='somewhere/a/file', wave_type='nm',

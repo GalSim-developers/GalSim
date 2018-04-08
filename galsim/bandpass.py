@@ -189,15 +189,6 @@ class Bandpass(object):
 
         self._setup_func()
 
-        # Sanity check that the throughput function can evaluate at the red and blue limits
-        for test_wave in [self.blue_limit, self.red_limit]:
-            try:
-                self.func(test_wave)
-            except Exception as e:
-                raise ValueError(
-                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave) +
-                    "Caught error: {0}".format(e))
-
     def _setup_func(self):
         if self.wave_factor == 1.:
             self.func = WeakMethod(self._func_trivial)
@@ -227,17 +218,18 @@ class Bandpass(object):
                 test_wave = self.blue_limit
                 try:
                     self._tp = galsim.utilities.math_eval('lambda wave : ' + self._orig_tp)
-                    from numbers import Real
-                    if not isinstance(self._tp(test_wave), Real):
-                        raise ValueError("The given throughput function, %r, did not return a valid"
-                                         " number at test wavelength %s"%(
-                                         self._orig_tp, test_wave))
+                    test_value = self._tp(test_wave)
                 except Exception as e:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
                         "Input provided: {0!r}\n".format(self._orig_tp) +
                         "Caught error: {0}".format(e))
+                from numbers import Real
+                if not isinstance(test_value, Real):
+                    raise ValueError("The given throughput function, %r, did not return a valid"
+                                     " number at test wavelength %s: got %s"%(
+                                     self._orig_tp, test_wave, test_value))
         else:
             self._tp = self._orig_tp
 

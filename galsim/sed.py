@@ -311,19 +311,20 @@ class SED(object):
                 # Are there any other types of errors we should trap here?
                 try:
                     self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
-                    from numbers import Real
-                    if not isinstance(self._spec(700.0), Real):
-                        raise ValueError("The given SED function, %r, did not return a valid"
-                                         " number at test wavelength %s"%(
-                                         self._spec, 700.0))
+                    test_value = self._spec(700.0)
                 except ArithmeticError:
-                    pass
+                    test_value = 0
                 except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave.\n" +
                         "Input provided: {0!r}\n".format(self._orig_spec) +
                         "Caught error: {0}".format(e))
+                from numbers import Real
+                if not isinstance(test_value, Real):
+                    raise ValueError("The given SED function, %r, did not return a valid"
+                                     " number at test wavelength %s: got %s"%(
+                                     self._spec, 700.0, test_value))
 
         else:
             self._spec = self._orig_spec
