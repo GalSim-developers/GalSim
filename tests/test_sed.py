@@ -643,7 +643,12 @@ def test_SED_calculateDCRMomentShifts():
                   zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees)
     assert_raises(TypeError, sed.calculateDCRMomentShifts, bandpass,
                   zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees,
+                  temperature=280, pressure=70, H2O_pressure=1.1,
                   invalid=True)
+    # Works with temperature, pressure, and H2O_pressure
+    sed.calculateDCRMomentShifts(bandpass,
+                                 zenith_angle=0*galsim.degrees, parallactic_angle=0*galsim.degrees,
+                                 temperature=280, pressure=70, H2O_pressure=1.1)
 
 
 @timer

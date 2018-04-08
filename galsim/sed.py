@@ -831,11 +831,11 @@ class SED(object):
         @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
                  second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
-        from .chromatic import parse_dcr_angles
+        from .dcr import parse_dcr_angles
         if self.dimensionless:
             raise TypeError("Cannot calculate DCR shifts of dimensionless SED.")
 
-        zenith_angle, parallactic_angle, kw = parse_dcr_angles(kwargs)
+        zenith_angle, parallactic_angle, kwargs = parse_dcr_angles(**kwargs)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid

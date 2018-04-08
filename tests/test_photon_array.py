@@ -33,6 +33,7 @@ except ImportError:
 bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
+
 @timer
 def test_photon_array():
     """Test the basic methods of PhotonArray class
@@ -309,6 +310,7 @@ def test_photon_io():
     np.testing.assert_array_equal(photons2.dydz, photons.dydz)
     np.testing.assert_array_equal(photons2.wavelength, photons.wavelength)
 
+@timer
 def test_dcr():
     """Test the dcr surface op
     """

@@ -401,7 +401,7 @@ class PhotonDCR(object):
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     def __init__(self, base_wavelength, scale_unit=galsim.arcsec, **kwargs):
-        from .chromatic import parse_dcr_angles
+        from .dcr import parse_dcr_angles
 
         # This matches the code in ChromaticAtmosphere.
         self.base_wavelength = base_wavelength
@@ -411,7 +411,7 @@ class PhotonDCR(object):
         self.scale_unit = scale_unit
         self.alpha = kwargs.pop('alpha', -0.2)
 
-        self.zenith_angle, self.parallactic_angle, self.kw = parse_dcr_angles(kwargs)
+        self.zenith_angle, self.parallactic_angle, self.kw = parse_dcr_angles(**kwargs)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
