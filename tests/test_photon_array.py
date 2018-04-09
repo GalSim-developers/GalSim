@@ -480,9 +480,7 @@ def test_dcr_angles():
     # These are arbitrary, so ripped from astroplan's docs
     # https://media.readthedocs.org/pdf/astroplan/latest/astroplan.pdf
     subaru = astroplan.Observer.at_site('subaru')
-    print(subaru)
     time = astropy.time.Time('2015-06-16 12:00:00')
-    print(time)
 
     # Stars that are visible from the north in summer time.
     names = ['Vega', 'Polaris', 'Altair', 'Regulus', 'Spica', 'Algol', 'Fomalhaut', 'Markab',
@@ -493,54 +491,44 @@ def test_dcr_angles():
         print(star)
 
         ap_z = subaru.altaz(time, star).zen
-        print('zenith angle is ',ap_z.deg)
-        ap_p = subaru.parallactic_angle(time, star)
+        ap_q = subaru.parallactic_angle(time, star)
         print('According to astroplan:')
-        print('  z,p = ', ap_z.deg, ap_p.deg)
-
-        local_sidereal_time = subaru.local_sidereal_time(time)
-        #print('local_sidereal_time = ',local_sidereal_time)
+        print('  z,q = ', ap_z.deg, ap_q.deg)
 
         # Repeat with GalSim
-        #print('ra,dec = ',star.ra.deg, star.dec.deg)
         coord = galsim.CelestialCoord(star.ra.deg * galsim.degrees, star.dec.deg * galsim.degrees)
-        #print('coord = ',coord.ra/galsim.degrees, coord.dec/galsim.degrees)
-        #print('lat = ',subaru.location.lat)
         lat = subaru.location.lat.deg * galsim.degrees
+        local_sidereal_time = subaru.local_sidereal_time(time)
         ha = local_sidereal_time.deg * galsim.degrees - coord.ra
         zenith = galsim.CelestialCoord(local_sidereal_time.deg * galsim.degrees, lat)
-        #print('zenith = ',zenith)
 
         # Two ways to calculate it
         # 1. From coord, ha, lat
-        z,p,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, HA=ha, latitude=lat)
+        z,q,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, HA=ha, latitude=lat)
         print('According to GalSim:')
-        print('  z,p = ',z/galsim.degrees,p/galsim.degrees)
+        print('  z,q = ',z/galsim.degrees,q/galsim.degrees)
 
         np.testing.assert_almost_equal(
                 z.rad, ap_z.rad, 2,
                 "zenith angle doesn't agree with astroplan's calculation.")
 
-        # XXX: Currently our calculation seems to return -p +- npi.
-        # ???  Are we wrong? or just use a different definition of what parallactic angle means?
-        # The preferred test, which fails.
-        #np.testing.assert_almost_equal(
-                #p.rad, ap_p.rad, 3,
-                #"parallactic angle doesn't agree with astroplan's calculation.")
-        # This test works.  tan(p) avoids the +-npi difference.  And there is a - sign.
+        # Unfortunately, at least as of version 0.4, astroplan's parallactic angle calculation
+        # has a bug.  It computes it as the arctan of some value, but doesn't use arctan2.
+        # So whenever |q| > 90 degrees, it gets it wrong by 180 degrees.  Therefore, we only
+        # test that tan(q) is right.  We'll check the quadrant below in test_dcr_moments().
         np.testing.assert_almost_equal(
-                np.tan(p), np.tan(-ap_p), 2,
+                np.tan(q), np.tan(ap_q), 2,
                 "parallactic angle doesn't agree with astroplan's calculation.")
 
         # 2. From coord, zenith_coord
-        z,p,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, zenith_coord=zenith)
-        print('  z,p = ',z/galsim.degrees,p/galsim.degrees)
+        z,q,_ = galsim.dcr.parse_dcr_angles(obj_coord=coord, zenith_coord=zenith)
+        print('  z,q = ',z/galsim.degrees,q/galsim.degrees)
 
         np.testing.assert_almost_equal(
                 z.rad, ap_z.rad, 2,
                 "zenith angle doesn't agree with astroplan's calculation.")
         np.testing.assert_almost_equal(
-                np.tan(p), np.tan(-ap_p), 2,
+                np.tan(q), np.tan(ap_q), 2,
                 "parallactic angle doesn't agree with astroplan's calculation.")
 
 

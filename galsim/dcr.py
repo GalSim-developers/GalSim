@@ -99,7 +99,7 @@ def zenith_parallactic_angles(obj_coord, zenith_coord=None, HA=None, latitude=No
         zenith_coord = galsim.CelestialCoord(HA + obj_coord.ra, latitude)
     zenith_angle = obj_coord.distanceTo(zenith_coord)
     NCP = galsim.CelestialCoord(0.0*galsim.degrees, 90*galsim.degrees)
-    parallactic_angle = obj_coord.angleBetween(zenith_coord, NCP)
+    parallactic_angle = obj_coord.angleBetween(NCP, zenith_coord)
     return zenith_angle, parallactic_angle
 
 def parse_dcr_angles(**kwargs):
