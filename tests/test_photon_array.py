@@ -531,6 +531,155 @@ def test_dcr_angles():
                 np.tan(q), np.tan(ap_q), 2,
                 "parallactic angle doesn't agree with astroplan's calculation.")
 
+def test_dcr_moments():
+    """Check that DCR gets the direction of the moment changes correct for some simplegeometries.
+    i.e. Basically check the sign conventions used in the DCR code.
+    """
+    # First, the basics.
+    # 1. DCR shifts blue photons closer to zenith, because the index of refraction larger.
+    #    cf. http://lsstdesc.github.io/chroma/
+    # 2. Galsim models profiles as seen from Earth with North up (and therefore East left).
+    # 3. Hour angle is negative when the object is in the east (soon after rising, say),
+    #    zero when crossing the zenith meridian, and then positive to the west.
+
+    # Use g-band, where the effect is more dramatic across the band than in redder bands.
+    # Also use a reference wavelength significantly to the red, so there should be a net
+    # overall shift towards zenith as well as a shear along the line to zenith.
+    bandpass = galsim.Bandpass('LSST_g.dat', 'nm').thin(0.1)
+    base_wavelength = 600  # > red end of g band
+
+    # Uniform across the band is fine for this.
+    sed = galsim.SED('1', wave_type='nm', flux_type='fphotons')
+    rng = galsim.BaseDeviate(31415)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+
+    star = galsim.Kolmogorov(fwhm=0.3, flux=1.e6)  # 10^6 photons should be enough.
+    im = galsim.ImageD(50, 50, scale=0.05)  # Small pixel scale, so shift is many pixels.
+    ra = 0 * galsim.degrees     # Completely irrelevant here.
+    lat = -20 * galsim.degrees  # Also doesn't really matter much.
+
+    # 1. HA < 0, Dec < lat  Spot should be shifted up and right.  e2 > 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = -2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('1. HA < 0, Dec < lat: ',moments)
+    assert moments['My'] > 0   # up
+    assert moments['Mx'] > 0   # right
+    assert moments['Mxy'] > 0  # e2 > 0
+
+    # 2. HA = 0, Dec < lat  Spot should be shifted up.  e1 < 0, e2 ~= 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 0 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('2. HA = 0, Dec < lat: ',moments)
+    assert moments['My'] > 0   # up
+    assert abs(moments['Mx']) < 0.05   # not left or right
+    assert moments['Mxx'] < moments['Myy']  # e1 < 0
+    assert abs(moments['Mxy']) < 0.1  # e2 ~= 0
+
+    # 3. HA > 0, Dec < lat  Spot should be shifted up and left.  e2 < 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('3. HA > 0, Dec < lat: ',moments)
+    assert moments['My'] > 0   # up
+    assert moments['Mx'] < 0   # left
+    assert moments['Mxy'] < 0  # e2 < 0
+
+    # 4. HA < 0, Dec = lat  Spot should be shifted right.  e1 > 0, e2 ~= 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = -2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('4. HA < 0, Dec = lat: ',moments)
+    assert abs(moments['My']) < 1.   # not up or down  (Actually slightly down in the south.)
+    assert moments['Mx'] > 0   # right
+    assert moments['Mxx'] > moments['Myy']  # e1 > 0
+    assert abs(moments['Mxy']) < 2.  # e2 ~= 0  (Actually slightly negative because of curvature.)
+
+    # 5. HA = 0, Dec = lat  Spot should not be shifted.  e1 ~= 0, e2 ~= 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 0 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('5. HA = 0, Dec = lat: ',moments)
+    assert abs(moments['My']) < 0.05   # not up or down
+    assert abs(moments['Mx']) < 0.05   # not left or right
+    assert abs(moments['Mxx'] - moments['Myy']) < 0.1  # e1 ~= 0
+    assert abs(moments['Mxy']) < 0.1  # e2 ~= 0
+
+    # 6. HA > 0, Dec = lat  Spot should be shifted left.  e1 > 0, e2 ~= 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('6. HA > 0, Dec = lat: ',moments)
+    assert abs(moments['My']) < 1.   # not up or down  (Actually slightly down in the south.)
+    assert moments['Mx'] < 0   # left
+    assert moments['Mxx'] > moments['Myy']  # e1 > 0
+    assert abs(moments['Mxy']) < 2.  # e2 ~= 0  (Actually slgihtly positive because of curvature.)
+
+    # 7. HA < 0, Dec > lat  Spot should be shifted down and right.  e2 < 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = -2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('7. HA < 0, Dec > lat: ',moments)
+    assert moments['My'] < 0   # down
+    assert moments['Mx'] > 0   # right
+    assert moments['Mxy'] < 0  # e2 < 0
+
+    # 8. HA = 0, Dec > lat  Spot should be shifted down.  e1 < 0, e2 ~= 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 0 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('8. HA = 0, Dec > lat: ',moments)
+    assert moments['My'] < 0   # down
+    assert abs(moments['Mx']) < 0.05   # not left or right
+    assert moments['Mxx'] < moments['Myy']  # e1 < 0
+    assert abs(moments['Mxy']) < 0.1  # e2 ~= 0
+
+    # 9. HA > 0, Dec > lat  Spot should be shifted down and left.  e2 > 0.
+    dcr = galsim.PhotonDCR(base_wavelength = base_wavelength,
+                           HA = 2 * galsim.hours,
+                           latitude = lat,
+                           obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
+    surface_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
+    print('9. HA > 0, Dec > lat: ',moments)
+    assert moments['My'] < 0   # down
+    assert moments['Mx'] < 0   # left
+    assert moments['Mxy'] > 0  # e2 > 0
+
 
 if __name__ == '__main__':
     test_photon_array()
@@ -539,3 +688,4 @@ if __name__ == '__main__':
     test_photon_io()
     test_dcr()
     test_dcr_angles()
+    test_dcr_moments()
