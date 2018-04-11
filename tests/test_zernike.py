@@ -364,7 +364,17 @@ def test_gradient():
         grady = 12*np.sqrt(5)*y*(2*r2-1)
         return gradx, grady
 
-    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y))
+    # import matplotlib.pyplot as plt
+    # fig, axes = plt.subplots(ncols=3, figsize=(12, 3))
+    # scat0 = axes[0].scatter(x, y, c=Z11.evalCartesianGrad(x, y)[0])
+    # fig.colorbar(scat0, ax=axes[0])
+    # scat1 = axes[1].scatter(x, y, c=Z11_grad(x, y)[0])
+    # fig.colorbar(scat1, ax=axes[1])
+    # scat2 = axes[2].scatter(x, y, c=Z11.evalCartesianGrad(x, y)[0] - Z11_grad(x, y)[0])
+    # fig.colorbar(scat2, ax=axes[2])
+    # plt.show()
+
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-13)
 
     Z28 = galsim.zernike.Zernike([0]*28+[1])
 
@@ -373,7 +383,7 @@ def test_gradient():
         grady = -6*np.sqrt(14)*y*(5*x**4-10*x**2*y**2+y**4)
         return gradx, grady
 
-    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y))
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-13)
 
     # Now try some finite differences on a broader set of input
 
@@ -385,39 +395,16 @@ def test_gradient():
 
     u = galsim.UniformDeviate(1234)
 
-    for j in range(100):
-        nj = int(u()*55)
-        Z = galsim.zernike.Zernike([0]+[u()]*nj)
+    for j in range(25):
+        nj = 1+int(u()*55)
+        R_inner = 0.2+0.6*u()
+        R_outer = R_inner + 0.2+0.6*u()
+        Z = galsim.zernike.Zernike([0]+[u() for _ in range(nj)], R_inner=R_inner, R_outer=R_outer)
 
         np.testing.assert_allclose(
                 finite_difference_gradient(Z, x, y),
                 Z.evalCartesianGrad(x, y),
-                rtol=2e-4)
-
-    # Try R_outer != 1
-
-    for j in range(100):
-        nj = int(u()*55)
-        Z = galsim.zernike.Zernike([0]+[u()]*nj, R_outer=1+u())
-
-        np.testing.assert_allclose(
-                finite_difference_gradient(Z, x, y),
-                Z.evalCartesianGrad(x, y),
-                rtol=2e-4)
-
-    # # Try annular Zernike
-    #
-    # for j in range(100):
-    #     print(j)
-    #     nj = int(u()*55)
-    #     R_inner = 0.2+0.6*u()
-    #     print(R_inner)
-    #     Z = galsim.zernike.Zernike([0]+[u()]*nj, R_inner=R_inner)
-    #
-    #     np.testing.assert_allclose(
-    #             finite_difference_gradient(Z, x, y),
-    #             Z.evalCartesianGrad(x, y),
-    #             rtol=2e-4)
+                rtol=1e-5, atol=1e-5)
 
 
 if __name__ == "__main__":

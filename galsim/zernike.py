@@ -151,7 +151,7 @@ def _a(n,m,nn,mm):
 
 def __noll_coef_array_gradx(jmax, obscuration):
     maxn = _noll_to_zern(jmax)[0]
-    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
+    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2, max power of rho, noll index-1)
 
     out = np.zeros(shape, dtype=np.complex128)
     for j in range(1,jmax+1):
@@ -171,7 +171,7 @@ _noll_coef_array_gradx = LRU_Cache(__noll_coef_array_gradx)
 
 def __noll_coef_array_grady(jmax, obscuration):
     maxn = _noll_to_zern(jmax)[0]
-    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2,  max power of rho, noll index-1)
+    shape = (maxn//2+1, maxn+1, jmax)  # (max power of |rho|^2, max power of rho, noll index-1)
 
     out = np.zeros(shape, dtype=np.complex128)
     for j in range(1,jmax+1):
@@ -208,7 +208,6 @@ def _xy_contribution(rho2_power, rho_power, shape=None):
     #
     # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
     # |rho|^2.
-
     if shape is None:
         size = 2*rho2_power + rho_power + 1
         shape = (size, size)
@@ -233,19 +232,105 @@ def _xy_contribution(rho2_power, rho_power, shape=None):
     return out
 
 
-def _rrsq_to_xy(coefs):
+def _rrsq_to_xy(coefs, shape=None):
     """Convert coefficient array from rho and |rho|^2 to x and y.
     """
     rho2_order = coefs.shape[0] - 1
     rho_order = coefs.shape[1] - 1
-    out_order = rho_order + 2*rho2_order
-    out_shape = (out_order+1, out_order+1)
-    new_coefs = np.zeros(out_shape, dtype=np.float64)
+    if shape is None:
+        out_order = rho_order + 2*rho2_order
+        out_shape = (out_order+1, out_order+1)
+    new_coefs = np.zeros(shape, dtype=np.float64)
 
     # Now we loop through the elements of coefs and compute their contribution to new_coefs
     for (i, j) in zip(*np.nonzero(coefs)):
-        new_coefs += (coefs[i, j]*_xy_contribution(i, j, out_shape)).real
+        new_coefs += (coefs[i, j]*_xy_contribution(i, j, shape)).real
     return new_coefs
+
+
+def _xycoef_gradx(coefs, shape=None):
+    # d/dx (x+y) = 1 looks like
+    #
+    # 0 1      1 0
+    # 1 0  ->  0 0
+    #
+    # d/dx (x^2 + y^2) = 2 x looks like
+    #
+    # 0 0 1    0 0 0
+    # 0 0 0 -> 2 0 0
+    # 1 0 0    0 0 0
+    #
+    # d/dx (x^2 + xy + y^2) = 2x + y looks like
+    #
+    # 0 0 1    0 1 0
+    # 0 1 0 -> 2 0 0
+    # 1 0 0    0 0 0
+
+    if shape is None:
+        shape = coefs.shape
+    gradx = np.zeros(shape, dtype=np.float64)
+    for (i, j) in zip(*np.nonzero(coefs)):
+        if i > 0:
+            gradx[i-1, j] = coefs[i, j]*i
+
+    return gradx
+
+
+def _xycoef_grady(coefs, shape=None):
+    # see above
+    if shape is None:
+        shape = coefs.shape
+    grady = np.zeros(shape, dtype=np.float64)
+    for (i, j) in zip(*np.nonzero(coefs)):
+        if j > 0:
+            grady[i, j-1] = coefs[i, j]*j
+
+    return grady
+
+
+def __noll_coef_array_xy(jmax, obscuration):
+    maxn = _noll_to_zern(jmax)[0]
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index-1)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2])
+    return out
+_noll_coef_array_xy = LRU_Cache(__noll_coef_array_xy)
+
+
+def __noll_coef_array_xygradx(jmax, obscuration):
+    maxn = _noll_to_zern(jmax)[0]
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index-1)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _xycoef_gradx(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
+    if jmax > 1:
+        return out[:-1, :-1, :]
+    else:
+        return out
+_noll_coef_array_xygradx = LRU_Cache(__noll_coef_array_xygradx)
+
+
+def __noll_coef_array_xygrady(jmax, obscuration):
+    maxn = _noll_to_zern(jmax)[0]
+    shape = (maxn+1, maxn+1, jmax)  # (max power of x, max power of y, noll index-1)
+
+    nca = _noll_coef_array(jmax, obscuration)
+
+    out = np.zeros(shape, dtype=np.float64)
+    for j in range(1, jmax+1):
+        out[:,:,j-1] = _xycoef_grady(_rrsq_to_xy(nca[:,:,j-1], shape=shape[0:2]), shape=shape[0:2])
+    if jmax > 1:
+        return out[:-1,:-1,:]
+    else:
+        return out
+_noll_coef_array_xygrady = LRU_Cache(__noll_coef_array_xygrady)
 
 
 # Following 3 functions from
@@ -393,16 +478,55 @@ class Zernike(object):
             _coef_array_grady /= self.R_outer**(np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)+1)
         return _coef_array_grady
 
-    def evalCartesian(self, x, y):
-        """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
+    @lazy_property
+    def _coef_array_xygradx(self):
+        _coef_array_xygradx = np.dot(
+                _noll_coef_array_xygradx(len(self.coef)-1, self.R_inner/self.R_outer),
+                self.coef[1:]
+        )
 
-        @param x  x-coordinate of evaluation points.  Can be list-like.
-        @param y  y-coordinate of evaluation points.  Can be list-like.
-        @returns  Series evaluations as numpy array.
-        """
-        r = np.array(x) + 1j * np.array(y)
-        rsqr = np.abs(r)**2
-        return horner2d(rsqr, r, self._coef_array, dtype=complex).real
+        if self.R_outer != 1.0:
+            shape = _coef_array_xygradx.shape
+            _coef_array_xygradx /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1)
+        return _coef_array_xygradx
+
+    @lazy_property
+    def _coef_array_xygrady(self):
+        _coef_array_xygrady = np.dot(
+                _noll_coef_array_xygrady(len(self.coef)-1, self.R_inner/self.R_outer),
+                self.coef[1:]
+        )
+
+        if self.R_outer != 1.0:
+            shape = _coef_array_xygrady.shape
+            _coef_array_xygrady /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1)
+        return _coef_array_xygrady
+
+    @lazy_property
+    def _coef_array_xy(self):
+        _coef_array_xy = np.dot(
+            _noll_coef_array_xy(len(self.coef)-1, self.R_inner/self.R_outer),
+            self.coef[1:]
+        )
+
+        if self.R_outer != 1.0:
+            shape = _coef_array_xy.shape
+            _coef_array_xy /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
+        return _coef_array_xy
+
+    # def evalCartesian(self, x, y):
+    #     """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
+    #
+    #     @param x  x-coordinate of evaluation points.  Can be list-like.
+    #     @param y  y-coordinate of evaluation points.  Can be list-like.
+    #     @returns  Series evaluations as numpy array.
+    #     """
+    #     r = np.array(x) + 1j * np.array(y)
+    #     rsqr = np.abs(r)**2
+    #     return horner2d(rsqr, r, self._coef_array, dtype=complex).real
+
+    def evalCartesian(self, x, y):
+        return horner2d(x, y, self._coef_array_xy)
 
     def evalPolar(self, rho, theta):
         """Evaluate this Zernike polynomial series at polar coordinates rho and theta.
@@ -418,11 +542,16 @@ class Zernike(object):
         rsqr = np.abs(rho)**2
         return horner2d(rsqr, r, self._coef_array, dtype=complex).real
 
+    # def evalCartesianGrad(self, x, y):
+    #     r = np.array(x) + 1j * np.array(y)
+    #     rsqr = np.abs(r)**2
+    #     gradx = horner2d(rsqr, r, self._coef_array_gradx, dtype=complex).real
+    #     grady = horner2d(rsqr, r, self._coef_array_grady, dtype=complex).real
+    #     return gradx, grady
+
     def evalCartesianGrad(self, x, y):
-        r = np.array(x) + 1j * np.array(y)
-        rsqr = np.abs(r)**2
-        gradx = horner2d(rsqr, r, self._coef_array_gradx, dtype=complex).real
-        grady = horner2d(rsqr, r, self._coef_array_grady, dtype=complex).real
+        gradx = horner2d(x, y, self._coef_array_xygradx, dtype=np.float64)
+        grady = horner2d(x, y, self._coef_array_xygrady, dtype=np.float64)
         return gradx, grady
 
     def rotate(self, theta):
