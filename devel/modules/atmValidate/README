@@ -1,0 +1,17 @@
+Here's a short summary of the goals for each of the validation scripts in this directory.
+
+• screen_plot.py: Just makes plots, can confirm visually that phases are the same, but amplitudes of different modes are different.
+• screen_scale.py: Investigate how the resolution of the phase screens affects FFT PSFs.
+• firstKick.py: Confirm that FFT PSF and geometric first kick give similar PSFs when screens are restricted to small k, even for short exposure times.  In particular, see how large we can make kcrit before the agreement breaks down.
+• firstKick_screen_scale.py: See how the first kick PSF varies with scale of phase screens.
+• secondKick.py: Confirm that FFT PSF and second kick give similar PSFs when screens are restricted to large k. This one needs to be in the longish exposure limit.
+• vonKarman.py: Compare FFT PSF using all k-modes to geometric PSF using both kicks, and also to analytic expectation value of PSF.
+
+The basic results for the above are:
+
+• FFT PSFs get larger with increasing resolution.  We haven't completely converged by 1cm resolution, but it's probably close enough.
+• The first kick doesn't need as much resolution as FFT PSFs though, which is good since that means we can use memory to make the screens larger instead of higher resolution.  That in turn is good in that it's less likely for the screens to wrap around during the course of an exposure if they're larger.
+• First kick matches expected behavior wrt FFT up to about kcrit=0.2. I think we want the first kick contribution relatively large if possible (so a relatively large kcrit), since the second kick contribution is perfectly isotropic and we want the final PSFs to have some ellipticity.
+• Second kick matches expected behavior wrt FFT over a wide range of kcrit.
+• Full geometric PSF has size consistent with geom PSF and consistent with analytic VonKarman model over a fairly wide range in wavelength (I tested 350nm to 1100nm), r0_500 (I tested 0.05m to 0.25m) and kcrit (I looked at kcrit between 0.05 and 0.5; some of the kcrit=0.5 geometric PSFs were noticeably too large, but for kcrit <= 0.2, everything looked fine).
+

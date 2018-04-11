@@ -132,6 +132,7 @@ from .compound import FourierSqrt, FourierSqrtProfile
 from .compound import RandomWalk
 from .transform import Transform, Transformation, _Transform
 from .vonkarman import VonKarman
+from .second_kick import SecondKick
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
