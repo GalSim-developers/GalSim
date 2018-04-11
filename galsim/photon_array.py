@@ -353,7 +353,7 @@ class FRatioAngles(object):
         dydz[:] = tantheta * np.cos(phi)
 
 class PhotonDCR(object):
-    """A surface-layer operator that applies the effect of differential chromatic aberration (DCR)
+    """A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
     and optionally the chromatic dilation due to atmospheric seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence

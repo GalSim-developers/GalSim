@@ -232,7 +232,7 @@ def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
     sed0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   wave_type='nm', flux_type='fphotons')
+                      wave_type='nm', flux_type='fphotons')
     sed1 = galsim.SED(lambda nu: nu**2, wave_type=units.Hz, flux_type='fnu', fast=False)
     sed2 = galsim.SED(17.0, wave_type='ang', flux_type='1')
 

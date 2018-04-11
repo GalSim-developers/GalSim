@@ -524,7 +524,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
         desired = obj.SED(wave)
         # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
         # image, which implies flux can be lost off of the edges of the image, we don't expect
-        # it's accuracy to be nearly as good as for other objects.
+        # its accuracy to be nearly as good as for other objects.
         decimal = 2 if obj.interpolated else 7
         np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).flux, desired,
                                        decimal)
@@ -544,6 +544,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
             # Also try manipulating exptime and area.
             np.testing.assert_allclose(
                     calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(dtype=float), rtol=1e-2)
+
 
 def funcname():
     import inspect

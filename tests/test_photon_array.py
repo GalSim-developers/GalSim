@@ -369,7 +369,7 @@ def test_dcr():
     np.testing.assert_almost_equal(im2.array, im1.array, decimal=4,
                                    err_msg="PhotonDCR didn't match ChromaticAtmosphere")
 
-    # Repeat with thinned bandpass and SED to check how thin still works well.
+    # Repeat with thinned bandpass and SED to check that thin still works well.
     im3 = galsim.ImageD(50, 50, scale=pixel_scale)
     thin = 0.1  # Even higher also works.  But this is probably enough.
     thin_bandpass = bandpass.thin(thin)
@@ -532,7 +532,7 @@ def test_dcr_angles():
                 "parallactic angle doesn't agree with astroplan's calculation.")
 
 def test_dcr_moments():
-    """Check that DCR gets the direction of the moment changes correct for some simplegeometries.
+    """Check that DCR gets the direction of the moment changes correct for some simple geometries.
     i.e. Basically check the sign conventions used in the DCR code.
     """
     # First, the basics.

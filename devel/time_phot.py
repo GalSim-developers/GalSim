@@ -1,7 +1,7 @@
 # A script to time and profile runs of photon shooting using
 #
 #  - A realistic range of fluxes, so many objects have < 10 photons
-#  - Surface layer ops, including wavelenght, angles
+#  - Surface layer ops, including wavelength, angles
 #  - Silicon sensor to get brighter-fatter
 
 from __future__ import print_function
@@ -226,4 +226,3 @@ if __name__ == "__main__":
             if 'instancemethod' in str(type(item)):
                 print('metareferrers = ',[type(r) for r in gc.get_referrers(*gc.get_referrers(item)[1:])])
             print()
-
