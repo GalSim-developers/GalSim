@@ -353,7 +353,8 @@ class FRatioAngles(object):
         dydz[:] = tantheta * np.cos(phi)
 
 class PhotonDCR(object):
-    """A surface-layer operator that applies the effect of differential chromatic aberration (DCR).
+    """A surface-layer operator that applies the effect of differential chromatic aberration (DCR)
+    and optionally the chromatic dilation due to atmospheric seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
     also predicts that blue photons get spread out more by the atmosphere than red photons,
@@ -387,7 +388,7 @@ class PhotonDCR(object):
                not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
                appropriate for Kolmogorov turbulence.
 
-    @param base_wavelength      Wavelength represented by the fiducial photon positions in nm.
+    @param base_wavelength      Wavelength (in nm) represented by the fiducial photon positions
     @param scale_unit           Units used for the positions of the photons.  [default:
                                 galsim.arcsec]
     @param alpha                Power law index for wavelength-dependent seeing.  This should only

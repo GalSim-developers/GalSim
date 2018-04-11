@@ -455,7 +455,6 @@ class SED(object):
 
         wave_list, blue_limit, red_limit = combine_wave_list(self, other)
         if fast:
-            # Make sure _fast_spec exists in both
             zfactor1 = (1.+redshift) / (1.+self.redshift)
             zfactor2 = (1.+redshift) / (1.+other.redshift)
             spec = lambda w: self._fast_spec(w * zfactor1) * other._fast_spec(w * zfactor2)
@@ -963,8 +962,6 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        # For some reason, the dimensionless astropy unit, Unit(), doesn't eval/repr roundtrip, so
-        # we use a custom repr for this case.
         outstr = ('galsim.SED(%r, wave_type=%r, flux_type=%r, redshift=%r, fast=%r,' +
                   ' _wave_list=%r, _blue_limit=%r, _red_limit=%s)')%(
                       self._orig_spec, self.wave_type, self._flux_type, self.redshift, self.fast,
