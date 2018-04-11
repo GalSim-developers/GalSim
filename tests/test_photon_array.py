@@ -17,10 +17,10 @@
 #
 
 from __future__ import print_function
+import unittest
 import numpy as np
 import os
 import sys
-from unittest import skipIf
 
 try:
     import astroplan
@@ -465,7 +465,7 @@ def test_dcr():
                   parallactic_angle=parallactic_angle,
                   scale_unit='inches')                  # invalid scale_unit
 
-@skipIf(no_astroplan, 'Unable to import astroplan')
+@unittest.skipIf(no_astroplan, 'Unable to import astroplan')
 @timer
 def test_dcr_angles():
     """Check the DCR angle calculations by comparing to astroplan's calculations of the same.

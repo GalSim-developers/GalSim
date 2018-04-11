@@ -158,7 +158,7 @@ namespace galsim {
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
 
-    // The definition for obs -= 0
+    // The definition for obs == 0
     class AiryInfoNoObs : public AiryInfo
     {
     public:

@@ -28,6 +28,28 @@ class AtmosphericScreen(object):
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
     scale beyond which the turbulence power flattens.
 
+    AtmosphericScreen delays the actual instantiation of the phase screen array in memory until it
+    is used for either drawing a PSF or querying the wavefront or wavefront gradient.  This is to
+    facilitate automatic truncation of the screen power spectrum depending on the use case.  For
+    example, when drawing a PhaseScreenPSF using Fourier methods, the entire power spectrum should
+    generally be used.  On the other hand, when drawing using photon-shooting and the geometric
+    approximation, it's better to truncate the high-k modes of the power spectrum here so
+    that they can be handled instead by a SecondKick object (which also happens automatically; see
+    the PhaseScreenPSF docstring).  (See Peterson et al. 2015 for more details about the second
+    kick).  Querying the wavefront or wavefront gradient will instantiate the screen using the full
+    power spectrum.
+
+    This class will normally attempt to sanity check that the screen has been appropriately
+    instantiated depending on the use case, i.e., depending on whether it's being used to draw with
+    Fourier optics or geometric optics.  If you want to turn this warning off, however, you can
+    use the `suppress_warning` keyword argument.
+
+    If you wish to override the automatic truncation determination, then you can directly
+    instantiate the phase screen array using the AtmosphericScreen.instantiate() method.
+
+    Note that once a screen has been instantiated with a particular set of truncation parameters, it
+    cannot be re-instantiated with another set of parameters.
+
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
@@ -63,6 +85,7 @@ class AtmosphericScreen(object):
                          that `alpha` is set to something other than 1.0.  [default: None]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [default: None]
+    @param suppress_warning   Turn off instantiation sanity checking.  (See above)  [default: False]
 
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
@@ -74,7 +97,7 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
-                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None):
+                 vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False):
 
         if (alpha != 1.0 and time_step is None):
             raise ValueError("No time_step provided when alpha != 1.0")
@@ -100,16 +123,15 @@ class AtmosphericScreen(object):
 
         if rng is None:
             rng = galsim.BaseDeviate()
+        self._suppress_warning = suppress_warning
 
         self._orig_rng = rng.duplicate()
         self.dynamic = True
         self.reversible = self.alpha == 1.0
 
-        self._init_psi()
-        self._reset()
-        # Free some RAM for frozen-flow screen.
-        if self.reversible:
-            del self._psi, self._screen
+        # These will be None until screens are instantiated.
+        self.kmin = None
+        self.kmax = None
 
     def __str__(self):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -121,13 +143,17 @@ class AtmosphericScreen(object):
                         self.vx, self.vy, self.alpha, self.time_step, self._orig_rng)
 
     # While AtmosphericScreen does have mutable internal state, it's still possible to treat the
-    # object as immutable under the python data model.  The requirements for hashability are that
+    # object as hashable under the python data model.  The requirements for hashability are that
     # the hash value never changes during the lifetime of the object, __eq__ is defined, and a == b
     # implies hash(a) == hash(b).  We also require that if a == b, then f(a) == f(b) for any public
-    # function on an AtmosphericScreen, such as producing a PSF.  The mutable internal state of
-    # AtmosphericScreen, such as the _psi, _screen, _tab2d, _origin attributes, are for
-    # computational convenience, and don't "define" the object and are not even strictly necessary
-    # for its implementation.
+    # function on an AtmosphericScreen, such as producing a PSF.  Generally, it's a good idea to
+    # try for hash(a) == hash(b) to imply that it's very likely that a == b, too.  This is mostly
+    # True for AtmosphericScreen (and derived objects, like PSFs), but note that while we don't
+    # use the object's mutable internal state for the hash value, we do use it for the __eq__ test.
+    # In particular, the hash value doesn't change after the screen is instantiated from its value
+    # before instantiation.  Equality, on the other hand, does change.  An instantiated screen is
+    # not equal to an otherwise identical uninstantiated screen.
+
     def __eq__(self, other):
         return (isinstance(other, galsim.AtmosphericScreen) and
                 self.screen_size == other.screen_size and
@@ -139,7 +165,9 @@ class AtmosphericScreen(object):
                 self.vy == other.vy and
                 self.alpha == other.alpha and
                 self.time_step == other.time_step and
-                self._orig_rng == other._orig_rng)
+                self._orig_rng == other._orig_rng and
+                self.kmin == other.kmin and
+                self.kmax == other.kmax)
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
@@ -150,6 +178,44 @@ class AtmosphericScreen(object):
         return self._hash
 
     def __ne__(self, other): return not self == other
+
+    def instantiate(self, kmin=0., kmax=np.inf, check=None):
+        """
+        @param kmin   Minimum k-mode to include when generating phase screens.  Generally this will
+                      only be used when testing the geometric approximation for atmospheric PSFs.
+                      [default: 0]
+        @param kmax   Maximum k-mode to include when generating phase screens.  This may be used in
+                      conjunction with SecondKick to complete the geometric approximation for
+                      atmospheric PSFs.  [default: np.inf]
+        @param check  Sanity check indicator.  If equal to 'FFT', then check that phase screen
+                      Fourier modes are not being truncated, which is appropriate for full Fourier
+                      optics.  If equal to 'phot', then check that phase screen Fourier modes *are*
+                      being truncated, which is appropriate for the geometric optics approximation.
+                      If `None`, then don't perform a check.  Also, don't perform a check if
+                      self.suppress_warning is True.
+        """
+        if self.kmax is None:
+            self.kmin = kmin
+            self.kmax = kmax
+            self._init_psi()
+            self._reset()
+            # Free some RAM for frozen-flow screens.
+            if self.reversible:
+                del self._psi, self._screen
+        if check is not None and not self._suppress_warning:
+            if check == 'FFT':
+                if self.kmax != np.inf:
+                    import warnings
+                    warnings.warn(
+                        "Instantiating AtmosphericScreen with kmax != inf "
+                        "may yield surprising results when drawing using Fourier optics.")
+            if check == 'phot':
+                if self.kmax == np.inf:
+                    import warnings
+                    warnings.warn(
+                        "Instantiating AtmosphericScreen with kmax == inf "
+                        "may yield surprising results when drawing using geometric optics.")
+
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
@@ -163,15 +229,26 @@ class AtmosphericScreen(object):
         """
         fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
+        # Faster to avoid as many temporary arrays as possible.  This is just ksq = fx**2 + fy**2.
+        ksq = fx
+        ksq[:,:] *= fx
+        ksq[:,:] += fy*fy
 
-        L0_inv = 1./self.L0 if self.L0 is not None else 0.0
+        # We'll use ksq as our array for psi too.  So save this mask for later.
+        m = (ksq < self.kmin**2) | (ksq > self.kmax**2)
+
         old_settings = np.seterr(all='ignore')
-        self._psi = (1./self.screen_size*self._kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                     (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                     self.npix * np.sqrt(np.sqrt(2.0)))
-        np.seterr(**old_settings)
-        self._psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
+        self._psi = ksq
+        if self.L0 is not None:
+            L0_inv = 1./self.L0
+            self._psi[:,:] += L0_inv*L0_inv
+        self._psi[:,:] **= -11./12.
+        # Note the multiplication by 500 here so we can divide by arbitrary lam later.
+        self._psi[:,:] *= (self._kolmogorov_constant * self.r0_500**(-5.0/6.0) * self.npix *
+                           500. / self.screen_size)
         self._psi[0, 0] = 0.0
+        self._psi[m] = 0.0
+        np.seterr(**old_settings)
 
     def _random_screen(self):
         """Generate a random phase screen with power spectrum given by self._psi**2"""
@@ -230,7 +307,7 @@ class AtmosphericScreen(object):
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepk
 
-    def wavefront(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -240,9 +317,11 @@ class AtmosphericScreen(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
+                        an iterable.  If None, then the internal time of the phase screens will be
+                        used for all u, v.  If scalar, then the size will be broadcast up to match
+                        that of u and v.  If iterable, then the shape must match the shapes of u and
+                        v.  [default: None]
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -253,6 +332,9 @@ class AtmosphericScreen(object):
         if u.shape != v.shape:
             raise ValueError("u.shape not equal to v.shape")
 
+        if t is None:
+            t = self._time
+
         from numbers import Real
         if isinstance(t, Real):
             tmp = np.empty_like(u)
@@ -262,6 +344,8 @@ class AtmosphericScreen(object):
             t = np.array(t, dtype=float)
             if t.shape != u.shape:
                 raise ValueError("t.shape must match u.shape if t is not a scalar")
+
+        self.instantiate()  # noop if already instantiated
 
         if self.reversible:
             return self._wavefront(u, v, t, theta)
@@ -278,23 +362,26 @@ class AtmosphericScreen(object):
             return out
 
     def _wavefront(self, u, v, t, theta):
-        # Same as wavefront(), but no argument checking and no boiling updates.
+        # Same as wavefront(), but no argument checking, no boiling updates, no
+        # screen instantiation checking
         if t is None:
             t = self._time
         u = u - t*self.vx + 1000*self.altitude*theta[0].tan()
         v = v - t*self.vy + 1000*self.altitude*theta[1].tan()
         return self._tab2d(u, v)
 
-    def wavefront_gradient(self, u, v, t, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
+    def wavefront_gradient(self, u, v, t=None, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin)):
         """ Compute gradient of wavefront due to atmospheric phase screen.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+                        scalar or an iterable.  If None, then the internal time of the phase screens
+                        will be used for all u, v.  If scalar, then the size will be broadcast up to
+                        match that of u and v.  If iterable, then the shape must match the shapes of
+                        u and v.  [default: None]
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -314,6 +401,8 @@ class AtmosphericScreen(object):
             t = np.array(t, dtype=float)
             if t.shape != u.shape:
                 raise ValueError("t.shape must match u.shape if t is not a scalar")
+
+        self.instantiate()  # noop if already instantiated
 
         if self.reversible:
             return self._wavefront_gradient(u, v, t, theta)
@@ -337,7 +426,7 @@ class AtmosphericScreen(object):
         return self._tab2d.gradient(u, v)
 
 
-def Atmosphere(screen_size, rng=None, **kwargs):
+def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
 
@@ -487,8 +576,9 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     if rng is None:
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
-    return galsim.PhaseScreenList([AtmosphericScreen(**kw)
-                                   for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
+
+    return galsim.PhaseScreenList(
+        [AtmosphericScreen(**kw) for kw in galsim.utilities.dol_to_lod(kwargs, nmax)])
 
 
 class OpticalScreen(object):
@@ -661,7 +751,7 @@ class OpticalScreen(object):
         return self._zernike.evalCartesian(u, v) * self.lam_0
 
     def wavefront_gradient(self, u, v, t=None, theta=None):
-        """ Compute gradient of wavefront due to atmospheric phase screen.
+        """ Compute gradient of wavefront due to optical phase screen.
 
         @param u        Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.

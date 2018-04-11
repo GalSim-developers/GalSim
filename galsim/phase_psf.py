@@ -73,6 +73,7 @@ from heapq import heappush, heappop
 import numpy as np
 import galsim
 from galsim import GSObject
+from .utilities import lazy_property
 
 
 class Aperture(object):
@@ -209,6 +210,7 @@ class Aperture(object):
                  gsparams=None):
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
+        self._obscuration = obscuration  # We store this, even though it's not always used.
         self._gsparams = gsparams
 
         if obscuration >= 1.:
@@ -295,7 +297,7 @@ class Aperture(object):
                                   "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
             else:
                 pupil_plane_size = good_pupil_size
-            self._generate_pupil_plane(circular_pupil, obscuration,
+            self._generate_pupil_plane(circular_pupil,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
 
@@ -309,7 +311,7 @@ class Aperture(object):
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 
-    def _generate_pupil_plane(self, circular_pupil, obscuration, nstruts, strut_thick, strut_angle,
+    def _generate_pupil_plane(self, circular_pupil, nstruts, strut_thick, strut_angle,
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
         """
@@ -322,7 +324,6 @@ class Aperture(object):
         self.pupil_plane_scale = pupil_plane_size / self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
-        self._obscuration = obscuration
         self._nstruts = nstruts
         self._strut_thick = strut_thick
         self._strut_angle = strut_angle
@@ -330,13 +331,13 @@ class Aperture(object):
         radius = 0.5*self.diam
         if circular_pupil:
             self._illuminated = (self.rsqr < radius**2)
-            if obscuration > 0.:
-                self._illuminated *= self.rsqr >= (radius*obscuration)**2
+            if self.obscuration > 0.:
+                self._illuminated *= self.rsqr >= (radius*self.obscuration)**2
         else:
             self._illuminated = (np.abs(self.u) < radius) & (np.abs(self.v) < radius)
-            if obscuration > 0.:
-                self._illuminated *= ((np.abs(self.u) >= radius*obscuration) *
-                                      (np.abs(self.v) >= radius*obscuration))
+            if self.obscuration > 0.:
+                self._illuminated *= ((np.abs(self.u) >= radius*self.obscuration) *
+                                      (np.abs(self.v) >= radius*self.obscuration))
 
         if nstruts > 0:
             if not isinstance(strut_angle, galsim.Angle):
@@ -445,8 +446,8 @@ class Aperture(object):
         s = ""
         if not self._circular_pupil:
             s += ", circular_pupil=False"
-        if self._obscuration != 0.0:
-            s += ", obscuration=%s"%self._obscuration
+        if self.obscuration != 0.0:
+            s += ", obscuration=%s"%self.obscuration
         if self._nstruts != 0:
             s += ", nstruts=%s"%self._nstruts
             if self._strut_thick != 0.05:
@@ -467,8 +468,8 @@ class Aperture(object):
         s = ""
         if not self._circular_pupil:
             s += ", circular_pupil=False"
-        if self._obscuration != 0.0:
-            s += ", obscuration=%r"%self._obscuration
+        if self.obscuration != 0.0:
+            s += ", obscuration=%r"%self.obscuration
         if self._nstruts != 0:
             s += ", nstruts=%r"%self._nstruts
             if self._strut_thick != 0.05:
@@ -549,6 +550,11 @@ class Aperture(object):
         if not hasattr(self, '_rsqr'):
             self._rsqr = self.u**2 + self.v**2
         return self._rsqr
+
+    @property
+    def obscuration(self):
+        """Fraction linear obscuration of pupil."""
+        return self._obscuration
 
     def __getstate__(self):
         # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
@@ -727,6 +733,15 @@ class PhaseScreenList(object):
                 pass
         self._update_attrs()
 
+    def instantiate(self, _bar=None, **kwargs):
+        for layer in self:
+            try:
+                layer.instantiate(**kwargs)
+            except AttributeError:
+                pass
+            if _bar:  # pragma: no cover
+                _bar.update()
+
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
         heappush(self._pending, (psf.t0, galsim.utilities.OrderedWeakRef(psf)))
@@ -778,9 +793,11 @@ class PhaseScreenList(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront.  Can be None, a scalar or
+                        an iterable.  If None, then the internal time of the phase screens will be
+                        used for all u, v.  If scalar, then the size will be broadcast up to match
+                        that of u and v.  If iterable, then the shape must match the shapes of u and
+                        v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -798,9 +815,11 @@ class PhaseScreenList(object):
                         be a scalar or an iterable.  The shapes of u and v must match.
         @param v        Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                         be a scalar or an iterable.  The shapes of u and v must match.
-        @param t        Times (in seconds) at which to evaluate wavefront.  Can be a scalar or an
-                        iterable.  If scalar, then the size will be broadcast up to match that of
-                        u and v.  If iterable, then the shape must match the shapes of u and v.
+        @param t        Times (in seconds) at which to evaluate wavefront gradient.  Can be None, a
+                        scalar or an iterable.  If None, then the internal time of the phase screens
+                        will be used for all u, v.  If scalar, then the size will be broadcast up to
+                        match that of u and v.  If iterable, then the shape must match the shapes of
+                        u and v.
         @param theta    Field angle at which to evaluate wavefront, as a 2-tuple of `galsim.Angle`s.
                         [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]  Only a single theta is
                         permitted.
@@ -925,7 +944,11 @@ class PhaseScreenList(object):
     @property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
-        return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
+        r0_500s = np.array([l.r0_500 for l in self if hasattr(l, 'r0_500')])
+        if len(r0_500s) == 0:
+            return None
+        else:
+            return np.sum(r0_500s**(-5./3))**(-3./5)
 
     def _stepK(self, **kwargs):
         """Return an appropriate stepk for this list of phase screens.
@@ -957,6 +980,48 @@ class PhaseScreenPSF(GSObject):
     Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
     to the `Aperture` constructor.  The `aper` keyword always takes precedence.
+
+    There are effectively three ways to draw a PhaseScreenPSF (or GSObject that includes a
+    PhaseScreenPSF):
+
+    1) Fourier optics
+
+        This is the default, and is performed for all drawImage methods except method='phot'.  This
+        is generally the most accurate option.  For PhaseScreenLists that include an
+        AtmosphericScreen, however, this can be prohibitively slow.  For OpticalPSFs, though, this
+        can sometimes be a good option.
+
+    2) Photon-shooting from an image produced using Fourier optics.
+
+        This is done if geometric_shooting=False when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  This actually performs the same calculations as the Fourier optics
+        option above, but then proceeds by shooting photons from that result.  This can sometimes be
+        a good option for OpticalPSFs, especially if the same OpticalPSF can be reused for may
+        objects, since the Fourier part of the process would only be performed once in this case.
+
+    3) Photon-shooting using the "geometric approximation".
+
+        This is done if geometric_shooting=True when creating the PhaseScreenPSF, and method='phot'
+        when calling drawImage.  In this case, a completely different algorithm is used make an
+        image.  Photons are uniformly generated in the Aperture pupil, and then the phase gradient
+        at that location is used to deflect each photon in the image plane.  This method, which
+        corresponds to geometric optics, is broadly accurate for phase screens that vary slowly
+        across the aperture, and is usually several orders of magnitude or more faster than Fourier
+        optics (depending on the flux of the object, of course, but much faster even for rather
+        bright flux levels).
+
+        One short-coming of this method is that it neglects interference effects, i.e. diffraction.
+        For PhaseScreenLists that include at least one AtmosphericScreen, a correction, dubbed the
+        "second kick", will automatically be applied to handle both the quickly varying modes of the
+        screens and the diffraction pattern of the Aperture.  For PhaseScreenLists without an
+        AtmosphericScreen, the correction is simply an Airy function.  Note that this correction can
+        be overridden using the second_kick keyword argument, and also tuned to some extent using
+        the kcrit keyword argument.
+
+    Note also that calling drawImage on a PhaseScreenPSF that uses a PhaseScreenList with any
+    uninstantiated AtmosphericScreens will perform that instantiation, and that the details of the
+    instantiation depend on the drawing method used, and also the kcrit keyword argument to
+    PhaseScreenPSF.  See the AtmosphericScreen docstring for more details.
 
     @param screen_list         PhaseScreenList object from which to create PSF.
     @param lam                 Wavelength in nanometers at which to compute PSF.
@@ -995,6 +1060,18 @@ class PhaseScreenPSF(GSObject):
                                optics and then shoot from the derived InterpolatedImage.
                                [default: True]
     @param aper                Aperture to use to compute PSF(s).  [default: None]
+    @param second_kick         An optional second kick to also convolve by when using geometric
+                               photon-shooting.  (This can technically be any GSObject, though
+                               usually it should probably be a SecondKick object).  If None, then a
+                               good second kick will be chosen automatically based on `screen_list`.
+                               If False, then a second kick won't be applied.  [default: None]
+    @param kcrit               Critical Fourier scale (in units of 1/r0) at which to separate low-k
+                               and high-k turbulence.  The default value was chosen based on
+                               comparisons between Fourier optics and geometric optics with a second
+                               kick correction.  While most values of kcrit smaller than the default
+                               produce similar results, we caution the user to compare the affected
+                               geometric PSFs against Fourier optics PSFs carefully before changing
+                               this value.  [default: 0.2]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -1035,11 +1112,11 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
-    def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0, aper=None,
+    def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
                  scale_unit=galsim.arcsec, ii_pad_factor=4., suppress_warning=False,
-                 geometric_shooting=True, gsparams=None,
-                 _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
+                 geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
+                 gsparams=None, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1054,6 +1131,7 @@ class PhaseScreenPSF(GSObject):
                 raise ValueError("Diameter required if aperture not specified directly.")
             aper = Aperture(lam=lam, screen_list=self._screen_list, gsparams=gsparams, **kwargs)
         self.aper = aper
+
         if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
             raise TypeError("theta must be 2-tuple of galsim.Angle's.")
         self.theta = theta
@@ -1085,6 +1163,9 @@ class PhaseScreenPSF(GSObject):
         self._flux = flux
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
+        self._kcrit = kcrit
+        # We'll set these more intelligently as needed below
+        self._second_kick = second_kick
 
         # Need to put in a placeholder SBProfile so that calls to, for example,
         # self.stepk, still work.
@@ -1100,6 +1181,37 @@ class PhaseScreenPSF(GSObject):
         self._sbp = self._dummy_obj._sbp
 
         self._screen_list._delayCalculation(self)
+
+    @property
+    def kcrit(self):
+        return self._kcrit
+
+    @lazy_property
+    def screen_kmax(self):
+        r0_500 = self._screen_list.r0_500_effective
+        if r0_500 is None:
+            return np.inf
+        else:
+            r0 = r0_500 * (self.lam/500)**(6./5)
+            return self.kcrit / r0
+
+    @lazy_property
+    def second_kick(self):
+        """Make a SecondKick object based on contents of _screen_list and aper.
+        """
+        if self._second_kick is None:
+            r0_500 = self._screen_list.r0_500_effective
+            if r0_500 is None:  # No AtmosphericScreens in list
+                return galsim.Airy(lam=self.lam, diam=self.aper.diam,
+                                   obscuration=self.aper.obscuration)
+            else:
+                r0 = r0_500 * (self.lam/500.)**(6./5)
+                return galsim.SecondKick(
+                        self.lam, r0, self.aper.diam, self.aper.obscuration,
+                        kcrit=self.kcrit, scale_unit=self.scale_unit,
+                        gsparams=self._gsparams)
+        else:
+            return self._second_kick
 
     @property
     def flux(self):
@@ -1196,12 +1308,16 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         u = self.aper.u[self.aper.illuminated]
         v = self.aper.v[self.aper.illuminated]
+        # This is where I need to make sure the screens are instantiated for FFT.
+        self._screen_list.instantiate(check='FFT')
         wf = self._screen_list._wavefront(u, v, None, self.theta)
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = galsim.fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         self.img += np.abs(ftexpwf)**2
+        if self._bar:  # pragma: no cover
+            self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
@@ -1279,6 +1395,9 @@ class PhaseScreenPSF(GSObject):
         u = u[pick]
         v = v[pick]
 
+        # This is where the screens need to be instantiated for drawing with geometric photon
+        # shooting.
+        self._screen_list.instantiate(kmax=self.screen_kmax, check='phot')
         x, y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         x *= 1e-9 * 206265  # convert wavefront gradient from nm/m to arcsec.
         y *= 1e-9 * 206265
@@ -1287,6 +1406,10 @@ class PhaseScreenPSF(GSObject):
         photon_array.x = x
         photon_array.y = y
         photon_array.flux = self._flux/n_photons
+
+        if self.second_kick:
+            photon_array.convolve(self.second_kick.shoot(n_photons, ud), ud)
+
         return photon_array
 
 

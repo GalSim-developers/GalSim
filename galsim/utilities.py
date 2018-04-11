@@ -235,12 +235,9 @@ def rand_arr(shape, deviate):
     @returns a NumPy array of the desired dimensions with random numbers generated using the
     supplied deviate.
     """
-    if len(shape) is not 2:
-        raise ValueError("Can only make a 2d array from this function!")
-    # note reversed indices due to NumPy vs. Image array indexing conventions!
-    tmp_img = galsim.ImageD(shape[1], shape[0])
-    tmp_img.addNoise(galsim.DeviateNoise(deviate))
-    return tmp_img.array
+    tmp = np.empty(tuple(shape), dtype=float)
+    deviate.generate(tmp.ravel())
+    return tmp
 
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
