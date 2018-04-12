@@ -186,7 +186,7 @@ def _rrsq_to_xy(coefs, shape=None):
     rho_order = coefs.shape[1] - 1
     if shape is None:
         out_order = rho_order + 2*rho2_order
-        out_shape = (out_order+1, out_order+1)
+        shape = (out_order+1, out_order+1)
     new_coefs = np.zeros(shape, dtype=np.float64)
 
     # Now we loop through the elements of coefs and compute their contribution to new_coefs
@@ -413,7 +413,7 @@ class Zernike(object):
     @param R_inner  Inner radius.  [default: 0.0]
     """
     def __init__(self, coef, R_outer=1.0, R_inner=0.0):
-        self.coef = np.array(coef)
+        self.coef = np.asarray(coef)
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
@@ -440,7 +440,8 @@ class Zernike(object):
 
         if self.R_outer != 1.0:
             shape = _coef_array_xygradx.shape
-            _coef_array_xygradx /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1)
+            _coef_array_xygradx /= (
+                self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
         return _coef_array_xygradx
 
     @lazy_property
@@ -452,7 +453,8 @@ class Zernike(object):
 
         if self.R_outer != 1.0:
             shape = _coef_array_xygrady.shape
-            _coef_array_xygrady /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1)
+            _coef_array_xygrady /= (
+                self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
         return _coef_array_xygrady
 
     @lazy_property
