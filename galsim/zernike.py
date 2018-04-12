@@ -417,6 +417,20 @@ class Zernike(object):
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
+    # This exists in support of the deprecated OpticalPSF.coef_array attribute.  It can be deleted
+    # in version 2.0.
+    @lazy_property
+    def _coef_array(self):
+        _coef_array = np.dot(
+            _noll_coef_array(len(self.coef)-1, self.R_inner/self.R_outer),
+            self.coef[1:]
+        )
+
+        if self.R_outer != 1.0:
+            shape = _coef_array.shape
+            _coef_array /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
+
+
     @lazy_property
     def _coef_array_xygradx(self):
         _coef_array_xygradx = np.dot(
