@@ -149,10 +149,10 @@ def test_noll():
         m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
         return (n, m)
 
-    # Test that the version of _noll_to_zern in phase_screens.py is accurate.
+    # Test that the version of noll_to_zern in phase_screens.py is accurate.
     for j in range(1,30):
         true_n,true_m = noll_to_zern(j)
-        n,m = galsim.zernike._noll_to_zern(j)
+        n,m = galsim.zernike.noll_to_zern(j)
         #print('j=%d, noll = %d,%d, true_noll = %d,%d'%(j,n,m,true_n,true_m))
         assert n == true_n
         assert m == true_m
@@ -173,7 +173,7 @@ def test_noll():
         return A
 
     for j in range(1,30):
-        n,m = galsim.zernike._noll_to_zern(j)
+        n,m = galsim.zernike.noll_to_zern(j)
         true_coefs = zern_rho_coefs(n,m)
         coefs = galsim.zernike._zern_rho_coefs(n,m)
         #print('j=%d, coefs = %s'%(j,coefs))
