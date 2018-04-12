@@ -490,6 +490,12 @@ class Zernike(object):
         return horner2d(x, y, self._coef_array_xy)
 
     def evalCartesianGrad(self, x, y):
+        """Evaluate the gradient of this Zernike polynomial series at Cartesian coordinates x and y.
+
+        @param x  x-coordinate of evaluation points.  Can be list-like.
+        @param y  y-coordinate of evaluation points.  Can be list-like.
+        @returns  d(Zernike)/dx, d(Zernike)/dy as numpy arrays.
+        """
         gradx = horner2d(x, y, self._coef_array_xy_gradx, dtype=np.float64)
         grady = horner2d(x, y, self._coef_array_xy_grady, dtype=np.float64)
         return gradx, grady
