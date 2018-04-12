@@ -133,7 +133,7 @@ def __noll_coef_array(jmax, obscuration):
 _noll_coef_array = LRU_Cache(__noll_coef_array)
 
 
-def _xy_contribution(rho2_power, rho_power, shape=None):
+def _xy_contribution(rho2_power, rho_power, shape):
     """Convert (rho, |rho|^2) bivariate polynomial coefficients to (x, y) bivariate polynomial
     coefficients.
     """
@@ -155,9 +155,6 @@ def _xy_contribution(rho2_power, rho_power, shape=None):
     #
     # and so on.  We can apply these operations repeatedly to effect arbitrary powers of rho or
     # |rho|^2.
-    if shape is None:
-        size = 2*rho2_power + rho_power + 1
-        shape = (size, size)
     out = np.zeros(shape, dtype=np.complex128)
     out[0,0] = 1
     while rho2_power >= 1:
@@ -179,14 +176,9 @@ def _xy_contribution(rho2_power, rho_power, shape=None):
     return out
 
 
-def _rrsq_to_xy(coefs, shape=None):
+def _rrsq_to_xy(coefs, shape):
     """Convert coefficient array from rho, |rho|^2 to x, y.
     """
-    rho2_order = coefs.shape[0] - 1
-    rho_order = coefs.shape[1] - 1
-    if shape is None:
-        out_order = rho_order + 2*rho2_order
-        shape = (out_order+1, out_order+1)
     new_coefs = np.zeros(shape, dtype=np.float64)
 
     # Now we loop through the elements of coefs and compute their contribution to new_coefs
@@ -195,7 +187,7 @@ def _rrsq_to_xy(coefs, shape=None):
     return new_coefs
 
 
-def _xycoef_gradx(coefs, shape=None):
+def _xycoef_gradx(coefs, shape):
     """Calculate x/y coefficient array of x-derivative of given x/y coefficient array.
     """
     # d/dx (x+y) = 1 looks like
@@ -215,8 +207,6 @@ def _xycoef_gradx(coefs, shape=None):
     # 0 1 0 -> 2 0 0
     # 1 0 0    0 0 0
 
-    if shape is None:
-        shape = coefs.shape
     gradx = np.zeros(shape, dtype=np.float64)
     for (i, j) in zip(*np.nonzero(coefs)):
         if i > 0:
@@ -225,12 +215,10 @@ def _xycoef_gradx(coefs, shape=None):
     return gradx
 
 
-def _xycoef_grady(coefs, shape=None):
+def _xycoef_grady(coefs, shape):
     """Calculate x/y coefficient array of y-derivative of given x/y coefficient array.
     """
     # see above
-    if shape is None:
-        shape = coefs.shape
     grady = np.zeros(shape, dtype=np.float64)
     for (i, j) in zip(*np.nonzero(coefs)):
         if j > 0:
@@ -429,7 +417,6 @@ class Zernike(object):
         if self.R_outer != 1.0:
             shape = _coef_array.shape
             _coef_array /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
-
 
     @lazy_property
     def _coef_array_xy_gradx(self):
