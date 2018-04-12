@@ -392,7 +392,6 @@ def test_gradient():
         return ((Z.evalCartesian(x+dh, y)-Z.evalCartesian(x-dh, y))/(2*dh),
                 (Z.evalCartesian(x, y+dh)-Z.evalCartesian(x, y-dh))/(2*dh))
 
-
     u = galsim.UniformDeviate(1234)
 
     for j in range(25):

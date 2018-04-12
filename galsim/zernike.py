@@ -260,7 +260,7 @@ def __noll_coef_array_xy(jmax, obscuration):
 _noll_coef_array_xy = LRU_Cache(__noll_coef_array_xy)
 
 
-def __noll_coef_array_xygradx(jmax, obscuration):
+def __noll_coef_array_xy_gradx(jmax, obscuration):
     """Assemble coefficient array for evaluating the x-derivative of Zernike (n, m) as a bivariate
     polynomial in x and y.
 
@@ -281,10 +281,10 @@ def __noll_coef_array_xygradx(jmax, obscuration):
         return out[:-1, :-1, :]
     else:
         return out
-_noll_coef_array_xygradx = LRU_Cache(__noll_coef_array_xygradx)
+_noll_coef_array_xy_gradx = LRU_Cache(__noll_coef_array_xy_gradx)
 
 
-def __noll_coef_array_xygrady(jmax, obscuration):
+def __noll_coef_array_xy_grady(jmax, obscuration):
     """Assemble coefficient array for evaluating the y-derivative of Zernike (n, m) as a bivariate
     polynomial in x and y.
 
@@ -305,7 +305,7 @@ def __noll_coef_array_xygrady(jmax, obscuration):
         return out[:-1,:-1,:]
     else:
         return out
-_noll_coef_array_xygrady = LRU_Cache(__noll_coef_array_xygrady)
+_noll_coef_array_xy_grady = LRU_Cache(__noll_coef_array_xy_grady)
 
 
 # Following 3 functions from
@@ -417,8 +417,8 @@ class Zernike(object):
         self.R_outer = float(R_outer)
         self.R_inner = float(R_inner)
 
-    # This exists in support of the deprecated OpticalPSF.coef_array attribute.  It can be deleted
-    # in version 2.0.
+    # _coef_array property only exists to support the deprecated OpticalPSF.coef_array attribute.
+    # It can be deleted in version 2.0.
     @lazy_property
     def _coef_array(self):
         _coef_array = np.dot(
@@ -432,30 +432,30 @@ class Zernike(object):
 
 
     @lazy_property
-    def _coef_array_xygradx(self):
-        _coef_array_xygradx = np.dot(
-                _noll_coef_array_xygradx(len(self.coef)-1, self.R_inner/self.R_outer),
+    def _coef_array_xy_gradx(self):
+        _coef_array_xy_gradx = np.dot(
+                _noll_coef_array_xy_gradx(len(self.coef)-1, self.R_inner/self.R_outer),
                 self.coef[1:]
         )
 
         if self.R_outer != 1.0:
-            shape = _coef_array_xygradx.shape
-            _coef_array_xygradx /= (
+            shape = _coef_array_xy_gradx.shape
+            _coef_array_xy_gradx /= (
                 self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
-        return _coef_array_xygradx
+        return _coef_array_xy_gradx
 
     @lazy_property
-    def _coef_array_xygrady(self):
-        _coef_array_xygrady = np.dot(
-                _noll_coef_array_xygrady(len(self.coef)-1, self.R_inner/self.R_outer),
+    def _coef_array_xy_grady(self):
+        _coef_array_xy_grady = np.dot(
+                _noll_coef_array_xy_grady(len(self.coef)-1, self.R_inner/self.R_outer),
                 self.coef[1:]
         )
 
         if self.R_outer != 1.0:
-            shape = _coef_array_xygrady.shape
-            _coef_array_xygrady /= (
+            shape = _coef_array_xy_grady.shape
+            _coef_array_xy_grady /= (
                 self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
-        return _coef_array_xygrady
+        return _coef_array_xy_grady
 
     @lazy_property
     def _coef_array_xy(self):
@@ -485,15 +485,13 @@ class Zernike(object):
         @param theta  azimuthal coordinate in radians of evaluation points.  Can be list-like.
         @returns  Series evaluations as numpy array.
         """
-        cth = np.cos(theta)
-        sth = np.sin(theta)
-        x = rho * cth
-        y = rho * sth
+        x = rho * np.cos(theta)
+        y = rho * np.sin(theta)
         return horner2d(x, y, self._coef_array_xy)
 
     def evalCartesianGrad(self, x, y):
-        gradx = horner2d(x, y, self._coef_array_xygradx, dtype=np.float64)
-        grady = horner2d(x, y, self._coef_array_xygrady, dtype=np.float64)
+        gradx = horner2d(x, y, self._coef_array_xy_gradx, dtype=np.float64)
+        grady = horner2d(x, y, self._coef_array_xy_grady, dtype=np.float64)
         return gradx, grady
 
     def rotate(self, theta):
@@ -619,7 +617,7 @@ def zernikeBasis(jmax, x, y, R_outer=1.0, R_inner=0.0):
     R_inner = float(R_inner)
     eps = R_inner / R_outer
 
-    coef_array = _noll_coef_array_xy(jmax, eps)
+    noll_coef = _noll_coef_array_xy(jmax, eps)
     out = np.zeros(tuple((jmax+1,)+x.shape), dtype=float)
-    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc) for nc in coef_array.transpose(2,0,1)])
+    out[1:] = np.array([horner2d(x/R_outer, y/R_outer, nc) for nc in noll_coef.transpose(2,0,1)])
     return out

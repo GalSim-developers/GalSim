@@ -768,16 +768,8 @@ class OpticalScreen(object):
         return self._wavefront_gradient(u, v, t, theta)
 
 
-    # def _wavefront_gradient(self, u, v, t, theta):
-    #     # Same as wavefront(), but no argument checking.
-    #     # Note, this phase screen is actually independent of time and theta.
-    #     du = dv = 0.01*self.diam
-    #     w0 = self._wavefront(u, v, t, theta)
-    #     gradu = (self._wavefront(u+du, v, t, theta) - w0) / du
-    #     gradv = (self._wavefront(u, v+dv, t, theta) - w0) / dv
-    #     return gradu, gradv
-
-
     def _wavefront_gradient(self, u, v, t, theta):
+        # Same as wavefront(), but no argument checking.
+        # Note, this phase screen is actually independent of time and theta.
         gradx, grady = self._zernike.evalCartesianGrad(u, v)
         return gradx * self.lam_0, grady * self.lam_0
