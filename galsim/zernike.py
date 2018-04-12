@@ -296,6 +296,38 @@ def __noll_coef_array_xy_grady(jmax, obscuration):
 _noll_coef_array_xy_grady = LRU_Cache(__noll_coef_array_xy_grady)
 
 
+def __noll_coef_array_gradx(j, obscuration):
+    if j == 1:
+        return np.zeros((1,1), dtype=np.float)
+    n, _ = noll_to_zern(j)
+    # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
+    # Next line computes the largest j for which radial coefficient is n-1.
+    jgrad = n*(n+1)//2
+    # Solve for gradient coefficients in terms of non-gradient coefficients.
+    return np.linalg.lstsq(
+        _noll_coef_array_xy(jgrad, obscuration).reshape(-1, jgrad),
+        _noll_coef_array_xy_gradx(j, obscuration).reshape(-1, j),
+        rcond=-1.
+    )[0]
+_noll_coef_array_gradx = LRU_Cache(__noll_coef_array_gradx)
+
+
+def __noll_coef_array_grady(j, obscuration):
+    if j == 1:
+        return np.zeros((1,1), dtype=np.float)
+    n, _ = noll_to_zern(j)
+    # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
+    # Next line computes the largest j for which radial coefficient is n-1.
+    jgrad = n*(n+1)//2
+    # Solve for gradient coefficients in terms of non-gradient coefficients.
+    return np.linalg.lstsq(
+        _noll_coef_array_xy(jgrad, obscuration).reshape(-1, jgrad),
+        _noll_coef_array_xy_grady(j, obscuration).reshape(-1, j),
+        rcond=-1.
+    )[0]
+_noll_coef_array_grady = LRU_Cache(__noll_coef_array_grady)
+
+
 # Following 3 functions from
 #
 # "Zernike annular polynomials for imaging systems with annular pupils"
@@ -417,32 +449,7 @@ class Zernike(object):
         if self.R_outer != 1.0:
             shape = _coef_array.shape
             _coef_array /= self.R_outer**np.sum(np.mgrid[0:2*shape[0]:2, 0:shape[1]], axis=0)
-
-    @lazy_property
-    def _coef_array_xy_gradx(self):
-        _coef_array_xy_gradx = np.dot(
-                _noll_coef_array_xy_gradx(len(self.coef)-1, self.R_inner/self.R_outer),
-                self.coef[1:]
-        )
-
-        if self.R_outer != 1.0:
-            shape = _coef_array_xy_gradx.shape
-            _coef_array_xy_gradx /= (
-                self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
-        return _coef_array_xy_gradx
-
-    @lazy_property
-    def _coef_array_xy_grady(self):
-        _coef_array_xy_grady = np.dot(
-                _noll_coef_array_xy_grady(len(self.coef)-1, self.R_inner/self.R_outer),
-                self.coef[1:]
-        )
-
-        if self.R_outer != 1.0:
-            shape = _coef_array_xy_grady.shape
-            _coef_array_xy_grady /= (
-                self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0)+1))
-        return _coef_array_xy_grady
+        return _coef_array
 
     @lazy_property
     def _coef_array_xy(self):
@@ -455,6 +462,36 @@ class Zernike(object):
             shape = _coef_array_xy.shape
             _coef_array_xy /= self.R_outer**(np.sum(np.mgrid[0:shape[0], 0:shape[1]], axis=0))
         return _coef_array_xy
+
+    @lazy_property
+    def _gradX(self):
+        j = len(self.coef)-1
+        newCoef = np.hstack([
+            [0],
+            np.dot(
+                _noll_coef_array_gradx(j, self.R_inner/self.R_outer),
+                self.coef[1:]
+            )
+        ])
+        # Handle R_outer with
+        # df/dx = df/d(x/R) * d(x/R)/dx = df/d(x/R) * 1/R
+        newCoef /= self.R_outer
+        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
+
+    @lazy_property
+    def _gradY(self):
+        j = len(self.coef)-1
+        newCoef = np.hstack([
+            [0],
+            np.dot(
+                _noll_coef_array_grady(j, self.R_inner/self.R_outer),
+                self.coef[1:]
+            )
+        ])
+        # Handle R_outer with
+        # df/dy = df/d(y/R) * d(y/R)/dy = df/d(y/R) * 1/R
+        newCoef /= self.R_outer
+        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
 
     def evalCartesian(self, x, y):
         """Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
@@ -477,15 +514,21 @@ class Zernike(object):
         return horner2d(x, y, self._coef_array_xy)
 
     def evalCartesianGrad(self, x, y):
-        """Evaluate the gradient of this Zernike polynomial series at Cartesian coordinates x and y.
+        return self.gradX().evalCartesian(x, y), self.gradY().evalCartesian(x, y)
 
-        @param x  x-coordinate of evaluation points.  Can be list-like.
-        @param y  y-coordinate of evaluation points.  Can be list-like.
-        @returns  d(Zernike)/dx, d(Zernike)/dy as numpy arrays.
+    def gradX(self):
+        """Compute the x-derivative of this Zernike.
+
+        @returns  d(Zernike)/dx as new Zernike object.
         """
-        gradx = horner2d(x, y, self._coef_array_xy_gradx, dtype=np.float64)
-        grady = horner2d(x, y, self._coef_array_xy_grady, dtype=np.float64)
-        return gradx, grady
+        return self._gradX
+
+    def gradY(self):
+        """Compute the y-derivative of this Zernike.
+
+        @returns  d(Zernike)/dy as new Zernike object.
+        """
+        return self._gradY
 
     def rotate(self, theta):
         """Return new Zernike polynomial series rotated by angle theta.  For example:

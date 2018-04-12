@@ -40,7 +40,7 @@ def test_Zernike_orthonormality():
     jmax = 30  # Going up to 30 filled Zernikes takes about ~1 sec on my laptop
     diam = 4.0
     R_outer = diam/2
-    pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
+
     x = np.linspace(-R_outer, R_outer, 256)
     dx = x[1]-x[0]
     x, y = np.meshgrid(x, x)
@@ -239,7 +239,6 @@ def test_ne():
 @timer
 def test_Zernike_basis():
     """Test the zernikeBasis function"""
-    eps = 0.2
     diam = 2.4
     jmax = 30
     R_outer = diam/2
@@ -374,7 +373,7 @@ def test_gradient():
     # fig.colorbar(scat2, ax=axes[2])
     # plt.show()
 
-    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-13)
+    np.testing.assert_allclose(Z11.evalCartesianGrad(x, y), Z11_grad(x, y), rtol=0, atol=1e-12)
 
     Z28 = galsim.zernike.Zernike([0]*28+[1])
 
@@ -383,7 +382,7 @@ def test_gradient():
         grady = -6*np.sqrt(14)*y*(5*x**4-10*x**2*y**2+y**4)
         return gradx, grady
 
-    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-13)
+    np.testing.assert_allclose(Z28.evalCartesianGrad(x, y), Z28_grad(x, y), rtol=0, atol=1e-12)
 
     # Now try some finite differences on a broader set of input
 
