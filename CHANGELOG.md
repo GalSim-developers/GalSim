@@ -40,6 +40,7 @@ Deprecated Features
 
 New Features
 ------------
+- Add Zernike submodule. (#832, #951)
 - Add SecondKick profile GSObject. (#864)
 - Automatically include SecondKick objects when drawing PhaseScreenPSFs using
   geometric photon shooting. (#864)
