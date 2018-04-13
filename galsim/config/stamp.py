@@ -352,7 +352,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             if not skip:
                 try :
                     psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
-                                                    logger=logger)[0]
+                                                      logger=logger)[0]
                     prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
                 except galsim.config.gsobject.SkipThisObject as e:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)

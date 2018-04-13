@@ -304,15 +304,24 @@ class Convolution(GSObject):
         flux_list = [obj.flux for obj in self.obj_list]
         return np.prod(flux_list)
 
-    @property
-    def _positive_flux(self):
-        pflux_list = [obj.positive_flux for obj in self.obj_list]
-        return np.prod(pflux_list)
+    def _calc_pn(self):
+        pos_list = [obj.positive_flux for obj in self.obj_list]
+        neg_list = [obj.negative_flux for obj in self.obj_list]
+        p_net = pos_list[0]
+        n_net = neg_list[0]
+        for p,n in zip(pos_list[1:], neg_list[1:]):
+            p_net, n_net = p_net*p + n_net*n, p_net*n + n_net*p
+        return p_net, n_net
 
-    @property
+    @lazy_property
+    def _positive_flux(self):
+        p,n = self._calc_pn()
+        return p
+
+    @lazy_property
     def _negative_flux(self):
-        pflux_list = [obj.negative_flux for obj in self.obj_list]
-        return np.prod(pflux_list)
+        p,n = self._calc_pn()
+        return n
 
     @property
     def _max_sb(self):
