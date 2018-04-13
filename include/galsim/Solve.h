@@ -109,7 +109,7 @@ namespace galsim {
      *    solver.setMethod(Brent)
      *    @endcode
      *
-     *    (In fact, the former is unnecessary, since Biset is the default.)
+     *    (In fact, the former is unnecessary, since Bisect is the default.)
      *
      *    Then the method root() will solve for the root in that range.
      *

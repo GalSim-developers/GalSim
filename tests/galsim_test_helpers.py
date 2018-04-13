@@ -52,7 +52,7 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
     np.testing.assert_array_almost_equal(im1.array, im2.array, decimal=decimal)
 
 
-def printval(image1, image2):
+def printval(image1, image2, show=False):
     print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
     print("Sum of values: ", np.sum(image1.array, dtype=float), np.sum(image2.array, dtype=float))
     print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
@@ -69,7 +69,7 @@ def printval(image1, image2):
     print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     print(fmt.format(mom2['Mx'], mom2['My'], mom2['Mxx'], mom2['Myy'], mom2['Mxy']))
 
-    if False:
+    if show:
         import matplotlib.pylab as plt
         ax1 = plt.subplot(121)
         ax2 = plt.subplot(122)
@@ -288,7 +288,7 @@ def do_shoot(prof, img, name):
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img2.sum => ',img2.array.sum(dtype=float))
-    #printval(img2,img)
+    printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
             err_msg="Photon shooting for %s disagrees with expected result"%name)
@@ -297,6 +297,7 @@ def do_shoot(prof, img, name):
     dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
+    print('stepk, maxk = ',prof.stepk,prof.maxk)
     if 'Airy' in name:
         img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name or 'Spergel' in name or 'VonKarman' in name:
@@ -319,7 +320,8 @@ def do_shoot(prof, img, name):
         print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
     print('img.sum = ',img.array.sum(dtype=float),'  cf. ',test_flux)
-    np.testing.assert_almost_equal(img.array.sum(dtype=float), test_flux, photon_decimal_test,
+    np.testing.assert_allclose(
+            img.array.sum(dtype=float), test_flux, rtol=10**(-photon_decimal_test),
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
     print('img.max = ',img.array.max(),'  cf. ',prof.max_sb*dx**2)
     print('ratio = ',img.array.max() / (prof.max_sb*dx**2))
@@ -435,11 +437,14 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object, and start
         # truncating the output for relatively small size arrays.  So we temporarily bump up the
         # precision and truncation threshold for testing.
+        #print(repr(obj1))
         with galsim.utilities.printoptions(precision=18, threshold=np.inf):
             obj5 = eval(repr(obj1))
-        #print('obj1 = ',repr(obj1))
-        #print('obj5 = ',repr(obj5))
+        print('obj1 = ',repr(obj1))
+        print('obj5 = ',repr(obj5))
         f5 = func(obj5)
+        print('f1 = ',f1)
+        print('f5 = ',f5)
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
     else:
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
@@ -506,7 +511,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     #print("SUCCESS\n")
 
 
-def all_obj_diff(objs):
+def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
@@ -524,6 +529,8 @@ def all_obj_diff(objs):
             assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
                                   .format(obji, objj, i, j))
 
+    if not check_hash:
+        return
     # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
         return

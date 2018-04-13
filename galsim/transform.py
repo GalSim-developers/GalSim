@@ -25,7 +25,7 @@ import cmath
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .utilities import lazy_property, doc_inherit
+from .utilities import lazy_property, doc_inherit, WeakMethod
 from .position import PositionD
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None):
@@ -272,38 +272,38 @@ class Transformation(GSObject):
     def _fwd(self):
         if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
             if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return self._ident
+                return WeakMethod(self._ident)
             else:
-                return self._fwd_diag
+                return WeakMethod(self._fwd_diag)
         else:
-            return self._fwd_normal
+            return WeakMethod(self._fwd_normal)
 
     @lazy_property
     def _fwdT(self):
         if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
             if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return self._ident
+                return WeakMethod(self._ident)
             else:
-                return self._fwd_diag
+                return WeakMethod(self._fwd_diag)
         else:
-            return self._fwdT_normal
+            return WeakMethod(self._fwdT_normal)
 
     @lazy_property
     def _inv(self):
         if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
             if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return self._ident
+                return WeakMethod(self._ident)
             else:
-                return self._inv_diag
+                return WeakMethod(self._inv_diag)
         else:
-            return self._inv_normal
+            return WeakMethod(self._inv_normal)
 
     @lazy_property
     def _kfactor(self):
         if self._offset == PositionD(0,0):
-            return self._kf_nophase
+            return WeakMethod(self._kf_nophase)
         else:
-            return self._kf_phase
+            return WeakMethod(self._kf_phase)
 
     def _ident(self, x, y):
         return x, y

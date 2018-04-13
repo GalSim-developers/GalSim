@@ -99,9 +99,7 @@ class VonKarman(GSObject):
         if L0 > 1e10:
             L0 = 1e10
 
-        if scale_unit is None:
-            self._scale_unit = arcsec
-        elif isinstance(scale_unit, str):
+        if isinstance(scale_unit, str):
             self._scale_unit = AngleUnit.from_name(scale_unit)
         else:
             self._scale_unit = scale_unit
@@ -175,6 +173,9 @@ class VonKarman(GSObject):
     @property
     def half_light_radius(self):
         return self._sbvk.getHalfLightRadius()
+
+    def _structure_function(self, rho):
+        return self._sbvk.structureFunction(rho)
 
     def __eq__(self, other):
         return (isinstance(other, VonKarman) and

@@ -1330,40 +1330,17 @@ class ChromaticAtmosphere(ChromaticObject):
         elif isinstance(scale_unit, str):
             scale_unit = AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
-
         self.alpha = kwargs.pop('alpha', -0.2)
-        # Determine zenith_angle and parallactic_angle from kwargs
-        if 'zenith_angle' in kwargs:
-            self.zenith_angle = kwargs.pop('zenith_angle')
-            self.parallactic_angle = kwargs.pop('parallactic_angle', _Angle(0.0))
-            if not isinstance(self.zenith_angle, Angle) or \
-                    not isinstance(self.parallactic_angle, Angle):
-                raise TypeError("zenith_angle and parallactic_angle must be galsim.Angles!")
-        elif 'obj_coord' in kwargs:
-            obj_coord = kwargs.pop('obj_coord')
-            if 'zenith_coord' in kwargs:
-                zenith_coord = kwargs.pop('zenith_coord')
-                self.zenith_angle, self.parallactic_angle = dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, zenith_coord=zenith_coord)
-            else:
-                if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
-                                    +"latitude) when obj_coord is specified!")
-                HA = kwargs.pop('HA')
-                latitude = kwargs.pop('latitude')
-                self.zenith_angle, self.parallactic_angle = dcr.zenith_parallactic_angles(
-                    obj_coord=obj_coord, HA=HA, latitude=latitude)
-        else:
-            raise TypeError("Need to specify zenith_angle and parallactic_angle!")
+        self.zenith_angle, self.parallactic_angle, self.kw = dcr.parse_dcr_angles(**kwargs)
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs:
+        for kw in self.kw:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
-        self.kw = kwargs
 
-        self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle, **kwargs)
+        self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,
+                                                  **self.kw)
 
     def __eq__(self, other):
         return (isinstance(other, ChromaticAtmosphere) and

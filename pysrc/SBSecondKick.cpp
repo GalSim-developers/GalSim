@@ -20,20 +20,19 @@
 #include "galsim/IgnoreWarnings.h"
 #include "boost/python.hpp"
 
-#include "SBVonKarman.h"
+#include "SBSecondKick.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    void pyExportSBVonKarman()
+    void pyExportSBSecondKick()
     {
-        bp::class_<SBVonKarman,bp::bases<SBProfile> >("SBVonKarman", bp::no_init)
-            .def(bp::init<double,double,double,double,double,bool,GSParams>())
-            .def("getDeltaAmplitude", &SBVonKarman::getDeltaAmplitude)
-            .def("getHalfLightRadius", &SBVonKarman::getHalfLightRadius)
-            .def("structureFunction", &SBVonKarman::structureFunction)
+        bp::class_<SBSecondKick,bp::bases<SBProfile> >("SBSecondKick", bp::no_init)
+            .def(bp::init<double,double,double,GSParams>())
+            .def("getDelta", &SBSecondKick::getDelta)
+            .def("structureFunction", &SBSecondKick::structureFunction)
             ;
-    }
+    };
 
 } // namespace galsim
