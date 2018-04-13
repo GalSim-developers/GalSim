@@ -780,7 +780,10 @@ class GSObject(object):
         if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, SED):
             raise TypeError('callable flux_ratio must be an SED.')
 
-        return Transform(self, flux_ratio=flux_ratio)
+        if flux_ratio == 1:
+            return self
+        else:
+            return Transform(self, flux_ratio=flux_ratio)
 
     def expand(self, scale):
         """Expand the linear size of the profile by the given `scale` factor, while preserving
